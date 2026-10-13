@@ -97,7 +97,7 @@ impl OpBinary for SemioDocumentMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioDocumentMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

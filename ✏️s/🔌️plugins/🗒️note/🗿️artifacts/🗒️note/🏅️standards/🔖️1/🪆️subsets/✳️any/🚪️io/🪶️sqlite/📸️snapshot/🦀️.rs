@@ -115,7 +115,7 @@ impl store::ArtifactSqliteSnapshot for NoteSnapshot {
         let maximum=control.limits().max_rows;
         store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|{encoding_rows(self,maximum,native)?;self.__dsl_to_record_controlled(native)},control,native_owner)
     }
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn retire_sqlite_snapshot(mut self){let mut pending=std::mem::take(&mut self.blocks);while let Some(block)=pending.pop(){if let NoteBlockNode::Group{mut children,..}=block{pending.append(&mut children);}}}
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {
         control.checkpoint(Phase::EncodeNative, 0, 0)?;
@@ -233,8 +233,8 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
         Ok(row)
     }
 
-    fn text(&mut self,row:Row<'_>,column:usize)->Result<String,ValueError>{store::sqlite_snapshot::artifact::Reconstruction::new(self.control)?.text(row.text(column)?)}
-    fn optional_text(&mut self,row:Row<'_>,column:usize)->Result<Option<String>,ValueError>{row.optional_text(column)?.map(|value|store::sqlite_snapshot::artifact::Reconstruction::new(self.control)?.text(value)).transpose()}
+    fn text(&mut self,row:Row<'_>,column:usize)->Result<String,ValueError>{sqlite_snapshot::artifact::Reconstruction::new(self.control)?.text(row.text(column)?)}
+    fn optional_text(&mut self,row:Row<'_>,column:usize)->Result<Option<String>,ValueError>{row.optional_text(column)?.map(|value|sqlite_snapshot::artifact::Reconstruction::new(self.control)?.text(value)).transpose()}
     fn ordered(&mut self, table: &'static str, parent: Option<i64>) -> Vec<Row<'a>> { self.children.remove(&(table, parent)).unwrap_or_default() }
 
     fn snapshot(&mut self) -> Result<NoteSnapshot,ValueError> {

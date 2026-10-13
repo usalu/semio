@@ -198,7 +198,7 @@ fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_f
 
 
 impl RowPatch<Puzzle2dHandle> for Puzzle2dHandlePatch {
-    fn commit_into(&self, item: &mut Puzzle2dHandle, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle2dHandle, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.handle_kind {
             item.handle_kind = value.clone();
         }
@@ -391,7 +391,7 @@ impl RowPatch<Puzzle2dNode> for Puzzle2dNodePatch {
 }
 
 impl RowPatch<Puzzle2dEdge> for Puzzle2dEdgePatch {
-    fn commit_into(&self, item: &mut Puzzle2dEdge, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle2dEdge, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.source {
             item.source = value.clone();
         }
@@ -511,7 +511,7 @@ impl RowPatch<Puzzle2dEdge> for Puzzle2dEdgePatch {
 }
 
 impl RowPatch<Puzzle2dTargetRegion> for Puzzle2dTargetRegionPatch {
-    fn commit_into(&self, item: &mut Puzzle2dTargetRegion, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle2dTargetRegion, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.x {
             item.x = *value;
         }
@@ -575,7 +575,7 @@ impl RowPatch<Puzzle2dTargetRegion> for Puzzle2dTargetRegionPatch {
 }
 
 impl RowPatch<Puzzle2dKindCompatibility> for Puzzle2dKindCompatibilityPatch {
-    fn commit_into(&self, item: &mut Puzzle2dKindCompatibility, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle2dKindCompatibility, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.bidirectional {
             item.bidirectional = *value;
         }

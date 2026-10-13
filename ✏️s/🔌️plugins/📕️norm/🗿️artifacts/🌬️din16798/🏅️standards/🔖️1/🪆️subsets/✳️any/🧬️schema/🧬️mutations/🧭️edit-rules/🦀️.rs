@@ -1,6 +1,6 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the DIN EN 16798 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
 use crate::mutations::{remove_vent_system::RemoveVentSystem, remove_zone::RemoveZone};
 use crate::{Din16798Mutation, Din16798Snapshot};
 

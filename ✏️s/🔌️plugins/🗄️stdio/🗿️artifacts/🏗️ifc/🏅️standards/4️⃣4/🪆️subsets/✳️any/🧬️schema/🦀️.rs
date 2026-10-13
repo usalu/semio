@@ -4,7 +4,7 @@
 //! verbatim) — now mirrors `IfcSnapshot`'s own typed `header`/`entities` fields.
 
 use crate::schema::snapshot::{IfcEntity, IfcHeader};
-use crate::{IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
+use crate::{IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact

@@ -20,7 +20,7 @@ pub struct En1992ConcreteGradesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::ConcreteGrade> for En1992ConcreteGradesPatch {
-    fn commit_into(&self, row: &mut crate::ConcreteGrade, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::ConcreteGrade, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.f_ck {
             row.f_ck = value.clone();
         }
@@ -61,7 +61,7 @@ pub struct En1992ReinforcementGradesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::ReinforcementGrade> for En1992ReinforcementGradesPatch {
-    fn commit_into(&self, row: &mut crate::ReinforcementGrade, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::ReinforcementGrade, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.f_yk {
             row.f_yk = value.clone();
         }
@@ -104,7 +104,7 @@ pub struct En1992PrestressSteelsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::PrestressSteel> for En1992PrestressSteelsPatch {
-    fn commit_into(&self, row: &mut crate::PrestressSteel, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::PrestressSteel, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.name {
             row.name = value.clone();
         }
@@ -160,7 +160,7 @@ pub struct En1992MembersLongitudinalPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::BarLayer> for En1992MembersLongitudinalPatch {
-    fn commit_into(&self, row: &mut crate::BarLayer, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::BarLayer, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.diameter {
             row.diameter = value.clone();
         }
@@ -210,7 +210,7 @@ pub struct En1992MembersActionsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::LoadCaseActions> for En1992MembersActionsPatch {
-    fn commit_into(&self, row: &mut crate::LoadCaseActions, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::LoadCaseActions, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.m_k {
             row.m_k = value.clone();
         }
@@ -395,7 +395,7 @@ pub struct En1992AnchorsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::Anchor> for En1992AnchorsPatch {
-    fn commit_into(&self, row: &mut crate::Anchor, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::Anchor, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.h_ef {
             row.h_ef = value.clone();
         }

@@ -12,10 +12,10 @@ pub struct FormsAnswerError {
 
 fn empty(value: &DslValue) -> bool {
     match value {
-        semio_framework_value::DslValue::Null => true,
-        semio_framework_value::DslValue::String(text) => text.trim().is_empty(),
-        semio_framework_value::DslValue::Array(values) => values.is_empty(),
-        semio_framework_value::DslValue::Object(values) => values.is_empty(),
+        DslValue::Null => true,
+        DslValue::String(text) => text.trim().is_empty(),
+        DslValue::Array(values) => values.is_empty(),
+        DslValue::Object(values) => values.is_empty(),
         _ => false,
     }
 }
@@ -47,24 +47,24 @@ pub fn answer_error(question: &FormQuestion, value: &DslValue) -> Option<&'stati
             None
         }
         "single" => {
-            let semio_framework_value::DslValue::String(text) = value else { return Some("type"); };
+            let DslValue::String(text) = value else { return Some("type"); };
             (!question.options.iter().flatten().any(|option| &option.value == text)).then_some("option")
         }
         "multi" => {
-            let semio_framework_value::DslValue::Array(items) = value else { return Some("type"); };
+            let DslValue::Array(items) = value else { return Some("type"); };
             let mut selected = std::collections::HashSet::new();
             items.iter().any(|item| match item {
-                semio_framework_value::DslValue::String(text) => !selected.insert(text) || !question.options.iter().flatten().any(|option| &option.value == text),
+                DslValue::String(text) => !selected.insert(text) || !question.options.iter().flatten().any(|option| &option.value == text),
                 _ => true,
             }).then_some("option")
         }
-        "date" => match value { semio_framework_value::DslValue::String(text) => (!valid_date(text)).then_some("date"), _ => Some("type") },
+        "date" => match value { DslValue::String(text) => (!valid_date(text)).then_some("date"), _ => Some("type") },
         "color" => match value {
-            semio_framework_value::DslValue::String(text) => (!(text.len() == 7 && text.starts_with('#') && text.as_bytes()[1..].iter().all(u8::is_ascii_hexdigit))).then_some("color"),
+            DslValue::String(text) => (!(text.len() == 7 && text.starts_with('#') && text.as_bytes()[1..].iter().all(u8::is_ascii_hexdigit))).then_some("color"),
             _ => Some("type"),
         },
         "vector" => match value {
-            semio_framework_value::DslValue::Array(items) => (items.len() != question.fields.as_ref().map_or(0, Vec::len) || items.iter().any(|item| item.as_f64().is_none_or(|number| !number.is_finite()))).then_some("vector"),
+            DslValue::Array(items) => (items.len() != question.fields.as_ref().map_or(0, Vec::len) || items.iter().any(|item| item.as_f64().is_none_or(|number| !number.is_finite()))).then_some("vector"),
             _ => Some("vector"),
         },
         _ => (!matches!(value, DslValue::Object(_))).then_some("type"),
@@ -72,7 +72,7 @@ pub fn answer_error(question: &FormQuestion, value: &DslValue) -> Option<&'stati
 }
 
 pub fn step_errors(step: &FormStep, values: &PlaybookValues) -> Vec<FormsAnswerError> {
-    crate::schema::visible_questions(step, values).into_iter().filter_map(|question| answer_error(question, values.get(&question.id).unwrap_or(&semio_framework_value::DslValue::Null)).map(|code| FormsAnswerError { question_id: question.id.clone(), code: code.into() })).collect()
+    crate::schema::visible_questions(step, values).into_iter().filter_map(|question| answer_error(question, values.get(&question.id).unwrap_or(&DslValue::Null)).map(|code| FormsAnswerError { question_id: question.id.clone(), code: code.into() })).collect()
 }
 
 pub fn can_advance(step: &FormStep, values: &PlaybookValues) -> bool {

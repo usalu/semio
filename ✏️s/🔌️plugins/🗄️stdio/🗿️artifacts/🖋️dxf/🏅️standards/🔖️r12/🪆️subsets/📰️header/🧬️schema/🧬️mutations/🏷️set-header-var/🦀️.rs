@@ -27,7 +27,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetHeaderVar {
         let Self { name, .. } = self;
         Ok({
             match base.header_vars.iter().find(|v| &v.name == name) {
-                Some(v) => vec![DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: v.clone(), index: None })],
+                Some(v) => vec![DxfMutation::SetHeaderVar(SetHeaderVar { name: name.clone(), header_var: v.clone(), index: None })],
                 None => vec![DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: name.clone() })],
             }
         })

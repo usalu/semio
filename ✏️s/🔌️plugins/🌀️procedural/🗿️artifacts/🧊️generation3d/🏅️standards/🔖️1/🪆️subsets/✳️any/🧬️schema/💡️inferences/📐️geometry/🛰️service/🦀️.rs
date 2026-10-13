@@ -2,7 +2,7 @@
 use super::{Generation3dFaultRecord, Generation3dOutputRecord};
 use crate::standards::v1::subsets::any::schema::catalogue::Quality;
 
-pub const GEOMETRY_INFERENCE_SCHEMA: &str = "s.procedural.generation3d.geometry";
+pub const GEOMETRY_INFERENCE_SCHEMA: &str = "s.procedural.generation3d.inference";
 pub const GEOMETRY_ARTIFACT_KIND: &str = "s.procedural.generation3d";
 pub const GEOMETRY_PROGRESS_UNIT: &str = "widget-step";
 pub const GEOMETRY_PAYLOAD_SCHEMA: &str = "s.procedural.generation3d.geometry.payload";

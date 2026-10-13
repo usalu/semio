@@ -14,7 +14,7 @@ pub(crate) fn record_controlled(snapshot:&FormsSnapshot,counts:&crate::standards
  projection::project(snapshot,counts,c)?.__dsl_to_record_controlled(c)
 }
 pub(crate) fn record(snapshot:&FormsSnapshot)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
- let mut callback=|_|true;let mut sqlite=SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_file_bytes:usize::MAX,max_value_bytes:usize::MAX,max_rows:usize::MAX,..Default::default()});let counts=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::forecast(snapshot,&mut sqlite,SqliteSnapshotPhase::EncodeNative)?;
+ let mut callback=|_|true;let counts=crate::standards::v1::subsets::any::io::sqlite::snapshot::admission::forecast(snapshot,&mut SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_file_bytes:usize::MAX,max_value_bytes:usize::MAX,max_rows:usize::MAX,..Default::default()}),SqliteSnapshotPhase::EncodeNative)?;
  let mut callback=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut c=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut callback);record_controlled(snapshot,&counts,&mut c)
 }
 fn list(source:&semio_framework_dsl_record::RecordValue,key:u16)->Result<&[semio_framework_dsl_record::FieldValue],ValueError>{match source.fields.get(&key){None|Some(semio_framework_dsl_record::FieldValue::Absent)=>Ok(&[]),Some(semio_framework_dsl_record::FieldValue::List(values))=>Ok(values),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms native ordered record list differs"))}}

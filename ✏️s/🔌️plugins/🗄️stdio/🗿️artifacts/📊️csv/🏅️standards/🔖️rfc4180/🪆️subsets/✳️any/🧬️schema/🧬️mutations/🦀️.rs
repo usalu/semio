@@ -9,10 +9,11 @@ use crate::schema::diff::{CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, 
 
 
 
-use crate::schema::snapshot::{CsvField, CsvRecord};
+use crate::schema::snapshot::{CsvRecord};
+#[cfg(test)] use crate::schema::snapshot::{CsvField};
 use crate::CsvSnapshot;
 
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region 🔖️Mutations
 #[path = "📥insert-record/🦀️.rs"]

@@ -80,35 +80,34 @@ pub(crate) fn encode(document:&ControlledSnapshot,encoding:semio_framework_os_ke
  encode_record_native(encoding,|c|{
   rows::owned(document,maximum,maximum_bytes,c)?;
   let result=(||->Result<semio_framework_dsl_record::RecordValue,ValueError>{
-   use semio_framework_dsl_record::DslField;
+   #[cfg(test)] use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::DslVariants;
 use semio_framework_dsl_record::FieldValue;
-use semio_framework_dsl_record::native_encoding::EncodedRecord;
    let host=&document.host_snapshot;let generation=&document.generation;
    c.begin_stage(8)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(8,c)?;
    record.insert(0,project_value(&host.schema,c)?)?;c.step()?;
    let camera=project_value(&camera_to_dsl(&host.camera),c)?;
-   let camera=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(camera,semio_framework_dsl_record::native_encoding::retire_field);c.charge(std::mem::size_of::<FieldValue>())?;
-   record.insert(1,semio_framework_dsl_record::FieldValue::Block(Box::new(camera.take())))?;c.step()?;
+   let camera=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(camera,semio_framework_dsl_record::native_encoding::retire_field);c.charge(size_of::<FieldValue>())?;
+   record.insert(1,FieldValue::Block(Box::new(camera.take())))?;c.step()?;
    let widgets=c.scoped_stage(|c|{c.begin_stage(host.widgets.len())?;
-   let mut widgets=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(c.allocate_vec(host.widgets.len())?,|items:Vec<(String,semio_framework_dsl_record::RecordValue)>|for(_,r)in items{semio_framework_dsl_record::native_encoding::retire_field(semio_framework_dsl_record::FieldValue::Record(r))});
-   for w in &host.widgets{let mirror=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(c.scoped_stage(|c|widget_encode(w,c))?,|v|semio_framework_dsl_record::DslVariants::retire_decoded_variant(v));let mut mirror=mirror;widgets.as_mut().push(c.scoped_stage(|c|mirror.as_mut().to_named_record_controlled(c))?);c.step()?;}
-   c.charge(std::mem::size_of::<FieldValue>())?;Ok::<_,ValueError>(semio_framework_dsl_record::FieldValue::Block(Box::new(semio_framework_dsl_record::FieldValue::Statements(widgets.take()))))})?;record.insert(2,widgets)?;c.step()?;
+   let mut widgets=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(c.allocate_vec(host.widgets.len())?,|items:Vec<(String,semio_framework_dsl_record::RecordValue)>|for(_,r)in items{semio_framework_dsl_record::native_encoding::retire_field(FieldValue::Record(r))});
+   for w in &host.widgets{let mirror=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(c.scoped_stage(|c|widget_encode(w,c))?,|v|DslVariants::retire_decoded_variant(v));let mut mirror=mirror;widgets.as_mut().push(c.scoped_stage(|c|mirror.as_mut().to_named_record_controlled(c))?);c.step()?;}
+   c.charge(size_of::<FieldValue>())?;Ok::<_,ValueError>(FieldValue::Block(Box::new(FieldValue::Statements(widgets.take()))))})?;record.insert(2,widgets)?;c.step()?;
    let synapses=c.scoped_stage(|c|{c.begin_stage(host.synapses.len())?;
    let mut synapses=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(c.allocate_vec(host.synapses.len())?,|items:Vec<FieldValue>|for v in items{semio_framework_dsl_record::native_encoding::retire_field(v)});
    for s in &host.synapses{let id=c.copy_text(&s.id)?;let from=c.copy_text(&s.from)?;let to=c.copy_text(&s.to)?;let from_port=if s.from_port.is_empty(){None}else{Some(c.copy_text(&s.from_port)?)};let to_port=if s.to_port.is_empty(){None}else{Some(c.copy_text(&s.to_port)?)};let mirror=SynapseSpecDsl{id,wire:semio_framework_dsl_record::Wire(semio_framework_dsl_record::WireValue{from:semio_framework_dsl_record::WireNode{id:from,kind:None,port:from_port},edge:Some((true,semio_framework_dsl_record::WireNode{id:to,kind:None,port:to_port})),edge_label:semio_framework_dsl_record::WireEdgeLabel::default(),properties:semio_framework_value::DslValue::Object(Vec::new())})};synapses.as_mut().push(project_value(&mirror,c)?);c.step()?;}
-   Ok::<_,ValueError>(semio_framework_dsl_record::FieldValue::List(synapses.take()))})?;record.insert(3,synapses)?;c.step()?;
+   Ok::<_,ValueError>(FieldValue::List(synapses.take()))})?;record.insert(3,synapses)?;c.step()?;
    let layout=c.scoped_stage(|c|{c.begin_stage(host.layout.len())?;
    let mut layout=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(c.allocate_vec(host.layout.len())?,|items:Vec<(String,FieldValue)>|for(_,v)in items{semio_framework_dsl_record::native_encoding::retire_field(v)});
    for(k,v)in host.layout.iter(){let key=c.copy_text(k)?;layout.as_mut().push((key,project_value(&layout_to_dsl(v),c)?));c.step()?;}
-   Ok::<_,ValueError>(semio_framework_dsl_record::FieldValue::Map(layout.take()))})?;record.insert(4,layout)?;c.step()?;
+   Ok::<_,ValueError>(FieldValue::Map(layout.take()))})?;record.insert(4,layout)?;c.step()?;
    record.insert(5,project_optional_text(&generation.selected_generation_id,c)?)?;c.step()?;record.insert(6,project_optional_text(&generation.preview_text,c)?)?;c.step()?;
    let generations=c.scoped_stage(|c|{c.begin_stage(generation.generations.len())?;
    let mut generations=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(c.allocate_vec(generation.generations.len())?,|items:Vec<FieldValue>|for v in items{semio_framework_dsl_record::native_encoding::retire_field(v)});
    for g in &generation.generations{
-    let child=c.scoped_stage(|c|{c.begin_stage(3)?;let mut child=semio_framework_dsl_record::native_encoding::EncodedRecord::new(3,c)?;child.insert(0,project_value(&g.id,c)?)?;c.step()?;child.insert(1,project_value(&g.name,c)?)?;c.step()?;child.insert(2,values::playbook_encode(&g.values,c)?)?;c.step()?;Ok::<_,ValueError>(semio_framework_dsl_record::FieldValue::Record(child.take()))})?;
+    let child=c.scoped_stage(|c|{c.begin_stage(3)?;let mut child=semio_framework_dsl_record::native_encoding::EncodedRecord::new(3,c)?;child.insert(0,project_value(&g.id,c)?)?;c.step()?;child.insert(1,project_value(&g.name,c)?)?;c.step()?;child.insert(2,values::playbook_encode(&g.values,c)?)?;c.step()?;Ok::<_,ValueError>(FieldValue::Record(child.take()))})?;
     generations.as_mut().push(child);c.step()?;
-   }Ok::<_,ValueError>(semio_framework_dsl_record::FieldValue::List(generations.take()))})?;record.insert(7,generations)?;c.step()?;Ok(record.take())
+   }Ok::<_,ValueError>(FieldValue::List(generations.take()))})?;record.insert(7,generations)?;c.step()?;Ok(record.take())
   })();result
  },control,native_owner)
 }

@@ -53,7 +53,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 pub use crate::mutations::LayoutMutation;
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
 impl protocol::OpBinary for LayoutMutation {

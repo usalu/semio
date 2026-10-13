@@ -31,4 +31,3 @@ impl store::ArtifactDsl for WavSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

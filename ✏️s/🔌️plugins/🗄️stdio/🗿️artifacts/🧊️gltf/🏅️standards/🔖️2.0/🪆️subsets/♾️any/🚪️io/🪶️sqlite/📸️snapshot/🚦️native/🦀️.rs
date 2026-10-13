@@ -1,11 +1,10 @@
 //! 🛬️ Adjacent GLTF input admission awaits the owning capability baseline.
 use super::*;
-use semio_framework_dsl_record::native_encoding::EncodedRecord;
 use semio_framework_value::NativeDecodeControl;
 use semio_framework_dsl_record::RecordSpecProducer;
 
 /// 📥️ Decodes through a supplied actual schema and typed owner constructor with cumulative settlement.
-pub(super) fn decode(payload:&store::io::IoPayload,spec:RecordSpecProducer,reconstruct:impl FnOnce(&semio_framework_dsl_record::RecordValue,&mut NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>{
+pub(super) fn decode(payload:&store::io::IoPayload,spec:RecordSpecProducer,reconstruct:impl FnOnce(&semio_framework_dsl_record::RecordValue,&mut NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<GltfSnapshot,ValueError>{
  let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;let length=match payload{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};if length>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"GLTF native input exceeds file byte limit"))}
  let snapshot=control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
   let native_before=native_control.owned_bytes();

@@ -26,7 +26,7 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
         Ok(match base.doc.declaration.as_ref() {
-            Some(declaration) => vec![XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: declaration.standalone })],
+            Some(declaration) => vec![XmlValidMutation::SetStandalone(SetStandalone { standalone: declaration.standalone })],
             None => Vec::new(),
         })
     }

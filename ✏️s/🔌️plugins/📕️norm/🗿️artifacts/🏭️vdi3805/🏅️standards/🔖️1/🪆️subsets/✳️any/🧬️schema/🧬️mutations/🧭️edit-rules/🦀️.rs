@@ -1,6 +1,6 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the Vdi3805 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
 use super::Vdi3805Mutation;
 use crate::Vdi3805Snapshot;
 

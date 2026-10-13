@@ -559,6 +559,7 @@ fn validate_value_at_depth(value: &DslValue, path: &str, depth: usize) -> Result
     }
 }
 
+/// 🟰️ Whether two snapshot values denote the same JSON document: object members are unordered, integral numbers equal their exact float, and an octet string equals the JSON array of its octets (the only form JSON can spell it in).
 fn values_equivalent(left: &DslValue, right: &DslValue) -> bool {
     match (left, right) {
         (DslValue::Object(left), DslValue::Object(right)) => {
@@ -577,6 +578,9 @@ fn values_equivalent(left: &DslValue, right: &DslValue) -> bool {
             }
         }
         (DslValue::Array(left), DslValue::Array(right)) => left.len() == right.len() && left.iter().zip(right).all(|(left, right)| values_equivalent(left, right)),
+        (DslValue::Bytes(bytes), DslValue::Array(items)) | (DslValue::Array(items), DslValue::Bytes(bytes)) => {
+            bytes.len() == items.len() && bytes.iter().zip(items).all(|(byte, item)| values_equivalent(&DslValue::Number(semio_framework_value::Number::UInt(u64::from(*byte))), item))
+        }
         (DslValue::Number(semio_framework_value::Number::Float(float)), DslValue::Number(semio_framework_value::Number::UInt(integer))) | (DslValue::Number(semio_framework_value::Number::UInt(integer)), DslValue::Number(semio_framework_value::Number::Float(float))) => {
             *integer <= 9_007_199_254_740_991 && *float == *integer as f64
         }
@@ -1491,6 +1495,17 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
             ),+];
             proofs.extend($crate::editing::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema));
             proofs
+        }
+    };
+}
+
+
+/// 📤️ Declares the document lane's one-item publication authority of a snapshot editor: the generic mutation-apply factory every snapshot edit publishes through, without which each such route fails closed with `interactive-job.publication-authority-missing`.
+#[macro_export]
+macro_rules! snapshot_editing_publication_authority {
+    () => {
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+            Some(semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
         }
     };
 }

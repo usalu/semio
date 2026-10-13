@@ -17,7 +17,7 @@ pub struct SetFrameUserInput {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-user-input", kind: "set-frame-user-input", record: "SetFrameUserInput" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, user_input } = self;
         protocol::MutationOutcome::new({
             let d = GifFrameDiff { user_input: Some(*user_input), ..Default::default() };
@@ -27,7 +27,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameUserInput {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.frames.get(*index) {
-            Some(f) => vec![GifMutation::SetFrameUserInput(set_frame_user_input::SetFrameUserInput { index: *index, user_input: f.user_input })],
+            Some(f) => vec![GifMutation::SetFrameUserInput(SetFrameUserInput { index: *index, user_input: f.user_input })],
             None => Vec::new(),
         })
     }

@@ -298,9 +298,9 @@ pub mod types {
         }
 
         /// 🎨️ Applies a typed overlay to the centralized default palette.
-        pub fn apply_overlay(&mut self, overlay:&crate::infinite::board::BoardPaletteOverlay) {
+        pub fn apply_overlay(&mut self, overlay:&infinite::board::BoardPaletteOverlay) {
             let defaults=Self::default();
-            let base=crate::infinite::board::BoardPalette {
+            let base=infinite::board::BoardPalette {
                 raster_clear:{let c=defaults.raster_clear.to_rgba8();[c.r,c.g,c.b,c.a]},
                 grid_minor_stroke:{let c=defaults.grid_minor_stroke.to_rgba8();[c.r,c.g,c.b,c.a]},
                 edge_stroke:{let c=defaults.edge_stroke.to_rgba8();[c.r,c.g,c.b,c.a]},
@@ -350,7 +350,7 @@ pub mod types {
                 minimap_widget_viewport_stroke:{let c=defaults.minimap_widget_viewport_stroke.to_rgba8();[c.r,c.g,c.b,c.a]},
                 minimap_widget_viewport_stroke_hovered:{let c=defaults.minimap_widget_viewport_stroke_hovered.to_rgba8();[c.r,c.g,c.b,c.a]},
             };
-            let next=crate::infinite::board::schema::palette::apply_board_palette_overlay(&base,overlay);
+            let next=infinite::board::schema::palette::apply_board_palette_overlay(&base,overlay);
             *self=Self {
                 raster_clear:{let c=next.raster_clear;Color::from_rgba8(c[0],c[1],c[2],c[3])},
                 grid_minor_stroke:{let c=next.grid_minor_stroke;Color::from_rgba8(c[0],c[1],c[2],c[3])},
@@ -612,7 +612,7 @@ pub mod types {
             if let Some(owner)=self.image.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:deeper(owner.next_depth_demand()?)?})}
             let Some(source)=self.source.as_ref() else{return Ok(RetirementDemand::default())};
             if source.retirement_scene.get().is_some()||source.retirement_credited_bytes.get()!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"existing icon scene authority requires its original full receipt"))}
-            if self.cursor==ICON_PAINT_CACHE_CAPACITY{return Ok(RetirementDemand{release_bytes:std::mem::size_of::<[IconPaintSlot;ICON_PAINT_CACHE_CAPACITY]>(),depth:1,..Default::default()})}
+            if self.cursor==ICON_PAINT_CACHE_CAPACITY{return Ok(RetirementDemand{release_bytes:size_of::<[IconPaintSlot;ICON_PAINT_CACHE_CAPACITY]>(),depth:1,..Default::default()})}
             if matches!(source.cache.borrow().slots[self.cursor].value.as_ref().map(|value|&value.body),Some(CachedIconBody::Vector(_))){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original vector icon producer has not declared full scene retirement authority"))}
             Ok(RetirementDemand{depth:1,..Default::default()})
         }
@@ -637,12 +637,12 @@ pub mod types {
         fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demand(copy).ok().map(|demand|demand.capacity_bytes)}
         fn next_close_byte_demand(&self)->Option<usize>{self.demand(0).ok().map(|demand|demand.release_bytes)}
         fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.demand(0)?.depth)}
-        fn terminal_release_bytes(&self)->Option<usize>{self.terminal().then_some(std::mem::size_of::<Self>())}
+        fn terminal_release_bytes(&self)->Option<usize>{self.terminal().then_some(size_of::<Self>())}
     }
     impl Drop for IconOwnedRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"original icon cache abandoned before physical retirement");if self.terminal(){unsafe{ManuallyDrop::drop(&mut self.source)}}}}
     impl semio_framework_value::retirement::RetireOwned for IconPaintCache {
         fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(IconOwnedRetirement{source:ManuallyDrop::new(Some(self)),key:None,image:None,metadata:None,cursor:0})}
-        fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<IconOwnedRetirement>())}
+        fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<IconOwnedRetirement>())}
         fn controlled_retirement_supported()->bool{true}
     }
 

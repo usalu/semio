@@ -41,7 +41,7 @@ pub fn inverse(p: &GltfMoveNodeChildPayload, base: &GltfSnapshot) -> Vec<super::
     let Some(index) = base.document.nodes[p.parent].children.iter().position(|child| *child == p.child) else {
         return Vec::new();
     };
-    vec![super::move_node_child::mutation(super::move_node_child::GltfMoveNodeChildPayload { parent: p.parent, child: p.child, position: index })]
+    vec![mutation(GltfMoveNodeChildPayload { parent: p.parent, child: p.child, position: index })]
 }
 
 //#region 🧬️DirectMutation
@@ -61,7 +61,7 @@ pub fn mutation(payload: GltfMoveNodeChildPayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeChildMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "node-child", kind: "move-node-child", record: "MovedNodeChild" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

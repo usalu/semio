@@ -9,7 +9,7 @@ async fn package_descriptor_lists_its_io_mechanism_rows_with_their_native_side()
     const NATIVE: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-io.native", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
     const FOREIGN: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-io-foreign.format", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
     #[allow(clippy::unnecessary_wraps, reason = "IoEntry test doubles implement its fallible function-pointer contract")]
-    fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
+    fn passthrough(payload: &IoPayload, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         Ok(IoOutcome::clean(payload.clone()))
     }
     static ENTRIES: [IoEntry; 2] = [

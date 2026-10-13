@@ -50,4 +50,3 @@ impl store::ArtifactDsl for DeflateSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

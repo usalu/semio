@@ -67,11 +67,11 @@ plugin-root = ["semio-framework-plugin/component-guest"]
 
 [dependencies]
 # 🧩️ Composition Dependencies
-semio-s-artifact-stdio-gltf = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-obj = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-stl = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-ply = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-las = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-stdio-ply = { workspace = true }
+semio-s-artifact-stdio-las = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }

@@ -1,19 +1,9 @@
 //! 📢️ Writer field updates construct preserved text incrementally under Store ownership.
 
-use super::{WriterEditorSelection, WriterMainWindowTransient, WriterMainWindowTransientMutation};
-use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::RetireOwned, ValueError, ValueRefusalKind};
+use super::{WriterMainWindowTransient, WriterMainWindowTransientMutation};
+use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, ValueError, ValueRefusalKind};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{ArtifactEphemeralPreparationTask, ArtifactEphemeralPreparationTaskStep, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ErasedSnapshotRetirement};
-
-impl RetireOwned for WriterEditorSelection {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::retirement::leaf((self.start, self.end, self.splice)) }
-}
-
-impl RetireOwned for WriterMainWindowTransient {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::sequence(vec![self.editor_selection.retirement(), self.lint_generation.retirement(), self.engagement_input.retirement()])
-    }
-}
 
 fn footprint(mutation: &WriterMainWindowTransientMutation) -> Result<ArtifactStoreOneItemFootprint, String> {
     let capacity = match mutation { WriterMainWindowTransientMutation::SetEngagementInput(value) => value.value.capacity(), _ => 0 };

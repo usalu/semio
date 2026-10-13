@@ -14,7 +14,7 @@ impl<P, M: Mutation<P>> EditReplay<P, M> {
 
 fn unsupported(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::UnsupportedOwner, message) }
 fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "raw replay original child depth overflow"))?; Ok(demand) }
-fn birth<T>() -> RetirementDemand { RetirementDemand { capacity_bytes: std::mem::size_of::<T>(), depth: 2, ..Default::default() } }
+fn birth<T>() -> RetirementDemand { RetirementDemand { capacity_bytes: size_of::<T>(), depth: 2, ..Default::default() } }
 fn typed_birth<T: semio_framework_value::retirement::RetireOwned>() -> Result<RetirementDemand, ValueError> { if !T::controlled_retirement_supported() { return Err(unsupported("raw replay native metadata has no controlled retirement authority")); } Ok(birth::<ControlledRetirement<T>>()) }
 fn admit_typed<T: semio_framework_value::retirement::RetireOwned + Default + Send + 'static>(original: &mut T, slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
     typed_birth::<T>()?;
@@ -48,10 +48,10 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         if !s.drafts.terminal_is_empty() { return typed_birth::<protocol::HistoryInputDrafts>(); }
         if !s.unit_flags.terminal_is_empty() { return typed_birth::<protocol::HistoryFoldIndex<([u8; 32], usize), bool>>(); }
         if s.replayed.capacity() != 0 { return Ok(birth::<crate::os_spr::command::EditMessageLedgerRetirement>()); }
-        let release = if s.rebased_inverse.capacity() != 0 { s.rebased_inverse.capacity() * std::mem::size_of::<(String, semio_framework_value::list::PagedList<M, {usize::MAX}>)>() }
-        else if s.outcomes.capacity() != 0 { s.outcomes.capacity() * std::mem::size_of::<protocol::MutationReplayOutcome>() }
-        else if s.recorded.capacity() != 0 { s.recorded.capacity() * std::mem::size_of::<(usize, Arc<P>)>() }
-        else if let Some(owner) = s.convergence.as_ref() { owner.checkpoints.capacity() * std::mem::size_of::<(usize, Arc<P>)>() } else { 0 };
+        let release = if s.rebased_inverse.capacity() != 0 { s.rebased_inverse.capacity() * size_of::<(String, semio_framework_value::list::PagedList<M, {usize::MAX}>)>() }
+        else if s.outcomes.capacity() != 0 { s.outcomes.capacity() * size_of::<protocol::MutationReplayOutcome>() }
+        else if s.recorded.capacity() != 0 { s.recorded.capacity() * size_of::<(usize, Arc<P>)>() }
+        else if let Some(owner) = s.convergence.as_ref() { owner.checkpoints.capacity() * size_of::<(usize, Arc<P>)>() } else { 0 };
         if release != 0 || s.convergence.is_some() { return Ok(RetirementDemand { release_bytes: release, depth: 1, ..Default::default() }); }
         if s.operation_preparation_factory.is_some() || s.replay_retirement_factory.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         Ok(Default::default())

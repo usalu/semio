@@ -89,9 +89,9 @@ use std::collections::BTreeMap;
 
 
 }
-pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use snapshot_wire_codec::*;
 
-crate::impl_norm_artifact_record!(@text crate::Iso16757Snapshot, extension="iso16757", envelope_id="norm.iso16757");
+crate::impl_norm_artifact_record!(@text Iso16757Snapshot, extension="iso16757", envelope_id="norm.iso16757");
 
 use crate::{CatalogueId,CatalogueValue,part_5::PartNumberRule};
 

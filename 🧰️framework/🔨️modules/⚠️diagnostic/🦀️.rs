@@ -8,7 +8,7 @@ pub(crate) mod controlled;
 
 //#region 🔖️Errors
 /// 🚧️ Span-carrying parse/print failure — the one error type every DSL surface returns.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct TextError {
     pub kind: ValueRefusalKind,
     pub message: String,
@@ -42,22 +42,22 @@ impl FromValue for TextError {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for TextError, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for TextError, found {other:?}"))),
         };
         let find = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot.clone());
         let kind = match find("kind") { Some(value) => controlled::refusal_kind(&value)?, None => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "missing TextError.kind")) };
         let message = match find("message") {
             Some(DslValue::String(text)) => text,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for TextError.message, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string for TextError.message, found {other:?}"))),
         };
         let span = match find("span") {
             Some(slot) => TextSpan::from_value(slot)?,
-            None => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing TextError.span")),
+            None => return Err(ValueError::new(ValueRefusalKind::InvalidValue, "missing TextError.span")),
         };
         let expected = match find("expected") {
             None | Some(DslValue::Null) => None,
             Some(DslValue::String(text)) => Some(text),
-            Some(other) => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for TextError.expected, found {other:?}"))),
+            Some(other) => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string for TextError.expected, found {other:?}"))),
         };
         Ok(TextError { kind, message, span, expected })
     }
@@ -110,7 +110,7 @@ impl FromValue for FaultCode {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::String(s) => Ok(FaultCode(s)),
-            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for FaultCode, found {other:?}"))),
+            other => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string for FaultCode, found {other:?}"))),
         }
     }
 }
@@ -167,9 +167,9 @@ impl FromValue for Severity {
                 "warning" => Ok(Severity::Warning),
                 "error" => Ok(Severity::Error),
                 "fatal" => Ok(Severity::Fatal),
-                other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown Severity variant `{other}`"))),
+                other => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("unknown Severity variant `{other}`"))),
             },
-            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+            other => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -240,7 +240,7 @@ impl FromValue for ExpectedSet {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for ExpectedSet, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for ExpectedSet, found {other:?}"))),
         };
         let strings = |key: &str| -> Result<Vec<String>, ValueError> {
             match entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot) {
@@ -249,10 +249,10 @@ impl FromValue for ExpectedSet {
                     .iter()
                     .map(|item| match item {
                         DslValue::String(text) => Ok(text.clone()),
-                        other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string in ExpectedSet.{key}, found {other:?}"))),
+                        other => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string in ExpectedSet.{key}, found {other:?}"))),
                     })
                     .collect(),
-                Some(other) => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array for ExpectedSet.{key}, found {other:?}"))),
+                Some(other) => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an array for ExpectedSet.{key}, found {other:?}"))),
             }
         };
         Ok(ExpectedSet { tokens: strings("tokens")?, keywords: strings("keywords")?, keys: strings("keys")? })
@@ -313,15 +313,15 @@ impl FromValue for Diagnostic {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for Diagnostic, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for Diagnostic, found {other:?}"))),
         };
         let find = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot.clone());
         let required = |key: &str| -> Result<DslValue, ValueError> {
-            find(key).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("missing Diagnostic.{key}")))
+            find(key).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, format!("missing Diagnostic.{key}")))
         };
         let message = match required("message")? {
             DslValue::String(text) => text,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for Diagnostic.message, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string for Diagnostic.message, found {other:?}"))),
         };
         Ok(Diagnostic {
             code: FaultCode::from_value(required("code")?)?,
@@ -443,9 +443,9 @@ impl FromValue for FaultOrigin {
                 "app" => Ok(FaultOrigin::App),
                 "extension" => Ok(FaultOrigin::Extension),
                 "framework" => Ok(FaultOrigin::Framework),
-                other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown FaultOrigin variant `{other}`"))),
+                other => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("unknown FaultOrigin variant `{other}`"))),
             },
-            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+            other => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -476,13 +476,13 @@ impl FromValue for FaultScope {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for FaultScope, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for FaultScope, found {other:?}"))),
         };
         let take = |key: &str| -> Result<Option<String>, ValueError> {
             match entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot) {
                 None | Some(DslValue::Null) => Ok(None),
                 Some(DslValue::String(text)) => Ok(Some(text.clone())),
-                Some(other) => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for FaultScope.{key}, found {other:?}"))),
+                Some(other) => Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string for FaultScope.{key}, found {other:?}"))),
             }
         };
         Ok(FaultScope {
@@ -512,12 +512,12 @@ impl FromValue for FaultCause {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for FaultCause, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for FaultCause, found {other:?}"))),
         };
         let find = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot.clone());
         let message = match find("message") {
             Some(DslValue::String(text)) => text,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for FaultCause.message, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string for FaultCause.message, found {other:?}"))),
         };
         let code = match find("code") {
             None | Some(DslValue::Null) => None,
@@ -581,15 +581,15 @@ impl FromValue for Fault {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {
             DslValue::Object(entries) => entries,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for Fault, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for Fault, found {other:?}"))),
         };
         let find = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, slot)| slot.clone());
         let required = |key: &str| -> Result<DslValue, ValueError> {
-            find(key).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("missing Fault.{key}")))
+            find(key).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, format!("missing Fault.{key}")))
         };
         let message = match required("message")? {
             DslValue::String(text) => text,
-            other => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for Fault.message, found {other:?}"))),
+            other => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a string for Fault.message, found {other:?}"))),
         };
         Ok(Fault {
             retained_progress:semio_framework_value::RetainedCloneProgress::from_value(required("retainedProgress")?)?,
@@ -608,7 +608,7 @@ impl FromValue for Fault {
             causes: match find("causes") {
                 None | Some(DslValue::Null) => Vec::new(),
                 Some(DslValue::Array(items)) => items.into_iter().map(FaultCause::from_value).collect::<Result<_, _>>()?,
-                Some(other) => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array for Fault.causes, found {other:?}"))),
+                Some(other) => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an array for Fault.causes, found {other:?}"))),
             },
             params: match find("params") {
                 None | Some(DslValue::Null) => None,
@@ -617,7 +617,7 @@ impl FromValue for Fault {
             retryable: match find("retryable") {
                 None | Some(DslValue::Null) => false,
                 Some(DslValue::Bool(flag)) => flag,
-                Some(other) => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a bool for Fault.retryable, found {other:?}"))),
+                Some(other) => return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected a bool for Fault.retryable, found {other:?}"))),
             },
         })
     }

@@ -25,11 +25,10 @@ pub struct RasterSceneInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub
 #[derive(Clone,Debug)]
 pub struct RasterSceneProgress {pub phase:&'static str,pub nodes:usize,pub total_nodes:usize,pub pixels:usize,pub assets:usize,pub total_assets:usize,pub source_bytes:usize,pub admitted_images:usize,pub work:u64,pub done:bool}
 use crate::schema::geometry::{arc_geometry,raster::{PathRasterJob,PathRasterInput,PathRasterRetirement}};
-use semio_framework_pixels::{editing::{validate_extent,validate_image},compositing::{CompositeJob,CompositeRetirement,CompositeInput,CompositeLayer,CompositeContent,CompositeBlend}};
+use semio_framework_pixels::{editing::{validate_extent,validate_image},compositing::{CompositeJob,CompositeRetirement,CompositeLayer,CompositeContent,CompositeBlend}};
 use std::collections::VecDeque;
 use semio_framework_pixels::retirement::RasterLease;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement};
-use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 const IDENTITY:[f64;6]=[1.0,0.0,0.0,1.0,0.0,0.0];
 #[derive(semio_framework_value::RetireOwned)]
 struct SceneTable<T:RetireOwned>(Vec<(String,T)>);
@@ -192,7 +191,7 @@ impl RasterSceneJob {
      let image=Arc::clone(image);self.image(image,false)?;
     },
     RasterSceneContent::Image{asset,width,height}=>{let key=asset.clone();let (width,height)=(*width,*height);self.prepare_image(&key,width,height)?;},
-    RasterSceneContent::Path{segments,fill_rule,fill,stroke}=>{
+    RasterSceneContent::Path{segments,fill_rule: _,fill: _,stroke: _}=>{
      if segments.len()>65536{return Err(invalid("Scene path exceeds segment budget"));}
      self.segment=0;self.from=[0.0;2];self.start=[0.0;2];self.contour=false;self.bounds=[f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY];self.phase="bounds";
     },

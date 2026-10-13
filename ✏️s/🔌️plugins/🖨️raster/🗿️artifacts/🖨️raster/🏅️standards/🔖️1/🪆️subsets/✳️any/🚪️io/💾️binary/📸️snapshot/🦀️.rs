@@ -53,4 +53,4 @@ impl store::ArtifactPack for RasterSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

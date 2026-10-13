@@ -9,7 +9,8 @@ use crate::FlowSnapshot;
 
 //#region 🔖️Aggregate
 /// 🕳️ The uninhabited parent vocabulary of a document whose whole content is its composed child.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum FlowMutation {}
 
 impl protocol::Mutation<FlowSnapshot> for FlowMutation {

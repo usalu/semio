@@ -1,6 +1,5 @@
 //! 📊️ Native JSON inference table projection.
 use std::collections::BTreeMap;
-use crate::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, METRICS};
 
 /// 📏️ The canonical JSON table `storey → measure → value` the plan oracle compares.

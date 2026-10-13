@@ -33,7 +33,7 @@ mod native_codec {
 use super::*;
 use crate::standards::v1::subsets::any::io::text::mutations::{RasterMutationDsl,raster_mutation_to_dsl,raster_mutation_from_dsl};
 
-impl protocol::OpBinary for RasterMutationDsl {
+impl OpBinary for RasterMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
     }
@@ -42,7 +42,7 @@ impl protocol::OpBinary for RasterMutationDsl {
     }
 }
 
-impl protocol::OpBinary for RasterMutation {
+impl OpBinary for RasterMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         raster_mutation_to_dsl(self).encode_op()
     }

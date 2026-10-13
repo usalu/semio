@@ -183,7 +183,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<PlaygroundSnapshot, Playgroun
     }
 
     fn begin_demand(&self, _mutation: &PlaygroundMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<PlaygroundStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<PlaygroundStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation, PlaygroundMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<PlaygroundSnapshot, PlaygroundMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<PlaygroundSnapshot, PlaygroundMutation, PlaygroundMutation>)> {

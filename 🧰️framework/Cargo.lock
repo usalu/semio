@@ -3895,7 +3895,6 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
- "serde",
  "serde_json",
  "tiny-skia",
  "ttf-parser",

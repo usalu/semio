@@ -11,11 +11,12 @@ pub struct Entry {
 }
 
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v1_2::subsets::any::io::text::mutations::change_gamma::CODEC,
-    crate::standards::v1_2::subsets::any::io::text::mutations::patch_pixels::CODEC,
-    crate::standards::v1_2::subsets::any::io::text::mutations::paint_native_samples::CODEC,
-    crate::standards::v1_2::subsets::any::io::text::mutations::set_gamma::CODEC,
-    crate::standards::v1_2::subsets::any::io::text::mutations::replace_samples::CODEC,
+    change_gamma::CODEC,
+    patch_pixels::CODEC,
+    paint_native_samples::CODEC,
+    set_gamma::CODEC,
+    replace_samples::CODEC,
+    replace_image::CODEC,
 ];
 
 impl protocol::OpText for PngMutation {
@@ -44,3 +45,6 @@ pub mod set_gamma;
 
 #[path = "🧩️replace-samples/🦀️.rs"]
 pub mod replace_samples;
+
+#[path = "🔄️replace-image/🦀️.rs"]
+pub mod replace_image;

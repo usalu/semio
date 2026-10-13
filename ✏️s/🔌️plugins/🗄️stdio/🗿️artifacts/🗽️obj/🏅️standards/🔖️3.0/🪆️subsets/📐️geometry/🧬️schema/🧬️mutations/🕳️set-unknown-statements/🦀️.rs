@@ -21,12 +21,12 @@ pub struct SetUnknownStatements {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetUnknownStatements {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "unknown-statements", kind: "set-unknown-statements", record: "SetUnknownStatements" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { unknown_statements } = self;
         protocol::MutationOutcome::new(diff_set_unknown_statements(unknown_statements.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-        Ok(vec![ObjMutation::SetUnknownStatements(set_unknown_statements::SetUnknownStatements { unknown_statements: base.unknown_statements.clone() })])
+        Ok(vec![ObjMutation::SetUnknownStatements(SetUnknownStatements { unknown_statements: base.unknown_statements.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set unknown statements", "Unbekannte Anweisungen setzen")

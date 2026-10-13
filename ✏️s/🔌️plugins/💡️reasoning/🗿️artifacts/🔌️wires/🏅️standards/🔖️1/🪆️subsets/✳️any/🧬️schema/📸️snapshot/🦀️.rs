@@ -11,7 +11,9 @@
 //! schema derive, per design.md rule 3 ("🧬️schema keeps types + pure transforms").
 
 use crate::WiresContentChild;
+use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, shared::SharedControlledRetirement, RetireOwned, RetirementCursor};
 use semio_framework_value::DslValue;
+use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -31,3 +33,17 @@ pub struct WiresSnapshot {
 
 //#endregion 🔖️Snapshot
 
+type ContentOwner = Option<SharedControlledRetirement<SemioGraphSnapshot>>;
+
+/// ♻️ The board content child retires as a lease of its materialized graph, so the last alias pays the graph's release in paid turns and the others only drop their count.
+impl RetireOwned for WiresSnapshot {
+    fn retirement(mut self) -> Box<dyn RetirementCursor> {
+        let content_owner: ContentOwner = self.content.take_local_owner::<SemioGraphSnapshot>().ok().flatten().map(SharedControlledRetirement::lease);
+        let Self { wires_snapshot, content, meta } = self;
+        sequence(vec![deferred(wires_snapshot), deferred(content), deferred(meta), deferred(content_owner)])
+    }
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        sequence_birth_bytes(&[deferred_birth_bytes_for(&self.wires_snapshot), deferred_birth_bytes_for(&self.content), deferred_birth_bytes_for(&self.meta), deferred_birth_bytes::<ContentOwner>()])
+    }
+    fn controlled_retirement_supported() -> bool { <ContentOwner as RetireOwned>::controlled_retirement_supported() }
+}

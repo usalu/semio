@@ -95,11 +95,11 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> RetirementCursor for TypedOwner<V,R> {
         }
     }
     fn terminal_is_empty(&self)->bool{self.root.is_empty()&&self.payload.is_none()}
-    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.payload.as_ref().map_or_else(||Ok(self.root.copy_demand()),ControlledRetirement::next_copy_byte_demand)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.payload.as_ref().map_or_else(||Ok(self.root.copy_demand()),ControlledRetirement::next_copy_byte_demand)}
     fn next_close_byte_demand(&self)->Option<usize>{self.payload.as_ref().map_or_else(||self.root.release_demand().ok(),|owner|owner.next_release_byte_demand().ok())}
     fn next_birth_bytes(&self,maximum_bytes:usize)->Option<usize>{self.payload.as_ref().map_or(Some(0),|owner|owner.next_capacity_byte_demand(maximum_bytes).ok())}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.payload.as_ref().map_or(Ok(self.root.depth_demand()),|owner|self.root.retained_depth().checked_add(owner.next_depth_demand()?).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered nested retirement depth overflow")))}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl<V:RetireOwned+Sync,R:RootOwner<V>> Drop for TypedOwner<V,R> {
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"ordered typed retirement abandoned before terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.payload);}}}
@@ -107,31 +107,31 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> Drop for TypedOwner<V,R> {
 
 impl<V:RetireOwned+Sync> RetireOwned for OrderedMap<V> {
     fn retirement(self)->Box<dyn RetirementCursor>{Box::new(TypedOwner::<V,Retirement<V>>::new(self.retire()))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<TypedOwner<V,Retirement<V>>>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<V,Retirement<V>>>())}
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
 impl<V:RetireOwned+Sync> RetireOwned for SharedOwner<V> {
     fn retirement(self)->Box<dyn RetirementCursor>{Box::new(TypedOwner::<V,SharedRoot<V>>::new(SharedRoot {owner:self,value:ManuallyDrop::new(None)}))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<TypedOwner<V,SharedRoot<V>>>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<V,SharedRoot<V>>>())}
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
 impl RetireOwned for super::OrderedSet {
     fn retirement(self)->Box<dyn RetirementCursor>{self.retire().retirement()}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<TypedOwner<(),Retirement<()>>>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<(),Retirement<()>>>())}
     fn controlled_retirement_supported()->bool{true}
 }
 impl<V:RetireOwned+Sync> RetireOwned for Retirement<V> {
     fn retirement(self)->Box<dyn RetirementCursor>{Box::new(TypedOwner::<V,Retirement<V>>::new(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<TypedOwner<V,Retirement<V>>>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<V,Retirement<V>>>())}
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
 impl<V:RetireOwned+Sync> RetireOwned for UpdateCursor<V> {
     fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(TypedOwner::<V,UpdateCursor<V>>::new(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<TypedOwner<V,UpdateCursor<V>>>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<V,UpdateCursor<V>>>())}
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
 impl<V:RetireOwned+Sync> RetireOwned for LookupCursor<V> {
     fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(TypedOwner::<V,LookupCursor<V>>::new(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<TypedOwner<V,LookupCursor<V>>>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<V,LookupCursor<V>>>())}
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }

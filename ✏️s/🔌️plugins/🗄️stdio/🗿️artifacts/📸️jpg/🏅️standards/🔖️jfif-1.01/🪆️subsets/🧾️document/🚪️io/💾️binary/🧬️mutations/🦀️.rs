@@ -13,11 +13,11 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<JpgMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::change_jfif_header::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::insert_other_segment::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::remove_other_segment::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_pixels::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_image::CODEC,
+    change_jfif_header::CODEC,
+    insert_other_segment::CODEC,
+    remove_other_segment::CODEC,
+    replace_pixels::CODEC,
+    replace_image::CODEC,
 ];
 //#endregion Registry
 

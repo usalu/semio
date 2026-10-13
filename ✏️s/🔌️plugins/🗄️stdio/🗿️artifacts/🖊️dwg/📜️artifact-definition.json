@@ -138,6 +138,17 @@
       ]
     },
     {
+      "id": "s.stdio.dwg.composer.dialect-s-stdio-dwg-ac1018.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.dwg@ac1018/*",
+      "claims": [
+        {
+          "namespace": "dialect",
+          "value": "s.stdio.dwg@ac1018/*"
+        }
+      ]
+    },
+    {
       "id": "s.stdio.dwg.composer.dialect-s-stdio-dwg-ac1024.v1",
       "category": "composer",
       "descriptor": "runtime-capability:composer:dialect:s.stdio.dwg@ac1024/*",

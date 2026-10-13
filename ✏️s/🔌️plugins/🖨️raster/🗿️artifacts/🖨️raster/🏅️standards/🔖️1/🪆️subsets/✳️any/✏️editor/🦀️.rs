@@ -618,7 +618,7 @@ fn raster_preparation_nested(mut demand: RasterRetirementDemand) -> Result<Raste
 }
 
 fn raster_preparation_factory_demand() -> RasterRetirementDemand {
-    RasterRetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }
+    RasterRetirementDemand { copy_bytes: size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }
 }
 
 /// 📬️ The document lane's one-item retained preparation. Without it every route declaring
@@ -686,7 +686,7 @@ impl RasterStorePreparation {
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutation> for RasterStorePreparationFactory {
-    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<RasterMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<RasterMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<RasterMutation>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<RasterMutation>>, RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
@@ -701,14 +701,14 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutatio
         if lane != store::HistoryLane::Document {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Raster Store preparation has no admissible lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<RasterStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<RasterStorePreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation, RasterMutation>,
         grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation, RasterMutation>)> {
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation, RasterMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         let item_count = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
@@ -807,7 +807,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
         let empty = RetainedCloneProgress::default();
         let grant = grant.retained_grant();
@@ -1233,7 +1233,7 @@ pub struct RasterPlayApp;
 
 impl ArtifactEditor for RasterPlayApp {
     /// 📢️ The localized notices of the raster tool refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         paint_stroke::raster_fault_notices()
     }
 
@@ -1662,7 +1662,7 @@ pub fn create_raster_app() -> AppDefinition {
             // harmless duplicate registration (registry dedupes by id).
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.image".into(),
-                label: semio_framework_ui_locale::LocalizedLabel::native("2D Image", "2D-Bild"),
+                label: LocalizedLabel::native("2D Image", "2D-Bild"),
                 source_format: "2d.image".into(),
                 component_kind: "image".into(),
                 dimension: "2d".into(),

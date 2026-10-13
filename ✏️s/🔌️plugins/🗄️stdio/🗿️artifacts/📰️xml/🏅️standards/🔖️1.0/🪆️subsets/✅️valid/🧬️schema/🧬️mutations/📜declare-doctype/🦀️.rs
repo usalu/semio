@@ -28,7 +28,7 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
         Ok(match base.doc.doctype.as_ref() {
-            Some(doctype) => vec![XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: doctype.external_id.clone() })],
+            Some(doctype) => vec![XmlValidMutation::DeclareDoctype(DeclareDoctype { external_id: doctype.external_id.clone() })],
             None => Vec::new(),
         })
     }

@@ -17,4 +17,3 @@ impl protocol::OpBinary for DagMutation {
     }
 }
 }
-pub use mutations_codec::*;

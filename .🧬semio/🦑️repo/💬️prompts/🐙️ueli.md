@@ -709,7 +709,7 @@ Make sure that it properly uses mutations that exclusively use declarative diffs
 
 ---
 
-/goal All mutations must return a declarative concrete diff that achieves and not mutate state directly. All mutations must return a list of mutations that inverts the mutation. Those mutations each return diffs that in summation is the negative diff to the diff return of the mutation itself. It must be impossible by design that mutations directly mutate a snapshot. All mutations must be indirect over the diff which is applied centrally.
+/goal All artifact state changes must be managed over an event-sourced mutation system. All mutations must return a declarative concrete diff that achieves and not mutate state directly. All mutations must return a list of mutations that inverts the mutation. Those mutations each return diffs that in summation is the negative diff to the diff return of the mutation itself. It must be impossible by design that mutations directly mutate a snapshot. All mutations must be indirect over the diff which is applied centrally.
 For all artifacts, for all plugins.
 Everything end to end.
 

@@ -2,7 +2,7 @@
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKind};
 
 pub(super) fn owned_vec<T>(count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<T>,ValueError>{
-    control.admit_allocation_bytes(count.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"TIFF construction backing overflow"))?)?;
+    control.admit_allocation_bytes(count.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"TIFF construction backing overflow"))?)?;
     let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"TIFF construction allocation failed"))?;Ok(output)
 }
 pub(super) fn copy_blob(control:&mut SqliteSnapshotControl<'_>,value:&[u8])->Result<Vec<u8>,ValueError>{control.admit_allocation_bytes(value.len())?;super::reconstruct_blob(control,value)}

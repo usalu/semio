@@ -70,13 +70,13 @@ fn sqlite_snapshot_gltf_independent_sql_reserialization_preserves_ieee_words_uns
     for bits in words() {
         let snapshot = word_snapshot(bits);
         let limits = SqliteDatabaseLimits::default();
-        let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         let database = independent(&expected, "SELECT 1");
-        let restored = GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let restored = GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         assert_eq!(restored.document.nodes[0].matrix.unwrap()[0].to_bits(), bits);
         assert_eq!(restored.document.nodes[0].mesh, Some(usize::MAX));
         assert_eq!(restored.document.samplers[0].mag_filter, Some(u64::MAX));
-        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), expected);
+        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), expected);
     }
 }
 #[test]
@@ -87,10 +87,10 @@ fn sqlite_snapshot_gltf_erased_binary_and_text_preserve_every_owned_field() {
     for bits in words() {
         let snapshot = word_snapshot(bits);
         let limits = SqliteDatabaseLimits::default();
-        let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-            let payload = (codec.import)(&snapshot.schema, &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-            let restored = (codec.export)(&snapshot.schema, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
+            let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema, &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+            let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
             assert_eq!(restored, database);
         }
     }
@@ -99,10 +99,10 @@ fn sqlite_snapshot_gltf_erased_binary_and_text_preserve_every_owned_field() {
 fn sqlite_snapshot_gltf_rejects_independently_edited_ieee_conflict_and_unowned_relationship() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for sql in ["UPDATE gltf_material SET alpha_cutoff=0.75 WHERE id=1", "UPDATE gltf_primitive_attribute SET ordinal=4 WHERE id=1", "INSERT INTO gltf_scene_node VALUES(99,99,0,0,0)"] {
         let database = independent(&database, sql);
-        assert!(GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+        assert!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
     }
 }
 
@@ -115,7 +115,7 @@ fn sqlite_snapshot_gltf_exact_typed_guard_budget_and_cancellation() {
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase};
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for (artifact_kind, standard, subset) in [("s.stdio.gltf", "2.0", "*"), ("s.stdio.obj", "2.0", "*"), ("s.stdio.gltf", "1.0", "*"), ("s.stdio.gltf", "2.0", "camera")] {
         let dialect = ArtifactDialect { artifact_kind: artifact_kind.into(), standard: standard.into(), subset: subset.into() };
         assert_eq!(snapshot.validate_sqlite_snapshot_subset(&dialect, &database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_ok(), artifact_kind == "s.stdio.gltf" && standard == "2.0" && subset == "*");
@@ -133,8 +133,8 @@ fn sqlite_snapshot_gltf_exact_typed_guard_budget_and_cancellation() {
         assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| false, limits)).is_err());
     }
     let small = SqliteDatabaseLimits { max_rows: 1, ..limits };
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, small)).is_err());
-    assert!(GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| false, limits)).is_err());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,small)).is_err());
+    assert!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| false,limits)).is_err());
     let mut work = snapshot.clone();
     work.document.nodes = vec![GltfNode::default(); 600];
     let mut reached = false;
@@ -154,13 +154,13 @@ fn sqlite_snapshot_gltf_exact_typed_guard_budget_and_cancellation() {
 fn sqlite_snapshot_gltf_full_typed_document_and_independent_buffers_reconstruct() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(database.table("gltf_primitive").unwrap().rows.len(), 1);
     assert_eq!(database.table("gltf_accessor").unwrap().rows.len(), 3);
     assert_eq!(database.table("gltf_resolved_buffer").unwrap().rows.len(), 3);
     let bytes = export_sqlite_database(&database, limits, &mut |_| true).unwrap();
     let database = import_sqlite_database(&bytes, limits, &mut |_| true).unwrap();
-    let restored = GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let restored = GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(restored, snapshot);
 }
 
@@ -172,7 +172,7 @@ fn sqlite_snapshot_gltf_independent_sql_mesh_accessor_material_and_buffer_edits(
     };
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     let bytes = export_sqlite_database(&database, limits, &mut |_| true).unwrap();
     let script = r#"const {Database}=require('bun:sqlite');const db=Database.deserialize(await Bun.stdin.bytes());if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('invalid semantic database');const row=db.query('SELECT m.name AS mesh,a.semantic,ac.name AS accessor,mat.name AS material FROM gltf_mesh m JOIN gltf_primitive p ON p.mesh_id=m.id JOIN gltf_primitive_attribute a ON a.primitive_id=p.id JOIN gltf_accessor ac ON ac.ordinal=a.accessor_index_low JOIN gltf_material mat ON mat.ordinal=p.material_index_low WHERE a.ordinal=0').get();if(row.mesh!=='Mesh'||row.semantic!=='POSITION'||row.accessor!=='Positions'||row.material!=='Material')throw Error('semantic join mismatch');db.run("UPDATE gltf_material SET name='Edited material' WHERE id=1");db.run('UPDATE gltf_resolved_byte SET value=17 WHERE buffer_id=1 AND ordinal=1');process.stdout.write(db.serialize());db.close();"#;
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
@@ -180,7 +180,7 @@ fn sqlite_snapshot_gltf_independent_sql_mesh_accessor_material_and_buffer_edits(
     let output = child.wait_with_output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let database = import_sqlite_database(&output.stdout, limits, &mut |_| true).unwrap();
-    let restored = GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let restored = GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(restored.document.materials[0].name.as_deref(), Some("Edited material"));
     assert_eq!(restored.buffers[0], vec![0, 17, 1]);
     assert_eq!(restored.document.buffers[0].byte_length, 64);
@@ -198,11 +198,11 @@ fn sqlite_snapshot_gltf_actual_factory_exposes_owned_provider_and_structural_has
 fn sqlite_snapshot_gltf_empty_domain_tables_preserve_absence_and_present_empty_lists() {
     let mut snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🌱️minimal/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let limits = SqliteDatabaseLimits::default();
-    let before = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let before = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(before.tables.len(), 57);
     assert_eq!(before.table("gltf_accessor").unwrap().rows.len(), 0);
     let database = independent(&before, "SELECT 1");
-    assert_eq!(GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), snapshot);
+    assert_eq!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), snapshot);
     snapshot.document.accessors = vec![GltfAccessor {
         buffer_view: None,
         byte_offset: 0,
@@ -219,8 +219,8 @@ fn sqlite_snapshot_gltf_empty_domain_tables_preserve_absence_and_present_empty_l
     }];
     snapshot.document.extras = Some(GltfJson::Null);
     snapshot.buffers = vec![Vec::new()];
-    let database = independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), "SELECT 1");
-    let restored = GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), "SELECT 1");
+    let restored = GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(restored, snapshot);
     assert_eq!(restored.document.accessors[0].min, Some(Vec::new()));
     assert_eq!(restored.document.accessors[0].max, None);
@@ -242,12 +242,12 @@ fn sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_dept
     }
     snapshot.document.extras = Some(extras);
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     let codec = (crate::native_codecs()[0].codec)().snapshot_sqlite.expect("actual GLTF owned provider");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let payload = (codec.import)(&snapshot.schema, &dialect, database.clone(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-        let restored = (codec.export)(&snapshot.schema, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema, &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+        let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
         assert_eq!(restored, database);
     }
 }
@@ -271,13 +271,13 @@ fn sqlite_snapshot_gltf_flat_primitive_extras_keep_deep_ordered_members_and_ieee
         extras = GltfJson::Object(vec![("same".into(), extras), ("same".into(), GltfJson::Null)])
     }
     snapshot.document.meshes[0].primitives[0].extras = Some(extras);
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for payload in [semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))] {
         let restored = match payload {
             semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),
             semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),
         };
-        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), database);
+        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), database);
     }
 }
 
@@ -285,7 +285,7 @@ fn sqlite_snapshot_gltf_flat_primitive_extras_keep_deep_ordered_members_and_ieee
 fn sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_lists() {
     let snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🪹️empty-entities/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let limits = SqliteDatabaseLimits::default();
-    let database = independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), "SELECT 1");
+    let database = independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), "SELECT 1");
     assert_eq!(database.table("gltf_image").unwrap().rows.len(), 2);
     assert_eq!(database.table("gltf_texture").unwrap().rows.len(), 1);
     for payload in [semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))] {
@@ -294,7 +294,7 @@ fn sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_
             semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),
         };
         assert_eq!(restored, snapshot);
-        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), database);
+        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), database);
     }
 }
 
@@ -389,9 +389,9 @@ fn sqlite_snapshot_gltf_independent_bad_later_json_owner_retires_deep_completed_
             }
             snapshot.document.extras = Some(GltfJson::Object(vec![("completed deep sibling".into(), value), ("bad later scalar".into(), GltfJson::Bool(true))]));
             let limits = SqliteDatabaseLimits::default();
-            let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+            let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
             let database = independent(&expected, "UPDATE gltf_json_object_member SET value_id=(SELECT value_id FROM gltf_json_object_member WHERE name='completed deep sibling') WHERE name='bad later scalar'");
-            assert!(GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+            assert!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
             GltfSnapshot::retire_sqlite_snapshot(snapshot);
         })
         .unwrap()
@@ -412,9 +412,9 @@ fn sqlite_snapshot_gltf_independent_later_root_owner_failure_retires_completed_e
             snapshot.document.extensions = Some(value);
             snapshot.document.extras = None;
             let limits = SqliteDatabaseLimits::default();
-            let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+            let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
             let database = independent(&expected, "UPDATE gltf_document SET extras_id=extensions_id");
-            assert!(GltfSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+            assert!(GltfSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
             GltfSnapshot::retire_sqlite_snapshot(snapshot);
         })
         .unwrap()
@@ -445,11 +445,11 @@ fn sqlite_snapshot_gltf_curated_metabolism_pack_is_current_owned_logical_state()
 fn sqlite_snapshot_gltf_typed_guard_rejects_independently_changed_owned_state() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     let edited = independent(&database, "UPDATE gltf_material SET name='Different valid state' WHERE id=1");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     assert!(snapshot.validate_sqlite_snapshot_subset(&dialect, &edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err(), "typed guard must compare all owned state");
-    let restored = GltfSnapshot::from_sqlite_database(&edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let restored = GltfSnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert!(restored.validate_sqlite_snapshot_subset(&dialect, &edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_ok());
 }
 
@@ -457,7 +457,7 @@ fn sqlite_snapshot_gltf_typed_guard_rejects_independently_changed_owned_state() 
 fn sqlite_snapshot_gltf_typed_guard_accepts_independently_renumbered_surrogate() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     let edited = independent(&database, "UPDATE gltf_scene_node SET id=99 WHERE id=1");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     assert!(snapshot.validate_sqlite_snapshot_subset(&dialect, &edited, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_ok(), "surrogate row identity must not change typed state");
@@ -469,12 +469,12 @@ fn sqlite_snapshot_gltf_native_owned_decode_controls_physical_and_typed_material
     value.schema = "nondefault controlled GLTF schema".into();
     value.document.extras = Some(GltfJson::Array((0..600).map(|index| GltfJson::String(if index == 0 { "long semantic literal 世界".repeat(4096) } else { "child".into() })).collect()));
     let limits = SqliteDatabaseLimits { max_value_bytes: 128 * 1024 * 1024, ..SqliteDatabaseLimits::default() };
-    let expected = value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let expected = value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for payload in [store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value)), store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value))] {
-        let restored = GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), expected);
+        let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
+        assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), expected);
         GltfSnapshot::retire_sqlite_snapshot(restored);
-        assert!(GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_value_bytes: 4096, ..limits })).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_value_bytes: 4096, ..limits }), native_owner)).is_err());
         let mut interior = false;
         let mut progress = |event: store::sqlite_snapshot::SqliteSnapshotProgress| {
             if event.phase == store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative && event.completed >= 256 && event.completed < event.total {
@@ -484,7 +484,7 @@ fn sqlite_snapshot_gltf_native_owned_decode_controls_physical_and_typed_material
                 true
             }
         };
-        assert!(GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut progress, limits)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut progress, limits), native_owner)).is_err());
         assert!(interior, "must cancel inside known actual native work");
     }
     GltfSnapshot::retire_sqlite_snapshot(value);
@@ -496,17 +496,17 @@ fn sqlite_snapshot_gltf_genuine_native_output_preserves_paid_full_word_state() {
     let limits = SqliteDatabaseLimits::default();
     for word in words() {
         let snapshot = word_snapshot(word);
-        let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
             let mut events = Vec::new();
             let mut accept = |p| {
                 events.push(p);
                 true
             };
-            let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut accept, limits)).unwrap();
+            let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut accept, limits), native_owner)).unwrap();
             assert!(events.iter().any(|p| p.phase == SqliteSnapshotPhase::EncodeNative && p.total > 0 && p.completed == p.total));
-            let actual = GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-            assert_eq!(actual.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), expected);
+            let actual = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
+            assert_eq!(actual.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), expected);
             GltfSnapshot::retire_sqlite_snapshot(actual);
         }
         GltfSnapshot::retire_sqlite_snapshot(snapshot);
@@ -521,15 +521,15 @@ fn sqlite_snapshot_gltf_genuine_native_output_rejects_limits_and_cancels_during_
     snapshot.document.asset.generator = Some(work["textUnit"].as_str().unwrap().repeat(work["repeat"].as_u64().unwrap() as usize));
     let limits = SqliteDatabaseLimits::default();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
         assert!(match payload {
             store::io::IoPayload::Binary(v) => !v.is_empty(),
             store::io::IoPayload::Text(v) => !v.is_empty(),
         });
         for limits in [SqliteDatabaseLimits { max_value_bytes: work["refusedBytes"].as_u64().unwrap() as usize, ..limits }, SqliteDatabaseLimits { max_file_bytes: 1, ..limits }] {
-            assert!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+            assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).is_err());
         }
-        assert!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| false, limits)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| false, limits), native_owner)).is_err());
         let mut reached = false;
         let mut progress = |p: store::sqlite_snapshot::SqliteSnapshotProgress| {
             if p.phase == SqliteSnapshotPhase::EncodeNative && p.total >= 65536 && p.completed >= 65536 && p.completed < p.total {
@@ -539,7 +539,7 @@ fn sqlite_snapshot_gltf_genuine_native_output_rejects_limits_and_cancels_during_
                 true
             }
         };
-        assert!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut progress, limits)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut progress, limits), native_owner)).is_err());
         assert!(reached);
     }
     GltfSnapshot::retire_sqlite_snapshot(snapshot);

@@ -33,7 +33,7 @@ pub(crate) mod context {
     impl Drop for LowpolyApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0);
+                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -58,7 +58,7 @@ pub(crate) mod context {
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn app_with_registry() -> LowpolyApp {
-        let mut app = new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(INSTANCE).await;
         LowpolyApp(app)
     }
@@ -76,7 +76,7 @@ pub(crate) mod context {
     /// the snapshot a test reads next is the committed one.
     pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult {
         let verb = command.command_id().to_string();
-        let result = app.0.dispatch_typed(command, &action_meta()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+        let result = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
         settle(&mut app.0, &verb).await;
         result
     }
@@ -86,7 +86,7 @@ pub(crate) mod context {
     /// `undo`, `redo`) return an admission receipt; their tool job only lands through the reserved settle.
     pub async fn act(app: &mut LowpolyApp, action: &str, args: serde_json::Value) {
         let args = semio_framework_value::DslValue::from(&args);
-        let result = app.0.handle_action(action, Some(&args), &action_meta()).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
+        let result = app.0.handle_action(action, Some(&args), &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
         if matches!(action, "interactionSelect" | "interactionHover" | "undo" | "redo") {
             semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, result).await.unwrap_or_else(|fault| panic!("{action} did not settle its reserved job: {fault:?}"));
         }
@@ -97,7 +97,7 @@ pub(crate) mod context {
     /// itself faults, or the retained reducer publishes a fault page while the operation settles.
     pub async fn dispatch_refused(app: &mut LowpolyApp, command: LowpolyCommand) -> String {
         let verb = command.command_id().to_string();
-        if let Err(fault) = app.0.dispatch_typed(command, &action_meta()).await {
+        if let Err(fault) = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await {
             return fault.message;
         }
         settle_faults(&mut app.0, &verb).await.into_iter().next().unwrap_or_else(|| panic!("{verb} was admitted and settled without a refusal"))
@@ -110,7 +110,7 @@ pub(crate) mod context {
         while app.has_pending_typed_operations() {
             assert!(std::time::Instant::now() < deadline, "{action} did not settle");
             let _ = app.maintenance_step(1, SETTLE_GRANT_BYTES).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
-            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
             while let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
                 if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
                     faults.push(String::from_utf8_lossy(page.bytes()).to_string());
@@ -140,7 +140,7 @@ pub(crate) mod context {
         while app.has_pending_typed_operations() {
             assert!(std::time::Instant::now() < deadline, "{action} did not settle");
             let _ = app.maintenance_step(1, SETTLE_GRANT_BYTES).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
-            app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
             while let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
                 let lane = page.lane;
                 let fault = (lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| String::from_utf8_lossy(page.bytes()).to_string());
@@ -552,7 +552,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         || async { lowpoly_manifest_for_tests() },
         LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Renamed By A").unwrap()) }),
         LowpolyCommand::AddPrimitive(add_primitive::AddPrimitive { kind: Some("box".into()) }),
-        |app| app.snapshot().expect("projection"),
+        |app| app.snapshot().expect("projection"),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -578,10 +578,10 @@ async fn ingest_operations_is_idempotent() {
     assert!(!envelopes.is_empty(), "the rename reached the backbone");
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = app().await;
-    receiver.ingest_operations(&operations).await.expect("ingest once");
+    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest once");
     let once = receiver.snapshot().expect("projection");
     assert_eq!(once.objects[0].name, "Hero", "the replayed rename applies");
-    receiver.ingest_operations(&operations).await.expect("ingest twice");
+    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
     assert_eq!(receiver.snapshot().expect("projection"), once, "feeding the same operation twice must not double-apply");
 }
 

@@ -121,7 +121,7 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
             return Err(ValueError::new(ValueRefusalKind::InvalidValue, "space history document identity differs"));
         }
         fields::reconstruct(control, |mut c| {
-            c.charge(std::mem::size_of::<Self>())?;
+            c.charge(size_of::<Self>())?;
             let active_alternative_id = fields::optional(document, 1, &mut c)?;
             let checkpoint_table = database.table("space_history_checkpoint")?;
             let checkpoint_keys = fields::keyed(checkpoint_table, 6, &mut c)?;
@@ -138,7 +138,7 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
                 let owner = checkpoint_keys.binary_search_by_key(&row.rowid, |row| row.rowid).map_err(|_| fields::invalid("space history checkpoint is missing"))?;
                 let clock = timestamps.binary_search_by_key(&row.rowid, |row| row.rowid).map_err(|_| fields::invalid("space history checkpoint clock is missing"))?;
                 let clock = timestamps[clock];
-                let authors = c.scoped_stage(|c| -> Result<Vec<Author>, semio_framework_value::ValueError> {
+                let authors = c.scoped_stage(|c| -> Result<Vec<Author>, ValueError> {
                     let mut output = c.allocate_vec(authors[owner].len())?;
                     c.begin_stage(authors[owner].len())?;
                     for author in &authors[owner] {
@@ -147,7 +147,7 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
                     }
                     Ok(output)
                 })?;
-                let members = c.scoped_stage(|c| -> Result<Vec<SpaceMemberPin>, semio_framework_value::ValueError> {
+                let members = c.scoped_stage(|c| -> Result<Vec<SpaceMemberPin>, ValueError> {
                     let mut output = c.allocate_vec(members[owner].len())?;
                     c.begin_stage(members[owner].len())?;
                     for pin in &members[owner] {
@@ -174,7 +174,7 @@ impl ArtifactSqliteSnapshot for SpaceHistorySnapshot {
             c.begin_stage(alternative_rows.len())?;
             for row in alternative_rows {
                 let owner = alternative_keys.binary_search_by_key(&row.rowid, |row| row.rowid).map_err(|_| fields::invalid("space history alternative is missing"))?;
-                let checkpoint_ids = c.scoped_stage(|c| -> Result<Vec<String>, semio_framework_value::ValueError> {
+                let checkpoint_ids = c.scoped_stage(|c| -> Result<Vec<String>, ValueError> {
                     let mut output = c.allocate_vec(pins[owner].len())?;
                     c.begin_stage(pins[owner].len())?;
                     for pin in &pins[owner] {

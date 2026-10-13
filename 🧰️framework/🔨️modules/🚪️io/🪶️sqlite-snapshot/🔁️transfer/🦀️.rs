@@ -7,7 +7,7 @@ fn overflow(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKi
 fn sum(value:usize,amount:usize)->Result<usize>{value.checked_add(amount).ok_or_else(||overflow("SQLite transfer backing overflow"))}
 /// 🏗️ Admits the concrete collection backing before reserving it.
 pub fn reserve<T>(count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<T>>{
- let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||overflow("SQLite transfer backing overflow"))?;control.admit_allocation_bytes(bytes)?;
+ let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(||overflow("SQLite transfer backing overflow"))?;control.admit_allocation_bytes(bytes)?;
  let mut values=Vec::new();values.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"SQLite transfer allocation failed"))?;Ok(values)
 }
 /// 🌿️ Reserves paid collection growth and preserves cancellable transfer of existing ownership.

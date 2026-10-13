@@ -23,10 +23,8 @@ use semio_framework_plugin::PanelTreeBuilder;
 use semio_framework_plugin::ActionId;
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::UiValue;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 use semio_framework_ui_contract as ui;
 use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
 
 #[path = "🏷️data/🦀️.rs"]
 mod data;
@@ -35,6 +33,8 @@ mod data;
 pub mod overrides;
 
 //#region 🔖️Constants
+/// 🪪️ The unique id of this panel tab, a child of the framework inspection tab.
+pub const PANEL_TAB_ID: &str = "bim.panel.properties";
 pub const BODY_KEY: &str = "bim.edit.properties";
 const ROOT: &str = "bim-properties";
 /// 🔽️ A reference row with fewer choices than this is a dropdown of them; a longer library is typed by id (a dropdown holds at most 32 items, one of them is "none").
@@ -45,7 +45,7 @@ const SELECT_ITEMS: usize = 31;
 /// 🧱️ Stitched into the app manifest by `crate::editor::bim::create_bim_app`.
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
-        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        kind: PanelTabKind::App(PANEL_TAB_ID.into()),
         label: BimLabels::localized(|labels| labels.panel_properties),
         group: PanelGroup::Details,
         body_key: Some(BODY_KEY.into()),

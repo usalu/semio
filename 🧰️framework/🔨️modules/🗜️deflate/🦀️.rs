@@ -571,8 +571,8 @@ impl Inflater {
     pub fn retained_retirement_demands(&self) -> semio_framework_value::RetirementDemand {
         use semio_framework_value::RetirementDemand;
         match self.retained_close_phase {
-            RetainedInflateClosePhase::Open => RetirementDemand { copy_bytes: std::mem::size_of::<usize>() * 2, depth: 1, ..Default::default() },
-            RetainedInflateClosePhase::DecoderLogical => RetirementDemand { copy_bytes: std::mem::size_of::<BitReader>() + std::mem::size_of::<Phase>() + std::mem::size_of::<bool>(), depth: 1, ..Default::default() },
+            RetainedInflateClosePhase::Open => RetirementDemand { copy_bytes: size_of::<usize>() * 2, depth: 1, ..Default::default() },
+            RetainedInflateClosePhase::DecoderLogical => RetirementDemand { copy_bytes: size_of::<BitReader>() + size_of::<Phase>() + size_of::<bool>(), depth: 1, ..Default::default() },
             RetainedInflateClosePhase::HistoryPhysical => RetirementDemand { release_bytes: self.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() },
             RetainedInflateClosePhase::Closed => Default::default(),
         }

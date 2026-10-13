@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_a_non_positive_factor_is_fatal() {
     assert_eq!(rejected.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "scale-assets/doubles-asset-hero-scale: collapsing an axis to zero must be Fatal");
     assert_eq!(rejected.messages()[0].code.0, "mutation.invariant", "scale-assets/doubles-asset-hero-scale: the positivity guard's frozen code");
     assert_eq!(rejected.messages()[0].target, vec!["asset-hero".to_string()], "scale-assets/doubles-asset-hero-scale: the invariant is reported against the whole addressed selection");
-    let unchanged = rejected.into_parts().protocol::apply_diff(&0, &before()).expect("a Fatal outcome carries the default diff");
+    let unchanged = protocol::apply_diff(&rejected.into_parts().0, &before()).expect("a Fatal outcome carries the default diff");
     assert_eq!(unchanged, before(), "scale-assets/doubles-asset-hero-scale: a Fatal scale must leave the snapshot untouched");
 }
 

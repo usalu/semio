@@ -96,16 +96,18 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun, DocxXmlPart};
-    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::{check_strict_conformance, STRICT_REL_BASE};
+    use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun};
+    #[cfg(test)] use crate::schema::snapshot::{DocxXmlPart};
+    use crate::standards::v_ecma_376::subsets::strict::schema::conformance::{check_strict_conformance};
+    #[cfg(test)] use crate::standards::v_ecma_376::subsets::strict::schema::conformance::{STRICT_REL_BASE};
     use crate::{DocxDiff, DocxMutation, DocxSnapshot};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
     #[cfg(test)]
     use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
-    use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
+    #[cfg(test)] use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+    #[cfg(test)] use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
     use crate::standards::v_ecma_376::subsets::strict::schema::construction::build_minimal_strict_docx;
 
@@ -193,14 +195,14 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::io::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
-    use crate::{schema::snapshot::DocxXmlPart, DocxSnapshot};
-    use semio_framework_diagnostic::Diagnostic;
-use semio_framework_diagnostic::FaultCode;
-use semio_framework_diagnostic::FaultScope;
+    #[cfg(test)] use crate::{schema::snapshot::DocxXmlPart, DocxSnapshot};
+    #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
+#[cfg(test)] use semio_framework_diagnostic::FaultCode;
+#[cfg(test)] use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
-use semio_framework_diagnostic::TextSpan;
+#[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
+    #[cfg(test)] use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -247,7 +249,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec DocxStrictBuilderFacets {
         construction: DocxStrictBuilderConstruction,
         analysis: DocxStrictAnalyzerAnalysis,
-        composition: super::io::derived_composition::DocxStrictComposerComposition,
+        composition: DocxStrictComposerComposition,
     }
     builder: DocxStrictBuilder,
     analyzer: DocxStrictAnalyzer,

@@ -628,7 +628,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PlyBuilderFacets {
         construction: PlyBuilderConstruction,
         analysis: PlyAnalyzerAnalysis,
-        composition: crate::standards::v1_0::subsets::any::io::derived_composition::PlyComposerComposition,
+        composition: PlyComposerComposition,
     }
     builder: PlyBuilder,
     analyzer: PlyAnalyzer,

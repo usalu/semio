@@ -268,14 +268,14 @@ pub(crate) fn interaction_store_owners(grant: RetainedCloneGrant) -> Result<(sto
     store::DocumentStoreOwners::admit_source_constructor(grant, || (InteractionRetirementFactory, InteractionRetirementFactory, InteractionRetirementFactory, store::ArtifactStoreCursorDisposer::<InteractionState, InteractionConfigMutation>::new()))
 }
 
-pub(crate) fn interaction_store_owners_source_demands()->Result<semio_framework_value::RetirementDemand,ValueError>{
+pub(crate) fn interaction_store_owners_source_demands()->Result<RetirementDemand,ValueError>{
  type Owners=store::DocumentStoreOwners<InteractionState,InteractionConfigMutation>;
  type Disposer=store::ArtifactStoreCursorDisposer<InteractionState,InteractionConfigMutation>;
- Ok(semio_framework_value::RetirementDemand{copy_bytes:0,capacity_bytes:Owners::source_birth_bytes::<InteractionRetirementFactory,InteractionRetirementFactory,InteractionRetirementFactory,Disposer>()?,depth:1,..Default::default()})
+ Ok(RetirementDemand{copy_bytes:0,capacity_bytes:Owners::source_birth_bytes::<InteractionRetirementFactory,InteractionRetirementFactory,InteractionRetirementFactory,Disposer>()?,depth:1,..Default::default()})
 }
 
 /// 🎟️ Funds the interaction catalog from its own quoted source and ticket demands.
-pub(crate) fn funded_interaction_store_owners() -> Result<store::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, semio_framework_value::ValueError> {
+pub(crate) fn funded_interaction_store_owners() -> Result<store::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, ValueError> {
     let capacity = store::DocumentStoreOwners::<InteractionState, InteractionConfigMutation>::source_birth_bytes::<InteractionRetirementFactory, InteractionRetirementFactory, InteractionRetirementFactory, store::ArtifactStoreCursorDisposer<InteractionState, InteractionConfigMutation>>()?;
     store::complete_unscheduled_catalog(interaction_store_owners(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() }))
 }

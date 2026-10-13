@@ -11,7 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -376,7 +375,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -451,7 +449,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

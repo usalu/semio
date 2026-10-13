@@ -6,10 +6,10 @@ use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding a
 use crate::standards::v1::subsets::value::io::sqlite::snapshot::native_decoding as values;
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<SemioGraphSnapshot,ValueError>{
+pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioGraphSnapshot,ValueError>{
  let limits=control.limits();crate::standards::v1::subsets::graph::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Graph native input exceeds file limit"))}
- control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+ control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,_checkpoint|{
   let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
   let result=(||->Result<SemioGraphSnapshot,ValueError>{let result=match payload{
    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},

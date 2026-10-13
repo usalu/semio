@@ -4,7 +4,7 @@ use crate::ArtifactReplayRetirementFactory;
 use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,frame::admit_retirement_frame as admit_artifact_retirement}};
 use semio_framework_value::retirement::RetireOwned;
 type Factory<'a,P,M>=Option<&'a dyn ArtifactReplayRetirementFactory<P,M>>;
-fn frame<T>()->RetirementDemand{RetirementDemand{capacity_bytes:std::mem::size_of::<T>(),depth:1,..Default::default()}}
+fn frame<T>()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn issuer<P,M>(factory:Factory<'_,P,M>)->Result<&dyn ArtifactReplayRetirementFactory<P,M>,ValueError>{factory.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"prepared replay publication retains its original without an installed retirement issuer"))}
 pub fn terminal<P,M>(prepared:&ArtifactReplayPrepared<P,M>)->bool{prepared.next.is_none()&&matches!(&prepared.inverse,Ok(inverse)if inverse.terminal_is_empty())&&prepared.messages.capacity()==0&&prepared.apply_refusal.is_none()&&prepared.input_refusal.is_none()}
 pub fn demands<P,M>(prepared:&ArtifactReplayPrepared<P,M>,factory:Factory<'_,P,M>)->Result<RetirementDemand,ValueError>{

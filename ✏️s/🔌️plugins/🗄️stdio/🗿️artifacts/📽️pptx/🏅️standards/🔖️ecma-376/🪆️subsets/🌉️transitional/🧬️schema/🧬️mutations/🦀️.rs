@@ -18,9 +18,9 @@
 //! @see ../🦀️.rs — this subset's conformance check, one axis per variant below.
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::PptxDiff;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{retarget_attribute_values_diff, root_attribute_diff, root_children_diff, root_edits_diff};
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{retarget_attribute_values_diff, root_attribute_diff, root_edits_diff};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxSnapshot, PptxXmlPart};
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};

@@ -19,7 +19,7 @@ impl ArtifactSqliteSnapshot for GisTerrainSnapshot{
  }
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let maximum_rows=control.limits().max_rows;let maximum_value_bytes=control.limits().max_value_bytes;control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
-  store::decode_sqlite_snapshot_record_native(payload,"gis.gisterrain",crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::reconstruct_record_controlled(record,native,maximum_rows,maximum_value_bytes)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  store::decode_sqlite_snapshot_record_native(payload,"gis.gisterrain",crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {crate::standards::v1::subsets::any::io::binary::snapshot::owned_pack::reconstruct_record_controlled(record,native,maximum_rows,maximum_value_bytes)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   let mut bound=NativeEncodingBound::new(control)?;bound.add(4096)?;

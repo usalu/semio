@@ -227,7 +227,7 @@ fn shape_drag_layer(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: 
     if width < 1.0 && height < 1.0 {
         return None;
     }
-    let (name, shape_kind, geometry) = match utility {
+    let (name, shape_kind, _geometry) = match utility {
         "shapeLine" => ("Line", "line", [start[0], start[1], end[0], end[1]]),
         "shapeEllipse" => ("Ellipse", "ellipse", [x + width / 2.0, y + height / 2.0, width / 2.0, height / 2.0]),
         _ => ("Rectangle", "rect", [x, y, width, height]),
@@ -1524,8 +1524,6 @@ impl DrawingSession {
 }
 //#endregion 🔖️DrawingSession
 
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
 
 //#region 🧵️TracePointerContinuation
 fn retain_trace_progress(session: &mut DrawingSession, job: &TracePointerJob) {

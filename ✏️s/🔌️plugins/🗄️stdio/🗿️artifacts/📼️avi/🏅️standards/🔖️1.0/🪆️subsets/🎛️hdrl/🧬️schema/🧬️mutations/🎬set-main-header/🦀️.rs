@@ -14,12 +14,12 @@ pub struct SetMainHeader {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetMainHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "main-header", kind: "set-main-header", record: "SetMainHeader" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         let Self { main_header } = self;
         protocol::MutationOutcome::new(AviDiff { main_header: Some(main_header.clone()), ..AviDiff::default() })
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-        Ok(vec![AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: base.main_header.clone() })])
+        Ok(vec![AviMutation::SetMainHeader(SetMainHeader { main_header: base.main_header.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set main header", "Haupt-Header setzen")

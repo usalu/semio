@@ -34,7 +34,7 @@ use super::super::ramp_runs::{strip_of, RampRun};
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
 use super::super::wall_layout::WallLayout;
-use super::super::ModelInference;
+#[cfg(test)] use super::super::ModelInference;
 use crate::{Beam, Ceiling, Column, Component, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;

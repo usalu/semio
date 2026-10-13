@@ -64,7 +64,7 @@
         "artifact_kind": "s.stdio.xml",
         "artifact_schema": "stdio.xml",
         "extension": "xml",
-        "pack_schema_hash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+        "pack_schema_hash": "f49c2064c8186e50901760fc7be69d1ae1ad52978c53a084bceb38975809ceb5",
         "runtime_capability_id": "s.stdio.xml.standard.1-0.codec.codec-stdio-xml-extension-xml.v1"
       }
     }

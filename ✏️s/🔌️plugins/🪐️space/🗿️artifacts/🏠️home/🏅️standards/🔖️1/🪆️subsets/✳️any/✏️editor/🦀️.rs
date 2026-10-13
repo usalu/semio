@@ -158,7 +158,7 @@ fn home_retained_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
-    let identity = require_session_identity(context.and_then(|context| context.view_state.as_ref()))?;
+    let _identity = require_session_identity(context.and_then(|context| context.view_state.as_ref()))?;
     if home_retained_extent(command, snapshot, _interaction).is_none() {
         return Err(Fault::from("space-home-retained-route-mismatch"));
     }
@@ -268,10 +268,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         Ok(ArtifactCommandWorkStep::Complete(emit))
     }
     fn checkpoint_byte(&self, index: usize) -> Option<u8> { (index == 0).then_some(u8::from(self.validated)) }
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(std::mem::size_of::<Self>()) }
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>()) }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> { self.validated = match checkpoint { [] | [0] => false, [1] => true, _ => return Err(Fault::from("s.home.create-studio.effect-checkpoint-invalid")) }; Ok(()) }
     fn begin_close(&mut self) { self.closing = true; }
-    fn terminal_frame_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(std::mem::size_of::<Self>()) }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
     fn terminal_is_empty(&self) -> bool { self.closing && self.completion.is_none() && self.retirement.is_none() }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.capacity_bytes) }
@@ -385,11 +385,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(std::mem::size_of::<Self>())
+        apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>())
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -483,10 +483,10 @@ impl ArtifactEditor for HomeApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "space home command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "space home command does not match its exact registered tool"));
         }
         if home_retained_extent(&request.command, &request.snapshot, &request.interaction_state).is_none() {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.too-large"), "space home command payload exceeds its bounded retained extent"));
+            return Err(Fault::new(FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.too-large"), "space home command payload exceeds its bounded retained extent"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = match request.command.as_ref() {
@@ -612,7 +612,7 @@ impl ArtifactEditor for HomeApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::SHomeMutation, HomeConfigMutation, Self::DraftMutation>, Fault> {
-        let identity = require_session_identity(view_state)?;
+        let _identity = require_session_identity(view_state)?;
         match command {
             HomeCommand::CreateStudio(_) => Err(Fault::from("s.home.create-studio.effect-authority-required")),
             _ => command.dispatch(doc, cfg),

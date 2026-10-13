@@ -12,18 +12,15 @@ extern crate semio_framework_value_derive as value_derive;
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
 use semio_framework_plugin::io::FormatDescriptor;
-use semio_framework_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_dispatch_macros::dyn_enum_close;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::__semio_dispatch_PluginApp;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::plugin_app_close_prelude::*;
 
-#[cfg(feature = "component-app-assembly")]
 dyn_enum_close! {
     pub enum TxtApps: PluginApp {
         Editor(VcsArtifactApp<EditorApp<editor::txt::TxtEditor>>),
@@ -80,9 +77,9 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, P
 /// 🧩️ The executable facets the hub-native document codec needs: the artifact schema, the declared representations
 /// and the `stdio.txt` document codec the linked `stdio.native.txt.v1` receipt instantiates.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn declaration(definition: ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, ArtifactDefinitionError> {
+pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v_utf_8::subsets::any::schema::txt_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.txt", standard: semio_framework_artifact_reference::StandardId("utf-8"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
+    ArtifactDeclaration::builder(definition).schema(standards::v_utf_8::subsets::any::schema::txt_artifact_schema_descriptor()).formats(formats).document_codec_bare::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") }).try_build()
 }
 
 //#region 🔖️ArtifactDeclaration
@@ -91,7 +88,6 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<semio_framework_plu
 /// `any`. See `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️.rs`'s `artifact()` doc
 /// comment for the `localization: &[]` deferral rationale (identical here).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact() -> declarations::ArtifactDeclaration<TxtApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -149,10 +145,8 @@ pub mod standards {
     pub mod v_utf_8 {
         // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
         // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
-        #[cfg(feature = "component-app-assembly")]
         #[path = "🏅️standards/🔖️utf-8/🦀️.rs"]
         mod component;
-        #[cfg(feature = "component-app-assembly")]
         pub use component::*;
 
         // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
@@ -287,7 +281,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -328,7 +321,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

@@ -19,7 +19,7 @@
 /// 🪡 Loop positions, surface parameters, and boundary flags.
 pub type TessellationLoopUv = (Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>);
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use semio_framework_mesh_engine::HistoryFoldIndex;
 
 type EdgeSampleCache = HistoryFoldIndex<EdgeId, Vec<(f64, Pnt3)>>;
@@ -1046,7 +1046,7 @@ fn insert_point_into(pts: &[(f64, f64)], tris: &mut Vec<Tri>, p_idx: usize) {
 fn connected_cavity(pts: &[(f64, f64)], bad: Vec<Tri>, p: (f64, f64)) -> (Vec<Tri>, Vec<Tri>) {
     let contains = |t: &Tri| orient(pts[t.a], pts[t.b], p) >= -1e-12 && orient(pts[t.b], pts[t.c], p) >= -1e-12 && orient(pts[t.c], pts[t.a], p) >= -1e-12;
     let Some(start) = bad.iter().position(contains) else { return (bad, Vec::new()) };
-    let mut edges: std::collections::HashMap<(usize, usize), Vec<usize>> = std::collections::HashMap::new();
+    let mut edges: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
     for (i, t) in bad.iter().enumerate() {
         for (u, v) in [(t.a, t.b), (t.b, t.c), (t.c, t.a)] {
             edges.entry((u.min(v), u.max(v))).or_default().push(i);

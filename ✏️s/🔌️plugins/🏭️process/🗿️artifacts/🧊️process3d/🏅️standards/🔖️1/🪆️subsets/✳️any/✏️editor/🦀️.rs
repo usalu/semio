@@ -553,7 +553,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         }
         let identity = u64::from_le_bytes(checkpoint[24..32].try_into().map_err(|_| Fault::from("process3d-retained-checkpoint-identity"))?);
         if identity != process3d_tool_identity(self.tool_id) {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Process 3D checkpoint belongs to another registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Process 3D checkpoint belongs to another registered tool"));
         }
         let extent = u64::from_le_bytes(checkpoint[32..40].try_into().map_err(|_| Fault::from("process3d-retained-checkpoint-extent"))?);
         if extent != self.extent as u64 {
@@ -1382,7 +1382,7 @@ fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, config: &Proce
 
 impl ArtifactEditor for Process3dPlayApp {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         use semio_framework_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 2]> = std::sync::LazyLock::new(|| {
             [
@@ -1441,7 +1441,7 @@ impl ArtifactEditor for Process3dPlayApp {
             return Ok(None);
         };
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "Process 3D command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "Process 3D command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match disposition {
@@ -1806,7 +1806,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Bearbeiten"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),
-                label: semio_framework_ui_locale::LocalizedLabel::native("3D Process", "3D-Prozess"),
+                label: LocalizedLabel::native("3D Process", "3D-Prozess"),
                 source_format: "process.3d".into(),
                 component_kind: "process3d".into(),
                 dimension: "3d".into(),

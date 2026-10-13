@@ -5,8 +5,6 @@ use crate::op::DrawingMutation;
 use crate::standards::v1::subsets::any::schema::default_drawing_document;
 use crate::standards::v1::subsets::any::examples;
 use crate::{ArtifactDsl, DrawingSnapshot};
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

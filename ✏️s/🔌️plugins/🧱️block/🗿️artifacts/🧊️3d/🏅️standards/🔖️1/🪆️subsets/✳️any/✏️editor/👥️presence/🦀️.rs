@@ -86,12 +86,8 @@ impl protocol::MutationDiff<Block3dPresence> for Block3dPresenceDiff {
 }
 
 /// 🧮️ An empty presence has no mutation: the enum is uninhabited, so no diff can be raised against it.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 pub enum Block3dPresenceMutation {}
-
-impl semio_framework_value::retirement::RetireOwned for Block3dPresenceMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { match self {} }
-}
 
 impl store::ArtifactPresenceSnapshot for Block3dPresence {}
 

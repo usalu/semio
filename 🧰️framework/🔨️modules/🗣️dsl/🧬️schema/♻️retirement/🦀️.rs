@@ -56,23 +56,23 @@ impl RetireOwned for RecordSpec{
 /// 📋️ Retains the original writer planning buffer until its physical backing is admitted.
 pub(super) struct RecordPlanningRetirement<T:Copy+Send+'static>(std::mem::ManuallyDrop<Vec<T>>);
 impl<T:Copy+Send+'static> RecordPlanningRetirement<T> {
-    pub(super) fn new(indices:Vec<T>)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(Self(std::mem::ManuallyDrop::new(indices)))}
-    pub(super) const fn birth_bytes()->usize{std::mem::size_of::<Self>()}
+    pub(super) fn new(indices:Vec<T>)->Box<dyn RetirementCursor>{Box::new(Self(std::mem::ManuallyDrop::new(indices)))}
+    pub(super) const fn birth_bytes()->usize{size_of::<Self>()}
 }
-impl<T:Copy+Send+'static> semio_framework_value::retirement::RetirementCursor for RecordPlanningRetirement<T> {
+impl<T:Copy+Send+'static> RetirementCursor for RecordPlanningRetirement<T> {
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
         use semio_framework_value::retirement::RetirementStep;
         if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
         if !self.0.is_empty(){self.0.clear();return RetirementStep::Advanced;}
-        let bytes=self.0.capacity()*std::mem::size_of::<T>();
+        let bytes=self.0.capacity()*size_of::<T>();
         if bytes==0{return RetirementStep::Complete;}
         if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
         drop(std::mem::take(&mut*self.0));RetirementStep::Bytes(bytes)
     }
     fn terminal_is_empty(&self)->bool{self.0.capacity()==0}
     fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
-    fn next_close_byte_demand(&self)->Option<usize>{Some(if self.0.is_empty(){self.0.capacity()*std::mem::size_of::<T>()}else{0})}
-    fn terminal_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(if self.0.is_empty(){self.0.capacity()*size_of::<T>()}else{0})}
+    fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 impl<T:Copy+Send+'static> Drop for RecordPlanningRetirement<T> {
     fn drop(&mut self){use semio_framework_value::retirement::RetirementCursor;assert!(std::thread::panicking()||self.terminal_is_empty(),"record planning buffer requires terminal retirement");unsafe{std::mem::ManuallyDrop::drop(&mut self.0)};}

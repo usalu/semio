@@ -6,7 +6,7 @@ use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::editor::flow::FLOW_PLAY_APP_ID;
 use flow::{dag::dag_lod_scale_json, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{ActionDescriptor, MeasureSelectItem, WindowMeasure};
-use serde_json::{json, Value};
+use serde_json::Value;
 
 //#region 🔖️Measure
 pub fn measure(config: &FlowMainWindowConfig, labels: &FlowPlayLabels) -> WindowMeasure {

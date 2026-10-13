@@ -1,6 +1,6 @@
 //! 🧬️ Direct move-used-extension mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::top_level_collections::*;
+#[cfg(test)] use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
@@ -40,7 +40,7 @@ pub fn inverse(p: &GltfMoveUsedExtensionPayload, base: &GltfSnapshot) -> Vec<sup
     let Some(index) = base.document.extensions_used.iter().position(|value| value == &p.extension) else {
         return Vec::new();
     };
-    vec![super::move_used_extension::mutation(super::move_used_extension::GltfMoveUsedExtensionPayload { extension: p.extension.clone(), position: index })]
+    vec![mutation(GltfMoveUsedExtensionPayload { extension: p.extension.clone(), position: index })]
 }
 
 //#region 🧬️DirectMutation
@@ -60,7 +60,7 @@ pub fn mutation(payload: GltfMoveUsedExtensionPayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveUsedExtensionMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "used-extension", kind: "move-used-extension", record: "MovedUsedExtension" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

@@ -5,7 +5,7 @@ use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::Sha
 struct HostShared<T:RetireOwned+Sync>(Arc<T>);
 impl<T:RetireOwned+Sync> RetireOwned for HostShared<T>{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<SharedControlledRetirement<T>>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<T>>())}
  fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }
 

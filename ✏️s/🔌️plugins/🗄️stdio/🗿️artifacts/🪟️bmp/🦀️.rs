@@ -70,7 +70,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .inferences([standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor()])
         .composers(standards::v_v3::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.bmp", standard: semio_framework_artifact_reference::StandardId("v3"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") })
         .try_build()
 }
 
@@ -251,7 +251,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -292,7 +291,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

@@ -29,6 +29,41 @@
       },
       "outputs": []
     },
+    "generate-schema-index": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts generate-schema-index"
+      },
+      "outputs": []
+    },
+    "preview-schema-index": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts schema-index preview"
+      },
+      "outputs": []
+    },
+    "check-schema-index": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-schema-index"
+      },
+      "outputs": []
+    },
+    "test-schema-index-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-schema-index-source",
+        "forwardAllArgs": true
+      }
+    },
     "test-source-authority-source": {
       "executor": "nx:run-commands",
       "options": {

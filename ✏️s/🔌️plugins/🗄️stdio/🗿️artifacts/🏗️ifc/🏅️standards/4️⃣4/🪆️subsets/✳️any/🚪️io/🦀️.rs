@@ -225,7 +225,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec IfcBuilderFacets {
         construction: IfcBuilderConstruction,
         analysis: IfcAnalyzerAnalysis,
-        composition: crate::standards::v4::subsets::any::io::derived_composition::IfcComposerComposition,
+        composition: IfcComposerComposition,
     }
     builder: IfcBuilder,
     analyzer: IfcAnalyzer,
@@ -268,28 +268,28 @@ pub fn register_pilot_languages() {
         id: "stdio.ifc",
         extension: Some("ifc"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::standards::v4::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v4::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v4::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v4::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::standards::v4::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v4::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v4::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v4::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::standards::v4::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v4::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.diff"),
@@ -300,8 +300,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v4::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v4::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -310,8 +310,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v4::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v4::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.spr"),
     });
 }
@@ -332,6 +332,6 @@ pub fn register_artifact_schema() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor()).expect("schema descriptor publication");
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(inferences::ifc_artifact_inference_descriptor()).expect("schema descriptor publication");
 }
 //#endregion 🔖️Register

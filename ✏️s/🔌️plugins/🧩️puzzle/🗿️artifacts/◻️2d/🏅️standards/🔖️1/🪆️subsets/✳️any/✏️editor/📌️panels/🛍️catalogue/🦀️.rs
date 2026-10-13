@@ -24,7 +24,7 @@ use semio_framework_plugin::UiText;
 use semio_framework_plugin::UiValue;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
-use semio_framework_pack_json::{json,Value,Object};
+use semio_framework_pack_json::{json,Value};
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_CATALOGUE: &str = "puzzle2d.play.catalogue";

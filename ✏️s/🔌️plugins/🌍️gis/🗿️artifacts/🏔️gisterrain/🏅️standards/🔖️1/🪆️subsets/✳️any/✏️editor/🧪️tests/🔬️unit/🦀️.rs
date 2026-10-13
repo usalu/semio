@@ -7,7 +7,7 @@ pub(crate) mod context {
     
     /// 🧬️ Builds the real registered fixture and binds the instance addressed by [`meta`].
     pub async fn app() -> Gis3dApp {
-        let mut app = new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         app
     }
@@ -35,7 +35,7 @@ pub(crate) mod context {
     
     /// 🧹️ Drives a Terrain fixture to its exact terminal-empty ownership witness.
     pub fn close(app: &mut Gis3dApp) {
-        close_registered_fixture_app(app);
+        close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     }
     
     /// 🎯️ Dispatches a typed Terrain command and completes its bounded host publication protocol.
@@ -47,18 +47,18 @@ pub(crate) mod context {
     pub async fn dispatch_at(app: &mut Gis3dApp, command: Gis3dCommand, view_state: ViewModel) -> TypedOperationFixtureReceipt {
         let mut action_meta = meta("local");
         action_meta.view_state = Some(view_state);
-        let admission = app.dispatch_typed(command, &action_meta).await.expect("dispatch");
+        let admission = app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         assert!(admission.mutations.is_empty(), "retained Terrain commands publish only through acknowledged result pages");
-        settle_registered_typed_operation(app, action_meta.instance_id).await.expect("settle Terrain dispatch")
+        settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle Terrain dispatch")
     }
     
     /// ↩️ Drives a framework-reserved history verb (`undo`/`redo`) home. `handle_action` only ADMITS
     /// such a verb and answers with the reserved job's `Effect::SpawnJob`; without settling that
     /// admission the rewind never runs and the projection still shows the pre-undo document.
     pub async fn history_verb(app: &mut Gis3dApp, action: &str) -> TypedOperationFixtureReceipt {
-        let admitted = app.handle_action(action, None, &meta("local")).await.expect("history verb");
+        let admitted = app.handle_action(action, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("history verb");
         semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("settle the framework-reserved history verb");
-        settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the history verb publication")
+        settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the history verb publication")
     }
     
     pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
@@ -300,7 +300,7 @@ async fn set_exaggeration_stages_a_bounded_default_that_actually_edits() {
     assert_ne!(seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, "a staged default equal to the seeded value would dispatch a no-op");
     let staged = semio_framework::effective_action_args(&action.args, &semio_framework_value::DslValue::Object(Vec::new()), None);
     let command = <EditorApp<Gis3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action("setExaggeration", Some(&staged)).await.expect("the staged default bridges to a command");
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, command, |app| app.snapshot().expect("projection").exaggeration, seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT).await;
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, command, |app| app.snapshot().expect("projection").exaggeration, seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     context::close(&mut app);
 }
 //#endregion 🎬️StageableActionVocabulary

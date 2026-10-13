@@ -43,7 +43,7 @@ pub(super) fn retirement_admission() -> usize {
 }
 
 pub(super) fn next_request_frame_bytes(request: &MemberOpenRequest) -> usize {
-    if let Some(pages) = request.pages.as_ref().filter(|pages| pages.terminal_is_empty()) { return pages.allocation_byte_demand(); }
+    if let Some(pages) = request.pages.as_ref().filter(|pages| pages.page_count() == 0) { return pages.allocation_byte_demand(); }
     if request.pages.is_none() && request.actor.0.has_owner() { return semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>(); }
     0
 }
@@ -57,7 +57,7 @@ pub(super) fn request_logical_retained_bytes(request: &MemberOpenRequest) -> usi
 fn request_identity_capacity(request: &MemberOpenRequest) -> usize {
     let expected = request.expected.as_ref().map_or(0, |value| value.artifact_id.capacity() + value.dialect.artifact_kind.capacity() + value.dialect.standard.capacity() + value.dialect.subset.capacity());
     let owner = request.owner.as_ref().map_or(0, |value| value.parent.artifact_id.capacity() + value.parent.dialect.artifact_kind.capacity() + value.parent.dialect.standard.capacity() + value.parent.dialect.subset.capacity() + value.slot.capacity() + value.child_id.capacity());
-    request.actor.0.original_allocation_bytes() + request.closing_actor.as_ref().map_or(0, String::capacity) + expected + owner
+    request.actor.0.original_allocation_bytes().saturating_sub(if request.actor.0.has_owner() { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>() } else { 0 }) + request.closing_actor.as_ref().map_or(0, String::capacity) + expected + owner
 }
 
 #[test]
@@ -286,13 +286,13 @@ fn member_open_request_original_identity_capacity_is_indivisible_even_when_empty
             assert!(step.progress().fits(policy));assert_eq!((events.requested_bytes,events.released_bytes),(0,step.progress().released_bytes));
         }
         assert_eq!(request.next_release_byte_demand().unwrap(),lease);
-        for denied in [RetainedCloneGrant{maximum_items:0,..policy},RetainedCloneGrant{maximum_copy_bytes:0,..policy},RetainedCloneGrant{maximum_release_bytes:lease-1,..policy}] {
+        for denied in [RetainedCloneGrant{maximum_items:0,..policy},RetainedCloneGrant{maximum_release_bytes:lease-1,..policy}] {
             let (result,events)=semio_framework_trace::observe_heap_allocations_on_this_thread(||request.close_step(denied));
             if let Ok(step)=result {assert_eq!(step.progress(),Default::default());}
             assert_eq!((events.requested_bytes,events.released_bytes),(0,0));assert_eq!(request.actor.0.as_ptr(),pointer);assert_eq!(request.actor.0.len(),text_bytes);
         }
         let (step,events)=semio_framework_trace::observe_heap_allocations_on_this_thread(||request.close_step(policy).unwrap());
-        assert!(step.progress().fits(policy));assert_eq!(step.progress().copied_bytes,std::mem::size_of::<Option<String>>());
+        assert!(step.progress().fits(policy));assert_eq!(step.progress().copied_bytes,0,"a shared UTF8 lease retires by release alone");
         assert_eq!((events.requested_bytes,events.released_bytes),(0,lease));assert_eq!(step.progress().released_bytes,lease);
         assert!(!request.actor.0.has_owner());assert_eq!(request.closing_actor.as_ref().unwrap().as_ptr(),pointer);assert_eq!(request.closing_actor.as_ref().unwrap().capacity(),capacity);
         let (demand,events)=semio_framework_trace::observe_heap_allocations_on_this_thread(||request.next_release_byte_demand().unwrap());

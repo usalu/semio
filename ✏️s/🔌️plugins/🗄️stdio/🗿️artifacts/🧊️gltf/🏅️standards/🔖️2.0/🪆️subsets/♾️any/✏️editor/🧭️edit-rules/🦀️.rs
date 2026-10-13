@@ -16,7 +16,7 @@ struct Ctx<'a> {
 
 struct FieldRule {
     path: &'static str,
-    resolve: fn(&Ctx) -> Rows,
+    resolve: fn(&Ctx<'_>) -> Rows,
 }
 
 struct ListRule {
@@ -43,7 +43,7 @@ fn decode<T: FromValue>(value: &DslValue) -> Result<T, Fault> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn optional<T: FromValue>(ctx: &Ctx) -> Result<Option<T>, Fault> {
+fn optional<T: FromValue>(ctx: &Ctx<'_>) -> Result<Option<T>, Fault> {
     match ctx.value {
         None | Some(DslValue::Null) => Ok(None),
         Some(value) => decode(value).map(Some),
@@ -51,7 +51,7 @@ fn optional<T: FromValue>(ctx: &Ctx) -> Result<Option<T>, Fault> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn required<T: FromValue>(ctx: &Ctx) -> Result<T, Fault> {
+fn required<T: FromValue>(ctx: &Ctx<'_>) -> Result<T, Fault> {
     optional(ctx)?.ok_or_else(|| refuse("a required glTF field cannot be removed"))
 }
 
@@ -61,7 +61,7 @@ fn row<T: Clone>(items: &[T], index: usize) -> Result<T, Fault> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn reordered<T: Ord + Clone>(current: &[T], ctx: &Ctx) -> Result<Option<Vec<T>>, Fault>
+fn reordered<T: Ord + Clone>(current: &[T], ctx: &Ctx<'_>) -> Result<Option<Vec<T>>, Fault>
 where
     Vec<T>: FromValue,
 {
@@ -76,7 +76,7 @@ where
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn metadata(ctx: &Ctx, field: &str) -> Rows {
+fn metadata(ctx: &Ctx<'_>, field: &str) -> Rows {
     let asset = &ctx.base.document.asset;
     let (mut generator, mut copyright, mut min_version) = (asset.generator.clone(), asset.copyright.clone(), asset.min_version.clone());
     let value = optional::<String>(ctx)?;
@@ -89,7 +89,7 @@ fn metadata(ctx: &Ctx, field: &str) -> Rows {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn transform(ctx: &Ctx, field: &str) -> Rows {
+fn transform(ctx: &Ctx<'_>, field: &str) -> Rows {
     let node = row(&ctx.base.document.nodes, ctx.ix[0])?;
     let (mut translation, mut rotation, mut scale) = (node.translation, node.rotation, node.scale);
     let transform = match field {

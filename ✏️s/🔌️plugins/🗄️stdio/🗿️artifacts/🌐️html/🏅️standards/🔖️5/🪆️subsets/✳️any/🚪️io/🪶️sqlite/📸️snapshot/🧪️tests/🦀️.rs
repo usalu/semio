@@ -4,8 +4,8 @@ use crate::standards::v5::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
 
 fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }
-fn project(snapshot: &HtmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap() }
-fn restore(database: &SqliteDatabase) -> Result<HtmlSnapshot, ValueError> { HtmlSnapshot::from_sqlite_database(database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())) }
+fn project(snapshot: &HtmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() }
+fn restore(database: &SqliteDatabase) -> Result<HtmlSnapshot, ValueError> { HtmlSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())) }
 
 #[test]
 fn sqlite_snapshot_html_owned_dialect_guard_requires_its_declared_coordinate() {
@@ -53,11 +53,11 @@ fn sqlite_snapshot_html_rejects_invalid_graphs_shapes_and_resource_limits() {
         _ => database.table_mut("html_attribute").unwrap().rows[0].values[4] = SqliteValue::Integer(0),
     } assert!(restore(&database).is_err(), "alteration {alteration}"); }
     let rows = original.tables.iter().map(|table| table.rows.len()).sum(); let bytes = original.tables.iter().flat_map(|table| &table.rows).flat_map(|row| &row.values).map(|value| match value { SqliteValue::Null => 0, SqliteValue::Integer(_) | SqliteValue::Real(_) => 8, SqliteValue::Text(text) => text.len(), SqliteValue::Blob(bytes) => bytes.len() }).sum();
-    let limits = SqliteDatabaseLimits { max_rows: rows, max_value_bytes: bytes, ..SqliteDatabaseLimits::default() }; assert_eq!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), original);
-    for limits in [SqliteDatabaseLimits { max_rows: rows - 1, ..limits }, SqliteDatabaseLimits { max_value_bytes: bytes - 1, ..limits }] { assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err()); assert!(HtmlSnapshot::from_sqlite_database(&original, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err()); }
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false, limits)).is_err());
+    let limits = SqliteDatabaseLimits { max_rows: rows, max_value_bytes: bytes, ..SqliteDatabaseLimits::default() }; assert_eq!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), original);
+    for limits in [SqliteDatabaseLimits { max_rows: rows - 1, ..limits }, SqliteDatabaseLimits { max_value_bytes: bytes - 1, ..limits }] { assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err()); assert!(HtmlSnapshot::from_sqlite_database(&original,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err()); }
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false,limits)).is_err());
     let mut large = HtmlSnapshot::default(); large.root = HtmlNode::Element { name: "html".into(), attributes: Vec::new(), children: (0..1024).map(|_| HtmlNode::Text { text: "value".into() }).collect() }; let mut checkpoints = 0;
-    assert!(large.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| { checkpoints += 1; checkpoints < 3 }, SqliteDatabaseLimits::default())).is_err()); assert_eq!(checkpoints, 3);
+    assert!(large.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| { checkpoints += 1; checkpoints < 3 },SqliteDatabaseLimits::default())).is_err()); assert_eq!(checkpoints, 3);
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn sqlite_snapshot_html_erased_native_preflight_admission_and_limits() {
     let codec = <HtmlSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
-        let actual = (codec.import)("html preflight", &dialect, project(&snapshot), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+        let actual = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("html preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)) };
         assert_eq!(actual, expected);
     }

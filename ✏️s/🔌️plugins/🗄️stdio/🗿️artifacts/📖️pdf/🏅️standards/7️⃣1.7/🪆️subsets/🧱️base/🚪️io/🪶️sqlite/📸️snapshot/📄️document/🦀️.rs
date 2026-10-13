@@ -14,7 +14,7 @@ fn read_indirect(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfIndirectObject
 fn write_collection<T>(out:&mut Projection<'_,'_>,table:&str,values:&[T],write:impl Fn(&mut Projection<'_,'_>,&T)->Result<i64,ValueError>)->Result<(),ValueError>{for(ordinal,value)in values.iter().enumerate(){let key=write(out,value)?;out.insert(table,&[C::Integer(1),C::Integer(ordinal as i64),C::Integer(key)])?;}Ok(())}
 fn read_collection<T>(reader:&mut Reader<'_,'_,'_>,table:&'static str,read:impl Fn(&mut Reader<'_,'_,'_>,i64)->Result<T,ValueError>)->Result<Vec<T>,ValueError>{let mut values=Vec::new();for child in reader.children(table,1,2,1)?{let child=reader.take(table,child.rowid,4)?;values.push(read(reader,child.integer(3)?)?);}Ok(values)}
 
-impl store::ArtifactSqliteSnapshot for PdfSnapshot{
+impl ArtifactSqliteSnapshot for PdfSnapshot{
     fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(||->Result<(),ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)}
     fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {admission::borrowed(record,native,limits)?;snapshot_text::from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn retire_sqlite_snapshot(self){<Self as pack::value::FromValue>::retire_decoded(self)}
@@ -43,7 +43,7 @@ impl store::ArtifactSqliteSnapshot for PdfSnapshot{
                 let kind=row.text(1)?;
                 if matches!(kind,"javaScript"|"launch")||(kind=="unknown"&&matches!(row.optional_text(22)?,Some("JavaScript"|"Launch"))){report("stdio.pdf.sqlite.forbidden-action",format!("semantic action {} has forbidden kind {kind}",row.rowid),severity);}
             }
-            let mut names=std::collections::BTreeMap::new();
+            let mut names=BTreeMap::new();
             for(index,row)in database.table("pdf_cos_value")?.rows.iter().enumerate(){
                 if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,database.table("pdf_cos_value")?.rows.len())?;}
                 if row.text(1)?=="name"{names.insert(row.rowid,row.text(8)?);}

@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-shots/moves-shot-close-to-front: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["shots"]["edits"][0]["id"], "shot-close", "reorder-shots/moves-shot-close-to-front: the promoted shot is the moved row");
-    assert_eq!(committed["shots"]["edits"][0]["index"], 0, "reorder-shots/moves-shot-close-to-front: the destination is the front");
+    assert_eq!(committed["shots"]["edits"][0]["to"], 0, "reorder-shots/moves-shot-close-to-front: the destination is the front");
     assert!(committed["activeShotId"].is_null(), "reorder-shots/moves-shot-close-to-front: the active-shot cursor slot is untouched by a reorder");
     assert!(committed["shots"]["patched"].as_array().expect("patched is an array").is_empty(), "reorder-shots/moves-shot-close-to-front: reordering is pure permutation");
 }

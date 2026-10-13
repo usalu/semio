@@ -3,7 +3,6 @@ use super::{SqliteSnapshotControl,SqliteSnapshotPhase,ValueError,ValueRefusalKin
 use crate::standards::v2x3::subsets::base::io::sqlite::snapshot::native;
 use semio_framework_diagnostic::{Diagnostic,FaultCode,FaultScope,Severity,TextSpan};
 use semio_framework_value::NativeEncodeControl;
-use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 
 /// 🩺️ Owns controlled IFC2x3 conformance diagnostics through success and partial failure.
 #[derive(Default)]

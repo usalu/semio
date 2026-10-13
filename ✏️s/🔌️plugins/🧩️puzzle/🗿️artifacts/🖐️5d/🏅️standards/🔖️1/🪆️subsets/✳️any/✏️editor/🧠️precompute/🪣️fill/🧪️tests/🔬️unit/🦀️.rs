@@ -447,8 +447,9 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
 
 //#region ⏯️App
 pub(crate) fn host_turn(app: &mut Puzzle5dApp) {
-    crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance step");
-    ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("advance one typed operation publication unit");
+    crate::puzzle_job::testing::maintain(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes).expect("maintenance step");
+    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut identity, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation))).expect("advance one typed operation publication unit");
+    crate::puzzle_job::testing::drain_outboxes(app);
     if let Some(page) = app.take_typed_operation_result_page(1) {
         assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page");
@@ -465,7 +466,7 @@ pub(crate) fn world_meta() -> ActionMeta {
 
 pub(crate) fn tool_run_action(app: &mut Puzzle5dApp, action: &str, args: serde_json::Value) -> serde_json::Value {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &world_meta())).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+    let result = semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &world_meta(), &mut identity))).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     serde_json::Value::from(&result.output)
 }
 

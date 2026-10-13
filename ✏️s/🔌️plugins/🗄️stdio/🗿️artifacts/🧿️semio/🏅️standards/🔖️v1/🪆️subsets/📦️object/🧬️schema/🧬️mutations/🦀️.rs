@@ -26,7 +26,7 @@ use super::scale_object;
 
 //#region 🔖️Mutations
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object")]
 pub enum SemioObjectMutation {

@@ -53,7 +53,7 @@ pub fn mutation(payload: GltfUnbindNodeCameraPayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeCameraMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "node-camera", kind: "unbind-node-camera", record: "UnboundNodeCamera" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

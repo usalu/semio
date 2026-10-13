@@ -386,7 +386,7 @@ impl ArtifactSqliteSnapshot for Block5dSnapshot {
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admit_native_rows(record, maximum, native)?;
                 Self::__dsl_from_record_controlled(record, native)
             })(); *snapshot_output = Some(constructed?); Ok(()) },

@@ -11,7 +11,7 @@ use store::{
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
-fn catalog_dialect(kind:&str,standard:&str,subset:&str)->Result<(),ValueError>{if !semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot::admits_dialect_parts(kind,standard,subset){return Err(invalid("Block3d catalog requires the typed Semio Kit dialect"))}Ok(())}
+fn catalog_dialect(kind:&str,standard:&str,subset:&str)->Result<(),ValueError>{if !SemioKitSnapshot::admits_dialect_parts(kind,standard,subset){return Err(invalid("Block3d catalog requires the typed Semio Kit dialect"))}Ok(())}
 fn class(v: f64) -> &'static str {
     if v.is_nan() {
         "nan"
@@ -60,11 +60,11 @@ impl<'a> Cells<'a> {
     }
 }
 fn add(total: &mut usize, count: usize, c: &SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-    *total = total.checked_add(count).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Block row count overflow"))?;
+    *total = total.checked_add(count).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Block row count overflow"))?;
     c.check_rows(*total)
 }
 fn admit_schema(c: &SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
-    if c.limits().max_tables < TABLES.len() || TABLES.iter().any(|(_,width)| *width > c.limits().max_columns) {return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Block3d authored tables or columns exceed caller limit"));}
+    if c.limits().max_tables < TABLES.len() || TABLES.iter().any(|(_,width)| *width > c.limits().max_columns) {return Err(ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Block3d authored tables or columns exceed caller limit"));}
     if SQL.len() > c.limits().max_schema_bytes {
         return Err(invalid("Block authored schema exceeds byte limit"));
     }
@@ -86,7 +86,7 @@ fn native_list(v: Option<&semio_framework_dsl_record::FieldValue>) -> Result<&[s
     }
 }
 fn native_add(total: &mut usize, n: usize, maximum: usize) -> Result<(), ValueError> {
-    *total = total.checked_add(n).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Block native rows overflow"))?;
+    *total = total.checked_add(n).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Block native rows overflow"))?;
     if *total > maximum {
         return Err(invalid("Block native rows exceed limit"));
     }
@@ -226,7 +226,7 @@ impl<'a> Rows<'a> {
         let total = group.len();
         c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, total)?;
         let mut out = Vec::new();
-        out.try_reserve_exact(total).map_err(|_|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"Block relationship allocation failed"))?;
+        out.try_reserve_exact(total).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"Block relationship allocation failed"))?;
         for (n, (order, row)) in group.into_iter().enumerate() {
             if order != i64::try_from(n).map_err(|e|invalid(e.to_string()))? {
                 return Err(invalid("Block noncontiguous ordinal"));
@@ -370,7 +370,7 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admission::admit(record,native,limits)?;
                 Self::__dsl_from_record_controlled(record, native)
             })(); *snapshot_output = Some(constructed?); Ok(()) },

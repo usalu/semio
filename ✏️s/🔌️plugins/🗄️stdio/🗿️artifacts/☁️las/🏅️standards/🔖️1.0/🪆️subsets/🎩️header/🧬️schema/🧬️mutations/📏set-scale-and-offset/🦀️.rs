@@ -28,7 +28,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetScaleAndOffset {
         protocol::MutationOutcome::new(diff::diff_set_scale_and_offset(base, *scale, *offset))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-        Ok({ vec![LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) })] })
+        Ok(vec![LasMutation::SetScaleAndOffset(SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set scale and offset", "Maßstab und Versatz setzen")

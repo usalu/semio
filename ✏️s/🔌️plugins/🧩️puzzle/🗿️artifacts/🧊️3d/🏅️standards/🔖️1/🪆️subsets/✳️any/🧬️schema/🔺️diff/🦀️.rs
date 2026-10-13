@@ -188,7 +188,7 @@ fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_f
 
 
 impl RowPatch<Puzzle3dVortex> for Puzzle3dVortexPatch {
-    fn commit_into(&self, item: &mut Puzzle3dVortex, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle3dVortex, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.vortex_kind {
             item.vortex_kind = value.clone();
         }
@@ -339,7 +339,7 @@ impl RowPatch<Puzzle3dObject> for Puzzle3dObjectPatch {
 }
 
 impl RowPatch<Puzzle3dAttraction> for Puzzle3dAttractionPatch {
-    fn commit_into(&self, item: &mut Puzzle3dAttraction, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle3dAttraction, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.attracting {
             item.attracting = value.clone();
         }
@@ -424,7 +424,7 @@ impl RowPatch<Puzzle3dAttraction> for Puzzle3dAttractionPatch {
 }
 
 impl RowPatch<Puzzle3dTargetVolume> for Puzzle3dTargetVolumePatch {
-    fn commit_into(&self, item: &mut Puzzle3dTargetVolume, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle3dTargetVolume, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.origin {
             item.origin = *value;
         }
@@ -474,7 +474,7 @@ impl RowPatch<Puzzle3dTargetVolume> for Puzzle3dTargetVolumePatch {
 }
 
 impl RowPatch<Puzzle3dReference> for Puzzle3dReferencePatch {
-    fn commit_into(&self, item: &mut Puzzle3dReference, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle3dReference, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.source {
             item.source = value.clone();
         }
@@ -524,7 +524,7 @@ impl RowPatch<Puzzle3dReference> for Puzzle3dReferencePatch {
 }
 
 impl RowPatch<Puzzle3dKindCompatibility> for Puzzle3dKindCompatibilityPatch {
-    fn commit_into(&self, item: &mut Puzzle3dKindCompatibility, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle3dKindCompatibility, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.bidirectional {
             item.bidirectional = *value;
         }

@@ -214,4 +214,3 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 
 use crate::standards::v1::subsets::mesh::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_bytes, dec_bytes, parse_f32, parse_f64, parse_u32, enc_list, dec_list, enc_point3, dec_point3, enc_uv, dec_uv, enc_rgba, dec_rgba, enc_topology, dec_topology, enc_primitive, dec_primitive, enc_mesh, dec_mesh, enc_material, dec_material, enc_texture, dec_texture, enc_named_added_mesh, dec_named_added_mesh, enc_named_added_primitive, dec_named_added_primitive, enc_named_added_material, dec_named_added_material, enc_named_added_texture, dec_named_added_texture, enc_primitive_diff, dec_primitive_diff, enc_mesh_item_diff, dec_mesh_item_diff, enc_material_diff, dec_material_diff, enc_texture_diff, dec_texture_diff, enc_meshes_diff, dec_meshes_diff, enc_materials_diff, dec_materials_diff, enc_textures_diff, dec_textures_diff};
 }
-pub use diff_codec::*;

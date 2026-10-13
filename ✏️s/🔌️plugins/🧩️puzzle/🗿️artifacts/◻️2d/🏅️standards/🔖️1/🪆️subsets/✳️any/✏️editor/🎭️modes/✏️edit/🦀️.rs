@@ -17,8 +17,7 @@ use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_plugin::WindowLayout;
-use semio_framework_ui_contract::{Buildable, HasBase};
-use semio_framework_pack_json::{json,Value,Object};
+use semio_framework_pack_json::{json,Value};
 
 pub const PUZZLE2D_PLAY_MODE_EDIT: &str = "edit";
 

@@ -9,7 +9,7 @@
 use crate::editor::puzzle2d::engine::{
     BoardFillCandidateEvent, BoardFillCandidateVerdict, BoardFillCaptureFault, BoardFillIngressHandleText, BoardFillIngressKindText, BoardFillIngressRuleText, BoardFillIngressTemplateText, BoardFillJob, BoardFillPlacement, BoardFillSnapshot, BoardFillSnapshotIngress, BoardFillStage,
 };
-use crate::standards::v1::subsets::any::schema::mutations::{};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{};
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
@@ -1359,7 +1359,7 @@ impl Puzzle2dFillRunJob {
         }
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>) -> Option<JobTurn> {
+    fn flush(&mut self, _context: &mut StepContext<'_>) -> Option<JobTurn> {
         if self.writer.is_empty() && !self.finished {
             return None;
         }
@@ -1384,7 +1384,7 @@ impl Puzzle2dFillRunJob {
         }
     }
 
-    fn settle_owed(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
+    fn settle_owed(&mut self, _context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
         match owed {
             FillRunOwed::Complete => JobTurn::Complete,
             FillRunOwed::Checkpoint => {
@@ -1505,7 +1505,7 @@ impl Puzzle2dFillRunJob {
 }
 
 impl InteractiveJob for Puzzle2dFillRunJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -1810,7 +1810,7 @@ impl Puzzle2dFillRevalidateJob {
 }
 
 impl InteractiveJob for Puzzle2dFillRevalidateJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {

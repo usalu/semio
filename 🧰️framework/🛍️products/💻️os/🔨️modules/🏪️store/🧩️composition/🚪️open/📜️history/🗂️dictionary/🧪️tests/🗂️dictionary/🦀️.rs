@@ -425,7 +425,7 @@ async fn member_history_dictionary_retains_every_denied_owner_until_exact_close(
             assert_eq!(facts, (row["entries"].as_u64().unwrap() as usize, row["pages"].as_u64().unwrap() as usize, row["inputBytes"].as_u64().unwrap() as usize));
             assert_eq!(retired, row["retiredBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
             let identity_bytes = fixture["requestIdentity"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().len()).sum::<usize>() + fixture["openedActor"].as_str().unwrap().len();
-            assert_eq!(retired - facts.2 - identity_bytes - facts.1 * 1024 - pending - lookup, row["idBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
+            assert_eq!(retired - facts.2 - identity_bytes - pending - lookup, row["idBytes"].as_u64().unwrap() as usize, "{}", row["id"]);
         }
     }
     println!("retained dictionary rejection owner:11 authority transitions +7 payload scratch +9 pending-copy/ID scratch traces x3 grants; original witness retained and exactly closed; no public member");

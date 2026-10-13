@@ -2,7 +2,7 @@
 
 use crate::artifact_schema::mutations::En1996Mutation;
 
-use protocol::{OpBinary, OpText};
+use protocol::OpText;
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");

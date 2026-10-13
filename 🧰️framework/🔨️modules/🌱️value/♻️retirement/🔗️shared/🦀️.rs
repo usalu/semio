@@ -71,7 +71,7 @@ impl<T:RetireOwned+Sync> Drop for SharedControlledRetirement<T> {fn drop(&mut se
 impl<T:RetireOwned+Sync> RetirementCursor for SharedControlledRetirement<T> {
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
-    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.next_copy_byte_demand()}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn allows_admitted_narrow_work(&self)->bool{true}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
     fn next_close_byte_demand(&self)->Option<usize> {self.next_release_byte_demand().ok()}

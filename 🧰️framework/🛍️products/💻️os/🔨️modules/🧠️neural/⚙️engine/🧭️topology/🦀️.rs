@@ -212,11 +212,11 @@ impl semio_framework_value::retirement::RetirementCursor for TopologyRetirement 
     fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_close_demands(copy).ok().map(|demand|demand.capacity_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_demands(0).ok().map(|demand|demand.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.depth)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for BudgetedEvalTopology {
     fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.begin_close();Box::new(TopologyRetirement(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<TopologyRetirement>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TopologyRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 

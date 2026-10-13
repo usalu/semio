@@ -3,6 +3,23 @@ import {createHash} from "node:crypto";
 import {join,resolve} from "node:path";
 import {readPhysicalFileV1,observePhysicalFileV1,type PhysicalFileClaimV1,type FileObservationControlV1} from "../🟦️.ts";
 
+/** 🧵️ Operations in flight at once under one current physical authority: enough to overlap descriptor round trips with hashing, few enough to hold at most this many chunk buffers. */
+export const CURRENT_PHYSICAL_CONCURRENCY_V1=8;
+
+/** 🪜️ Runs `run` over `items` with at most `limit` calls in flight and returns the results in item order.
+ *
+ * Items start in order. After the first failure no further item starts, the calls already in flight settle, and the first failure is thrown, so nothing runs on past a refusal.
+ * @see ../../../🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🧪️tests/🟦️.ts
+ */
+export async function mapBoundedV1<T,R>(items:readonly T[],limit:number,run:(item:T,index:number)=>Promise<R>):Promise<R[]>{
+ if(!Number.isSafeInteger(limit)||limit<1)throw Error("Positive concurrency limit required");
+ const results=new Array<R>(items.length);let next=0,failed=false,failure:unknown;
+ const worker=async():Promise<void>=>{while(!failed&&next<items.length){const index=next++;try{results[index]=await run(items[index]!,index);}catch(error){if(!failed){failed=true;failure=error;}return;}}};
+ await Promise.all(Array.from({length:Math.min(limit,items.length)},worker));
+ if(failed)throw failure;
+ return results;
+}
+
 /** 🌲️ One exact physical child identity independent of compiler or application schemas. */
 export type CurrentPhysicalEntryV1=Readonly<{path:string;kind:"file"|"directory"|"symlink"|"other";symlinkTarget:string|null}>;
 
@@ -31,5 +48,5 @@ export class CurrentPhysicalOwnerV1 implements CurrentPhysicalPortV1 {
    await this.checkpoint();const after=await lstat(absolute,{bigint:true});this.check();if(!after.isDirectory()||before.dev!==after.dev||before.ino!==after.ino||before.mtimeNs!==after.mtimeNs||before.ctimeNs!==after.ctimeNs)throw Error("Current directory changed");const source=JSON.stringify(rows.map(entry=>[entry.path.slice(absolute.length+1),entry.kind,entry.symlinkTarget]));this.admit(1,Buffer.byteLength(source));const sha256=createHash("sha256").update(source).digest("hex"),previous=this.directories.get(absolute);if(previous&&previous!==sha256)throw Error("Current directory roster changed");this.directories.set(absolute,sha256);return rows;
   }finally{await handle.close();}
  }
- async recheck():Promise<void>{for(const [path,claim]of this.files){await this.checkpoint();const current=await this.file(path,control=>observePhysicalFileV1(path,control));if(current.sha256!==claim.sha256||current.byteLength!==claim.byteLength)throw Error("Current physical bytes changed before transfer");}for(const [path,sha256]of this.directories){await this.checkpoint();const entries=await this.directoryEntries(path);if(!entries||createHash("sha256").update(JSON.stringify(entries.map(entry=>[entry.path.slice(path.length+1),entry.kind,entry.symlinkTarget]))).digest("hex")!==sha256)throw Error("Current directory changed before transfer");}for(const path of this.missing){await this.checkpoint();try{await lstat(path);this.check();throw Error("Current physical absent input appeared before transfer");}catch(error){this.check();if((error as {code?:string}).code!=="ENOENT"&&(error as {code?:string}).code!=="ENOTDIR")throw error;}}this.progress();}
+ async recheck():Promise<void>{await mapBoundedV1([...this.files],CURRENT_PHYSICAL_CONCURRENCY_V1,async([path,claim])=>{await this.checkpoint();const current=await this.file(path,control=>observePhysicalFileV1(path,control));if(current.sha256!==claim.sha256||current.byteLength!==claim.byteLength)throw Error("Current physical bytes changed before transfer");});for(const [path,sha256]of this.directories){await this.checkpoint();const entries=await this.directoryEntries(path);if(!entries||createHash("sha256").update(JSON.stringify(entries.map(entry=>[entry.path.slice(path.length+1),entry.kind,entry.symlinkTarget]))).digest("hex")!==sha256)throw Error("Current directory changed before transfer");}for(const path of this.missing){await this.checkpoint();try{await lstat(path);this.check();throw Error("Current physical absent input appeared before transfer");}catch(error){this.check();if((error as {code?:string}).code!=="ENOENT"&&(error as {code?:string}).code!=="ENOTDIR")throw error;}}this.progress();}
 }

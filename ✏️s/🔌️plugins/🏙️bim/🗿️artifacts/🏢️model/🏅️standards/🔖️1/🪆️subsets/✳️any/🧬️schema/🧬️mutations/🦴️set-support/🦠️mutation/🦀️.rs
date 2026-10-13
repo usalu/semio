@@ -1,5 +1,5 @@
 //! 🦴️ Authored set-support semantic leaf.
-use crate::{StructuralSupport, StructuralSupportPatch, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::{StructuralSupportPatch, ModelDiff, ModelMutation, ModelSnapshot};
 use crate::{StructuralLocation, Restraints, Point3};
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

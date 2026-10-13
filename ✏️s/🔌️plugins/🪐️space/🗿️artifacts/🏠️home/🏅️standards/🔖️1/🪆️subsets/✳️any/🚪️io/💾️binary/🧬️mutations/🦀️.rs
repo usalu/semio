@@ -31,7 +31,7 @@ mod tests;
 pub mod change_catalog_generation;
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 
 impl protocol::OpBinary for SHomeMutation {

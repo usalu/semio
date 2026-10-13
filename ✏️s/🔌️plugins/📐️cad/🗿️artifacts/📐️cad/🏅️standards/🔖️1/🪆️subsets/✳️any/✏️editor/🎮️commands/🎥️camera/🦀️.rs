@@ -7,8 +7,8 @@ use crate::editor::cad::cad_pane_id_from_surface_id;
 use crate::op::CadMutation;
 use crate::standards::v1::subsets::any::schema::inferences::{cad_camera_distance, cad_camera_projection_config, cad_camera_set_projection_config};
 use crate::CadSnapshot;
-use crate::{CadCamera, CadPaneId};
 use semio_framework_value::DslValue;
+use crate::{CadCamera, CadPaneId};
 use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -56,8 +56,8 @@ pub mod set_projection {
         // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
         // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
         // boundary, bridged once here from a `DslValue` built the normal way.
-        let value = payload.value_str.clone().map(semio_framework_value::DslValue::String).or_else(|| payload.value_num.map(semio_framework_value::DslValue::float)).unwrap_or(semio_framework_value::DslValue::Null);
-        let dsl_args = semio_framework_value::DslValue::object([("field".to_string(), payload.field.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String))]);
+        let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
+        let dsl_args = DslValue::object([("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String))]);
         let args_value = semio_framework_pack_json::from_dsl_value(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjection", args);
@@ -95,8 +95,8 @@ pub mod set_projection_param {
         // 🌉️ `world3d_projection_action_moves_pose`/`apply_world3d_projection_action` (framework
         // `🔌️plugin/🦀️.rs`) take `Option<&dsl::os_pack::json::Value>` — a genuine framework
         // boundary, bridged once here from a `DslValue` built the normal way.
-        let value = payload.value_str.clone().map(semio_framework_value::DslValue::String).or_else(|| payload.value_num.map(semio_framework_value::DslValue::float)).unwrap_or(semio_framework_value::DslValue::Null);
-        let dsl_args = semio_framework_value::DslValue::object([("field".to_string(), payload.field.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(semio_framework_value::DslValue::Null, semio_framework_value::DslValue::String))]);
+        let value = payload.value_str.clone().map(DslValue::String).or_else(|| payload.value_num.map(DslValue::float)).unwrap_or(DslValue::Null);
+        let dsl_args = DslValue::object([("field".to_string(), payload.field.clone().map_or(DslValue::Null, DslValue::String)), ("value".to_string(), value), ("param".to_string(), payload.param.clone().map_or(DslValue::Null, DslValue::String))]);
         let args_value = semio_framework_pack_json::from_dsl_value(&dsl_args);
         let args = Some(&args_value);
         let moves_pose = world3d_projection_action_moves_pose("setProjectionParam", args);

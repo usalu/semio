@@ -133,7 +133,7 @@ impl RegistryLeaseRetirement {
 impl Drop for RegistryLeaseRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"registry source lease abandoned before explicit handoff");}}
 impl RetireOwned for SharedRegistry {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self.into_retirement())}
-    fn retirement_birth_bytes(&self)->Option<usize> {Some(std::mem::size_of::<RegistryLeaseRetirement>())}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<RegistryLeaseRetirement>())}
     fn controlled_retirement_supported()->bool {true}
 }
 
@@ -144,7 +144,7 @@ impl OperatorRetirement {
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_capacity_byte_demand(copy)}else{self.operator.as_ref().map_or(Ok(0),|value|value.next_retire_capacity_byte_demand(copy))}}
     fn next_release_byte_demand(&self)->Result<usize,ValueError> {
         if !self.values.terminal_is_empty(){return self.values.next_release_byte_demand();}
-        self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(std::mem::size_of_val(value.as_ref()))}else{value.next_retire_release_byte_demand()})
+        self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(size_of_val(value.as_ref()))}else{value.next_retire_release_byte_demand()})
     }
     fn next_depth_demand(&self)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_depth_demand()}else{self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(1)}else{value.next_retire_depth_demand()})}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
@@ -155,7 +155,7 @@ impl OperatorRetirement {
         if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"operator retained ownership exceeds admitted depth"));}
         let value=self.operator.as_mut().unwrap();
         if value.retirement_is_empty() {
-            let bytes=std::mem::size_of_val(value.as_ref());
+            let bytes=size_of_val(value.as_ref());
             if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
             drop(self.operator.take());
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
@@ -167,7 +167,7 @@ impl OperatorRetirement {
 impl Drop for OperatorRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"operator abandoned before physical shell closure");}}
 impl RetireOwned for Box<dyn Operator> {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(OperatorRetirement {operator:Some(self),values:ValueRetirement::default()})}
-    fn retirement_birth_bytes(&self)->Option<usize> {Some(std::mem::size_of::<OperatorRetirement>())}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<OperatorRetirement>())}
     fn controlled_retirement_supported()->bool {true}
 }
 macro_rules! original_retirement_cursor {

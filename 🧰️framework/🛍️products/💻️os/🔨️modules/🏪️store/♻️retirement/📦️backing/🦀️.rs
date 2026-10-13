@@ -1,7 +1,7 @@
 //! 📦️ Whole physical retirement of empty resident Store metadata backings.
 use super::*;
 
-fn extent<T>(capacity: usize) -> usize { capacity.checked_mul(std::mem::size_of::<T>()).expect("resident metadata backing layout") }
+fn extent<T>(capacity: usize) -> usize { capacity.checked_mul(size_of::<T>()).expect("resident metadata backing layout") }
 
 fn denied() -> RetainedCloneStep { RetainedCloneStep::Progress(Default::default()) }
 
@@ -71,7 +71,7 @@ impl<T: semio_framework_value::retirement::RetireOwned> SourceIterator<T> {
         }
         if self.pending.is_some() || self.source.len() != 0 {
             if !T::controlled_retirement_supported() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original source iterator element has no controlled retirement declaration")); }
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<T>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<T>(), depth: 1, ..Default::default() });
         }
         Ok(RetirementDemand { release_bytes: self.source_bytes, depth: 1, ..Default::default() })
     }

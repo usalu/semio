@@ -44,7 +44,7 @@ impl Puzzle2dDeleteNodePreparationCursor {
             },
             1 => { let step=self.lookup.close_step(grant)?;if self.lookup.terminal_is_empty(){self.phase=2;}Ok(Puzzle2dDeleteNodePreparationStep::Pending(step.progress())) },
             2 => {
-                let bytes = std::mem::size_of::<Option<usize>>();
+                let bytes = size_of::<Option<usize>>();
                 if grant.maximum_copy_bytes < bytes { return Ok(Puzzle2dDeleteNodePreparationStep::Pending(Default::default())); }
                 self.phase = 3;
                 Ok(Puzzle2dDeleteNodePreparationStep::Node { index: self.node, progress: RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() } })
@@ -69,7 +69,7 @@ impl Puzzle2dDeleteNodePreparationCursor {
             5 => {let step=self.comparison.close_step(grant)?;if self.comparison.terminal_is_empty(){self.comparison=Default::default();self.phase=if self.matched{7}else{6};}Ok(Puzzle2dDeleteNodePreparationStep::Pending(step.progress()))},
             6 => { if self.endpoint { self.handle += 1; self.endpoint = false; } else { self.endpoint = true; } self.phase = 4; Ok(Puzzle2dDeleteNodePreparationStep::Pending(item)) }
             7 => {
-                let bytes = std::mem::size_of::<usize>();
+                let bytes = size_of::<usize>();
                 if grant.maximum_copy_bytes < bytes { return Ok(Puzzle2dDeleteNodePreparationStep::Pending(Default::default())); }
                 let index = self.edge;
                 self.edge += 1; self.handle = 0; self.endpoint = false; self.matched = false; self.phase = 3;

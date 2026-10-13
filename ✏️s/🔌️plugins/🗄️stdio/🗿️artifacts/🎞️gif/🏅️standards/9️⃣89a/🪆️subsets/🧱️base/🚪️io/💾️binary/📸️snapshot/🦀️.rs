@@ -26,4 +26,3 @@ impl store::ArtifactPack for GifSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

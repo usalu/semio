@@ -2,7 +2,8 @@
 
 use super::app::{ArtifactOwnedDisposer, PluginLifecycleStep};
 use super::window_config::{WindowRegistry, registry::fits};
-use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress};
+use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind, RetainedCloneGrant, RetainedCloneProgress};
+#[cfg(test)] use semio_framework_value::{RetainedCloneStep};
 use super::transient_publication::transient_store_disposer;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
@@ -149,10 +150,10 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
     fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>;
-    fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
-    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
-    fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError>;
+    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+    fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -194,14 +195,14 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
         self.publication.begin_close();
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, ValueError> {
         if !self.ingress.terminal_is_empty(){return self.ingress.step(grant).map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));}
         self.publication.close_step(store::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items, maximum_copy_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth })
     }
 
-    fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
-    fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.ingress.step(grant)}
-    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if !self.ingress.terminal_is_empty(){self.ingress_demands(body)}else if !self.publication.terminal_is_empty(){self.publication.retirement_demands(body)}else{super::window_mutation::address_demands(&self.window_id,&self.address_retirement,body)}}
+    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
+    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{self.ingress.step(grant)}
+    fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.ingress.terminal_is_empty(){self.ingress_demands(body)}else if !self.publication.terminal_is_empty(){self.publication.retirement_demands(body)}else{super::window_mutation::address_demands(&self.window_id,&self.address_retirement,body)}}
     fn terminal_is_empty(&self) -> bool {
         self.publication.terminal_is_empty()&&self.ingress.terminal_is_empty()&&super::window_mutation::address_terminal(&self.window_id,&self.address_retirement)
     }
@@ -329,13 +330,13 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         }
         if let Some(partition) = (self.partition_open != 0).then(|| self.partitions.get_index(self.partition_close_cursor)).flatten() {
             if let Some(owner) = partition.disposer.as_ref() {
-                return if owner.terminal_is_empty(&partition.store) { Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<Box<dyn ArtifactOwnedDisposer<WindowTransientStore<O>>>>>() + std::mem::size_of::<usize>() * 2, release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { owner.retirement_demands(&partition.store, body).map(|mut demand| { demand.copy_bytes = demand.copy_bytes.max(std::mem::size_of::<usize>()); demand }) };
+                return if owner.terminal_is_empty(&partition.store) { Ok(RetirementDemand { copy_bytes: size_of::<Option<Box<dyn ArtifactOwnedDisposer<WindowTransientStore<O>>>>>() + size_of::<usize>() * 2, release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { owner.retirement_demands(&partition.store, body).map(|mut demand| { demand.copy_bytes = demand.copy_bytes.max(size_of::<usize>()); demand }) };
             }
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<usize>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<usize>(), depth: 1, ..Default::default() });
         }
         if !self.partitions.is_empty() { return self.partitions.pop_demand(); }
         if !self.partitions.terminal_is_empty() { return self.partitions.backing_demand(); }
-        if self.owners.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<WindowTransientOwnerBundle<O::State, O::Mutation>>(), depth: 1, ..Default::default() }); }
+        if self.owners.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<WindowTransientOwnerBundle<O::State, O::Mutation>>(), depth: 1, ..Default::default() }); }
         self.factory_close.iter().flatten().next().map_or(Ok(Default::default()), |factory| factory.demands(body))
     }
 
@@ -355,7 +356,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
                     let step = owner.close_step(&mut partition.store, grant)?;
                     if matches!(step, PluginLifecycleStep::AwaitingInput { .. } | PluginLifecycleStep::Blocked { .. }) || step.progress().is_some_and(|progress| progress == RetainedCloneProgress::default()) {
                         self.partition_close_cursor = (self.partition_close_cursor + 1) % partition_count;
-                        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<usize>(), ..Default::default() }));
+                        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), ..Default::default() }));
                     }
                     return Ok(match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other });
                 }
@@ -503,9 +504,9 @@ impl WindowTransientOwnerRegistry {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if self.owner_open != 0 {
             if let Some(owner) = self.owners.get_index(self.owner_close_cursor).unwrap().as_ref() {
-                return if owner.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<Box<dyn ErasedWindowTransientStoreOwner>>>() + std::mem::size_of::<usize>() * 2, release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { owner.retirement_demands(body).map(|mut demand| { demand.copy_bytes = demand.copy_bytes.max(std::mem::size_of::<usize>()); demand }) };
+                return if owner.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: size_of::<Option<Box<dyn ErasedWindowTransientStoreOwner>>>() + size_of::<usize>() * 2, release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { owner.retirement_demands(body).map(|mut demand| { demand.copy_bytes = demand.copy_bytes.max(size_of::<usize>()); demand }) };
             }
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<usize>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<usize>(), depth: 1, ..Default::default() });
         }
         if !self.owners.is_empty() { return self.owners.pop_demand(); }
         self.owners.backing_demand()
@@ -523,7 +524,7 @@ impl WindowTransientOwnerRegistry {
                     let step = owner.close_step(grant)?;
                     if matches!(step, PluginLifecycleStep::AwaitingInput { .. } | PluginLifecycleStep::Blocked { .. }) || step.progress().is_some_and(|progress| progress == RetainedCloneProgress::default()) {
                         self.owner_close_cursor = (self.owner_close_cursor + 1) % count;
-                        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<usize>(), ..Default::default() }));
+                        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), ..Default::default() }));
                     }
                     return Ok(match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other });
                 }

@@ -175,7 +175,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Din4108BuilderFacets {
         construction: Din4108BuilderConstruction,
         analysis: Din4108AnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Din4108ComposerComposition,
+        composition: Din4108ComposerComposition,
     }
     builder: Din4108Builder,
     analyzer: Din4108Analyzer,

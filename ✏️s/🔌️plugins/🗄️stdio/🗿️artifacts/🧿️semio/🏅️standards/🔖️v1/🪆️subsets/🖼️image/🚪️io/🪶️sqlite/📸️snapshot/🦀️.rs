@@ -3,7 +3,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageSnapshot,SemioImageFrame,SemioImageMetadataEntry,SemioColorspace};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
-use semio_framework_os_kernel::sqlite_snapshot::transfer;
+#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::transfer;
 #[path="💰️reconstruction/🦀️.rs"]
 mod reconstruction;
 #[path="🧮️semantic/🦀️.rs"]
@@ -31,8 +31,8 @@ fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.rowid<=0
 fn colorspace(value:SemioColorspace)->&'static str{match value{SemioColorspace::Rgb=>"rgb",SemioColorspace::Rgba=>"rgba",SemioColorspace::Grayscale=>"grayscale",SemioColorspace::GrayscaleAlpha=>"grayscale_alpha",SemioColorspace::Indexed=>"indexed"}}
 impl ArtifactSqliteSnapshot for SemioImageSnapshot{
 fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
-fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{crate::standards::v1::subsets::image::io::sqlite::snapshot::native_encoding::encode(self,encoding,control,native_owner)}
-fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{crate::standards::v1::subsets::image::io::sqlite::snapshot::native_decoding::decode(payload,control,native_control.native())}
+fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
+fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
 
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
 

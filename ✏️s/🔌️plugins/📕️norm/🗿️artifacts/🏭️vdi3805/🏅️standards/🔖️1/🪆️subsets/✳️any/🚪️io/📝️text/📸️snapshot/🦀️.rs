@@ -299,8 +299,8 @@ pub(crate) fn attributes_to_native_line(attributes: &SheetAttributes) -> Option<
 
 /// 🧪 Round-trip helpers retained for tests (not emitted into the user-facing report).
 pub fn assert_json_round_trip(catalog: &ManufacturerCatalog) -> Result<(), String> {
-    let json = crate::standards::v1::subsets::any::io::catalog_to_json(catalog).map_err(|e| e.to_string())?;
-    let restored = crate::standards::v1::subsets::any::io::catalog_from_json(&json).map_err(|e| e.to_string())?;
+    let json = standards::v1::subsets::any::io::catalog_to_json(catalog).map_err(|e| e.to_string())?;
+    let restored = standards::v1::subsets::any::io::catalog_from_json(&json).map_err(|e| e.to_string())?;
     if restored.products.len() != catalog.products.len() {
         return Err("catalog JSON product count mismatch".into());
     }
@@ -318,4 +318,4 @@ pub fn assert_native_round_trip(catalog: &ManufacturerCatalog, limits: SecurityL
 }
 pub use snapshot_wire2_codec::*;
 
-crate::impl_norm_artifact_record!(@text crate::Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805");
+crate::impl_norm_artifact_record!(@text Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805");

@@ -296,7 +296,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec GisterrainBuilderFacets {
         construction: GisterrainBuilderConstruction,
         analysis: GisTerrainAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::GisTerrainComposerComposition,
+        composition: GisTerrainComposerComposition,
     }
     builder: GisterrainBuilder,
     analyzer: GisTerrainAnalyzer,

@@ -36,7 +36,7 @@ pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canv
 // #endregion 🔖️RenderScene
 
 // #region 🔖️Kinds
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use crate::os_spr::causal::transition::HistoryFoldIndex;
 #[path="♻️retirement/🦀️.rs"]
 mod retirement;

@@ -33,7 +33,7 @@ pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
 pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
-    crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
+    snapshot::validate_ifc2x3_snapshot(snapshot)?;
     let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
     Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).into_bytes())
 }
@@ -318,7 +318,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3BuilderFacets {
         construction: Ifc2x3BuilderConstruction,
         analysis: Ifc2x3AnalyzerAnalysis,
-        composition: crate::standards::v2x3::subsets::base::io::derived_composition::Ifc2x3ComposerComposition,
+        composition: Ifc2x3ComposerComposition,
     }
     builder: Ifc2x3Builder,
     analyzer: Ifc2x3Analyzer,
@@ -347,7 +347,7 @@ pub fn register() {
     ::semio_framework_schema_registry::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor()).expect("schema descriptor publication");
     register_artifact_inferences();
     register_pilot_languages();
-    semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<Ifc2x3Snapshot, crate::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation>(crate::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA))
+    semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<Ifc2x3Snapshot, mutations::Ifc2x3Mutation>(STDIO_IFC2X3_DOCUMENT_SCHEMA))
         .expect("static Stdio registration must be available and conflict-free");
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
@@ -362,7 +362,7 @@ pub fn register() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_artifact_inferences() {
-    ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v2x3::subsets::base::schema::inferences::ifc2x3_artifact_inference_descriptor()).expect("schema descriptor publication");
+    ::semio_framework_schema_registry::register_artifact_inference_descriptor(inferences::ifc2x3_artifact_inference_descriptor()).expect("schema descriptor publication");
 }
 
 /// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role
@@ -375,33 +375,33 @@ pub fn register_artifact_inferences() {
 /// `register_pilot_languages` established.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    use crate::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
+    #[cfg(test)] use crate::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3",
         extension: Some("ifc"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::standards::v2x3::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v2x3::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v2x3::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v2x3::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::standards::v2x3::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v2x3::subsets::base::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v2x3::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v2x3::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::standards::v2x3::subsets::base::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v2x3::subsets::base::io::text::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.diff"),
@@ -412,8 +412,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v2x3::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v2x3::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -422,8 +422,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v2x3::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v2x3::subsets::base::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.spr"),
     });
 }

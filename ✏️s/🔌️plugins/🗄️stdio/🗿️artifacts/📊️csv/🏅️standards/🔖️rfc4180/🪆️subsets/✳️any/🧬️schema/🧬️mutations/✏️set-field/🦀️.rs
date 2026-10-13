@@ -17,7 +17,7 @@ pub struct SetField {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "field", kind: "set-field", record: "SetField" };
 
-    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
+    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         let Self { record_index, field_index, value, quoted } = self;
         protocol::MutationOutcome::new({
             let mut fields = vec![None; field_index + 1];
@@ -29,7 +29,7 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetField {
         let Self { record_index, field_index, .. } = self;
         Ok({
             match base.records.get(*record_index).and_then(|r| r.fields.get(*field_index)) {
-                Some(field) => vec![CsvMutation::SetField(set_field::SetField { record_index: *record_index, field_index: *field_index, value: field.value.clone(), quoted: field.quoted })],
+                Some(field) => vec![CsvMutation::SetField(SetField { record_index: *record_index, field_index: *field_index, value: field.value.clone(), quoted: field.quoted })],
                 None => Vec::new(),
             }
         })

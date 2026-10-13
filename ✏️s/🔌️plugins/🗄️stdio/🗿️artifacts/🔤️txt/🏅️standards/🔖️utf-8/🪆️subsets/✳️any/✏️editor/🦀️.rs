@@ -13,7 +13,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;

@@ -14,11 +14,11 @@ pub struct InsertRecord {
 impl protocol::MutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "record", kind: "insert-record", record: "InsertRecord" };
 
-    fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
+    fn diff(&self, _base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
         let Self { index, record } = self;
-        protocol::MutationOutcome::new({ CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) } })
+        protocol::MutationOutcome::new(CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) })
     }
-    fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok({
             {

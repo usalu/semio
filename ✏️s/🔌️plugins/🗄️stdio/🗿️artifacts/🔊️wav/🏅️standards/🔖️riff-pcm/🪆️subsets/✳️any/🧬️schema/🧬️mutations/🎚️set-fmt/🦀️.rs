@@ -21,7 +21,7 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetFmt {
         }
     }
     fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
-        Ok((base.fmt != self.fmt).then(|| WavMutation::SetFmt(set_fmt::SetFmt { fmt: base.fmt.clone() })).into_iter().collect())
+        Ok((base.fmt != self.fmt).then(|| WavMutation::SetFmt(SetFmt { fmt: base.fmt.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set fmt", "fmt-Chunk setzen")

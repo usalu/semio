@@ -3,8 +3,7 @@
 use crate::standards::v1::subsets::any::schema::empty_presentation_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
-use protocol::{Mutation as _, MutationDiff as _, OpBinary};
-use store::ArtifactOwnedValueRetirementFactory as _;
+#[cfg(test)] use store::ArtifactOwnedValueRetirementFactory as _;
 use store::{create_document_envelope, ArtifactEnvelope, ArtifactStore};
 pub type PresentationStore = ArtifactStore<PresentationSnapshot, PresentationMutation>;
 

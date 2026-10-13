@@ -14,6 +14,8 @@ impl SharedUtf8 {
         let original=Arc::into_inner(self.0.take().unwrap());let final_lease=original.is_some();
         Ok((original,RetainedCloneProgress{copied_items:1,copied_bytes:if final_lease{copied}else{0},retained_capacity_bytes:0,released_bytes:if final_lease{released}else{0}}))
     }
+    /// 🧳️ Adopts a shared allocation whose birth an earlier funded turn already reported, so the transfer itself allocates nothing.
+    pub fn from_funded_arc(original:Arc<String>)->Self {Self(Some(original))}
     pub fn admission_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,capacity_bytes:shared_retirement_allocation_bytes::<String>(),depth:1,..Default::default()}}
     pub fn lease_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,depth:1,..Default::default()}}
     pub fn admit(original:String,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,String)> {

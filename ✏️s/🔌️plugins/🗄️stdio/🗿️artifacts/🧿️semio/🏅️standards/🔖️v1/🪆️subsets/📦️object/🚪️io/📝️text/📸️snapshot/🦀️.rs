@@ -204,4 +204,3 @@ use framework_schema::ArtifactSchema;
 
 
 }
-pub use snapshot_wire_codec::*;

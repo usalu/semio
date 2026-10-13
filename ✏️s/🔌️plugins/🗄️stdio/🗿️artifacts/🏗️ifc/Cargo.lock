@@ -2448,6 +2448,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
+ "semio-framework-value",
  "semio-framework-value-derive",
 ]
 

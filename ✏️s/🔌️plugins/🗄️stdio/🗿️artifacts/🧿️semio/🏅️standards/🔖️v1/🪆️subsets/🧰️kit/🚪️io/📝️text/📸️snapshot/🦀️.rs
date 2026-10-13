@@ -45,7 +45,7 @@ pub(crate) fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> St
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
-    let parts=crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)?,',');
+    let parts=split_top_level(strip_brackets(s)?,',');
     let[id,kind,standard,subset]=parts.as_slice()else{return Err("reference requires four literal fields".into())};
     Ok(semio_framework_artifact_reference::ArtifactRef{artifact_id:dec_str(id)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:dec_str(kind)?,standard:dec_str(standard)?,subset:dec_str(subset)?}})
 }
@@ -343,4 +343,4 @@ use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 
 
 }
-pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use snapshot_wire_codec::*;

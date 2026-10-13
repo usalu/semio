@@ -258,6 +258,11 @@ impl XmlSnapshot {
         self.clone()
     }
 
+    /// 🌱️ A well-formed document holding exactly one empty `<root/>` element, the blank page a new XML editor starts from.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn with_empty_root() -> Self {
+        Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), ..XmlDocument::default() } }
+    }
 
 }
 //#endregion 🔖️Snapshot

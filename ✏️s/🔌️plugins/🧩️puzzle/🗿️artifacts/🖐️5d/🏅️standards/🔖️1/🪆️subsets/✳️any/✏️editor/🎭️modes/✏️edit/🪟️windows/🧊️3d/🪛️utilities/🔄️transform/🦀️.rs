@@ -12,7 +12,7 @@
 //! state is never history; the yielded mutations are (design
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8).
 
-use semio_framework_pack_json::json;
+#[cfg(test)] use semio_framework_pack_json::json;
 use crate::apply_puzzle5d_mutation;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;

@@ -2,21 +2,22 @@ import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator
 import { stageArtifacts } from "../📤️publication/🟦️.ts";
 import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
 import { startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
-import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { homedir } from "node:os";
+import { availableParallelism, homedir, totalmem } from "node:os";
 import { createInterface } from "node:readline";
 import {copyFile,lstat,mkdir,open,rename,rm,type FileHandle} from "node:fs/promises";
-import {CurrentPhysicalOwnerV1,type CurrentPhysicalEntryV1,type CurrentPhysicalPortV1} from "../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import {CURRENT_PHYSICAL_CONCURRENCY_V1,CurrentPhysicalOwnerV1,mapBoundedV1,type CurrentPhysicalEntryV1,type CurrentPhysicalPortV1} from "../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import {
   CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,
   CargoProvenanceStreamV1,
   cargoDepInfoChecksumsV1,
   cargoDepInfoSourcesV1,
   cargoProvenancePhysicalControlV1,
+  cargoProvenanceProgressSinkV1,
   decodeCargoProvenanceV1,
   type CargoArtifactObservationV1,
   type CargoDepInfoV1,
@@ -28,9 +29,11 @@ import {
   type CargoUnitObservationV1,
 } from "./🧾️receipt/🟦️.ts";
 
-export { cargoDepInfoChecksumsV1, cargoDepInfoSourcesV1, cargoProvenancePhysicalControlV1 } from "./🧾️receipt/🟦️.ts";
+export { cargoDepInfoChecksumsV1, cargoDepInfoSourcesV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } from "./🧾️receipt/🟦️.ts";
 
-import { acquireCargoBuildLeaseV1 } from "./🔒️lease/🟦️.ts";
+import { acquireCargoBuildLeaseV1, cargoPrebuildJobsV1, cargoPrebuildPassesV1, ensureCargoPrebuildV1, type CargoPrebuildPlanV1 } from "./🔒️lease/🟦️.ts";
+
+export { admitCargoPrebuildPlanV1, cargoPrebuildJobsV1, cargoPrebuildKeyV1, cargoPrebuildPassesV1, cargoPrebuildRequestV1, readCargoPrebuildPlanV1, type CargoPrebuildPlanV1 } from "./🔒️lease/🟦️.ts";
 
 
 /** ✍️ Re-signs a native executable on macOS, ad-hoc, and does nothing anywhere else.
@@ -165,9 +168,9 @@ export function readCargoArtifactBuildPolicyV1(environment: Readonly<Record<stri
  * `O_NONBLOCK` once written, an inherited pipe shares that flag, and a Cargo burst (replayed warnings
  * of fresh units) then fails with `EAGAIN` as soon as a slow reader lets the 64 KiB pipe fill — the
  * build dies with its diagnostics cut mid-line (ticket 26/09/23 W4, `wp-w4/w4-nonblock-probe.ts`). */
-export type CargoArtifactBuildOptionsV1 = { readonly command?: "build" | "rustc"; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly signal?: AbortSignal; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[] }> };
+export type CargoArtifactBuildOptionsV1 = { readonly command?: "build" | "rustc"; readonly prebuild?: CargoPrebuildPlanV1; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly signal?: AbortSignal; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[] }> };
 
-/** 🚦️ Holds the shared profile lease through compiler shutdown and artifact capture, including queue cancellation. */
+/** 🚦️ Holds the shared profile lease through compiler shutdown and the copy of the final artifacts, including queue cancellation, and releases it before staging and provenance so the next compile starts while this build's receipt is still being observed. The receipt's physical recheck still refuses any input a later compile changed. */
 export async function buildCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1 = {}): Promise<void> {
   policy = admitArtifactPolicy(policy);
   if (!isAbsolute(manifest)) throw Error("Cargo artifact manifest must be absolute");
@@ -185,9 +188,10 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
   try {
     if (options.signal?.aborted) abort();
+    if (options.prebuild) await ensureCargoPrebuildV1({ plan: options.prebuild, args, cwd: policy.cwd, directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, environment: options.environment ?? process.env, jobs: cargoPrebuildJobsV1(availableParallelism(), totalmem(), options.environment ?? process.env), passes: cargoPrebuildPassesV1(totalmem()), signal: controller.signal, ...(options.commandPort ? { commandPort: options.commandPort } : {}) });
     lease = await acquireCargoBuildLeaseV1({ directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, args, signal: controller.signal });
     controller.signal.throwIfAborted();
-    await captureCargoArtifacts(manifest, args, policy, { ...options, signal: controller.signal });
+    await captureCargoArtifacts(manifest, args, policy, { ...options, signal: controller.signal }, () => { const held = lease; lease = undefined; held?.release(); });
   } finally {
     try { lease?.release(); }
     finally {
@@ -197,6 +201,30 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
       process.removeListener("SIGINT", abort);
       process.removeListener("SIGTERM", abort);
     }
+  }
+}
+
+/** 🪵️ Forwards a compiler's diagnostics live up to a line budget, keeps the complete stream in a log file and, after a failure, replays the newest lines.
+ * A release build replays the cached warnings of every fresh unit into every component task (build #9: 945 MB), so an unbounded forward floods the task log and the outer Nx buffer. */
+export class BoundedDiagnosticsV1 {
+  lines = 0;
+  suppressed = 0;
+  private logged = 0;
+  private readonly newest: string[] = [];
+  constructor(private readonly log: number | null, private readonly forward: (line: string) => void, private readonly liveLines = 200, private readonly newestLines = 200, private readonly logLimitBytes = 128 * 1024 * 1024) {}
+  line(text: string): void {
+    this.lines++;
+    if (this.log !== null && this.logged < this.logLimitBytes) this.logged += writeSync(this.log, `${text}\n`);
+    if (this.lines <= this.liveLines) { this.forward(text); return; }
+    this.suppressed++;
+    this.newest.push(text);
+    if (this.newest.length > this.newestLines) this.newest.shift();
+  }
+  finish(failed: boolean, logPath: string | null): string[] {
+    const rows: string[] = [];
+    if (this.suppressed > 0) rows.push(`[cargo] ${this.suppressed} diagnostic line(s) not shown${logPath ? `; complete log: ${logPath}` : ""}`);
+    if (failed) rows.push(...this.newest);
+    return rows;
   }
 }
 
@@ -250,8 +278,10 @@ export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: str
   const policy = physical.control;
   if (![policy.maxBytes, policy.maxWork, policy.chunkBytes].every(Number.isSafeInteger) || policy.maxBytes < 0 || policy.maxWork < 1 || policy.chunkBytes < 1 || !["cancelled", "remainingMs", "onProgress"].every((key) => typeof (policy as any)[key] === "function")) throw Error("Finite current physical provenance control required");
   const path = (value: string): string => {
-    if (typeof value !== "string" || !isAbsolute(value) || value.length > 256 || value.includes("\0")) throw Error("Physical provenance path refused");
-    return resolve(value);
+    if (typeof value !== "string" || !isAbsolute(value) || value.includes("\0")) throw Error("Physical provenance path refused");
+    const file = resolve(value);
+    if (file.length > 256) throw Error(`Physical provenance path exceeds 256 UTF-16 units (${file.length}): ${file}`);
+    return file;
   };
   path(receiptPath);
   path(cargoHome);
@@ -359,6 +389,7 @@ export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: str
     const sink = new ReceiptFileSinkV1(handle, limit);
     const stream = new CargoProvenanceStreamV1(sink);
     await stream.begin(invocation);
+    await mapBoundedV1([...new Set<string>(invocation.units.flatMap((unit) => unit.message.filenames ?? []))], CURRENT_PHYSICAL_CONCURRENCY_V1, (file) => sha256(file));
     for (const original of invocation.units) {
       await physical.checkpoint();
       const evidence = parseCargoCompilerUnitEvidenceV1(original.evidence);
@@ -454,7 +485,9 @@ export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: str
         depInfo.push({ path: file, sha256: depSha256, baseDirectory: relativeSources.length === 0 ? invocation.cwd : bases.length === 1 ? bases[0]! : null, sources, checksums: cargoDepInfoChecksumsV1(depText) });
       }
       const rows: CargoInputObservationV1[] = [];
-      for (const file of new Set<string>(depInfo.flatMap((row) => row.sources.filter((source) => isAbsolute(source) || row.baseDirectory !== null).map((source) => resolve(row.baseDirectory ?? invocation.cwd, source))))) rows.push(await input(file));
+      const sourceFiles = [...new Set<string>(depInfo.flatMap((row) => row.sources.filter((source) => isAbsolute(source) || row.baseDirectory !== null).map((source) => resolve(row.baseDirectory ?? invocation.cwd, source))))];
+      await mapBoundedV1(sourceFiles, CURRENT_PHYSICAL_CONCURRENCY_V1, (file) => input(file));
+      for (const file of sourceFiles) rows.push(await input(file));
       const observedAtMs = Date.now();
       const artifacts: CargoArtifactObservationV1[] = [];
       for (const file of message.filenames ?? []) {
@@ -538,7 +571,7 @@ export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: str
   }
 }
 
-async function captureCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
+async function captureCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1, compilerStopped: () => void): Promise<void> {
   options.signal?.throwIfAborted();
   const path = resolve(manifest);
   const sourceRoot = dirname(path);
@@ -567,7 +600,12 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
     detached: process.platform !== "win32",
     stdio: ["inherit", "pipe", "pipe"],
   });
-  child.stderr!.pipe(process.stderr, { end: false });
+  const diagnosticsPath = join(policy.buildDirectory, "semio-cargo-logs", `${basename(capture)}.log`);
+  mkdirSync(dirname(diagnosticsPath), { recursive: true });
+  const diagnosticsLog = openSync(diagnosticsPath, "w");
+  let diagnosticsOpen = true;
+  const diagnostics = new BoundedDiagnosticsV1(diagnosticsLog, (line) => process.stderr.write(`${line}\n`));
+  const diagnosticsDrained = new Promise<void>((accept) => { createInterface({ input: child.stderr!, crlfDelay: Infinity }).on("line", (line) => diagnostics.line(line)).once("close", accept); });
   const cancel = (): void => {
     cancelled = true;
     terminateOwnedChildTree(child);
@@ -614,6 +652,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
           if (primary && typeof message.executable === "string") primaryExecutable = message.executable;
           for (const file of message.filenames ?? []) {
             if (file.endsWith(".d")) continue;
+            if (primary && options.deliverables && !options.deliverables.some((extension) => file.endsWith(extension))) continue;
             const library = primary && file.endsWith(".rmeta") ? message.filenames.find((candidate: string) => candidate.endsWith(".rlib")) : undefined;
             const name = (library ? library.replace(/\.rlib$/, ".rmeta") : file).split(/[\\/]/).at(-1)!;
             const key = primary ? name : /\.(rlib|rmeta|so|dylib|dll|lib)$/.test(file) ? `deps/${name}` : undefined;
@@ -636,8 +675,16 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
         await status;
         throw error;
       }
-      if ((await status) !== 0 || cancelled) throw new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}`);
+      const compilerStatus = await status;
+      await diagnosticsDrained;
+      diagnosticsOpen = false;
+      closeSync(diagnosticsLog);
+      for (const row of diagnostics.finish(compilerStatus !== 0 || cancelled, diagnosticsPath)) process.stderr.write(`${row}\n`);
+      if (compilerStatus === 0 && !cancelled && diagnostics.suppressed === 0) rmSync(diagnosticsPath, { force: true });
+      if (compilerStatus !== 0 || cancelled) throw new Error(`Cargo artifact build ${cancelled ? "cancelled" : "failed"}: ${owner}`);
+      compilerStopped();
     } finally {
+      if (diagnosticsOpen) { await diagnosticsDrained; closeSync(diagnosticsLog); }
       stopProgress();
       if (forceKill) clearTimeout(forceKill);
       options.signal?.removeEventListener("abort", cancel);
@@ -667,7 +714,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   } finally {
     try {
       {
-        if(!options.signal)throw Error("Cargo capture physical signal required");const physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>options.signal!.aborted,onProgress:row=>console.log("[cargo-provenance] "+JSON.stringify(row))}));
+        if(!options.signal)throw Error("Cargo capture physical signal required");const physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>options.signal!.aborted,onProgress:cargoProvenanceProgressSinkV1(row=>console.log("[cargo-provenance] "+JSON.stringify(row)))}));
         await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot ?? join(policy.buildDirectory, "semio-cargo-provenance"), `cargo-unit-provenance-${basename(capture)}.json`), { manifest: path, cwd: policy.cwd, command: commandPort.command, args: [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], buildDirectory: policy.buildDirectory, builtAtMs, status: await status, cancelled, units, buildScripts }, new Map([...stagedNames].filter(([, key]) => files.has(key)).map(([path, key]) => [path, join(staging, key)])), resolve((options.environment ?? process.env).CARGO_HOME??join(homedir(),".cargo")),physical);
       }
     } finally {

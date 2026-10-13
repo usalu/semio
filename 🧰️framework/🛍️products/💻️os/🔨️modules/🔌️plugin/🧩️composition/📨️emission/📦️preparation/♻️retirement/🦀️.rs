@@ -15,12 +15,12 @@ impl RetirementCursor for OwnedChildEmitRetirement{
  fn next_close_byte_demand(&self)->Option<usize>{self.original.as_ref().map_or(Some(0),|source|source.retirement_demands(0).ok().map(|d|d.release_bytes))}
  fn next_depth_demand(&self)->Result<usize,ValueError>{self.original.as_ref().map_or(Ok(0),|source|if source.terminal_is_empty(){Ok(1)}else{source.retirement_demands(0).map(|d|d.depth)})}
  fn allows_admitted_narrow_work(&self)->bool{true}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for OwnedChildEmitRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.original.is_none(),"original owned child emission remains retained until full close");}}
 impl RetireOwned for OwnedChildEmit{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(OwnedChildEmitRetirement{original:ManuallyDrop::new(Some(self))})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<OwnedChildEmitRetirement>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OwnedChildEmitRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 
@@ -50,11 +50,11 @@ impl RetirementCursor for ChildEmitPreparationRetirement{
  fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|d|d.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
  fn allows_admitted_narrow_work(&self)->bool{true}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for ChildEmitPreparationRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original child preparation and full refusal remain retained until granted close");}}
 impl RetireOwned for ChildEmitPreparation{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ChildEmitPreparationRetirement{original:ManuallyDrop::new(Some(self)),fault:None})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<ChildEmitPreparationRetirement>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ChildEmitPreparationRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }

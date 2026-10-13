@@ -13,7 +13,7 @@ pub struct RemoveLayer {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "layer", kind: "remove-layer", record: "RemoveLayer" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_layer(name))
     }

@@ -156,7 +156,7 @@ pub fn inverse_order(order: &[usize]) -> Vec<usize> {
 //#region 🔖️ReferenceScan
 type Remap<'a> = &'a mut dyn FnMut(usize) -> Option<usize>;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn optional(value: Option<usize>, remap: Remap) -> Option<usize> {
+fn optional(value: Option<usize>, remap: Remap<'_>) -> Option<usize> {
     value.and_then(|index| remap(index))
 }
 /// 🧵️ The rows that rewrite every entry of a keyed list through `rewrite`: an entry it drops leaves, one it changes is removed at its base
@@ -180,20 +180,20 @@ fn rewritten<R: Keyed + Clone + PartialEq>(rows: &[R], mut rewrite: impl FnMut(&
 }
 /// 🧵️ The delta that rebinds each reference of a list through the remap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn refs_through(values: &[usize], remap: Remap) -> Option<GltfRefsDelta> {
+fn refs_through(values: &[usize], remap: Remap<'_>) -> Option<GltfRefsDelta> {
     let (removed, inserted) = rewritten(&refs(values), |reference| remap(reference.0).map(GltfRef));
     (!removed.is_empty() || !inserted.is_empty()).then(|| GltfRefsDelta::rows(removed, inserted, Vec::new()))
 }
 /// 🧵️ The delta that rebinds each attribute accessor of a primitive or morph target through the remap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn attributes_through(values: &[(String, usize)], remap: Remap) -> Option<GltfAttributesDelta> {
+fn attributes_through(values: &[(String, usize)], remap: Remap<'_>) -> Option<GltfAttributesDelta> {
     let (removed, inserted) = rewritten(&attribute_rows(values), |attribute| remap(attribute.accessor).map(|accessor| GltfAttribute { semantic: attribute.semantic.clone(), accessor }));
     (!removed.is_empty() || !inserted.is_empty()).then(|| GltfAttributesDelta::rows(removed, inserted, Vec::new()))
 }
 
 /// 🧵️ The texture reference rebound through the remap; dropped when its texture is dropped.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn texture_info(info: &Option<GltfTextureInfo>, remap: Remap) -> Option<GltfTextureInfo> {
+fn texture_info(info: &Option<GltfTextureInfo>, remap: Remap<'_>) -> Option<GltfTextureInfo> {
     info.as_ref().and_then(|info| remap(info.index).map(|index| GltfTextureInfo { index, ..info.clone() }))
 }
 
@@ -201,7 +201,7 @@ fn texture_info(info: &Option<GltfTextureInfo>, remap: Remap) -> Option<GltfText
 /// references lands elsewhere (or is dropped, when `remap` answers `None`). Entries of `family` itself that refer to `family`
 /// (node children) are named like any other referrer; the owning leaf folds or drops them.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> GltfDiff {
+pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap<'_>) -> GltfDiff {
     let document = &base.document;
     let mut diff = GltfDiff::default();
     match family {

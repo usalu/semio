@@ -34,12 +34,12 @@ impl PackRefusal{
  /// 🧭️ Reads intrinsic syntax authority or the actual mandatory producer-authored kind.
  pub const fn kind(&self)->ValueRefusalKind{
   match self{
-   Self::TransportAdmission{refusal,..}=>(refusal.kind),
-   Self::BadMagic|Self::Truncated(_)|Self::ChecksumMismatch{..}|Self::ContentHashMismatch|Self::NonCanonical(_)=>(ValueRefusalKind::InvalidValue),
-   Self::UnsupportedVersion{..}|Self::UnknownRequiredFlags(_)|Self::UnsupportedCodec(_)=>(ValueRefusalKind::UnsupportedOwner),
-   Self::LimitExceeded{kind,..}|Self::RetainedMalformed{kind,..}|Self::RetainedAllocation{kind,..}|Self::Malformed{kind,..}=>(*kind),
-   Self::ValueRefusal(error)|Self::Io{error,..}=>(error.kind),
-   Self::TextRefusal(error)=>(error.kind),
+   Self::TransportAdmission{refusal,..}=> refusal.kind,
+   Self::BadMagic|Self::Truncated(_)|Self::ChecksumMismatch{..}|Self::ContentHashMismatch|Self::NonCanonical(_)=> ValueRefusalKind::InvalidValue,
+   Self::UnsupportedVersion{..}|Self::UnknownRequiredFlags(_)|Self::UnsupportedCodec(_)=> ValueRefusalKind::UnsupportedOwner,
+   Self::LimitExceeded{kind,..}|Self::RetainedMalformed{kind,..}|Self::RetainedAllocation{kind,..}|Self::Malformed{kind,..}=> *kind,
+   Self::ValueRefusal(error)|Self::Io{error,..}=> error.kind,
+   Self::TextRefusal(error)=> error.kind,
   }
  }
  /// 🔎️ Returns a Value refusal only when the producer supplied semantic authority.

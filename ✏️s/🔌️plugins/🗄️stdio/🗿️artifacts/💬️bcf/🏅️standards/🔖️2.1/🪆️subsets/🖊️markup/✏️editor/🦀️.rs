@@ -14,7 +14,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -45,7 +44,7 @@ use semio_framework_plugin::ToolOperationSpec;
 use semio_framework_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
-use semio_s_artifact_stdio_contract::pack;
+#[cfg(test)] use semio_s_artifact_stdio_contract::pack;
 
 //#region 🔖️Dialect
 pub const BCF_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId::ANY };
@@ -90,12 +89,12 @@ const BCF_RETAINED_TOOL_IDS: &[&str] = &[semio_s_artifact_stdio_contract::SET_AC
 const BCF_COMMAND_TOOL_IDS: &[&str] = &[
     semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     "set-cell",
-    semio_s_artifact_stdio_contract::editing::SET_SNAPSHOT_VALUE_ACTION_ID,
-    semio_s_artifact_stdio_contract::editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
-    semio_s_artifact_stdio_contract::editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
-    semio_s_artifact_stdio_contract::editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
-    semio_s_artifact_stdio_contract::editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
-    semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
+    editing::SET_SNAPSHOT_VALUE_ACTION_ID,
+    editing::INSERT_SNAPSHOT_VALUE_ACTION_ID,
+    editing::REMOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::MOVE_SNAPSHOT_VALUE_ACTION_ID,
+    editing::RENAME_SNAPSHOT_KEY_ACTION_ID,
+    editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID,
 ];
 const BCF_RETAINED_PAYLOAD_SCHEMA: &str = "stdio.bcf.tool-command.v1";
 const BCF_RETAINED_RAW_BYTES: usize = 8_192;
@@ -121,7 +120,7 @@ fn bcf_command_id(command: &BcfAnyEditCommand) -> &'static str {
 }
 
 fn bcf_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BcfAnyEditCommand, Fault> {
-    if let Some(event) = semio_s_artifact_stdio_contract::editing::snapshot_edit_event_from_action(action, args)? {
+    if let Some(event) = editing::snapshot_edit_event_from_action(action, args)? {
         return Ok(BcfAnyEditCommand::EditSnapshot { event });
     }
     match action {
@@ -273,12 +272,12 @@ impl ArtifactEditor for BcfAnyEditor {
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(BcfRetainedCommandJobFactory::new(&controller))?;
-        semio_s_artifact_stdio_contract::editing::register_snapshot_edit_tool_factory::<Self>(registry)
+        editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
-        if semio_s_artifact_stdio_contract::editing::is_snapshot_edit_action(&request.tool_id) {
-            return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Self>(request);
+        if editing::is_snapshot_edit_action(&request.tool_id) {
+            return editing::build_snapshot_edit_tool_job::<Self>(request);
         }
         if !BCF_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
@@ -348,7 +347,7 @@ impl ArtifactEditor for BcfAnyEditor {
                 let revision = doc.operation_optional().map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
                 bcf_emit_at_revision(command, doc.snapshot, revision.as_deref())
             }
-            BcfAnyEditCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
+            BcfAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
             BcfAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bcf_example_snapshot(example_id), BCF_ANY_DOCUMENT_SCHEMA)], ..Default::default() }),
         }
     }
@@ -363,11 +362,11 @@ impl ArtifactEditor for BcfAnyEditor {
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
                 main::render_revisioned(doc.snapshot, &revision, publication_revision, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree)
             }
-            semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(
                 doc,
                 view_state.locale,
                 "s.stdio.bcf@2.1/*#editor",
-                &semio_framework_plugin::TreeWindows::for_body(view_state, semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY),
+                &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY),
             )
             .map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
@@ -375,7 +374,7 @@ impl ArtifactEditor for BcfAnyEditor {
     }
 }
 
-impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BcfAnyEditor {
+impl editing::SnapshotEditingEditor for BcfAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&SnapshotEditEvent> {
         match command {
             BcfAnyEditCommand::EditSnapshot { event } => Some(event),
@@ -398,14 +397,14 @@ pub fn create_bcf_any_editor() -> semio_framework_plugin::AppDefinition {
         .mode_def(edit::definition())
         .default_mode_id(edit::BCF_ANY_EDIT_MODE_ID)
         .window_kind_def(main::definition())
-        .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
-        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Topics"))
+        .window_kind_def(editing::snapshot_details_window_definition())
+        .default_layout(editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Topics"))
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
-    semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
+    editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest
 

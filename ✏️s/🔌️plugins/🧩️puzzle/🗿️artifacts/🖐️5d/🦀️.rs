@@ -215,7 +215,7 @@ impl semio_framework_dsl_record::DslField for Puzzle5dScale {
         if items.len()!=1&&items.len()!=3{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"expected a 1- or 3-item List"))}
         control.scoped_stage(|control|{
             control.begin_stage(items.len())?;
-            control.charge(std::mem::size_of::<Self>())?;
+            control.charge(size_of::<Self>())?;
             let x=<f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[0],control)?;
             if items.len()==1{return Ok(Self::Uniform(x))}
             let y=<f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[1],control)?;

@@ -774,7 +774,7 @@ fn tree_item_inline_toolbar(document: &UiDocumentTree, props: &ui_contract::Tree
 }
 
 /// 🎛️ Rehydrates a Tree row or section header's explicit Toolbar relation.
-fn tree_toolbar(document: &UiDocumentTree, toolbar: ui_contract::UiNodeId, controller: &str) -> Option<UiStackNode> {
+fn tree_toolbar(document: &UiDocumentTree, toolbar: UiNodeId, controller: &str) -> Option<UiStackNode> {
     let record = document.record(toolbar)?;
     let ui_contract::Component::Container(container) = &record.component else { return None };
     if container.role != ui_contract::ContainerRole::Toolbar {

@@ -1,7 +1,7 @@
 //! 🧬️ Direct bind-morph-target-attribute mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level_collections::*;
-use crate::schema::snapshot::*;
+#[cfg(test)] use crate::schema::snapshot::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -59,7 +59,7 @@ pub fn mutation(payload: GltfBindMorphTargetAttributePayload) -> super::GltfMuta
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindMorphTargetAttributeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "morph-target-attribute", kind: "bind-morph-target-attribute", record: "BoundMorphTargetAttribute" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

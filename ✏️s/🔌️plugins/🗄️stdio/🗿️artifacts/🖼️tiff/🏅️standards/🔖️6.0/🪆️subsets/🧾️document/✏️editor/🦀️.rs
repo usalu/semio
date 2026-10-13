@@ -6,7 +6,8 @@
 use crate::editor::tiff_any::modes::edit;
 use crate::editor::tiff_any::modes::edit::windows::main;
 use crate::standards::v6_0::subsets::document::schema::mutations::{ReplaceSamplesMutation, TiffMutation};
-use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffIfd, TiffSnapshot, TiffTag};
+use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffSnapshot};
+#[cfg(test)] use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffIfd, TiffTag};
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -93,10 +94,10 @@ const STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_CONTRACTS: &[ArtifactToolPublicationCon
     ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: main::SELECT_IFD_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Config] },
 ];
-fn tiffAnyEditor_example_snapshot(example_id: &str) -> TiffSnapshot {
+fn tiff_any_editor_example_snapshot(example_id: &str) -> TiffSnapshot {
     if example_id == crate::examples::demo::ID { <TiffSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { TiffSnapshot::default() }
 }
-fn tiffAnyEditor_command_id(command: &TiffAnyEditCommand) -> &'static str {
+fn tiff_any_editor_command_id(command: &TiffAnyEditCommand) -> &'static str {
     if let TiffAnyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         TiffAnyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
@@ -105,7 +106,7 @@ fn tiffAnyEditor_command_id(command: &TiffAnyEditCommand) -> &'static str {
         TiffAnyEditCommand::EditSnapshot { .. } => unreachable!("handled above"),
     }
 }
-fn tiffAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TiffAnyEditCommand, Fault> {
+fn tiff_any_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TiffAnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| TiffAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         paint_region::ACTION_ID => Ok(TiffAnyEditCommand::PaintRegion(paint_region::PaintRegionCommand::from_action(args)?)),
@@ -120,20 +121,20 @@ fn tiffAnyEditor_command_from_action(action: &str, args: Option<&semio_framework
         _ => Err(Fault::from(format!("action '{action}' is not a TIFF editor action"))),
     }
 }
-fn tiffAnyEditor_retained_extent(command: &TiffAnyEditCommand, _snapshot: &TiffSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn tiff_any_editor_retained_extent(command: &TiffAnyEditCommand, _snapshot: &TiffSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, TiffAnyEditCommand::SetActiveExample { .. } | TiffAnyEditCommand::SelectIfd { .. }).then_some(1)
 }
-fn tiffAnyEditor_retained_reduce(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, _config: &TiffEditorConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>, _operation: &AppOperationContext) -> Result<Emit<TiffMutation, TiffEditorConfigMutation, NoDraftMutation>, Fault> {
+fn tiff_any_editor_retained_reduce(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, _config: &TiffEditorConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>, _operation: &AppOperationContext) -> Result<Emit<TiffMutation, TiffEditorConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        TiffAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 0 }], effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiffAnyEditor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
+        TiffAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 0 }], effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_any_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
         TiffAnyEditCommand::SelectIfd { ifd_index } => {
-            if *ifd_index >= snapshot.ifds.len() { return Err(tiffAnyEditor_edit_fault("stdio.tiff.ifd-out-of-range", format!("image page {ifd_index} is outside 0..{}", snapshot.ifds.len()))); }
+            if *ifd_index >= snapshot.ifds.len() { return Err(tiff_any_editor_edit_fault("stdio.tiff.ifd-out-of-range", format!("image page {ifd_index} is outside 0..{}", snapshot.ifds.len()))); }
             Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: *ifd_index }], ..Default::default() })
         }
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
-fn tiffAnyEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
+fn tiff_any_editor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
 }
 struct TiffAnyEditorExampleFactory { keys: Vec<ToolFactoryKey> }
@@ -160,7 +161,7 @@ impl ArtifactOwnedToolJobFactory for TiffAnyEditorExampleFactory {
 const STDIO_TIFF_PAINT_REGION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: paint_region::ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
-const fn tiffAnyEditor_paint_region_execution_contract() -> ToolExecutionContract {
+const fn tiff_any_editor_paint_region_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(paint_region::MAXIMUM_RAW_BYTES, 64, paint_region::CAPACITY.work_items() as u64, 65_536, 7_500)
 }
 struct TiffPaintRegionFactory { keys: Vec<ToolFactoryKey> }
@@ -175,7 +176,7 @@ impl ToolJobFactory for TiffPaintRegionFactory {
     fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
     fn payload_schema_id(&self) -> &str { paint_region::PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { tiffAnyEditor_paint_region_execution_contract() }
+    fn execution_contract(&self) -> ToolExecutionContract { tiff_any_editor_paint_region_execution_contract() }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         Ok(ArtifactRetainedCommandJob::new(payload))
     }
@@ -222,7 +223,7 @@ impl ArtifactEditor for TiffAnyEditor {
         let mut proofs = vec![
             ArtifactBoundedFirstStepProof::new::<EditorApp<TiffAnyEditor>>(OWNER_FILE, CONTROLLER, "TiffAnyEditorExampleFactory", semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, "stdio.tiff", ToolExecutionContract::bounded_first_step(STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)).with_factory_type::<EditorApp<TiffAnyEditor>, TiffAnyEditorExampleFactory>(),
             ArtifactBoundedFirstStepProof::new::<EditorApp<TiffAnyEditor>>(OWNER_FILE, CONTROLLER, "TiffAnyEditorExampleFactory", main::SELECT_IFD_ACTION_ID, "stdio.tiff", ToolExecutionContract::bounded_first_step(STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)).with_factory_type::<EditorApp<TiffAnyEditor>, TiffAnyEditorExampleFactory>(),
-            ArtifactBoundedFirstStepProof::new::<EditorApp<TiffAnyEditor>>(OWNER_FILE, CONTROLLER, "TiffPaintRegionFactory", paint_region::ACTION_ID, "stdio.tiff", tiffAnyEditor_paint_region_execution_contract()).with_factory_type::<EditorApp<TiffAnyEditor>, TiffPaintRegionFactory>(),
+            ArtifactBoundedFirstStepProof::new::<EditorApp<TiffAnyEditor>>(OWNER_FILE, CONTROLLER, "TiffPaintRegionFactory", paint_region::ACTION_ID, "stdio.tiff", tiff_any_editor_paint_region_execution_contract()).with_factory_type::<EditorApp<TiffAnyEditor>, TiffPaintRegionFactory>(),
         ];
         proofs.extend(editing::snapshot_edit_bounded_first_step_proofs::<Self>(OWNER_FILE, CONTROLLER, "stdio.tiff"));
         proofs
@@ -235,11 +236,11 @@ impl ArtifactEditor for TiffAnyEditor {
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
         if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
         if request.tool_id == paint_region::ACTION_ID {
-            if tiffAnyEditor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-tiff-paint-region-tool-mismatch")); }
+            if tiff_any_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-tiff-paint-region-tool-mismatch")); }
             let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
             let payload = ArtifactRetainedCommandPayload::new(
                 ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion },
-                tiffAnyEditor_command_id,
+                tiff_any_editor_command_id,
                 paint_region::MAXIMUM_RAW_BYTES,
                 paint_region::CAPACITY.work_items(),
                 Box::new(paint_region::PaintRegionWork::new()),
@@ -247,14 +248,14 @@ impl ArtifactEditor for TiffAnyEditor {
             return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
         }
         if !STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
-        if tiffAnyEditor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
+        if tiff_any_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
         let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
         let action_id = match request.tool_id.as_str() {
             semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
             main::SELECT_IFD_ACTION_ID => main::SELECT_IFD_ACTION_ID,
             _ => unreachable!("filtered above"),
         };
-        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiffAnyEditor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(action_id, tiffAnyEditor_retained_reduce, tiffAnyEditor_retained_extent)));
+        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiff_any_editor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(action_id, tiff_any_editor_retained_reduce, tiff_any_editor_retained_extent)));
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -266,8 +267,8 @@ impl ArtifactEditor for TiffAnyEditor {
     fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation, actor))
     }
-    fn command_id(command: &Self::Command) -> &'static str { tiffAnyEditor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiffAnyEditor_command_from_action(action, args) }
+    fn command_id(command: &Self::Command) -> &'static str { tiff_any_editor_command_id(command) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiff_any_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
         crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
@@ -286,7 +287,7 @@ impl ArtifactEditor for TiffAnyEditor {
             TiffAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             TiffAnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
                 config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 0 }],
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiffAnyEditor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_any_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
             TiffAnyEditCommand::SelectIfd { .. } => Err(Fault::from("TIFF page selection requires the retained config route")),
@@ -322,8 +323,8 @@ impl editing::SnapshotEditingEditor for TiffAnyEditor {
             return Ok(None);
         }
         let current = snapshot.ifds.get(ifd_index).and_then(|page| page.blocks.get(block_index)).and_then(|block| block.samples.get(offset)).ok_or_else(|| Fault::from(format!("sample {path} is outside the image")))?;
-        let word = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/ifds/{ifd}/blocks/{block}/samples/{sample}"), event).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()))?;
-        let word = <TiffWord64 as semio_framework_value::FromValue>::from_value(word).map_err(|error| tiffAnyEditor_edit_fault("stdio.tiff.invalid-sample", error.to_string()))?;
+        let word = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/ifds/{ifd}/blocks/{block}/samples/{sample}"), event).map_err(|error| tiff_any_editor_edit_fault(error.code, error.to_string()))?;
+        let word = <TiffWord64 as semio_framework_value::FromValue>::from_value(word).map_err(|error| tiff_any_editor_edit_fault("stdio.tiff.invalid-sample", error.to_string()))?;
         Ok(Some(vec![TiffMutation::ReplaceSamples(ReplaceSamplesMutation { ifd_index, block: block_index, offset, samples: vec![word] })]))
     }
 }

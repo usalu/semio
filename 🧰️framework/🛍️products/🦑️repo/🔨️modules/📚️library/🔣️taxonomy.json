@@ -27097,6 +27097,39 @@
       ],
       "reason": "The exact standalone JCO workspace owns one digest-locked Cargo library adapter; no implementation bytes are generated"
     },
+    "mutation-schema-document-index": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+      "target": "@semio-tech/dsl-derive-rs:generate-schema-index",
+      "previewTarget": "@semio-tech/dsl-derive-rs:preview-schema-index",
+      "previewArguments": [
+        "schema-index",
+        "preview"
+      ],
+      "checkTarget": "@semio-tech/dsl-derive-rs:check-schema-index",
+      "nativeConsumers": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust"
+      ],
+      "inputPatterns": [
+        "♻️mit-bestand/📋️bericht/**/🧬️schema/**/*.json",
+        "♻️mit-bestand/🧺️demonstrator/**/🧬️schema/**/*.json",
+        "✏️s/🔌️plugins/**/🧬️schema/**/*.json",
+        "✏️s/🔨️modules/**/🧬️schema/**/*.json",
+        "🏢️semio-tech/🎡️play/**/🧬️schema/**/*.json",
+        "🧰️framework/🔨️modules/**/🧬️schema/**/*.json",
+        "🧰️framework/🛍️products/**/🧬️schema/**/*.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🔣️.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+          "inclusion": "tracked"
+        }
+      ],
+      "reason": "The mutation derive reads this one tracked index of schema $ids, so rustc never hashes walked directories and a new schema file changes the index that invalidates the derive"
+    },
     "mutation-source-authority": {
       "ownership": "owned",
       "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",

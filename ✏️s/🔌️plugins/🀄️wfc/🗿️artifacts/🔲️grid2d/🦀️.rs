@@ -555,8 +555,8 @@ pub mod mutations {
 pub mod inferences {
     pub use crate::standards::v1::subsets::any::schema::inferences::*;
     pub use crate::host::inferences::*;
-    pub use crate::host::inferences::*;
-    pub use crate::host::inferences::*;
+    #[cfg(test)] pub use crate::host::inferences::*;
+    #[cfg(test)] pub use crate::host::inferences::*;
 }
 pub use crate::standards::v1::subsets::any::schema::diff::Grid2dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Grid2dMutation;

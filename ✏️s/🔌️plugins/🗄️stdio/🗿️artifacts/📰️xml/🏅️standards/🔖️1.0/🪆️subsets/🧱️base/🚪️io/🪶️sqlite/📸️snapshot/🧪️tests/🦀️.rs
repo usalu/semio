@@ -3,7 +3,7 @@ use crate::standards::v1_0::subsets::base::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
 
 fn fixture() -> XmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap(); XmlSnapshot::import_utf8(fixture["xmlText"].as_str().unwrap().as_bytes()).unwrap() }
-fn project(snapshot: &XmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap() }
+fn project(snapshot: &XmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() }
 
 #[test]
 fn sqlite_snapshot_xml_multiple_document_graph_retains_every_owned_root(){
@@ -16,7 +16,7 @@ fn sqlite_snapshot_xml_multiple_document_graph_retains_every_owned_root(){
 #[test]
 fn sqlite_snapshot_xml_multiple_empty_documents_have_known_cancellable_workload(){
  let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🕸️documents/🔣️.json")).unwrap();let count=plan["documents"].as_u64().unwrap() as usize;let at=plan["cancelAt"].as_u64().unwrap() as usize;let doc=XmlDocument::default();let keys:Vec<_>=(0..count).map(|ordinal|ordinal.to_string()).collect();let documents:Vec<_>=keys.iter().map(|key|(key.as_str(),&doc)).collect();let limits=SqliteDatabaseLimits::default();let database=sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
- for phase in [SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot]{let mut reached=false;let mut callback=|event:SqliteSnapshotProgress|{if event.phase==phase&&event.total==count&&event.completed==at{reached=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut callback,limits);let failed=if phase==SqliteSnapshotPhase::ProjectSnapshot{sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut control).is_err()}else{sqlite::reconstruct_xml_documents(&database,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut control).is_err()};assert!(failed);assert!(reached);}
+ for phase in [SqliteSnapshotPhase::ProjectSnapshot,SqliteSnapshotPhase::ReconstructSnapshot]{let mut reached=false;let mut callback=|event:SqliteSnapshotProgress|{if event.phase==phase&&event.total==count&&event.completed==at{reached=true;false}else{true}};let failed=if phase==SqliteSnapshotPhase::ProjectSnapshot{sqlite::project_xml_documents(&documents,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut callback,limits)).is_err()}else{sqlite::reconstruct_xml_documents(&database,XmlSnapshot::SQLITE_SCHEMA,sqlite::XML_SQLITE_TABLES,&mut SqliteSnapshotControl::new(&mut callback,limits)).is_err()};assert!(failed);assert!(reached);}
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn sqlite_snapshot_xml_cancels_inside_each_owned_long_text_copy() {
     }
     assert!(failures.is_empty(), "missing interior owned text cancellation: {failures:?}");
 }
-fn restore(database: &SqliteDatabase) -> Result<XmlSnapshot, semio_framework_value::ValueError> { XmlSnapshot::from_sqlite_database(database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())) }
+fn restore(database: &SqliteDatabase) -> Result<XmlSnapshot, semio_framework_value::ValueError> { XmlSnapshot::from_sqlite_database(database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())) }
 
 #[test]
 fn sqlite_snapshot_xml_whole_native_controls_owned_long_fields() {
@@ -71,12 +71,12 @@ fn sqlite_snapshot_xml_whole_native_controls_owned_long_fields() {
     let mut failures = Vec::new();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         let payload = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)) };
-        match XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("decode {encoding:?}: {error}")) }
-        match snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())) { Ok(encoded) => assert_eq!(encoded, payload), Err(error) => failures.push(format!("encode {encoding:?}: {error}")) }
+        match semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("decode {encoding:?}: {error}")) }
+        match semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)) { Ok(encoded) => assert_eq!(encoded, payload), Err(error) => failures.push(format!("encode {encoding:?}: {error}")) }
         for phase in [SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
             let mut observed = false; let mut callback = |event: SqliteSnapshotProgress| { if event.phase == phase && event.total > 65536 && event.completed >= 65536 && event.completed < event.total { observed = true; false } else { true } };
             let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default());
-            let refused = match phase { SqliteSnapshotPhase::DecodeNative => XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut control).is_err(), _ => snapshot.encode_sqlite_snapshot_native(encoding, &mut control).is_err() };
+            let refused = match phase { SqliteSnapshotPhase::DecodeNative => semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut control, native_owner)).is_err(), _ => semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut control, native_owner)).is_err() };
             if !refused || !observed { failures.push(format!("interior {encoding:?}:{phase:?}")); }
         }
     }
@@ -107,13 +107,13 @@ fn sqlite_snapshot_xml_whole_native_deep_partial_lifecycle() {
     retire_fixture_document(snapshot.doc);
     std::thread::Builder::new().stack_size(256 * 1024).spawn(move || {
         for payload in payloads {
-            let decoded = XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+            let decoded = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap();
             let mut node = decoded.doc.root.as_ref().unwrap(); let mut count = 0; while let XmlNode::Element { children, .. } = node { assert_eq!(children.len(), 1); count += 1; node = &children[0]; } assert_eq!(count, depth);
             let encoding = match &payload { semio_framework_os_kernel::io_schema::IoPayload::Text(_) => SnapshotEncoding::Text, _ => SnapshotEncoding::Binary };
-            assert!(decoded.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap() == payload);
+            assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| decoded.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap() == payload);
             decoded.retire_sqlite_snapshot();
             let mut reached = false; let mut callback = |event: SqliteSnapshotProgress| { if event.phase == SqliteSnapshotPhase::DecodeNative && event.total == total && event.completed >= 65536 && event.completed < total { reached = true; false } else { true } };
-            assert!(XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default())).is_err()); assert!(reached);
+            assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default()), native_owner)).is_err()); assert!(reached);
         }
     }).unwrap().join().unwrap();
 }
@@ -129,7 +129,7 @@ fn sqlite_snapshot_xml_long_schema_cancellation_retires_deep_partial_document() 
     let refused = std::thread::Builder::new().stack_size(256 * 1024).spawn(move || {
         let total = fixture["utf8Bytes"].as_u64().unwrap() as usize; let stop = fixture["cancelAfter"].as_u64().unwrap() as usize; let mut observed = false;
         let mut callback = |progress: SqliteSnapshotProgress| { if progress.phase == SqliteSnapshotPhase::ReconstructSnapshot && progress.total == total && progress.completed >= stop && progress.completed < total { observed = true; false } else { true } };
-        let result = XmlSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default()));
+        let result = XmlSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default()));
         let refused = result.is_err(); if let Ok(snapshot) = result { retire_fixture_document(snapshot.doc); }
         refused && observed
     }).unwrap().join().unwrap();
@@ -145,10 +145,10 @@ fn sqlite_snapshot_xml_schema_admitted_intermediate_boundaries_preserve_owned_fi
     let value: pack::value::DslValue = serde_json::from_str(source).unwrap();
     let snapshot = <XmlSnapshot as pack::value::FromValue>::from_value(value).unwrap();
     let mut failures = Vec::new();
-    match snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).and_then(|database| restore(&database)) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("SQLite: {error}")) }
+    match snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).and_then(|database| restore(&database)) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("SQLite: {error}")) }
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
-        let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
-        match XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("controlled {encoding:?}: {error}")) }
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap();
+        match semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("controlled {encoding:?}: {error}")) }
         let ordinary = match payload { semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| error.to_string()), semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <XmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string()) };
         match ordinary { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("owned state {encoding:?}: {error}")) }
     }
@@ -215,16 +215,16 @@ fn sqlite_snapshot_xml_controls_bound_projection_and_reconstruction() {
     let snapshot = fixture(); let database = project(&snapshot);
     let rows: usize = database.tables.iter().map(|table| table.rows.len()).sum(); let bytes: usize = database.tables.iter().flat_map(|table| &table.rows).flat_map(|row| &row.values).map(|value| match value { SqliteValue::Null => 0, SqliteValue::Integer(_) | SqliteValue::Real(_) => 8, SqliteValue::Text(value) => value.len(), SqliteValue::Blob(value) => value.len() }).sum();
     let limits = SqliteDatabaseLimits { max_rows: rows, max_value_bytes: bytes, ..SqliteDatabaseLimits::default() };
-    assert_eq!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), database);
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false, limits)).is_err());
+    assert_eq!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), database);
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false,limits)).is_err());
     for limits in [SqliteDatabaseLimits { max_rows: rows - 1, ..limits }, SqliteDatabaseLimits { max_value_bytes: bytes - 1, ..limits }] {
-        assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
-        assert!(XmlSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+        assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
+        assert!(XmlSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
     }
     let mut large = XmlSnapshot::default(); large.doc.root = Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: (0..1024).map(|_| XmlNode::Text { text: "value".into() }).collect() });
-    assert!(large.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |progress| progress.completed == 0, SqliteDatabaseLimits::default())).is_err());
+    assert!(large.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |progress| progress.completed == 0,SqliteDatabaseLimits::default())).is_err());
     let database = project(&large); let mut checkpoints = 0;
-    assert!(XmlSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| { checkpoints += 1; checkpoints < 3 }, SqliteDatabaseLimits::default())).is_err()); assert_eq!(checkpoints, 3);
+    assert!(XmlSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| { checkpoints += 1; checkpoints < 3 },SqliteDatabaseLimits::default())).is_err()); assert_eq!(checkpoints, 3);
 }
 
 #[test]
@@ -260,7 +260,7 @@ fn sqlite_snapshot_xml_erased_native_encoding_admission_and_large_field_limits()
     let codec = <XmlSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
-        let restored = (codec.import)("XML preflight", &dialect, project(&snapshot), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+        let restored = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("XML preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)) };
         assert_eq!(restored, expected);
     }
@@ -274,7 +274,7 @@ fn sqlite_snapshot_xml_full_width_position_is_queryable_and_exact(){
  let plan:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧭️position/🔣️.json")).unwrap();
  for position in plan["positions"].as_array().unwrap(){let text=position.as_str().unwrap();let snapshot=XmlSnapshot{schema:"literal".into(),doc:XmlDocument{doctype:Some(XmlDoctype{prolog_position:text.parse().unwrap(),name:"root".into(),..Default::default()}),..Default::default()}};
  let database=project(&snapshot);let row=database.table("xml_doctype").unwrap().rows.first().unwrap();assert_eq!(row.text(2).unwrap(),text);let restored=XmlSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(restored,snapshot);
- for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert_eq!(XmlSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap(),snapshot);}
+ for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(),snapshot);}
  for invalid in plan["invalid"].as_array().unwrap(){let mut edited=database.clone();edited.table_mut("xml_doctype").unwrap().rows[0].values[2]=SqliteValue::Text(invalid.as_str().unwrap().into());assert!(XmlSnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err());}
  let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();use std::{io::Write,process::{Command,Stdio}};let mut child=Command::new("bun").args(["-e","import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));await Bun.write(Bun.stdout,db.query('SELECT prolog_position_decimal AS position FROM xml_doctype').get().position);db.close();"]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&bytes).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(String::from_utf8(output.stdout).unwrap(),text);
  }

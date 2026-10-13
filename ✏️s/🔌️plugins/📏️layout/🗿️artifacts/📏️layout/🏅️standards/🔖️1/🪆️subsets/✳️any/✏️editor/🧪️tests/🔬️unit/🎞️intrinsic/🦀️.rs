@@ -9,7 +9,7 @@ use semio_s_artifact_forms_forms::editor::forms::{FormsPlayApp,create_forms_app}
 type LiveForms=semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<FormsPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>;
 struct LiveFormsOwner(LiveForms);
 impl Drop for LiveFormsOwner{
- fn drop(&mut self){if !std::thread::panicking(){semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);}}
+ fn drop(&mut self){if !std::thread::panicking(){semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);}}
 }
 fn live_forms_manifest()->semio_framework_plugin::App{semio_framework_plugin::App{definition:create_forms_app(),examples:Vec::new()}}
 fn live_intrinsic_value(value:&serde_json::Value)->DslValue{
@@ -45,7 +45,7 @@ async fn live_vcs_forms_dictionary_out_to_layout_fields_in_retains_complete_intr
  let files=store::print_document_pack(&envelope).await.expect("actual typed form document pack");
  let mut producer=LiveFormsOwner(semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<semio_framework_plugin::EditorApp<FormsPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>(live_forms_manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
  producer.0.bind_instance_id(context::INSTANCE).await;
- semio_framework_plugin::artifact_app_laws::load_document(&mut producer.0, &files).await.expect("real VCS form load");
+ semio_framework_plugin::artifact_app_laws::load_document(&mut producer.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("real VCS form load");
  assert_eq!(semio_s_artifact_forms_forms::schema::configured_dictionary(&producer.0.snapshot().unwrap()).unwrap(),expected);
  let artifact=producer.0.produce_media(contract["output"].as_str().unwrap()).await.expect("actual dictionary output");
  assert_eq!(artifact.descriptor.port_id.as_deref(),Some("dictionary:out"));
@@ -67,6 +67,6 @@ async fn live_vcs_forms_dictionary_out_to_layout_fields_in_retains_complete_intr
  assert_ne!(target.test_document_revision(),revision);
  let mut complete=before;complete.data_fields=Some(expected);
  assert_eq!(target.snapshot().expect("completed target snapshot"),complete);
- semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut target.0);
- semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut producer.0);
+ semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut target.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+ semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut producer.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }

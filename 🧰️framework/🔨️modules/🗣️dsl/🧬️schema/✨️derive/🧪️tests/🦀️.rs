@@ -42,3 +42,22 @@ fn required_inline_statement_emission_preserves_the_authored_native_owner() {
  }
  println!("[DEBUG] required inline, boxed, optional and repeated native variant roles parsed with independent syn");
 }
+
+#[test]
+fn borrowed_tables_are_upper_snake_named_and_stay_distinct() {
+    let table = |owner: &str, role: &str| borrowed_table_ident(&syn::Ident::new(owner, proc_macro2::Span::call_site()), role).to_string();
+    assert_eq!(table("OpsAuthor", "FIELDS"), "__DSL_BORROWED_OPS_AUTHOR_FIELDS");
+    assert_eq!(table("Port", "VARIANT_3_FIELDS"), "__DSL_BORROWED_PORT_VARIANT_3_FIELDS");
+    assert_ne!(table("HTTPServer", "ENUM"), table("HttpServer", "ENUM"));
+    for input in ["struct OpsAuthor { name: String }", "enum Kind { A, B }"] {
+        let declaration: DeriveInput = syn::parse_str(input).unwrap();
+        let output = match &declaration.data {
+            Data::Struct(_) => borrowed_record_owner_codegen(&declaration, false),
+            _ => borrowed_scalar_owner_codegen(&declaration),
+        };
+        let parsed: syn::File = syn::parse2(output).unwrap();
+        let statics: Vec<_> = parsed.items.iter().filter_map(|item| if let syn::Item::Static(item) = item { Some(item.ident.to_string()) } else { None }).collect();
+        assert_eq!(statics.len(), 1);
+        assert!(statics.iter().all(|name| name.chars().all(|c| !c.is_lowercase())), "{statics:?}");
+    }
+}

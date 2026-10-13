@@ -32,4 +32,3 @@ impl store::ArtifactPack for WavSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

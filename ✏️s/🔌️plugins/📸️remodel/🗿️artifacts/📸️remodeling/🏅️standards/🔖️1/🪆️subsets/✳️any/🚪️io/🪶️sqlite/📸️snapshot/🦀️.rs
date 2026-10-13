@@ -79,7 +79,7 @@ impl<T:Scalar> Scalar for Option<T>{
  const WIDTH:usize=T::WIDTH;
  fn append<'a>(&'a self,c:&mut ScalarRow<'a>)->Result<(),ValueError>{match self{Some(v)=>v.append(c),None=>c.extend((0..Self::WIDTH).map(|_|ScalarCell::Borrowed(Cell::Null)))}}
  fn native(value:&semio_framework_dsl_record::FieldValue,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<usize,ValueError>{if matches!(value,semio_framework_dsl_record::FieldValue::Absent){n.step()?;Ok(0)}else{T::native(value,n)}}
- fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let end=i.checked_add(Self::WIDTH).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling optional width overflow"))?;let fields=r.values.get(*i..end).ok_or_else(||invalid("Remodeling optional scalar is absent"))?;if fields.iter().all(|v|matches!(v,SqliteValue::Null)){*i=end;Ok(None)}else{T::read(r,i,n).map(Some)}}
+ fn read(r:&SqliteRow,i:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,ValueError>{let end=i.checked_add(Self::WIDTH).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling optional width overflow"))?;let fields=r.values.get(*i..end).ok_or_else(||invalid("Remodeling optional scalar is absent"))?;if fields.iter().all(|v|matches!(v,SqliteValue::Null)){*i=end;Ok(None)}else{T::read(r,i,n).map(Some)}}
 }
 impl<T:Scalar,const N:usize> Scalar for [T;N]{
  const WIDTH:usize=N*T::WIDTH;
@@ -166,7 +166,7 @@ fn project_durable(p:&mut RowWriter<'_,'_>,parent:i64,ordinal:usize,kind:&str,by
  }Ok(())
 }
 
-fn visit_rows(snapshot:&crate::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+fn visit_rows(snapshot:&RemodelingSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let root=p.insert("remodel_document",&[Cell::Text(&snapshot.schema),Cell::Text(&snapshot.id)])?;
  let calibration=p.insert("remodel_calibration",&[Cell::Integer(root)])?;
  let parameters=p.insert("remodel_parameters",&[Cell::Integer(root)])?;
@@ -196,8 +196,8 @@ fn visit_rows(snapshot:&crate::standards::v1::subsets::any::schema::snapshot::Re
  if let Some(qc)=&snapshot.results.qc{let id=entity_row(p,"remodel_qc_report",results,None,qc)?;for(index,warning)in qc.warnings.iter().enumerate(){p.insert("remodel_qc_warning",&[Cell::Integer(id),Cell::Integer(i64::try_from(index).map_err(|e|invalid(e.to_string()))?),Cell::Text(warning)])?;}if let Some(report)=&qc.watertight{project_watertight(p,None,Some(id),report)?;}}
  Ok(())
 }
-fn project(snapshot:&crate::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic_cells::extent(c.limits())?;let mut p=RowWriter::new(SCHEMA,c)?;visit_rows(snapshot,&mut p)?;p.finish()}
-fn admit(snapshot:&crate::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic_cells::extent(c.limits())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit_rows(snapshot,&mut p)?;p.finish_borrowed()}
+fn project(snapshot:&RemodelingSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic_cells::extent(c.limits())?;let mut p=RowWriter::new(SCHEMA,c)?;visit_rows(snapshot,&mut p)?;p.finish()}
+fn admit(snapshot:&RemodelingSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic_cells::extent(c.limits())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit_rows(snapshot,&mut p)?;p.finish_borrowed()}
 
 fn project_watertight(p:&mut RowWriter<'_,'_>,mesh:Option<i64>,qc:Option<i64>,value:&WatertightReportSnapshot)->Result<(),ValueError>{let mut fields=ScalarRow::new();mesh.append(&mut fields)?;qc.append(&mut fields)?;value.fields(&mut fields)?;emit(p,"remodel_watertight_report",&fields)?;Ok(())}
 fn project_float_buffer(p:&mut RowWriter<'_,'_>,cloud:i64,slot:&str,value:&Float32Buffer)->Result<(),ValueError>{
@@ -214,7 +214,7 @@ impl<'d,'n,'p>Reader<'d,'n,'p>{
  fn use_row(&mut self,table:&'static str,row:&SqliteRow)->Result<(),ValueError>{self.native.charge(96)?;if !self.used.insert((table,row.rowid)){return Err(invalid("Remodeling row is multiply owned"))}Ok(())}
  fn take(&mut self,table:&'static str,parent:i64,column:usize,width:usize,ordinal:bool)->Result<Vec<&'d SqliteRow>,ValueError>{
   let key=(table,column);
-  if !self.groups.contains_key(&key){let rows=&self.database.table(table)?.rows;self.native.charge(rows.len().checked_mul(256).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling ownership workspace overflow"))?)?;let mut groups:BTreeMap<i64,Vec<&SqliteRow>>=BTreeMap::new();let mut ids=BTreeSet::new();for row in rows{self.native.step()?;if row.rowid<=0||row.values.len()!=width||row.integer(0)?!=row.rowid||!ids.insert(row.rowid){return Err(invalid("Remodeling relational row shape differs"))}if let Some(SqliteValue::Integer(parent))=row.values.get(column){groups.entry(*parent).or_default().push(row)}else if row.values.get(column)!=Some(&SqliteValue::Null){return Err(invalid("Remodeling ownership key is invalid"))}}self.groups.insert(key,groups);}
+  if !self.groups.contains_key(&key){let rows=&self.database.table(table)?.rows;self.native.charge(rows.len().checked_mul(256).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling ownership workspace overflow"))?)?;let mut groups:BTreeMap<i64,Vec<&SqliteRow>>=BTreeMap::new();let mut ids=BTreeSet::new();for row in rows{self.native.step()?;if row.rowid<=0||row.values.len()!=width||row.integer(0)?!=row.rowid||!ids.insert(row.rowid){return Err(invalid("Remodeling relational row shape differs"))}if let Some(SqliteValue::Integer(parent))=row.values.get(column){groups.entry(*parent).or_default().push(row)}else if row.values.get(column)!=Some(&SqliteValue::Null){return Err(invalid("Remodeling ownership key is invalid"))}}self.groups.insert(key,groups);}
   let rows=self.groups.get_mut(&key).and_then(|m|m.remove(&parent)).unwrap_or_default();
   if ordinal{let mut ordered=BTreeMap::new();for row in rows{self.native.step()?;let ordinal=usize::try_from(row.integer(2)?).map_err(|e|invalid(e.to_string()))?;if ordered.insert(ordinal,row).is_some(){return Err(invalid("Remodeling relationship ordinal is repeated"))}}let mut result=self.native.allocate_vec(ordered.len())?;for(index,(ordinal,row))in ordered.into_iter().enumerate(){self.native.step()?;if ordinal!=index{return Err(invalid("Remodeling relationship ordinals are not dense"))}self.use_row(table,row)?;result.push(row)}Ok(result)}else{for row in &rows{self.native.step()?;self.use_row(table,row)?;}Ok(rows)}
  }
@@ -224,7 +224,7 @@ impl<'d,'n,'p>Reader<'d,'n,'p>{
  fn entity<T:Entity>(&mut self,table:&'static str,parent:i64)->Result<T,ValueError>{let row=self.required(table,parent,T::WIDTH+2)?;T::read(row,2,self.native)}
  fn optional_entity<T:Entity>(&mut self,table:&'static str,parent:i64)->Result<Option<T>,ValueError>{let row=self.optional(table,parent,T::WIDTH+2)?;row.map(|row|T::read(row,2,self.native)).transpose()}
  fn list<T:Entity>(&mut self,table:&'static str,parent:i64)->Result<Vec<T>,ValueError>{let rows=self.take(table,parent,1,T::WIDTH+3,true)?;let mut values=self.native.allocate_vec(rows.len())?;for row in rows{self.native.step()?;values.push(T::read(row,3,self.native)?)}Ok(values)}
- fn finish(self)->Result<(),ValueError>{let mut total=0usize;for table in &self.database.tables{self.native.step()?;total=total.checked_add(table.rows.len()).ok_or_else(||semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling database row count overflow"))?;}if total!=self.used.len(){return Err(invalid("Remodeling contains unowned rows"))}self.native.checkpoint()}
+ fn finish(self)->Result<(),ValueError>{let mut total=0usize;for table in &self.database.tables{self.native.step()?;total=total.checked_add(table.rows.len()).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,"Remodeling database row count overflow"))?;}if total!=self.used.len(){return Err(invalid("Remodeling contains unowned rows"))}self.native.checkpoint()}
 }
 fn read_durable(r:&mut Reader<'_,'_,'_>,row:&SqliteRow,kind:&str)->Result<ByteBuffer,ValueError>{
  let field=match &row.values[3]{SqliteValue::Null=>None,SqliteValue::Text(value)=>Some(value.as_str()),_=>return Err(invalid("Remodeling durable field requires text"))};let tag=match &row.values[4]{SqliteValue::Null=>None,SqliteValue::Integer(value)=>Some(u8::try_from(*value).map_err(|e|invalid(e.to_string()))?),_=>return Err(invalid("Remodeling durable tag requires byte"))};let storage=row.text(5)?;let count=usize::try_from(row.integer(6)?).map_err(|e|invalid(e.to_string()))?;
@@ -255,11 +255,11 @@ fn read_cloud(r:&mut Reader<'_,'_,'_>,row:&SqliteRow)->Result<(Float32Buffer,Opt
 }
 fn read_watertight(r:&mut Reader<'_,'_,'_>,parent:i64,column:usize)->Result<Option<WatertightReportSnapshot>,ValueError>{let rows=r.take("remodel_watertight_report",parent,column,WatertightReportSnapshot::WIDTH+3,false)?;if rows.len()>1{return Err(invalid("Remodeling watertight report is repeated"))}let Some(row)=rows.into_iter().next()else{return Ok(None)};if row.values.get(3-column)!=Some(&SqliteValue::Null){return Err(invalid("Remodeling watertight report has two owners"))}WatertightReportSnapshot::read(row,3,r.native).map(Some)}
 
-fn restore(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<crate::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot,ValueError>{
+fn restore(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<RemodelingSnapshot,ValueError>{
  c.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;
  store::sqlite_snapshot::validate_sqlite_database_schema(database,SCHEMA,c.limits())?;
  let maximum=c.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value::NativeDecodeControl::new(maximum,&mut progress);
- native.charge(std::mem::size_of::<crate::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot>())?;
+ native.charge(size_of::<RemodelingSnapshot>())?;
  let mut r=Reader{database,native:&mut native,groups:BTreeMap::new(),used:BTreeSet::new()};
  let document=r.singleton("remodel_document",3)?;let root=document.rowid;let schema=r.native.copy_text(document.text(1)?)?;let id=r.native.copy_text(document.text(2)?)?;
  let calibration_id=r.required("remodel_calibration",root,2)?.rowid;
@@ -283,18 +283,18 @@ fn restore(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<cr
  let geo=r.optional_entity("remodel_geo_products",results_id)?;
  let qc=if let Some(row)=r.optional("remodel_qc_report",results_id,QcReportSnapshot::WIDTH+2)?{let mut value=QcReportSnapshot::read(row,2,r.native)?;let warnings=r.take("remodel_qc_warning",row.rowid,1,4,true)?;value.warnings=r.native.allocate_vec(warnings.len())?;for warning in warnings{r.native.step()?;value.warnings.push(r.native.copy_text(warning.text(3)?)?);}value.watertight=read_watertight(&mut r,row.rowid,2)?;Some(value)}else{None};
  let results=ReconstructionResults{sparse,dense,mesh,trajectory,tracks,geo,qc};
- let snapshot=crate::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot{schema,id,streams,assets,durable_artifacts,calibration,params,gcps,results};r.finish()?;Ok(snapshot)
+ let snapshot=RemodelingSnapshot{schema,id,streams,assets,durable_artifacts,calibration,params,gcps,results};r.finish()?;Ok(snapshot)
 }
 
 
 /// 🪶️ The concrete owner shares one complete relational admission visitor across public and direct IO.
-impl store::ArtifactSqliteSnapshot for crate::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot{
+impl store::ArtifactSqliteSnapshot for RemodelingSnapshot{
  const SQLITE_SCHEMA:&'static str=SCHEMA;
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit(self,c)}
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,c)}
  fn from_sqlite_database(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{restore(database,c)}
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
 }
 
 #[cfg(test)]

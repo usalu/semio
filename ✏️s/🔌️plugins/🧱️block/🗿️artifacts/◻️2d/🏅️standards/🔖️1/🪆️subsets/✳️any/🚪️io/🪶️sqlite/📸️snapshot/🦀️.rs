@@ -297,7 +297,7 @@ fn forecast(v: &Block2dSnapshot, c: &mut SqliteSnapshotControl<'_>, phase: Sqlit
     c.checkpoint(phase, total, total)?;
     Ok(total)
 }
-fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: usize, native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(),semio_framework_value::ValueError> {
+fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: usize, native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(),ValueError> {
     native
         .scoped_stage(|native| -> Result<(), ValueError> {
             let mut total = 5;
@@ -321,7 +321,7 @@ impl ArtifactSqliteSnapshot for Block2dSnapshot {
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admit_native_rows(record, maximum, native)?;
                 Self::__dsl_from_record_controlled(record, native)
             })(); *snapshot_output = Some(constructed?); Ok(()) },

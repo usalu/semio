@@ -51,9 +51,9 @@ use crate::standards::v1::subsets::any::schema::mutations::{change_data_fields,c
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn bridge_step(snapshot: &crate::LayoutSnapshot, mutation: &LayoutMutation) -> Result<(crate::LayoutSnapshot, Vec<String>), String> {
+pub(crate) fn bridge_step(snapshot: &LayoutSnapshot, mutation: &LayoutMutation) -> Result<(LayoutSnapshot, Vec<String>), String> {
     use protocol::Mutation;
-    let outcome = <LayoutMutation as Mutation<crate::LayoutSnapshot>>::diff(mutation, snapshot);
+    let outcome = <LayoutMutation as Mutation<LayoutSnapshot>>::diff(mutation, snapshot);
     let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
     match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => Ok((next, messages)),

@@ -24,10 +24,11 @@ use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use protocol::os_spr::command::DiffAlgebra;
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 #[cfg(test)]
 use semio_s_artifact_stdio_contract::part21::Part21Value;
-use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance};
+use semio_s_artifact_stdio_contract::part21::{Part21Header, Part21Instance};
+#[cfg(test)] use semio_s_artifact_stdio_contract::part21::{Part21Document};
 
 //#region 🔖️Mutations
 #[path = "🧭️edit-rules/🦀️.rs"]

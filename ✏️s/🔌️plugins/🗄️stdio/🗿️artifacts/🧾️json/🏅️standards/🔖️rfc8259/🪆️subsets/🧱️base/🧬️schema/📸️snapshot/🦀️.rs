@@ -7,9 +7,7 @@
 pub(crate) mod number;
 
 use crate::STDIO_JSON_DOCUMENT_SCHEMA;
-use semio_framework_diagnostic::TextSpan;
 use framework_schema::ArtifactSchema;
-use semio_framework_diagnostic::TextError;
 
 //#region 🔖️JsonModel
 /// 🍃️ One `object` member, in source order.

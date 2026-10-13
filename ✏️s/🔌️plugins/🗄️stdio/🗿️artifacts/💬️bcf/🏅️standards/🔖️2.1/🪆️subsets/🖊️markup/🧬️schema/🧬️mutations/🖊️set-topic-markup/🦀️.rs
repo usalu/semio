@@ -50,7 +50,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetTopicMarkup {
         let Self { guid, title, description, status, priority, labels, creation_date, creation_author } = self;
         Ok({
             match find_topic(base, guid) {
-                Some(t) => vec![BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
+                Some(t) => vec![BcfMutation::SetTopicMarkup(SetTopicMarkup {
                     guid: guid.clone(),
                     title: title.as_ref().map(|_| t.title.clone()),
                     description: description.as_ref().map(|_| t.description.clone()),

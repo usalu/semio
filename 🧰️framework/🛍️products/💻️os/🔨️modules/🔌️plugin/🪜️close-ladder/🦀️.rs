@@ -362,8 +362,8 @@ impl ClosingOwner for PeerPresenceRootRetirement {
 }
 
 impl<P: Send + Sync + 'static> ClosingOwner for store::PresencePeersRetirement<P> {
-    fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { super::envelope_ladder::erased_demand(self, body) }
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { super::envelope_ladder::erased_step(self, grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
+    fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { envelope_ladder::erased_demand(self, body) }
+    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { envelope_ladder::erased_step(self, grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
     fn closing_terminal_is_empty(&self) -> bool { store::PresencePeersRetirement::terminal_is_empty(self) }
 }
 
@@ -407,6 +407,11 @@ fn registry_step<T: ClosingOwner>(registry: &mut ArtifactFixedRegistry<T>, curso
 }
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+    /// 🩺️ The ladder frontier a stalled close is parked on, named for deadline reports.
+    pub(crate) fn close_rung_name(&self) -> String {
+        format!("{:?}", self.close_rung())
+    }
+
     fn close_rung(&self) -> CloseRung {
         if !self.close_started { return CloseRung::Begin; }
         if !self.window_config_store.direct_ingress_terminal_is_empty() { return CloseRung::DirectIngress; }
@@ -433,9 +438,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         if !self.segmented_downloads.is_empty() { return CloseRung::Segments; }
         if !self.segmented_closures.is_empty() { return CloseRung::SegmentClosures; }
         if !self.snapshot_retirements.is_empty() { return CloseRung::SnapshotRetentions; }
-        if self.child_member_retirements.empty_backing_byte_demand() != Some(0) { return CloseRung::ChildMemberRetirements; }
-        if self.child_content_retirements.empty_backing_byte_demand() != Some(0) { return CloseRung::ChildRootRetirements; }
-        if !self.close_child_root_detached { return CloseRung::DetachChildRoot; }
+        let child_root_detached = self.close_child_root_detached;
+        if self.child_member_retirements.empty_backing_byte_demand() != Some(0) && (child_root_detached || !self.child_member_retirements.is_empty()) { return CloseRung::ChildMemberRetirements; }
+        if self.child_content_retirements.empty_backing_byte_demand() != Some(0) && (child_root_detached || !self.child_content_retirements.is_empty()) { return CloseRung::ChildRootRetirements; }
+        if !child_root_detached { return CloseRung::DetachChildRoot; }
         if self.close_child_member.is_some() { return CloseRung::ClosingChildMember; }
         if !self.children.is_empty() { return CloseRung::DetachChildren; }
         if !self.peer_roster_publications.is_empty() { return CloseRung::PeerRoster; }

@@ -38,7 +38,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 
 impl protocol::OpBinary for PresentationMutation {

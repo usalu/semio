@@ -55,7 +55,7 @@ fn text(parts: &[&str], control: &mut NativeEncodeControl<'_>) -> Result<String,
     })
 }
 fn diagnostic(output: &mut Vec<Diagnostic>, subset: &str, suffix: &str, severity: Severity, parts: &[&str], control: &mut NativeEncodeControl<'_>) -> Result<(), ValueError> {
-    control.charge(std::mem::size_of::<Diagnostic>())?;
+    control.charge(size_of::<Diagnostic>())?;
     output.try_reserve_exact(1).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "PPTX diagnostic allocation"))?;
     output.push(Diagnostic { code: FaultCode::new(text(&["stdio.pptx.", subset, ".", suffix], control)?), severity, span: TextSpan::at(1, 1), message: text(parts, control)?, expected: None, scope: FaultScope::default() });
     Ok(())
@@ -77,7 +77,7 @@ struct Frame<'a> {
 }
 fn push<'a>(frames: &mut Vec<Frame<'a>>, nodes: &'a [XmlNode], attrs: &'a [XmlAttr], control: &mut NativeEncodeControl<'_>) -> Result<(), ValueError> {
     if frames.len() == frames.capacity() {
-        control.charge(64 * std::mem::size_of::<Frame<'a>>())?;
+        control.charge(64 * size_of::<Frame<'a>>())?;
         frames.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "PPTX profile frontier allocation"))?;
     }
     frames.push(Frame { nodes, position: 0, attrs });
@@ -176,7 +176,7 @@ fn segment<'a>(part: &'a str, parts: &mut Vec<&'a str>, control: &mut NativeEnco
         }
         _ => {
             if parts.len() == parts.capacity() {
-                control.charge(64 * std::mem::size_of::<&str>())?;
+                control.charge(64 * size_of::<&str>())?;
                 parts.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "PPTX relationship frontier allocation"))?;
             }
             parts.push(part);

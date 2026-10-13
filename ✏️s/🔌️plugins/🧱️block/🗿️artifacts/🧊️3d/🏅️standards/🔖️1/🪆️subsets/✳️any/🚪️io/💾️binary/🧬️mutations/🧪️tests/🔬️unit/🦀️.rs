@@ -13,7 +13,7 @@ async fn block3d_document_vcs_replays_granular_operations() {
     // (`edit history insertion requires its exact mutation retirement factory`); install the
     // exact owners production installs through `Block3dPlayApp::build_document_store_owners`.
     store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<Block3dSnapshot, Block3dMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_object_kind("o1".into())], transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![m::rename_object_kind("o1".into())], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let projection = store.snapshot().expect("snapshot");
     assert_eq!(projection.object_kind.name, "o1");
     store.close_owned_unscheduled().expect("block3d document store closes through its exact bounded owners");

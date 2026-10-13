@@ -14,7 +14,7 @@ pub struct SetSun {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetSun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sun", kind: "set-sun", record: "SetSun" };
 
-    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
+    fn diff(&self, _base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
         protocol::MutationOutcome::new(Generation3dConfigPatch { sun_json: Some(self.json.clone()), ..Default::default() })
     }
 

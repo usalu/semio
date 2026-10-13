@@ -1043,7 +1043,7 @@ pub struct GenericAttributes {
 }
 
 impl GenericAttributes {
-    pub fn from_map(kv: &std::collections::BTreeMap<String, String>) -> Self {
+    pub fn from_map(kv: &BTreeMap<String, String>) -> Self {
         Self {
             entries: kv
                 .iter()
@@ -1800,12 +1800,12 @@ pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
         depth_m: 0.1,
         connection_type: "flange".into(),
     });
-    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.products[0].configuration.geometry_ref = None;
     doc.catalog.products[0].configuration.function_refs.clear();
     doc.geometry.clear();
@@ -1822,9 +1822,9 @@ pub fn nonconforming_blatt_3_dataset() -> Vdi3805Snapshot {
         a.standard_output_w = 0.0;
         a.connection_type.clear();
     }
-    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
 /// ✅️ Conforming Blatt-5 pump example.
@@ -1853,9 +1853,9 @@ pub fn conforming_blatt_5_dataset() -> Vdi3805Snapshot {
         qh.points = vec![CurvePoint { x: 0.0, y: 8.0 }, CurvePoint { x: 50.0, y: 6.0 }, CurvePoint { x: 100.0, y: 2.0 }];
         doc.curves.insert("curve-qh".into(), qh);
     }
-    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.file.record_count = doc.catalog.products.iter().map(|p| p.records.len() as u32).sum();
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
@@ -1867,9 +1867,9 @@ pub fn nonconforming_blatt_5_dataset() -> Vdi3805Snapshot {
         a.nominal_flow_m3_s = 0.0;
         a.hydraulic_efficiency = 1.5;
     }
-    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
 /// ✅️ Conforming Blatt-6 heat generator.
@@ -1886,9 +1886,9 @@ pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
         flow_temp_max_c: 80.0,
         return_temp_min_c: 40.0,
     });
-    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.products[0].configuration.geometry_ref = None;
     doc.catalog.products[0].configuration.function_refs.clear();
     doc.geometry.clear();
@@ -1905,9 +1905,9 @@ pub fn nonconforming_blatt_6_dataset() -> Vdi3805Snapshot {
         a.fuel_type.clear();
         a.return_temp_min_c = 95.0;
     }
-    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
-    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
 /// ✅️ Conforming operative Blatt snapshot for sheets that use GenericAttributes + Blatt code lists.
@@ -2006,7 +2006,7 @@ pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
                     }
                 }
                 // Resync 210 from generic entries
-                let kv: std::collections::BTreeMap<String, String> = match &product.configuration.attributes {
+                let kv: BTreeMap<String, String> = match &product.configuration.attributes {
                     SheetAttributes::Generic(g) => g.entries.iter().map(|e| (e.key.clone(), e.value.clone())).collect(),
                     _ => Default::default(),
                 };
@@ -2109,28 +2109,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "vdi3805.document",
                     extension: Some("vdi3805"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("vdi3805.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "vdi3805.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("vdi3805.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "vdi3805.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("vdi3805.diff"),
@@ -2141,8 +2141,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("vdi3805.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -2151,8 +2151,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("vdi3805.spr"),
                 },
             ]

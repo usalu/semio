@@ -3,7 +3,6 @@
 use neural_engine as neural;
 
 use neural::{Neuron, Synapse};
-use crate::retained::{FlowOwner, FlowRetirement};
 use protocol::value::ordered::UpdateCursor as LayoutUpdate;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 

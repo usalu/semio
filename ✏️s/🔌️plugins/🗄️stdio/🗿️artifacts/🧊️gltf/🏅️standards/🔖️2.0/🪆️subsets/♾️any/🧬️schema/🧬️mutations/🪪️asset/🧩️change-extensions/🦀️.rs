@@ -35,7 +35,7 @@ pub fn inverse(p: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot) -> 
     if current == &p.data {
         return Vec::new();
     }
-    vec![super::change_asset_extension_data::mutation(super::change_asset_extension_data::GltfChangeAssetExtensionDataPayload { data: current.clone() })]
+    vec![mutation(GltfChangeAssetExtensionDataPayload { data: current.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -55,7 +55,7 @@ pub fn mutation(payload: GltfChangeAssetExtensionDataPayload) -> super::GltfMuta
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetExtensionDataMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "asset-extension-data", kind: "change-asset-extension-data", record: "ChangedAssetExtensionData" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

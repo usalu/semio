@@ -11,7 +11,7 @@ enum Node<'a> {
     Null, Bool(bool), UInt(u64), Float(f64), Text(&'a str),
     Mutation(&'a FlowMutation), Payload(&'a FlowMutation), Widget(&'a Widget), Synapse(&'a SynapseSpec), Layout(&'a WidgetLayout),
     Entries(&'a [FlowLayoutEntry]), Entry(&'a FlowLayoutEntry), Strings(&'a [String]), Set(&'a OrderedSet), Dictionary(&'a Dictionary), Value(&'a NeuralValue),
-    Tree(&'a Tree), Neurons(&'a [Neuron]), Neuron(&'a Neuron), Edges(&'a [crate::neural::Synapse]), Edge(&'a crate::neural::Synapse),
+    Tree(&'a Tree), Neurons(&'a [Neuron]), Neuron(&'a Neuron), Edges(&'a [neural::Synapse]), Edge(&'a neural::Synapse),
     Flow(&'a FlowGui), Camera(&'a CameraJson), Nodes(&'a OrderedMap<FlowNodeGui>), NodeGui(&'a FlowNodeGui), Chrome(&'a NodeChrome),
     Previews(&'a [FlowPreviewGui]), Preview(&'a FlowPreviewGui), Channel(&'a FlowChannelRef),
 }

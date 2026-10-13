@@ -22,7 +22,7 @@ async fn cad_projection_defaults() {
 async fn create_shape_model_round_trips_through_store() {
     let mut store = new_cad_store(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let sample = sample_model_child("store-round-trip-1");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.clone() })], transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.clone() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let scene = store.snapshot().expect("projection");
     assert_eq!(scene.shape_model.expect("shape_model set").child_id, sample.child_id);
 }

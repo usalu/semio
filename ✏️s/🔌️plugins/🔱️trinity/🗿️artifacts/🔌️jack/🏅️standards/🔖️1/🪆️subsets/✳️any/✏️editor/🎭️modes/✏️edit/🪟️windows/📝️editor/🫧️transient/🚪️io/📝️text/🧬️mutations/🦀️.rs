@@ -27,7 +27,6 @@ impl protocol::OpText for JackEditorWindowTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 #[allow(unused_imports)]
 mod mutations_wire_codec {

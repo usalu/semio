@@ -1,12 +1,17 @@
 
 fn adopt_fixture(publication: &mut PresencePeersPublication<i32>, actor: String, presence: i32, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, PresencePeerAdmissionRejected<i32>> {
+    adopt_fixture_minted(publication, actor, presence, grant, None)
+}
+
+/// 🏭️ A publication whose commit already transferred its factory alias refuses through the factory that minted it, which the caller retains.
+fn adopt_fixture_minted(publication: &mut PresencePeersPublication<i32>, actor: String, presence: i32, grant: RetainedCloneGrant, minted: Option<Arc<dyn SnapshotRetirementFactory<i32>>>) -> Result<RetainedCloneStep, PresencePeerAdmissionRejected<i32>> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
     let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let mut actor = Some(actor); let mut presence = Some(presence);
     match publication.adopt(&mut actor, &mut presence, 0, &mut original) {
         Ok(step) => { assert_eq!(step.progress(), original.progress()); Ok(step) },
-        Err(_) => Err(PresencePeerAdmissionRejected::new("original fixture publication refusal", actor.take().expect("refused original actor"), presence.take().expect("refused original presence"), publication.factory.as_ref().expect("original publication factory").clone())),
+        Err(_) => Err(PresencePeerAdmissionRejected::new("original fixture publication refusal", actor.take().expect("refused original actor"), presence.take().expect("refused original presence"), publication.factory.as_ref().cloned().or(minted).expect("original publication factory"))),
     }
 }
 
@@ -109,7 +114,7 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
         let expected_bytes = case["expectedActorBytes"].as_u64().unwrap() as usize;
         assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&text).unwrap()).unwrap().len(), expected_bytes);
         let mut bytes = 0;
-        match adopt_fixture(&mut publication, actor, 41, CLOSE_GRANT) {
+        match adopt_fixture_minted(&mut publication, actor, 41, CLOSE_GRANT, Some(factory.clone() as Arc<dyn SnapshotRetirementFactory<i32>>)) {
             Ok(_) => assert!(case["accepted"].as_bool().unwrap()),
             Err(mut rejected) => {
                 assert!(!case["accepted"].as_bool().unwrap());

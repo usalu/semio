@@ -228,7 +228,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec MdBuilderFacets {
         construction: MdBuilderConstruction,
         analysis: MdAnalyzerAnalysis,
-        composition: crate::standards::v_commonmark::subsets::any::io::derived_composition::MdComposerComposition,
+        composition: MdComposerComposition,
     }
     builder: MdBuilder,
     analyzer: MdAnalyzer,

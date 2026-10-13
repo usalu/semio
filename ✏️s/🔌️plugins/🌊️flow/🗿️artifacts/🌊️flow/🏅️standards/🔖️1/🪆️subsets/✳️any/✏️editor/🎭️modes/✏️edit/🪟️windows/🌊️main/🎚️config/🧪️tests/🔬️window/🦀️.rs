@@ -41,7 +41,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                 /// "Flow retained publications timed out" (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
                 async fn drain(app: &mut FlowRuntime) -> Result<(usize, usize), String> {
                     use semio_framework_plugin::app::TypedOperationResultLane;
-                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, FLOW_WINDOW_OWNERSHIP_INSTANCE).await.map_err(|error| format!("{error:?}"))?;
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, FLOW_WINDOW_OWNERSHIP_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                     let count = |wanted: TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
                     Ok((count(TypedOperationResultLane::WindowConfig), count(TypedOperationResultLane::WindowTransient)))
                 }
@@ -81,10 +81,10 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                         (&right, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: -21.0, y: 5.0, zoom: 0.75 } })),
                         (&right, FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 })),
                     ] {
-                        app.dispatch_typed(command, &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(context.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }).await.map_err(|error| format!("{error:?}"))?;
+                        app.dispatch_typed(command, &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(context.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                         lanes.0 += drain(&mut app).await?.0;
                     }
-                    app.dispatch_typed(FlowCommand::AddGeneration(add_generation::AddGeneration {}), &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(generation.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(FlowCommand::AddGeneration(add_generation::AddGeneration {}), &ActionMeta { instance_id: FLOW_WINDOW_OWNERSHIP_INSTANCE, view_state: Some(generation.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                     lanes.1 += drain(&mut app).await?.1;
                     let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Flow window publications changed document bytes".into()); }
@@ -134,7 +134,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     app.begin_document_archive_load(operation, archive_before).map_err(|error| format!("{error:?}"))?;
                     let mut polls = 0usize;
                     let status = loop {
-                        let status = app.poll_document_archive_load(operation).await.map_err(|error| format!("{error:?}"))?;
+                        let status = app.poll_document_archive_load(operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) { break status; }
                         polls += 1;
                         if polls >= 1_000_000 { return Err("Flow complete archive reload never reached a terminal state".into()); }
@@ -162,7 +162,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     for pack in config_packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                     let reopened_left = scene(&mut reopened, &left).await?.viewport.ok_or("reopened left Flow viewport missing")?;
                     let reopened_right = scene(&mut reopened, &right).await?.viewport.ok_or("reopened right Flow viewport missing")?;
-                    artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                     if reopened_left != left_viewport || reopened_right != right_viewport { return Err("Flow persisted window config changed during restore".into()); }
                     let stale = ViewModel { window_id: Some("lost-flow-window".into()), window_instances: view.window_instances.clone(), ..semio_framework_plugin::ViewModel::new(view.locale, view.terminology) };
                     if addressed(&stale, &FlowMainWindowConfig::default(), FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted stale window identity".into()); }
@@ -170,7 +170,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     if addressed(&wrong, &FlowMainWindowConfig::default(), FlowMainWindowConfig::default()).is_ok() { return Err("Flow accepted wrong-kind window identity".into()); }
                     Ok(())
                 }.await;
-                artifact_app_laws::close_registered_fixture_app(&mut *app);
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 outcome.expect("Flow exact-window ownership runtime law");
             })
         })
@@ -224,9 +224,9 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                 app.bind_instance_id(FLOW_ONE_TURN_INSTANCE).await;
                 let outcome: Result<(), String> = async {
                     let meta = ActionMeta { instance_id: FLOW_ONE_TURN_INSTANCE, view_state: Some(window.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
-                    app.dispatch_typed(FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(false) }), &meta).await.map_err(|error| format!("{error:?}"))?;
-                    app.dispatch_typed(FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 }), &meta).await.map_err(|error| format!("{error:?}"))?;
-                    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, FLOW_ONE_TURN_INSTANCE).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(false) }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, FLOW_ONE_TURN_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                     let pages = receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count();
                     let measures = app.window_measures(&window).await;
                     let rows = measures.get(window_id).map_or(&[][..], Vec::as_slice);
@@ -263,7 +263,7 @@ fn flow_two_window_config_commands_in_one_turn_both_land() {
                 if let Err(error) = &outcome {
                     eprintln!("[DEBUG] Flow one-turn window-config failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut *app);
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 outcome.expect("Flow two window-config commands in one turn");
             })
         })

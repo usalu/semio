@@ -117,8 +117,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(standards::v6_0::subsets::document::io::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tiff", standard: semio_framework_artifact_reference::StandardId("6.0"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tiff", standard: semio_framework_artifact_reference::StandardId("6.0"), subset: semio_framework_artifact_reference::SubsetId("baseline") })
+        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("*") })
+        .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.tiff", standard: StandardId("6.0"), subset: SubsetId("baseline") })
         .try_build()
 }
 
@@ -372,7 +372,6 @@ pub mod schema {
 
 pub use standards::v6_0::subsets::document::examples;
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -449,7 +448,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

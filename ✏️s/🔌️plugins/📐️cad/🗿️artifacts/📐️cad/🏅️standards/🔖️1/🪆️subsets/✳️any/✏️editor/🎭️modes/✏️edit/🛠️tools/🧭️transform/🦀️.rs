@@ -10,7 +10,7 @@
 use crate::editor::cad::config::CadConfigMutation;
 use crate::{cad_pane_model, cad_pane_model_slot, CadMutation, CadPaneId, CadSnapshot};
 use machine::Command;
-use semio_framework_diagnostic::{Fault, FaultFrom};
+use semio_framework_diagnostic::Fault;
 use semio_framework_plugin::app::ChildEmitPreparation;
 use semio_framework_plugin::{ArtifactView, ChildContentView, Emit};
 use std::collections::VecDeque;

@@ -129,7 +129,7 @@ impl semio_framework_plugin::WindowConfigApplyMutation<Fem2dModelWindowConfig> f
         Ok(Self::Update(Fem2dModelWindowConfigUpdate { patch }))
     }
     fn payload_bytes(&self) -> usize {
-        let Self::Update(Fem2dModelWindowConfigUpdate { patch }) = self;
+        let Self::Update(Fem2dModelWindowConfigUpdate { patch: _ }) = self;
         0
     }
 }

@@ -50,7 +50,7 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 /// finish"). It also took ONE page per turn, where the helper drains every presented
                 /// page — so a turn publishing both a config and a transient reported only one of them.
                 async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, receiver: u32) -> Result<(usize, usize), String> {
-                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, receiver).await.map_err(|fault| format!("{fault:?}"))?;
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|fault| format!("{fault:?}"))?;
                     let count = |wanted: semio_framework_plugin::app::TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
                     Ok((count(semio_framework_plugin::app::TypedOperationResultLane::WindowConfig), count(semio_framework_plugin::app::TypedOperationResultLane::WindowTransient)))
                 }
@@ -74,10 +74,10 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                         (&right, WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
                         (&left, WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() })),
                     ] {
-                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
+                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                     }
                     let (mut config_receipts, mut transient_receipts) = drain(&mut app, 1).await?;
-                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                     let (next_config_receipts, next_transient_receipts) = drain(&mut app, 1).await?;
                     config_receipts += next_config_receipts;
                     transient_receipts += next_transient_receipts;
@@ -145,8 +145,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 if let Err(error) = &outcome {
                     eprintln!("Writer exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(reopened.as_mut());
-                artifact_app_laws::close_registered_fixture_app(app.as_mut());
+                artifact_app_laws::close_registered_fixture_app(reopened.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(app.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 outcome.expect("retained Writer exact-window ownership and persistence");
             })
         })

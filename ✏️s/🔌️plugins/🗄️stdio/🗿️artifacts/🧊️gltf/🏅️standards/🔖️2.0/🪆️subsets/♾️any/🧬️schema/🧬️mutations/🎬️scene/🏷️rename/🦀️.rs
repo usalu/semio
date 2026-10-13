@@ -33,7 +33,7 @@ pub fn inverse(p: &GltfChangeSceneNamePayload, base: &GltfSnapshot) -> Vec<super
     if current == &p.value {
         return Vec::new();
     }
-    vec![super::change_scene_name::mutation(super::change_scene_name::GltfChangeSceneNamePayload { scene: p.scene, value: current.clone() })]
+    vec![mutation(GltfChangeSceneNamePayload { scene: p.scene, value: current.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -53,7 +53,7 @@ pub fn mutation(payload: GltfChangeSceneNamePayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneNameMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "scene-name", kind: "change-scene-name", record: "ChangedSceneName" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

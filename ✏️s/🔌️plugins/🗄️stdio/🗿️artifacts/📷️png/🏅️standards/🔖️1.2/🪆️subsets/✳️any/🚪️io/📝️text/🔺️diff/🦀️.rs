@@ -20,4 +20,3 @@ use protocol::{DiffAlgebra, MutationApplyResult, MutationDiff};
 
 semio_framework_os_kernel::diff_text!(crate::standards::v1_2::subsets::any::schema::diff::PngDiff);
 }
-pub use diff_codec::*;

@@ -73,7 +73,7 @@ mod tests {
         async fn grammar_conformance_law() {
             let grammar = semio_framework_dsl::parse_grammar(crate::standards::v1::subsets::mesh::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-            let text = snapshot::print_mesh_dsl(&snapshot::demo_mesh_snapshot());
+            let text = crate::standards::v1::subsets::mesh::io::text::snapshot::print_mesh_dsl(&snapshot::demo_mesh_snapshot());
             let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
             let reconstructed = format!("{}\n{body}", envelope.envelope_id());
             assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -110,7 +110,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
             let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v1::subsets::mesh::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-            let packed = snapshot::encode_mesh_pack(&snapshot::demo_mesh_snapshot());
+            let packed = crate::standards::v1::subsets::mesh::io::binary::snapshot::encode_mesh_pack(&snapshot::demo_mesh_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
             let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");

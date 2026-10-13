@@ -204,7 +204,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Iso16757BuilderFacets {
         construction: Iso16757BuilderConstruction,
         analysis: Iso16757AnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Iso16757ComposerComposition,
+        composition: Iso16757ComposerComposition,
     }
     builder: Iso16757Builder,
     analyzer: Iso16757Analyzer,

@@ -14,4 +14,3 @@ impl protocol::OpBinary for FormsConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

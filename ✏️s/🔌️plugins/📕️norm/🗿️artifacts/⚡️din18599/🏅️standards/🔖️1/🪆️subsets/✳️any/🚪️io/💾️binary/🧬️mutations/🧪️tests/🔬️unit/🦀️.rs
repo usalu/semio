@@ -24,7 +24,7 @@ async fn document_text_round_trips_through_store() {
         .dispatch(store::ArtifactCommand::Apply {
             mutations: vec![sample_mutation()],
             transaction: None,
-        })
+        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;

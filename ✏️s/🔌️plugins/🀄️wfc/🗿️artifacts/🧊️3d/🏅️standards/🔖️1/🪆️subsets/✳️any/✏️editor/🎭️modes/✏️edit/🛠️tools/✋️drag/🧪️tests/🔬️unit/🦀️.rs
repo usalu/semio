@@ -83,7 +83,7 @@ fn manifest() -> App {
 }
 
 fn app() -> Wfc3dApp {
-    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Wfc3dEditor>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
+    let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Wfc3dEditor>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     block_on(app.bind_instance_id(1));
     app
 }
@@ -115,7 +115,7 @@ fn settle(app: &mut Wfc3dApp, result: Result<InvocationResult, semio_framework_p
             return result;
         }
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
-        block_on(app.advance_typed_operation_publication()).expect("publication advances");
+        block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("publication advances");
     }
     panic!("the wfc3d dispatch did not settle");
 }
@@ -123,7 +123,7 @@ fn settle(app: &mut Wfc3dApp, result: Result<InvocationResult, semio_framework_p
 fn drag(app: &mut Wfc3dApp, gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> InvocationResult {
     let row = record(gesture, node_ids, dx * WFC_3D_GRAPH_UNIT, dy * WFC_3D_GRAPH_UNIT).to_row();
     let command = Wfc3dEditorCommand::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![row])) };
-    let result = block_on(app.dispatch_typed(command, &graph_meta()));
+    let result = block_on(app.dispatch_typed(command, &graph_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     settle(app, result)
 }
 
@@ -188,7 +188,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
         store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<Wfc3dSnapshot, crate::Wfc3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [drag_slots(vec!["room-a".into()], 1.0, 0.0, 0.0), drag_slots(vec!["room-a".into(), "room-b".into()], 0.0, 2.0, 1.0), resize_slot("room-a".into(), 3.0, 1.5, 2.0)];
         for mutation in &log {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let edited = drag_slots(vec!["room-a".into()], 3.0, -1.0, 0.5);
@@ -206,7 +206,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
             vcs::apply_mutation(&fresh, &mutation).map(|(applied_state, _)| { fresh = applied_state; }).expect("the edited log folds");
         }
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
         let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<Wfc3dSnapshot, crate::Wfc3dMutation>();
         for _ in 0..4_096 {

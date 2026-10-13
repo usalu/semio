@@ -59,24 +59,33 @@ fn mutation_trait_matches_adjacent_required_declaration_facts() {
     assert_eq!(actual, expected.facts);
 }
 
-/// 🔍️ Exercises the actual production lookup against shared neutral filesystem specimens.
+/// 🔍️ The derive resolves `$id` documents from the generated index and ignores schema files the index does not list.
 #[test]
-fn mutation_schema_document_index_excludes_example_collections() {
-    let vector: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️schema-search/🔣️.json")).unwrap();
-    let parent = std::path::PathBuf::from(std::env::var("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned schema search output required"));
-    let base = parent.join(format!("dsl-schema-search-{}", std::process::id()));
-    for (ordinal, case) in vector["cases"].as_array().unwrap().iter().enumerate() {
-        let root = base.join(ordinal.to_string()).join(case["root"].as_str().unwrap());
-        std::fs::create_dir_all(&root).unwrap();
-        for (path, document) in case["files"].as_object().unwrap() {
-            let destination = root.join(path);
-            std::fs::create_dir_all(destination.parent().unwrap()).unwrap();
-            std::fs::write(destination, serde_json::to_vec(document).unwrap()).unwrap();
-        }
-        let actual = super::mutation_schema_document_index(&root);
-        let expected = case["expected"]["ids"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect::<std::collections::BTreeSet<_>>();
-        assert_eq!(actual.keys().cloned().collect::<std::collections::BTreeSet<_>>(), expected, "{}", case["id"]);
-        println!("[DEBUG] actual production schema index case={} indexed={}", case["id"], actual.len());
-    }
-    std::fs::remove_dir_all(base).unwrap();
+fn schema_document_index_reads_one_file_and_ignores_unlisted_schemas() {
+    let parent = std::path::PathBuf::from(std::env::var("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned schema index output required"));
+    let workspace = parent.join(format!("dsl-schema-index-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&workspace);
+    std::fs::create_dir_all(&workspace).unwrap();
+    std::fs::write(workspace.join("nx.json"), b"{}\n").unwrap();
+    std::fs::write(workspace.join("📋️project.json"), b"{}\n").unwrap();
+    let index_path = workspace.join(super::MUTATION_SCHEMA_INDEX_LOCATOR);
+    std::fs::create_dir_all(index_path.parent().unwrap()).unwrap();
+    let schema_dir = "🧬️schema";
+    let kept = workspace.join("plugin").join(schema_dir).join("kept.json");
+    let extra = workspace.join("plugin").join(schema_dir).join("extra.json");
+    std::fs::create_dir_all(kept.parent().unwrap()).unwrap();
+    std::fs::write(&kept, r#"{"$id":"urn:semio:schema-index:kept"}"#).unwrap();
+    std::fs::write(&extra, r#"{"$id":"urn:semio:schema-index:extra"}"#).unwrap();
+    let relative = format!("plugin/{schema_dir}/kept.json");
+    std::fs::write(&index_path, format!(r#"{{"schema":"semio.dsl.mutation-schema-document-index/v1","roots":{{"plugin":{{"urn:semio:schema-index:kept":"{relative}"}}}}}}"#)).unwrap();
+    let indexed = super::mutation_schema_document_index(&workspace.join("plugin")).unwrap();
+    assert_eq!(indexed.keys().cloned().collect::<Vec<_>>(), vec!["urn:semio:schema-index:kept".to_string()]);
+    assert_eq!(indexed["urn:semio:schema-index:kept"], kept);
+    let collection = workspace.join("owner").join("🧫️fixtures");
+    std::fs::create_dir_all(&collection).unwrap();
+    assert!(super::mutation_schema_document_index(&collection).unwrap().is_empty());
+    assert!(super::mutation_schema_document_index(&workspace.join("absent")).is_err());
+    println!("[DEBUG] schema document index tracked one file and ignored the unlisted schema");
+    std::fs::remove_dir_all(&workspace).unwrap();
 }
+

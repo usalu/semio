@@ -195,7 +195,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec DxfBuilderFacets {
         construction: DxfBuilderConstruction,
         analysis: DxfAnalyzerAnalysis,
-        composition: crate::standards::v_r12::subsets::any::io::derived_composition::DxfComposerComposition,
+        composition: DxfComposerComposition,
     }
     builder: DxfBuilder,
     analyzer: DxfAnalyzer,

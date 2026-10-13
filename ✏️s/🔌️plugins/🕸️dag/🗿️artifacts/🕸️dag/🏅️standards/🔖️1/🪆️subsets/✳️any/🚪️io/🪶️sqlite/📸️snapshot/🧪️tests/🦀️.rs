@@ -1,4 +1,6 @@
 //! 🕸️ Actual two-field DAG parent baselines before semantic SQLite opt-in.
+#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue};
 use store::{ArtifactDsl, ArtifactPack};
@@ -114,7 +116,7 @@ fn sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns
                 SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
                 SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
             };
-            let database = (codec.export)(DAG_DOCUMENT_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            let database = original_owners::with_decoding(|native_owner|(codec.export)(DAG_DOCUMENT_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             assert_eq!(database.tables.len(), 2);
             assert_eq!(database.table("dag_document").unwrap().single_row().unwrap().text(1).unwrap(), expected.schema);
             let child = database.table("dag_content_child").unwrap().single_row().unwrap();
@@ -123,7 +125,7 @@ fn sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns
             assert_eq!(child.text(4).unwrap(), expected.content.target.dialect.artifact_kind);
             assert_eq!(child.text(5).unwrap(), expected.content.target.dialect.standard);
             assert_eq!(child.text(6).unwrap(), expected.content.target.dialect.subset);
-            let payload = (codec.import)(DAG_DOCUMENT_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            let payload = original_owners::with_encoding(|native_owner|(codec.import)(DAG_DOCUMENT_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             let actual = Owned::new(match payload {
                 store::io_schema::IoPayload::Text(text) => DagSnapshot::parse_dsl(&text).unwrap(),
                 store::io_schema::IoPayload::Binary(bytes) => DagSnapshot::decode_pack(&bytes).unwrap(),
@@ -140,13 +142,13 @@ fn sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_cop
     let value = Owned::new(full(0));
     let exact = SqliteDatabaseLimits { max_rows: 2, ..Default::default() };
     let short = SqliteDatabaseLimits { max_rows: 1, ..Default::default() };
-    assert!(value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, exact)).is_ok());
-    assert!(value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, short)).is_err());
+    assert!(original_owners::with_sqlite_recipient(exact,&mut |_| true,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_ok());
+    assert!(original_owners::with_sqlite_recipient(short,&mut |_| true,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_err());
     let mut large = full(0);
     large.content.child_id = "引用😀".repeat(20000);
     large.content.target.artifact_id = "independent alias".into();
     let large = Owned::new(large);
-    let database = large.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, Default::default())).unwrap();
+    let database = original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|large.to_sqlite_database(sqlite_control)).unwrap();
     let payload = store::io_schema::IoPayload::Binary(large.encode_pack());
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
         let mut hit = false;
@@ -162,8 +164,8 @@ fn sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_cop
         let rejected = match phase {
             SqliteSnapshotPhase::ProjectSnapshot => large.to_sqlite_database(&mut control).is_err(),
             SqliteSnapshotPhase::ReconstructSnapshot => DagSnapshot::from_sqlite_database(&database, &mut control).is_err(),
-            SqliteSnapshotPhase::DecodeNative => DagSnapshot::decode_sqlite_snapshot_native(&payload, &mut control).is_err(),
-            SqliteSnapshotPhase::EncodeNative => large.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut control).is_err(),
+            SqliteSnapshotPhase::DecodeNative => original_owners::with_decoding(|native_owner|DagSnapshot::decode_sqlite_snapshot_native(&payload, &mut control, native_owner)).is_err(),
+            SqliteSnapshotPhase::EncodeNative => original_owners::with_encoding(|native_owner|large.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut control, native_owner)).is_err(),
             _ => unreachable!(),
         };
         assert!(rejected);
@@ -175,7 +177,7 @@ fn sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected() {
     use store::sqlite_snapshot::*;
     use store::ArtifactSqliteSnapshot;
     let value = Owned::new(full(2));
-    let database = value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, Default::default())).unwrap();
+    let database = original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|value.to_sqlite_database(sqlite_control)).unwrap();
     for change in 0..4 {
         let mut db = database.clone();
         match change {
@@ -187,7 +189,7 @@ fn sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected() {
             }
             _ => db.table_mut("dag_document").unwrap().rows[0].values[1] = SqliteValue::Text("invalid".into()),
         };
-        assert!(DagSnapshot::from_sqlite_database(&db, &mut SqliteSnapshotControl::new(&mut |_| true, Default::default())).is_err());
+        assert!(original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|DagSnapshot::from_sqlite_database(&db, sqlite_control)).is_err());
     }
 }
 
@@ -197,7 +199,7 @@ fn sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent() {
     use store::sqlite_snapshot::*;
     use store::ArtifactSqliteSnapshot;
     let expected = Owned::new(full(2));
-    let database = expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, Default::default())).unwrap();
+    let database = original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
     let bytes = export_sqlite_database(&database, Default::default(), &mut |_| true).unwrap();
     let script = r#"import{Database}from'bun:sqlite';const db=Database.deserialize(await Bun.stdin.bytes());if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('SQLite integrity');if(db.query('SELECT count(*) AS n FROM sqlite_schema WHERE type=\'table\'').get().n!==2)throw Error('tables');db.exec("UPDATE dag_content_child SET child_id='independent child',artifact_id='independent target'");process.stdout.write(db.serialize());"#;
     let mut child = std::process::Command::new("bun").args(["--eval", script]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped()).spawn().unwrap();
@@ -205,7 +207,7 @@ fn sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent() {
     let result = child.wait_with_output().unwrap();
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
     let database = import_sqlite_database(&result.stdout, Default::default(), &mut |_| true).unwrap();
-    let actual = Owned::new(DagSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, Default::default())).unwrap());
+    let actual = Owned::new(original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|DagSnapshot::from_sqlite_database(&database, sqlite_control)).unwrap());
     assert_eq!(actual.content.child_id, "independent child");
     assert_eq!(actual.content.target.artifact_id, "independent target");
     assert_eq!(actual.content.target.dialect, expected.content.target.dialect);

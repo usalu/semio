@@ -64,7 +64,7 @@ fn write_children(out:&mut Projection<'_,'_>,root:WriteChildren<'_>)->Result<(),
 }
 fn object_children(value:&PdfObject,key:i64)->Option<WriteChildren<'_>>{match value{PdfObject::Array(values)=>Some(WriteChildren::Array{key,values:values.iter().enumerate()}),PdfObject::Dict(entries)|PdfObject::Stream{dict:entries,..}=>Some(WriteChildren::Dictionary{key,entries:entries.iter().enumerate()}),_=>None}}
 pub(super) fn write_dictionary(out:&mut Projection<'_,'_>,entries:&[PdfDictEntry])->Result<i64,ValueError>{
-    let key=out.insert("pdf_cos_value",&[C::Text("dictionary"),C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null])?;
+    let key=out.insert("pdf_cos_value",&[C::Text("dictionary"),C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null,C::Null])?;
     write_children(out,WriteChildren::Dictionary{key,entries:entries.iter().enumerate()})?;Ok(key)
 }
 pub(super) fn write_object(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{let key=write_shallow(out,value)?;if let Some(children)=object_children(value,key){write_children(out,children)?;}Ok(key)}
@@ -75,7 +75,7 @@ fn write_shallow(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueE
         PdfObject::Int(value) => { fields[1] = C::Integer(*value); "integer" },
         PdfObject::Real(value) => { fields[2] = C::Integer(i64::from(value.negative)); fields[3] = C::Text(&value.coefficient); fields[4] = C::Integer(i64::from(value.scale)); "decimal" },
         PdfObject::Text(value) => {fields[6]=C::Text(value);"text"},
-        PdfObject::Date(value) => {fields[11]=C::Integer(super::metadata::write_date(out,value)?);"date"},
+        PdfObject::Date(value) => {fields[11]=C::Integer(metadata::write_date(out,value)?);"date"},
         PdfObject::Str(value) => { fields[5] = C::Blob(value); "string" }, PdfObject::Name(value) => { fields[6] = C::Text(value); "name" },
         PdfObject::Array(_) => "array", PdfObject::Dict(_) => "dictionary",
         PdfObject::Ref(value) => { fields[7] = C::Integer(i64::from(value.num)); fields[8] = C::Integer(i64::from(value.gen)); "reference" },
@@ -108,7 +108,7 @@ fn read_shallow(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfObject,ValueErr
     Ok(match kind {
         "null" => PdfObject::Null, "boolean" => PdfObject::Bool(boolean(row, 2)?), "integer" => PdfObject::Int(row.integer(3)?),
         "decimal" => PdfObject::Real(PdfDecimal { negative: boolean(row, 4)?, coefficient: reader.text(row,5)?, scale: integer(row, 6)? }),
-        "text"=>PdfObject::Text(reader.text(row,8)?),"date"=>PdfObject::Date(super::metadata::read_date(reader,row.integer(13)?)?),
+        "text"=>PdfObject::Text(reader.text(row,8)?),"date"=>PdfObject::Date(metadata::read_date(reader,row.integer(13)?)?),
         "string" => PdfObject::Str(reader.blob(row,7)?), "name" => PdfObject::Name(reader.text(row,8)?),
         "reference" => PdfObject::Ref(ObjRef { num: integer(row, 9)?, gen: integer(row, 10)? }),
         "array" => PdfObject::Array(Vec::new()),

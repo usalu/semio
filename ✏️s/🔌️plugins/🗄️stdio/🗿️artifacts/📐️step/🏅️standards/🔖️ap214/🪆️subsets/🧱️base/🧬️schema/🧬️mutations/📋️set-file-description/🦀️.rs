@@ -20,7 +20,7 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileDescription {
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
         Ok({
-            vec![StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: base.header.file_description.clone() })]
+            vec![StepMutation::SetFileDescription(SetFileDescription { file_description: base.header.file_description.clone() })]
         })
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

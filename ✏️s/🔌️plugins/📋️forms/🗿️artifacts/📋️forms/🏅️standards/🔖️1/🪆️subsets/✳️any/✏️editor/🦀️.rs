@@ -27,7 +27,8 @@ use crate::editor::forms::panels::{catalogue as catalogue_panel, document as doc
 use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
 use crate::op::FormMutation;
 use crate::{forms_steps, FormQuestion, FormsSnapshot, FORMS_DOCUMENT_SCHEMA, FORM_BUILTIN_KINDS};
-use semio_framework_pack_json::{object, Object, Value};
+use semio_framework_pack_json::{Object, Value};
+#[cfg(test)] use semio_framework_pack_json::{object};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -842,7 +843,7 @@ where
     }
 
     fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<FormsStorePreparation<P, M>>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<FormsStorePreparation<P, M>>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
@@ -947,7 +948,7 @@ impl ArtifactEditor for FormsPlayApp {
 })())
 }
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::forms_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;

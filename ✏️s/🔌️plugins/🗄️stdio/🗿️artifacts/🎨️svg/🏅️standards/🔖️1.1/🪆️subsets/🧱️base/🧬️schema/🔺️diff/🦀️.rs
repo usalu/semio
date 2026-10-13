@@ -12,7 +12,8 @@ use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlQuote};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype};
+#[cfg(test)] use semio_s_artifact_stdio_xml::schema::snapshot::{XmlQuote};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- every mutation leaf

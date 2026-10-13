@@ -1536,7 +1536,7 @@ fn journal_grant() -> store::ArtifactStoreOneItemGrant {
 /// #⃣ The smallest concrete projection/operation pair a durable-group recovery law can open real
 /// `store::ArtifactStore`s over: a projection that IS one content hash and an operation that
 /// overwrites it (its `inverse` restores the prior hash). Test-only fixture.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 pub struct HashProjection {
     pub latest_hash: [u8; 32],
 }
@@ -1825,12 +1825,6 @@ impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirement
 
     fn retire(&self, snapshot: Arc<HashProjection>) -> Box<dyn store::ErasedSnapshotRetirement> {
         Box::new(HashSnapshotRetirement(Some(snapshot)))
-    }
-}
-
-impl semio_framework_value::retirement::RetireOwned for HashProjection {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement(self.latest_hash)
     }
 }
 

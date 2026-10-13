@@ -43,7 +43,7 @@ impl store::ArtifactDsl for SvgSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
@@ -88,7 +88,7 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
 
 
 }
-pub use snapshot_wire2_codec::*;
+#[cfg(test)] pub use snapshot_wire2_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire3_codec {
@@ -141,7 +141,7 @@ pub use snapshot_wire3_codec::*;
 impl crate::SvgSnapshot {
     pub fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| format!("svg source is not UTF-8: {error}"))?;
-        Ok(Self { schema: crate::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: crate::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml(text)? })
+        Ok(Self { schema: crate::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)? })
     }
 }
 

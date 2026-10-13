@@ -105,7 +105,7 @@ fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assemb
             "duplicate" => actual[1] = actual[0].clone(),
             "identity" => actual[0].id = "foreign.artifact".into(),
             "schema" => actual[0].schema = "foreign.schema".into(),
-            "label" => actual[0].label = semio_framework_plugin::LocalizedLabel::native("Foreign", "Fremd"),
+            "label" => actual[0].label = semio_framework_ui_locale::LocalizedLabel::native("Foreign", "Fremd"),
             "source-format" => actual[0].source_format = "foreign.format".into(),
             value => panic!("unknown neutral mutation {value}"),
         }
@@ -297,7 +297,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
 /// and `html.parser`) derive from each source.
 #[semio_framework_async_macros::async_test]
 async fn text_document_codecs_compile_their_neutral_fixture_through_the_linked_receipts() {
-    fn neutral<T: semio_framework_os_kernel::ToValue>(snapshot: T) -> serde_json::Value {
+    fn neutral<T: semio_framework_value::ToValue>(snapshot: T) -> serde_json::Value {
         serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&snapshot.to_value()))).unwrap()
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-text-codecs/🔣️.json"))).unwrap();

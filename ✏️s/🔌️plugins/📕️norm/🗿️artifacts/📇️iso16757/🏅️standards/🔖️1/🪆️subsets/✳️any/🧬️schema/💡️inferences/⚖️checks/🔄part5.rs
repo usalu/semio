@@ -317,8 +317,8 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 .part_number_inputs
                 .iter()
                 .filter_map(|(k, v)| match v {
-                    crate::CatalogueValue::Decimal { value } => Some((k.clone(), *value)),
-                    crate::CatalogueValue::Integer { value } => Some((k.clone(), *value as f64)),
+                    CatalogueValue::Decimal { value } => Some((k.clone(), *value)),
+                    CatalogueValue::Integer { value } => Some((k.clone(), *value as f64)),
                     _ => None,
                 })
                 .collect();
@@ -339,8 +339,8 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                         .part_number_inputs
                         .iter()
                         .filter_map(|(k, v)| match v {
-                            crate::CatalogueValue::Decimal { value } => Some((k.clone(), *value)),
-                            crate::CatalogueValue::Integer { value } => Some((k.clone(), *value as f64)),
+                            CatalogueValue::Decimal { value } => Some((k.clone(), *value)),
+                            CatalogueValue::Integer { value } => Some((k.clone(), *value as f64)),
                             _ => None,
                         })
                         .collect();

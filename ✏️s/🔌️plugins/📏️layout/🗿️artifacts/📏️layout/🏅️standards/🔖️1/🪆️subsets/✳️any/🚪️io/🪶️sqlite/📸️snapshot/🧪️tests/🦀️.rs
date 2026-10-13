@@ -1,4 +1,6 @@
 //! 📏️ Exact Layout native capability before the owned relational implementation.
+#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(){
@@ -9,11 +11,11 @@ async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(
     let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};
     let payload=store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));
-    let database=(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default())).unwrap().value;
+    let database=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
     assert!(database.table("layout_document").is_ok());
 }
 #[test]
-fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();let provider=<LayoutSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));let result=(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default())).unwrap();assert!(result.value.table("layout_document").is_ok());}
+fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();let provider=<LayoutSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));let result=original_owners::with_decoding(|native_owner|(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(result.value.table("layout_document").is_ok());}
 
 fn component_fixture()->crate::LayoutDrawingChild {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas,DrawLayer,DrawNode,SemioPoint2};
@@ -103,10 +105,10 @@ fn sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_na
         for encoding in [store::sqlite_snapshot::SnapshotEncoding::Binary,store::sqlite_snapshot::SnapshotEncoding::Text]{
             let payload=match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io::IoPayload::Binary(expected.encode_pack()),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io::IoPayload::Text(expected.print_dsl())};
             let mut callback=|_|true;let mut control=store::sqlite_snapshot::SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits::default());
-            let database=(codec.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut control).unwrap().value;
+            let database=original_owners::with_decoding(|native_owner|(codec.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut control, native_owner)).unwrap().value;
             assert_eq!(database.table("layout_frame").unwrap().rows.len(),6);assert_eq!(database.table("layout_image_link").unwrap().rows[0].text(12).unwrap(),fixture["imageArtifactKind"].as_str().unwrap());
             assert_eq!(database.table("layout_scalar64").unwrap().rows[0].integer(2).unwrap() as u64,word);
-            let result=(codec.import)(LAYOUT_DOCUMENT_SCHEMA,&dialect,database,encoding,&mut control).unwrap().value;
+            let result=original_owners::with_encoding(|native_owner|(codec.import)(LAYOUT_DOCUMENT_SCHEMA,&dialect, &mut Some(database),encoding,&mut control, native_owner)).unwrap().value;
             let restored=match result{store::io::IoPayload::Binary(bytes)=>LayoutSnapshot::decode_pack(&bytes).unwrap(),store::io::IoPayload::Text(text)=>LayoutSnapshot::parse_dsl(&text).unwrap()};
             assert_eq!(restored.grid.baseline_grid.to_bits(),word);assert_eq!(restored.character_styles[0].color.unwrap()[0].to_bits(),color);assert_eq!(restored.stories[0].style_runs[0].start,expected.stories[0].style_runs[0].start);assert_eq!(restored.links,expected.links);assert_eq!(restored.background_drawing.as_ref(),expected.background_drawing.as_ref());assert_eq!(restored.referenced_model,expected.referenced_model);assert_eq!(restored.data_fields,expected.data_fields);
             assert!(restored.encode_pack()==expected.encode_pack(),"complete derived owner fields must survive relational reconstruction");

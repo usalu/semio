@@ -155,11 +155,11 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
     ) -> Option<usize> {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) => {
-                let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(std::mem::size_of::<usize>())?)?;
+                let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(size_of::<usize>())?)?;
                 (address_bytes <= DOCX_TEXT_WORK_PAGE_BYTES && text.len() <= semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES).then_some(text.len().div_ceil(DOCX_TEXT_WORK_PAGE_BYTES).saturating_add(1))
             }
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetRunFormatting { address, .. }) => {
-                let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(std::mem::size_of::<usize>())?)?;
+                let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(size_of::<usize>())?)?;
                 (address_bytes <= DOCX_TEXT_WORK_PAGE_BYTES).then_some(1)
             }
             _ => None,
@@ -230,8 +230,8 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
 
 /// 📏️ The copy and capacity quote of the address strings one formatting mutation owns.
 pub(crate) fn docx_address_demand(address: &DocxXmlAddress) -> semio_framework_value::RetirementDemand {
-    let bytes = address.part_path.len().saturating_add(address.expected_name.len()).saturating_add(address.revision.len()).saturating_add(address.node_path.len().saturating_mul(std::mem::size_of::<usize>()));
-    semio_framework_value::RetirementDemand { copy_bytes: bytes, capacity_bytes: bytes.saturating_add(std::mem::size_of::<DocxMutation>()), release_bytes: 0, depth: 1 }
+    let bytes = address.part_path.len().saturating_add(address.expected_name.len()).saturating_add(address.revision.len()).saturating_add(address.node_path.len().saturating_mul(size_of::<usize>()));
+    semio_framework_value::RetirementDemand { copy_bytes: bytes, capacity_bytes: bytes.saturating_add(size_of::<DocxMutation>()), release_bytes: 0, depth: 1 }
 }
 
 /// 📏️ The quote of one set-page turn: one admitted text page plus the address and mutation owners.

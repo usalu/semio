@@ -206,7 +206,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec StepBuilderFacets {
         construction: StepBuilderConstruction,
         analysis: StepAnalyzerAnalysis,
-        composition: crate::standards::v_ap214::subsets::base::io::derived_composition::StepComposerComposition,
+        composition: StepComposerComposition,
     }
     builder: StepBuilder,
     analyzer: StepAnalyzer,

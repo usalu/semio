@@ -40,7 +40,7 @@ impl MeshTessellationJob{
         self.corner_ids.push(data.corner);let out=self.output.as_mut().unwrap();out.positions.extend_from_slice(&data.position);out.normals.extend_from_slice(&data.normal);out.vertex_ids.push(data.vertex);out.uvs.extend_from_slice(&data.uv);if let Some(color)=data.color{out.colors.extend_from_slice(&color);}
     }
     /// 📏️ Prices every output scalar plus original vertex/corner identities in this atomic corner.
-    pub(super) fn next_corner_copy_byte_demand(&self,local:usize)->Result<usize,ValueError>{let(edge_id,edge,_)=self.prepared_corner(local)?;Ok((8+4*usize::from(sample(self.semantic_attribute(MeshAttributeSemantic::Color),edge_id,edge,self.face).is_some()))*std::mem::size_of::<f32>()+2*std::mem::size_of::<u32>())}
+    pub(super) fn next_corner_copy_byte_demand(&self,local:usize)->Result<usize,ValueError>{let(edge_id,edge,_)=self.prepared_corner(local)?;Ok((8+4*usize::from(sample(self.semantic_attribute(MeshAttributeSemantic::Color),edge_id,edge,self.face).is_some()))*size_of::<f32>()+2*size_of::<u32>())}
     /// 🧺️ Requires the already admitted original backing; emission cannot trigger another allocation.
     pub(super) fn next_corner_capacity_byte_demand(&self,local:usize,_maximum_copy_bytes:usize)->Result<usize,ValueError>{
         let color=self.next_corner_copy_byte_demand(local)?>40;let out=self.output.as_ref().ok_or_else(||refusal("original mesh corner output is absent"))?;

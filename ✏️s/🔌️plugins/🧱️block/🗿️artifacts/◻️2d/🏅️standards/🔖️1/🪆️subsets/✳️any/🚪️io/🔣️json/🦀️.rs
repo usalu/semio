@@ -2,15 +2,14 @@
 use crate::Block2dSnapshot;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
-use semio_framework_value::Number;
 use semio_framework_value::ToValue;
 
 fn word(value: f64) -> DslValue {
-    semio_framework_value::DslValue::Object(vec![("bits".into(), DslValue::String(format!("{:016x}", value.to_bits())))])
+    DslValue::Object(vec![("bits".into(), DslValue::String(format!("{:016x}", value.to_bits())))])
 }
 fn members(value: &mut DslValue) -> Result<&mut Vec<(String, DslValue)>, String> {
     match value {
-        semio_framework_value::DslValue::Object(value) => Ok(value),
+        DslValue::Object(value) => Ok(value),
         _ => Err("Block2d JSON record is not an object".into()),
     }
 }
@@ -21,16 +20,16 @@ fn put(value: &mut DslValue, key: &str, owned: DslValue) {
     *field(value, key).expect("authored Block2d field") = owned;
 }
 fn decode_word(value: &mut DslValue) -> Result<(), String> {
-    let semio_framework_value::DslValue::Object(entries) = value else { return Err("Block2d JSON word must be a closed bits object".into()) };
+    let DslValue::Object(entries) = value else { return Err("Block2d JSON word must be a closed bits object".into()) };
     if entries.len() != 1 || entries[0].0 != "bits" {
         return Err("Block2d JSON word must contain only bits".into());
     }
-    let semio_framework_value::DslValue::String(bits) = &entries[0].1 else { return Err("Block2d JSON bits must be text".into()) };
+    let DslValue::String(bits) = &entries[0].1 else { return Err("Block2d JSON bits must be text".into()) };
     if bits.len() != 16 || !bits.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) {
         return Err("Block2d JSON bits must be sixteen lowercase hexadecimal digits".into());
     }
     let bits = u64::from_str_radix(bits, 16).map_err(|_| "Block2d JSON bits exceed binary64")?;
-    *value = semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(f64::from_bits(bits)));
+    *value = DslValue::Number(semio_framework_value::Number::Float(f64::from_bits(bits)));
     Ok(())
 }
 
@@ -43,7 +42,7 @@ pub(crate) fn to_json_text(source: &Block2dSnapshot) -> String {
             put(presentation, key, word(number));
         }
     }
-    let semio_framework_value::DslValue::Array(handles) = field(&mut value, "handles").unwrap() else { unreachable!("authored Block2d handles") };
+    let DslValue::Array(handles) = field(&mut value, "handles").unwrap() else { unreachable!("authored Block2d handles") };
     for (handle, source) in handles.iter_mut().zip(&source.handles) {
         put(handle, "angle", word(source.angle));
         put(handle, "radius", word(source.radius));
@@ -66,7 +65,7 @@ pub(crate) fn from_json_text(text: &str) -> Result<Block2dSnapshot, String> {
         }
     }
     if let Some((_, handles)) = members(&mut value)?.iter_mut().find(|(key, _)| key == "handles") {
-        let semio_framework_value::DslValue::Array(handles) = handles else { return Err("Block2d JSON handles must be an array".into()) };
+        let DslValue::Array(handles) = handles else { return Err("Block2d JSON handles must be an array".into()) };
         for handle in handles {
             decode_word(field(handle, "angle")?)?;
             decode_word(field(handle, "radius")?)?;

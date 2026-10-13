@@ -37,9 +37,9 @@ impl<T:RetireOwned,O:RetireOwned> NativeSnapshotReceiving<T,O>{
  fn active(&self)->&dyn ErasedSnapshotRetirement{if let Some(pending)=self.pending.as_ref(){pending.as_ref()}else if !self.intermediate.terminal_is_empty(){&self.intermediate}else{&self.output}}
 }
 impl<T:RetireOwned,O:RetireOwned> ErasedSnapshotRetirement for NativeSnapshotReceiving<T,O>{
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot receiving child exceeds parent depth"))}let mut child=grant;child.maximum_depth-=1;if self.terminal_pending(){let slot=std::mem::size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>();if grant.maximum_copy_bytes<slot{return Ok(RetainedCloneStep::Progress(Default::default()))}let step=semio_framework_value::close_factory_ticket(&mut self.pending,child)?;let mut progress=step.progress();if progress.copied_items>0{progress.copied_bytes=slot}Ok(RetainedCloneStep::Progress(progress))}else if self.pending.is_some(){semio_framework_value::close_factory_ticket(&mut self.pending,child)}else if !self.intermediate.terminal_is_empty(){self.intermediate.step(child)}else{self.output.step(child)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot receiving child exceeds parent depth"))}let mut child=grant;child.maximum_depth-=1;if self.terminal_pending(){let slot=size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>();if grant.maximum_copy_bytes<slot{return Ok(RetainedCloneStep::Progress(Default::default()))}let step=semio_framework_value::close_factory_ticket(&mut self.pending,child)?;let mut progress=step.progress();if progress.copied_items>0{progress.copied_bytes=slot}Ok(RetainedCloneStep::Progress(progress))}else if self.pending.is_some(){semio_framework_value::close_factory_ticket(&mut self.pending,child)}else if !self.intermediate.terminal_is_empty(){self.intermediate.step(child)}else{self.output.step(child)}}
  fn terminal_is_empty(&self)->bool{self.pending.is_none()&&self.intermediate.terminal_is_empty()&&self.output.terminal_is_empty()}
- fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.terminal_pending(){return Ok(std::mem::size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>())}if let Some(pending)=self.pending.as_ref(){return Ok(semio_framework_value::factory_ticket_demands(pending,0)?.copy_bytes)}self.active().next_copy_byte_demand()}
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.terminal_pending(){return Ok(size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>())}if let Some(pending)=self.pending.as_ref(){return Ok(semio_framework_value::factory_ticket_demands(pending,0)?.copy_bytes)}self.active().next_copy_byte_demand()}
  fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if let Some(pending)=self.pending.as_ref(){return Ok(semio_framework_value::factory_ticket_demands(pending,copy)?.capacity_bytes)}self.active().next_capacity_byte_demand(copy)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(pending)=self.pending.as_ref(){return Ok(semio_framework_value::factory_ticket_demands(pending,0)?.release_bytes)}self.active().next_release_byte_demand()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{if self.terminal_is_empty(){return Ok(0)}let depth=if let Some(pending)=self.pending.as_ref(){semio_framework_value::factory_ticket_demands(pending,0)?.depth}else{self.active().next_depth_demand()?};depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot receiving child depth overflow"))}
@@ -77,7 +77,7 @@ impl<'owner,'control> NativeSnapshotEncodeOwner<'owner,'control>{
 
 }
 fn publication_progress<O>(grant:RetainedCloneGrant,frame_bytes:usize)->Result<RetainedCloneProgress,ValueError>{
- let progress=RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<O>>(),retained_capacity_bytes:0,released_bytes:frame_bytes};
+ let progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<O>>(),retained_capacity_bytes:0,released_bytes:frame_bytes};
  if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot publication requires original header depth"))}
  if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot publication exceeds original physical grant"))}
  Ok(progress)
@@ -90,13 +90,13 @@ fn take_output<T:RetireOwned,O:RetireOwned>(frame:&mut NativeSnapshotReceiving<T
 }
 
 pub(super) fn receive<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(native:&mut N,original_grant:RetainedCloneGrant,performed:&mut RetainedCloneProgress,parent:Option<&mut Option<Box<dyn ErasedSnapshotRetirement>>>,operation:impl FnOnce(&mut Option<T>,&mut N,&mut NativeSnapshotBodyWallet,&mut Option<Box<dyn ErasedSnapshotRetirement>>)->Result<O,ValueError>)->Result<O,ValueError>{
-  let mut grant=original_grant;let frame_bytes=std::mem::size_of::<NativeSnapshotReceiving<T,O>>();
+  let mut grant=original_grant;let frame_bytes=size_of::<NativeSnapshotReceiving<T,O>>();
   if !T::controlled_retirement_supported()||!O::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"snapshot receiving fields require original retirement factories"))}
   if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot receiving frame requires admitted item"))}
   if grant.maximum_depth<2{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot receiving frame requires parent and child depth"))}
   if frame_bytes>grant.maximum_capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot receiving frame exceeds original capacity grant"))}
   if parent.as_ref().is_some_and(|slot|slot.is_some()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"nested parent retains its original refused child"))}
-  let mut construct=|native:&mut N|{
+  let construct=|native:&mut N|{
    grant.maximum_items-=1;grant.maximum_capacity_bytes-=frame_bytes;*performed=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:frame_bytes,..Default::default()};
    let mut frame=Box::new(NativeSnapshotReceiving{pending:std::mem::ManuallyDrop::new(None),intermediate:ControlledRetirement::new(None::<T>).ok().unwrap(),output:ControlledRetirement::new(None::<O>).ok().unwrap()});
    grant.maximum_depth-=1;let mut body=NativeSnapshotBodyWallet::new(grant);
@@ -108,7 +108,7 @@ pub(super) fn receive<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(native:&m
      while frame.pending.is_some()||!frame.intermediate.terminal_is_empty(){
       native.checkpoint()?;
       if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot retirement exhausted original item grant"))}
-      let header=if frame.pending.is_none()&&frame.intermediate.original_is_untouched(){std::mem::size_of::<Option<T>>()}else{0};
+      let header=if frame.pending.is_none()&&frame.intermediate.original_is_untouched(){size_of::<Option<T>>()}else{0};
       let demand=if let Some(pending)=frame.pending.as_ref(){semio_framework_value::factory_ticket_demands(pending,grant.maximum_copy_bytes)?}else{semio_framework_value::RetirementDemand{copy_bytes:frame.intermediate.next_copy_byte_demand()?+header,capacity_bytes:frame.intermediate.next_capacity_byte_demand(grant.maximum_copy_bytes)?,release_bytes:frame.intermediate.next_release_byte_demand()?,depth:frame.intermediate.next_depth_demand()?}};
       if demand.depth>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot retirement exceeds original depth grant"))}
       let copy=demand.copy_bytes;let capacity=demand.capacity_bytes;let release=demand.release_bytes;
@@ -129,7 +129,7 @@ pub(super) fn receive<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(native:&m
 
 /// 🪑️ Retains the exact typed cursor and output through either original native direction.
 pub(super) fn drive_cursor<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(native:&mut N,original_grant:RetainedCloneGrant,performed:&mut RetainedCloneProgress,parent:Option<&mut Option<Box<dyn ErasedSnapshotRetirement>>>,cursor:&mut Option<T>,mut advance:impl FnMut(&mut T,&mut N,RetainedCloneGrant)->(Result<Option<O>,ValueError>,RetainedCloneProgress))->Result<O,ValueError>{
-  let remaining=original_grant;let frame_bytes=std::mem::size_of::<NativeSnapshotReceiving<T,O>>();
+  let remaining=original_grant;let frame_bytes=size_of::<NativeSnapshotReceiving<T,O>>();
   if cursor.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot cursor original is absent"))}
   if !T::controlled_retirement_supported()||!O::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"snapshot cursor fields require controlled retirement"))}
   if remaining.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot cursor frame requires one original item"))}
@@ -156,7 +156,7 @@ pub(super) fn drive_cursor<T:RetireOwned,O:RetireOwned,N:SnapshotAdmission>(nati
      let mut child=driver.remaining_grant();child.maximum_depth-=1;
      if child.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot cursor retirement exhausted original work"))}
      if frame.intermediate.next_depth_demand()?>child.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"snapshot cursor retirement exceeds original depth"))}
-     let header=if frame.intermediate.original_is_untouched(){std::mem::size_of::<Option<T>>()}else{0};
+     let header=if frame.intermediate.original_is_untouched(){size_of::<Option<T>>()}else{0};
      let copy=frame.intermediate.next_copy_byte_demand()?.checked_add(header).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot cursor retirement copy overflow"))?;let capacity=frame.intermediate.next_capacity_byte_demand(child.maximum_copy_bytes)?;let release=frame.intermediate.next_release_byte_demand()?;
      if copy>child.maximum_copy_bytes||capacity>child.maximum_capacity_bytes||release>child.maximum_release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot cursor retirement exceeds remaining physical grant"))}
      native.checkpoint()?;native.charge(capacity)?;

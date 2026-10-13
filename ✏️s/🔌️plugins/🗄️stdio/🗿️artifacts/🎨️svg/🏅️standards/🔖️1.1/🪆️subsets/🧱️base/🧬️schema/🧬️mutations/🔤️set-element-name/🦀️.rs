@@ -15,7 +15,7 @@ pub struct SetElementNamePayload {
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetElementNamePayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "element-name", kind: "set-element-name", record: "SetElementName" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { path, name } = self;
         protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Element(SvgElementDiff { name: Some(name.clone()), ..Default::default() })))
     }

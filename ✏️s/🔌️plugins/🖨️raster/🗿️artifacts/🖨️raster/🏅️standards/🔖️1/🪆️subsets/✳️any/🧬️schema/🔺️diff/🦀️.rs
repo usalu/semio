@@ -838,8 +838,8 @@ type ContainerParts = protocol::list_delta::Parts<Slot, protocol::list_delta::No
 
 /// 🧱️ The per-container lists of one delta: a leaving row (removed or moved out) is a `removed` entry of its container, an
 /// entering row (inserted or moved in) an `inserted` entry of its container.
-fn container_parts(removed: &[RasterLayerRemoval], moved: &[RasterLayerRelocation], inserted: Vec<(Option<String>, usize, String)>) -> std::collections::BTreeMap<Option<String>, ContainerParts> {
-    let mut parts: std::collections::BTreeMap<Option<String>, ContainerParts> = std::collections::BTreeMap::new();
+fn container_parts(removed: &[RasterLayerRemoval], moved: &[RasterLayerRelocation], inserted: Vec<(Option<String>, usize, String)>) -> BTreeMap<Option<String>, ContainerParts> {
+    let mut parts: BTreeMap<Option<String>, ContainerParts> = BTreeMap::new();
     for row in removed {
         parts.entry(row.parent_id.clone()).or_default().removed.push((row.id.clone(), row.index));
     }
@@ -875,7 +875,7 @@ fn born_children_mut<'a>(rows: &'a mut [RasterLayerInsertion], id: &str) -> Opti
 fn fold_into_born(born: &mut Vec<RasterLayerInsertion>, later: &mut RasterLayersDelta) {
     let territory: std::collections::BTreeSet<String> = born.iter().flat_map(|row| subtree_ids_of(&row.layer)).collect();
     let inside = |parent: &Option<String>| parent.as_deref().is_some_and(|parent| territory.contains(parent));
-    let mut leaving: std::collections::BTreeMap<String, Vec<(usize, String, bool)>> = std::collections::BTreeMap::new();
+    let mut leaving: BTreeMap<String, Vec<(usize, String, bool)>> = BTreeMap::new();
     for row in std::mem::take(&mut later.removed) {
         match &row.parent_id {
             parent if inside(parent) => leaving.entry(row.parent_id.clone().unwrap_or_default()).or_default().push((row.index, row.id, true)),
@@ -891,7 +891,7 @@ fn fold_into_born(born: &mut Vec<RasterLayerInsertion>, later: &mut RasterLayers
             later.moved.push(row);
         }
     }
-    let mut lifted: std::collections::BTreeMap<String, RasterLayerNode> = std::collections::BTreeMap::new();
+    let mut lifted: BTreeMap<String, RasterLayerNode> = BTreeMap::new();
     for (container, mut rows) in leaving {
         rows.sort_by(|left, right| right.0.cmp(&left.0));
         let Some(children) = born_children_mut(born, &container) else { continue };
@@ -906,7 +906,7 @@ fn fold_into_born(born: &mut Vec<RasterLayerInsertion>, later: &mut RasterLayers
             }
         }
     }
-    let mut entering: std::collections::BTreeMap<String, Vec<(usize, RasterLayerNode)>> = std::collections::BTreeMap::new();
+    let mut entering: BTreeMap<String, Vec<(usize, RasterLayerNode)>> = BTreeMap::new();
     for row in leaving_moves {
         match lifted.remove(&row.id) {
             Some(node) if inside(&row.to.parent_id) => entering.entry(row.to.parent_id.clone().unwrap_or_default()).or_default().push((row.to.index, node)),
@@ -964,7 +964,7 @@ fn absorb_layers_delta(dst: &mut RasterLayersDelta, mut src: RasterLayersDelta) 
     let inserted_of = |rows: &[RasterLayerInsertion]| rows.iter().map(|row| (row.parent_id.clone(), row.index, layer_node_id(&row.layer).to_string())).collect::<Vec<_>>();
     let mut left = container_parts(&dst.removed, &dst.moved, inserted_of(&born_rows));
     let mut right = container_parts(&src.removed, &src.moved, inserted_of(&src.inserted));
-    let mut nodes: std::collections::BTreeMap<String, RasterLayerNode> = std::collections::BTreeMap::new();
+    let mut nodes: BTreeMap<String, RasterLayerNode> = BTreeMap::new();
     for row in born_rows.into_iter().chain(std::mem::take(&mut src.inserted)) {
         if let Some(displaced) = nodes.insert(layer_node_id(&row.layer).to_string(), row.layer) {
             crate::retire_raster_layer(displaced);
@@ -1050,15 +1050,15 @@ pub fn diff_move_layer(base: &[RasterLayerNode], layer_id: &str, parent_id: Opti
 }
 
 /// 🖇️ Sparse asset-map insertion diff (`add-layer-asset`).
-pub fn diff_add_asset(asset_id: &str, asset: crate::SemioImageSnapshot) -> RasterDiff {
-    let mut entries = std::collections::BTreeMap::new();
+pub fn diff_add_asset(asset_id: &str, asset: SemioImageSnapshot) -> RasterDiff {
+    let mut entries = BTreeMap::new();
     entries.insert(asset_id.to_string(), Some(asset));
     RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }
 }
 
 /// 🗂️ Sparse asset-map removal diff (`remove-layer-asset`).
 pub fn diff_remove_asset(asset_id: &str) -> RasterDiff {
-    let mut entries = std::collections::BTreeMap::new();
+    let mut entries = BTreeMap::new();
     entries.insert(asset_id.to_string(), None);
     RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }
 }

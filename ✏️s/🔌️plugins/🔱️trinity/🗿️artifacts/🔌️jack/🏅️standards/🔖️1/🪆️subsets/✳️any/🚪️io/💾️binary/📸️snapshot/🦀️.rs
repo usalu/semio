@@ -30,10 +30,10 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::JackSnapshot;
-use semio_framework_diagnostic::TextError;
-use semio_framework_diagnostic::TextSpan;
+#[cfg(test)] use semio_framework_diagnostic::TextError;
+#[cfg(test)] use semio_framework_diagnostic::TextSpan;
 use store::ArtifactDsl;
 use store::PackDecodeOptions;
 use store::PackEncodeOptions;

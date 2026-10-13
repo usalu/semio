@@ -1022,7 +1022,7 @@ function printDocumentTargets(project, root, workspaceRoot, scripts) {
   return targets;
 }
 
-/** 🔨️ Every concrete Cargo package exposes native leaves even when its authored metadata only defines generators. */
+/** 🔨️ Every concrete Cargo package exposes native leaves even when its authored metadata only defines generators. `build` queues on the Cargo build lease and may overlap other work; `check` and `test` run Cargo directly and stay `parallelism: false`. */
 function cargoTargets(root, workspaceRoot, commandInputs) {
   const manifest = join(workspaceRoot, root, "Cargo.toml");
   if (!existsSync(manifest) || !readToml(manifest).package) return {};
@@ -1031,14 +1031,14 @@ function cargoTargets(root, workspaceRoot, commandInputs) {
   return Object.fromEntries(["build", "check", "test"].map((target) => [target, {
     executor: DEFAULT_EXECUTOR,
     cache: true,
-    parallelism: false,
+    ...(target === "build" ? {} : { parallelism: false }),
     outputs: target === "build" ? ["{projectRoot}/dist/build"] : [],
     inputs: [target === "test" ? "nativeTestSources" : "nativeSources", target === "test" ? "^nativeTestSources" : "^nativeSources", ...commandInputs],
     options: { cwd: ".", command: `bun ${JSON.stringify(script)} native cargo ${target} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, manifest)))}` },
   }]));
 }
 
-/** 🧩️ Every Cargo component owns profile-specific deliverables outside the compiler store. */
+/** 🧩️ Every Cargo component owns profile-specific deliverables outside the compiler store. Component producers carry no `parallelism: false`: Nx runs a `parallelism: false` task alone, which serialized all 140 wasm builds of a play release behind one core. Cargo concurrency is owned by the per-profile build lease and the one-pass prebuild instead (`acquireCargoBuildLeaseV1`, `ensureCargoPrebuildV1`). */
 function componentTargets(root, workspaceRoot, commandInputs) {
   const path = join(workspaceRoot, root, "Cargo.toml");
   if (!existsSync(path)) return {};
@@ -1062,7 +1062,6 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   return Object.fromEntries([["describe", describe], ...["dev", "release"].flatMap((profile) => [[`component-${profile}`, {
     executor: DEFAULT_EXECUTOR,
     cache: true,
-    parallelism: false,
     inputs: ["nativeSources", "^nativeSources", ...commandInputs, { env: "SEMIO_PLUGIN_SYMBOLS" }],
     outputs: [`{projectRoot}/dist/component-${profile}`],
     options: { cwd: ".", command: `bun ${JSON.stringify(script)} native component ${profile} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },

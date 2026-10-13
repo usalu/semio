@@ -290,7 +290,7 @@ fn text_block_from_dwg(ids: &mut crate::schema::NoteIdOwner, at: &[f64; 3], heig
 
 pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String> {
     let mut ids = crate::schema::NoteIdOwner::new(format!("dwg-import:{}", drawing.entities.len()), 0);
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot();
+    let mut document = text::snapshot::empty_note_snapshot();
     document.id = crate::schema::create_note_id(&mut ids, "dwg-import");
     document.title = Some("Imported Drawing".into());
     for entity in &drawing.entities {
@@ -327,7 +327,7 @@ mod media_tests;
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::standards::v1::subsets::any::io::binary::{diff, mutations, snapshot};
+    #[cfg(test)] use crate::standards::v1::subsets::any::io::binary::{diff, mutations, snapshot};
     use crate::{NoteMutation, NoteSnapshot, NOTE_DIALECT, NOTE_DOCUMENT_SCHEMA};
     use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
@@ -345,28 +345,28 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     id: "note.document",
                     extension: Some("note"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("note.document"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "note.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("note.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "note.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("note.diff"),
@@ -377,8 +377,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("note.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -387,8 +387,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("note.spr"),
                 },
             ]

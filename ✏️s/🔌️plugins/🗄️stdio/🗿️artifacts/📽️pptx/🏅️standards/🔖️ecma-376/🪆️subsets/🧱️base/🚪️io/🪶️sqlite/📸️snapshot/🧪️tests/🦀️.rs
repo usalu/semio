@@ -24,7 +24,7 @@ fn sqlite_snapshot_pptx_exact_profile_policies_use_typed_root_namespace_entities
     for case in plan["cases"].as_array().unwrap() {
         let snapshot = profile_fixture(case);
         let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: case["subset"].as_str().unwrap().into() };
-        let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         let result = snapshot.validate_sqlite_snapshot_subset(&dialect, &db, &mut SqliteSnapshotControl::new(&mut |_| true, limits));
         assert_eq!(result.is_ok(), case["codes"].as_array().unwrap().len() == case["warnings"].as_u64().unwrap() as usize, "{}", case["id"]);
         let diagnostics = match result {
@@ -98,8 +98,8 @@ fn fixture() -> PptxSnapshot {
 fn sqlite_snapshot_pptx_all_owned_fields_and_literal_package_domains() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-    let restored = PptxSnapshot::from_sqlite_database(&db, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
+    let restored = PptxSnapshot::from_sqlite_database(&db,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(snapshot, restored);
     assert_eq!(db.tables.len(), 21);
 }
@@ -107,18 +107,18 @@ fn sqlite_snapshot_pptx_all_owned_fields_and_literal_package_domains() {
 fn sqlite_snapshot_pptx_exact_aggregate_row_budget() {
     let snapshot = fixture();
     let defaults = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, defaults)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,defaults)).unwrap();
     let count = db.tables.iter().map(|table| table.rows.len()).sum::<usize>();
     let exact = SqliteDatabaseLimits { max_rows: count, ..defaults };
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, exact)).is_ok());
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_rows: count - 1, ..defaults })).is_err());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,exact)).is_ok());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits { max_rows: count - 1, ..defaults })).is_err());
 }
 
 #[test]
 fn sqlite_snapshot_pptx_rejects_dangling_and_shared_package_owners() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for (table, row, column, value) in [
         ("pptx_document", 0, 2, SqliteValue::Integer(2)),
         ("pptx_xml_part", 1, 4, SqliteValue::Integer(1)),
@@ -128,7 +128,7 @@ fn sqlite_snapshot_pptx_rejects_dangling_and_shared_package_owners() {
     ] {
         let mut invalid = db.clone();
         invalid.table_mut(table).unwrap().rows[row].values[column] = value;
-        assert!(PptxSnapshot::from_sqlite_database(&invalid, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err(), "{table}");
+        assert!(PptxSnapshot::from_sqlite_database(&invalid,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err(), "{table}");
     }
 }
 #[test]
@@ -136,7 +136,7 @@ fn sqlite_snapshot_pptx_literal_large_part_bytes_have_interior_controls() {
     let mut snapshot = fixture();
     snapshot.opc.parts[0].bytes = vec![0x97; 100000];
     let limits = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot] {
         let mut observed = false;
         let mut callback = |event: SqliteSnapshotProgress| {
@@ -175,25 +175,20 @@ fn sqlite_snapshot_pptx_partial_part_reconstruction_retires_deep_completed_docum
             snapshot.xml_parts[1].content_type = "z".repeat(100000);
             let snapshot = Owned(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
-            let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+            let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
             let mut observed = false;
             assert!(PptxSnapshot::from_sqlite_database(
-                &db,
-                &mut SqliteSnapshotControl::new(
-                    &mut |event| {
+                &db,&mut SqliteSnapshotControl::new(&mut |event| {
                         if event.phase == SqliteSnapshotPhase::ReconstructSnapshot && event.total == 100000 && event.completed >= 65536 && event.completed < event.total {
                             observed = true;
                             false
                         } else {
                             true
                         }
-                    },
-                    limits
-                )
-            )
+                    },limits))
             .is_err());
             assert!(observed);
-            let restored = PptxSnapshot::from_sqlite_database(&db, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+            let restored = PptxSnapshot::from_sqlite_database(&db,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
             restored.retire_sqlite_snapshot();
         })
         .unwrap()
@@ -220,7 +215,7 @@ fn sqlite_snapshot_pptx_complete_signed64_transform_domain() {
     let values = [("x", i64::MIN), ("y", i64::MAX), ("cx", 9007199254740993), ("cy", -9007199254740993)];
     snapshot.xml_parts[0].document.root = Some(XmlNode::Element { name: "a:xfrm".into(), attrs: values.iter().map(|(name, value)| XmlAttr { name: (*name).into(), value: value.to_string() }).collect(), children: vec![] });
     let limits = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     let node = database.table("pptx_xml_element").unwrap().rows.iter().find(|row| row.text(1).unwrap() == "a:xfrm").unwrap().rowid;
     let attrs = database.table("pptx_xml_attribute").unwrap().rows.iter().filter(|row| row.integer(1).unwrap() == node).collect::<Vec<_>>();
     assert_eq!(attrs.len(), values.len());
@@ -228,7 +223,7 @@ fn sqlite_snapshot_pptx_complete_signed64_transform_domain() {
         assert_eq!(row.text(3).unwrap(), name);
         assert_eq!(row.text(4).unwrap(), value.to_string());
     }
-    let restored = PptxSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let restored = PptxSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(restored, snapshot);
     restored.retire_sqlite_snapshot();
     snapshot.retire_sqlite_snapshot();
@@ -241,10 +236,10 @@ fn sqlite_snapshot_pptx_actual_erased_native_boundaries_retain_all_owned_fields(
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let codec = <PptxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-        let payload = (codec.import)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-        let projected = (codec.export)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-        let restored = PptxSnapshot::from_sqlite_database(&projected, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+        let projected = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+        let restored = PptxSnapshot::from_sqlite_database(&projected,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
     }
@@ -281,10 +276,10 @@ fn sqlite_snapshot_pptx_deep_erased_native_input_output_are_interior_cancellable
             let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.pptx".into(), standard: "ecma-376".into(), subset: "*".into() };
             let codec = <PptxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-                let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+                let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
                 let expected_database = db.clone();
-                let payload = (codec.import)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-                let projected = (codec.export)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
+                let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+                let projected = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
                 assert!(projected == expected_database, "complete deep native graph differs");
                 assert_eq!(projected.table("pptx_xml_element").unwrap().rows.iter().filter(|row| row.text(1).unwrap() == "node").count(), plan["depth"].as_u64().unwrap() as usize);
                 assert_eq!(projected.table("pptx_xml_text").unwrap().rows.iter().filter(|row| row.text(1).unwrap() == "leaf").count(), 1);
@@ -301,10 +296,10 @@ fn sqlite_snapshot_pptx_deep_erased_native_input_output_are_interior_cancellable
                         }
                     };
                     let failed = if phase == SqliteSnapshotPhase::EncodeNative {
-                        let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-                        (codec.import)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut callback, limits)).is_err()
+                        let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
+                        semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut callback, limits), native_owner)).is_err()
                     } else {
-                        (codec.export)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut callback, limits)).is_err()
+                        semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(crate::STDIO_PPTX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut callback, limits), native_owner)).is_err()
                     };
                     assert!(failed);
                     assert!(reached, "actual interior native phase {phase:?}");
@@ -320,22 +315,22 @@ fn sqlite_snapshot_pptx_deep_erased_native_input_output_are_interior_cancellable
 fn sqlite_snapshot_pptx_native_exact_file_and_entity_admission() {
     let snapshot = fixture();
     let defaults = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, defaults)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,defaults)).unwrap();
     let rows = database.tables.iter().map(|table| table.rows.len()).sum::<usize>();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, defaults)).unwrap();
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, defaults), native_owner)).unwrap();
         let bytes = match &payload {
             store::io_schema::IoPayload::Binary(bytes) => bytes.len(),
             store::io_schema::IoPayload::Text(text) => text.len(),
         };
         let exact = SqliteDatabaseLimits { max_file_bytes: bytes, max_rows: rows, ..defaults };
-        assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, exact)).unwrap(), payload);
-        let restored = PptxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, exact)).unwrap();
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, exact), native_owner)).unwrap(), payload);
+        let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PptxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, exact), native_owner)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
         for limited in [SqliteDatabaseLimits { max_file_bytes: bytes - 1, ..exact }, SqliteDatabaseLimits { max_rows: rows - 1, ..exact }] {
-            assert!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limited)).is_err());
-            assert!(PptxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limited)).is_err());
+            assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limited), native_owner)).is_err());
+            assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PptxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limited), native_owner)).is_err());
         }
     }
     snapshot.retire_sqlite_snapshot();
@@ -357,8 +352,8 @@ fn sqlite_snapshot_pptx_complete_literal_native_file_matches_independent_fixture
             store::io_schema::IoPayload::Text(text) => text.len(),
         };
         let limits = SqliteDatabaseLimits { max_file_bytes: file_size, max_rows: plan["rows"].as_u64().unwrap() as usize, ..defaults };
-        assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), expected);
-        let restored = PptxSnapshot::decode_sqlite_snapshot_native(&expected, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap(), expected);
+        let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PptxSnapshot::decode_sqlite_snapshot_native(&expected, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
     }
@@ -386,10 +381,10 @@ fn sqlite_snapshot_pptx_borrowed_preflight_pays_frontiers_without_materializing_
         let error = snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut callback, limits)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::Canceled);
         assert!(reached);
-        let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-        let error = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits })).unwrap_err();
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
+        let error = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
-        let error = <PptxSnapshot as ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits })).unwrap_err();
+        let error = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <PptxSnapshot as ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
     }
     snapshot.retire_sqlite_snapshot();

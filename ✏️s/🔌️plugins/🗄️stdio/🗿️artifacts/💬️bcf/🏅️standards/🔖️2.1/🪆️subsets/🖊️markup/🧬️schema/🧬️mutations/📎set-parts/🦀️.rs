@@ -20,7 +20,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetParts {
         }
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
-        Ok((base.parts != self.parts).then(|| BcfMutation::SetParts(set_parts::SetParts { parts: base.parts.clone() })).into_iter().collect())
+        Ok((base.parts != self.parts).then(|| BcfMutation::SetParts(SetParts { parts: base.parts.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set package parts", "Paketdateien setzen")

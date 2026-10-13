@@ -33,7 +33,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetNormal {
         let Self { index, .. } = self;
         Ok({
             match base.normals.get(*index) {
-                Some(v) => vec![ObjMutation::SetNormal(set_normal::SetNormal { index: *index, normal: v.clone() })],
+                Some(v) => vec![ObjMutation::SetNormal(SetNormal { index: *index, normal: v.clone() })],
                 None => Vec::new(),
             }
         })

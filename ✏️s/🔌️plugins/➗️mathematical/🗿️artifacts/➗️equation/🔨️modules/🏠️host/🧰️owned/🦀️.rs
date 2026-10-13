@@ -1,9 +1,5 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::EquationSnapshot;
-use store::PackError;
-use crate::standards::v1::subsets::any::schema::snapshot::{EquationNode,EquationNodeLabel,EquationNodeKind,EquationExprSnapshot};
 pub type EquationStore = store::ArtifactStore<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>;
 
 /// 🔐️ Opens a Equation store WITH its exact owner catalog installed. `ArtifactStore::new` installs no

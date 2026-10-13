@@ -13,7 +13,7 @@ pub struct SetGenerationPreview {
 
 impl protocol::MutationKind<Generation3dTransient, Generation3dTransientMutation> for SetGenerationPreview {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "generation-preview", kind: "set-generation-preview", record: "SetGenerationPreview" };
-    fn diff(&self, base: &Generation3dTransient) -> protocol::MutationOutcome<Generation3dTransientPatch> {
+    fn diff(&self, _base: &Generation3dTransient) -> protocol::MutationOutcome<Generation3dTransientPatch> {
         protocol::MutationOutcome::new(Generation3dTransientPatch { generation_preview_text: Some(Generation3dPreviewTextChange { text: self.preview_text.clone() }), ..Default::default() })
     }
     fn inverse(&self, base: &Generation3dTransient) -> Result<Vec<Generation3dTransientMutation>, semio_framework_value::ValueError> {

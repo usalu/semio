@@ -39,4 +39,3 @@ impl store::ArtifactDsl for BcfSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

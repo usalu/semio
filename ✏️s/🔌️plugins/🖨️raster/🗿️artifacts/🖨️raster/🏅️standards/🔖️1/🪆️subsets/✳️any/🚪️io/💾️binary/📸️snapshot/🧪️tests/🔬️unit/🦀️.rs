@@ -144,7 +144,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
                 }),
             })],
             transaction: None,
-        })
+        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

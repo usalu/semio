@@ -15,6 +15,11 @@ use crate::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLim
 use semio_framework_diagnostic::Limits;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
+/// 👛️ A law that runs several imports and exports through one native owner shares one wallet across them, so its item credit covers every operation instead of the single-operation grant.
+fn wallet(grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedCloneGrant {
+    semio_framework_value::RetainedCloneGrant { maximum_items: grant.maximum_items * 4096, ..grant }
+}
+
 #[derive(semio_framework_value::RetireOwned)]
 struct MissingEncodingGuard {
     output_bytes: usize,
@@ -114,7 +119,7 @@ expansion_owner!(
 #[test]
 fn sqlite_snapshot_native_exact_output_admission_ignores_approximate_preflight() {
  let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
-let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
+let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,wallet(snapshot_caller_grant));
 
     use std::{
         io::Write,
@@ -159,7 +164,7 @@ drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owne
 #[test]
 fn sqlite_snapshot_native_encoding_admission_rejects_before_either_encoder() {
  let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
-let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
+let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,wallet(snapshot_caller_grant));
 
     use std::{
         io::Write,
@@ -213,7 +218,7 @@ drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owne
 
 fn encoding_stops_inside_owned_output(encoding: SnapshotEncoding) {
  let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
-let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
+let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,wallet(snapshot_caller_grant));
 
     use std::{
         io::Write,
@@ -268,26 +273,48 @@ struct ControlledOutputFields {
     items: Vec<String>,
 }
 
+/// 🔁️ Runs one encode on its own native owner and drains the retirement recipient a refused turn leaves behind, so a following encode finds its explicit retirement slot free.
+fn with_fresh_encode_owner<R>(maximum: usize, live: &std::cell::Cell<bool>, grant: semio_framework_value::RetainedCloneGrant, operation: impl FnOnce(&mut crate::os_store::NativeSnapshotEncodeOwner<'_, '_>) -> R) -> R {
+    let mut progress = |_: semio_framework_value::native_encoding::NativeEncodeProgress| live.get();
+    let mut recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
+    let mut native = semio_framework_value::NativeEncodeControl::new(maximum, &mut progress);
+    native.install_retirement_recipient(&mut recipient).unwrap();
+    let result = {
+        let mut owner = crate::os_store::NativeSnapshotEncodeOwner::new(&mut native, wallet(grant));
+        operation(&mut owner)
+    };
+    while native.has_retirement_owner() {
+        native.close_retirement_recipient(grant).unwrap();
+    }
+    result
+}
+
 #[test]
 fn sqlite_snapshot_native_record_owner_output_uses_one_control_through_both_envelopes() {
  let snapshot_policy:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧫️fixtures/🔣️.json")).unwrap();let snapshot_caller_grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(snapshot_policy["cases"][0]["grant"].clone()).unwrap();let snapshot_native_maximum=snapshot_policy["nativeMaximumBytes"].as_u64().unwrap()as usize;let snapshot_original_live=std::cell::Cell::new(true);
-let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,snapshot_caller_grant);
-let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snapshot_encoding_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut snapshot_encoding_native=semio_framework_value::NativeEncodeControl::new(snapshot_native_maximum,&mut snapshot_encoding_progress);snapshot_encoding_native.install_retirement_recipient(&mut snapshot_encoding_recipient).unwrap();let mut snapshot_encoding_owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut snapshot_encoding_native,snapshot_caller_grant);
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["typedProjection"];
     let count = case["count"].as_u64().unwrap() as usize;
     let source = ControlledOutputFields { items: (0..count).map(|index| index.to_string()).collect() };
     let limits = SqliteDatabaseLimits::default();
+    macro_rules! encode_fresh {
+        ($encoding:expr, $callback:expr, $limits:expr) => {
+            with_fresh_encode_owner(snapshot_native_maximum, &snapshot_original_live, snapshot_caller_grant, |owner| {
+                super::encode_sqlite_snapshot_record_native(
+                    $encoding,
+                    "fixture.output",
+                    ControlledOutputFields::__dsl_spec_producer(),
+                    |native| source.__dsl_to_record_controlled(native),
+                    &mut SqliteSnapshotControl::new($callback, $limits),
+                    owner,
+                )
+            })
+        };
+    }
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let output = super::encode_sqlite_snapshot_record_native(
-            encoding,
-            "fixture.output",
-            ControlledOutputFields::__dsl_spec_producer(),
-            |native| source.__dsl_to_record_controlled(native),
-            &mut SqliteSnapshotControl::new(&mut |_| true, limits),&mut snapshot_encoding_owner
-        )
-        .unwrap();
+let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snapshot_decoding_recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut snapshot_decoding_native=semio_framework_value::NativeDecodeControl::new(snapshot_native_maximum,&mut snapshot_decoding_progress);snapshot_decoding_native.install_retirement_recipient(&mut snapshot_decoding_recipient).unwrap();let mut snapshot_decoding_owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut snapshot_decoding_native,wallet(snapshot_caller_grant));
+        let output = encode_fresh!(encoding, &mut |_| true, limits).unwrap();
         let decoded = super::decode_sqlite_snapshot_record_native(
             &output,
             "fixture.output",
@@ -303,30 +330,13 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         };
         let mut exact = limits;
         exact.max_file_bytes = length;
-        assert_eq!(
-            super::encode_sqlite_snapshot_record_native(
-                encoding,
-                "fixture.output",
-                ControlledOutputFields::__dsl_spec_producer(),
-                |native| source.__dsl_to_record_controlled(native),
-                &mut SqliteSnapshotControl::new(&mut |_| true, exact),&mut snapshot_encoding_owner
-            )
-            .unwrap(),
-            output
-        );
+        assert_eq!(encode_fresh!(encoding, &mut |_| true, exact).unwrap(), output);
         exact.max_file_bytes -= 1;
-        assert!(
-            super::encode_sqlite_snapshot_record_native(
-                encoding,
-                "fixture.output",
-                ControlledOutputFields::__dsl_spec_producer(),
-                |native| source.__dsl_to_record_controlled(native),
-                &mut SqliteSnapshotControl::new(&mut |_| true, exact),&mut snapshot_encoding_owner
-            )
-            .is_err()
-        );
+        assert!(encode_fresh!(encoding, &mut |_| true, exact).is_err());
         let mut reached = false;
+        let mut seen = Vec::new();
         let mut callback = |event: crate::sqlite_snapshot::SqliteSnapshotProgress| {
+            if seen.len() < 12 { seen.push((format!("{:?}", event.phase), event.completed, event.total)); }
             if event.phase == SqliteSnapshotPhase::EncodeNative && event.total == count && event.completed >= 256 && event.completed < event.total {
                 reached = true;
                 false
@@ -334,33 +344,13 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
                 true
             }
         };
-        assert!(
-            super::encode_sqlite_snapshot_record_native(
-                encoding,
-                "fixture.output",
-                ControlledOutputFields::__dsl_spec_producer(),
-                |native| source.__dsl_to_record_controlled(native),
-                &mut SqliteSnapshotControl::new(&mut callback, limits),&mut snapshot_encoding_owner
-            )
-            .is_err()
-        );
-        assert!(reached);
+        assert!(encode_fresh!(encoding, &mut callback, limits).is_err());
+        assert!(reached, "events seen {seen:?}");
         let mut tiny = limits;
         tiny.max_allocation_bytes = 1;
-        assert!(
-            super::encode_sqlite_snapshot_record_native(
-                encoding,
-                "fixture.output",
-                ControlledOutputFields::__dsl_spec_producer(),
-                |native| source.__dsl_to_record_controlled(native),
-                &mut SqliteSnapshotControl::new(&mut |_| true, tiny),&mut snapshot_encoding_owner
-            )
-            .is_err()
-        );
-    }
-
+        assert!(encode_fresh!(encoding, &mut |_| true, tiny).is_err());
 drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+    }
 }
 
 #[test]

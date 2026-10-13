@@ -87,7 +87,7 @@ impl store::ArtifactDsl for Fem3dSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {

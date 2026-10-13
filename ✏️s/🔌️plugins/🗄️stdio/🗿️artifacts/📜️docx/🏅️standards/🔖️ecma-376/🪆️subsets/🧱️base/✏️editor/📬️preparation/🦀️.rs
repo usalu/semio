@@ -100,12 +100,12 @@ fn measure_node(node: &XmlNode, depth: usize, measure: &mut Measure) -> Result<(
     match node {
         XmlNode::Element { name, attrs, children } => {
             measure.string(name)?;
-            measure.add(attrs.capacity().saturating_mul(std::mem::size_of::<XmlAttr>()))?;
+            measure.add(attrs.capacity().saturating_mul(size_of::<XmlAttr>()))?;
             for attr in attrs {
                 measure.string(&attr.name)?;
                 measure.string(&attr.value)?;
             }
-            measure.add(children.capacity().saturating_mul(std::mem::size_of::<XmlNode>()))?;
+            measure.add(children.capacity().saturating_mul(size_of::<XmlNode>()))?;
             for child in children {
                 measure_node(child, depth + 1, measure)?;
             }
@@ -120,7 +120,7 @@ fn measure_node(node: &XmlNode, depth: usize, measure: &mut Measure) -> Result<(
 }
 
 fn measure_document(document: &XmlDocument, measure: &mut Measure) -> Result<(), String> {
-    measure.add(std::mem::size_of::<XmlDocument>())?;
+    measure.add(size_of::<XmlDocument>())?;
     if document.doctype.is_some() || !document.prolog.is_empty() || !document.epilog.is_empty() {
         return Err(format!("{PREFIX}.paged-xml-envelope-required"));
     }
@@ -138,7 +138,7 @@ fn measure_document(document: &XmlDocument, measure: &mut Measure) -> Result<(),
 
 fn measure_snapshot(snapshot: &DocxSnapshot) -> Result<usize, String> {
     let mut measure = Measure::default();
-    measure.add(std::mem::size_of::<DocxSnapshot>())?;
+    measure.add(size_of::<DocxSnapshot>())?;
     measure.string(&snapshot.schema)?;
     for part in snapshot.xml_parts.iter() {
         measure.string(&part.path)?;
@@ -149,14 +149,14 @@ fn measure_snapshot(snapshot: &DocxSnapshot) -> Result<usize, String> {
 
 fn measure_address(address: &DocxXmlAddress, measure: &mut Measure) -> Result<(), String> {
     measure.string(&address.part_path)?;
-    measure.add(address.node_path.capacity().saturating_mul(std::mem::size_of::<usize>()))?;
+    measure.add(address.node_path.capacity().saturating_mul(size_of::<usize>()))?;
     measure.string(&address.expected_name)?;
     measure.string(&address.revision)
 }
 
 pub(super) fn measure_mutation(mutation: &DocxMutation) -> Result<usize, String> {
     let mut measure = Measure::default();
-    measure.add(std::mem::size_of::<DocxMutation>())?;
+    measure.add(size_of::<DocxMutation>())?;
     match mutation {
         DocxMutation::SetRunText(value) => {
             measure_address(&value.address, &mut measure)?;
@@ -175,7 +175,7 @@ pub(super) fn measure_mutation(mutation: &DocxMutation) -> Result<usize, String>
         }
         DocxMutation::InsertTableRow(value) => {
             measure_address(&value.address, &mut measure)?;
-            measure.add(value.cells.capacity().saturating_mul(std::mem::size_of::<String>()))?;
+            measure.add(value.cells.capacity().saturating_mul(size_of::<String>()))?;
             for cell in &value.cells {
                 measure.string(cell)?;
             }
@@ -197,7 +197,7 @@ pub(super) fn measure_mutation(mutation: &DocxMutation) -> Result<usize, String>
 
 pub(super) fn set_run_text_is_admitted(address: &DocxXmlAddress, text: &str) -> Result<(), String> {
     let mut measure = Measure::default();
-    measure.add(std::mem::size_of::<DocxMutation>())?;
+    measure.add(size_of::<DocxMutation>())?;
     measure_address(address, &mut measure)?;
     measure.text(text)
 }
@@ -205,13 +205,13 @@ pub(super) fn set_run_text_is_admitted(address: &DocxXmlAddress, text: &str) -> 
 pub(crate) fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, String> {
     set_run_text_is_admitted(address, text)?;
     let mutation = if address.expected_name.ends_with("}p") {
-        let Some(mutation) = crate::schema::mutations::xml_address::empty_paragraph_text_mutation(snapshot, address, text).map_err(semio_framework_value::ValueError::into_message)? else { return Ok(None) };
+        let Some(mutation) = crate::schema::mutations::xml_address::empty_paragraph_text_mutation(snapshot, address, text).map_err(ValueError::into_message)? else { return Ok(None) };
         measure_mutation(&mutation)?;
         mutation
     } else {
-        DocxMutation::SetRunText(crate::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: text.to_owned() })
+        DocxMutation::SetRunText(set_run_text::SetRunText { address: address.clone(), text: text.to_owned() })
     };
-    let prepared = crate::schema::mutations::prepare_addressed_xml_mutation(snapshot, &mutation).map_err(semio_framework_value::ValueError::into_message)?;
+    let prepared = crate::schema::mutations::prepare_addressed_xml_mutation(snapshot, &mutation).map_err(ValueError::into_message)?;
     Ok(prepared.changed.then_some(mutation))
 }
 

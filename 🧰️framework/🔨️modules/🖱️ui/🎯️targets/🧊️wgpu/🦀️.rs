@@ -33,7 +33,7 @@ pub use icon_name_gen::IconName;
 mod icon_name_value;
 
 //#region 🔖️UiAxes
-use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
+use semio_framework_ui_locale::{AppLabels, Label, Locale, LocalizedLabel, Terminology};
 
 //#endregion 🔖️UiAxes
 

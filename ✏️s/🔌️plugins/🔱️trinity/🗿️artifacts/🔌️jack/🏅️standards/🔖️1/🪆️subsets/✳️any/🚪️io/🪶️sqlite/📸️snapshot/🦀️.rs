@@ -424,7 +424,7 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_from_record_controlled(record, native)?;
                 flat.admit_rows(max_rows, native)?;
                 flat.into_snapshot_controlled(native)

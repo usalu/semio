@@ -37,7 +37,7 @@ impl RetainedCloneEditCursor<BmpSnapshot,BmpMutation> for BmpPublicationCursor{
         let progress=match self.phase{
             0=>{let cursor=self.copy.as_mut().ok_or("bmp: missing inverse image clone")?;let step=cursor.advance(base.project(1,|value|&value.image),grant).map_err(ValueError::into_message)?;if matches!(step,RetainedCloneStep::Complete(_)){self.inverse_image=Some(cursor.take().ok_or("bmp: inverse image clone lost its owner")?);cursor.begin_close();self.phase=1;}step.progress()},
             1|3=>self.close_copy(grant)?,
-            8=>{let bytes=std::mem::size_of::<BmpMutation>();if grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneEditStep::Progress(Default::default()));}let mut inverse=Vec::with_capacity(1);inverse.push(BmpMutation::ReplaceImage(ReplaceImage{image:self.inverse_image.take().ok_or("bmp: inverse image owner is absent")?}));self.inverse=Some(inverse);self.phase=2;RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}},
+            8=>{let bytes=size_of::<BmpMutation>();if grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneEditStep::Progress(Default::default()));}let mut inverse=Vec::with_capacity(1);inverse.push(BmpMutation::ReplaceImage(ReplaceImage{image:self.inverse_image.take().ok_or("bmp: inverse image owner is absent")?}));self.inverse=Some(inverse);self.phase=2;RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}},
             2=>{if let BmpMutation::ReplaceImage(_)=mutation.get(){let source=mutation.project(1,|value|match value{BmpMutation::ReplaceImage(value)=>&value.image,_=>unreachable!()});let cursor=self.copy.get_or_insert_with(BmpImage::retained_clone_cursor);let step=cursor.advance(source,grant).map_err(ValueError::into_message)?;if matches!(step,RetainedCloneStep::Complete(_)){let next=cursor.take().ok_or("bmp: incoming image clone lost its owner")?;self.displaced_image=Some(std::mem::replace(&mut post.image,next));cursor.begin_close();self.phase=3;}step.progress()}else{self.phase=5;unit()}},
             4=>{
                 if let Some(step)=self.retirement.begin_granted(&mut self.displaced_image,grant).map_err(ValueError::into_message)?{step.progress()}
@@ -54,7 +54,7 @@ impl RetainedCloneEditCursor<BmpSnapshot,BmpMutation> for BmpPublicationCursor{
                 if region.width==0||region.height==0{self.inverse=Some(Vec::new());self.phase=7;unit()}else{
                     let total=region.width as usize*region.height as usize;
                     let indexed=matches!(post.image.pixels,BmpPixels::Indexed{..});
-                    let width=if indexed{1}else{std::mem::size_of::<BmpNativeSample>()};
+                    let width=if indexed{1}else{size_of::<BmpNativeSample>()};
                     if self.old.is_none(){
                         let planned=total.checked_mul(width).ok_or("bmp: inverse sample capacity overflow")?;
                         if grant.maximum_capacity_bytes<planned{return Ok(RetainedCloneEditStep::Progress(Default::default()));}

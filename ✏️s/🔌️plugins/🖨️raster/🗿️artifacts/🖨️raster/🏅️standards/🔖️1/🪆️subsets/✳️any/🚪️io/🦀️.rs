@@ -35,7 +35,8 @@ use {semio_framework_os_kernel::io::io_compose_via,semio_framework_os_kernel::io
 use semio_s_artifact_stdio_png::PngSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{compose_affine, flatten_segments, semio_transform_affine, transformed_segments};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+#[cfg(test)] use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{PathSegment};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
 
@@ -858,7 +859,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec RasterBuilderFacets {
         construction: RasterBuilderConstruction,
         analysis: RasterAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::RasterComposerComposition,
+        composition: RasterComposerComposition,
     }
     builder: RasterBuilder,
     analyzer: RasterAnalyzer,

@@ -15,7 +15,7 @@ pub struct RemoveComment {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "comment", kind: "remove-comment", record: "RemoveComment" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(GifDiff { comments: Some(GifCommentsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })
     }

@@ -36,7 +36,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 }
 
                 async fn drain(app: &mut MathApp) -> Result<usize, String> {
-                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("Equation window publication failed: {error:?}"))?;
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("Equation window publication failed: {error:?}"))?;
                     Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
                 }
 
@@ -58,7 +58,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                         let camera: EquationCamera = serde_json::from_value(row["mutation"]["camera"].clone()).map_err(|error| error.to_string())?;
                         app.dispatch_typed(
                             EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
-                            &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("equation-window-config") },
+                            &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("equation-window-config") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
                         )
                             .await
                             .map_err(|error| format!("{error:?}"))?;
@@ -109,8 +109,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 if let Err(error) = &outcome {
                     eprintln!("Equation exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened);
-                artifact_app_laws::close_registered_fixture_app(&mut *app);
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 outcome.expect("Equation exact-window config publication and persistence");
             })
         })

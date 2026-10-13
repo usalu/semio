@@ -414,7 +414,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Process3dBuilderFacets {
         construction: Process3dBuilderConstruction,
         analysis: Process3dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Process3dComposerComposition,
+        composition: Process3dComposerComposition,
     }
     builder: Process3dBuilder,
     analyzer: Process3dAnalyzer,

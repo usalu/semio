@@ -32,6 +32,12 @@ pub struct MountedOwnerJobReceiptV1 {
 }
 
 impl MountedOwnerPolicyV1 {
+    /// 🎛️ The interactive component embedding every hub composition grants per host turn: 32 one-item units batched within the turn, 16 MiB capacity so a whole-document clone fits one apply, 1 MiB release and 32 KiB copy (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT, `📓️2026-10-12-publication-perf.md`).
+    pub const INTERACTIVE_COMPONENT: Self = {
+        let grant = RetainedCloneGrant { maximum_items: 32, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        Self { preparation: grant, maintenance: grant, close: grant }
+    };
+
     /// 📏️ Checks the schema's portable target-width bounds without granting omitted authority.
     pub fn validate(self) -> Result<Self, ValueError> {
         for grant in [self.preparation, self.maintenance, self.close] {

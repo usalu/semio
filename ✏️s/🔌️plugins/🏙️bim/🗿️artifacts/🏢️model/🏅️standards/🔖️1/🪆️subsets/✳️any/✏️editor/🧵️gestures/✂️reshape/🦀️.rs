@@ -8,7 +8,7 @@
 //!
 //! Every tool shows the result as a ghost before the click, a refused result as a warning.
 
-use super::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, dist, flatten, from_point2, point2, project, same, P};
+use super::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
 use super::session::{length_label, Mark, Pick, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use super::transform::{ghost, outline};
 use crate::editor::bim::modes::edit::windows::plan;

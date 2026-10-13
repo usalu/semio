@@ -310,7 +310,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3SavBuilderFacets {
         construction: Ifc2x3SavBuilderConstruction,
         analysis: Ifc2x3SavAnalyzerAnalysis,
-        composition: super::io::derived_composition::Ifc2x3SavComposerComposition,
+        composition: Ifc2x3SavComposerComposition,
     }
     builder: Ifc2x3SavBuilder,
     analyzer: Ifc2x3SavAnalyzer,

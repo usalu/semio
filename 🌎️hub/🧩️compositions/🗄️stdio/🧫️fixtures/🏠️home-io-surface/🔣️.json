@@ -3,8 +3,7 @@
   "features": {
     "homeIo": "home-io",
     "fullArtifactCatalog": "full-artifact-catalog",
-    "componentAppAssembly": "component-app-assembly",
-    "spaceGuest": "space-guest"
+    "componentAppAssembly": "component-app-assembly"
   },
   "directArtifacts": [
     "csv",

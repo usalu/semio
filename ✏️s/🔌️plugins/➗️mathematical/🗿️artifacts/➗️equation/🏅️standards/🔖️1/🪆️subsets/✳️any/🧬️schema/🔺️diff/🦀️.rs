@@ -2,7 +2,7 @@
 //! point-edit list and label-addressed expression-node kind patches. The derived `notation`/`results`/`computed` child handles are
 //! never carried: `apply` re-derives them from the graph and points it leaves behind.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{EquationExprSnapshot, EquationNodeKind, EquationNodeLabel};
+use crate::standards::v1::subsets::any::schema::snapshot::{EquationNodeKind, EquationNodeLabel};
 use crate::{EquationEdge, EquationGeometry, EquationNode, EquationPoint, EquationSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;

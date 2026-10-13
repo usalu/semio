@@ -20,7 +20,7 @@ use framework_schema::ArtifactSchema;
 /// 🎞️ Owned by the `video` subset (per `w1b-type-ownership.md`): `SemioVideoStream`,
 /// `SemioVideoSample`, plus this subset's own `SemioVideoStreamKind`/`SemioRational` (not shared
 /// engine types — `Rational` is video-specific, unlike `SemioPoint3`/`SemioTransform` etc).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioVideoStreamKind {
@@ -32,7 +32,7 @@ pub enum SemioVideoStreamKind {
 
 /// 🎚️ A frame/sample rate as an exact fraction — named struct, never a bare tuple (f6-final-summary.md
 /// §4.3: `dsl` has no blanket `DslField` impl for tuples of any arity).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioRational {
@@ -49,7 +49,7 @@ impl Default for SemioRational {
 
 /// 🎯️ One decoded/encoded unit within a stream. `data` is the format's opaque compressed payload
 /// (honest boundary — never decoded by this subset).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioVideoSample {
@@ -61,7 +61,7 @@ pub struct SemioVideoSample {
 }
 
 /// 🎞️ One elementary stream (video/audio/subtitle track) inside the container.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioVideoStream {
@@ -85,7 +85,7 @@ pub const STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA: &str = "stdio.semio.video";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.video")]
 pub struct SemioVideoSnapshot {

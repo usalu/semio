@@ -6,7 +6,7 @@
 //! `add-layer-asset`/`remove-layer-asset` mutation assumes. `child_slots()` is EMPTY for `assets`: the
 //! `#[child(kind=...)]` derive only recognizes a bare `ArtifactChild<T>`/`Vec<ArtifactChild<T>>` field.
 
-use crate::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::{RasterAssetChild, RasterLayerNode, RasterOwnedMap, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

@@ -49,12 +49,12 @@ impl<P,Mu> ErasedSnapshotRetirement for PreparedHistoryReadRetirement<P,Mu> wher
         if grant.maximum_items==0||grant.maximum_copy_bytes<self.next_copy_byte_demand()?||grant.maximum_capacity_bytes<self.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<self.next_release_byte_demand()?||grant.maximum_depth<self.next_depth_demand()?{return Ok(RetainedCloneStep::Progress(Default::default()))}
         self.closing=true;
         let owner=self.owner.as_mut().unwrap();
-        if owner.terminal_is_empty(){let released_bytes=std::mem::size_of::<ArtifactHistoryReadRetirement<P,Mu>>();drop(self.owner.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}))}
+        if owner.terminal_is_empty(){let released_bytes=size_of::<ArtifactHistoryReadRetirement<P,Mu>>();drop(self.owner.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}))}
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;let step=admit_retained_clone_close(child,step,owner.terminal_is_empty(),"prepared original history frame")?;Ok(RetainedCloneStep::Progress(step.progress()))
     }
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(0)}else{owner.next_copy_byte_demand()})}
     fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(0)}else{owner.next_capacity_byte_demand(body)})}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(std::mem::size_of::<ArtifactHistoryReadRetirement<P,Mu>>())}else{owner.next_release_byte_demand()})}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(size_of::<ArtifactHistoryReadRetirement<P,Mu>>())}else{owner.next_release_byte_demand()})}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(1)}else{owner.next_depth_demand()?.checked_add(1).ok_or_else(||refusal("prepared history depth overflow"))})}
     fn terminal_is_empty(&self)->bool{self.owner.is_none()}
 }
@@ -71,7 +71,7 @@ where P:Send+Sync+'static,Mu:super::Mutation<P>+Send+'static {
     Ok(Some((PreparedHistoryReadRetirement{owner:ManuallyDrop::new(Some(owner)),closing:false,registry:None},RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})))
 }
 
-pub(super) fn history_read_retirement_birth_bytes<P,Mu:super::Mutation<P>>()->usize {std::mem::size_of::<ArtifactHistoryReadRetirement<P,Mu>>()}
+pub(super) fn history_read_retirement_birth_bytes<P,Mu:super::Mutation<P>>()->usize {size_of::<ArtifactHistoryReadRetirement<P,Mu>>()}
 
 pub(super) fn admit_history_read_retirement<P,Mu,T>(original:&mut Option<T>,snapshots:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,mutations:&Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>,grant:RetainedCloneGrant,install:fn(&mut ArtifactHistoryReadRetirement<P,Mu>,T))->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>
 where P:Send+Sync+'static,Mu:super::Mutation<P>+Send+'static {

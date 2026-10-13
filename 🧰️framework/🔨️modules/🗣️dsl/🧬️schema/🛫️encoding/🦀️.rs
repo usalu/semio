@@ -1,6 +1,6 @@
 //! 🛫️ Controlled canonical physical Text emission.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use super::{RecordValue,RecordSpec,RecordLayout,FieldSpec,FieldValue,Shape,DslValue,Number,ExprValue,WireValue,WireNode,JoinMode,TextError};
+use super::{RecordValue,RecordSpec,RecordLayout,FieldSpec,FieldValue,Shape,DslValue,Number,ExprValue,WireValue,WireNode,JoinMode};
 use semio_framework_value::native_encoding::NativeEncodeControl;
 
 /// 🖨️ Emits a declared physical record through caller-owned output admission.
@@ -159,7 +159,7 @@ impl RetainedRecordWriter {
     fn compound_value_mut<'a>(source:&'a mut RecordValue,spec:&RecordSpec,step:RecordCompoundStep)->Result<&'a mut FieldValue,ValueError>{let mut value=source.fields.get_mut(&spec.fields[step.field].id).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"retained compound source is absent"))?;for _ in 0..step.depth{let FieldValue::Block(inner)=value else{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"retained block source path is absent"))};value=inner;}Ok(value)}
     fn start_nested(&mut self,producer:super::RecordSpecProducer,mut step:RecordCompoundStep,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
         let next_depth=self.depth+step.depth+match step.kind{3=>if step.depth==0&&self.spec.as_ref().unwrap().fields[step.field].position.is_none(){0}else{1},4|5=>3,_=>2};Self::check_depth(next_depth)?;
-        let spec=if matches!(step.kind,3..=5){self.child_spec.take().unwrap()}else{producer.encode(control)?};control.charge(std::mem::size_of::<Self>())?;
+        let spec=if matches!(step.kind,3..=5){self.child_spec.take().unwrap()}else{producer.encode(control)?};control.charge(size_of::<Self>())?;
         let value=Self::compound_value_mut(self.source.as_mut().unwrap(),self.spec.as_ref().unwrap(),step)?;
         let record=match step.kind{1=>{let FieldValue::Record(record)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"retained nested record source is absent"))};std::mem::take(record)},2=>{let FieldValue::Statements(items)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"retained statement source is absent"))};std::mem::take(&mut items[step.index].1)},3|4=>{let FieldValue::List(items)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"retained list source is absent"))};let FieldValue::Record(record)=&mut items[step.index]else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"retained table row is not a record"))};std::mem::take(record)},5=>{let FieldValue::Map(items)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"retained map source is absent"))};let FieldValue::Record(record)=&mut items[step.index].1 else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"retained map member is not a record"))};std::mem::take(record)},_=>unreachable!()};
         let maximum=self.emitter.maximum_output_bytes;let mut child=Self::new(record,spec,self.mode,maximum);child.nested_mode=true;child.table_row=step.kind==3;child.depth=next_depth;child.intrinsic_frames=std::mem::take(&mut self.intrinsic_frames);child.intrinsic_path=std::mem::take(&mut self.intrinsic_path);child.emitter=std::mem::replace(&mut self.emitter,Emitter::new(self.mode,None,maximum));step.state=2;self.compound=Some(step);self.nested=Some(Box::new(child));Ok(())
@@ -280,12 +280,12 @@ impl RetainedRecordWriter {
 }
 impl semio_framework_value::retirement::RetireOwned for RetainedRecordWriter {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(self)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for RetainedRecordWriter{
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
-        use semio_framework_value::retirement::{RetireOwned,RetirementStep};if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.terminal_is_empty(){return RetirementStep::Complete;}if grant.maximum_depth<1{return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"record writer retirement requires an admitted child depth"));}let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes)else{return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"record writer field has no controlled constructor authority"));};if birth>grant.maximum_capacity_bytes{return RetirementStep::BudgetExhausted;}
+        use semio_framework_value::retirement::{RetireOwned,RetirementStep};if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.terminal_is_empty(){return RetirementStep::Complete;}if grant.maximum_depth<1{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"record writer retirement requires an admitted child depth"));}let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes)else{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"record writer field has no controlled constructor authority"));};if birth>grant.maximum_capacity_bytes{return RetirementStep::BudgetExhausted;}
         let child=match self.retirement_position{
             0=>self.source.take().map(RetireOwned::retirement),1=>self.spec.take().map(RetireOwned::retirement),2=>(!self.order.is_empty()||self.order.capacity()!=0).then(||crate::retirement::RecordPlanningRetirement::new(std::mem::take(&mut self.order))),3=>self.text.take().map(RetireOwned::retirement),
             4=>(!self.intrinsic_frames.is_empty()||self.intrinsic_frames.capacity()!=0).then(||crate::retirement::RecordPlanningRetirement::new(std::mem::take(&mut self.intrinsic_frames))),5=>(!self.intrinsic_path.is_empty()||self.intrinsic_path.capacity()!=0).then(||crate::retirement::RecordPlanningRetirement::new(std::mem::take(&mut self.intrinsic_path))),6=>self.emitter.output.take().map(RetireOwned::retirement),7=>self.compound.take().map(RetireOwned::retirement),8=>self.wire.take().map(RetireOwned::retirement),
@@ -301,7 +301,7 @@ impl semio_framework_value::retirement::RetirementCursor for RetainedRecordWrite
             9=>Some(0),10=>self.child_spec.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),11=>self.retiring.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes),_=>Some(0),
         }
     }
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 
 struct Emitter { prospective:bool, output:Option<String>, bytes:usize, maximum_output_bytes:usize, mode:JoinMode, indent:usize, line_open:bool, glued:bool }

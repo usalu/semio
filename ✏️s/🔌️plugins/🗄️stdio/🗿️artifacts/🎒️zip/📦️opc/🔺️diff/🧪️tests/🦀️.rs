@@ -4,6 +4,8 @@ use super::*;
 use semio_s_artifact_stdio_contract::kernel::command::DiffAlgebra;
 use semio_s_artifact_stdio_contract::kernel::{apply_diff, MutationApplyResult, MutationDiff};
 
+#[derive(Clone, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(transparent)]
 struct PackageDiff(OpcDiff);
 
 impl MutationDiff<OpcPackage> for PackageDiff {

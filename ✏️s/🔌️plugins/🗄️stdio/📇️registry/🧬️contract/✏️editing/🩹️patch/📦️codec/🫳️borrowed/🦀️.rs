@@ -24,7 +24,7 @@ impl SnapshotPatch{
         }
     }
     /// ✍️ Streams the original JSON operation through the caller's complete byte and collection policy.
-    pub fn encode_op_into(&self,options:&super::kernel::codec::PackEncodeOptions,output:&mut dyn super::kernel::operation_bytes::OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),super::kernel::ProtocolError>{
+    pub fn encode_op_into(&self,options:&super::kernel::codec::PackEncodeOptions,output:&mut dyn OperationByteOutput,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),super::kernel::ProtocolError>{
         super::kernel::operation_bytes::with_operation_encode_policy(options,control,|control|{
         let maximum=options.limits.max_file_len.min(super::SNAPSHOT_PATCH_MAX_BYTES as u64);
         let mut limited=super::kernel::operation_bytes::OperationByteLimitedOutput::new(output,maximum);
@@ -48,7 +48,7 @@ impl JsonWriteSource for SnapshotPatch{
 }
 
 impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson for SnapshotPatch {
-    fn canonical_json_node(&self, path: &[usize]) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode<'_>, ValueError> {
         use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonNode as N;
         Ok(match self.node_at_path(path)? {
             JsonWriteNode::Null => N::Null,
@@ -62,7 +62,7 @@ impl semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJ
             JsonWriteNode::Object(length) => N::Object(length),
         })
     }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> { self.object_key_at_path(path, index).map(Into::into) }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, ValueError> { self.object_key_at_path(path, index).map(Into::into) }
 }
 
 #[path="../📥️decode/🫳️borrowed/🦀️.rs"]

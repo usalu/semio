@@ -1,0 +1,25 @@
+{
+  "roots": ["🧰️framework", "✏️s", "🌎️hub", "🎓️teaching"],
+  "allowed": [
+    {
+      "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "owner": "std::vec::IntoIter<T>",
+      "reason": "A consumed Vec iterator hides its backing capacity, so its release cannot be quoted exactly; it is only an internal cursor field of parents that price their own scaffold, never a payload, snapshot or factory input."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+      "owner": "Unsupported",
+      "reason": "Test fixture that must be refused by the erased controlled admission."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/🎮️ownership/🦀️.rs",
+      "owner": "Unsupported",
+      "reason": "Test fixture that must be returned by the retirement queue admission."
+    },
+    {
+      "file": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🦀️.rs",
+      "owner": "Unsupported",
+      "reason": "Test fixture that must be returned by the history fold control before registration."
+    }
+  ]
+}

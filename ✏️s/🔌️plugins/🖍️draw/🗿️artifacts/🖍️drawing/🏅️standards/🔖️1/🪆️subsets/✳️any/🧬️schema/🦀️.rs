@@ -32,7 +32,7 @@ pub fn default_drawing_document(id: &str, title: Option<&str>) -> DrawingSnapsho
         schema: DRAWING_DOCUMENT_SCHEMA.into(),
         id: id.into(),
         title: title.map(Into::into),
-        layers: vec![create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(("initial-layer").to_string().into()).expect("nonempty authored identity"), "Layer 1", Default::default())].into(),
+        layers: vec![create_drawing_path_layer(DrawingIdentity::admit(("initial-layer").to_string().into()).expect("nonempty authored identity"), "Layer 1", Default::default())].into(),
         assets: Default::default(),
         artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }),
     }

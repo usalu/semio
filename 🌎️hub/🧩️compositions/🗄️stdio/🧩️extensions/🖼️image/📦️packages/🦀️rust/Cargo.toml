@@ -103,12 +103,12 @@ plugin-root = ["semio-framework-plugin/component-guest"]
 
 [dependencies]
 # 🧩️ Composition Dependencies
-semio-s-artifact-stdio-svg = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-png = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-jpg = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-gif = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-bmp = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-tiff = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-jpg = { workspace = true }
+semio-s-artifact-stdio-gif = { workspace = true }
+semio-s-artifact-stdio-bmp = { workspace = true }
+semio-s-artifact-stdio-tiff = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }

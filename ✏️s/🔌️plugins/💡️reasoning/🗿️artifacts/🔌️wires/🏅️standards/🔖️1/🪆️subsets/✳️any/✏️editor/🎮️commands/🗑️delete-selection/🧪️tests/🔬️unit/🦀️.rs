@@ -30,7 +30,7 @@ async fn delete_selection_removes_the_live_selected_node() {
     let mut app = new_app().await;
     dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
     let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "node-1".into() }]).expect("targets");
-    app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(semio_framework_plugin::dsl_value!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })).as_ref(), &meta("local"))
+    app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(semio_framework_plugin::dsl_value!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })).as_ref(), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("interactionSelect");
     dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {})).await;

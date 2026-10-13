@@ -36,5 +36,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
     apply_mutation(&mut state, mutation);
     assert_eq!(state.codepage, base.codepage + 1);
     let stamp = editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) };
-    assert_eq!(<DwgAc1018Editor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&stamp, &base).expect_err("the schema stamp has no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(<DwgAc1018Editor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&stamp, &base).err().expect("the schema stamp has no kind").code.0, "snapshot-edit.unsupported-path");
 }

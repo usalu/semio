@@ -256,6 +256,7 @@ impl store::ArtifactCanonicalJson for HostileRoot {
     }
 }
 
+#[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct HostileRetirementFactory;
 
 struct HostileRetirement {

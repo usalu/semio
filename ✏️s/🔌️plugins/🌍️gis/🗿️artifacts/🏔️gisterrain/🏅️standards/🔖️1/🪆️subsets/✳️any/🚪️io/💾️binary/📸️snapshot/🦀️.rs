@@ -68,7 +68,7 @@ pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactCh
     }
 }
 }
-pub use native_snapshot_codec::*;
+#[cfg(test)] pub use native_snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_codec {
@@ -111,4 +111,4 @@ pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Op
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

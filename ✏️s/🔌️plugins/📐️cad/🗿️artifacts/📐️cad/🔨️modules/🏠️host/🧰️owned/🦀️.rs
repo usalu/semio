@@ -2,7 +2,6 @@
 
 use crate::op::CadMutation;
 use crate::CadSnapshot;
-use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 

@@ -164,7 +164,7 @@ async fn writer_document_text_round_trips_through_the_store() {
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
@@ -182,7 +182,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
     let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
@@ -267,11 +267,11 @@ async fn a_document_folded_from_the_hub_tail_reloads_again() {
         assert_eq!(id, envelope.mutation_id, "current checkpoint address covers all bytes");
     }
     let mut folded = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, document_id, schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid writer store fixture");
-    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], transaction: None }).await.expect("a locally authored edit before the tail");
+    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a locally authored edit before the tail");
     for value in tail {
         folded.ingest_remote(hub_tail_envelope(value)).await.expect("every operation and transition of the hub tail folds");
     }
-    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], transaction: None }).await.expect("a locally authored edit after the tail");
+    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a locally authored edit after the tail");
     let hub_actors: std::collections::BTreeSet<&str> = tail.iter().map(|value| value["actor"].as_str().expect("hub tail actor")).collect();
     let edits = &folded.envelope().vcs.edits;
     let from_hub = edits.iter().filter(|edit| edit.actor.as_deref().is_some_and(|actor| hub_actors.contains(actor))).count();

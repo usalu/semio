@@ -98,7 +98,8 @@ type RetainedUpdateFixture = {
   readonly cases: readonly string[];
   readonly grants: readonly number[];
   readonly cancelSourceCase: string;
-  readonly cancelOwnedStringBytes: number;
+  readonly cancelOwnedKeyBytes: number;
+  readonly cancelDomainKeyBytes: number;
   readonly largeSourceCase: string;
   readonly domainKeyCopies: number;
   readonly partialCandidateReadable: boolean;
@@ -185,14 +186,14 @@ console.log("[DEBUG] local interaction variable ownership grants and demands ind
 
 
 
-function rootStringBytes(state: typeof fixture.cases[number]["before"]): number {
-  const selectionBytes = sumBy(Object.entries(state.selection), ([domain, value]: [string, any]) => Buffer.byteLength(domain) + Buffer.byteLength(value.granularity) + sumBy(value.ids, (id: string) => Buffer.byteLength(id)) + (value.anchorId === undefined ? 0 : Buffer.byteLength(value.anchorId)));
-  return selectionBytes + sumBy(Object.keys(state.activeMode), (domain: string) => Buffer.byteLength(domain)) + sumBy(Object.entries(state.activeGranularity), ([domain, value]: [string, any]) => Buffer.byteLength(domain) + Buffer.byteLength(value));
+/** 🔑️ Retirement copies only ordered-map key bytes: String values retire by release alone, so the logical copy work of one root is its domain-key corpus. */
+function rootKeyBytes(state: typeof fixture.cases[number]["before"]): number {
+  return sumBy([state.selection, state.activeMode, state.activeGranularity], (map: object) => sumBy(Object.keys(map), (domain: string) => Buffer.byteLength(domain)));
 }
 const rootSource = fixture.cases.find((row: any) => row.id === rootFixture.sourceCase).before;
 const largeRootSource = fixture.cases.find((row: any) => row.id === rootFixture.largeSourceCase).expected;
-assert.equal(rootStringBytes(rootSource), rootFixture.finalOwnerRetiredBytes);
-assert.equal(rootStringBytes(largeRootSource), rootFixture.largeFinalOwnerRetiredBytes);
+assert.equal(rootKeyBytes(rootSource), rootFixture.finalOwnerRetiredBytes);
+assert.equal(rootKeyBytes(largeRootSource), rootFixture.largeFinalOwnerRetiredBytes);
 assert(rootFixture.largeFinalOwnerRetiredBytes > 4096);
 assert.deepEqual(produce(rootSource, () => {}), rootSource);
 assert(rootSource.selection.private && rootSource.selection.graph.anchorId === "b" && rootSource.selection.graph.ids[0] === "a,comma");
@@ -204,9 +205,8 @@ const updateFixture: RetainedUpdateFixture = await Bun.file(new URL("../../🌳�
 
 
 const cancelSource = fixture.cases.find((row: any) => row.id === updateFixture.cancelSourceCase);
-const [cancelDomain, cancelPatch] = Object.entries<any>(cancelSource.restore.domains)[0];
-const patchBytes = Buffer.byteLength(cancelDomain) + Buffer.byteLength(cancelPatch.activeGranularity) + Buffer.byteLength(cancelPatch.selection.granularity) + sumBy(cancelPatch.selection.ids, (id: string) => Buffer.byteLength(id)) + Buffer.byteLength(cancelPatch.selection.anchorId);
-assert.equal(rootStringBytes(cancelSource.before) + patchBytes, updateFixture.cancelOwnedStringBytes);
+assert.equal(rootKeyBytes(cancelSource.before), updateFixture.cancelOwnedKeyBytes);
+assert.equal(Buffer.byteLength(Object.keys(cancelSource.restore.domains)[0]), updateFixture.cancelDomainKeyBytes);
 for (const name of updateFixture.cases) {
   const row = fixture.cases.find((row: any) => row.id === name);
   const oracle = produce(row.before, (draft: any) => {

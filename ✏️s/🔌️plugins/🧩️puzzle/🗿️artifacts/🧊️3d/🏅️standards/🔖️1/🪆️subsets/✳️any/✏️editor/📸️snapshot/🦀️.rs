@@ -41,13 +41,13 @@ impl Puzzle3dPlaySnapshot {
 
 /// 🌱️ Encodes the admitted typed authority through the native value port.
 impl semio_framework_value::ToValue for Puzzle3dPlaySnapshot {
-    fn to_value(&self) -> semio_framework_value::DslValue { <Puzzle3dSnapshot as semio_framework_value::ToValue>::to_value(self.typed()) }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::ToValue>::to_value_controlled(self.typed(), control) }
+    fn to_value(&self) -> DslValue { <Puzzle3dSnapshot as semio_framework_value::ToValue>::to_value(self.typed()) }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::ToValue>::to_value_controlled(self.typed(), control) }
 }
 
 impl semio_framework_value::FromValue for Puzzle3dPlaySnapshot {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_typed) }
-    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self::from_typed) }
+    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_typed) }
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { <Puzzle3dSnapshot as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self::from_typed) }
 }
 
 impl Clone for Puzzle3dPlaySnapshot {
@@ -110,11 +110,11 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
         Mutation::<Puzzle3dSnapshot>::input_schema(self)
     }
 
-    fn payload_value(&self) -> semio_framework_value::DslValue {
+    fn payload_value(&self) -> DslValue {
         Mutation::<Puzzle3dSnapshot>::payload_value(self)
     }
 
-    fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+    fn with_payload_value(&self, value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Mutation::<Puzzle3dSnapshot>::with_payload_value(self, value)
     }
 
@@ -139,7 +139,7 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
     }
-    fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_payload_value(kind: &str, value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <Self as Mutation<Puzzle3dSnapshot>>::from_payload_value(kind, value)
     }
     fn conflict_target(&self) -> Vec<String> {

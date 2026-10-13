@@ -4,7 +4,6 @@
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
 use crate::op::CadMutation;
-use crate::CadSnapshot;
 use protocol::OpBinary;
 
 
@@ -48,8 +47,9 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
-pub use crate::mutations::{CadMutation, CadNodePatch, CadReferencePatch};
+#[cfg(test)] use super::*;
+pub use crate::mutations::{CadMutation};
+#[cfg(test)] pub use crate::mutations::{CadNodePatch, CadReferencePatch};
 
 impl protocol::OpBinary for CadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

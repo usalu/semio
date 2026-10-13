@@ -7,7 +7,7 @@
 
 use crate::standards::v89a::subsets::any::schema::diff::{GifAppExtensionAdded, GifAppExtensionsDiff, GifCommentAdded, GifCommentsDiff, GifDiff, GifFrameAdded, GifFrameDiff, GifFrameModified, GifFramesDiff};
 use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifSnapshot};
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 
 
 //#region 🔖️Mutations

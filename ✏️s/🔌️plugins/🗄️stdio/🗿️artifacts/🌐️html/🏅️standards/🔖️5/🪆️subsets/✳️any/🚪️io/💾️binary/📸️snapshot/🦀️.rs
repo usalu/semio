@@ -36,4 +36,3 @@ impl store::ArtifactPack for HtmlSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

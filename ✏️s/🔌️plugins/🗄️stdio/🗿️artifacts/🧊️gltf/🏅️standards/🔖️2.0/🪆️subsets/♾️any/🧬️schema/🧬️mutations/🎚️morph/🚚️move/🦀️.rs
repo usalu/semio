@@ -1,7 +1,7 @@
 //! 🧬️ Direct move-morph-target-attribute mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level_collections::*;
-use crate::schema::snapshot::*;
+#[cfg(test)] use crate::schema::snapshot::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -47,7 +47,7 @@ pub fn inverse(p: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot) -> 
     let Some(index) = base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().position(|(semantic, _)| semantic == &p.semantic) else {
         return Vec::new();
     };
-    vec![super::move_morph_target_attribute::mutation(super::move_morph_target_attribute::GltfMoveMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone(), position: index })]
+    vec![mutation(GltfMoveMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone(), position: index })]
 }
 
 //#region 🧬️DirectMutation
@@ -67,7 +67,7 @@ pub fn mutation(payload: GltfMoveMorphTargetAttributePayload) -> super::GltfMuta
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMorphTargetAttributeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "morph-target-attribute", kind: "move-morph-target-attribute", record: "MovedMorphTargetAttribute" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

@@ -39,7 +39,7 @@ fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError>
 }
 
 }
-pub use diff_codec::*;
+#[cfg(test)] pub use diff_codec::*;
 
 #[allow(unused_imports)]
 mod diff_wire_codec {

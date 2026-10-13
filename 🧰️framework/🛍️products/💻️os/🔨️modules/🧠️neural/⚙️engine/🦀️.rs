@@ -1949,7 +1949,7 @@ impl Default for NeuralCache {
 /// 🧹️ Keeps the original Arc and every final cache allocation until admitted physical closure.
 pub struct NeuralCacheRetirement {owner:semio_framework_value::retirement::shared::SharedControlledRetirement<NeuralCache>}
 impl NeuralCacheRetirement {
-    pub fn new(cache:std::sync::Arc<NeuralCache>)->Self {Self {owner:semio_framework_value::retirement::shared::SharedControlledRetirement::lease(cache)}}
+    pub fn new(cache:Arc<NeuralCache>)->Self {Self {owner:semio_framework_value::retirement::shared::SharedControlledRetirement::lease(cache)}}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_copy_byte_demand()}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.owner.next_capacity_byte_demand(copy)}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_release_byte_demand()}

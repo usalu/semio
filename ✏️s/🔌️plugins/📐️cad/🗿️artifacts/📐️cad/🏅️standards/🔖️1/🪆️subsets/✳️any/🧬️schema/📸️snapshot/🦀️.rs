@@ -1,6 +1,6 @@
 //! 🧬️ Cad snapshot schema — artifact-lane fields only.
 
-use crate::{empty_cad_snapshot, CadBrepChild, CadDrawingChild, CadModelChild, CadNode, CadReferenceList};
+use crate::{CadBrepChild, CadDrawingChild, CadModelChild, CadNode};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::CadReferenceIndex;

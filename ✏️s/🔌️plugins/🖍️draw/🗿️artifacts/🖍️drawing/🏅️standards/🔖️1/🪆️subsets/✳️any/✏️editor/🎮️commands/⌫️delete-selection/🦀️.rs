@@ -6,7 +6,7 @@ use crate::{DrawingLayerNode,DrawingSnapshot};
 use crate::mutations::DrawingMutation;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
-use semio_framework_value::{list::PagedList,paged::PagedUtf8};
+use semio_framework_value::paged::PagedUtf8;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword="delete-selection")]

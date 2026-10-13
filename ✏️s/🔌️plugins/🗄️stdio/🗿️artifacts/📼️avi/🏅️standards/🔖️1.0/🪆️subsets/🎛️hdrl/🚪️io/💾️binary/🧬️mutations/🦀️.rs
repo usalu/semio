@@ -22,7 +22,6 @@ impl OpBinary for AviMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ `AviMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.

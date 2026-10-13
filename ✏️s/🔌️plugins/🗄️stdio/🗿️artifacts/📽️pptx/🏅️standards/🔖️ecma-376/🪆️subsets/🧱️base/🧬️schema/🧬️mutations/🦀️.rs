@@ -2,7 +2,8 @@
 //! apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 
 use crate::schema::diff::PptxDiff;
-use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide, PptxTransform};
+use crate::schema::snapshot::{PptxTransform};
+#[cfg(test)] use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
 use crate::PptxSnapshot;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
@@ -149,9 +150,9 @@ pub(crate) fn plan_inverse(plan: Result<xml_address::PptxPlan, String>) -> Vec<P
 /// declaration is an ordinary attribute, so one walk covers `xmlns`, `xmlns:a` and whatever prefixed alias a deck uses. `None` when
 /// nothing under `node` declares one of `from`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn retarget_attribute_values_diff(node: &semio_s_artifact_stdio_xml::schema::snapshot::XmlNode, from: &[&str], to: &str) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
+pub(crate) fn retarget_attribute_values_diff(node: &XmlNode, from: &[&str], to: &str) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
     use semio_s_artifact_stdio_xml::schema::diff::{XmlAttrModified, XmlAttributesDiff, XmlChildModified, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
-    let semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, children, .. } = node else { return None };
+    let XmlNode::Element { attrs, children, .. } = node else { return None };
     let modified: Vec<XmlAttrModified> = attrs.iter().filter(|attr| from.contains(&attr.value.as_str()) && attr.value != to).map(|attr| XmlAttrModified { name: attr.name.clone(), value: to.to_string() }).collect();
     let attributes = (!modified.is_empty()).then(|| XmlAttributesDiff { order: attrs.iter().map(|attr| attr.name.clone()).collect(), removed: Vec::new(), modified, added: Vec::new() });
     let nested: Vec<XmlChildModified> = children.iter().enumerate().filter_map(|(index, child)| retarget_attribute_values_diff(child, from, to).map(|diff| XmlChildModified { index, diff })).collect();
@@ -176,7 +177,7 @@ pub(crate) fn root_edits_diff(edits: Vec<(String, semio_s_artifact_stdio_xml::sc
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, name: &str, value: Option<&str>) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
     use semio_s_artifact_stdio_xml::schema::diff::{XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlElementDiff, XmlNodeDiff};
-    let Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { attrs, .. }) = document.root.as_ref() else { return None };
+    let Some(XmlNode::Element { attrs, .. }) = document.root.as_ref() else { return None };
     let existing = attrs.iter().find(|attr| attr.name == name);
     let mut order: Vec<String> = attrs.iter().map(|attr| attr.name.clone()).collect();
     let attributes = match (existing, value) {
@@ -197,9 +198,9 @@ pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema:
 /// 🌿️ The children edit that inserts `insert.1` at final index `insert.0` of, or removes the children at the base indexes `remove` from, the ROOT element of `document`;
 /// `None` when nothing changes. Insertion and removal are never combined in one call.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, insert: Option<(usize, semio_s_artifact_stdio_xml::schema::snapshot::XmlNode)>, remove: &[usize]) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
+pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, insert: Option<(usize, XmlNode)>, remove: &[usize]) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
     use semio_s_artifact_stdio_xml::schema::diff::{XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
-    let Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { .. }) = document.root.as_ref() else { return None };
+    let Some(XmlNode::Element { .. }) = document.root.as_ref() else { return None };
     let added: Vec<XmlChildAdded> = insert.map(|(index, item)| vec![XmlChildAdded { index, item }]).unwrap_or_default();
     (!remove.is_empty() || !added.is_empty()).then(|| XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: remove.to_vec(), modified: Vec::new(), added }) }))
 }

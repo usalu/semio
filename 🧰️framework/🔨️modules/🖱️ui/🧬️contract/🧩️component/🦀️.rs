@@ -869,7 +869,7 @@ pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, ste
     let step = if step.is_finite() && step > 0.0 {
         step
     } else {
-        precision.map_or(1.0, |precision| crate::round_ui_number(10f64.powi(-i32::from(precision.min(crate::UI_NUMBER_PRECISION_MAX))), precision) / factor.unwrap_or(1.0))
+        precision.map_or(1.0, |precision| crate::round_ui_number(10f64.powi(-i32::from(precision.min(UI_NUMBER_PRECISION_MAX))), precision) / factor.unwrap_or(1.0))
     };
     let digits = decimal_digits(origin).max(decimal_digits(step)).min(12);
     let snaps: Vec<f64> = snaps.into_iter().filter(|snap| snap.is_finite()).collect();

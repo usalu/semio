@@ -32,4 +32,3 @@ impl protocol::OpText for ZipMutation {
     }
 }
 }
-pub use mutations_codec::*;

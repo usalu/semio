@@ -39,5 +39,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_row() {
     assert_eq!(state.groups[0].name, "floors");
     let dropped = emit(editing::SnapshotEditEvent::RemoveValue { path: "/vertices/0".into() }).expect("a vertex removal resolves");
     assert!(matches!(dropped.artifact_mutations.as_slice(), [ObjMutation::RemoveVertex(_)]));
-    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }

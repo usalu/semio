@@ -233,7 +233,7 @@ struct SceneRasterPoolInner {
 struct RasterPoolRetirement {state:std::mem::ManuallyDrop<SceneRasterPoolState>}
 impl semio_framework_value::retirement::RetireOwned for SceneRasterPoolInner {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(RasterPoolRetirement{state:std::mem::ManuallyDrop::new(self.state.into_inner())})}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<RasterPoolRetirement>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<RasterPoolRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 impl RasterPoolRetirement {
@@ -253,10 +253,10 @@ impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetiremen
         RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..RetainedCloneProgress::default()})
     }
     fn terminal_is_empty(&self)->bool{self.state.slots.is_empty()&&self.state.slots.capacity()==0&&self.state.gpu_residents.is_empty()&&self.state.gpu_residents.capacity()==0}
-    fn next_close_byte_demand(&self)->Option<usize>{Some(if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*std::mem::size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*std::mem::size_of::<Option<SceneRasterGpuRecord>>()})}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()})}
     fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
     fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for RasterPoolRetirement {
     fn drop(&mut self){use semio_framework_value::retirement::RetirementCursor;assert!(std::thread::panicking()||self.terminal_is_empty(),"raster pool abandoned before terminal-empty");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.state)}}}

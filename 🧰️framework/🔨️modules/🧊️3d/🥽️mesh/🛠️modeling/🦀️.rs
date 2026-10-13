@@ -109,7 +109,7 @@ impl MeshModelingJob {
 
     /// 🧹️ Moves the same modeling Work payload into bounded typed retirement.
     pub fn retirement_birth_bytes(&self)->usize {protocol::value::retirement::owned_retirement_birth_bytes::<Work>()}
-    pub fn into_retirement(self,grant:protocol::value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn protocol::value::ErasedSnapshotRetirement>,protocol::value::retained_clone::RetainedCloneProgress),(protocol::value::ValueError,Self)> {
+    pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn protocol::value::ErasedSnapshotRetirement>,RetainedCloneProgress),(protocol::value::ValueError,Self)> {
         let Self {work,progress,cancelled,retired}=self;
         protocol::value::retirement::admit_owned_retirement(work,grant).map_err(|(error,work)|(error,Self {work,progress,cancelled,retired}))
     }
@@ -207,7 +207,7 @@ impl MeshModelingJob {
     pub fn translation_demands(&self)->Option<protocol::value::RetirementDemand> {
         let Work::Transform(work)=&self.work else{return None};
         if work.recompute||work.selection.is_some()||work.component_matrix.is_some()||!matches!(work.policy,PositionPolicy::Affine)||!matches!(work.phase,0|8) {return None;}
-        Some(protocol::value::RetirementDemand {copy_bytes:if work.phase==0&&work.vertex<work.mesh.vertices.len(){std::mem::size_of::<[f32;3]>()}else{0},depth:3,..Default::default()})
+        Some(protocol::value::RetirementDemand {copy_bytes:if work.phase==0&&work.vertex<work.mesh.vertices.len(){size_of::<[f32;3]>()}else{0},depth:3,..Default::default()})
     }
 
     /// 🪆️ Quotes the same original tessellation child or retained handback frontier.

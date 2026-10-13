@@ -106,7 +106,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .inferences([standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
         .composers(standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.mp3", standard: semio_framework_artifact_reference::StandardId("mpeg1-layer3"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") })
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -193,7 +193,6 @@ pub mod examples {
     pub mod demo;
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -234,7 +233,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

@@ -57,7 +57,7 @@ pub(crate) fn to_record(value:&PdfSnapshot)->semio_framework_dsl_record::RecordV
     semio_framework_dsl_record::RecordValue{fields:[
         (1,V::Text(value.schema.clone())),(2,V::Text(value.declared_version.clone())),
         (3,V::Value(value.pages.to_value())),(4,V::Value(value.fonts.to_value())),(5,V::Value(value.images.to_value())),(6,V::Value(value.forms.to_value())),(7,V::Value(value.ext_g_states.to_value())),(8,V::Value(value.shadings.to_value())),(9,V::Value(value.patterns.to_value())),(10,V::Value(value.color_spaces.to_value())),(11,V::Value(value.properties.to_value())),(12,V::Value(value.outlines.to_value())),(13,V::Value(value.named_destinations.to_value())),(14,V::Value(value.page_labels.to_value())),(15,V::Value(value.embedded_files.to_value())),(16,V::Value(value.output_intents.to_value())),
-        (17,V::Value(value.acro_form.to_value())),(18,V::Value(value.optional_content.to_value())),(19,V::Value(value.page_layout.to_value())),(20,V::Value(value.page_mode.to_value())),(21,V::Value(value.viewer_preferences.to_value())),(22,V::Value(value.open_action.to_value())),(23,V::Value(value.language.to_value())),(24,V::Value(value.mark_info.to_value())),(25,V::Value(value.metadata.to_value())),(26,V::Value(crate::standards::v1_7::subsets::base::schema::snapshot::octets::document_id_to_value(&value.document_id))),(27,V::Value(value.encryption.to_value())),
+        (17,V::Value(value.acro_form.to_value())),(18,V::Value(value.optional_content.to_value())),(19,V::Value(value.page_layout.to_value())),(20,V::Value(value.page_mode.to_value())),(21,V::Value(value.viewer_preferences.to_value())),(22,V::Value(value.open_action.to_value())),(23,V::Value(value.language.to_value())),(24,V::Value(value.mark_info.to_value())),(25,V::Value(value.metadata.to_value())),(26,V::Value(octets::document_id_to_value(&value.document_id))),(27,V::Value(value.encryption.to_value())),
         (28,V::Value(value.info.to_value())),(29,V::Value(value.catalog_extra.to_value())),(30,V::Value(value.objects.to_value())),(31,V::Value(value.trailer.to_value())),(32,V::Value(value.admitted_stream_roles.to_value())),
     ].into_iter().collect()}
 }
@@ -102,9 +102,9 @@ pub(crate) fn to_record_controlled(value:&PdfSnapshot,control:&mut semio_framewo
         Ok(record.take())
     }))
 }
-fn field(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<DslValue,semio_framework_diagnostic::TextError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Text(value))if id<=2=>Ok(DslValue::String(value.clone())),Some(semio_framework_dsl_record::FieldValue::Value(value))if id>2=>Ok(value.clone()),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(DslValue::Null),_=>Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)))}}
+fn field(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<DslValue,semio_framework_diagnostic::TextError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Text(value))if id<=2=>Ok(DslValue::String(value.clone())),Some(semio_framework_dsl_record::FieldValue::Value(value))if id>2=>Ok(value.clone()),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(DslValue::Null),_=>Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)))}}
 pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<PdfSnapshot,semio_framework_diagnostic::TextError>{
-    if record.fields.keys().any(|id|!(1..=32).contains(id)){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field",semio_framework_diagnostic::TextSpan::at(1,1)));}
+    if record.fields.keys().any(|id|!(1..=32).contains(id)){return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field",semio_framework_diagnostic::TextSpan::at(1,1)));}
     PdfSnapshot::from_value(DslValue::object([
         ("schema".into(),field(record,1,"schema")?),("declaredVersion".into(),field(record,2,"declaredVersion")?),
         ("pages".into(),field(record,3,"pages")?),("fonts".into(),field(record,4,"fonts")?),("images".into(),field(record,5,"images")?),("forms".into(),field(record,6,"forms")?),("extGStates".into(),field(record,7,"extGStates")?),("shadings".into(),field(record,8,"shadings")?),("patterns".into(),field(record,9,"patterns")?),("colorSpaces".into(),field(record,10,"colorSpaces")?),("properties".into(),field(record,11,"properties")?),("outlines".into(),field(record,12,"outlines")?),("namedDestinations".into(),field(record,13,"namedDestinations")?),("pageLabels".into(),field(record,14,"pageLabels")?),("embeddedFiles".into(),field(record,15,"embeddedFiles")?),("outputIntents".into(),field(record,16,"outputIntents")?),
@@ -113,12 +113,12 @@ pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Resu
     ])).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1,1)))
 }
 
-fn borrowed_field<'a>(record:&'a semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<&'a DslValue,ValueError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Value(value))=>Ok(value),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(&DslValue::Null),_=>Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))}}
+fn borrowed_field<'a>(record:&'a semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<&'a DslValue,ValueError>{match record.get(id){Some(semio_framework_dsl_record::FieldValue::Value(value))=>Ok(value),None|Some(semio_framework_dsl_record::FieldValue::Absent)if(17..=27).contains(&id)=>Ok(&DslValue::Null),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))}}
 fn owned<T:FromValue>(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,ValueError>{let value=T::from_value_controlled(borrowed_field(record,id,key)?,control).map_err(|error|error.under(key))?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)}
 pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<PdfSnapshot,ValueError>{
     control.scoped_stage(|control|->Result<_,ValueError>{
-        control.begin_stage(31)?;if record.fields.keys().any(|id|!(1..=32).contains(id)){return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field"));}
-        let text=|id,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>|{let Some(semio_framework_dsl_record::FieldValue::Text(value))=record.get(id)else{return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))};let value=control.copy_text(value)?;control.step()?;Ok::<_,ValueError>(value)};
+        control.begin_stage(32)?;if record.fields.keys().any(|id|!(1..=32).contains(id)){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "PDF snapshot contains an undeclared root field"));}
+        let text=|id,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>|{let Some(semio_framework_dsl_record::FieldValue::Text(value))=record.get(id)else{return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("PDF snapshot field {key} is missing or has a different shape")))};let value=control.copy_text(value)?;control.step()?;Ok::<_,ValueError>(value)};
         let schema=text(1,"schema",control)?;let declared_version=text(2,"declaredVersion",control)?;
         let pages=owned::<Vec<PdfPage>>(record,3,"pages",control)?;
         let fonts=owned::<Vec<PdfFont>>(record,4,"fonts",control)?;
@@ -174,22 +174,22 @@ impl store::ArtifactDsl for PdfSnapshot {
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
         };
-        let record=semio_framework_dsl_record::parse(body,&snapshot_text::spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits{max_bytes:272*1024*1024,max_tokens:4_000_000,max_nodes:2_000_000,..semio_framework_diagnostic::Limits::default()},mode:semio_framework_dsl_record::SourceMode::Document})?;
-        snapshot_text::from_record(&record)
+        let record=semio_framework_dsl_record::parse(body,&spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits{max_bytes:272*1024*1024,max_tokens:4_000_000,max_nodes:2_000_000,..semio_framework_diagnostic::Limits::default()},mode:semio_framework_dsl_record::SourceMode::Document})?;
+        from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body=semio_framework_dsl_record::print(&snapshot_text::to_record(self),&snapshot_text::spec(),semio_framework_dsl_record::JoinMode::Document);
+        let body=semio_framework_dsl_record::print(&to_record(self),&spec(),semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 mod source_fixtures {
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;

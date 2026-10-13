@@ -58,4 +58,4 @@ impl store::ArtifactPack for Puzzle5dSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

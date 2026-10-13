@@ -1056,17 +1056,17 @@ pub fn generation3d_mounted_pack_session(expected_bytes: usize, maximum_items: u
 mod retained_mounted_laws;
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
-use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
-use std::collections::BTreeMap;
-use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as ProjectionView, projection_path_error};
-use semio_framework_artifact_flow_flow::{FlowUi, FlowNodeGui, NodeChrome, FlowPreviewGui, FlowChannelRef};
-use semio_framework_artifact_flow_flow::neural::{Tree, Neuron, Synapse};
-use semio_framework_value::ordered::{OrderedMap, OrderedSet};
-use semio_framework_value::{DslValue, Number, ValueError};
+#[cfg(test)] use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
+#[cfg(test)] use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
+#[cfg(test)] use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
+#[cfg(test)] use std::collections::BTreeMap;
+#[cfg(test)] use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as ProjectionView, projection_path_error};
+#[cfg(test)] use semio_framework_artifact_flow_flow::{FlowUi, FlowNodeGui, NodeChrome, FlowPreviewGui, FlowChannelRef};
+#[cfg(test)] use semio_framework_artifact_flow_flow::neural::{Tree, Neuron, Synapse};
+#[cfg(test)] use semio_framework_value::ordered::{OrderedMap, OrderedSet};
+#[cfg(test)] use semio_framework_value::{DslValue, Number, ValueError};
 use crate::standards::v1::subsets::any::io::text::snapshot::{Generation3dSnapshotDsl,generation3d_document_to_dsl,generation3d_document_from_dsl};
 
 impl store::ArtifactPack for Generation3dSnapshotDsl {

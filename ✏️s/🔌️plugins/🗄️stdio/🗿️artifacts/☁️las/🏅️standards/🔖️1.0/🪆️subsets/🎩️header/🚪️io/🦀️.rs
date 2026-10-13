@@ -633,7 +633,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec LasBuilderFacets {
         construction: LasBuilderConstruction,
         analysis: LasAnalyzerAnalysis,
-        composition: crate::standards::v1_0::subsets::any::io::derived_composition::LasComposerComposition,
+        composition: LasComposerComposition,
     }
     builder: LasBuilder,
     analyzer: LasAnalyzer,

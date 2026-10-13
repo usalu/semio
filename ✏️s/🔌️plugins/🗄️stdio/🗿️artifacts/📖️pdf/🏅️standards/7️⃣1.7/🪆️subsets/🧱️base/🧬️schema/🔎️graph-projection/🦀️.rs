@@ -9,7 +9,8 @@ fn dict_name<'a>(entries: &'a [PdfDictEntry], key: &str) -> Option<&'a str> { di
 fn role_words(source: &mut dyn ObjectSource, value: &PdfObject) -> Vec<u8> { match source.semantic_role(value, PdfStreamRoleKind::AttachmentBytes) { Some(PdfStreamRoleValue::AttachmentBytes { bytes }) => bytes, _ => Vec::new() } }
 fn role_text(source: &mut dyn ObjectSource, value: &PdfObject) -> String { match source.semantic_role(value, PdfStreamRoleKind::MetadataText) { Some(PdfStreamRoleValue::MetadataText { text }) => text, _ => String::new() } }
 fn base_encoding_from_name(name: &str) -> Option<PdfBaseEncoding> { match name { "StandardEncoding" => Some(PdfBaseEncoding::Standard), "WinAnsiEncoding" => Some(PdfBaseEncoding::WinAnsi), "MacRomanEncoding" => Some(PdfBaseEncoding::MacRoman), "MacExpertEncoding" => Some(PdfBaseEncoding::MacExpert), _ => None } }
-use colour::{array_n, extra_entries, lift_colour_space, lift_ext_g_state, lift_function, lift_shading, matrix_of, numbers_of, rect_of};
+use colour::{array_n, extra_entries, lift_colour_space, lift_ext_g_state, lift_shading, matrix_of, numbers_of, rect_of};
+#[cfg(test)] use colour::{lift_function};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{HashMap, HashSet};
@@ -371,8 +372,8 @@ impl Lifter<'_> {
         if fresh {
             let resolved = self.source.deref(value);
             let dict = resolved.as_dict().map(<[PdfDictEntry]>::to_vec).unwrap_or_default();
-            let mut form_id_of = |group: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_form_id(group) };
-            let mut font_id_of = |font: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_font_id(font) };
+            let form_id_of = |group: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_form_id(group) };
+            let font_id_of = |font: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_font_id(font) };
             // 🧷 Soft-mask groups and fonts are lifted first so the closures above only look up.
             if let Some(mask) = dict_get(&dict, "SMask").map(|m| self.source.deref(m)) {
                 if let Some(group) = mask.dict_get("G").cloned() {

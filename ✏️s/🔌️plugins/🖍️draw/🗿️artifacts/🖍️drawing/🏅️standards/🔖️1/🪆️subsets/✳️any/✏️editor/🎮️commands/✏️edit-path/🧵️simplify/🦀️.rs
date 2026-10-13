@@ -12,9 +12,9 @@ impl Work {
     fn new()->Self {Self {workspace:None,identity:None,complete:false,closing:false}}
 }
 impl ArtifactCommandWork<App> for Work {
-    fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
     fn tool_id(&self)->&'static str {"editPath"}
-    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {Ok(semio_framework_value::RetirementDemand {copy_bytes:std::mem::size_of::<Self>()+std::mem::size_of::<crate::PathSegment>(),depth:1,..Default::default()})}
+    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {Ok(semio_framework_value::RetirementDemand {copy_bytes:size_of::<Self>()+size_of::<crate::PathSegment>(),depth:1,..Default::default()})}
     fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
         let DrawingCommand::EditPath(payload)=command else {return None};
         if let PathEdit::Simplify {tolerance}=payload.edit.as_ref() {if !tolerance.is_finite()||!(1e-6..=1e6).contains(tolerance) {return None;}}
@@ -57,8 +57,8 @@ impl ArtifactCommandWork<App> for Work {
             let segments=job.take_result().map_err(Fault::from)?;
             let mut emit=Emit::mutations(vec![crate::mutations::update_path_geometry(path.base.id.clone(),segments)]);
             if let Some(selection)=input.interaction.selection.get(DRAWING_POINT_DOMAIN) {
-                let retained=selection.ids.iter().filter(|id|crate::editor::drawing::interaction::points::parse_point_id(id).is_some_and(|point|point.layer_id!=payload.layer_id)).cloned().collect::<Vec<_>>();
-                emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::point_selection_effect(&retained));
+                let retained=selection.ids.iter().filter(|id|interaction::points::parse_point_id(id).is_some_and(|point|point.layer_id!=payload.layer_id)).cloned().collect::<Vec<_>>();
+                emit.effects.push(canvas_pointer_down::point_selection_effect(&retained));
             }
             return Ok(ArtifactCommandWorkStep::Complete(emit));
         }

@@ -1366,7 +1366,9 @@ fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize) -> Result<c
 /// 🎟️ One close turn that self-funds exactly the app's quoted next demand, with `body` as the ordinary copy page.
 fn composed_close_turn<A: PluginApp>(app: &mut A, body: usize) -> Result<crate::app::PluginLifecycleStep, Fault> {
     let grant = crate::app::retirement_self_grant(|page| app.close_retirement_demands(page), body).map_err(crate::app::plugin_retirement_fault)?;
-    app.close_step(grant)
+    let step = app.close_step(grant);
+    let _ = app.take_constructor_receipt();
+    step
 }
 
 async fn drive_composed_replacement_to(
@@ -1432,8 +1434,8 @@ fn close_recursive_replacement_app(app: &mut VcsArtifactApp<ComposedParentApp, R
     for _ in 0..100_000 {
         let demand = app.close_retirement_demands(4096).expect("original fixture close demand");
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            assert!(grant.maximum_copy_bytes <= 4096 && grant.maximum_release_bytes <= 4096, "original fixture body and physical grant limits remain unchanged");
-            match app.close_step(grant).expect("recursive fixture app closes under its exact grant") {
+            assert!(grant.maximum_copy_bytes <= 4096 && grant.maximum_release_bytes <= 4096, "original fixture body and physical grant limits remain unchanged {demand:?}");
+            match { let step = app.close_step(grant).expect("recursive fixture app closes under its exact grant"); let _ = app.take_constructor_receipt(); step } {
             crate::app::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
             crate::app::PluginLifecycleStep::AwaitingInput { reason } => panic!("recursive fixture app close awaited input: {reason}"),
             crate::app::PluginLifecycleStep::Blocked { reason } => panic!("recursive fixture app has no external owner: {reason}"),
@@ -1832,17 +1834,17 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
     app.cancel_artifact_store_replacement(handle).expect("cancel candidate");
     for _ in 0..100_000 {
         if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == crate::app::ActiveArtifactStoreReplacementState::RetiringRejectedMembers && active.active_member_open.as_ref().is_some_and(|open| store::MemberOpenOperation::next_release_byte_demand(open).is_ok_and(|bytes| bytes == extent))) { break; }
-        app.close_step(crate::app::plugin_page_grant(ordinary)).expect("close prior owners and bounded logical request retirement");
+        app.close_step(crate::app::plugin_page_grant(ordinary)).expect("close prior owners and bounded logical request retirement"); let _ = app.take_constructor_receipt();
         semio_framework_async::yield_once().await;
     }
     let demand = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(|open| store::MemberOpenOperation::next_release_byte_demand(open).expect("retained member release quote")).expect("retained member operation");
-    let denied = app.close_step(crate::app::plugin_page_grant(ordinary)).expect("physical undergrant retains owner");
+    let denied = app.close_step(crate::app::plugin_page_grant(ordinary)).expect("physical undergrant retains owner"); let _ = app.take_constructor_receipt();
     let demand_after_denial = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(|open| store::MemberOpenOperation::next_release_byte_demand(open).expect("denied member release quote")).expect("denied owner remains retained");
     let caller_demand = app.close_retirement_demands(ordinary).expect("caller close quote").release_bytes;
     eprintln!("[DEBUG] retained replacement neutral before cleanup request={} caller={} denied={:?}", demand_after_denial, caller_demand, denied);
     let mut terminal = false;
     for _ in 0..100_000 {
-        let step = app.close_step(crate::app::plugin_page_grant(ceiling)).expect("explicit admitted cleanup extent");
+        let step = app.close_step(crate::app::plugin_page_grant(ceiling)).expect("explicit admitted cleanup extent"); let _ = app.take_constructor_receipt();
         if matches!(step, crate::app::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
@@ -1870,19 +1872,20 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
                 break;
             }
         }
-        app.close_step(crate::app::plugin_page_grant(ceiling)).expect("close exact preceding candidate owners");
+        app.close_step(crate::app::plugin_page_grant(ceiling)).expect("close exact preceding candidate owners"); let _ = app.take_constructor_receipt();
         semio_framework_async::yield_once().await;
     }
     let extent = extent.expect("terminal candidate store frame remains retained");
     assert!(extent > 0 && extent <= ceiling);
     let before_demand = app.close_retirement_demands(extent).expect("terminal frame close quote").release_bytes;
-    let (denied, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(crate::app::plugin_page_grant(extent - 1)).expect("terminal frame one below"));
+    let (denied, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(crate::app::plugin_page_grant(extent - 1)).expect("terminal frame one below")); let _ = app.take_constructor_receipt();
     let retained = app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.terminal_store_frame_bytes() == Some(extent));
     let exact_demand = app.close_retirement_demands(extent).expect("terminal frame close quote after the undergrant").release_bytes;
-    let (funded, funded_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(crate::app::plugin_page_grant(extent)).expect("terminal frame exact funding"));
+    let (funded, funded_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(crate::app::plugin_page_grant(extent)).expect("terminal frame exact funding")); let _ = app.take_constructor_receipt();
     let mut terminal = false;
     for _ in 0..100_000 {
-        if matches!(app.close_step(crate::app::plugin_page_grant(ceiling)).expect("complete separately admitted app cleanup"), crate::app::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
+        let step = app.close_step(crate::app::plugin_page_grant(ceiling)).expect("complete separately admitted app cleanup"); let _ = app.take_constructor_receipt();
+        if matches!(step, crate::app::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
     assert!(terminal && PluginApp::close_terminal_is_empty(&app));

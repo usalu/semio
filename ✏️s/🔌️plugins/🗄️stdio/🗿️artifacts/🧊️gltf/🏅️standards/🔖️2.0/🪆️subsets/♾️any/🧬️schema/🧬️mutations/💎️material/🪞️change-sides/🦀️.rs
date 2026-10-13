@@ -52,7 +52,7 @@ pub fn inverse(p: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) ->
     if current == p.double_sided {
         return Vec::new();
     }
-    vec![super::change_material_double_sided::mutation(super::change_material_double_sided::GltfChangeMaterialDoubleSidedPayload { material: p.material, double_sided: current })]
+    vec![mutation(GltfChangeMaterialDoubleSidedPayload { material: p.material, double_sided: current })]
 }
 
 //#region 🧬️DirectMutation
@@ -72,7 +72,7 @@ pub fn mutation(payload: GltfChangeMaterialDoubleSidedPayload) -> super::GltfMut
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMaterialDoubleSidedMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-double-sided", kind: "change-material-double-sided", record: "ChangedMaterialDoubleSided" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

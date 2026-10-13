@@ -3,7 +3,7 @@
 //! old (step `label` is a display string, not a key, so no `duplicate-id` case applies here). The derived `steps`/`tool_solids`
 //! handles are re-derived by `apply`, never carried.
 
-use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
+use crate::diff::{Process3dStepPatch, Process3dStepsDelta};
 use crate::diff::Process3dDiff;
 use crate::Process3dSnapshot;
 

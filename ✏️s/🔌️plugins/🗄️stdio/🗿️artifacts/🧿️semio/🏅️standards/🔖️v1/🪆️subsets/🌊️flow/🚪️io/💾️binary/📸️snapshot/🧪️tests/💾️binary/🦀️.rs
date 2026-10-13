@@ -104,8 +104,8 @@ fn retained_request(bytes: &[u8], expected: semio_framework_artifact_reference::
 fn close_open(open: &mut impl MemberOpenOperation, grants: &[usize]) -> usize {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     let policy = retirement_policy();
-    let mut born = 0;
-    let mut freed = 0;
+    let mut born = 0usize;
+    let mut freed = 0usize;
     for turn in 0..100_000 {
         if open.terminal_is_empty() { return freed.checked_sub(born).expect("original member close backing exceeds funded cursor frames"); }
         let grant = RetainedCloneGrant { maximum_items: grants[turn % grants.len()], ..policy };
@@ -188,12 +188,12 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
                 let retained = input.retained_input_bytes();
                 let mut decoder = SemioFlowSnapshotDecode::begin(input).unwrap_or_else(|_| panic!("exact Flow identity"));
                 let mut sequence = 0;
-                let mut zero = StepContext::new(OperationId(1), Generation(1), StepBudget::new(0, 999), root_cancel_token(), || Some(1), &mut sequence);
+                let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut zero = StepContext::new(OperationId(1), Generation(1), StepBudget::new(0, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut step_progress);
                 assert!(matches!(decoder.step(&mut zero), SemioFlowSnapshotDecodeStep::Pending { consumed_bytes: 0 }));
                 assert_eq!(decoder.retained_input_bytes(), retained);
                 let outcome = loop {
                     let before = decoder.consumed_bytes();
-                    let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, 999), root_cancel_token(), || Some(1), &mut sequence);
+                    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(fuel, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut step_progress);
                     let outcome = decoder.step(&mut cx);
                     assert!(decoder.consumed_bytes() - before <= fuel as usize);
                     if !matches!(outcome, SemioFlowSnapshotDecodeStep::Pending { .. }) {
@@ -202,7 +202,7 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
                     assert!(decoder.take_ready(&cx).is_none());
                 };
                 assert_eq!(decoder.retained_input_bytes(), retained);
-                let cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence);
+                let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut step_progress);
                 if valid {
                     assert_eq!(outcome, SemioFlowSnapshotDecodeStep::Ready, "{}", row["id"]);
                     let (snapshot, mut input) = decoder.take_ready(&cx).expect("only confirmed exact EOF can hand off");
@@ -231,11 +231,11 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
         let cancel = root_cancel_token();
         let mut sequence = 0;
         while decoder.consumed_bytes() < cut {
-            let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999), cancel.clone(), || Some(1), &mut sequence);
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel.clone(), || Some(1), &mut sequence, &mut step_progress);
             assert!(matches!(decoder.step(&mut cx), SemioFlowSnapshotDecodeStep::Pending { .. }));
         }
         cancel.cancel_now();
-        let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel, || Some(1), &mut sequence, &mut step_progress);
         assert_eq!(decoder.step(&mut cx), SemioFlowSnapshotDecodeStep::Rejected(MemberOpenDiagnostic::Cancelled));
         assert_eq!(decoder.retained_input_bytes(), retained);
         assert!(decoder.take_ready(&cx).is_none());
@@ -250,7 +250,7 @@ fn semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures() {
             None => || None,
             _ => unreachable!(),
         };
-        let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(1, 2000), root_cancel_token(), clock, &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(operation), Generation(generation), StepBudget::new(1, 2000, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), clock, &mut sequence, &mut step_progress);
         assert_eq!(decoder.step(&mut cx), SemioFlowSnapshotDecodeStep::Rejected(diagnostic));
         close(&mut decoder);
     }
@@ -318,7 +318,7 @@ fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes(
         let cancel = root_cancel_token();
         let mut sequence = 0;
         loop {
-            let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(97, 999), cancel.clone(), || Some(1), &mut sequence);
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(97, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel.clone(), || Some(1), &mut sequence, &mut step_progress);
             let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decoder.step(&mut cx)); assert_eq!(physical.released_bytes, 0); retained_backing += physical.requested_bytes;
             match step {
                 SemioFlowSnapshotDecodeStep::Ready => break,
@@ -327,7 +327,7 @@ fn semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes(
             }
         }
         cancel.cancel_now();
-        let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999), cancel, || Some(1), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(1), Generation(1), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel, || Some(1), &mut sequence, &mut step_progress);
         assert_eq!(decoder.step(&mut cx), SemioFlowSnapshotDecodeStep::Rejected(MemberOpenDiagnostic::Cancelled));
         assert!(decoder.take_ready(&cx).is_none());
         assert_eq!(close_with_grants(&mut decoder, &grants), retained_backing);
@@ -356,7 +356,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
     let mut open = begin_member_open(request);
     let mut sequence = 0;
     let mut reopened = loop {
-        let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(4096, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut step_progress);
         match open.step(&mut cx, retirement_policy()) {
             MemberOpenStep::Pending(progress) => {
                 assert!(progress.completed <= progress.total || progress.total == 0);
@@ -369,7 +369,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         }
     };
     assert!(open.terminal_is_empty());
-    assert!(matches!(open.step(&mut StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999), root_cancel_token(), || Some(1), &mut sequence), retirement_policy()), MemberOpenStep::Rejected(MemberOpenDiagnostic::Stale)));
+    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); assert!(matches!(open.step(&mut StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut step_progress), retirement_policy()), MemberOpenStep::Rejected(MemberOpenDiagnostic::Stale)));
     assert!(matches!(&reopened, SemioMembers::Flow(_)));
     assert_eq!(reopened.artifact_ref(), Some(expected.clone()));
     assert_eq!(reopened.owner_ref(), Some(owner.clone()));
@@ -392,7 +392,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
     let mut replay = begin_member_open(request);
     let mut sequence = 0;
     loop {
-        let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(4096, 999), root_cancel_token(), || Some(1), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(4096, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), root_cancel_token(), || Some(1), &mut sequence, &mut step_progress);
         match replay.step(&mut cx, retirement_policy()) {
             MemberOpenStep::Pending(_) => {}
             MemberOpenStep::Rejected(found) => {
@@ -424,7 +424,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
             // the retained input under budget, but a Flow envelope can never publish as another subset.
             let mut rejected = None;
             for _ in 0..100_000 {
-                let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999), cancel.clone(), || Some(1), &mut sequence);
+                let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel.clone(), || Some(1), &mut sequence, &mut step_progress);
                 match denied_open.step(&mut cx, retirement_policy()) {
                     MemberOpenStep::Rejected(found) => {
                         rejected = Some(found);
@@ -467,7 +467,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         let mut sequence = 0;
         let mut observed = false;
         for _ in 0..100_000 {
-            let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999), cancel.clone(), || Some(1), &mut sequence);
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(OperationId(71), Generation(17), StepBudget::new(1, 999, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel.clone(), || Some(1), &mut sequence, &mut step_progress);
             match lifecycle_open.step(&mut cx, retirement_policy()) {
                 MemberOpenStep::Pending(_) => {}
                 MemberOpenStep::Rejected(found) => {
@@ -495,7 +495,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         let operation = if event == "operation" { OperationId(72) } else { OperationId(71) };
         let generation = if event == "generation" { Generation(18) } else { Generation(17) };
         let clock: fn() -> Option<u64> = if event == "expired" { || Some(10_000) } else { || Some(1) };
-        let mut cx = StepContext::new(operation, generation, StepBudget::new(1, 11_000), cancel, clock, &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation, generation, StepBudget::new(1, 11_000, semio_s_artifact_stdio_contract::testing::unbounded_grant()), cancel, clock, &mut sequence, &mut step_progress);
         match lifecycle_open.step(&mut cx, retirement_policy()) {
             MemberOpenStep::Rejected(found) => assert_eq!(found, diagnostic, "{stage}"),
             MemberOpenStep::Pending(_) => panic!("mutated lifecycle authority must fail closed immediately"),

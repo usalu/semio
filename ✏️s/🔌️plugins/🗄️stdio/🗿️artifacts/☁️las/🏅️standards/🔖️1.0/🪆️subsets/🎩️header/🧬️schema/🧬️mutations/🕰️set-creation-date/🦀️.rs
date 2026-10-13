@@ -16,12 +16,12 @@ pub struct SetCreationDate {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetCreationDate {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "creation-date", kind: "set-creation-date", record: "SetCreationDate" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         let Self { day_of_year, year } = self;
         protocol::MutationOutcome::new(diff::diff_set_creation_date(*day_of_year, *year))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-        Ok(vec![LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year })])
+        Ok(vec![LasMutation::SetCreationDate(SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set creation date", "Erstellungsdatum setzen")

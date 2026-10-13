@@ -1,6 +1,6 @@
 //! 🧰 Shared attribute diff construction for direct SVG mutations.
 use crate::schema::diff::{diff_at_path, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::schema::snapshot::{element_attr, node_at, NodePath, SvgAttr, SvgAttributeValue, SvgNode};
+use crate::schema::snapshot::{node_at, NodePath, SvgAttr, SvgAttributeValue, SvgNode};
 use crate::SvgSnapshot;
 use semio_framework_value::FromValue;
 use semio_s_artifact_stdio_contract::editing::{SnapshotEditError, SnapshotEditEvent};

@@ -23,4 +23,4 @@ class OutlineOwnershipScript extends BundleScript {
  }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-pptx",{testFeatures:["component-app-assembly"],testCommands:{"transform-wire":TransformWireScript,"outline-ownership":OutlineOwnershipScript},snapshotSqliteTests:["../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-pptx",{ testCommands:{"transform-wire":TransformWireScript,"outline-ownership":OutlineOwnershipScript},snapshotSqliteTests:["../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

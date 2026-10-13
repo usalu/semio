@@ -426,6 +426,5 @@ pub(crate) fn enc_attr_bin(a: &SvgAttr, out: &mut Vec<u8>) {
     write_str_lp(out, &crate::standards::v1_1::subsets::base::io::text::snapshot::print_svg_attribute(&a.value));
 }
 }
-pub use diff_wire_codec::*;
 
 pub(crate) fn enc_svg_node_bin(node:&crate::schema::snapshot::SvgNode,out:&mut Vec<u8>) {semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::binary::diff::enc_xml_node_bin(&crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(node),out)}

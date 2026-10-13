@@ -9,7 +9,8 @@
 
 use crate::editor::deflate::modes::edit;
 use crate::editor::deflate::modes::edit::windows::main;
-use crate::schema::mutations::{set_compression_params, set_payload, set_preset_dictionary};
+use crate::schema::mutations::{set_compression_params, set_preset_dictionary};
+#[cfg(test)] use crate::schema::mutations::{set_payload};
 use crate::{DeflateMutation, DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};

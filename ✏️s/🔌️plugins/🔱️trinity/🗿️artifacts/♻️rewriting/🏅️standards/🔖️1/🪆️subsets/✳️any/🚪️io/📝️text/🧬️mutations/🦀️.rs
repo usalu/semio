@@ -3,22 +3,19 @@
 use crate::RewritingSnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::operations::{
-    apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, RewriteRuleEnvelope, RewriteRuleStore,
-};
 
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("EditWorkingGraph", crate::standards::v1::subsets::any::io::text::mutations::edit_working_graph::TEXT_OPCODE),
-    ("EditLhs", crate::standards::v1::subsets::any::io::text::mutations::edit_lhs::TEXT_OPCODE),
-    ("EditRhs", crate::standards::v1::subsets::any::io::text::mutations::edit_rhs::TEXT_OPCODE),
-    ("ChangeParameterBinding", crate::standards::v1::subsets::any::io::text::mutations::change_parameter_binding::TEXT_OPCODE),
-    ("RemoveParameterBinding", crate::standards::v1::subsets::any::io::text::mutations::remove_parameter_binding::TEXT_OPCODE),
-    ("ChangeRuleLayoutPoint", crate::standards::v1::subsets::any::io::text::mutations::change_rule_layout_point::TEXT_OPCODE),
-    ("RemoveRuleLayoutPoint", crate::standards::v1::subsets::any::io::text::mutations::remove_rule_layout_point::TEXT_OPCODE),
-    ("DragRuleNodes", crate::standards::v1::subsets::any::io::text::mutations::drag_rule_nodes::TEXT_OPCODE),
-    ("SetRuleLayoutPoints", crate::standards::v1::subsets::any::io::text::mutations::set_rule_layout_points::TEXT_OPCODE),
+    ("EditWorkingGraph", edit_working_graph::TEXT_OPCODE),
+    ("EditLhs", edit_lhs::TEXT_OPCODE),
+    ("EditRhs", edit_rhs::TEXT_OPCODE),
+    ("ChangeParameterBinding", change_parameter_binding::TEXT_OPCODE),
+    ("RemoveParameterBinding", remove_parameter_binding::TEXT_OPCODE),
+    ("ChangeRuleLayoutPoint", change_rule_layout_point::TEXT_OPCODE),
+    ("RemoveRuleLayoutPoint", remove_rule_layout_point::TEXT_OPCODE),
+    ("DragRuleNodes", drag_rule_nodes::TEXT_OPCODE),
+    ("SetRuleLayoutPoints", set_rule_layout_points::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

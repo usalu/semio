@@ -18,7 +18,8 @@ pub use set_state::SetInteractionState;
 /// 🕹️ Framework interaction mutation aggregate; its direct leaf owns metadata and ordinary semantics. Externally tagged:
 /// `{"setInteractionState": <InteractionState>}` (`🔣️.json` beside this file).
 /// 🧊️ Whole-state cold codecs/evaluation do not certify a retained restore or reserved interaction route.
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = InteractionState, diff = InteractionStateDiff, schema = "framework.interaction")]
 pub enum InteractionConfigMutation {

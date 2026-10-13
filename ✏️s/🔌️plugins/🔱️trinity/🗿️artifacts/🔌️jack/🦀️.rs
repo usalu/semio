@@ -36,7 +36,6 @@ pub mod executor;
 pub mod language_service;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔤️lexer/🦀️.rs"]
 pub mod lexer;
-#[cfg(feature = "component-app-assembly")]
 pub use crate::editor::jack::snapshot_to_workflow;
 pub use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
 pub use language_service as core;
@@ -271,7 +270,7 @@ impl JackSnapshot {
 
     /// 📤️ Encodes the actual Jack parent; composed Semio content travels through its independent child owner.
     pub fn to_json(&self) -> Result<String, TrinityRamError> {
-        let value = crate::standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(self), false)?;
+        let value = standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(self), false)?;
         Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)))
     }
 
@@ -288,7 +287,7 @@ impl JackSnapshot {
 
     /// 📥️ Decodes the literal parent with its unresolved content address; the host supplies the exact child owner.
     pub fn from_json(json: &str) -> Result<Self, TrinityRamError> {
-        let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::decode_jack_snapshot_json(json)?;
+        let snapshot = standards::v1::subsets::any::io::text::snapshot::decode_jack_snapshot_json(json)?;
         snapshot.validate_schema()?;
         Ok(snapshot)
     }
@@ -592,7 +591,6 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 /// precedent, `📓️terra-fleet-trinity-recipe-report.md`): the real en/de localized names
 /// (`"Jack"`/`"Buchse"`) still live only on these `ArtifactCapability` rows.
 /// Jack query source and execution output now register through their exact window owners.
-#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
@@ -600,7 +598,6 @@ pub trait ArtifactApps:
 {
 }
 
-#[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
         + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
@@ -651,7 +648,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
 /// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
 /// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -669,19 +665,15 @@ mod tests;
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[cfg(feature = "component-app-assembly")]
         #[path = "🏅️standards/🔖️1/🦀️.rs"]
         mod component;
-        #[cfg(feature = "component-app-assembly")]
         pub use component::*;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
                 mod component;
-                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
                 #[path = "."]
                 pub mod schema {
@@ -850,7 +842,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -1041,7 +1032,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]
@@ -1083,7 +1073,7 @@ pub mod viewer {
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn jack_child_restore_projection(snapshot: &crate::JackSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+pub fn jack_child_restore_projection(snapshot: &JackSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("jack.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection

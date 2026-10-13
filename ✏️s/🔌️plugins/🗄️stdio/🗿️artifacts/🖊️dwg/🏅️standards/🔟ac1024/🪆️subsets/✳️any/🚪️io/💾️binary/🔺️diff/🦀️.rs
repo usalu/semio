@@ -16,4 +16,3 @@ use protocol::{MutationApplyResult, MutationDiff};
 
 semio_framework_os_kernel::diff_binary!(crate::standards::v_ac1024::subsets::any::schema::diff::DwgDiff);
 }
-pub use diff_codec::*;

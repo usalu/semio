@@ -175,7 +175,10 @@ pub enum DrawingNode {
     Circle { cx: f64, cy: f64, r: f64 },
     Line { x1: f64, y1: f64, x2: f64, y2: f64 },
     Polygon { points: Vec<semio_framework_2d::Vec2> },
-    Path { segments: Vec<semio_framework_2d::PathSegment> },
+    Path {
+        #[serde(with = "path_segments")]
+        segments: Vec<semio_framework_2d::PathSegment>,
+    },
     Text { x: f64, y: f64, content: String, size: f64 },
     Group { children: Vec<String> },
 }
@@ -191,7 +194,7 @@ pub struct SceneNode {
     pub stroke: Option<StrokeStyle>,
     #[serde(default = "default_opacity")]
     pub opacity: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "optional_path_segments")]
     pub clip: Option<Vec<semio_framework_2d::PathSegment>>,
 }
 
@@ -213,6 +216,74 @@ impl Default for DrawingScene {
     }
 }
 // #endregion 🔖️KernelTypes
+
+// #region 🔖️PathSegmentJson
+/// 🛤️ Serde conversion type of [`semio_framework_2d::PathSegment`]. This kernel is the only serde user of the shared
+/// path vocabulary, so it owns the camelCase JSON shape (`kind` tag, `largeArc`) instead of the geometry kernel.
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+enum PathSegmentJson {
+    Move { to: semio_framework_2d::Vec2 },
+    Line { to: semio_framework_2d::Vec2 },
+    Quad { ctrl: semio_framework_2d::Vec2, to: semio_framework_2d::Vec2 },
+    Cubic { ctrl1: semio_framework_2d::Vec2, ctrl2: semio_framework_2d::Vec2, to: semio_framework_2d::Vec2 },
+    Arc { rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: bool, to: semio_framework_2d::Vec2 },
+    Close,
+}
+
+impl From<&semio_framework_2d::PathSegment> for PathSegmentJson {
+    fn from(segment: &semio_framework_2d::PathSegment) -> Self {
+        use semio_framework_2d::PathSegment as P;
+        match *segment {
+            P::Move { to } => Self::Move { to },
+            P::Line { to } => Self::Line { to },
+            P::Quad { ctrl, to } => Self::Quad { ctrl, to },
+            P::Cubic { ctrl1, ctrl2, to } => Self::Cubic { ctrl1, ctrl2, to },
+            P::Arc { rx, ry, rotation, large_arc, sweep, to } => Self::Arc { rx, ry, rotation, large_arc, sweep, to },
+            P::Close => Self::Close,
+        }
+    }
+}
+
+impl From<PathSegmentJson> for semio_framework_2d::PathSegment {
+    fn from(segment: PathSegmentJson) -> Self {
+        match segment {
+            PathSegmentJson::Move { to } => Self::Move { to },
+            PathSegmentJson::Line { to } => Self::Line { to },
+            PathSegmentJson::Quad { ctrl, to } => Self::Quad { ctrl, to },
+            PathSegmentJson::Cubic { ctrl1, ctrl2, to } => Self::Cubic { ctrl1, ctrl2, to },
+            PathSegmentJson::Arc { rx, ry, rotation, large_arc, sweep, to } => Self::Arc { rx, ry, rotation, large_arc, sweep, to },
+            PathSegmentJson::Close => Self::Close,
+        }
+    }
+}
+
+/// 🧵️ `#[serde(with)]` codec of a path-segment list through [`PathSegmentJson`].
+mod path_segments {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(segments: &[semio_framework_2d::PathSegment], serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_seq(segments.iter().map(super::PathSegmentJson::from))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<semio_framework_2d::PathSegment>, D::Error> {
+        Ok(Vec::<super::PathSegmentJson>::deserialize(deserializer)?.into_iter().map(Into::into).collect())
+    }
+}
+
+/// 🧵️ `#[serde(with)]` codec of an optional path-segment list through [`PathSegmentJson`].
+mod optional_path_segments {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer>(segments: &Option<Vec<semio_framework_2d::PathSegment>>, serializer: S) -> Result<S::Ok, S::Error> {
+        segments.as_ref().map(|segments| segments.iter().map(super::PathSegmentJson::from).collect::<Vec<_>>()).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<Vec<semio_framework_2d::PathSegment>>, D::Error> {
+        Ok(Option::<Vec<super::PathSegmentJson>>::deserialize(deserializer)?.map(|segments| segments.into_iter().map(Into::into).collect()))
+    }
+}
+// #endregion 🔖️PathSegmentJson
 
 // #region 🔖️KernelTrait
 /// 🔌️ Model-free synchronous 2D drawing kernel interface for flow's ephemeral node-evaluation
@@ -347,6 +418,7 @@ struct StoredNode {
     transform: Affine2D,
     fill: Option<FillStyle>,
     stroke: Option<StrokeStyle>,
+    #[serde(default, with = "optional_path_segments")]
     clip: Option<Vec<semio_framework_2d::PathSegment>>,
     opacity: f64,
 }
@@ -974,7 +1046,7 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
             Ok(handle) => match store.flatten_scene(&handle) {
                 Ok(scene) => {
                     let segments = scene.nodes.into_iter().find_map(|node| if let DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
-                    segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
+                    segments.map(|segs| serde_json::json!({ "segments": segs.iter().map(PathSegmentJson::from).collect::<Vec<_>>() }).to_string())
                 }
                 Err(error) => Some(json_error(error)),
             },
@@ -991,13 +1063,13 @@ pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> Str
             return Err(DrawingKernelError::Invalid(error.to_string()));
         }
         let segments_value = parsed.get("segments").cloned().ok_or_else(|| DrawingKernelError::Invalid("missing segments".to_string()))?;
-        serde_json::from_value(segments_value).map_err(DrawingKernelError::from)
+        Ok(serde_json::from_value::<Vec<PathSegmentJson>>(segments_value)?.into_iter().map(Into::into).collect())
     };
     drawing_kernel()
         .lock()
         .ok().map_or_else(json_kernel_unavailable, |store| match (parse(a_json), parse(b_json)) {
             (Ok(a), Ok(b)) => match store.boolean_segments(&a, &b, operation) {
-                Ok(segments) => serde_json::json!({ "segments": segments }).to_string(),
+                Ok(segments) => serde_json::json!({ "segments": segments.iter().map(PathSegmentJson::from).collect::<Vec<_>>() }).to_string(),
                 Err(error) => json_error(error),
             },
             (Err(error), _) | (_, Err(error)) => json_error(error),

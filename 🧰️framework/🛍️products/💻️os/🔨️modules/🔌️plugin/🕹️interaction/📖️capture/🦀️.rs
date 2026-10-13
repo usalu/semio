@@ -55,8 +55,8 @@ impl CapturedRoot {
 }
 
 impl ArtifactCanonicalJson for CapturedRoot {
-    fn canonical_json_borrowed_root(&self) -> Result<Option<JsonValue<'_>>, semio_framework_value::ValueError> {
-        let state = self.read.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "local-interaction.capture-root-returned"))?.get();
+    fn canonical_json_borrowed_root(&self) -> Result<Option<JsonValue<'_>>, ValueError> {
+        let state = self.read.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "local-interaction.capture-root-returned"))?.get();
         Ok(Some(JsonValue::Object(JsonObject::new([("identity", self.identity_json()), ("state", state_json(state))].into_iter()))))
     }
 }
@@ -105,10 +105,10 @@ struct CapturedRootRetirementState {
 }
 
 impl SnapshotRetirementFactory<CapturedRoot> for CapturedRootRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<CapturedRoot>) -> usize { std::mem::size_of::<CapturedRootRetirement>() }
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<CapturedRoot>) -> usize { size_of::<CapturedRootRetirement>() }
 
     fn retire(&self, root: Arc<CapturedRoot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CapturedRoot>)> {
-        match (RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<CapturedRootRetirement>(), depth: 1 }).admit(grant) {
+        match (RetainedCloneBirthDemand { capacity_bytes: size_of::<CapturedRootRetirement>(), depth: 1 }).admit(grant) {
             Ok(progress) => Ok((Box::new(CapturedRootRetirement { owned: ManuallyDrop::new(CapturedRootRetirementState { root: Some(root) }) }), progress)),
             Err(error) => Err((error, root)),
         }

@@ -16,11 +16,11 @@ pub struct InsertEntityArg {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for InsertEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "entity-arg", kind: "insert-entity-arg", record: "InsertEntityArg" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
+    fn diff(&self, _base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
         let Self { id, index, value } = self;
         protocol::MutationOutcome::new(diff::diff_insert_entity_arg(*id, *index, value.clone()))
     }
-    fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
         let Self { id, index, .. } = self;
         Ok(vec![IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: *id, index: *index })])
     }

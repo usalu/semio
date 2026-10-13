@@ -46,7 +46,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.mp3", standard: semio_framework_artifact_reference::StandardId("mpeg1-layer3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.mp3", standard: StandardId("mpeg1-layer3"), subset: SubsetId("*") }, store::ArtifactCodec::bare::<Mp3Snapshot, crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
@@ -64,8 +64,9 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Sniff
-use crate::apply_mutation;
-use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Content, Id3Frame, Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3FrameHeader, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
+#[cfg(test)] use crate::apply_mutation;
+use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Mp3Frame, Mp3FrameHeader, Mp3Snapshot, STDIO_MP3_DOCUMENT_SCHEMA};
+#[cfg(test)] use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3Content, Id3Frame, Id3v1Tag, Id3v2Tag};
 
 /// 🔍 Real magic sniff: an ID3v2 header at the front, OR a valid MPEG frame sync anywhere in the
 /// buffer.
@@ -511,12 +512,12 @@ pub mod playback {
     impl ArtifactSnapshotDisposer<Mp3Snapshot> for Mp3ExportSnapshotDisposer {
         fn retirement_demands(&self, snapshot: &Option<Arc<Mp3Snapshot>>, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
             if let Some(owner) = self.retirement.as_ref() {
-                if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Mp3Snapshot>>>(), depth: 1, ..Default::default() }); }
+                if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Mp3Snapshot>>>(), depth: 1, ..Default::default() }); }
                 let copy = owner.next_copy_byte_demand()?;
                 let release = owner.next_release_byte_demand()?;
                 return Ok(semio_framework_value::RetirementDemand { copy_bytes: copy, capacity_bytes: owner.next_capacity_byte_demand(body.max(copy).max(release))?, release_bytes: release, depth: owner.next_depth_demand()? });
             }
-            Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.pending.is_some() || snapshot.is_some() { std::mem::size_of::<Mp3Snapshot>() } else { 0 }, capacity_bytes: 0, release_bytes: if snapshot.is_some() { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Mp3Snapshot>() } else { 0 }, depth: usize::from(self.pending.is_some() || snapshot.is_some()) })
+            Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.pending.is_some() || snapshot.is_some() { size_of::<Mp3Snapshot>() } else { 0 }, capacity_bytes: 0, release_bytes: if snapshot.is_some() { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Mp3Snapshot>() } else { 0 }, depth: usize::from(self.pending.is_some() || snapshot.is_some()) })
         }
 
         fn close_step(&mut self, snapshot: &mut Option<Arc<Mp3Snapshot>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
@@ -588,7 +589,7 @@ pub mod sqlite;
 pub mod derived_construction {
     use crate::standards::mpeg1_layer3::subsets::any::schema::diff::Mp3Diff;
     use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation;
-    use crate::apply_mutation;
+    #[cfg(test)] use crate::apply_mutation;
 
     use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
@@ -700,7 +701,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Mp3BuilderFacets {
         construction: Mp3BuilderConstruction,
         analysis: Mp3AnalyzerAnalysis,
-        composition: crate::standards::mpeg1_layer3::subsets::any::io::derived_composition::Mp3ComposerComposition,
+        composition: Mp3ComposerComposition,
     }
     builder: Mp3Builder,
     analyzer: Mp3Analyzer,

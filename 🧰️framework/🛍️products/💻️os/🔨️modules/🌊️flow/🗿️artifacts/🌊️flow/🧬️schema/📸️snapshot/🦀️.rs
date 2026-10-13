@@ -4,7 +4,7 @@ use neural_engine as neural;
 use protocol::causal::transition::HistoryFoldIndex;
 
 use crate::{OrderedMap, OrderedSet};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use graph::manifest::{PropertyBag, PropertyValue};
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};

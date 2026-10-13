@@ -30,7 +30,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetTinyAttribute {
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
         let Self { path, name, .. } = self;
         let (value, index) = prior_attribute(base, path, name);
-        Ok(vec![SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: path.clone(), name: name.clone(), value, index })])
+        Ok(vec![SvgTinyMutation::SetTinyAttribute(SetTinyAttribute { path: path.clone(), name: name.clone(), value, index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set tiny attribute", "Tiny-Attribut setzen")

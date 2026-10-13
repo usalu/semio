@@ -17,4 +17,3 @@ impl protocol::OpBinary for ProcedureMutation {
     }
 }
 }
-pub use mutations_codec::*;

@@ -41,7 +41,7 @@ mod merge_ui_values_tests {
     #[semio_framework_async_macros::async_test]
     async fn merge_ui_values_falls_back_to_whichever_single_side_is_set() {
         assert_eq!(merge_ui_values(Some(&UiValue::Text(ui_text("a"))), None).await.expect("args merge"), Some(DslValue::from(&serde_json::json!("a"))));
-        assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))).await.expect("input merge"), Some(DslValue::from(&serde_json::json!(3.0))));
+        assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))).await.expect("input merge"), Some(DslValue::from(&serde_json::json!(3))));
     }
 
     /// 🔀️ The decided merge rule: `input` wins on key collision when both are objects.
@@ -53,7 +53,7 @@ mod merge_ui_values_tests {
         let mut input_map = BTreeMap::new();
         input_map.insert("value".to_string(), UiValue::Number(2.0));
         let merged = merge_ui_values(Some(&UiValue::Map(ui_map(args_map))), Some(&UiValue::Map(ui_map(input_map)))).await.expect("retained merge").expect("both sides set");
-        assert_eq!(merged, serde_json::json!({ "value": 2.0, "scope": "keep" }));
+        assert_eq!(merged, serde_json::json!({ "value": 2, "scope": "keep" }));
     }
 
     /// 🔀️ A scalar `input` has no field to merge INTO — it replaces `args` wholesale (e.g.
@@ -61,7 +61,7 @@ mod merge_ui_values_tests {
     #[semio_framework_async_macros::async_test]
     async fn merge_ui_values_replaces_a_non_object_args_wholesale_when_input_is_also_set() {
         let merged = merge_ui_values(Some(&UiValue::Text(ui_text("stale"))), Some(&UiValue::Number(-2.0))).await.expect("retained merge");
-        assert_eq!(merged, Some(DslValue::from(&serde_json::json!(-2.0))));
+        assert_eq!(merged, Some(DslValue::from(&serde_json::json!(-2))));
     }
 
     #[test]

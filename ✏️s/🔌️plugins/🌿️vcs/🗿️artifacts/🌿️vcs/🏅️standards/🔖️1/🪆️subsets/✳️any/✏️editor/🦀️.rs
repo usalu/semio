@@ -534,7 +534,7 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -691,7 +691,7 @@ where
     }
 
     fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<VcsOneItemPreparation<P, M>>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<VcsOneItemPreparation<P, M>>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {

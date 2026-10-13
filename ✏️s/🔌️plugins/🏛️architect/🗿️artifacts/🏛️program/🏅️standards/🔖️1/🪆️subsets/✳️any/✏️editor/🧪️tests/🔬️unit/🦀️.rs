@@ -31,7 +31,7 @@ pub(crate) mod context {
     impl Drop for ArchitectApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0);
+                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -69,13 +69,13 @@ pub(crate) mod context {
     /// `LoadDocument` effects the host would apply. Without the `bind_instance_id`/settle pair every
     /// typed command is refused with `interactive-job.live-instance`.
     pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
-        let mut result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
-        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.expect("settle");
+        let mut result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -84,14 +84,14 @@ pub(crate) mod context {
     /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
     /// committed through its reserved job, then published — all three steps or the projection never moves.
     pub async fn history_verb(app: &mut ArchitectApp, action: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     }
 
     /// 🕹️ The framework's own injected `interactionSelect` verb takes that same reserved-job lane.
     pub async fn framework_verb(app: &mut ArchitectApp, action: &str, payload: &semio_framework_value::DslValue) {
-        let admitted = app.handle_action(action, Some(payload), &meta("local")).await.unwrap_or_else(|fault| panic!("{action} admission: {fault:?}"));
+        let admitted = app.handle_action(action, Some(payload), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} admission: {fault:?}"));
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved-job commit: {fault:?}"));
-        settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+        settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
     }
     
     pub async fn render(app: &mut ArchitectApp, body_key: &str) -> String {
@@ -442,8 +442,8 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let meta = semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    let result = app.dispatch_typed(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta).await.expect("select exact Register window");
-    let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("view publication settles");
+    let result = app.dispatch_typed(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("select exact Register window");
+    let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("view publication settles");
     assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
     assert!(!settled.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row never publishes the document lane: {:?}", settled.lanes);
 }
@@ -488,11 +488,11 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     let instance = 7;
     app.bind_instance_id(instance).await;
     let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
-    app.dispatch_typed(ArchitectCommand::SetActiveExample(crate::editor::architect::commands::example::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta).await.expect("example dispatch");
+    app.dispatch_typed(ArchitectCommand::SetActiveExample(crate::editor::architect::commands::example::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
         app.maintenance_step(1, 4_096).unwrap();
-        app.advance_typed_operation_publication().await.unwrap();
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
@@ -510,7 +510,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     PluginApp::begin_document_archive_load(&mut *app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 91).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
@@ -535,6 +535,6 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         let table = <semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));
         assert_eq!(table.rows.len(), rows, "the genesis-derived {slot} member must carry one row per loaded record");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut *app);
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 //#endregion 🔖️ExampleArchiveLoad

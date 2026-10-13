@@ -7,9 +7,9 @@ pub(crate) mod test_allocation;
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
 pub use ui_wgpu::wgpu::IconName;
-use semio_framework_ui_locale::Locale;
-use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_locale::Terminology;
+#[cfg(test)] use semio_framework_ui_locale::Locale;
+#[cfg(test)] use semio_framework_ui_locale::LocalizedLabel;
+#[cfg(test)] use semio_framework_ui_locale::Terminology;
 
 //#region 🧬️SchemaMetadata
 #[cfg(feature = "typegen")]

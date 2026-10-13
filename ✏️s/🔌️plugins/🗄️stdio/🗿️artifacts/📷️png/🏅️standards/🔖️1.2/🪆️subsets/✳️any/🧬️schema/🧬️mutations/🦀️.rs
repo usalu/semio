@@ -32,6 +32,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
         super::paint_native_samples::test_case(),
         super::set_gamma::test_case(),
         super::replace_samples::test_case(),
+        super::replace_image::test_case(),
     ]
 }
 

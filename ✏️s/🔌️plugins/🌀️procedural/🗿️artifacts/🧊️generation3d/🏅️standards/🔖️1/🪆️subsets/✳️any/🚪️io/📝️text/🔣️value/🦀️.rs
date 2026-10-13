@@ -5,7 +5,7 @@ use semio_framework_value::DslValue;
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayRoot};
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::mutations::{create_widget, update_widget, delete_widget, connect_synapse, update_synapse, disconnect_synapse, move_widget, delete_widget_position, update_camera, change_schema, create_generation, delete_generation, rename_generation, change_generation_value, change_slider_value, drag_transforms, rotate_transforms, scale_transforms, move_nodes, change_widget_input, select_generation, change_generation_preview};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{create_widget, update_widget, delete_widget, connect_synapse, update_synapse, disconnect_synapse, move_widget, delete_widget_position, update_camera, change_schema, create_generation, delete_generation, rename_generation, change_generation_value, change_slider_value, drag_transforms, rotate_transforms, scale_transforms, move_nodes, change_widget_input, select_generation, change_generation_preview};
 
 fn is_false(value: &bool) -> bool { !value }
 
@@ -512,28 +512,28 @@ value_codec! {
 #[derive(ToValue, FromValue)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum Generation3dMutation {
-    CreateWidget(create_widget::CreateWidget),
-    UpdateWidget(update_widget::UpdateWidget),
-    DeleteWidget(delete_widget::DeleteWidget),
-    ConnectSynapse(connect_synapse::ConnectSynapse),
-    UpdateSynapse(update_synapse::UpdateSynapse),
-    DisconnectSynapse(disconnect_synapse::DisconnectSynapse),
-    MoveWidget(move_widget::MoveWidget),
-    DeleteWidgetPosition(delete_widget_position::DeleteWidgetPosition),
-    UpdateCamera(update_camera::UpdateCamera),
-    ChangeSchema(change_schema::ChangeSchema),
-    CreateGeneration(create_generation::CreateGeneration),
-    DeleteGeneration(delete_generation::DeleteGeneration),
-    RenameGeneration(rename_generation::RenameGeneration),
-    ChangeGenerationValue(change_generation_value::ChangeGenerationValue),
-    ChangeSliderValue(change_slider_value::ChangeSliderValue),
-    DragTransforms(drag_transforms::DragTransforms),
-    RotateTransforms(rotate_transforms::RotateTransforms),
-    ScaleTransforms(scale_transforms::ScaleTransforms),
-    MoveNodes(move_nodes::MoveNodes),
-    ChangeWidgetInput(change_widget_input::ChangeWidgetInput),
-    SelectGeneration(select_generation::SelectGeneration),
-    ChangeGenerationPreview(change_generation_preview::ChangeGenerationPreview),
+    CreateWidget(CreateWidget),
+    UpdateWidget(UpdateWidget),
+    DeleteWidget(DeleteWidget),
+    ConnectSynapse(ConnectSynapse),
+    UpdateSynapse(UpdateSynapse),
+    DisconnectSynapse(DisconnectSynapse),
+    MoveWidget(MoveWidget),
+    DeleteWidgetPosition(DeleteWidgetPosition),
+    UpdateCamera(UpdateCamera),
+    ChangeSchema(ChangeSchema),
+    CreateGeneration(CreateGeneration),
+    DeleteGeneration(DeleteGeneration),
+    RenameGeneration(RenameGeneration),
+    ChangeGenerationValue(ChangeGenerationValue),
+    ChangeSliderValue(ChangeSliderValue),
+    DragTransforms(DragTransforms),
+    RotateTransforms(RotateTransforms),
+    ScaleTransforms(ScaleTransforms),
+    MoveNodes(MoveNodes),
+    ChangeWidgetInput(ChangeWidgetInput),
+    SelectGeneration(SelectGeneration),
+    ChangeGenerationPreview(ChangeGenerationPreview),
 }
 }
 
@@ -680,7 +680,7 @@ value_codec! {
 pub struct ChangeGenerationValue {
     pub id: String,
     pub question_id: String,
-    pub new_value: semio_framework_value::DslValue,
+    pub new_value: DslValue,
 }
 }
 

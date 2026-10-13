@@ -36,9 +36,9 @@ impl FaultCloseOwner{
             let crate::FaultParams(values)=owner.as_mut();
             if let Some((key,value))=values.last_mut(){for text in [key,value]{if let Some(step)=close_text(text,maximum_bytes){return step;}}values.pop();return pending(0);}
             if let Some(step)=close_empty_vec(values,maximum_bytes){return step;}
-            let bytes=std::mem::size_of_val(owner.as_ref());if bytes>maximum_bytes{return pending_blocked();}*params=None;return pending(bytes);
+            let bytes=size_of_val(owner.as_ref());if bytes>maximum_bytes{return pending_blocked();}*params=None;return pending(bytes);
         }
-        let bytes=std::mem::size_of::<FaultScope>();if bytes>maximum_bytes{return pending_blocked();}
+        let bytes=size_of::<FaultScope>();if bytes>maximum_bytes{return pending_blocked();}
         drop(self.fault.take());pending(bytes)
     }
 }
@@ -46,7 +46,7 @@ impl Drop for FaultCloseOwner{fn drop(&mut self){assert!(std::thread::panicking(
 fn pending(bytes:usize)->FaultCloseStep{FaultCloseStep::Pending{released_items:1,released_bytes:bytes}}
 fn pending_blocked()->FaultCloseStep{FaultCloseStep::Pending{released_items:0,released_bytes:0}}
 fn close_text(text:&mut String,maximum_bytes:usize)->Option<FaultCloseStep>{let bytes=text.capacity();if bytes==0{return None;}if bytes>maximum_bytes{return Some(pending_blocked());}*text=String::new();Some(pending(bytes))}
-fn close_empty_vec<T>(values:&mut Vec<T>,maximum_bytes:usize)->Option<FaultCloseStep>{let bytes=values.capacity().checked_mul(std::mem::size_of::<T>()).expect("actual empty diagnostic vector layout");if bytes==0{return None;}if bytes>maximum_bytes{return Some(pending_blocked());}*values=Vec::new();Some(pending(bytes))}
+fn close_empty_vec<T>(values:&mut Vec<T>,maximum_bytes:usize)->Option<FaultCloseStep>{let bytes=values.capacity().checked_mul(size_of::<T>()).expect("actual empty diagnostic vector layout");if bytes==0{return None;}if bytes>maximum_bytes{return Some(pending_blocked());}*values=Vec::new();Some(pending(bytes))}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

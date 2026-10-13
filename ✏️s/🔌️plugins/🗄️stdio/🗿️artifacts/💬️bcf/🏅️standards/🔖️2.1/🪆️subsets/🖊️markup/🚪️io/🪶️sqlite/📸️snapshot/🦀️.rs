@@ -44,7 +44,7 @@ fn visit_rows(snapshot:&BcfSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueE
 
 impl ArtifactSqliteSnapshot for BcfSnapshot{
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
@@ -55,7 +55,7 @@ impl ArtifactSqliteSnapshot for BcfSnapshot{
  fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> {
   admit_native(self,SqliteSnapshotPhase::EncodeNative,control)?;
   let mut bound = NativeEncodingBound::file_only(control)?;
-  let scalar = 2 * std::mem::size_of::<semio_framework_dsl_record::FieldValue>() + 64;
+  let scalar = 2 * size_of::<semio_framework_dsl_record::FieldValue>() + 64;
   bound.add(32768)?;
   for text in [&self.schema, &self.version] { bound.repeated(text.len(), 24)?; }
   for topic in &self.topics {

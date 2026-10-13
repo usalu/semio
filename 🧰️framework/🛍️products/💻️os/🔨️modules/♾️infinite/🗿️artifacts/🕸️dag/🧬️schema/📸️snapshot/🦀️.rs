@@ -347,8 +347,8 @@ impl Default for DagNodeSpec {
 /// needs from that object and ignores the rest, exactly like serde's own flatten.
 impl semio_framework_value::ToValue for DagNodeSpec {
     fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<DslValue,semio_framework_value::ValueError>{native_binding::encode_node(self,control)}
-    fn to_value(&self) -> semio_framework_value::DslValue {
-        let mut entries: Vec<(String, semio_framework_value::DslValue)> = vec![
+    fn to_value(&self) -> DslValue {
+        let mut entries: Vec<(String, DslValue)> = vec![
             ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
             ("name".to_string(), semio_framework_value::ToValue::to_value(&self.name)),
             ("abbreviation".to_string(), semio_framework_value::ToValue::to_value(&self.abbreviation)),
@@ -363,18 +363,18 @@ impl semio_framework_value::ToValue for DagNodeSpec {
         }
         entries.push(("properties".to_string(), semio_framework_value::ToValue::to_value(&self.properties)));
         match semio_framework_value::ToValue::to_value(&self.kind) {
-            semio_framework_value::DslValue::Object(kind_entries) => entries.extend(kind_entries),
+            DslValue::Object(kind_entries) => entries.extend(kind_entries),
             other => entries.push(("kind".to_string(), other)),
         }
-        semio_framework_value::DslValue::Object(entries)
+        DslValue::Object(entries)
     }
 }
 impl semio_framework_value::FromValue for DagNodeSpec {
     fn from_value_controlled(value:&DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{native_binding::decode_node(value,control)}
     fn default_value_controlled(control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{control.checkpoint()?;Ok(Self::default())}
     fn retire_decoded(self){native_binding::retire_node(self)}
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        let entries = semio_framework_value::DslValue::into_object(value)?;
+    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        let entries = DslValue::into_object(value)?;
         let find = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
         let id = match find("id") {
             Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("id"))?,
@@ -416,7 +416,7 @@ impl semio_framework_value::FromValue for DagNodeSpec {
             Some(v) => semio_framework_value::FromValue::from_value(v).map_err(|error: semio_framework_value::ValueError| error.under("properties"))?,
             None => ::std::default::Default::default(),
         };
-        let kind = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::Object(entries))?;
+        let kind = semio_framework_value::FromValue::from_value(DslValue::Object(entries))?;
         Ok(Self { id, name, abbreviation, icon, x, y, width, height, operator_kind, properties, kind })
     }
 }

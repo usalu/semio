@@ -242,7 +242,7 @@ pub fn lzw_encode(data: &[u8], early_change: bool) -> Vec<u8> {
     let mut bit_buffer: u64 = 0;
     let mut bit_count = 0usize;
     let early = if early_change { 1 } else { 0 };
-    let mut emit = |code: usize, width: usize, out: &mut Vec<u8>, bit_buffer: &mut u64, bit_count: &mut usize| {
+    let emit = |code: usize, width: usize, out: &mut Vec<u8>, bit_buffer: &mut u64, bit_count: &mut usize| {
         *bit_buffer = (*bit_buffer << width) | code as u64;
         *bit_count += width;
         while *bit_count >= 8 {

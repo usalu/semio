@@ -17,7 +17,7 @@ pub struct SetRowProperty {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetRowProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "row-property", kind: "set-row-property", record: "SetRowProperty" };
 
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
         let Self { element_name, row_index, property_name, value } = self;
         protocol::MutationOutcome::new(diff_set_row_property(element_name, *row_index, property_name, value.clone()))
     }
@@ -30,7 +30,7 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetRowProperty {
                     el.rows.get(*row_index)?.values.get(prop_idx).cloned()
                 });
                 match prior {
-                    Some(value) => vec![PlyMutation::SetRowProperty(set_row_property::SetRowProperty { element_name: element_name.clone(), row_index: *row_index, property_name: property_name.clone(), value })],
+                    Some(value) => vec![PlyMutation::SetRowProperty(SetRowProperty { element_name: element_name.clone(), row_index: *row_index, property_name: property_name.clone(), value })],
                     None => Vec::new(),
                 }
             }

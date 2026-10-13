@@ -12,7 +12,7 @@ pub(crate) struct RejectedCompletion{publication:DrawingCompletionPayload,fault:
 impl RejectedCompletion{pub(crate) fn new(original:semio_framework_plugin::ArtifactToolCompletionRejection<App>)->Self{Self{publication:DrawingCompletionPayload(Value::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral)),fault:original.fault}}}
 struct Cursor{original:ManuallyDrop<Option<Source>>,phase:u8}
 fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Draw completion retains an original opaque payload without an exact retirement facet")}
-pub(super) fn birth(value:&Value)->Option<usize>{supported(value).then_some(std::mem::size_of::<ControlledRetirement<DrawingCompletionPayload>>())}
+pub(super) fn birth(value:&Value)->Option<usize>{supported(value).then_some(size_of::<ControlledRetirement<DrawingCompletionPayload>>())}
 pub(super) fn admit(value:&mut Option<Value>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
  let Some(original)=value.as_ref()else{return Ok(None);};let bytes=birth(original).ok_or_else(unsupported)?;if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(None);}
  match admit_typed_controlled_retirement(DrawingCompletionPayload(value.take().unwrap()),grant){Ok((owner,progress))=>Ok(Some((owner as Box<dyn ErasedSnapshotRetirement>,progress))),Err((error,DrawingCompletionPayload(original)))=>{*value=Some(original);Err(error)}}
@@ -23,7 +23,7 @@ fn supported(value:&Value)->bool{
 }
 impl RetireOwned for DrawingCompletionPayload{
  fn retirement(self)->Box<dyn RetirementCursor>{let original=match self.0{Value::Emit(Ok(emit),ephemeral)=>Source::Emit(emit,ephemeral),Value::Download(Ok(download),ephemeral)=>Source::Download(Some(download),ephemeral),Value::Emit(Err(fault),ephemeral)|Value::Download(Err(fault),ephemeral)=>Source::Fault(Some(fault),ephemeral)};Box::new(Cursor{original:ManuallyDrop::new(Some(original)),phase:0})}
- fn retirement_birth_bytes(&self)->Option<usize>{supported(&self.0).then_some(std::mem::size_of::<Cursor>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{supported(&self.0).then_some(size_of::<Cursor>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl Cursor{
@@ -44,7 +44,7 @@ impl RetirementCursor for Cursor{
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{self.birth()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for Cursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"actual Draw completion payload reached Drop before all retained fields returned");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original);}}}}
 

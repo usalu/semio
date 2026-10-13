@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["dep:semio-framework-ui-contract"]
-
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -31,14 +27,14 @@ semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-ui-contract = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
@@ -46,6 +42,7 @@ semio-s-artifact-stdio-deflate = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-s-artifact-stdio-pdf-test-oracle = { path = "../../🔮️oracles/📦️packages/🦀️rust", features = ["oracles"] }
 semio-repo-test-host = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
 semio-framework-async-macros = { workspace = true }

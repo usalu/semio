@@ -2,7 +2,7 @@
 //! `payload.index` (clamped to the timeline length); `apply` re-derives the `steps`/`tool_solids` handles. Fatal `duplicate-id` on an
 //! existing step id.
 
-use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
+use crate::diff::Process3dStepsDelta;
 use crate::diff::Process3dDiff;
 use crate::Process3dSnapshot;
 

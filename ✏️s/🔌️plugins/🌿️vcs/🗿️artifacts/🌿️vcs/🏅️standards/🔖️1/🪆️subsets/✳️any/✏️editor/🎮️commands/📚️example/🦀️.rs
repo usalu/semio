@@ -5,8 +5,7 @@ pub mod set_active_example {
     use crate::editor::vcs::vcs_example_document_effect;
     use crate::op::VcsDemoMutation;
     use crate::VcsSnapshot;
-    use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
+    
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
     #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

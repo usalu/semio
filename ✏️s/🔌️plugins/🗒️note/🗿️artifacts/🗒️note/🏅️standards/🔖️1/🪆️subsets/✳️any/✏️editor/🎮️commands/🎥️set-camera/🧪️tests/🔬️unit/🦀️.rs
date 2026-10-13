@@ -59,6 +59,6 @@ async fn camera_drag_never_creates_a_document_undo_step() {
         dispatch(&mut app, NoteCommand::SetCamera(SetCamera { camera: NoteCamera { x, y: 0.0, zoom: 1.0 } })).await;
     }
     assert_eq!(composite_camera(&mut app).await.x, 3.0);
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo (no-op: nothing on the document store to undo)");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo (no-op: nothing on the document store to undo)");
     assert_eq!(composite_camera(&mut app).await.x, 3.0, "document undo has nothing to revert — the drag never touched the document");
 }

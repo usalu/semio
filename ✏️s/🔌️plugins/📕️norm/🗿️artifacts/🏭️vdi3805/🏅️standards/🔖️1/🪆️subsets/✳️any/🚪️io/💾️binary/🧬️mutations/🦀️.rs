@@ -20,7 +20,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<Vdi3805Mutation, protocol::ProtocolErro
 }
 
 mod native_codec {
-use super::*;
 use crate::artifact_schema::mutations::Vdi3805Mutation;
 use crate::artifact_schema::mutations::{
     add_geometry_connection::AddGeometryConnection, change_correction_as_of::ChangeCorrectionAsOf, change_edition_profile::ChangeEditionProfile, change_strict_mode::ChangeStrictMode, add_curve::AddCurve, add_geometry::AddGeometry,

@@ -44,7 +44,7 @@ pub struct EquationEdgeDsl {
 pub fn math_edge_to_dsl(edge: &EquationEdge, directed: bool) -> EquationEdgeDsl {
     let from = semio_framework_dsl_record::WireNode { id: edge.source.clone(), kind: None, port: None };
     let to = semio_framework_dsl_record::WireNode { id: edge.target.clone(), kind: None, port: None };
-    EquationEdgeDsl { id: edge.id.clone(), wire: semio_framework_dsl_record::Wire(semio_framework_dsl_record::WireValue { from, edge: Some((directed, to)), edge_label: semio_framework_dsl_record::WireEdgeLabel::default(), properties: semio_framework_value::DslValue::Object(Vec::new()) }) }
+    EquationEdgeDsl { id: edge.id.clone(), wire: semio_framework_dsl_record::Wire(semio_framework_dsl_record::WireValue { from, edge: Some((directed, to)), edge_label: semio_framework_dsl_record::WireEdgeLabel::default(), properties: DslValue::Object(Vec::new()) }) }
 }
 
 pub fn math_edge_from_dsl(edge: EquationEdgeDsl) -> Result<EquationEdge, String> {
@@ -114,7 +114,7 @@ impl ToValue for EquationGraphDsl {
     fn to_value(&self) -> DslValue {
         match math_graph_from_dsl(self.clone()) {
             Ok(graph) => graph.to_value(),
-            Err(_) => semio_framework_value::DslValue::Null,
+            Err(_) => DslValue::Null,
         }
     }
 }
@@ -186,10 +186,10 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 /// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
 /// bytes across.
 pub fn equation_identity_report_json(dsl_text: &str) -> Result<String, String> {
-    let parsed = <EquationSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
-    let canonical = <EquationSnapshot as store::ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <EquationSnapshot as store::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
-    let canonical_again = <EquationSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
+    let parsed = <EquationSnapshot as ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
+    let canonical = <EquationSnapshot as ArtifactDsl>::print_dsl(&parsed);
+    let reparsed = <EquationSnapshot as ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
+    let canonical_again = <EquationSnapshot as ArtifactDsl>::print_dsl(&reparsed);
     let packed = <EquationSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <EquationSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
     let report = semio_framework_pack_json::object([

@@ -4,11 +4,9 @@
 //! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
 use crate::standards::v_ecma_376::subsets::base::schema::refusal::{DocxError};
-use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STRICT_REL_TYPE_OFFICE_DOCUMENT,STRICT_REL_TYPE_STYLES,STYLES_PART};
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_OFFICE_DOCUMENT;
 use crate::DocxSnapshot;
-use crate::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart, DocxXmlParts, docx_part_is_xml};
-use crate::standards::v_ecma_376::subsets::base::schema::namespaces::{is_word_name, scoped_bindings, word_attr, word_local_name};
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
+use crate::schema::snapshot::{DocxXmlPart, docx_part_is_xml};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text};
 use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 

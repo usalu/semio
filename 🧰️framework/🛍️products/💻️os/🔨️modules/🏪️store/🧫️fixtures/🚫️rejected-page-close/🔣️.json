@@ -1,6 +1,7 @@
 {
-  "version": 2,
+  "version": 3,
   "pageBytes": 4096,
+  "directorySlotBytes": 4098,
   "inputState": "unstarted-record",
   "fieldOwner": {
     "tokenId": 73,
@@ -110,6 +111,46 @@
             "copiedBytes": 4096,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 4097,
+            "maximumDepth": 2
+          },
+          "expected": {
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 1,
+            "maximumCopyBytes": 4096,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 4098,
+            "maximumDepth": 2
+          },
+          "expected": {
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 4098,
             "remainingPages": 0,
             "remainingBytes": 0,
             "recordPresent": true,
@@ -339,6 +380,46 @@
             "maximumItems": 2,
             "maximumCopyBytes": 8192,
             "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 8195,
+            "maximumDepth": 2
+          },
+          "expected": {
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 2,
+            "maximumCopyBytes": 8192,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 8196,
+            "maximumDepth": 2
+          },
+          "expected": {
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 8196,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 2,
+            "maximumCopyBytes": 8192,
+            "maximumCapacityBytes": 0,
             "maximumReleaseBytes": 0,
             "maximumDepth": 2
           },
@@ -468,6 +549,46 @@
             "copiedBytes": 4096,
             "retainedCapacityBytes": 0,
             "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumCopyBytes": 12288,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 12293,
+            "maximumDepth": 2
+          },
+          "expected": {
+            "kind": "progress",
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
+            "remainingPages": 0,
+            "remainingBytes": 0,
+            "recordPresent": true,
+            "terminal": false
+          }
+        },
+        {
+          "grant": {
+            "maximumItems": 3,
+            "maximumCopyBytes": 12288,
+            "maximumCapacityBytes": 0,
+            "maximumReleaseBytes": 12294,
+            "maximumDepth": 2
+          },
+          "expected": {
+            "kind": "progress",
+            "copiedItems": 1,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 12294,
             "remainingPages": 0,
             "remainingBytes": 0,
             "recordPresent": true,

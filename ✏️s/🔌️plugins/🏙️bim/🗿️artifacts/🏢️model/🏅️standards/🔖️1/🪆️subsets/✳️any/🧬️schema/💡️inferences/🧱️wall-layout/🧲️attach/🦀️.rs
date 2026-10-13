@@ -13,7 +13,7 @@ use crate::standards::v1::subsets::any::schema::authored::references::{edges, fi
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses, seg};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, dep_object, dep_value, roofs, slabs, Anonymous, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{Axis, ModelSnapshot, TopConstraint, Wall};
+use crate::{Axis, ModelSnapshot, Wall};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::vector::{cross, lerp, perp};

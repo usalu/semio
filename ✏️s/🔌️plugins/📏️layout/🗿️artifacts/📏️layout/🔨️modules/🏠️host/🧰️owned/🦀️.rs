@@ -1,7 +1,6 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
 use crate::standards::v1::subsets::any::schema::mutations::LayoutMutation;
-use protocol::OpBinary;
 pub type LayoutStore = store::ArtifactStore<crate::LayoutSnapshot, LayoutMutation>;
 
 /// 🔐️ Opens a layout store WITH its exact owner catalog installed. `ArtifactStore::new` installs no

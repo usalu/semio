@@ -14,13 +14,13 @@ pub struct AddElement {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for AddElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "element", kind: "add-element", record: "AddElement" };
 
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
         let Self { index, element } = self;
         protocol::MutationOutcome::new(diff_add_element(*index, element.clone()))
     }
-    fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
         let Self { element, .. } = self;
-        Ok({ vec![PlyMutation::RemoveElement(remove_element::RemoveElement { name: element.name.clone() })] })
+        Ok(vec![PlyMutation::RemoveElement(remove_element::RemoveElement { name: element.name.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Add element", "Element hinzufügen")

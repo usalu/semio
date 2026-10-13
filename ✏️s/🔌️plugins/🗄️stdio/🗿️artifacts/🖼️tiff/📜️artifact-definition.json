@@ -64,7 +64,7 @@
         "artifact_kind": "s.stdio.tiff",
         "artifact_schema": "stdio.tiff",
         "extension": "tiff",
-        "pack_schema_hash": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09",
+        "pack_schema_hash": "a03332233369d8b4fe73673352f9eed2c828468b800bec3ab54a47f0d29f5327",
         "runtime_capability_id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1"
       }
     }

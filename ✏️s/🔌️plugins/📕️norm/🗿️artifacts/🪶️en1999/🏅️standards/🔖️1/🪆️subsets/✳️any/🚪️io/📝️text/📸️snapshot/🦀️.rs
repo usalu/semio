@@ -72,6 +72,6 @@ use framework_schema::ArtifactSchema;
 
 
 }
-pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use snapshot_wire_codec::*;
 
-crate::impl_norm_artifact_record!(@text crate::En1999Snapshot, extension="en1999", envelope_id="norm.en1999");
+crate::impl_norm_artifact_record!(@text En1999Snapshot, extension="en1999", envelope_id="norm.en1999");

@@ -15,7 +15,7 @@ pub struct RemoveElementPayload {
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for RemoveElementPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemovedElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { parent, index } = self;
         protocol::MutationOutcome::new(diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { children: Some(SvgChildrenDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })))
     }

@@ -535,7 +535,7 @@ fn tool_run_args(entries: &[(&str, DslValue)]) -> DslValue {
 }
 
 fn tool_run_action(app: &mut Puzzle2dApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
-    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&tool_run_args(entries)), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&tool_run_args(entries)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &Puzzle2dApp) -> Option<&'static str> {
@@ -550,7 +550,7 @@ fn pump_until(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&Puzzle2dApp) -> 
             return;
         }
         crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");

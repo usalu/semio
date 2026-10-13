@@ -11,7 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-#[cfg(feature = "component-app-assembly")]
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -115,7 +114,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
         .composers(standards::v1_2::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.png", standard: semio_framework_artifact_reference::StandardId("1.2"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") })
         .try_build()
 }
 
@@ -200,7 +199,7 @@ pub fn register() {
     for lang in pilot_languages() {
         semio_framework_dsl::register_language(*lang);
     }
-    semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.png", standard: semio_framework_artifact_reference::StandardId("1.2"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") }, store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 //#endregion 🔖️ImperativeRegister
 
@@ -382,7 +381,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -423,7 +421,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

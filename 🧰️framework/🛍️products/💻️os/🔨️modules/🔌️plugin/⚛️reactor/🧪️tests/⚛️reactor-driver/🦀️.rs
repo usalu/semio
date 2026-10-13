@@ -31,7 +31,7 @@ pub(crate) async fn poll_with_patch_output_fault<PA: crate::app::PluginApp>(
             }
         },
         |_, ()| (),
-    , &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context())
+        &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context())
     .await;
     (result, receipt)
 }

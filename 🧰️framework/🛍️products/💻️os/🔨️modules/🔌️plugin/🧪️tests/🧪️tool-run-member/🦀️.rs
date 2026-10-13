@@ -24,6 +24,8 @@ pub(super) struct ToyMemberJob {
     base_count: i32,
     target: u32,
     done: u32,
+    phase: u8,
+    progress_source: Option<ToolRunProgress>,
     closing: bool,
 }
 
@@ -32,37 +34,63 @@ pub(super) fn toy_member_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> Resul
     let member = &fixture()["member"];
     let base_count = request.children.typed_read::<TestSnapshot>(text(&member["slot"]), text(&member["childId"]))?.count;
     let done = (request.member_ops.len() / number(&fixture()["opsPerUnit"]) as usize) as u32;
-    Ok(ToyMemberJob { original:ToyPortJobCustody::new(ToolRunTickWriter::with_provisional_base(request.identity,request.member_ops.len()as u32),request.port), base_count, target: toy_target(&request.config), done, closing: false })
+    Ok(ToyMemberJob { original:ToyPortJobCustody::new(ToolRunTickWriter::with_provisional_base(request.identity,request.member_ops.len()as u32),request.port), base_count, target: toy_target(&request.config), done, phase: 0, progress_source: None, closing: false })
 }
 
 impl semio_framework_job::InteractiveJob for ToyMemberJob {
-    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
         if cx.is_cancelled() {
-            return semio_framework_job::StepOutcome::Cancelled;
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
-        if self.done >= self.target {
-            return ToyRunJob::complete();
+        let grant = cx.retained_grant();
+        match self.phase {
+            0 => {
+                if self.done >= self.target {
+                    return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None);
+                }
+                let unit = self.done + 1;
+                if self.original.unit.advance(&mut self.original.writer, self.base_count, unit, cx)? {
+                    self.done = unit;
+                    self.phase = 1;
+                }
+            }
+            1 => {
+                if ToyRunJob::metadata(cx)? {
+                    let identity = self.original.writer.identity();
+                    self.progress_source = Some(ToolRunProgress { identity, sequence: 0, state: ToolRunState::Running, stage: 0, completed: u64::from(self.done), total: Some(u64::from(self.target)), counters: Vec::new(), units_per_second: 0.0, conflicts: 0, steps: ToolRunStepRing::new() });
+                    self.phase = 2;
+                }
+            }
+            2 => {
+                let result = self.original.writer.admit_original_progress(&mut self.progress_source, grant);
+                if ToyRunJob::receive(cx, result)? {
+                    self.phase = 3;
+                }
+            }
+            3 => {
+                let original = self.original.emission.advance_preview(&self.original.writer, cx)?;
+                if original.is_some() {
+                    self.phase = 4;
+                }
+                return Ok(original);
+            }
+            4 => {
+                if self.original.emission.close_in_context(cx)? {
+                    self.phase = 5;
+                }
+            }
+            5 => {
+                if self.original.reset_writer(cx)? {
+                    self.phase = 0;
+                }
+            }
+            _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original member phase is absent")),
         }
-        self.done += 1;
-        cx.consume_fuel(1);
-        self.original.writer.append_op(encoded(SetCount { value: self.base_count + self.done as i32 }.into())).expect("the member op fits the member cap");
-        self.original.writer.append_op(encoded(SetLabel { value: format!("unit-{}", self.done) }.into())).expect("the member op fits the member cap");
-        self.original.writer.append_entity(u64::from(self.done));
-        let identity=self.original.writer.identity();
-        self.original.writer.progress(ToolRunProgress {
-            identity,
-            sequence: 0,
-            state: ToolRunState::Running,
-            stage: 0,
-            completed: u64::from(self.done),
-            total: Some(u64::from(self.target)),
-            counters: Vec::new(),
-            units_per_second: 0.0,
-            conflicts: 0,
-            steps: ToolRunStepRing::new(),
-        });
-        let tick = self.original.writer.finish().expect("a pending member tick");
-        ToyRunJob::emit(cx, tick)
+        Ok(None)
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
+        self.original.emission.borrow_outcome(descriptor)
     }
 
     toy_port_job_close!();

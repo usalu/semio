@@ -32,7 +32,7 @@ pub fn inverse(p: &GltfBindNodeCameraPayload, base: &GltfSnapshot) -> Vec<super:
     }
     match base.document.nodes[p.node].camera {
         Some(current) if current == p.camera => Vec::new(),
-        Some(current) => vec![super::bind_node_camera::mutation(super::bind_node_camera::GltfBindNodeCameraPayload { node: p.node, camera: current })],
+        Some(current) => vec![mutation(GltfBindNodeCameraPayload { node: p.node, camera: current })],
         None => vec![super::unbind_node_camera::mutation(super::unbind_node_camera::GltfUnbindNodeCameraPayload { node: p.node })],
     }
 }
@@ -54,7 +54,7 @@ pub fn mutation(payload: GltfBindNodeCameraPayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeCameraMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "node-camera", kind: "bind-node-camera", record: "BoundNodeCamera" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

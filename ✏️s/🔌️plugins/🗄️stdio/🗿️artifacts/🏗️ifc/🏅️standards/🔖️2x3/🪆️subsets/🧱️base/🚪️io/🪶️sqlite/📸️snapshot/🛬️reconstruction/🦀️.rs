@@ -54,7 +54,7 @@ struct Forest{state:Vec<u8>,values:DecodedFieldOwner<Vec<Option<Part21Value>>>,p
 impl Forest{
     fn new(count:usize,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
         let mut state=control.allocate_vec(count)?;state.resize(count,0);
-        let mut values=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(count)?,native::close::<Vec<Option<Part21Value>>>);values.as_mut().resize_with(count,||None);
+        let mut values=DecodedFieldOwner::new(control.allocate_vec(count)?,native::close::<Vec<Option<Part21Value>>>);values.as_mut().resize_with(count,||None);
         let size=count.checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"IFC2x3 value frontier size overflow"))?;
         Ok(Self{state,values,pending:control.allocate_vec(size)?})
     }
@@ -88,7 +88,7 @@ impl Forest{
                 "ref"=>{let word=word(row.text(9)?)?;match &row.values[10]{SqliteValue::Null=>{if words.binary_search(&word).is_ok(){return Err(invalid("resolved IFC2x3 reference lacks its relationship"));}},SqliteValue::Integer(instance)=>{let actual=instances.binary_search_by_key(instance,|item|item.0).ok().map(|index|instances[index].1);if actual!=Some(word){return Err(invalid("IFC2x3 reference word differs from related instance identity"));}},_=>return Err(invalid("invalid IFC2x3 resolved reference storage"))}Part21Value::Ref(word)},
                 "list"|"typed"=>{
                     let table=if kind=="list"{9}else{10};let range=catalog.tables[table].range(id);
-                    let mut items=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<Part21Value>>);
+                    let mut items=DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<Part21Value>>);
                     for edge in range{let row=catalog.tables[table].row(catalog.edge(table,edge).id)?;items.as_mut().push(self.pop(catalog,row.integer(3)?)?);control.step()?;}
                     if kind=="list"{Part21Value::List(items.take())}else{let name=control.copy_text(row.text(11)?)?;Part21Value::Typed{name,items:items.take()}}
                 },
@@ -99,7 +99,7 @@ impl Forest{
         self.pop(catalog,id)
     }
     fn arguments(&mut self,catalog:&mut Catalog<'_>,table:usize,parent:i64,instances:&[(i64,u64)],words:&[u64],control:&mut NativeDecodeControl<'_>)->Result<Vec<Part21Value>,ValueError>{
-        let range=catalog.tables[table].range(parent);let mut output=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<Part21Value>>);
+        let range=catalog.tables[table].range(parent);let mut output=DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<Part21Value>>);
         for edge in range{let row=catalog.take(table,catalog.edge(table,edge).id)?;output.as_mut().push(self.value(catalog,row.integer(3)?,instances,words,control)?);control.step()?;}
         Ok(output.take())
     }
@@ -108,7 +108,7 @@ fn reconstruct(database:&SqliteDatabase,control:&mut NativeDecodeControl<'_>)->R
     let mut catalog=Catalog::new(database,control)?;
     if catalog.tables[0].rows.len()!=1||catalog.tables[1].rows.len()!=1{return Err(invalid("IFC2x3 must own one document and one header"));}
     let document=catalog.take(0,catalog.tables[0].rows[0].rowid)?;let header=catalog.take(1,document.integer(2)?)?;
-    let mut result=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Ifc2x3Snapshot{schema:String::new(),document:Part21Document{header:Part21Header{file_description:Vec::new(),file_name:Vec::new(),file_schema:Vec::new()},instances:Vec::new()},edm_preamble:None},native::close::<Ifc2x3Snapshot>);
+    let mut result=DecodedFieldOwner::new(Ifc2x3Snapshot{schema:String::new(),document:Part21Document{header:Part21Header{file_description:Vec::new(),file_name:Vec::new(),file_schema:Vec::new()},instances:Vec::new()},edm_preamble:None},native::close::<Ifc2x3Snapshot>);
     let out=result.as_mut();out.schema=control.copy_text(document.text(1)?)?;
     match &document.values[3]{
         SqliteValue::Null=>{},
@@ -130,9 +130,9 @@ fn reconstruct(database:&SqliteDatabase,control:&mut NativeDecodeControl<'_>)->R
     for edge in range{
         let row=catalog.take(5,catalog.edge(5,edge).id)?;let word=word(row.text(3)?)?;
         let range=catalog.tables[6].range(row.rowid);
-        let mut instance=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Part21Instance{id:word,entities:control.allocate_vec(range.len())?},native::close::<Part21Instance>);
+        let mut instance=DecodedFieldOwner::new(Part21Instance{id:word,entities:control.allocate_vec(range.len())?},native::close::<Part21Instance>);
         for edge in range{
-            let row=catalog.take(6,catalog.edge(6,edge).id)?;let name=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(row.text(3)?)?,native::close::<String>);
+            let row=catalog.take(6,catalog.edge(6,edge).id)?;let name=DecodedFieldOwner::new(control.copy_text(row.text(3)?)?,native::close::<String>);
             let arguments=forest.arguments(&mut catalog,7,row.rowid,&instances,&words,control)?;
             instance.as_mut().entities.push((name.take(),arguments));control.step()?;
         }

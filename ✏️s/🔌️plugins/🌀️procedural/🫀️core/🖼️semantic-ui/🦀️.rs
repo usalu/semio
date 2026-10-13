@@ -63,11 +63,11 @@ pub(crate) fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
     scene: &T,
     label: &str,
     description: &str,
-    live: semio_framework_ui_contract::Liveness,
+    live: Liveness,
 ) -> UiAssemblyResult<BuiltNode> {
     let mut node = scene_surface(id, kind, scene)?;
-    node.accessibility.label = semio_framework_ui_contract::UiText::try_from_str(label).map(semio_framework_ui_contract::Label);
-    node.accessibility.description = Some(semio_framework_ui_contract::Label(semio_framework_ui_contract::UiText::clipped(description)));
+    node.accessibility.label = UiText::try_from_str(label).map(Label);
+    node.accessibility.description = Some(Label(UiText::clipped(description)));
     node.accessibility.live = live;
     Ok(node)
 }
@@ -84,9 +84,9 @@ pub(crate) fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
 pub(crate) fn activatable_scene_surface(mut node: BuiltNode, controller_id: &'static str, action: &str, shortcut: &str) -> UiAssemblyResult<BuiltNode> {
     let (action_id, _) = ActionFactory::new(controller_id).action(action, None)?;
     node.bindings
-        .try_push(semio_framework_ui_contract::ActionBinding { trigger: Trigger::Activate, action: action_id, args: None, capability: None })
+        .try_push(ActionBinding { trigger: Trigger::Activate, action: action_id, args: None, capability: None })
         .map_err(|_| ui_assembly_error("ui.surface.activate-binding"))?;
-    node.accessibility.shortcut = semio_framework_ui_contract::UiText::try_from_str(shortcut);
+    node.accessibility.shortcut = UiText::try_from_str(shortcut);
     Ok(node)
 }
 
@@ -170,7 +170,7 @@ pub(crate) fn generation_tree(
     let generations_id = format!("{surface_prefix}.generations");
     PanelTreeBuilder::new(surface_prefix)?
         .window_section_or_placeholder(windows, &generations_id, Some(ui_label(label("generations"))?), true, &generation.generations, generation_row, ui_label(label("empty"))?)?
-        .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, semio_framework_plugin::ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
+        .section(format!("{surface_prefix}.actions"), Some(ui_label(label("actions"))?), true, ui_node_list([tree_item_with_action(format!("{surface_prefix}.add-generation"), label("add"), None, factory.action("addGeneration", None)?)])?)?
         .build()
 }
 

@@ -16,15 +16,15 @@ pub struct SetChunkKeyframe {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetChunkKeyframe {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "chunk-keyframe", kind: "set-chunk-keyframe", record: "SetChunkKeyframe" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         let Self { stream_index, index, keyframe } = self;
-        protocol::MutationOutcome::new({ chunk_diff_for(*stream_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: AviChunkDiff { data: None, keyframe: Some(*keyframe) } }], added: vec![] }) })
+        protocol::MutationOutcome::new(chunk_diff_for(*stream_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: AviChunkDiff { data: None, keyframe: Some(*keyframe) } }], added: vec![] }))
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
         let Self { stream_index, index, .. } = self;
         Ok({
             match base.streams.get(*stream_index).and_then(|s| s.chunks.get(*index)) {
-                Some(chunk) => vec![AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index: *stream_index, index: *index, keyframe: chunk.keyframe })],
+                Some(chunk) => vec![AviMutation::SetChunkKeyframe(SetChunkKeyframe { stream_index: *stream_index, index: *index, keyframe: chunk.keyframe })],
                 None => Vec::new(),
             }
         })

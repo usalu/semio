@@ -16,7 +16,7 @@ pub struct SetTrackCodec {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackCodec {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "track-codec", kind: "set-track-codec", record: "SetTrackCodec" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
+    fn diff(&self, _base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         let Self { track_index, codec } = self;
         protocol::MutationOutcome::new(track_diff_for(*track_index, Mp4TrackDiff { codec: Some(codec.clone()), ..Mp4TrackDiff::default() }))
     }
@@ -24,7 +24,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackCodec {
         let Self { track_index, .. } = self;
         Ok({
             match base.tracks.get(*track_index) {
-                Some(track) => vec![Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() })],
+                Some(track) => vec![Mp4Mutation::SetTrackCodec(SetTrackCodec { track_index: *track_index, codec: track.codec.clone() })],
                 None => Vec::new(),
             }
         })

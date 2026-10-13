@@ -30,7 +30,7 @@ pub mod import_cad_file {
     pub fn handle(payload: &ImportCadFile, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, ctx: &mut CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         let name_lower = payload.name.to_ascii_lowercase();
-        let payload_value: DslValue = semio_framework_pack_json::from_json_str(&payload.payload, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_value::DslValue::String(payload.payload.clone()));
+        let payload_value: DslValue = semio_framework_pack_json::from_json_str(&payload.payload, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| DslValue::String(payload.payload.clone()));
         if let Some(imported) = import_cad_object_by_extension(&name_lower, &payload_value) {
             let pane = ctx.view_state.as_ref().and_then(|view| cad_pane_from_view(view).ok()).unwrap_or(CadPaneId::Shape);
             let emit = cad_import_object_emit(doc, pane, "importCadFile", imported)?;

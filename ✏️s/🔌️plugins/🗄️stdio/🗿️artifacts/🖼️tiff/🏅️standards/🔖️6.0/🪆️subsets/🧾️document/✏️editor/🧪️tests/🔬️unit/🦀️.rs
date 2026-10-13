@@ -107,7 +107,7 @@ fn drive_paint(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, config: &T
     assert_eq!(work.extent(command, snapshot, &interaction, None), paint_region::CAPACITY.rows_for_items(1));
     let mut sequence = 0;
     for _ in 0..4 {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
         match work.step(&ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx).expect("TIFF paint work step") {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).expect("localized progress").contains("de")),
             ArtifactCommandWorkStep::Complete(emit) => return emit.artifact_mutations,
@@ -177,9 +177,9 @@ fn cancelled_retained_tiled_paint_discards_revision_without_publication() {
     let mut work = paint_region::PaintRegionWork::new();
     let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut sequence = 0;
-    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-prepare", .. }));
-    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-row", .. }));
     work.begin_close();
     assert!(matches!(work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()), semio_framework_job::InteractiveJobCloseStep::Complete{..}));

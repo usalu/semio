@@ -13,7 +13,7 @@
 
 use semio_framework_value::{FromValue, ToValue};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPublication, StepContext, JOB_PAYLOAD_PAGE_BYTES};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter,
     ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_PROVISIONAL_OPS_MAX,
@@ -1056,7 +1056,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         self.publish(JobPublicationKind::Fault, message.as_bytes()[..message.len().min(JOB_PAYLOAD_PAGE_BYTES)].to_vec())
     }
 
-    fn initialize(&mut self, cx: &mut StepContext<'_>, cursor: u32) -> LayoutRunTurn {
+    fn initialize(&mut self, _cx: &mut StepContext<'_>, cursor: u32) -> LayoutRunTurn {
         let count = self.positions.len();
         if cursor == 0 {
             let (reason, args) = if self.resumed { (LayoutRunReason::Resumed, vec![ToolRunStepArg::Unsigned(u64::from(self.iteration))]) } else { (LayoutRunReason::Initialized, vec![ToolRunStepArg::Unsigned(count as u64), ToolRunStepArg::Unsigned(self.edges.len() as u64)]) };
@@ -1282,7 +1282,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         self.flush()
     }
 
-    fn compact(&mut self, cx: &mut StepContext<'_>, cursor: u32, settle: bool) -> LayoutRunTurn {
+    fn compact(&mut self, _cx: &mut StepContext<'_>, cursor: u32, settle: bool) -> LayoutRunTurn {
         let count = self.positions.len();
         if cursor == 0 {
             self.writer.retract_to(0);

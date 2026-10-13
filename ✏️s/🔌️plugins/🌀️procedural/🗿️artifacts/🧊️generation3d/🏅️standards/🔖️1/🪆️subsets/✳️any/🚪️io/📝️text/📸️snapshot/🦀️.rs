@@ -133,7 +133,7 @@ pub fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
             from: semio_framework_dsl_record::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) },
             edge: Some((true, semio_framework_dsl_record::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) })),
             edge_label: semio_framework_dsl_record::WireEdgeLabel::default(),
-            properties: semio_framework_value::DslValue::Object(Vec::new()),
+            properties: DslValue::Object(Vec::new()),
         }),
     }
 }
@@ -193,8 +193,8 @@ pub enum WidgetDsl {
     Cluster {
         id: String,
         name: String,
-        tree: semio_framework_value::DslValue,
-        flow: semio_framework_value::DslValue,
+        tree: DslValue,
+        flow: DslValue,
     },
 }
 
@@ -237,7 +237,7 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, semio_framework_diag
 pub struct FormGenerationDsl {
     id: String,
     name: String,
-    values: BTreeMap<String, semio_framework_value::DslValue>,
+    values: BTreeMap<String, DslValue>,
 }
 
 pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
@@ -266,7 +266,7 @@ pub(crate) struct Generation3dSnapshotDsl {
     generations: Vec<FormGenerationDsl>,
 }
 /// 📐️ Projects the original document text declaration under the retained operation's admission.
-pub(crate) fn generation3d_document_spec_controlled(control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordSpec,semio_framework_value::ValueError>{Generation3dSnapshotDsl::__dsl_spec_controlled(control)}
+pub(crate) fn generation3d_document_spec_controlled(control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{Generation3dSnapshotDsl::__dsl_spec_controlled(control)}
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl store::ArtifactDsl for Generation3dSnapshotDsl {
@@ -560,7 +560,7 @@ pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
 /// `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what
 /// actually evaluates and exports.
 #[cfg(feature = "component-app-assembly")]
-pub fn ensure_gumball_node(editor: &mut crate::standards::v1::subsets::any::schema::GraphEditor<'_>, selected_id: &str, operation: &str) -> Result<String, GumballRefusal> {
+pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, operation: &str) -> Result<String, GumballRefusal> {
     if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
     let selected_port = selected_id.split_once('@').map(|(_, channel)| channel.split('#').next().unwrap_or(channel));
     let selected_id = widget_id_from_instance_id(selected_id);
@@ -599,7 +599,7 @@ pub mod catalogue;
 
 /// 🔎️ Projects the live widget at the gumball IO boundary.
 #[cfg(feature = "component-app-assembly")]
-pub fn gumball_widget_json(host: &semio_framework_os_flow::FlowHost, widget_id_str: &str) -> Option<semio_framework_value::DslValue> {
+pub fn gumball_widget_json(host: &semio_framework_os_flow::FlowHost, widget_id_str: &str) -> Option<DslValue> {
     host.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id_str).map(semio_framework_value::ToValue::to_value)
 }
 

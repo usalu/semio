@@ -1417,7 +1417,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyMo
         if lane != store::HistoryLane::Document {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "energy-model-artifact-lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<EnergyModelStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<EnergyModelStorePreparation>(), depth: 1 })
     }
 
     fn begin(
@@ -1526,7 +1526,7 @@ pub struct EnergyModelEditor;
 
 impl ArtifactEditor for EnergyModelEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<ExampleSource> {
         examples()
     }
     type Snapshot = EnergyModelSnapshot;

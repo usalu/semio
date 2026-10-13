@@ -2414,7 +2414,7 @@ impl InteractiveJob for MeshJob {
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         MeshJob::close_step(self, grant)
     }
 

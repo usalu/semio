@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteVertex`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{create_edge, create_vertex, delete_edge, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::mutations::{create_edge, create_vertex, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse

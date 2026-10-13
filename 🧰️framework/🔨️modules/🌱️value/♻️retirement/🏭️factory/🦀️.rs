@@ -70,7 +70,7 @@ impl<const N:usize> FactoryChildTickets<N> {
 struct FactoryTicket<T:FactoryPayloadRetirement> {alias:ManuallyDrop<Option<Arc<T>>>,state:ManuallyDrop<T::CloseState>}
 fn arc_extent<T>()->usize {Layout::new::<[usize;2]>().extend(Layout::new::<T>()).expect("factory Arc concrete layout").0.pad_to_align().size()}
 pub fn factory_arc_birth_bytes<T:FactoryPayloadRetirement>()->usize {arc_extent::<T>()}
-pub const fn factory_retirement_frame_bytes<T:FactoryPayloadRetirement>()->usize {std::mem::size_of::<FactoryTicket<T>>()}
+pub const fn factory_retirement_frame_bytes<T:FactoryPayloadRetirement>()->usize {size_of::<FactoryTicket<T>>()}
 pub fn factory_constructor_birth_bytes<T:FactoryPayloadRetirement>(child_constructor_bytes:usize)->usize {factory_arc_birth_bytes::<T>().checked_add(factory_retirement_frame_bytes::<T>()).and_then(|bytes|bytes.checked_add(child_constructor_bytes)).expect("factory constructor layout")}
 
 impl<T:FactoryPayloadRetirement> FactoryRetirement for T {
@@ -133,8 +133,8 @@ impl<T:FactoryPayloadRetirement> Drop for FactoryTicket<T> {fn drop(&mut self){a
 
 /// 📏️ Borrows each exact currency including the final admitted ticket-frame release.
 pub fn factory_ticket_demands<T:ErasedSnapshotRetirement+?Sized>(ticket:&Box<T>,copy:usize)->Result<RetirementDemand,ValueError> {
-    if ticket.terminal_is_empty(){return Ok(RetirementDemand {release_bytes:std::mem::size_of_val(ticket.as_ref()),depth:1,..Default::default()});}
-    Ok(RetirementDemand {copy_bytes:ticket.next_copy_byte_demand()?,capacity_bytes:ticket.next_capacity_byte_demand(copy)?,release_bytes:ticket.next_release_byte_demand()?,depth:ticket.next_depth_demand()?})
+    if ticket.terminal_is_empty(){return Ok(RetirementDemand {release_bytes:size_of_val(ticket.as_ref()),depth:1,..Default::default()});}
+    ticket.next_demand(copy)
 }
 
 /// 🧹️ Preserves the caller's independent grants through payload and final ticket-frame release.
@@ -144,7 +144,7 @@ pub fn close_factory_ticket<T:ErasedSnapshotRetirement+?Sized>(slot:&mut Option<
     if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
     if ticket.terminal_is_empty() {
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"terminal ticket requires admitted depth"));}
-        let bytes=std::mem::size_of_val(ticket.as_ref());
+        let bytes=size_of_val(ticket.as_ref());
         if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty));}
         drop(slot.take());
         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
@@ -187,18 +187,18 @@ impl FactoryAuthority {
 }
 impl crate::retirement::RetireOwned for FactoryAuthority{
     fn retirement(self)->Box<dyn crate::retirement::RetirementCursor>{Box::new(self)}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn controlled_retirement_supported()->bool{true}
 }
 impl crate::retirement::RetirementCursor for FactoryAuthority{
     fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep{match self.step(grant){Err(error)=>crate::retirement::RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress)}}
-    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(self.demands(0)?.copy_bytes)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}
     fn next_birth_bytes(&self,work:usize)->Option<usize>{self.demands(work).ok().map(|demand|demand.capacity_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|demand|demand.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
     fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for FactoryAuthority{
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"factory authority abandoned original typed payload");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.ticket);}}}

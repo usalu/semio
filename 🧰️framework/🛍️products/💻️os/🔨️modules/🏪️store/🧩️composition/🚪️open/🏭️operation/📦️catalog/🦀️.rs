@@ -72,7 +72,7 @@ fn member_catalog_initial_open_cancellation_pays_original_catalog_and_page_befor
     let mut born = outstanding + allocated;
     let mut physical = 0;
     let mut turns = 0;
-    while !ErasedSnapshotRetirement::terminal_is_empty(&open) && turns < 1024 {
+    while !ErasedSnapshotRetirement::terminal_is_empty(&open) && turns < 65_536 {
         let (demand, allocated, released) = crate::test_allocation::observe_backing(|| {
             let copy_bytes = ErasedSnapshotRetirement::next_copy_byte_demand(&open).unwrap();
             semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: ErasedSnapshotRetirement::next_capacity_byte_demand(&open, copy_bytes).unwrap(), release_bytes: ErasedSnapshotRetirement::next_release_byte_demand(&open).unwrap(), depth: ErasedSnapshotRetirement::next_depth_demand(&open).unwrap() }
@@ -90,7 +90,7 @@ fn member_catalog_initial_open_cancellation_pays_original_catalog_and_page_befor
         turns += 1;
     }
     assert!(ErasedSnapshotRetirement::terminal_is_empty(&open));
-    assert_eq!(physical, born);
+    assert_eq!(physical, born, "request born {request_born} freed {request_freed} outstanding {outstanding} source birth {} turns {turns}", birth.capacity_bytes);
     let (final_bytes, allocated, released) = crate::test_allocation::observe_backing(|| MemberOpenOperation::terminal_drop_byte_demand(&open).expect("terminal original open declares no remaining physical allocation"));
     assert_eq!((allocated, released, final_bytes), (0, 0, 0));
     let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(open));

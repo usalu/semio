@@ -15,4 +15,3 @@ impl protocol::OpBinary for Generation3dTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

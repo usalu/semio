@@ -37,9 +37,9 @@ async fn set_cell_reaches_the_document_through_its_exact_retained_factory() {
     use semio_framework_plugin::PluginApp;
     let source = bcf_example_snapshot(crate::examples::demo::ID);
     assert!(!source.topics.is_empty(), "the BCF example must contain an editable topic");
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<BcfAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_bcf_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<BcfAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_bcf_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&source, BCF_ANY_DOCUMENT_SCHEMA) else { panic!("the fixture load is a complete document effect") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("load BCF fixture");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("load BCF fixture");
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     let args = semio_framework_value::DslValue::object([
         ("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(0))),
@@ -48,10 +48,10 @@ async fn set_cell_reaches_the_document_through_its_exact_retained_factory() {
         ("value".into(), semio_framework_value::DslValue::String("Retained title".into())),
     ]);
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    app.handle_action("set-cell", Some(&args), &meta).await.expect("dispatch set-cell");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("settle set-cell");
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-cell", Some(&args), &meta, &mut identity).await).expect("dispatch set-cell");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("settle set-cell");
     assert_eq!(app.snapshot().expect("BCF snapshot").topics[0].title, "Retained title");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 #[test]
@@ -95,5 +95,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
     assert_eq!(state.topics[0].comments[0].text, "bye");
     let dropped = emit(editing::SnapshotEditEvent::RemoveValue { path: "/topics/0/comments/0".into() }).expect("a comment removal resolves");
     assert!(matches!(dropped.artifact_mutations.as_slice(), [BcfMutation::RemoveComment(_)]));
-    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }

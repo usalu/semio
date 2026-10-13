@@ -14,6 +14,9 @@ fn retire_owned_value<T:semio_framework_value::retirement::RetireOwned>(value:T)
  assert!(owner.terminal_is_empty());
 }
 
+fn owned_source<T:semio_framework_value::retirement::RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T,T>{RetainedCloneSource::admit_owned(value,(),semio_s_artifact_stdio_contract::testing::unbounded_grant()).map_err(|(error,_,_)|error).expect("owned source admits").0}
+fn close_source<T:Sync+'static,A:semio_framework_value::retirement::RetireOwned+Sync>(mut source:RetainedCloneSource<T,A>){for _ in 0..100000{if source.terminal_is_empty(){return;}source.close_step(semio_s_artifact_stdio_contract::testing::unbounded_grant()).expect("source closes");}panic!("source did not close");}
+
 fn close(cursor:&mut PngPublicationCursor){
  cursor.begin_close();
  for _ in 0..100000{
@@ -33,12 +36,12 @@ fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
         let color:Vec<u16>=case["paint"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u16).collect();let paint=PngNativePaint::rgba(color[0],color[1],color[2],color[3]);
         let revision=crate::schema::operations::png_revision(&snapshot);
         let mut expected=snapshot.clone();for y in region.y..region.y+region.height {for x in region.x..region.x+region.width {let index=((y*snapshot.image.width+x)*4)as usize;expected.image.samples[index..index+4].copy_from_slice(&color);}}
-        let source=RetainedCloneSource::from_authority(Arc::new(snapshot.clone()),());let mutation=RetainedCloneSource::from_authority(Arc::new(PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation{revision,region,paint})),());
+        let source=owned_source(snapshot.clone());let mutation=owned_source(PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation{revision,region,paint}));
         let grant=RetainedCloneGrant {maximum_items:case["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:case["maximumBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:case["maximumBytes"].as_u64().unwrap()as usize,maximum_depth:64, maximum_release_bytes: case["maximumBytes"].as_u64().unwrap()as usize };
         let mut cursor=PngPublicationCursor::new();let mut post=snapshot.clone();let mut turns=0;
         loop {turns+=1;assert!(turns<10000);let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
         assert!(turns>case["minimumTurns"].as_u64().unwrap()as usize);assert_eq!(post,expected);
-        let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]);close(&mut cursor);
+        let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]);close(&mut cursor);close_source(source);close_source(mutation);
         let mut bytes=Vec::new();{let mut encoder=png::Encoder::new(&mut bytes,post.image.width,post.image.height);encoder.set_color(png::ColorType::Rgba);encoder.set_depth(png::BitDepth::Eight);let mut writer=encoder.write_header().unwrap();writer.write_image_data(&expected.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>()).unwrap();}
         let mut reader=png::Decoder::new(std::io::Cursor::new(bytes)).read_info().unwrap();let mut decoded=vec![0;reader.output_buffer_size().unwrap()];let info=reader.next_frame(&mut decoded).unwrap();assert_eq!(decoded[..info.buffer_size()],post.image.samples.iter().map(|v|*v as u8).collect::<Vec<_>>());
         retire_owned_value(inverse);
@@ -47,10 +50,10 @@ fn retained_png_publication_prepares_authored_intent_and_validates_with_fuel() {
 }
 #[test]
 fn retained_png_publication_cancellation_releases_mutation_projection_lease() {
-    let snapshot=Arc::new(PngSnapshot::default());let source=RetainedCloneSource::from_authority(Arc::clone(&snapshot),());let owner=Arc::new(PngMutation::ReplaceImage(ReplaceImage{image:PngImage::default()}));let mutation=RetainedCloneSource::from_authority(Arc::clone(&owner),());let mut post=PngSnapshot::default();
+    let source=owned_source(PngSnapshot::default());let mutation=owned_source(PngMutation::ReplaceImage(ReplaceImage{image:PngImage::default()}));let mut post=PngSnapshot::default();
     let mut cursor=PngPublicationCursor::new();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };
     for _ in 0..100 {cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();if cursor.phase==2&&cursor.copy.is_some(){break;}}
-    cursor.cancel();close(&mut cursor);drop(mutation.into_owner());assert_eq!(Arc::strong_count(&owner),1);drop(source.into_owner());assert_eq!(Arc::strong_count(&snapshot),1);
+    cursor.cancel();close(&mut cursor);close_source(mutation);close_source(source);
 }
 
 #[test]
@@ -106,12 +109,12 @@ fn retained_png_publication_replays_neutral_intent_profiles() {
         let p=&row["paint"];let region=PngRegion{x:p["x"].as_u64().unwrap()as u32,y:p["y"].as_u64().unwrap()as u32,width:p["width"].as_u64().unwrap()as u32,height:p["height"].as_u64().unwrap()as u32};
         let profile=match p["profile"].as_str().unwrap(){"indexed"=>PngNativeProfile::Indexed,"grayscale"=>PngNativeProfile::Grayscale,"grayscale-alpha"=>PngNativeProfile::GrayscaleAlpha,"rgb"=>PngNativeProfile::Rgb,"rgba"=>PngNativeProfile::Rgba,_=>panic!("unknown neutral native profile")};
         let sample=|key:&str|p[key].as_u64().unwrap()as u16;let paint=PngNativePaint{profile,first:sample("first"),second:sample("second"),third:sample("third"),fourth:sample("fourth")};
-        let source=RetainedCloneSource::from_authority(Arc::new(snapshot.clone()),());
-        let mutation=RetainedCloneSource::from_authority(Arc::new(PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation{revision:crate::schema::operations::png_revision(&snapshot),region,paint})),());
+        let source=owned_source(snapshot.clone());
+        let mutation=owned_source(PngMutation::PaintNativeSamples(crate::schema::mutations::PaintNativeSamplesMutation{revision:crate::schema::operations::png_revision(&snapshot),region,paint}));
         let mut cursor=PngPublicationCursor::new();let mut post=snapshot.clone();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut turns=0;
         loop {turns+=1;assert!(turns<100000);let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
         let expected:Vec<u16>=row["expectedSamples"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u16).collect();assert_eq!(post.image.samples,expected);assert!(post.image.same_metadata(&snapshot.image));
-        let restores=if post.image.samples==snapshot.image.samples{Vec::new()}else{vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]};assert_eq!(cursor.take_inverse().unwrap(),restores);close(&mut cursor);
+        let restores=if post.image.samples==snapshot.image.samples{Vec::new()}else{vec![PngMutation::ReplaceSamples(crate::schema::mutations::ReplaceSamples{region,samples:snapshot.image.region_samples(region).unwrap()})]};assert_eq!(cursor.take_inverse().unwrap(),restores);close(&mut cursor);close_source(source);close_source(mutation);
         eprintln!("[DEBUG] retained PNG authored intent neutral={} turns={turns} exactSamples={}",row["name"],post.image.samples.len());
     }
 }
@@ -127,7 +130,7 @@ fn retained_png_publication_metadata_intents_match_neutral_targets() {
         let target=PngSnapshot::from_value(value(&row["expected"])).unwrap();
         let mutation=PngMutation::ReplaceImage(ReplaceImage{image:target.image});
         assert!(PngPublication.preflight(&mutation,store::HistoryLane::Document).is_ok());
-        let source=RetainedCloneSource::from_authority(Arc::new(snapshot.clone()),());let mutation=RetainedCloneSource::from_authority(Arc::new(mutation),());let mut post=snapshot;let mut cursor=PngPublicationCursor::new();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut turns=0;let mut paused=false;
+        let source=owned_source(snapshot.clone());let mutation=owned_source(mutation);let mut post=snapshot;let mut cursor=PngPublicationCursor::new();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut turns=0;let mut paused=false;
         loop {
             turns+=1;assert!(turns<100000);
             if cursor.phase==8&&!paused {
@@ -139,7 +142,7 @@ fn retained_png_publication_metadata_intents_match_neutral_targets() {
             let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}
         }
         assert!(paused);
-        let expected=PngSnapshot::from_value(value(&row["expected"])).unwrap();assert_eq!(post,expected);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceImage(ReplaceImage{image:source.borrow().get().image.clone()})]);close(&mut cursor);
+        let expected=PngSnapshot::from_value(value(&row["expected"])).unwrap();assert_eq!(post,expected);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse,vec![PngMutation::ReplaceImage(ReplaceImage{image:source.borrow().get().image.clone()})]);close(&mut cursor);close_source(source);close_source(mutation);
         eprintln!("[DEBUG] retained PNG metadata intent neutral={} turns={turns} exactMetadata=true",row["name"]);
     }
 }
@@ -147,12 +150,13 @@ fn retained_png_publication_metadata_intents_match_neutral_targets() {
 #[test]
 fn retained_png_publication_replacement_and_inverse_use_bounded_typed_image_owners(){
     use protocol::Mutation;
+    use semio_framework_value::FromValue;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧬️owned-native-samples/🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64,maximum_release_bytes:4096};
     for row in fixture["cases"].as_array().unwrap().iter(){
         let target=PngSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let base=PngSnapshot::default();let mut post=base.clone();
-        let source=RetainedCloneSource::from_authority(Arc::new(base.clone()),());let mutation=RetainedCloneSource::from_authority(Arc::new(PngMutation::ReplaceImage(ReplaceImage{image:target.image.clone()})),());
+        let source=owned_source(base.clone());let mutation=owned_source(PngMutation::ReplaceImage(ReplaceImage{image:target.image.clone()}));
         let mut cursor=PngPublicationCursor::new();let mut turns=0;
         loop{
             turns+=1;assert!(turns<10000);
@@ -165,7 +169,7 @@ fn retained_png_publication_replacement_and_inverse_use_bounded_typed_image_owne
             if matches!(step,RetainedCloneEditStep::Complete(_)){break;}
         }
         assert_eq!(post,target);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse.len(),1);
-        let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);
+        let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);close_source(source);close_source(mutation);
         retire_owned_value(inverse);
         eprintln!("[DEBUG] retained Png typed image replacement neutral={} turns={turns} inverseCapacityGranted=true nativeWordsExact=true",row["name"]);
     }

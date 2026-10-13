@@ -133,6 +133,7 @@ pub(super) fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
                 (quote!(#owner::ArtifactCanonicalJsonTree::canonical_tree_node(&self.#member)),quote!(#owner::ArtifactCanonicalJsonTree::canonical_tree_child(&self.#member,ordinal)),quote!(#owner::ArtifactCanonicalJsonTree::canonical_tree_key(&self.#member,ordinal)))
             }else{roles(named_roles(&data.fields,&attrs,Some(&quote!(self)),&owner)?,&owner)}
         }
+        Data::Enum(data)if data.variants.is_empty()=>(quote!(match *self{}),quote!(match *self{}),quote!(match *self{})),
         Data::Enum(data)=>{
             let mut nodes=Vec::new();let mut children=Vec::new();let mut keys=Vec::new();
             for variant in &data.variants {
@@ -193,8 +194,11 @@ pub(super) fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
     };
     let(implementation,arguments,where_clause)=generics.split_for_impl();
     Ok(quote!(#(#views)* impl #implementation #owner::ArtifactCanonicalJsonTree for #name #arguments #where_clause {
+        #[allow(unused_variables)]
         fn canonical_tree_node(&self)->Result<#owner::ArtifactCanonicalJsonNode<'_>,::semio_framework_value::ValueError>{#node}
+        #[allow(unused_variables)]
         fn canonical_tree_child(&self,mut ordinal:usize)->Result<&dyn #owner::ArtifactCanonicalJsonTree,::semio_framework_value::ValueError>{#child}
+        #[allow(unused_variables)]
         fn canonical_tree_key(&self,mut ordinal:usize)->Result<#owner::ArtifactCanonicalJsonText<'_>,::semio_framework_value::ValueError>{#key}
     }))
 }

@@ -209,7 +209,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec XlsxBuilderFacets {
         construction: XlsxBuilderConstruction,
         analysis: XlsxAnalyzerAnalysis,
-        composition: crate::standards::v_ecma_376::subsets::base::io::derived_composition::XlsxComposerComposition,
+        composition: XlsxComposerComposition,
     }
     builder: XlsxBuilder,
     analyzer: XlsxAnalyzer,

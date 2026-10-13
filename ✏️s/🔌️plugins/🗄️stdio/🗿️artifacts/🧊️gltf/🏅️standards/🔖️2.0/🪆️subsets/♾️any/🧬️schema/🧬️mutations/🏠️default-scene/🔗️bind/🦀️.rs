@@ -1,6 +1,6 @@
 //! 🧬️ Direct bind-default-scene mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::top_level_collections::*;
+#[cfg(test)] use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
@@ -34,7 +34,7 @@ pub fn inverse(p: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Vec<supe
     }
     match base.document.scene {
         Some(current) if current == p.scene => Vec::new(),
-        Some(current) => vec![super::bind_default_scene::mutation(super::bind_default_scene::GltfBindDefaultScenePayload { scene: current })],
+        Some(current) => vec![mutation(GltfBindDefaultScenePayload { scene: current })],
         None => vec![super::unbind_default_scene::mutation(super::unbind_default_scene::GltfUnbindDefaultScenePayload {  })],
     }
 }
@@ -56,7 +56,7 @@ pub fn mutation(payload: GltfBindDefaultScenePayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindDefaultSceneMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "default-scene", kind: "bind-default-scene", record: "BoundDefaultScene" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

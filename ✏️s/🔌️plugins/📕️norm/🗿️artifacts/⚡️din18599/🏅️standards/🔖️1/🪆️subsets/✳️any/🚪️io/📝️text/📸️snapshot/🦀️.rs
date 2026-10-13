@@ -101,4 +101,4 @@ use framework_schema::ArtifactSchema;
 
 
 }
-pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use snapshot_wire_codec::*;

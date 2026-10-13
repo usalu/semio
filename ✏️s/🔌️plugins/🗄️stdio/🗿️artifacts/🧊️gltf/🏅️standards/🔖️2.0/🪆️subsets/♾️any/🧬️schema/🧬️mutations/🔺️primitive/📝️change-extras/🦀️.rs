@@ -57,7 +57,7 @@ pub fn inverse(p: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot) -> 
     if current == &requested(p) {
         return Vec::new();
     }
-    vec![super::change_primitive_extra_data::mutation(super::change_primitive_extra_data::GltfChangePrimitiveExtraDataPayload { mesh: p.mesh, primitive: p.primitive, data: presence(current) })]
+    vec![mutation(GltfChangePrimitiveExtraDataPayload { mesh: p.mesh, primitive: p.primitive, data: presence(current) })]
 }
 
 //#region 🧬️DirectMutation
@@ -77,7 +77,7 @@ pub fn mutation(payload: GltfChangePrimitiveExtraDataPayload) -> super::GltfMuta
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimitiveExtraDataMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "primitive-extra-data", kind: "change-primitive-extra-data", record: "ChangedPrimitiveExtraData" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

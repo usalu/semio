@@ -9,12 +9,13 @@ use crate::drawing::*;
 use crate::host::*;
 use crate::infinite::board::ports::directed_dag as dag;
 use semio_framework_canvas as canvas;
-use crate::vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsClosePhase, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
+use crate::vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
 use protocol::{FlowBridge, FlowDomain, FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
 use semio_framework_value::{retained_clone::{RetainedCloneStep,RetainedCloneProgress,RetainedCloneGrant,admit_retained_clone_close},retirement::controlled::ControlledRetirement};
 use crate::vcs::FlowVcsCloseDemands;
 use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
-use serde_json::{json, Value};
+use serde_json::{json};
+#[cfg(test)] use serde_json::{Value};
 use std::cell::{Cell,RefCell};
 use std::rc::{Rc,Weak};
 use ui_webgpu::abi::AbiErrorCode as SurfaceAbiErrorCode;
@@ -242,7 +243,7 @@ fn flow_operation_fields(operation: u16) -> &'static [(&'static str, FlowArgumen
 }
 
 trait FlowActionState {
-    fn retained_receipt(&self)->Option<semio_framework_value::retained_clone::RetainedCloneProgress>{None}
+    fn retained_receipt(&self)->Option<RetainedCloneProgress>{None}
     #[cfg(test)]
     fn operation(&self) -> u16;
     fn advance(&mut self, domain: &mut FlowDomainAdapter, arguments: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep;
@@ -468,7 +469,7 @@ struct FlowProgramState {
 }
 
 impl FlowProgramState {
-    fn new(arguments: &FlowArguments) -> Self {
+    fn new(_arguments: &FlowArguments) -> Self {
         Self { phase: FlowProgramPhase::Decode, field_cursor: 0, byte_cursor: 0, validated_fields: 0, domain_cursor: 0, encode_cursor: 0, utf8: [FlowUtf8State::default(); 8], source_output: None, output: Vec::new() }
     }
 
@@ -4756,7 +4757,7 @@ impl FlowActionState for FlowAction2599 {
                         let port = domain.host.geometry_port().map_err(domain_error)?;
                         let (handle, tolerance) = (text(args, "handle")?, number(args, "tolerance")?);
                         let copy = port.next_tessellate_copy_byte_demand(handle, tolerance).map_err(domain_error)?;
-                        let grant = semio_framework_value::RetainedCloneGrant {
+                        let grant = RetainedCloneGrant {
                             maximum_items: 1,
                             maximum_copy_bytes: copy,
                             maximum_capacity_bytes: port.next_tessellate_capacity_byte_demand(handle, tolerance, copy).map_err(domain_error)?,
@@ -5663,7 +5664,7 @@ pub unsafe extern "C" fn flow_bridge_send(pointer: *const u8, length: usize, byt
     let Ok(message) = decode_abi_message(unsafe { std::slice::from_raw_parts(pointer, length) }) else {
         return -1;
     };
-    let budget = AbiWorkBudget { byte_credit, retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
+    let budget = AbiWorkBudget { byte_credit, retained:RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
     BRIDGE.with(|bridge| bridge.borrow_mut().try_send(message, budget).map(|_| 1).unwrap_or(-1))
 }
 
@@ -5675,7 +5676,7 @@ pub unsafe extern "C" fn flow_bridge_poll(pointer: *mut u8, capacity: usize, byt
     }
     RETAINED.with(|retained| {
         if retained.borrow().is_none() {
-            let budget = AbiWorkBudget { byte_credit, retained:semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
+            let budget = AbiWorkBudget { byte_credit, retained:RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}, now_ms, deadline_ms: (deadline_ms != 0).then_some(deadline_ms), cancelled: false, interrupted: false };
             match BRIDGE.with(|bridge| bridge.borrow_mut().poll(budget)) {
                 Ok(AbiPortPoll::Message(message)) => *retained.borrow_mut() = Some(RetainedMessage { bytes: encode_abi_message(&message), _message: message }),
                 Ok(AbiPortPoll::Pending) => return 0,

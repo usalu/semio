@@ -2,7 +2,7 @@
 use crate::editor::raster::{RasterCommand, RasterPlayApp};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id};
-use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterMutation, RasterSnapshot, RasterTransform};
+use crate::{RasterLayerMask, RasterLayerNode, RasterMutation, RasterSnapshot, RasterTransform};
 use semio_framework_pixels::{editing::validate_extent, png_encoding::{EncodedPngImage, PngEncodeJob}, RasterImage};
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
@@ -96,7 +96,7 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for MaskFromSelectionWork {
     }
     fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
         let RasterCommand::MaskFromSelection(command)=input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"raster mask command required")); };
-        let stage=if self.encoding.is_some() {std::mem::size_of::<PngEncodeJob>()+std::mem::size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else {std::mem::size_of::<Candidate>()+command.selection.len().saturating_mul(std::mem::size_of::<crate::mutations::paint_stroke::RasterSelectionSpan>())};
+        let stage=if self.encoding.is_some() {size_of::<PngEncodeJob>()+size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else {size_of::<Candidate>()+command.selection.len().saturating_mul(size_of::<crate::mutations::paint_stroke::RasterSelectionSpan>())};
         Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
     }
     fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {

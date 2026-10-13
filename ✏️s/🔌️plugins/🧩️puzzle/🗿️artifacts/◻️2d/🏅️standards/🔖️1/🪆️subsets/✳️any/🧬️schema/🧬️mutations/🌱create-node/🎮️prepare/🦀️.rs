@@ -42,7 +42,7 @@ impl Puzzle2dCreateNodePreparationCursor {
         if let Some(plan) = self.output { return Ok(Puzzle2dCreateNodePreparationStep::Complete { plan, progress: Default::default() }); }
         let node = &mutation.get().node;
         if self.phase < 7 || self.phase == 7 && self.handle < node.handles.len() {
-            let bytes = match self.phase { 0 | 1 => std::mem::size_of::<f64>(), 2 => node.shape.as_ref().map_or(0, |shape| if shape.len() == 6 || shape.len() == 9 { shape.len() } else { 0 }), 7 if self.handle_field == 0 => std::mem::size_of::<f64>(), _ => std::mem::size_of::<Option<f64>>() };
+            let bytes = match self.phase { 0 | 1 => size_of::<f64>(), 2 => node.shape.as_ref().map_or(0, |shape| if shape.len() == 6 || shape.len() == 9 { shape.len() } else { 0 }), 7 if self.handle_field == 0 => size_of::<f64>(), _ => size_of::<Option<f64>>() };
             if grant.maximum_copy_bytes < bytes { return Ok(Puzzle2dCreateNodePreparationStep::Pending(Default::default())); }
             let invalid = match self.phase {
                 0 => (!node.x.is_finite()).then_some(Puzzle2dCreateNodeDisposition::NonfiniteX),
@@ -67,7 +67,7 @@ impl Puzzle2dCreateNodePreparationCursor {
                 Puzzle2dLookupStep::Complete { location, progress } => { if location.is_some() { self.disposition = Puzzle2dCreateNodeDisposition::DuplicateId; } self.lookup.take(); self.phase = 9; Ok(Puzzle2dCreateNodePreparationStep::Pending(progress)) },
             };
         }
-        let bytes = std::mem::size_of::<Option<usize>>() + std::mem::size_of::<usize>();
+        let bytes = size_of::<Option<usize>>() + size_of::<usize>();
         if grant.maximum_copy_bytes < bytes { return Ok(Puzzle2dCreateNodePreparationStep::Pending(Default::default())); }
         let position = (self.disposition == Puzzle2dCreateNodeDisposition::Changed).then(|| mutation.get().index.unwrap_or(source.get().nodes.len()).min(source.get().nodes.len()));
         let plan = Puzzle2dCreateNodePlan { disposition: self.disposition, position };
@@ -79,14 +79,14 @@ impl Puzzle2dCreateNodePreparationCursor {
 
     pub fn begin_close(&mut self) { self.closing = true; self.lookup.begin_close(); }
 
-    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(std::mem::size_of_val(&self.output));}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_copy_byte_demand();}RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.mutation}) }
+    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(size_of_val(&self.output));}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_copy_byte_demand();}RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.mutation}) }
     pub fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(0);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_capacity_byte_demand(body);}RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.mutation},body) }
     pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(0);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_release_byte_demand();}RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.mutation}) }
     pub fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if self.output.is_some(){return Ok(1);}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_depth_demand();}RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.mutation}) }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "create preparation closure was not started")); }
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.output.is_some(){let bytes=std::mem::size_of_val(&self.output);if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));}
+        if self.output.is_some(){let bytes=size_of_val(&self.output);if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));}
         if !self.lookup.terminal_is_empty(){return self.lookup.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
         let step=RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }

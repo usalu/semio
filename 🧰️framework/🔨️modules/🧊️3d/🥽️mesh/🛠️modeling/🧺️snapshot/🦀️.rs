@@ -4,7 +4,7 @@ use super::*;
 use protocol::value::{RetirementDemand,ValueError,ValueRefusalKind};
 
 fn refusal(kind:ValueRefusalKind,reason:&'static str)->ValueError {ValueError::literal(kind,reason)}
-fn extent<T>(count:usize)->Result<usize,ValueError> {count.checked_mul(std::mem::size_of::<T>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"original snapshot buffer extent overflow"))}
+fn extent<T>(count:usize)->Result<usize,ValueError> {count.checked_mul(size_of::<T>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit,"original snapshot buffer extent overflow"))}
 fn backing<T>(buffer:&Vec<T>,count:usize)->Result<usize,ValueError> {
     if !buffer.is_empty()||buffer.capacity()!=0 {return Err(refusal(ValueRefusalKind::InvariantViolated,"original snapshot reservation requires its exact empty buffer"));}
     extent::<T>(count)

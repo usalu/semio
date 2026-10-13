@@ -258,7 +258,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
     assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID), "the contributed kind is absent before the push");
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: fake_contribution() })).await;
-    app.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("restock dispatch");
+    app.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("restock dispatch");
     let restocked = settle(&mut app)
         .await
         .into_iter()
@@ -279,7 +279,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
 async fn the_restock_button_publishes_a_merged_catalogue_document() {
     let mut app = new_app().await;
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
-    app.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("restock dispatch");
+    app.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("restock dispatch");
     let restocked = settle(&mut app)
         .await
         .into_iter()

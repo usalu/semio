@@ -41,14 +41,14 @@ impl ColdRetire for OperatorRecord {
     fn retire_cold(self) { self.info.retire_cold(); for implementation in self.implementations { implementation.operator.retire_cold(); } }
 }
 impl ColdRetire for Registry { fn retire_cold(self) { self.schemas.retire_cold(); self.operators.retire_cold(); } }
-impl ColdRetire for Neuron { fn retire_cold(self) { super::native_controlled::retire_neuron(self); } }
-impl ColdRetire for Tree { fn retire_cold(self) { super::native_controlled::retire_tree(self); } }
+impl ColdRetire for Neuron { fn retire_cold(self) { native_controlled::retire_neuron(self); } }
+impl ColdRetire for Tree { fn retire_cold(self) { native_controlled::retire_tree(self); } }
 impl ColdRetire for TreeSnapshot { fn retire_cold(self) { if let Ok(tree) = Arc::try_unwrap(self.tree) { tree.retire_cold(); } if let Ok(seeds) = Arc::try_unwrap(self.seeds) { seeds.retire_cold(); } } }
 impl ColdRetire for EvalChannels { fn retire_cold(self) { self.outputs.retire_cold(); self.inputs.retire_cold(); } }
 impl ColdRetire for BudgetedEval { fn retire_cold(self) { self.channels.retire_cold(); } }
 impl ColdRetire for NeuralCache {
     fn retire_cold(self) {
-        let mut retirement = NeuralCacheRetirement::new(std::sync::Arc::new(self));
+        let mut retirement = NeuralCacheRetirement::new(Arc::new(self));
         while !retirement.terminal_is_empty() {
             let copy=4096.max(retirement.next_copy_byte_demand().expect("cold cache copy demand"));
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).expect("cold cache capacity demand"),maximum_release_bytes:retirement.next_release_byte_demand().expect("cold cache release demand"),maximum_depth:retirement.next_depth_demand().expect("cold cache depth demand")};

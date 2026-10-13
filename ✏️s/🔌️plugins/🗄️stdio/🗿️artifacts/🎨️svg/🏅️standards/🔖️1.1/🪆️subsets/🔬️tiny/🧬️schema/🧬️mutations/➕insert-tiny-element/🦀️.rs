@@ -16,7 +16,7 @@ pub struct InsertTinyElement {
 impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for InsertTinyElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "tiny-element", kind: "insert-tiny-element", record: "InsertTinyElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { parent, index, node } = self;
         match subtree_profile_violation(node) {
             Some(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
@@ -26,7 +26,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for InsertTinyElement 
             )),
         }
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
         let Self { parent, index, .. } = self;
         Ok(vec![SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: parent.clone(), index: *index })])
     }

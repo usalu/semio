@@ -15,7 +15,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let handle = app.submit_media_export(crate::standards::mpeg1_layer3::subsets::any::io::playback::PORT_ID).await.expect("registered MP3 playback producer");
     app.cancel_media_export(&handle).await.expect("cancel live MP3 producer");
     assert!(app.poll_media_export(&handle).await.is_err(), "cancelled handle transfers to bounded close");
@@ -23,7 +23,7 @@ async fn playback_export_route_is_registered_cancellable_and_fully_retired() {
         if app.close_terminal_is_empty() {
             break;
         }
-        app.close_step(1, 16_384).expect("bounded MP3 close");
+        app.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()).expect("bounded MP3 close");
         semio_framework_async::yield_once().await;
     }
     assert!(app.close_terminal_is_empty());
@@ -34,11 +34,11 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     use semio_framework_plugin::{app::ArtifactMediaExportPoll, PluginApp};
     let source = include_bytes!("../../../🧫️fixtures/🔊️.mp3");
     let snapshot = crate::standards::mpeg1_layer3::subsets::any::io::decode_mp3(source).expect("real MP3 fixture decodes");
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_MP3_DOCUMENT_SCHEMA) else {
         panic!("MP3 snapshot builds one document load");
     };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("host loads the real MP3 document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads the real MP3 document");
     let handle = app.submit_media_export(crate::standards::mpeg1_layer3::subsets::any::io::playback::PORT_ID).await.expect("registered MP3 playback producer");
     let mut completed = None;
     for _ in 0..10_000 {
@@ -67,7 +67,7 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
         if app.close_terminal_is_empty() {
             break;
         }
-        app.close_step(1, 16_384).expect("bounded MP3 close");
+        app.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()).expect("bounded MP3 close");
         semio_framework_async::yield_once().await;
     }
     assert!(app.close_terminal_is_empty());
@@ -94,43 +94,43 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source.to_vec(),
     };
     let initial = <Mp3Editor as ArtifactEditor>::initial_snapshot();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
     app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
-    artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.expect("natural import publishes");
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("natural import publishes");
     let opened = app.snapshot().expect("opened snapshot").clone();
     let refused = match app.consume_media(NATURAL_FILE_PORT, outside).await {
         Err(_) => true,
-        Ok(_) => artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.is_err(),
+        Ok(_) => semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err(),
     };
     assert!(refused);
     assert_eq!(app.snapshot().expect("refused MP3 preserves the owner"), opened);
-    let saved = app.produce_media(NATURAL_FILE_PORT).await.expect("registered natural save");
+    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| app.produce_media(NATURAL_FILE_PORT, native_owner).await).await.expect("registered natural save");
     assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
     assert_eq!(saved.descriptor.kind_id.as_deref(), Some(codec.format_kind));
     let oracle = semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::oracle_round_trip(&saved.data).expect("id3 and the independent MPEG walker reopen and write the MP3 export");
     let observed = semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3(&saved.data).expect("project MP3 export");
     let expected = semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3(&oracle).expect("project independent MP3 output");
     assert_eq!(observed, expected);
-    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut reopened = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<Mp3Editor>, _>(async { semio_framework_plugin::App { definition: create_mp3_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     reopened.bind_instance_id(2).await;
     reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
-    artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.expect("fresh owner import publishes");
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("fresh owner import publishes");
     let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
     assert_eq!(reopened_snapshot, opened);
-    artifact_app_laws::settle_history_verb(&mut app, "undo", 1).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().expect("source undo snapshot"), initial);
     assert_eq!(reopened.snapshot().expect("reopened snapshot remains isolated"), reopened_snapshot);
-    artifact_app_laws::settle_history_verb(&mut app, "redo", 1).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().expect("source redo snapshot"), opened);
-    artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(reopened.snapshot().expect("reopened undo snapshot"), initial);
     assert_eq!(app.snapshot().expect("source remains isolated"), opened);
-    artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
-    artifact_app_laws::close_registered_fixture_app(&mut reopened);
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -139,5 +139,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
     let emit = |event: editing::SnapshotEditEvent| <Mp3Editor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base);
     let unchanged = emit(editing::SnapshotEditEvent::SetValue { path: "/frames".into(), value: semio_framework_value::DslValue::Array(Vec::new()) }).expect("an unchanged frame list resolves");
     assert!(unchanged.artifact_mutations.is_empty(), "an edit that changes nothing publishes nothing");
-    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }

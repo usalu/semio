@@ -7,7 +7,8 @@
 
 #[cfg(test)]
 use crate::schema::snapshot::XlsxWorkbook;
-use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxXmlPart};
+use crate::schema::snapshot::{XlsxXmlPart};
+#[cfg(test)] use crate::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
 use crate::schema::vocabulary::{element_matches, expanded_element_name, namespace_scope, SML_NS, SML_NS_STRICT};
 use crate::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
@@ -21,7 +22,7 @@ use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcR
 use semio_s_artifact_stdio_contract::kernel::list_delta::RowPatch;
 use semio_s_artifact_stdio_contract::list_delta::compose_optional;
 pub use semio_s_artifact_stdio_zip::opc::diff::OpcDiff;
-use std::collections::BTreeMap;
+#[cfg(test)] use std::collections::BTreeMap;
 
 //#region 🔖️XmlPartDiffTypes
 /// 🩹 The sparse patch of one XML part: its content type and its document diff.

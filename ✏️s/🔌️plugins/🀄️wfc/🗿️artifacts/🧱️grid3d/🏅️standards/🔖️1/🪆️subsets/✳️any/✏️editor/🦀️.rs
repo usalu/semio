@@ -10,7 +10,7 @@
 use crate::editor::grid3d::modes::edit;
 use crate::editor::grid3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
-use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig, Grid3dWindowConfigMutation, Grid3dWindowConfigSetActiveTile, Grid3dWindowConfigSetCamera, Grid3dWindowConfigSetShowMasked};
+use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig, Grid3dWindowConfigMutation, Grid3dWindowConfigSetActiveTile, Grid3dWindowConfigSetCamera};
 use crate::mutations::{change_cell_sizes, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{tile_index, Grid3dAxis, Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
@@ -301,7 +301,7 @@ pub fn grid3d_command_emit(
             let leaf = match utility {
                 grid::UTILITY_PIN => {
                     if window_config.active_tile_id.is_empty() {
-                        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.tile.none-armed"), "wfc.grid3d.tile.none-armed"));
+                        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.tile.none-armed"), "wfc.grid3d.tile.none-armed"));
                     }
                     pin_cell(Grid3dPinnedCell { x, y, z, tile_id: window_config.active_tile_id })
                 }
@@ -311,11 +311,11 @@ pub fn grid3d_command_emit(
             return Ok(Emit::tool_once(GRID3D_EDITOR_APP_ID, utility, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), vec![leaf]));
         }
         Grid3dEditorCommand::SetActiveTile { tile_id } => {
-            let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
+            let view = view_state.ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
             return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetActiveTile(Grid3dWindowConfigSetActiveTile { tile_id: tile_id.clone() }))?], ..Default::default() });
         }
         Grid3dEditorCommand::SetCamera { x, y, z, target_x, target_y, target_z, zoom } => {
-            let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
+            let view = view_state.ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
             return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetCamera(Grid3dWindowConfigSetCamera { camera_x: *x, camera_y: *y, camera_z: *z, target_x: *target_x, target_y: *target_y, target_z: *target_z, zoom: *zoom }))?], ..Default::default() });
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),

@@ -85,7 +85,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::table::schema::semio_table_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("table") }, store::ArtifactCodec::of::<SemioTableSnapshot, crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation>(
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") }, store::ArtifactCodec::of::<SemioTableSnapshot, crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation>(
             crate::standards::v1::subsets::table::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
@@ -101,7 +101,7 @@ pub mod derived_composition {
         static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         builder
             .schemas([crate::standards::v1::subsets::table::schema::semio_table_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioTableSnapshot, crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation>(crate::standards::v1::subsets::table::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("table") })
+            .document_codec_bare::<SemioTableSnapshot, crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation>(crate::standards::v1::subsets::table::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") })
             .subset_validators(std::slice::from_ref(validator_entry()))
             .inferences([crate::standards::v1::subsets::table::schema::inferences::semio_table_artifact_inference_descriptor()])
             .composers(crate::semio_written(io_entries(), &COMPOSERS))
@@ -272,7 +272,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec SemioTableBuilderFacets {
         construction: SemioTableBuilderConstruction,
         analysis: SemioTableAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::table::io::derived_composition::SemioTableComposerComposition,
+        composition: SemioTableComposerComposition,
     }
     builder: SemioTableBuilder,
     analyzer: SemioTableAnalyzer,

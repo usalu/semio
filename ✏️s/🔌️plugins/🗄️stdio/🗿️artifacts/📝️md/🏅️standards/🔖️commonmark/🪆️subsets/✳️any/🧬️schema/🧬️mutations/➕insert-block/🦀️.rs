@@ -15,11 +15,11 @@ pub struct InsertBlock {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for InsertBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "block", kind: "insert-block", record: "InsertBlock" };
 
-    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
+    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
         let Self { path, index, block } = self;
         protocol::MutationOutcome::new(diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())))
     }
-    fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
         let Self { path, index, .. } = self;
         Ok(vec![MdMutation::RemoveBlock(remove_block::RemoveBlock { path: path.clone(), index: *index })])
     }

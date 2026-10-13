@@ -124,7 +124,7 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded = Generation3dDiffRead::new(semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
     let produced = Generation3dSnapshotRead::new(
-        protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot"),
+        protocol::apply_diff(&*decoded, &before()).expect("committed diff applies to the before-snapshot"),
     );
     assert_eq!(produced, expected_after(), "delete-generation/removes-a-middle-row: committed diff did not carry before to after");
 }

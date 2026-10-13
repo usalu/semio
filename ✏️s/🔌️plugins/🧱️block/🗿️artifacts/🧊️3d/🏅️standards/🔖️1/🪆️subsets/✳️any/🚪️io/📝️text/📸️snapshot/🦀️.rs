@@ -74,4 +74,4 @@ impl store::ArtifactDsl for Block3dSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

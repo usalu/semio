@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3,SemioUv,SemioRgba};
 use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot,SemioMesh,SemioPrimitive,SemioTopology,SemioMaterial,SemioTexture};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(snapshot:&SemioMeshSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.mesh.dsl v1\n","stdio.semio.mesh.pack v1",control,|control|crate::standards::v1::subsets::mesh::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn point(point:&SemioPoint3,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.number(point.x,encoding)?;writer.delimiter(b",",encoding)?;writer.number(point.y,encoding)?;writer.delimiter(b",",encoding)?;writer.number(point.z,encoding)?;writer.delimiter(b"]",encoding)}

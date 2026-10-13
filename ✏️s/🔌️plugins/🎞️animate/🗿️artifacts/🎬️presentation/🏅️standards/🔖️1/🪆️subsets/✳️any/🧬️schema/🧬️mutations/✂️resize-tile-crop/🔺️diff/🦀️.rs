@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `resize-tile-crop`.
 use super::ResizeTileCrop;
-use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff

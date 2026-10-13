@@ -48,7 +48,7 @@ impl GeometryPortRetirement {
     pub fn terminal_is_empty(&self)->bool {self.port.is_none()}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(0)}else{port.next_copy_byte_demand()})}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(0)}else{port.next_capacity_byte_demand(copy)})}
-    pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(std::mem::size_of_val(port.as_ref()))}else{port.next_release_byte_demand()})}
+    pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(size_of_val(port.as_ref()))}else{port.next_release_byte_demand()})}
     pub fn next_depth_demand(&self)->Result<usize,ValueError>{self.port.as_ref().map_or(Ok(0),|port|if port.terminal_is_empty(){Ok(1)}else{port.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"geometry port retirement depth overflow"))})}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();
@@ -56,7 +56,7 @@ impl GeometryPortRetirement {
         if grant.maximum_items==0||grant.maximum_depth<self.next_depth_demand()?{return Ok(RetainedCloneStep::Progress(empty))}
         let port=self.port.as_mut().unwrap();
         if port.terminal_is_empty(){
-            let released_bytes=std::mem::size_of_val(port.as_ref());
+            let released_bytes=size_of_val(port.as_ref());
             if grant.maximum_release_bytes<released_bytes{return Ok(RetainedCloneStep::Progress(empty))}
             drop(self.port.take());
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes,..empty}))

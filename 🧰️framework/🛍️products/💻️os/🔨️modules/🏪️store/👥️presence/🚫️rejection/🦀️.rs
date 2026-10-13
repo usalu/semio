@@ -24,14 +24,14 @@ impl<P> PresencePeerAdmissionRejected<P> {
         self.presence.as_ref().expect("rejected admission retains its exact presence")
     }
 
-    pub fn retirement_birth_demand(&self) -> semio_framework_value::retained_clone::RetainedCloneBirthDemand {
-        semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<PresencePeerRejectionRetirement<P>>(), depth: 1 }
+    pub fn retirement_birth_demand(&self) -> RetainedCloneBirthDemand {
+        RetainedCloneBirthDemand { capacity_bytes: size_of::<PresencePeerRejectionRetirement<P>>(), depth: 1 }
     }
 
     pub fn into_retirement(self, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Self)>
     where P: Send + Sync + 'static,
     {
-        super::admit_artifact_retirement(self, grant, |mut original| PresencePeerRejectionRetirement {
+        admit_artifact_retirement(self, grant, |mut original| PresencePeerRejectionRetirement {
             actor: std::mem::ManuallyDrop::new(Some(std::mem::take(&mut *original.actor).into_bytes())),
             presence: std::mem::ManuallyDrop::new(original.presence.take()),
             original_arc: std::mem::ManuallyDrop::new(None),
@@ -70,7 +70,7 @@ impl<P: Send + Sync + 'static> PresencePeerRejectionRetirement<P> {
         use semio_framework_value::RetirementDemand;
         if let Some(actor) = self.actor.as_ref() { return Ok(RetirementDemand { release_bytes: actor.capacity(), depth: 1, ..Default::default() }); }
         if let Some(active) = self.active.as_ref() {
-            let mut demand = super::artifact_retirement_box_demands(active, maximum_body_bytes)?;
+            let mut demand = artifact_retirement_box_demands(active, maximum_body_bytes)?;
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presence rejection depth overflow"))?;
             return Ok(demand);
         }
@@ -78,7 +78,7 @@ impl<P: Send + Sync + 'static> PresencePeerRejectionRetirement<P> {
         if let Some(original_arc) = self.original_arc.as_ref() {
             return Ok(RetirementDemand { capacity_bytes: self.factory.as_ref().expect("original presence factory").retirement_birth_bytes(original_arc), depth: 2, ..Default::default() });
         }
-        if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.as_ref() {
             let mut demand = factory.demands(maximum_body_bytes)?;
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presence factory depth overflow"))?;
@@ -105,7 +105,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeerRejectio
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(presence) = self.presence.take() {
             *self.original_arc = Some(Arc::new(presence));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() }));

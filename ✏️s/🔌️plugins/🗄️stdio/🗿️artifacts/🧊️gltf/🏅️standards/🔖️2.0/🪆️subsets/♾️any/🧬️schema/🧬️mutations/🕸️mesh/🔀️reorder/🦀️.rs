@@ -40,7 +40,7 @@ pub fn inverse(p: &GltfReorderMeshsPayload, base: &GltfSnapshot) -> Vec<super::G
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::reorder_meshs::mutation(super::reorder_meshs::GltfReorderMeshsPayload { order: inverse_order(&p.order) })]
+    vec![mutation(GltfReorderMeshsPayload { order: inverse_order(&p.order) })]
 }
 
 //#region 🧬️DirectMutation
@@ -60,7 +60,7 @@ pub fn mutation(payload: GltfReorderMeshsPayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderMeshsMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "meshs", kind: "reorder-meshs", record: "ReorderedMeshs" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

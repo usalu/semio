@@ -1,4 +1,6 @@
 //! 🧱️ Genuine Block2d Native capability and complete owned-field baselines.
+#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Block2dSnapshot;
 use crate::*;
 use store::{ArtifactDsl, ArtifactPack};
@@ -130,12 +132,12 @@ fn sqlite_snapshot_block2d_independent_edited_physical_database_preserves_every_
     use store::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
     for word in words() {
         let expected = full(word);
-        let database = expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+        let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
         assert_eq!(database.tables.len(), 10);
         assert_eq!(database.tables.iter().map(|t| t.rows.len()).sum::<usize>(), 10);
         let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
         let edited = import_sqlite_database(&independent_edit(&bytes, "UPDATE block2_meta SET description='independent';UPDATE block2_handle SET handle_kind='unresolved edited'"), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        let actual = Block2dSnapshot::from_sqlite_database(&edited, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+        let actual = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block2dSnapshot::from_sqlite_database(&edited, sqlite_control)).unwrap();
         assert_words(&actual, word);
         assert_eq!(actual.meta.description, "independent");
         assert_eq!(actual.handles[0].handle_kind, "unresolved edited");
@@ -148,7 +150,7 @@ fn sqlite_snapshot_block2d_independent_edited_physical_database_preserves_every_
 #[test]
 fn sqlite_snapshot_block2d_independent_malformed_entities_refuse() {
     use store::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
-    let database = full(0).to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|full(0).to_sqlite_database(sqlite_control)).unwrap();
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     for edit in [
         "UPDATE block2_handle SET ordinal=2",
@@ -160,7 +162,7 @@ fn sqlite_snapshot_block2d_independent_malformed_entities_refuse() {
         "UPDATE block2_attribute SET document_id=999",
     ] {
         let malformed = import_sqlite_database(&independent_edit(&bytes, edit), SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-        assert!(Block2dSnapshot::from_sqlite_database(&malformed, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err(), "{edit}");
+        assert!(original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|Block2dSnapshot::from_sqlite_database(&malformed, sqlite_control)).is_err(), "{edit}");
     }
 }
 #[test]
@@ -169,12 +171,12 @@ fn sqlite_snapshot_block2d_row_frontier_and_real_four_phase_cancellation() {
     let mut expected = full(0);
     expected.node_kind.description = "😀".repeat(32768);
     let limits = SqliteDatabaseLimits { max_rows: 10, ..SqliteDatabaseLimits::default() };
-    let database = expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let database = original_owners::with_sqlite_recipient(limits,&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
     let short = SqliteDatabaseLimits { max_rows: 9, ..limits };
-    assert!(expected.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, short)).is_err());
+    assert!(original_owners::with_sqlite_recipient(short,&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).is_err());
     let native = store::io_schema::IoPayload::Text(expected.print_dsl());
-    assert!(Block2dSnapshot::decode_sqlite_snapshot_native(&native, &mut SqliteSnapshotControl::new(&mut |_| true, short)).is_err());
-    assert!(expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, short)).is_err());
+    assert!(original_owners::with_decoding(|native_owner|Block2dSnapshot::decode_sqlite_snapshot_native(&native, &mut SqliteSnapshotControl::new(&mut |_| true, short), native_owner)).is_err());
+    assert!(original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut SqliteSnapshotControl::new(&mut |_| true, short), native_owner)).is_err());
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
         let mut saw = false;
         let mut callback = |e: SqliteSnapshotProgress| {
@@ -189,8 +191,8 @@ fn sqlite_snapshot_block2d_row_frontier_and_real_four_phase_cancellation() {
         let refused = match phase {
             SqliteSnapshotPhase::ProjectSnapshot => expected.to_sqlite_database(&mut control).is_err(),
             SqliteSnapshotPhase::ReconstructSnapshot => Block2dSnapshot::from_sqlite_database(&database, &mut control).is_err(),
-            SqliteSnapshotPhase::DecodeNative => Block2dSnapshot::decode_sqlite_snapshot_native(&native, &mut control).is_err(),
-            SqliteSnapshotPhase::EncodeNative => expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut control).is_err(),
+            SqliteSnapshotPhase::DecodeNative => original_owners::with_decoding(|native_owner|Block2dSnapshot::decode_sqlite_snapshot_native(&native, &mut control, native_owner)).is_err(),
+            SqliteSnapshotPhase::EncodeNative => original_owners::with_encoding(|native_owner|expected.encode_sqlite_snapshot_native(SnapshotEncoding::Text, &mut control, native_owner)).is_err(),
             _ => unreachable!(),
         };
         drop(control);
@@ -209,10 +211,10 @@ fn sqlite_snapshot_block2d_actual_erased_declared_binary_text_retains_full_domai
                 SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack()),
                 SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
             };
-            let database = (codec.export)(BLOCK_2D_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            let database = original_owners::with_decoding(|native_owner|(codec.export)(BLOCK_2D_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             assert_eq!(database.tables.len(), 10);
             assert_eq!(database.table("block2_document").unwrap().single_row().unwrap().text(1).unwrap(), "");
-            let native = (codec.import)(BLOCK_2D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            let native = original_owners::with_encoding(|native_owner|(codec.import)(BLOCK_2D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             let actual = match native {
                 store::io_schema::IoPayload::Binary(v) => Block2dSnapshot::decode_pack(&v).unwrap(),
                 store::io_schema::IoPayload::Text(v) => Block2dSnapshot::parse_dsl(&v).unwrap(),

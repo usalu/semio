@@ -95,7 +95,7 @@ fn compression_params_reject_header_fields_outside_their_four_bits() {
     assert!(diff(15).messages().is_empty(), "the maximum boundary is admitted");
     assert!(!diff(255).messages().is_empty(), "a window size beyond the 4-bit field is refused");
     let identity = semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.unknown".into()) };
-    assert_eq!(<DeflateEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(&identity, &base).expect_err("no kind edits the schema identity").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(<DeflateEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(&identity, &base).err().expect("no kind edits the schema identity").code.0, "snapshot-edit.unsupported-path");
     let mut unknown = base.clone();
     unknown.schema = "stdio.unknown".into();
     let adapter_error = semio_s_artifact_stdio_contract::editing::validate_snapshot_schema_for_dialect(&semio_framework_value::ToValue::to_value(&unknown), DEFLATE_EDITOR_DIALECT, STDIO_DEFLATE_DOCUMENT_SCHEMA).expect_err("registered adapter identity");

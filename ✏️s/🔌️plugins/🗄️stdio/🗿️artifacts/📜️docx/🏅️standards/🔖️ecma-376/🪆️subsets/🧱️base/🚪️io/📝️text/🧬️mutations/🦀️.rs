@@ -181,4 +181,4 @@ impl OpText for DocxMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;

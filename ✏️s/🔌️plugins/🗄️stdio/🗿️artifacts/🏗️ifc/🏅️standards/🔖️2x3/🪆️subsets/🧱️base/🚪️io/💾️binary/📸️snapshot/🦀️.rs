@@ -22,4 +22,3 @@ impl store::ArtifactPack for Ifc2x3Snapshot {
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { native::decode_pack(bytes, options) }
 }
 }
-pub use snapshot_codec::*;

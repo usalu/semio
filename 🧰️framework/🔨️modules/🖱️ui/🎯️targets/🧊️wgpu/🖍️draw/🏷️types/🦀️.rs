@@ -583,7 +583,7 @@ impl DrawList {
     /// renderer owns the previous frame's `DrawList` across a frame boundary and drives this ladder
     /// itself — the same contract `prepared.rs`'s `retire_step` already exposes.
     pub fn next_retirement_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
-        fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(std::mem::size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"draw backing extent overflow"))}
+        fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"draw backing extent overflow"))}
         fn text(value:&String)->usize{if value.is_empty(){value.capacity()}else{0}}
         if let Some(pass)=self.scene_passes.last(){
             if let Some(draw)=pass.textured_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.texture_key))}return if draw.instances.capacity()!=0{bytes(&draw.instances)}else{Ok(0)}}

@@ -3,7 +3,7 @@
 //! keystroke (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
 
 use crate::editor::rewriting::terminology::TrinityRewritingLabels;
-use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
+use crate::standards::v1::subsets::any::schema::{self, ParameterKind};
 use crate::RewritingSnapshot;
 use semio_framework_graph::manifest::PropertyValue;
 use semio_framework_ui_locale::Label;

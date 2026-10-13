@@ -175,7 +175,7 @@ impl ArtifactEditor for En1997PlayApp {
 
     /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, En1997Snapshot>) -> Result<Emit<En1997Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
-        let base = doc.snapshot.clone();
+        let _base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media)
     }
     //#endregion ðï¸MediaPorts

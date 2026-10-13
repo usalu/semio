@@ -13,7 +13,7 @@ pub struct RemoveBlock {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "block", kind: "remove-block", record: "RemoveBlock" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(diff_remove_block(*index))
     }

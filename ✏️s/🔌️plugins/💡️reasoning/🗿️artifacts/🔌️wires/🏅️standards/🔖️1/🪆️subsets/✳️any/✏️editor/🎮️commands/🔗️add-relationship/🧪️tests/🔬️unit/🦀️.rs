@@ -33,8 +33,8 @@ async fn add_relationship_refuses_missing_unknown_and_identical_endpoints_by_nam
         (AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-9".into() }, "mutation.target-missing"),
         (AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-1".into() }, "wires.relationship.self"),
     ] {
-        app.dispatch_typed(WiresCommand::AddRelationship(payload), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("admitted");
-        let fault = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.err().expect("refused");
+        app.dispatch_typed(WiresCommand::AddRelationship(payload), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("admitted");
+        let fault = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.err().expect("refused");
         assert!(fault.message.contains(code) || fault.code.0 == code, "expected {code}, got {fault:?}");
     }
     let board = crate::editor::wires::unit_tests::context::board(&app);

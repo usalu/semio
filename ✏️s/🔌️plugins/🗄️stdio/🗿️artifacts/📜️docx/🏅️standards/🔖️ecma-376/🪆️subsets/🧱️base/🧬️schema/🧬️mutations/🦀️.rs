@@ -20,7 +20,8 @@ use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcConte
 
 
 
-use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, DocxXmlPartModification, DocxXmlPartRemoval, DocxXmlPartsDelta};
+use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxXmlPartDiff, DocxXmlPartModification, DocxXmlPartRemoval, DocxXmlPartsDelta};
+#[cfg(test)] use crate::schema::diff::{DocxPathSegment};
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 #[cfg(test)]
 use crate::schema::snapshot::DocxDocument;

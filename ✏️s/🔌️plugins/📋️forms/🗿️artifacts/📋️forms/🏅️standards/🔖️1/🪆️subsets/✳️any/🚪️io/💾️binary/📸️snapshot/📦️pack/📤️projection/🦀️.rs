@@ -31,11 +31,11 @@ pub(super) fn project<'s>(s:&'s FormsSnapshot,counts:&Counts,c:&mut NativeEncode
   FormExpr::And{items}|FormExpr::Or{items}=>{node.kind=if matches!(value,FormExpr::And{..}){ConditionKind::And}else{ConditionKind::Or};node.items=b.control.allocate_vec(items.len())?;for item in items{node.items.push(b.condition(item)?);b.control.step()?;}}
  }document.conditions.push(node);index+=1;b.control.step()?;}
  index=0;while index<b.values.len(){let value=b.values[index];let mut node=Value{kind:Kind::Null,boolean:None,unsigned:None,signed:None,float_bits:None,text:None,bytes:None,items:Vec::new(),members:Vec::new()};match value{
-  semio_framework_value::DslValue::Null=>{},semio_framework_value::DslValue::Bool(value)=>{node.kind=Kind::Boolean;node.boolean=Some(*value)},
-  semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value))=>{node.kind=Kind::Unsigned;node.unsigned=Some(*value)},semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(value))=>{node.kind=Kind::Signed;node.signed=Some(*value)},semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(value))=>{node.kind=Kind::Float;node.float_bits=Some(value.to_bits())},
-  semio_framework_value::DslValue::String(value)=>{node.kind=Kind::Text;node.text=Some(b.text(value)?)},semio_framework_value::DslValue::Bytes(value)=>{node.kind=Kind::Bytes;node.bytes=Some(Octets(b.control.copy_bytes(value)?))},
-  semio_framework_value::DslValue::Array(values)=>{node.kind=Kind::Array;node.items=b.control.allocate_vec(values.len())?;for value in values{node.items.push(b.value(value)?);b.control.step()?;}},
-  semio_framework_value::DslValue::Object(values)=>{node.kind=Kind::Object;node.members=b.control.allocate_vec(values.len())?;for(name,value)in values{node.members.push(Member{name:b.text(name)?,value:b.value(value)?});b.control.step()?;}}
+  DslValue::Null=>{},DslValue::Bool(value)=>{node.kind=Kind::Boolean;node.boolean=Some(*value)},
+  DslValue::Number(semio_framework_value::Number::UInt(value))=>{node.kind=Kind::Unsigned;node.unsigned=Some(*value)},DslValue::Number(semio_framework_value::Number::Int(value))=>{node.kind=Kind::Signed;node.signed=Some(*value)},DslValue::Number(semio_framework_value::Number::Float(value))=>{node.kind=Kind::Float;node.float_bits=Some(value.to_bits())},
+  DslValue::String(value)=>{node.kind=Kind::Text;node.text=Some(b.text(value)?)},DslValue::Bytes(value)=>{node.kind=Kind::Bytes;node.bytes=Some(Octets(b.control.copy_bytes(value)?))},
+  DslValue::Array(values)=>{node.kind=Kind::Array;node.items=b.control.allocate_vec(values.len())?;for value in values{node.items.push(b.value(value)?);b.control.step()?;}},
+  DslValue::Object(values)=>{node.kind=Kind::Object;node.members=b.control.allocate_vec(values.len())?;for(name,value)in values{node.members.push(Member{name:b.text(name)?,value:b.value(value)?});b.control.step()?;}}
  }document.values.push(node);index+=1;b.control.step()?;}
  if document.values.len()!=counts.values||document.conditions.len()!=counts.conditions{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Forms native forecast disagrees with literal projection"))}b.control.checkpoint()?;Ok(document)
 }

@@ -13,7 +13,7 @@ pub struct RemoveEntry {
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RemoveEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entry", kind: "remove-entry", record: "RemoveEntry" };
 
-    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
+    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff::diff_remove_entry(name))
     }

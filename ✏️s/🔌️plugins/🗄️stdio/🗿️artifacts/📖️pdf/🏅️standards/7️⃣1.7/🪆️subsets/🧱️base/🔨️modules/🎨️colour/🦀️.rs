@@ -300,7 +300,7 @@ pub fn lift_shading(id: &str, value: &PdfObject, source: &mut dyn ObjectSource) 
         2 => PdfShadingKind::Axial { coords: array_n::<4>(dict_get(&dict, "Coords"))?, domain: array_n::<2>(dict_get(&dict, "Domain")), function: function?, extend },
         3 => PdfShadingKind::Radial { coords: array_n::<6>(dict_get(&dict, "Coords"))?, domain: array_n::<2>(dict_get(&dict, "Domain")), function: function?, extend },
         4..=7 => {
-            let PdfObject::Stream { data, .. } = &resolved else { return None };
+            let PdfObject::Stream { data: _, .. } = &resolved else { return None };
             let reference = NativePdfArtifactResources::default().admit("s.stdio.pdf-mesh", resolved.clone()).ok()?;
             source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: reference.clone() });
             PdfShadingKind::Mesh { shading_type, bits_per_coordinate: dict_i64(&dict, "BitsPerCoordinate").unwrap_or(16) as u32, bits_per_component: dict_i64(&dict, "BitsPerComponent").unwrap_or(16) as u32, bits_per_flag: dict_i64(&dict, "BitsPerFlag").map(|v| v as u32), vertices_per_row: dict_i64(&dict, "VerticesPerRow").map(|v| v as u32), decode: numbers_of(dict_get(&dict, "Decode")), function, reference }

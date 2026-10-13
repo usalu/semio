@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/📚️history-cases/🔣️.json" with { type: "json" };
 
 test("one common decision publishes three retained member roots together", () => {
   const generated = join(process.env.SEMIO_TICKET_DIR!, "🗑️generated");

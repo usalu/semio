@@ -15,7 +15,7 @@ impl MeshTessellationJob{
     }
     /// 🔺️ Writes one actual original triangle row through the shared output producer.
     pub(super) fn append_triangle_indices(&mut self,indices:[u32;3]){let out=self.output.as_mut().unwrap();out.indices.extend_from_slice(&indices);out.face_ids.push(self.face as u32);}
-    pub(super) fn next_triangle_copy_byte_demand(&self,indices:[u32;3])->Result<usize,ValueError>{self.prepared_triangle(indices).map(|_|4*std::mem::size_of::<u32>())}
+    pub(super) fn next_triangle_copy_byte_demand(&self,indices:[u32;3])->Result<usize,ValueError>{self.prepared_triangle(indices).map(|_|4*size_of::<u32>())}
     pub(super) fn next_triangle_capacity_byte_demand(&self,indices:[u32;3],_copy:usize)->Result<usize,ValueError>{self.prepared_triangle(indices)?;let out=self.output.as_ref().unwrap();if out.indices.capacity().saturating_sub(out.indices.len())<3||out.face_ids.capacity()==out.face_ids.len(){return Err(refusal("original mesh triangle exceeds its admitted output extent"));}Ok(0)}
     pub(super) fn next_triangle_release_byte_demand(&self,indices:[u32;3])->Result<usize,ValueError>{self.prepared_triangle(indices).map(|_|0)}
     pub(super) fn next_triangle_depth_demand(&self,indices:[u32;3])->Result<usize,ValueError>{self.prepared_triangle(indices).map(|_|1)}

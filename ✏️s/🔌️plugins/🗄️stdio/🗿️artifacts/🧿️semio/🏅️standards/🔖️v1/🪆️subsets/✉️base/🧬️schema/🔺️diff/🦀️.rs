@@ -23,7 +23,6 @@ use crate::standards::v1::subsets::text::schema::{diff::SemioTextDiff, snapshot:
 use crate::standards::v1::subsets::value::schema::{diff::SemioValueTreeDiff, snapshot::SemioValueSnapshot};
 use crate::standards::v1::subsets::video::schema::{diff::SemioVideoDiff, snapshot::SemioVideoSnapshot};
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec};
 use protocol::MutationApplyError;
 use protocol::MutationDiff;
 

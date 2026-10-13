@@ -30,7 +30,7 @@ pub(crate) mod context {
     impl Drop for RasterAppFixture {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                artifact_laws::close_registered_fixture_app(&mut self.0);
+                artifact_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -53,7 +53,7 @@ pub(crate) mod context {
     /// every typed command until the app carries the live runtime instance the `ActionMeta` names, so
     /// an unmounted fixture can construct and render but never mutate.
     pub async fn app() -> RasterAppFixture {
-        let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(artifact_laws::meta("local").instance_id).await;
         RasterAppFixture(app)
     }
@@ -77,8 +77,8 @@ pub(crate) mod context {
     pub async fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
         let mut action = artifact_laws::meta("local");
         action.view_state = Some(raster_view_state());
-        let mut result = app.dispatch_typed(command, &action).await.expect("dispatch");
-        let settled = artifact_laws::settle_registered_typed_operation(app, artifact_laws::meta("local").instance_id).await.expect("settle the typed operation");
+        let mut result = app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        let settled = artifact_laws::settle_registered_typed_operation(app, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
     }
@@ -88,7 +88,7 @@ pub(crate) mod context {
     /// `ArtifactCommand::Undo`, and only then does the typed publication settle. Pressing it with a
     /// bare `handle_action` reads back as a silent no-op on a MOUNTED app.
     pub async fn history(app: &mut RasterApp, action: &str) {
-        artifact_laws::settle_history_verb(app, action, artifact_laws::meta("local").instance_id).await;
+        artifact_laws::settle_history_verb(app, action, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     }
 
     pub async fn render(app: &mut RasterApp, body_key: &str) -> String {
@@ -119,7 +119,7 @@ pub(crate) mod context {
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
         retire_raster_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.expect("load semio");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load semio");
         app
     }
 }
@@ -518,8 +518,8 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     let base_envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None);
     let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
     context::retire_raster_envelope(base_envelope);
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a, &base_files).await.expect("load a");
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b, &base_files).await.expect("load b");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load a");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load b");
     let background_id = "bg".to_string();
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://raster-convergence", "mem://raster-convergence").await;
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
@@ -533,8 +533,8 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     // anything in, so without these two ticks each instance still read only its own edit — the exact
     // exchange `artifact_app_laws::assert_two_registered_instances_converge` performs for the apps
     // whose genesis document is enough to carry both commands.
-    instance_a.tick_backbone().await.expect("a folds b's events");
-    instance_b.tick_backbone().await.expect("b folds a's events");
+    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
 
     let projection_a = instance_a.snapshot().expect("projection a");
     let projection_b = instance_b.snapshot().expect("projection b");
@@ -546,10 +546,10 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     // 🔀️ A replicated CHECKPOINT keeps both sides converged too — the second half of the framework's
     // own convergence law, run here against the shared seeded base.
     let local = artifact_app_laws::meta("local");
-    let admitted = instance_a.handle_action("commitCheckpoint", None, &local).await.expect("a commits a checkpoint");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a commits a checkpoint");
     semio_framework_plugin::plugin_app_close_prelude::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
-    artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, local.instance_id).await.expect("a's checkpoint publication settles");
-    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, local.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's checkpoint publication settles");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's checkpoint");
     assert_eq!(instance_a.snapshot().expect("projection a").layers.len(), instance_b.snapshot().expect("projection b").layers.len(), "a replicated checkpoint keeps both instances converged");
 
     // 🧷️ Paired backbone ends block the fixtures' close ladder until both are released.
@@ -564,7 +564,7 @@ async fn ingest_operations_is_idempotent() {
     artifact_app_laws::assert_registered_ingest_idempotent::<EditorApp<RasterPlayApp>, usize, _, _>(
         || async { context::raster_app_manifest_for_tests() },
         RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }),
-        |app| app.snapshot().unwrap().layers.len(),
+        |app| app.snapshot().unwrap().layers.len(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -927,7 +927,7 @@ pub(crate) mod mounted {
     impl Drop for MountedRasterApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -937,7 +937,7 @@ pub(crate) mod mounted {
     }
 
     pub fn mounted_app() -> MountedRasterApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<RasterPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
+        let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<RasterPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(RASTER_TEST_INSTANCE));
         MountedRasterApp(app)
     }
@@ -946,8 +946,8 @@ pub(crate) mod mounted {
         let id = "raster-composite";
         let mut action = meta("local");
         action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-        let mut result = app.dispatch_typed(command, &action).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, RASTER_TEST_INSTANCE).await.expect("settle the typed operation");
+        let mut result = app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, RASTER_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
     }
@@ -957,7 +957,7 @@ pub(crate) mod mounted {
     /// sees `ArtifactCommand::Undo`, and only then does the typed publication settle. Pressing it
     /// without that ladder reads back as a silent no-op.
     pub async fn history(app: &mut MountedRasterApp, action: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, RASTER_TEST_INSTANCE).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, RASTER_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     }
 }
 
@@ -1303,7 +1303,7 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let mut polls = 0usize;
     let mut last = (0u64, 0u64);
     while started.elapsed() < std::time::Duration::from_secs(240) {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 91).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
         polls += 1;
         last = (polled.completed, polled.total);
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {

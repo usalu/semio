@@ -6,8 +6,6 @@
 
 use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDrawingChild, GisMapImageChild, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
 
 
 //#region 🔹Snapshot

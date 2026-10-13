@@ -9,7 +9,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::host::owned::{PROCESS3D_MAXIMUM_DOMAIN_ITEMS, PROCESS3D_OWNER_BYTES};
-use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
+use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, ProcessMeasure, ProcessStep, StepOrigin, StockQuantity, WorkingSolid, WorkshopMachine};
 
 pub(crate) const PROCESS3D_MUTATION_BINARY_FORMAT: u8 = 2;
 
@@ -766,14 +766,14 @@ pub fn process3d_all_retained_mutation_fixtures_for_test() -> Vec<Process3dMutat
 //#endregion 🧪️RetainedLaws
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{
     change_machine_icon, change_step_enabled, change_step_origin, change_stock_label, create_machine, create_step, delete_machine, delete_step, move_stock, rename_machine, rename_step, reorder_steps, replace_machine_capabilities,
     replace_step_measure, replace_stock_solid,
 };
-use crate::{Capability, Pose, StepOrigin, WorkshopMachine};
-use protocol::OpText;
+#[cfg(test)] use crate::{Capability, Pose, StepOrigin, WorkshopMachine};
+#[cfg(test)] use protocol::OpText;
 use crate::standards::v1::subsets::any::io::text::mutations::{Process3dMutationDsl};
 
 impl protocol::OpBinary for Process3dMutationDsl {

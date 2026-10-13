@@ -212,7 +212,7 @@ pub fn sequence_child_leaves_emit(snapshot: &SequenceSnapshot, leaves: Vec<Semio
     if leaves.is_empty() {
         return Emit::default();
     }
-    Emit { child_preparations: std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
+    Emit { child_preparations: VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot, _>("content", &snapshot.content.child_id, leaves)]), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }
 }
 
 /// ✏️ Starts one editing gesture over the exact working scene of the composed content child `doc` carries.
@@ -1127,10 +1127,10 @@ impl SequenceRetainedArtifactWork {
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedArtifactWork {
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -2108,10 +2108,10 @@ impl SequencePersistentWork {
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequencePersistentWork {
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -2332,10 +2332,10 @@ impl SequenceRetainedConfigWork {
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedConfigWork {
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -2543,10 +2543,10 @@ impl SequenceRetainedExampleWork {
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedExampleWork {
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -2748,8 +2748,8 @@ enum SequenceDecodeTurn {
 }
 
 /// 📦️ Takes the original parameter value into its canonical dictionary shape.
-fn sequence_import_parameter_value(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
-    if matches!(value, semio_framework_value::DslValue::Object(_)) { value } else { semio_framework_value::DslValue::Object(vec![("value".into(), value)]) }
+fn sequence_import_parameter_value(value: DslValue) -> DslValue {
+    if matches!(value, DslValue::Object(_)) { value } else { DslValue::Object(vec![("value".into(), value)]) }
 }
 
 /// 🎟️ The exact one-turn grant a quoted demand needs.
@@ -2814,7 +2814,7 @@ impl SequenceImportJob {
             if self.input.is_none() && self.parser.is_none() && self.projection.is_none() {
                 match self.media.as_mut().map(|media| &mut media.payload) {
                     Some(MediaPayload::Intrinsic { value, .. }) => {
-                        let value = std::mem::replace(value, semio_framework_value::DslValue::Null);
+                        let value = std::mem::replace(value, DslValue::Null);
                         self.input = Some(neural_engine::retirement::RetainedDictionaryInput::new(sequence_import_parameter_value(value)));
                     },
                     Some(MediaPayload::Structured { .. }) => self.parser = Some(semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject)),
@@ -3413,9 +3413,9 @@ impl ArtifactEditor for SequencePlayApp {
     /// refuses EVERY id (`app.command.unsupported`) — without this bridge no Actions-pane row, no
     /// palette drop and no graph gesture ever reached `handle`. Key aliases mirror the shells' own
     /// vocabularies (`value`/`id`, `nodeId`, `sourceNodeId`) rather than adding shell-side shims.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SequenceCommand, Fault> {
-        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
-        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64)).unwrap_or_default();
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<SequenceCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string));
+        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(DslValue::as_f64)).unwrap_or_default();
         let json_arg = |key: &str, fallback: &str| args.and_then(|value| value.get(key)).map_or_else(|| fallback.to_string(), json::to_json_string);
         match action {
             "addStep" => Ok(SequenceCommand::AddStep(add_step::AddStep { kind: text_arg(&["kind", "value"]).unwrap_or_else(|| "computation.import".into()), x: number_arg(&["x"]), y: number_arg(&["y"]) })),

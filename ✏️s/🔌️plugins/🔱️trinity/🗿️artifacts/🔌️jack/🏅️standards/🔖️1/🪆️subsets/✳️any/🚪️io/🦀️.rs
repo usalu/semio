@@ -243,7 +243,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec JackBuilderFacets {
         construction: JackBuilderConstruction,
         analysis: JackAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::JackComposerComposition,
+        composition: JackComposerComposition,
     }
     builder: JackBuilder,
     analyzer: JackAnalyzer,

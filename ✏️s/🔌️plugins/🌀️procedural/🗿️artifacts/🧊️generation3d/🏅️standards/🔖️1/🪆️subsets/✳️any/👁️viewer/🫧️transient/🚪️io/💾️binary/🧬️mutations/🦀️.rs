@@ -15,4 +15,3 @@ impl protocol::OpBinary for Generation3dViewTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

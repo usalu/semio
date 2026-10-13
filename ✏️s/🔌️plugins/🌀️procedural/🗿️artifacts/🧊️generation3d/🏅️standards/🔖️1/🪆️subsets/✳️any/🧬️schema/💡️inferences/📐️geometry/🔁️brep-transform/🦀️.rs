@@ -5,7 +5,7 @@
 use super::brep_curve::guarded;
 use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{Brep, BrepError, BrepOperation, GeometryHandle, GeometryKind, ShapeRoot, ShapeValue};
+use semio_framework_3d::brep::engine::{Brep, BrepError, BrepOperation, GeometryHandle, ShapeRoot, ShapeValue};
 use semio_framework_3d::brep::representation::vector::matrix::Affine3;
 use semio_framework_3d::brep::representation::vector::{Pnt3, Vec3};
 

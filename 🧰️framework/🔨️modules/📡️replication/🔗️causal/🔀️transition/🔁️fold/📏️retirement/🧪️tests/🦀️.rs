@@ -66,7 +66,8 @@ fn bounded_history_fold_new_local_admission_retains_original_across_same_poll_re
 #[test]
 fn bounded_history_fold_unsupported_local_refusal_returns_original_before_registration(){
     struct Unsupported(String);
-    impl RetireOwned for Unsupported { fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { panic!("unsupported original must never construct retirement") } }
+    /// ⛔️ Deliberately refuses controlled retirement so the fold control returns the original before registration.
+    impl RetireOwned for Unsupported { fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { panic!("unsupported original must never construct retirement") } fn controlled_retirement_supported() -> bool { false } }
     let control = HistoryFoldControl::new();
     let original = Unsupported(String::from("original owner"));
     let pointer = original.0.as_ptr();

@@ -53,14 +53,13 @@ impl store::ArtifactDsl for TiffSnapshot {
  const EXTENSION:&'static str="tiff";
  fn envelope_id()->&'static str{"stdio.tiff"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
-  let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
-  if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"TIFF owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}
-  crate::standards::v6_0::subsets::document::io::text::snapshot::from_record(semio_framework_dsl_record::parse_exact(body,&crate::standards::v6_0::subsets::document::io::text::snapshot::spec(),&semio_framework_dsl_record::ParseOptions::default())?)
+  let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue,error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+  if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue,"TIFF owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)))}
+  from_record(semio_framework_dsl_record::parse_exact(body,&spec(),&semio_framework_dsl_record::ParseOptions::default())?)
  }
  fn print_dsl(&self)->String{
-  let body=semio_framework_dsl_record::print(&crate::standards::v6_0::subsets::document::io::text::snapshot::to_record(self),&crate::standards::v6_0::subsets::document::io::text::snapshot::spec(),semio_framework_dsl_record::JoinMode::Document);
+  let body=semio_framework_dsl_record::print(&to_record(self),&spec(),semio_framework_dsl_record::JoinMode::Document);
   let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared TIFF envelope");store::semio_format::wrap_text(&envelope,&body)
  }
 }
 }
-pub use snapshot_codec::*;

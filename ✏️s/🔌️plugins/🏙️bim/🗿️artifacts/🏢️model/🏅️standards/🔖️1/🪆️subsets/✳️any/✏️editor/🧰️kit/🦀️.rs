@@ -20,7 +20,7 @@ pub fn bim_action(action: &str, args: Option<UiValue>) -> UiAssemblyResult<(Acti
 }
 
 /// 🎛️ Addresses host window chrome with its native action descriptor.
-pub fn bim_window_action(action: &str, args: Option<semio_framework_plugin::DslValue>) -> semio_framework_plugin::ActionDescriptor {
+pub fn bim_window_action(action: &str, args: Option<DslValue>) -> semio_framework_plugin::ActionDescriptor {
     semio_framework_plugin::ActionDescriptor { controller_id: BIM_EDITOR_CONTROLLER_ID.into(), action: action.into(), args }
 }
 //#endregion 🔖️Actions

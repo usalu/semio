@@ -655,7 +655,7 @@ impl semio_framework_dsl_record::DslField for Float32Buffer {
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Block(Box::new(semio_framework_dsl_record::FieldValue::Statements(vec![<Self as semio_framework_dsl_record::DslVariants>::to_named_record(self)]))) }
     fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
         let mut statements = control.allocate_vec(1)?;
-        control.charge(std::mem::size_of::<semio_framework_dsl_record::FieldValue>())?;
+        control.charge(size_of::<semio_framework_dsl_record::FieldValue>())?;
         statements.push(<Self as semio_framework_dsl_record::DslVariants>::to_named_record_controlled(self, control)?);
         Ok(semio_framework_dsl_record::FieldValue::Block(Box::new(semio_framework_dsl_record::FieldValue::Statements(statements))))
     }

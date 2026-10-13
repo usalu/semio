@@ -406,7 +406,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<GisTerrainSnapshot, GisTerrai
         Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, 8))
     }
     fn begin_demand(&self, _mutation: &GisTerrainMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Gis3dOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Gis3dOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>(), depth: 1 })
     }
     fn begin(
         &self,

@@ -16,7 +16,7 @@ pub struct SetRecordField {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "record-field", kind: "set-record-field", record: "SetRecordField" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         let Self { record_index, field_index, value } = self;
         protocol::MutationOutcome::new({
             let mut fdiff = EpwRecordDiff::default();
@@ -28,7 +28,7 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
         let Self { record_index, field_index, .. } = self;
         Ok({
             match base.records.get(*record_index).and_then(|r| r.field_at(*field_index)) {
-                Some(prior) => vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: *record_index, field_index: *field_index, value: prior.to_string() })],
+                Some(prior) => vec![EpwMutation::SetRecordField(SetRecordField { record_index: *record_index, field_index: *field_index, value: prior.to_string() })],
                 None => Vec::new(),
             }
         })

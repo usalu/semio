@@ -37,7 +37,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetImageGeometry {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.images.get(*index) {
-            Some(img) => vec![GifMutation::SetImageGeometry(set_image_geometry::SetImageGeometry { index: *index, left: img.left, top: img.top, width: img.width, height: img.height })],
+            Some(img) => vec![GifMutation::SetImageGeometry(SetImageGeometry { index: *index, left: img.left, top: img.top, width: img.width, height: img.height })],
             None => Vec::new(),
         })
     }

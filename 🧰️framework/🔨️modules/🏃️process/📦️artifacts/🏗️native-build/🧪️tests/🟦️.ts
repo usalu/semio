@@ -1,12 +1,12 @@
 import { test, expect } from "bun:test";
-import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
+import { closeSync, openSync, readFileSync, writeFileSync, mkdtempSync, mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import {runCargoRelayV1} from "../🌊️relay/🟦️.ts";
-import { buildCargoArtifacts, readCargoArtifactBuildPolicyV1, writeCompletedCargoInvocationProvenanceV1 } from "../🟦️.ts";
+import { BoundedDiagnosticsV1, buildCargoArtifacts, readCargoArtifactBuildPolicyV1, writeCompletedCargoInvocationProvenanceV1 } from "../🟦️.ts";
 import {CurrentPhysicalOwnerV1} from "../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import {decodeCargoProvenanceV1} from "../🧾️receipt/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
@@ -137,4 +137,32 @@ test("actual compiler resource read consumes in-place bytes and tracks only orig
 test("completed compiler unit custody requires explicit discovery or received candidate authority",async()=>{
  const schema=(await import("../🧬️schema/🧾️unit-evidence/🔣️.json")).default,validate=new Ajv({strict:true}).compile(schema);for(const vector of[fixture.unitEvidence.discovery,fixture.unitEvidence.received]){expect(validate(vector)).toBe(true);for(const key of fixture.unitEvidence.required){const invalid={...vector};delete invalid[key];expect(validate(invalid)).toBe(false);}}
  const root=mkdtempSync(join(fixtureOutput,"u-")),manifest=join(root,"Cargo.toml"),source=join(root,"unit.rs"),artifact=join(root,"libunit.rmeta"),receipt=join(root,"receipt.json");writeFileSync(manifest,'[workspace]\n[package]\nname="unit"\nversion="0.0.0"\nedition="2021"\n[lib]\npath="unit.rs"\n');writeFileSync(source,"pub fn unit() {}\n");writeFileSync(artifact,fixture.internalDepInfoOwnership.artifact);const reference=Bun.spawn(["cargo","metadata","--offline","--no-deps","--format-version=1","--manifest-path",manifest],{cwd:root,stdout:"pipe",stderr:"pipe"}),metadata=JSON.parse(await new Response(reference.stdout).text());expect(await reference.exited).toBe(0);expect(metadata.packages[0].targets[0].src_path).toBe(source);const invocation={manifest,cwd:root,command:"check",args:[],buildDirectory:null,builtAtMs:Date.now(),status:0,cancelled:false,units:[{message:{package_id:"path+file://actual#unit@0.0.0",manifest_path:manifest,target:{name:"unit",kind:["lib"],src_path:source},filenames:[artifact]}}],buildScripts:[]};await expect(writeCompletedCargoInvocationProvenanceV1(receipt,invocation,new Map(),root,provenancePhysical(root))).rejects.toThrow();expect(existsSync(receipt)).toBe(false);
+});
+
+test("a build with declared deliverables stages exactly those files and none of the sibling library outputs", async () => {
+  const spec = fixture.deliverables, root = mkdtempSync(join(fixtureOutput, "d-")), source = join(root, "owner"), emitted = join(root, "emitted");
+  mkdirSync(source); mkdirSync(emitted);
+  const manifest = join(source, "Cargo.toml"), sourcePath = join(source, "lib.rs");
+  writeFileSync(manifest, '[package]\nname="fixture"\nversion="0.1.0"\n'); writeFileSync(sourcePath, "");
+  writeFileSync(join(emitted, spec.component), Buffer.from(spec.wasmHex, "hex")); writeFileSync(join(emitted, spec.library), spec.libraryText);
+  const message = { reason: "compiler-artifact", manifest_path: manifest, package_id: `path+${pathToFileURL(source).href}#fixture@0.1.0`, target: { kind: ["cdylib", "rlib"], name: "fixture", src_path: sourcePath }, filenames: [join(emitted, spec.library), join(emitted, spec.component)] };
+  const policy = { version: 1 as const, cwd: source, buildDirectory: join(root, "compiler"), leaseDirectory: fixtureOutput, captureDirectory: join(root, "captures"), budgetMs: 5000 };
+  let observed: string[] = [];
+  await buildCargoArtifacts(manifest, ["--lib", "--profile", "wasm-dev"], policy, { deliverables: [spec.extension], output: "dist/component", signal: new AbortController().signal, validate: (files) => { observed = [...files.keys()]; }, commandPort: { command: process.execPath, args: ["-e", `process.stdout.write(${JSON.stringify(JSON.stringify(message) + "\n")})`] } });
+  expect(observed).toEqual([spec.component]);
+  expect(readdirSync(join(source, "dist/component")).filter((name) => !name.startsWith("."))).toEqual([spec.component]);
+});
+
+test("compiler diagnostics stay inside their line budget while the complete stream and the newest failure lines survive", () => {
+  const spec = fixture.diagnostics, directory = mkdtempSync(join(fixtureOutput, "g-")), path = join(directory, "cargo.log");
+  const shown: string[] = [], fd = openSync(path, "w"), rows = Array.from({ length: spec.lines }, (_, index) => `line ${index}`);
+  const diagnostics = new BoundedDiagnosticsV1(fd, (line) => shown.push(line), spec.live, spec.newest);
+  for (const row of rows) diagnostics.line(row);
+  closeSync(fd);
+  expect(shown).toEqual(rows.slice(0, spec.live));
+  expect(diagnostics.suppressed).toBe(spec.lines - spec.live);
+  expect(readFileSync(path, "utf8").split("\n").slice(0, spec.lines)).toEqual(rows);
+  expect(diagnostics.finish(false, path)).toEqual([`[cargo] ${spec.lines - spec.live} diagnostic line(s) not shown; complete log: ${path}`]);
+  expect(diagnostics.finish(true, path).slice(1)).toEqual(rows.slice(-spec.newest));
+  expect(new BoundedDiagnosticsV1(null, () => {}, spec.live, spec.newest).finish(true, null)).toEqual([]);
 });

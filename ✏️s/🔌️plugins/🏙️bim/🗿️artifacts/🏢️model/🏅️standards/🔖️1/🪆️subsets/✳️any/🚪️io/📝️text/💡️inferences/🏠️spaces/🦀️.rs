@@ -1,6 +1,5 @@
 //! 📊️ Native JSON inference table projection.
 use std::collections::BTreeMap;
-use crate::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
 
 /// 🧾️ One row of the table the third-party oracle reproduces.

@@ -357,15 +357,15 @@ pub mod projection {
     pub const WORLD_VISIBLE_SPAN: f64 = WORLD_HALF * 2.0;
 
     /// 📐️ Minimum zoom so every viewport pixel maps inside the world (cover, no outscroll).
-    pub fn cover_zoom_for_viewport(viewport: &super::canvas::camera::Viewport) -> f64 {
+    pub fn cover_zoom_for_viewport(viewport: &canvas::camera::Viewport) -> f64 {
         let vw = viewport.width.max(1) as f64;
         let vh = viewport.height.max(1) as f64;
         vw.max(vh) / WORLD_VISIBLE_SPAN
     }
 
-    pub fn default_world_camera(viewport: &super::canvas::camera::Viewport) -> super::canvas::camera::Camera {
+    pub fn default_world_camera(viewport: &canvas::camera::Viewport) -> canvas::camera::Camera {
         let zoom = cover_zoom_for_viewport(viewport).max(super::MAP_CAMERA_ZOOM_MIN);
-        super::canvas::camera::Camera { x: 0.0, y: 0.0, zoom }
+        canvas::camera::Camera { x: 0.0, y: 0.0, zoom }
     }
 
     pub fn tile_world_rect(z: u32, x: u32, y: u32) -> Rect {

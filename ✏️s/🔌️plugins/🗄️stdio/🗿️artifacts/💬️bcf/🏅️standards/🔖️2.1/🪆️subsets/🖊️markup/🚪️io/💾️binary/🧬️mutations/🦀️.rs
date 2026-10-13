@@ -301,7 +301,6 @@ impl protocol::OpBinary for BcfMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `BcfMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

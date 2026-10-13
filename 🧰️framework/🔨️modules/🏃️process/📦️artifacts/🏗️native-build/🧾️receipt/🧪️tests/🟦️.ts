@@ -2,10 +2,12 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import { blake3 } from "@noble/hashes/blake3.js";
+import throttle from "lodash/throttle";
+import pMap from "p-map";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { CurrentPhysicalOwnerV1, type CurrentPhysicalPortV1 } from "../../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "../../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import { writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
 import {
   CARGO_PROVENANCE_PHYSICAL_BUDGET_V1,
@@ -16,6 +18,7 @@ import {
   cargoDepInfoResolvedSourcesV1,
   cargoDepInfoSourcesV1,
   cargoProvenancePhysicalControlV1,
+  cargoProvenanceProgressSinkV1,
   decodeCargoProvenanceV1,
   encodeCargoProvenanceV1,
   type CargoProvenanceV1,
@@ -103,6 +106,104 @@ test("the physical control is finite, owner-validated and bounded by the caller'
   expect(cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined }).remainingMs()).toBeGreaterThan(CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs - 5000);
   expect(() => new CurrentPhysicalOwnerV1(artifacts, control)).not.toThrow();
   expect(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1).toBeLessThanOrEqual(128 * 1024 * 1024);
+});
+
+test("the progress sink admits one row per interval exactly like lodash throttle", () => {
+  const vector = fixture.progress;
+  let clock = 0;
+  const admitted: number[] = [];
+  const sink = cargoProvenanceProgressSinkV1(() => admitted.push(clock), vector.intervalMs, () => clock);
+  for (const tick of vector.ticks) {
+    clock = tick;
+    sink({ phase: "read", bytes: 0, totalBytes: 0, work: tick });
+  }
+  expect(admitted).toEqual(vector.admitted);
+  const reference: number[] = [];
+  const original = Date.now;
+  const throttled = throttle(() => reference.push(clock), vector.intervalMs, { leading: true, trailing: false });
+  try {
+    Date.now = () => clock;
+    for (const tick of vector.ticks) {
+      clock = tick;
+      throttled();
+    }
+  } finally {
+    Date.now = original;
+    throttled.cancel();
+  }
+  expect(reference).toEqual(vector.admitted);
+  for (const interval of [Number.NaN, Number.POSITIVE_INFINITY, -1]) expect(() => cargoProvenanceProgressSinkV1(() => undefined, interval)).toThrow("Finite progress interval");
+  expect(() => cargoProvenanceProgressSinkV1(undefined as never)).toThrow("Finite progress interval");
+});
+
+test("a throttled progress sink never weakens cancellation and leaves the receipt bytes untouched", async () => {
+  const root = mkdtempSync(join(artifacts, "t-"));
+  const file = join(root, "a.rs");
+  writeFileSync(file, "a");
+  let cancelled = false;
+  let seen = 0;
+  const owner = new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => cancelled, onProgress: cargoProvenanceProgressSinkV1(() => seen++, 3_600_000) }));
+  expect(await owner.digest(file)).toBe(sha256("a"));
+  expect(seen).toBe(1);
+  cancelled = true;
+  await expect(owner.digest(file)).rejects.toThrow("cancelled");
+  expect(seen).toBe(1);
+  const { invocation } = syntheticInvocation(root, 30, 3);
+  const original = Date.now;
+  const receipts: Buffer[] = [];
+  let rows = 0;
+  try {
+    Date.now = () => 1_760_000_000_000;
+    for (const onProgress of [() => undefined, cargoProvenanceProgressSinkV1(() => rows++)]) {
+      const receipt = join(root, `receipt-${receipts.length}.json`);
+      await writeCompletedCargoInvocationProvenanceV1(receipt, { ...invocation, buildDirectory: null }, new Map(), join(root, "cargo-home"), new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress })));
+      receipts.push(readFileSync(receipt));
+    }
+  } finally {
+    Date.now = original;
+  }
+  expect(rows).toBeGreaterThan(0);
+  expect(receipts[1]!.equals(receipts[0]!)).toBe(true);
+});
+
+test("bounded concurrency keeps item order, never exceeds its limit and starts nothing after a refusal, like p-map", async () => {
+  const vector = fixture.bounded;
+  const measure = async (map: (items: readonly number[], run: (item: number) => Promise<number>) => Promise<number[]>) => {
+    let flight = 0;
+    let peak = 0;
+    const results = await map(vector.items, async (item) => {
+      flight++;
+      peak = Math.max(peak, flight);
+      await Bun.sleep(vector.delays[item]!);
+      flight--;
+      return item * 2;
+    });
+    return { results, peak };
+  };
+  const ours = await measure((items, run) => mapBoundedV1(items, vector.limit, run));
+  const reference = await measure((items, run) => pMap(items, run, { concurrency: vector.limit }));
+  expect(ours.results).toEqual(vector.items.map((item: number) => item * 2));
+  expect(reference.results).toEqual(ours.results);
+  expect(ours.peak).toBe(vector.limit);
+  expect(reference.peak).toBe(vector.limit);
+  const events: string[] = [];
+  await expect(
+    mapBoundedV1(vector.items, vector.limit, async (item: number) => {
+      events.push(`start:${item}`);
+      await Bun.sleep(vector.delays[item]!);
+      if (item === vector.failAt) {
+        events.push(`fail:${item}`);
+        throw Error(`refused ${item}`);
+      }
+      events.push(`done:${item}`);
+      return item;
+    }),
+  ).rejects.toThrow(`refused ${vector.failAt}`);
+  expect(events.slice(events.indexOf(`fail:${vector.failAt}`)).some((event) => event.startsWith("start:"))).toBe(false);
+  const starts = events.filter((event) => event.startsWith("start:")).map((event) => Number(event.slice(6)));
+  expect(starts).toEqual([...starts].sort((a, b) => a - b));
+  for (const limit of [0, -1, 1.5, Number.NaN]) await expect(mapBoundedV1([1], limit, async (item) => item)).rejects.toThrow("Positive concurrency limit");
+  expect(await mapBoundedV1([], 4, async (item: number) => item)).toEqual([]);
 });
 
 function syntheticInvocation(root: string, fileCount: number, unitCount: number) {

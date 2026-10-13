@@ -100,7 +100,7 @@ pub(in super::super) fn reconstruct(database: &SqliteDatabase, tables: OpcSqlite
             target.push((reconstruct_text(control, row.text(3)?)?, reconstruct_text(control, row.text(4)?)?));
         }
     }
-    let mut owners = identities(database, tables.relationship_owner, 3, control)?;
+    let owners = identities(database, tables.relationship_owner, 3, control)?;
     let mut relations = identities(database, tables.relationship, 7, control)?;
     let mut work = 0;
     for row in &owners {

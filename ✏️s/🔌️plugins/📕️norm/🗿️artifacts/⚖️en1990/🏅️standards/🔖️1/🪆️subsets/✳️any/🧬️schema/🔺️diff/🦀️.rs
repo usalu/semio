@@ -298,7 +298,7 @@ pub struct En1990EffectEdit {
 
 impl En1990RowEdit for En1990EffectEdit {
     type Row = MemberEffect;
-    fn key(row: &MemberEffect) -> String {
+    fn key(_row: &MemberEffect) -> String {
         String::new()
     }
 

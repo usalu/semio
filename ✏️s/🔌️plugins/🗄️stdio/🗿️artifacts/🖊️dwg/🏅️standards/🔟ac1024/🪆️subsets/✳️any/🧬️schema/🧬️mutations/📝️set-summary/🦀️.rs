@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetSummary {
         protocol::MutationOutcome::new(DwgDiff { summary: (base.summary != self.summary).then(|| self.summary.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.summary != self.summary).then(|| DwgMutation::SetSummary(set_summary::SetSummary { summary: base.summary.clone() })).into_iter().collect())
+        Ok((base.summary != self.summary).then(|| DwgMutation::SetSummary(SetSummary { summary: base.summary.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set summary info", "Zusammenfassung setzen")

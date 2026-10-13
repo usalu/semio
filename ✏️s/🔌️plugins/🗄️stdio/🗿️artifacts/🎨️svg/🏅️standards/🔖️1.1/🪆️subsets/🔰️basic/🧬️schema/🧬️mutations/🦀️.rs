@@ -29,7 +29,7 @@ use crate::schema::snapshot::{node_at, NodePath, TransformOp, ViewBox};
 
 
 use crate::SvgSnapshot;
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 use crate::schema::snapshot::{SvgNode, SvgAttributeValue};
 
 //#region 🔖️Mutations

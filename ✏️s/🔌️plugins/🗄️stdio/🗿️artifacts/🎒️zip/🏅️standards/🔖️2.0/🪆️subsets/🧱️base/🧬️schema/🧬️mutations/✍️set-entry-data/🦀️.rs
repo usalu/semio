@@ -16,7 +16,7 @@ pub struct SetEntryData {
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetEntryData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entry-data", kind: "set-entry-data", record: "SetEntryData" };
 
-    fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipMutation as protocol::Mutation<ZipSnapshot>>::Diff> {
+    fn diff(&self, _base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipMutation as protocol::Mutation<ZipSnapshot>>::Diff> {
         let Self { name, data } = self;
         protocol::MutationOutcome::new(diff::diff_set_entry_data(name, data.clone()))
     }
@@ -24,7 +24,7 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetEntryData {
         let Self { name, .. } = self;
         Ok({
             {
-                base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
+                base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
             }
         })
     }

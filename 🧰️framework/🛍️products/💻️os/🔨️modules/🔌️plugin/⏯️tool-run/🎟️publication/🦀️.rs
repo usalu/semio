@@ -9,7 +9,7 @@ fn close_original_control<T:RetireOwned>(slot:&mut Option<ControlledRetirement<T
 impl ToolRunPublicationIngress{
  pub fn terminal_is_empty(&self)->bool{self.actor.is_none()&&self.transaction.is_none()&&self.transaction_close.is_none()}
  pub fn admit_actor(&mut self,actor:&str,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{semio_framework_plugin_mounted_owner::actor_capture::admit_actor_capture(&mut self.actor,actor,grant)}
- pub fn admit_transaction(&mut self,actor:&str,clock:&protocol::HybridLogicalTimestamp,app:&str,tool:&str,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+ pub fn admit_transaction(&mut self,actor:&str,clock:&HybridLogicalTimestamp,app:&str,tool:&str,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
   if self.transaction.is_some()||self.transaction_close.is_some(){return Ok(None);}
   let placement=size_of::<Option<protocol::TransactionRef>>();if grant.maximum_copy_bytes<placement{return Ok(None);}
   let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-placement,..grant};

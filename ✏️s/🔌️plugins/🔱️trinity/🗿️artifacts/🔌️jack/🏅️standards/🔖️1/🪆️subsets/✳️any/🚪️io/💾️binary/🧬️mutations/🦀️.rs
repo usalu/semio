@@ -1,7 +1,7 @@
 //! 📡️ Trinity graph mutation binary framing and registry surface.
 
 /// 🧾️ Direct-owner binary tags in aggregate declaration order.
-pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[("SetQuery", crate::standards::v1::subsets::any::io::binary::mutations::set_query::BINARY_TAG)];
+pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[("SetQuery", set_query::BINARY_TAG)];
 
 #[path = "🔎️set-query/🦀️.rs"]
 pub mod set_query;
@@ -14,12 +14,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::standards::v1::subsets::any::schema::mutations::set_query as semantic_set_query;
-use crate::executor::GraphEffect;
-use crate::{Edge, EntityRef, JackSnapshot, Node, Port, PropertyBag, PropertyDef, PropertyValue};
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-use semio_framework_diagnostic::TextError;
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use protocol::OpBinary;
 
 //#region 🔖️DslMirrors
 
@@ -73,6 +68,6 @@ use crate::standards::v1::subsets::any::io::text::mutations::{TrinityGraphOperat
 use crate::standards::v1::subsets::any::schema::operations::{TrinityGraphEnvelope, TrinityGraphStore, OwnedTrinityGraphStore};
 pub async fn new_trinity_graph_store(envelope: TrinityGraphEnvelope, actor: protocol::ActorId) -> Result<OwnedTrinityGraphStore, store::VcsError> {
     let mut store = TrinityGraphStore::new(envelope, actor).await?;
-    store::install_unscheduled_catalog(&mut store, store::funded_bounded_artifact_store_owners::<crate::JackSnapshot, crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation>())?;
+    store::install_unscheduled_catalog(&mut store, store::funded_bounded_artifact_store_owners::<crate::JackSnapshot, TrinityGraphMutation>())?;
     Ok(OwnedTrinityGraphStore(store))
 }

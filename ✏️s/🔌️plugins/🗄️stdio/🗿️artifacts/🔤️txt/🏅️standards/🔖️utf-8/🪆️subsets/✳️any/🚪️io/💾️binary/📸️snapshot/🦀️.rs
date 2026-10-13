@@ -47,14 +47,13 @@ impl store::ArtifactPack for TxtSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 use crate::standards::v_utf_8::subsets::any::schema::snapshot::TxtSnapshot;
 
 impl store::ArtifactPackReceiving for TxtSnapshot {
     /// 🫴️ Keeps original line storage and typed publication in the supplied native receiving owner.
     fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,semio_framework_value::ValueError>{
-        use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
-        use crate::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
+        
+        
         Self::receive_pack_rows(bytes,owner,None)
     }
 }
@@ -73,7 +72,7 @@ impl TxtSnapshot {
         use crate::standards::v_utf_8::subsets::any::schema::snapshot::LineEnding;
         type Receiving=(String,Vec<String>,String,Option<TxtSnapshot>);
         owner.receive::<Receiving,Self>(|slot,native,body|{
-            let inline=std::mem::size_of::<Receiving>();
+            let inline=size_of::<Receiving>();
             body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:inline,maximum_depth:1,..Default::default()})?;native.checkpoint()?;
             *slot=Some((String::new(),Vec::new(),String::new(),None));body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:inline,..Default::default()})?;
             let mut lf=0usize;let mut crlf=0usize;let mut previous=0u8;
@@ -95,10 +94,10 @@ impl TxtSnapshot {
             body.copy_text_into(native,crate::STDIO_TXT_DOCUMENT_SCHEMA,schema,2)?;body.allocate_vec_into(native,count,lines,3)?;
             if !text.is_empty(){for line in content.split(separator){
                 body.copy_text_into(native,line,pending,3)?;
-                body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<String>(),maximum_depth:3,..Default::default()})?;native.checkpoint()?;
-                lines.push(std::mem::take(pending));body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<String>(),..Default::default()})?;
+                body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<String>(),maximum_depth:3,..Default::default()})?;native.checkpoint()?;
+                lines.push(std::mem::take(pending));body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<String>(),..Default::default()})?;
             }}
-            let inline=std::mem::size_of::<Self>();body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:inline,maximum_depth:1,..Default::default()})?;native.checkpoint()?;
+            let inline=size_of::<Self>();body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:inline,maximum_depth:1,..Default::default()})?;native.checkpoint()?;
             *typed=Some(Self{schema:std::mem::take(schema),lines:std::mem::take(lines),trailing_newline,line_ending});body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:inline,..Default::default()})?;
             Ok(typed.take().unwrap())
         })

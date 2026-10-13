@@ -158,7 +158,6 @@ impl OpBinary for IfcMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `IfcMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

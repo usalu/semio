@@ -28,6 +28,27 @@ export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled
   });
 }
 
+/** ⏱️ Shortest gap between two progress rows a human-facing log admits: one line per second per invocation. */
+export const CARGO_PROVENANCE_PROGRESS_INTERVAL_MS_V1 = 1000;
+
+/** 🔇️ Narrows the per-operation observation rows to a human-facing sink: the first row, then the first row that arrives at least `intervalMs` after the previous admitted one.
+ *
+ * Every filesystem operation of a real release graph is one row (about 78 000 for the process plugin), so a sink that
+ * prints each one floods the build log and its pipe instead of reporting progress. The filter lives beside the sink, never in
+ * the physical authority: cancellation, deadline and budget checks run on every row before the sink sees it.
+ * @see ./🧪️tests/🟦️.ts
+ */
+export function cargoProvenanceProgressSinkV1(sink: (progress: FileObservationProgressV1) => void, intervalMs: number = CARGO_PROVENANCE_PROGRESS_INTERVAL_MS_V1, now: () => number = () => performance.now()): (progress: FileObservationProgressV1) => void {
+  if (typeof sink !== "function" || !Number.isFinite(intervalMs) || intervalMs < 0 || typeof now !== "function") throw Error("Finite progress interval and sink required");
+  let admitted = Number.NEGATIVE_INFINITY;
+  return (progress) => {
+    const at = now();
+    if (at - admitted < intervalMs) return;
+    admitted = at;
+    sink(progress);
+  };
+}
+
 /** 📜️ The source files a Cargo dep-info file (`<artifact>.d`) names for its target, with Cargo's
  * `\ ` space escape undone. Only the first `target: deps` rule counts; the empty per-dependency
  * rules Cargo appends after it carry nothing. */

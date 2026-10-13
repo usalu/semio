@@ -3,7 +3,7 @@
 //! weather-file-epw-data-dictionary.html — see `…/schema/snapshot` module doc for the full
 //! rationale) plus composition/registration. 🦑 Codec + registration dissolved out of the former
 //! `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
-use crate::apply_mutation;
+#[cfg(test)] use crate::apply_mutation;
 use crate::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriod, EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot, EPW_RECORD_FIELD_COUNT, STDIO_EPW_DOCUMENT_SCHEMA};
 
 //#region 🎹️DerivedComposition
@@ -51,7 +51,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.epw", standard: semio_framework_artifact_reference::StandardId("energyplus"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<EpwSnapshot, crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(crate::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.epw", standard: StandardId("energyplus"), subset: SubsetId("*") }, store::ArtifactCodec::bare::<EpwSnapshot, crate::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(crate::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -371,7 +371,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec EpwBuilderFacets {
         construction: EpwBuilderConstruction,
         analysis: EpwAnalyzerAnalysis,
-        composition: crate::standards::energyplus::subsets::any::io::derived_composition::EpwComposerComposition,
+        composition: EpwComposerComposition,
     }
     builder: EpwBuilder,
     analyzer: EpwAnalyzer,

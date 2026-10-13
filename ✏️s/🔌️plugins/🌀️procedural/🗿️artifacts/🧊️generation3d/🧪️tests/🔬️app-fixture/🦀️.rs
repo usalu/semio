@@ -14,7 +14,7 @@ impl std::ops::DerefMut for Generation3dAppFixture {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
 impl Drop for Generation3dAppFixture {
-    fn drop(&mut self) { semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0); }
+    fn drop(&mut self) { semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT); }
 }
 
 /// 🏗️ Supplies the artifact's registered tool catalog without installing geometry implementations.
@@ -23,7 +23,7 @@ pub(crate) async fn app_with_registry() -> Generation3dAppFixture {
 }
 /// 👤️ Binds the genuine opened fixture actor before any original store or window owner is constructed.
 pub(crate) async fn app_with_actor(actor: semio_framework_os_kernel::ActorId) -> Generation3dAppFixture {
-    let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(|| semio_framework_plugin::App { definition: create_generation3d_app(), examples: Vec::new() }, actor).await;
+    let mut app = new_app_with_registry::<EditorApp<Generation3dPlayApp>>(|| semio_framework_plugin::App { definition: create_generation3d_app(), examples: Vec::new() }, actor, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     Generation3dAppFixture(app)
 }
@@ -32,8 +32,8 @@ pub(crate) fn snapshot(app: &Generation3dApp) -> Generation3dSnapshotRead { Gene
 /// 🎯️ Completes the registered typed publication before returning a live document read.
 pub(crate) async fn dispatch(app: &mut Generation3dApp, command: Generation3dCommand) -> TypedOperationFixtureReceipt {
     let action_meta = meta("local");
-    app.dispatch_typed(command, &action_meta).await.expect("dispatch");
-    settle_registered_typed_operation(app, action_meta.instance_id).await.expect("retained publication")
+    app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+    settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained publication")
 }
 pub(crate) async fn render_body(app: &mut Generation3dApp, body: &str) -> String {
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")

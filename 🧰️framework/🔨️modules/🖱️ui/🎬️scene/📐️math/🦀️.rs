@@ -12,7 +12,7 @@
 
 pub use semio_framework_geometry::{Mat4, Vec3};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+#[cfg(test)] use std::collections::{BTreeMap, BTreeSet};
 pub use semio_framework_mesh_engine::ComponentReferenceTable;
 use protocol::value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
 #[path="♻️retirement/🦀️.rs"]
@@ -1362,7 +1362,7 @@ fn mesh3d_authority() -> &'static protocol::value::retirement::controlled::Retai
     &AUTHORITY
 }
 
-pub const fn mesh3d_begin_capacity_byte_demand()->usize {std::mem::size_of::<[Option<Mesh3dPage>;MESH3D_OWNER_PAGE_CAPACITY]>()}
+pub const fn mesh3d_begin_capacity_byte_demand()->usize {size_of::<[Option<Mesh3dPage>;MESH3D_OWNER_PAGE_CAPACITY]>()}
 
 pub fn mesh3d_begin(generation: u64, revision: u64, schema: Mesh3dSchema,grant:RetainedCloneGrant) -> Result<(Mesh3dWriteToken,RetainedCloneProgress), Mesh3dFault> {
     mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?.begin(generation, revision, schema,grant)

@@ -72,7 +72,7 @@ impl ArtifactSqliteSnapshot for DocxSnapshot {
         }
         match dialect.subset.as_str() {
             "*" => Ok(store::io_schema::IoOutcome::clean(())),
-            "strict" | "transitional" => crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::subset::validate(self, &dialect.subset, control),
+            "strict" | "transitional" => subset::validate(self, &dialect.subset, control),
             _ => Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, "DOCX owned subset has no declared semantic validator"))),
         }
     }

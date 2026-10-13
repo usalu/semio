@@ -68,7 +68,7 @@ pub trait DslField: Sized {
     // through a derived `__dsl_spec` — see R9.
     fn shape() -> Shape;
     /// 🏭️ Constructs only the explicitly declared shape metadata under caller admission.
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"field owner has no controlled native schema implementation"))}
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"field owner has no controlled native schema implementation"))}
     fn to_value(&self) -> FieldValue;
     /// 🛫️ Projects explicitly owned fields under cumulative output admission and cancellation.
     fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"field owner has no controlled native projection implementation"))}
@@ -108,10 +108,10 @@ impl<T: DslField> DslField for Box<T> {
         T::from_value(value).map(Box::new)
     }
     fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self,ValueError> {
-        control.charge(std::mem::size_of::<T>())?;
+        control.charge(size_of::<T>())?;
         control.scoped_stage(|control|T::from_value_controlled(value, control)).map(Box::new)
     }
-    fn from_record_controlled(record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.charge(std::mem::size_of::<T>())?;control.scoped_stage(|control|T::from_record_controlled(record,control)).map(Box::new)}
+    fn from_record_controlled(record:&RecordValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{control.charge(size_of::<T>())?;control.scoped_stage(|control|T::from_record_controlled(record,control)).map(Box::new)}
 }
 
 macro_rules! impl_dsl_field_int {
@@ -267,7 +267,7 @@ impl<const N: usize> DslField for semio_framework_value::paged::PagedUtf8<N> {
 
 impl<T: DslField, const N: usize> DslField for semio_framework_value::list::PagedList<T, N> {
     fn shape() -> Shape { Shape::List(Box::new(T::shape())) }
-    fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::List(crate::producer::boxed(T::shape_controlled(control)?, control)?))) }
+    fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::List(producer::boxed(T::shape_controlled(control)?, control)?))) }
     fn to_value(&self) -> FieldValue { FieldValue::List(self.iter().map(T::to_value).collect()) }
     fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> { Ok(FieldValue::List(native_encoding::project_list(self, control)?)) }
     fn from_value(value: &FieldValue) -> Result<Self, String> { let FieldValue::List(items) = value else { return Err("expected List".into()); }; let mut output = Self::default(); for value in items { output.try_push(T::from_value(value)?).map_err(|error| error.to_string())?; } Ok(output) }
@@ -279,7 +279,7 @@ impl<T: DslField, const N: usize> DslField for semio_framework_value::list::Page
 
 impl<T: DslField, const N: usize> DslField for semio_framework_value::paged::PagedMap<T, N> {
     fn shape() -> Shape { Shape::Map(Box::new(T::shape())) }
-    fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::Map(crate::producer::boxed(T::shape_controlled(control)?, control)?))) }
+    fn shape_controlled<C: NativeSchemaControl>(control: &mut C) -> Result<Shape, ValueError> { control.scoped_depth(64, |control| Ok(Shape::Map(producer::boxed(T::shape_controlled(control)?, control)?))) }
     fn to_value(&self) -> FieldValue { FieldValue::Map(self.iter().map(|(key, value)| (key.to_string_owner(), value.to_value())).collect()) }
     fn from_value(value: &FieldValue) -> Result<Self, String> { match value { FieldValue::Map(entries) => Self::try_from_fallible_entries(entries.iter().map(|(key, value)| Ok((semio_framework_value::paged::PagedUtf8::try_from_str(key)?, T::from_value(value).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?)))).map_err(ValueError::into_message), _ => Err("expected Map".into()) } }
     fn from_value_controlled(value: &FieldValue, control: &mut NativeDecodeControl<'_>) -> Result<Self, ValueError> {
@@ -349,7 +349,7 @@ impl<T: DslField> DslField for Vec<T> {
     fn shape() -> Shape {
         Shape::List(Box::new(T::shape()))
     }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::List(crate::producer::boxed(T::shape_controlled(control)?,control)?)))}
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::List(producer::boxed(T::shape_controlled(control)?,control)?)))}
     // 🔁 `Iterator::map` cannot await per-element (residue shape 1) and `T::to_value`/`from_value`
     // are AFIT over an arbitrary implementor, so — unlike a known-pure leaf fn — R9 does not apply;
     // the fix is a plain sequential loop that awaits each element in turn.
@@ -395,7 +395,7 @@ impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
     fn shape() -> Shape {
         Shape::Map(Box::new(T::shape()))
     }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::Map(crate::producer::boxed(T::shape_controlled(control)?,control)?)))}
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::Map(producer::boxed(T::shape_controlled(control)?,control)?)))}
     // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
     fn to_value(&self) -> FieldValue {
         let mut entries = Vec::with_capacity(self.len());
@@ -420,7 +420,7 @@ impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
         control.step()?;
         match value {
             FieldValue::Map(entries)=>{
-                let slot=std::mem::size_of::<(String,T)>().checked_add(128).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"map slot size overflow"))?;
+                let slot=size_of::<(String,T)>().checked_add(128).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"map slot size overflow"))?;
                 control.charge(entries.len().checked_mul(slot).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"map ownership size overflow"))?)?;
                 let mut output=__rt::DecodedFieldOwner::new(Self::new(),Self::retire_decoded);
                 for (key,value) in entries {if let Some(previous)=output.as_mut().insert(control.copy_text(key)?,control.scoped_stage(|control|T::from_value_controlled(value,control))?){T::retire_decoded(previous);}}
@@ -442,7 +442,7 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
     fn shape() -> Shape {
         Shape::Tuple(Box::new(T::shape()), Some(N))
     }
-    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::Tuple(crate::producer::boxed(T::shape_controlled(control)?,control)?,Some(N))))}
+    fn shape_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Shape,ValueError>{control.scoped_depth(64,|control|Ok(Shape::Tuple(producer::boxed(T::shape_controlled(control)?,control)?,Some(N))))}
     // 🔁 Same R9-doesn't-apply reasoning as `Vec<T>` above: sequential loop, not `.map().collect()`.
     fn to_value(&self) -> FieldValue {
         let mut items = Vec::with_capacity(N);
@@ -516,7 +516,7 @@ pub trait DslVariants: Sized {
     // `Shape::Statements(<T>::variants())` is itself called from inside a sync `__dsl_spec` — see R9.
     fn variants() -> Vec<(String, RecordSpecProducer)>;
     /// 🌿️ Owns literal variant labels and their lazy controlled schema producers.
-    fn variants_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Vec<(String,RecordSpecProducer)>,ValueError>{control.checkpoint()?;Err(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"variant owner has no controlled native schema implementation"))}
+    fn variants_controlled<C:NativeSchemaControl>(control:&mut C)->Result<Vec<(String,RecordSpecProducer)>,ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"variant owner has no controlled native schema implementation"))}
     fn to_named_record(&self) -> (String, RecordValue);
     /// 🌿️ Projects a declared tagged variant under the same cumulative output control.
     fn to_named_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<(String,RecordValue),ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"variant owner has no controlled native projection implementation"))}
@@ -587,7 +587,7 @@ pub mod __rt {
 
     /// 🪆️ Delegates a declared record variant through its explicit lazy schema producer.
     pub fn newtype_variant_producer<T:DslField>()->RecordSpecProducer{
-        RecordSpecProducer{ordinary:newtype_variant_spec::<T>,decoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.decode(control),_=>Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"newtype variant requires a controlled Record schema"))}},encoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.encode(control),_=>Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"newtype variant requires a controlled Record schema"))}}}
+        RecordSpecProducer{ordinary:newtype_variant_spec::<T>,decoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.decode(control),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"newtype variant requires a controlled Record schema"))}},encoding:|control|{match T::shape_controlled(control)?{Shape::Record(producer)=>producer.encode(control),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"newtype variant requires a controlled Record schema"))}}}
     }
 
     pub fn newtype_variant_to_record<T: DslField>(inner: &T) -> RecordValue {

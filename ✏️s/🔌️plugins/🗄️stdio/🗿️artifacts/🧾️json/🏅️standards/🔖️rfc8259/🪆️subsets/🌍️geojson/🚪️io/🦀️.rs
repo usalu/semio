@@ -177,7 +177,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec JsonGeoJsonBuilderFacets {
         construction: JsonGeoJsonBuilderConstruction,
         analysis: JsonGeoJsonAnalyzerAnalysis,
-        composition: crate::standards::v_rfc8259::subsets::geojson::io::derived_composition::JsonGeoJsonComposerComposition,
+        composition: JsonGeoJsonComposerComposition,
     }
     builder: JsonGeoJsonBuilder,
     analyzer: JsonGeoJsonAnalyzer,

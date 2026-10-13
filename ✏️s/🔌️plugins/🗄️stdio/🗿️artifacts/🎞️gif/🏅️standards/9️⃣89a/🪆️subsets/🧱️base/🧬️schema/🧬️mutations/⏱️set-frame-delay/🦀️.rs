@@ -17,7 +17,7 @@ pub struct SetFrameDelay {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-delay", kind: "set-frame-delay", record: "SetFrameDelay" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, delay_cs } = self;
         protocol::MutationOutcome::new({
             let d = GifFrameDiff { delay_cs: Some(*delay_cs), ..Default::default() };
@@ -27,7 +27,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDelay {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.frames.get(*index) {
-            Some(f) => vec![GifMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: *index, delay_cs: f.delay_cs })],
+            Some(f) => vec![GifMutation::SetFrameDelay(SetFrameDelay { index: *index, delay_cs: f.delay_cs })],
             None => Vec::new(),
         })
     }

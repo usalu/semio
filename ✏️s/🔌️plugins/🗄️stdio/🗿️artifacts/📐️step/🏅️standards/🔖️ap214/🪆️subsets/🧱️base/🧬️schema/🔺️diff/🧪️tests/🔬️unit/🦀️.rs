@@ -71,7 +71,7 @@ async fn absorb_insert_insert_same_index_both_survive() {
     let d1 = absorb_entities(Some(d1), Some(d2)).expect("absorb of two non-empty diffs must be Some");
     assert_eq!(d1.added, vec![StepEntityAdded { index: 2, entity: e.clone() }, StepEntityAdded { index: 2, entity: f.clone() }]);
     let base = vec![entity(1, "BASE0", vec![]), entity(2, "BASE1", vec![])];
-    let applied = protocol::apply_diff(&d1, &base);
+    let applied = d1.apply(&base);
     let pos_e = applied.iter().position(|x| x.id == 50).expect("e survives");
     let pos_f = applied.iter().position(|x| x.id == 51).expect("f survives");
     assert_eq!(pos_f, 2, "later-absorbed insert (f) lands at the target index");

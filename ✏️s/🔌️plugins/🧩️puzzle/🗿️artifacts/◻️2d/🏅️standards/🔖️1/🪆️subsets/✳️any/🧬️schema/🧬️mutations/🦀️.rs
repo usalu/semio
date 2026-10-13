@@ -11,7 +11,7 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::Puzzle2dSnapshot;
-use protocol::{DiffAlgebra, Mutation, MutationDiff};
+use protocol::{DiffAlgebra, Mutation};
 use semio_framework_value::{list::PagedList, paged::PagedUtf8};
 
 //#region 🔖️Mutations

@@ -31,7 +31,6 @@ impl store::ArtifactDsl for DocxSnapshot {
  fn print_dsl(&self)->String{match native::encode_standalone(self,semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).expect("DOCX native ownership admission"){semio_framework_os_kernel::io_schema::IoPayload::Text(text)=>text,semio_framework_os_kernel::io_schema::IoPayload::Binary(_)=>unreachable!()}}
 }
 }
-pub use snapshot_codec::*;
 
 
 

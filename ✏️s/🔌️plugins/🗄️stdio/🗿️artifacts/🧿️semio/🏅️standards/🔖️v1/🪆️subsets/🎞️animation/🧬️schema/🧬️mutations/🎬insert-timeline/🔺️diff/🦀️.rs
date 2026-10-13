@@ -8,7 +8,7 @@ pub fn diff(payload: &super::InsertTimeline, base: &SemioAnimationSnapshot) -> p
     if payload.index > base.timelines.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("No timeline slot exists at index #{}.", payload.index), [payload.index.to_string()]);
     }
-    use SemioAnimationMutation::*;
+    
     let super::InsertTimeline { index, timeline } = payload;
     protocol::MutationOutcome::new(SemioAnimationDiff { timelines: Some(IndexedTripleDiff { added: vec![IndexAdded { index: *index, item: timeline.clone() }], ..Default::default() }) })
 }

@@ -6,7 +6,7 @@ use crate::editor::space_index::{SpaceIndexCommand, unit_tests::context};
 async fn open_artifact_with_relays_the_explicit_choice() {
     let (mut app, id) = context::new_app_with_indexed_artifact().await;
     let result = app
-        .dispatch_typed(SpaceIndexCommand::OpenArtifactWith(OpenArtifactWith { id: id.clone(), role: "viewer".into(), plugin_id: "draw".into(), app_id: "draw-play".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"))
+        .dispatch_typed(SpaceIndexCommand::OpenArtifactWith(OpenArtifactWith { id: id.clone(), role: "viewer".into(), plugin_id: "draw".into(), app_id: "draw-play".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("open with");
     assert_eq!(result.requested_effects.len(), 1);

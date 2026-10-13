@@ -24,7 +24,7 @@ use crate::standards::v87a::subsets::any::schema::diff::{GifDiff, GifImageAdded,
 #[cfg(test)]
 use crate::standards::v87a::subsets::any::schema::snapshot::GifRgb;
 use crate::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 
 
 //#region 🔖️Mutations

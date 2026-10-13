@@ -6,7 +6,7 @@ use crate::part_1::{Catalogue, Product, PropertyDefinition, SelectionRequest};
 use crate::CatalogueValue;
 use crate::standards::v1::subsets::any::schema::part_1 as helpers;
 use crate::Iso16757Snapshot;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
 fn required_languages(catalogue: &Catalogue) -> Vec<String> {
     let mut langs = name_locales(&catalogue.metadata.names);
@@ -712,19 +712,19 @@ fn check_multilingual(catalogue: &Catalogue, required: &[String], report: &mut C
     let mut named: Vec<(String, String, &crate::Names)> = Vec::new();
     named.push(("catalogue".into(), "catalogue.metadata.names".into(), &catalogue.metadata.names));
     named.push((catalogue.manufacturer.id.clone(), "catalogue.manufacturer.names".into(), &catalogue.manufacturer.names));
-    for (i, g) in catalogue.product_groups.iter().enumerate() {
+    for (_i, g) in catalogue.product_groups.iter().enumerate() {
         named.push((g.id.clone(), format!("catalogue.productGroups[id={}].names", g.id), &g.names));
     }
-    for (i, c) in catalogue.product_classes.iter().enumerate() {
+    for (_i, c) in catalogue.product_classes.iter().enumerate() {
         named.push((c.id.clone(), format!("catalogue.productClasses[id={}].names", c.id), &c.names));
     }
-    for (i, s) in catalogue.product_series.iter().enumerate() {
+    for (_i, s) in catalogue.product_series.iter().enumerate() {
         named.push((s.id.clone(), format!("catalogue.productSeries[id={}].names", s.id), &s.names));
     }
-    for (i, p) in catalogue.products.iter().enumerate() {
+    for (_i, p) in catalogue.products.iter().enumerate() {
         named.push((p.id.clone(), format!("catalogue.products[id={}].names", p.id), &p.names));
     }
-    for (i, d) in catalogue.property_definitions.iter().enumerate() {
+    for (_i, d) in catalogue.property_definitions.iter().enumerate() {
         named.push((d.id.clone(), format!("catalogue.propertyDefinitions[id={}].names", d.id), &d.names));
     }
 
@@ -802,7 +802,7 @@ fn product_class<'a>(catalogue: &'a Catalogue, product: &Product) -> Option<&'a 
 fn check_required_properties(catalogue: &Catalogue, report: &mut CheckReport) {
     let mut checked = 0u32;
     let mut failed = 0u32;
-    for (pi, product) in catalogue.products.iter().enumerate() {
+    for (_pi, product) in catalogue.products.iter().enumerate() {
         let Some(class) = product_class(catalogue, product) else {
             continue;
         };
@@ -875,7 +875,7 @@ fn check_required_properties(catalogue: &Catalogue, report: &mut CheckReport) {
 fn check_property_values(catalogue: &Catalogue, dictionary: &crate::part_4::Dictionary, report: &mut CheckReport) {
     let mut checked = 0u32;
     let mut failed = 0u32;
-    for (pi, product) in catalogue.products.iter().enumerate() {
+    for (_pi, product) in catalogue.products.iter().enumerate() {
         let mut values: Vec<(String, &CatalogueValue, String)> = Vec::new();
         for pv in &product.static_properties {
             values.push((pv.definition_id.clone(), &pv.value, format!("product:{}", product.id)));
@@ -1319,8 +1319,8 @@ fn check_property_definition_units(catalogue: &Catalogue, dictionary: &crate::pa
 fn check_variant_domains(catalogue: &Catalogue, report: &mut CheckReport) {
     let mut checked = 0u32;
     let mut failed = 0u32;
-    for (pi, product) in catalogue.products.iter().enumerate() {
-        for (vi, variant) in product.variants.iter().enumerate() {
+    for (_pi, product) in catalogue.products.iter().enumerate() {
+        for (_vi, variant) in product.variants.iter().enumerate() {
             for (param_id, value) in &variant.parameter_values {
                 checked += 1;
                 if let Some(domain) = product.parameter_domains.iter().find(|d| &d.parameter_id == param_id) {

@@ -2,7 +2,7 @@
 
 pub const WINDOW_KIND_ID: &str = crate::editor::block3d::modes::edit::windows::world::BLOCK3D_WINDOW_WORLD;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
@@ -14,7 +14,7 @@ pub struct Block3dBrushPreview {
     pub direction: [f64; 3],
 }
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -112,25 +112,6 @@ mod mutations;
 pub use mutations::*;
 
 pub struct Block3dWorldWindowTransientOwner;
-
-impl semio_framework_value::retirement::RetireOwned for Block3dBrushPreview {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(self.position), semio_framework_value::retirement::leaf(self.direction)])
-    }
-}
-
-impl semio_framework_value::retirement::RetireOwned for Block3dWorldWindowTransient {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement(self.brush_preview)
-    }
-}
-
-impl semio_framework_value::retirement::RetireOwned for Block3dWorldWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let Self::SetBrushPreview(mutation) = self;
-        semio_framework_value::retirement::RetireOwned::retirement(mutation.preview)
-    }
-}
 
 #[expect(clippy::unnecessary_wraps, reason = "ArtifactEphemeralTransferPreparationFactory requires a fallible footprint callback")]
 fn preview_footprint(_: &Block3dWorldWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {

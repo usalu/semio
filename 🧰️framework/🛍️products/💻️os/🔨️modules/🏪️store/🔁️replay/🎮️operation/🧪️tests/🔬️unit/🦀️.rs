@@ -119,7 +119,7 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_copy_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_copy_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_copy_byte_demand) }
     fn next_close_capacity_byte_demand(&self, bytes:usize) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.shared.as_ref(){return owner.next_capacity_byte_demand(bytes);} self.inverse_list.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(bytes)) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_release_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand) }
-    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_depth_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_depth_demand();} self.inverse_list.as_ref().map_or(Ok(1),ControlledRetirement::next_depth_demand) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.active.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} if let Some(owner)=self.shared.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} self.inverse_list.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand().map(|depth|depth.max(1))) }
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();
         if !self.closing||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}
@@ -145,13 +145,15 @@ impl Drop for TextPreparation {
 }
 
 fn close(mut retirement:ArtifactReplayPreparationRetirement<String,TextInput>){
+    let mut last=None;
     for _ in 0..4096 {
         let body=retirement.next_copy_byte_demand().unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:retirement.next_capacity_byte_demand(body).unwrap(),maximum_release_bytes:retirement.next_release_byte_demand().unwrap(),maximum_depth:retirement.next_depth_demand().unwrap()};
         let step=retirement.close_step(grant).expect("exact admitted fixture close");assert!(step.progress().fits(grant));
+        last=Some((grant,step));
         if retirement.terminal_is_empty(){return;}
     }
-    panic!("fixture replay preparation never closed");
+    panic!("fixture replay preparation never closed; last quoted grant and step {last:?}");
 }
 fn close_owned<T:RetireOwned>(value:T){let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("fixture native owner refused: {error}"));for _ in 0..4096{if owner.terminal_is_empty(){return;}let body=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};assert!(owner.step(grant).unwrap().progress().fits(grant));}panic!("fixture owner did not close");}
 

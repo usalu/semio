@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::SHomeMutation;
 
-pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeCatalogGeneration", crate::standards::v1::subsets::any::io::text::mutations::change_catalog_generation::TEXT_OPCODE)];
+pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeCatalogGeneration", change_catalog_generation::TEXT_OPCODE)];
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

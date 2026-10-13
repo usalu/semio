@@ -14,7 +14,7 @@ pub struct RemoveEntity {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity", kind: "remove-entity", record: "RemoveEntity" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+    fn diff(&self, _base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
         let Self { id } = self;
         protocol::MutationOutcome::new(StepDiff { entities: Some(StepEntitiesDiff { removed: vec![*id], ..Default::default() }), ..Default::default() })
     }

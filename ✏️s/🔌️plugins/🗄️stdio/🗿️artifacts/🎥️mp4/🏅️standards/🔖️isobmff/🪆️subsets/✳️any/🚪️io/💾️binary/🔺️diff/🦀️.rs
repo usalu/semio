@@ -14,4 +14,3 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 semio_framework_os_kernel::diff_binary!(crate::standards::isobmff::subsets::any::schema::diff::Mp4Diff);
 }
-pub use diff_codec::*;

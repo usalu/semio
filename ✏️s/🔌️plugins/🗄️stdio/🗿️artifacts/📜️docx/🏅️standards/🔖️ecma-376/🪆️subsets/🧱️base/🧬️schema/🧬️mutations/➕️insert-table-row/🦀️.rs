@@ -18,7 +18,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertTableRow {
         addressed_outcome(&DocxMutation::InsertTableRow(self.clone()), base)
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
     Ok({
         addressed_inverse(&DocxMutation::InsertTableRow(self.clone()), base)?
     

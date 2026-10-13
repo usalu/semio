@@ -73,10 +73,10 @@ use crate::artifact_schema::mutations::{
     change_layer_application_type,
     change_layer_compressive_class,
 };
-use protocol::OpText;
+#[cfg(test)] use protocol::OpText;
 use crate::standards::v1::subsets::any::io::text::mutations::{Din4108MutationDsl,din4108_mutation_to_dsl,din4108_mutation_from_dsl};
 
-impl protocol::OpBinary for Din4108MutationDsl {
+impl OpBinary for Din4108MutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
     }
@@ -85,7 +85,7 @@ impl protocol::OpBinary for Din4108MutationDsl {
     }
 }
 
-impl protocol::OpBinary for Din4108Mutation {
+impl OpBinary for Din4108Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         din4108_mutation_to_dsl(self).encode_op()
     }

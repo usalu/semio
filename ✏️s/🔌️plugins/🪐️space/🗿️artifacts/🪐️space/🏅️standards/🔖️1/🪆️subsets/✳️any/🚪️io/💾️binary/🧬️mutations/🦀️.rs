@@ -45,7 +45,7 @@ pub mod touch_artifact;
 pub mod create_artifact;
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 
 impl protocol::OpBinary for SSpaceMutation {

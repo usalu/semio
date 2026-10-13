@@ -318,6 +318,7 @@ impl MemberOpenRequest {
         }
         if self.closing_identity_field == 0 {
             if self.actor.0.has_owner() {
+                if grant.maximum_release_bytes<semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>(){return Ok(RetainedCloneStep::Progress(empty));}
                 let original=std::mem::take(&mut self.actor.0);
                 match original.close_original_lease(grant) {
                     Ok((value,progress))=>{self.closing_actor=value;return Ok(RetainedCloneStep::Progress(progress));},
@@ -387,7 +388,7 @@ impl MemberOpenRequest {
         };
         Ok(field.map_or(0, String::capacity))
     }
-    pub fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(if !self.detached&&self.pages.is_none()&&self.closing_identity_field==0&&self.actor.0.has_owner(){std::mem::size_of::<Option<String>>()}else{0}) }
+    pub fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     pub fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     pub fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(usize::from(!self.detached)) }
 
@@ -524,8 +525,8 @@ where
         let nested = |mut demand: RetirementDemand| { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "member-open owner depth overflow"))?; Ok(demand) };
         if let Some(active) = self.active.as_ref() { return super::artifact_retirement_box_demands(active, copy); }
         if let Some(runtime) = self.runtime.as_ref() { return nested(RetirementDemand { copy_bytes: runtime.next_close_copy_byte_demand()?, capacity_bytes: runtime.next_close_capacity_byte_demand(copy)?, release_bytes: runtime.next_close_release_byte_demand()?, depth: runtime.next_close_depth_demand()? }); }
-        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
-        if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
+        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
+        if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
         if let Some(initial) = self.initial.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.owners.as_ref().expect("member-open retains its initial factory").initial_snapshot_retirement.retirement_birth_bytes(initial), depth: 2, ..Default::default() }); }
         if self.history.is_some() { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<crate::os_spr::HistoryLog>(), depth: 2, ..Default::default() }); }
         if let Some(request) = self.request.as_ref() { return nested(RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(copy)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()? }); }

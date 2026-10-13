@@ -1,4 +1,6 @@
 //! 🧊️ Exact Native capability and controlled Scale laws precede semantic owner mounting.
+#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Puzzle3dSnapshot;
 use crate::*;
 use store::{ArtifactDsl, ArtifactPack};
@@ -197,9 +199,9 @@ fn sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domai
                     SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(value.encode_pack()),
                     SnapshotEncoding::Text => store::io_schema::IoPayload::Text(value.print_dsl()),
                 };
-                let database = (codec.export)(PUZZLE_3D_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+                let database = original_owners::with_decoding(|native_owner|(codec.export)(PUZZLE_3D_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
                 assert_eq!(database.tables.len(), 23);
-                let output = (codec.import)(PUZZLE_3D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+                let output = original_owners::with_encoding(|native_owner|(codec.import)(PUZZLE_3D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
                 let actual = match output {
                     store::io_schema::IoPayload::Binary(bytes) => Puzzle3dSnapshot::decode_pack(&bytes).unwrap(),
                     store::io_schema::IoPayload::Text(text) => Puzzle3dSnapshot::parse_dsl(&text).unwrap(),
@@ -218,14 +220,14 @@ fn sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases() {
     let exact = SqliteDatabaseLimits { max_rows: 30, ..Default::default() };
     let short = SqliteDatabaseLimits { max_rows: 29, ..Default::default() };
     let mut cb = |_| true;
-    assert!(small.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut cb, exact)).is_ok());
-    assert!(small.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
+    assert!(original_owners::with_sqlite_recipient(exact,&mut cb,|sqlite_control|small.to_sqlite_database(sqlite_control)).is_ok());
+    assert!(original_owners::with_sqlite_recipient(short,&mut cb,|sqlite_control|small.to_sqlite_database(sqlite_control)).is_err());
     let payload = store::io_schema::IoPayload::Binary(small.encode_pack());
-    assert!(Puzzle3dSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
-    assert!(small.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
+    assert!(original_owners::with_decoding(|native_owner|Puzzle3dSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut cb, short), native_owner)).is_err());
+    assert!(original_owners::with_encoding(|native_owner|small.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut cb, short), native_owner)).is_err());
     let mut large = small;
     large.meta.kind_catalogs.as_mut().unwrap().objects[0].description = "引用😀".repeat(20000);
-    let database = large.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut cb, Default::default())).unwrap();
+    let database = original_owners::with_sqlite_recipient(Default::default(),&mut cb,|sqlite_control|large.to_sqlite_database(sqlite_control)).unwrap();
     let payload = store::io_schema::IoPayload::Binary(large.encode_pack());
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
         let mut hit = false;
@@ -241,8 +243,8 @@ fn sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases() {
         let rejected = match phase {
             SqliteSnapshotPhase::ProjectSnapshot => large.to_sqlite_database(&mut control).is_err(),
             SqliteSnapshotPhase::ReconstructSnapshot => Puzzle3dSnapshot::from_sqlite_database(&database, &mut control).is_err(),
-            SqliteSnapshotPhase::DecodeNative => Puzzle3dSnapshot::decode_sqlite_snapshot_native(&payload, &mut control).is_err(),
-            SqliteSnapshotPhase::EncodeNative => large.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut control).is_err(),
+            SqliteSnapshotPhase::DecodeNative => original_owners::with_decoding(|native_owner|Puzzle3dSnapshot::decode_sqlite_snapshot_native(&payload, &mut control, native_owner)).is_err(),
+            SqliteSnapshotPhase::EncodeNative => original_owners::with_encoding(|native_owner|large.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut control, native_owner)).is_err(),
             _ => unreachable!(),
         };
         assert!(rejected);

@@ -22,7 +22,7 @@ use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DIALECT, WFC_2D_DOCUMENT_SCHEMA
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::Effect;
+#[cfg(test)] use semio_framework_plugin::Effect;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_plugin::ActionDefinition;
 use semio_framework_plugin::ActionKind;
@@ -34,7 +34,6 @@ use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobPurpose;
 use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
@@ -747,7 +746,7 @@ pub fn render_body(
 
 impl ArtifactEditor for Wfc2dEditor {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         use semio_framework_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
             [

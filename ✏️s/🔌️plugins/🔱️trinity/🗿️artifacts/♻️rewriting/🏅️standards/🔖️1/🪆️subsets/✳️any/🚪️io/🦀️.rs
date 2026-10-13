@@ -251,7 +251,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec RewritingBuilderFacets {
         construction: RewritingBuilderConstruction,
         analysis: RewritingAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::RewritingComposerComposition,
+        composition: RewritingComposerComposition,
     }
     builder: RewritingBuilder,
     analyzer: RewritingAnalyzer,

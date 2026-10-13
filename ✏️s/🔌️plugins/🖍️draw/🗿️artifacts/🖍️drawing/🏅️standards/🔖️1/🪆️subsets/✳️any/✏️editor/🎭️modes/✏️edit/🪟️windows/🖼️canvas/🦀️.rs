@@ -24,25 +24,25 @@ const DRAWING_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
 const DRAWING_ARTBOARD_LABEL: [f64; 4] = [0.198, 0.223, 0.205, 0.92];
 
 fn overlay_record<T: semio_framework_value::ToValue + ?Sized>(id: &str, transform: [f64; 6], segments: &T, fill: Option<[f64; 4]>, stroke_color: [f64; 4], stroke_width: f64) -> DslValue {
-    semio_framework_value::DslValue::object([
-        ("id".to_string(), semio_framework_value::DslValue::String(id.to_string())),
-        ("role".to_string(), semio_framework_value::DslValue::String("overlay".to_string())),
+    DslValue::object([
+        ("id".to_string(), DslValue::String(id.to_string())),
+        ("role".to_string(), DslValue::String("overlay".to_string())),
         ("transform".to_string(), semio_framework_value::ToValue::to_value(&transform.to_vec())),
         ("segments".to_string(), semio_framework_value::ToValue::to_value(segments)),
-        ("fill".to_string(), fill.map_or(semio_framework_value::DslValue::Null, |color| semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("solid".to_string())), ("color".to_string(), semio_framework_value::ToValue::to_value(&color.to_vec()))]))),
+        ("fill".to_string(), fill.map_or(DslValue::Null, |color| DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), semio_framework_value::ToValue::to_value(&color.to_vec()))]))),
         (
             "stroke".to_string(),
-            semio_framework_value::DslValue::object([
+            DslValue::object([
                 ("color".to_string(), semio_framework_value::ToValue::to_value(&stroke_color.to_vec())),
-                ("width".to_string(), semio_framework_value::DslValue::float(stroke_width)),
-                ("cap".to_string(), semio_framework_value::DslValue::String("round".to_string())),
-                ("join".to_string(), semio_framework_value::DslValue::String("round".to_string())),
+                ("width".to_string(), DslValue::float(stroke_width)),
+                ("cap".to_string(), DslValue::String("round".to_string())),
+                ("join".to_string(), DslValue::String("round".to_string())),
             ]),
         ),
-        ("opacity".to_string(), semio_framework_value::DslValue::float(1.0)),
-        ("blendMode".to_string(), semio_framework_value::DslValue::String("normal".to_string())),
-        ("visible".to_string(), semio_framework_value::DslValue::Bool(true)),
-        ("fillRule".to_string(), semio_framework_value::DslValue::String("evenodd".to_string())),
+        ("opacity".to_string(), DslValue::float(1.0)),
+        ("blendMode".to_string(), DslValue::String("normal".to_string())),
+        ("visible".to_string(), DslValue::Bool(true)),
+        ("fillRule".to_string(), DslValue::String("evenodd".to_string())),
     ])
 }
 
@@ -66,16 +66,16 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
     let label_x = (width * 0.5) - (label.len() as f64 * label_size * 0.28);
     vec![
         overlay_record("artboard:frame", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAWING_ARTBOARD_FILL), DRAWING_ARTBOARD_STROKE, 1.0),
-        semio_framework_value::DslValue::object([
-            ("id".to_string(), semio_framework_value::DslValue::String("artboard:dimensions".to_string())),
-            ("role".to_string(), semio_framework_value::DslValue::String("overlay".to_string())),
+        DslValue::object([
+            ("id".to_string(), DslValue::String("artboard:dimensions".to_string())),
+            ("role".to_string(), DslValue::String("overlay".to_string())),
             ("transform".to_string(), semio_framework_value::ToValue::to_value(&vec![1.0_f64, 0.0, 0.0, 1.0, label_x, height + label_size * 0.35])),
-            ("segments".to_string(), semio_framework_value::DslValue::Array(Vec::new())),
-            ("fill".to_string(), semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String("solid".to_string())), ("color".to_string(), semio_framework_value::ToValue::to_value(&DRAWING_ARTBOARD_LABEL.to_vec()))])),
-            ("opacity".to_string(), semio_framework_value::DslValue::float(1.0)),
-            ("blendMode".to_string(), semio_framework_value::DslValue::String("normal".to_string())),
-            ("visible".to_string(), semio_framework_value::DslValue::Bool(true)),
-            ("text".to_string(), semio_framework_value::DslValue::object([("content".to_string(), semio_framework_value::DslValue::String(label)), ("size".to_string(), semio_framework_value::DslValue::float(label_size)), ("fontFamily".to_string(), semio_framework_value::DslValue::String(crate::DrawingFontFamily::Anta.catalog_family().to_string()))])),
+            ("segments".to_string(), DslValue::Array(Vec::new())),
+            ("fill".to_string(), DslValue::object([("kind".to_string(), DslValue::String("solid".to_string())), ("color".to_string(), semio_framework_value::ToValue::to_value(&DRAWING_ARTBOARD_LABEL.to_vec()))])),
+            ("opacity".to_string(), DslValue::float(1.0)),
+            ("blendMode".to_string(), DslValue::String("normal".to_string())),
+            ("visible".to_string(), DslValue::Bool(true)),
+            ("text".to_string(), DslValue::object([("content".to_string(), DslValue::String(label)), ("size".to_string(), DslValue::float(label_size)), ("fontFamily".to_string(), DslValue::String(crate::DrawingFontFamily::Anta.catalog_family().to_string()))])),
         ]),
     ]
 }
@@ -94,7 +94,7 @@ pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene
     }
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
-    records.push(semio_framework_value::DslValue::object([("id".to_string(), semio_framework_value::DslValue::String("meta:utility".to_string())), ("role".to_string(), semio_framework_value::DslValue::String("meta".to_string())), ("utility".to_string(), semio_framework_value::DslValue::String(active_utility.to_string()))]));
+    records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
     for node in &scene_nodes {
         records.push(crate::standards::v1::subsets::any::io::image::prepared_scene_node_value(node,document).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.image-output",error))?);

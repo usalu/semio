@@ -15,4 +15,3 @@ impl protocol::OpBinary for BitmapTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

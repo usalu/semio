@@ -1986,6 +1986,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
   const openWire = Array.from(
     encodeBackboneWorkerRequest({
       kind: "open",
+      actorIdentityGrant: { maximumItems: 1024, maximumCopyBytes: 65536, maximumCapacityBytes: 65536, maximumReleaseBytes: 65536, maximumDepth: 64 },
       documentId: current.intent.scope.documentId,
       schema: current.expected.helloSchema,
       bindings: [{ kind: "hub", baseUrl: hubOrigin, spaceId: current.intent.scope.spaceId, dataClass: "persistedShared", installedTarget: current.installedTarget as unknown as import("@semio-tech/framework-os").DocumentExecutionTargetLeaseFieldsV1 }],
@@ -14118,7 +14119,7 @@ function createdLiveDirectorySpace(events: readonly Record<string, any>[]): stri
 type DirectoryHomeBrowserProcessFixture = {
   readonly schema: "semio.hub.directory-home-browser-process-fixture/v1";
   readonly limits: { readonly journeyMs: number; readonly stepMs: number; readonly responseBytes: 65536; readonly appliedEvents: number };
-  readonly spaceGuest: { readonly target: "wasm32-wasip2"; readonly package: "semio-hub-space"; readonly nativeFeature: "os-host-full"; readonly forbiddenPackages: readonly ["ring", "cc", "tokio"] };
+  readonly spaceGuest: { readonly target: "wasm32-wasip2"; readonly package: "semio-hub-space"; readonly nativeFeature: "sync"; readonly forbiddenPackages: readonly ["ring", "cc", "tokio"] };
   readonly profiles: Readonly<Record<"a" | "b", { readonly profileId: string; readonly subject: string; readonly displayName: string }>>;
   readonly home: { readonly pluginId: "space"; readonly appId: "s.space.home@1/*#editor"; readonly actionId: "applyDirectoryEventPage"; readonly moduleDirectory: "🪐️space" };
   readonly pages: Readonly<
@@ -14231,7 +14232,7 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   if (fixture.schema !== "semio.hub.directory-home-browser-process-fixture/v1") throw new Error("directory Home browser process fixture schema drift");
   if (Object.keys(fixture).sort().join(",") !== "home,hostile,limits,pages,profiles,schema,spaceGuest,traces") throw new Error("directory Home browser process fixture envelope drift");
   if (fixture.limits.responseBytes !== 65536 || fixture.limits.appliedEvents < 8 || fixture.limits.appliedEvents > 512) throw new Error("directory Home browser process bound drift");
-  if (fixture.spaceGuest.target !== "wasm32-wasip2" || fixture.spaceGuest.package !== "semio-hub-space" || fixture.spaceGuest.nativeFeature !== "os-host-full" || fixture.spaceGuest.forbiddenPackages.join(",") !== "ring,cc,tokio")
+  if (fixture.spaceGuest.target !== "wasm32-wasip2" || fixture.spaceGuest.package !== "semio-hub-space" || fixture.spaceGuest.nativeFeature !== "sync" || fixture.spaceGuest.forbiddenPackages.join(",") !== "ring,cc,tokio")
     throw new Error("directory Home browser process guest boundary drift");
   if (fixture.home.pluginId !== "space" || fixture.home.appId !== "s.space.home@1/*#editor" || fixture.home.actionId !== "applyDirectoryEventPage" || fixture.home.moduleDirectory !== "🪐️space") throw new Error("directory Home browser process app binding drift");
   const homeProfile = hubSchemaExport(repoRoot, "schema://hub.directory/DirectoryProfileV1");
@@ -14249,12 +14250,12 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   for (const forbidden of fixture.spaceGuest.forbiddenPackages) {
     if (new RegExp(`(?:^|\\s)${forbidden} v`, "mu").test(guestTree.stdout)) throw new Error(`directory Home Space guest graph retained forbidden package ${forbidden}`);
   }
-  if (guestTree.stdout.includes(`semio-framework-os feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error(`directory Home Space guest graph retained native feature ${fixture.spaceGuest.nativeFeature}`);
+  if (guestTree.stdout.includes(`semio-framework-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error(`directory Home Space guest graph retained native kernel feature ${fixture.spaceGuest.nativeFeature}`);
   const rustc = runProbe("rustc", ["-vV"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   const hostTarget = rustc.status === 0 ? rustc.stdout.match(/^host: (.+)$/mu)?.[1] : undefined;
   if (!hostTarget) throw new Error(`directory Home Space native target oracle failed: ${rustc.stderr}`);
-  const nativeTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
-  if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-framework-os feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost os-host-full");
+  const nativeTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os-kernel"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
+  if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-framework-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost the kernel sync transport");
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const owner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx"), "utf8");
   const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");

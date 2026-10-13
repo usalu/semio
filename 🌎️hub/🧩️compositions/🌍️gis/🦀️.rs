@@ -40,7 +40,7 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
         .package_id("semio:gis")
         .depends_on(dependency.plugin_id, dependency.version)
         .contributes_topic(catalog)
-        .contributes_topic(semio_framework::TopicContribution::new(protocol::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC, semio_framework_value::ToValue::to_value(&semio_s_artifact_gis_gismap::inference_client::declaration())))
+        .contributes_topic(TopicContribution::new(protocol::os_directory::client::DOCUMENT_HTTP_PORT_TOPIC, semio_framework_value::ToValue::to_value(&semio_s_artifact_gis_gismap::inference_client::declaration())))
         .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
         .artifact_kind(semio_s_artifact_gis_gisterrain::artifact_kind())
         .artifact(semio_s_artifact_gis_gismap::declaration().map_err(PluginAssemblyError::definition)?)
@@ -75,4 +75,4 @@ mod surface_tests;
 //#endregion 🧪️SurfaceTests
 
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }, plugin, GisApps);
+semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, GisApps);

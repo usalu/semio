@@ -374,7 +374,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {

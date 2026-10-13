@@ -208,7 +208,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
     let snapshot = demo_snapshot_b();
     vec![
         BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
-        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: base.topics[0].clone() }),
+        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: base.topics[0].clone(), index: None }),
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "keep".into() }),
         BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
             guid: "keep".into(),
@@ -220,11 +220,11 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
             creation_date: None,
             creation_author: None,
         }),
-        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "keep".into(), comment: base.topics[0].comments[0].clone() }),
+        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "keep".into(), comment: base.topics[0].comments[0].clone(), index: None }),
         BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "keep".into(), guid: "c-keep".into() }),
         BcfMutation::SetComment(set_comment::SetComment { topic_guid: "keep".into(), guid: "c-keep".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) }),
         BcfMutation::SetComment(set_comment::SetComment { topic_guid: "keep".into(), guid: "c-keep".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: Some("a@example.com".into()), text: None, viewpoint_ref: Some(Some("vp2".into())) }),
-        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "keep".into(), viewpoint: base.topics[0].viewpoints[0].clone() }),
+        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "keep".into(), viewpoint: base.topics[0].viewpoints[0].clone(), index: None }),
         BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "keep".into(), guid: "vp-keep".into() }),
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "keep".into(), guid: "vp-keep".into(), camera: base.topics[0].viewpoints[0].camera.clone() }),
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "keep".into(), guid: "vp-keep".into(), camera: None }),

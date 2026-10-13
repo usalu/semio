@@ -34,8 +34,9 @@ mod tests;
 mod semio_protocol_conformance;
 
 mod native_codec {
-use super::*;
-use crate::schema::mutations::{apply_note_mutation, NoteMutation};
+#[cfg(test)] use super::*;
+use crate::schema::mutations::{NoteMutation};
+#[cfg(test)] use crate::schema::mutations::{apply_note_mutation};
 
 impl protocol::OpBinary for NoteMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

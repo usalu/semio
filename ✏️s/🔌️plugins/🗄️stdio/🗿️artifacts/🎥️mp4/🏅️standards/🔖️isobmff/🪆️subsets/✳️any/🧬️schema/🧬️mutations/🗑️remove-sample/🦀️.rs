@@ -24,7 +24,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveSample {
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
         let Self { track_index, index } = self;
-        Ok({ base.tracks.get(*track_index).and_then(|track| track.samples.get(*index)).map(|sample| Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index: *track_index, index: *index, sample: sample.clone() })).into_iter().collect() })
+        Ok(base.tracks.get(*track_index).and_then(|track| track.samples.get(*index)).map(|sample| Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index: *track_index, index: *index, sample: sample.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove sample", "Sample entfernen")

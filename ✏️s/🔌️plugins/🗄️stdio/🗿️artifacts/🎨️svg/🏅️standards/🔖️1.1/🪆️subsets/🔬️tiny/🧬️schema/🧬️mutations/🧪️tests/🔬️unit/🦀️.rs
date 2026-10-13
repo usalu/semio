@@ -1,4 +1,5 @@
 use super::*;
+use crate::schema::snapshot::{element_attr, SvgAttr};
 
 fn elem(name: &str, attrs: Vec<(&str, SvgAttributeValue)>, children: Vec<SvgNode>) -> SvgNode {
     SvgNode::Element { name: name.into(), attrs: attrs.into_iter().map(|(n, v)| SvgAttr { name: n.into(), value: v }).collect(), children }

@@ -4,9 +4,9 @@ mod private_publication_group {
     use std::{mem::ManuallyDrop, sync::Arc};
 
     mod child { include!("🪆️child/🦀️.rs"); }
-    pub(crate) use child::{PrivateChildPublicationInput, PrivateChildPublicationInputParts};
+    pub(crate) use child::PrivateChildPublicationInput;
     mod owner { include!("📦️owner/🦀️.rs"); }
-    pub(crate) use owner::{PrivateChildGroupSource, PrivateChildPublicationGroup, PrivateChildPreparedReceipt, PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN};
+    pub(crate) use owner::{PrivateChildGroupSource, PrivateChildPublicationGroup, PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN};
 
     #[derive(Clone, Copy, PartialEq, Eq)]
     enum PrivateOwnedPublicationPhase { Admission, Preparation, Staging, Staged, Adopted, Closing, Complete }
@@ -44,7 +44,7 @@ mod private_publication_group {
                     let Some(publication) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant)? else { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); };
                     *self.publication = Some(publication);
                     self.phase = PrivateOwnedPublicationPhase::Preparation;
-                    Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth_bytes, ..Default::default() }))
+                    Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth_bytes, ..Default::default() }))
                 }
                 PrivateOwnedPublicationPhase::Preparation => {
                     let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), grant)?;
@@ -70,10 +70,10 @@ mod private_publication_group {
             Ok(step)
         }
         /// 📐️ Exposes independent active source, staged root, metadata and physical frame currencies.
-        pub(crate) fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
             use semio_framework_value::RetirementDemand;
             let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private publication retirement depth overflow"))?; Ok(demand) };
-            if let Some(publication) = self.publication.as_ref() { return if publication.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(publication.as_ref()), depth: 1, ..Default::default() }) } else { nested(publication.retirement_demands(body)?) }; }
+            if let Some(publication) = self.publication.as_ref() { return if publication.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(publication.as_ref()), depth: 1, ..Default::default() }) } else { nested(publication.retirement_demands(body)?) }; }
             if let Some(request) = self.request.as_ref() { return if request.mutations.terminal_is_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { nested(request.mutations.next_demands(body)?) }; }
             Ok(self.metadata.as_ref().map_or(Default::default(), |metadata| RetirementDemand { release_bytes: metadata.next_close_byte_demand(), depth: 2, ..Default::default() }))
         }
@@ -108,4 +108,7 @@ mod private_publication_group {
     impl Drop for PrivateOwnedPublicationLane { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "private typed publication retains its original source and staged authority until bounded terminal close"); } }
 }
 
-pub(crate) use private_publication_group::{PrivateOwnedPublicationLane, PrivateChildPublicationInput, PrivateChildPublicationInputParts, PrivateChildGroupSource, PrivateChildPublicationGroup, PrivateChildPreparedReceipt, PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN};
+pub(crate) use private_publication_group::{PrivateChildGroupSource, PrivateChildPublicationGroup, PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN};
+
+#[cfg(test)]
+pub(crate) use private_publication_group::{PrivateChildPublicationInput, PrivateOwnedPublicationLane};

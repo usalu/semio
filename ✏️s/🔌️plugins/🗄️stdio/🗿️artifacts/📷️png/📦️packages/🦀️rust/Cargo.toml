@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = []
-
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
@@ -32,7 +28,7 @@ semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -49,6 +45,7 @@ semio-s-artifact-stdio-zip = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 png = "0.18.1"
@@ -58,7 +55,6 @@ semio-framework-async-macros = { workspace = true }
 [[test]]
 name = "preparation_law"
 path = "../../🧪️tests/⚙️preparation/🦀️.rs"
-required-features = ["component-app-assembly"]
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"

@@ -50,10 +50,11 @@ use crate::schema::diff::{block_field_changes, // 🧪️ P2-FG1: real recursive
 
 
 
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfStyle};
+#[cfg(test)] use crate::schema::snapshot::{DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText};
 use crate::DxfSnapshot;
 
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -218,11 +219,11 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
     }
 
     vec![
-        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } }),
+        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } , index: None }),
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar {
             name: "$NEWVAR".into(),
             header_var: DxfHeaderVar { name: "$NEWVAR".into(), group_code: 70, value: DxfValue::Int { value: 3 }, extra_group_codes: vec![(999, DxfValue::Str { value: "note".into() })] },
-        }),
+         index: None }),
         DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: "$ACADVER".into() }),
         DxfMutation::InsertLayer(insert_layer::InsertLayer { index: 1, layer: DxfLayer { name: "L2".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } }),
         DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: "0".into() }),

@@ -6,7 +6,6 @@
 
 use crate::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
-use semio_framework_value::ToValue;
 use protocol::Mutation;
 use store::{ArtifactEnvelope, ArtifactStore};
 

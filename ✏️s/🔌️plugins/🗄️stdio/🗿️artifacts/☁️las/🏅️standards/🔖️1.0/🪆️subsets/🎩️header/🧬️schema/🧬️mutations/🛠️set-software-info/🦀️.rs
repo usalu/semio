@@ -15,12 +15,12 @@ pub struct SetSoftwareInfo {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetSoftwareInfo {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "software-info", kind: "set-software-info", record: "SetSoftwareInfo" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         let Self { generating_software } = self;
         protocol::MutationOutcome::new(diff::diff_set_software_info(generating_software))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-        Ok(vec![LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: base.header.generating_software.clone() })])
+        Ok(vec![LasMutation::SetSoftwareInfo(SetSoftwareInfo { generating_software: base.header.generating_software.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set software info", "Softwareinfo setzen")

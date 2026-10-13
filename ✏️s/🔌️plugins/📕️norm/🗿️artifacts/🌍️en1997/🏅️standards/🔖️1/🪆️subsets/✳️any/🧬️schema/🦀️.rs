@@ -1194,8 +1194,8 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
     push_all_duplicate_ids(&mut report, doc);
     let approach = parse_design_approach(&doc.design_approach);
     let annex = doc.annex;
-    let p_project = resolve_params(approach, annex, &doc.design_situation);
-    let upl_p = resolve_upl_params(annex, &doc.design_situation);
+    let _p_project = resolve_params(approach, annex, &doc.design_situation);
+    let _upl_p = resolve_upl_params(annex, &doc.design_situation);
     let part1 = "DIN EN 1997-1";
     let part2 = "DIN EN 1997-2";
     let part1054 = "DIN 1054";

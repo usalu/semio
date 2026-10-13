@@ -28,8 +28,7 @@ pub const JACK_SELF_FUNDED_BODY_BYTES: usize = 65_536;
 
 /// 🏇️ The mounted-owner policy every Trinity component declares for its preparation, maintenance and close lanes.
 pub fn trinity_mounted_owner_policy() -> semio_framework_plugin::MountedOwnerPolicyV1 {
-    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-    semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant }
+    semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT
 }
 
 /// 🎟️ Funds exactly one turn from the owner's own published quote, for callers no scheduler grants (standalone stores, fixtures and local scratch owners).

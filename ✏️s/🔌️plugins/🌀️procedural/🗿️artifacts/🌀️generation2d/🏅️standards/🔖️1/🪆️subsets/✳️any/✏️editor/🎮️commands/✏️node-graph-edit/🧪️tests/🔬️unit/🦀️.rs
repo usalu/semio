@@ -20,8 +20,8 @@ async fn edit(app: &mut Generation2dApp, operations: serde_json::Value) {
 async fn send(app: &mut Generation2dApp, args: serde_json::Value) {
     let action_meta = meta("local");
     let args: semio_framework_value::DslValue = args.into();
-    app.handle_action("nodeGraphEdit", Some(&args), &action_meta).await.expect("nodeGraphEdit admitted");
-    settle_registered_typed_operation(app, action_meta.instance_id).await.expect("nodeGraphEdit settles");
+    app.handle_action("nodeGraphEdit", Some(&args), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("nodeGraphEdit admitted");
+    settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("nodeGraphEdit settles");
 }
 
 /// 🧾️ Every applied history row that carries document operations, oldest first.

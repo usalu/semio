@@ -15,4 +15,3 @@ impl protocol::OpBinary for WiresCanvasWindowConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

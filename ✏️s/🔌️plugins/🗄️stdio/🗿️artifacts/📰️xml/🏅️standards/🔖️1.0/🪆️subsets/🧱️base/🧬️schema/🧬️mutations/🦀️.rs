@@ -1,6 +1,6 @@
 //! 🧬️ Transparent XmlMutation aggregate.
 use crate::schema::diff::XmlDiff;
-use crate::schema::snapshot::XmlNode;
+#[cfg(test)] use crate::schema::snapshot::XmlNode;
 use crate::XmlSnapshot;
 
 pub use super::insert_element::{InsertElementMutation, InsertElementPayload};

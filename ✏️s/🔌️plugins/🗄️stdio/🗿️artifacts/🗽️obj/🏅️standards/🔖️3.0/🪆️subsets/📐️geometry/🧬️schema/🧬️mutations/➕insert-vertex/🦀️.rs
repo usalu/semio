@@ -22,13 +22,13 @@ pub struct InsertVertex {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertVertex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vertex", kind: "insert-vertex", record: "InsertVertex" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { index, vertex } = self;
         protocol::MutationOutcome::new(diff_insert_vertex(*index, vertex.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
-        Ok({ vec![ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: (*index).min(base.vertices.len()) })] })
+        Ok(vec![ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: (*index).min(base.vertices.len()) })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert vertex", "Vertex einfügen")

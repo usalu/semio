@@ -70,4 +70,4 @@ impl protocol::OpText for Ifc2x3Mutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;

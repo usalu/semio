@@ -173,14 +173,14 @@ pub use derived_construction::*;
 pub mod derived_analysis {
     use crate::standards::v_jfif_1_01::subsets::document::io::JpgAnalyzer as JpgAnyAnalyzer;
     pub use crate::standards::v_jfif_1_01::subsets::document::io::JpgParts;
-    use crate::JpgSnapshot;
-    use semio_framework_diagnostic::Diagnostic;
-use semio_framework_diagnostic::FaultCode;
-use semio_framework_diagnostic::FaultScope;
+    #[cfg(test)] use crate::JpgSnapshot;
+    #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
+#[cfg(test)] use semio_framework_diagnostic::FaultCode;
+#[cfg(test)] use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
-    use semio_framework_diagnostic::TextSpan;
+    #[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use semio_framework_value::ValueError;
+    #[cfg(test)] use semio_framework_value::ValueError;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("baseline") };
@@ -229,7 +229,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec JpgBaselineBuilderFacets {
         construction: JpgBaselineBuilderConstruction,
         analysis: JpgBaselineAnalyzerAnalysis,
-        composition: super::io::derived_composition::JpgBaselineComposerComposition,
+        composition: JpgBaselineComposerComposition,
     }
     builder: JpgBaselineBuilder,
     analyzer: JpgBaselineAnalyzer,

@@ -1,7 +1,7 @@
 //! 🧊️ Explicit Puzzle3d JSON scalar paths preserve closed binary64 words.
 use semio_framework_value::DslValue;
 fn field(v: &mut DslValue, key: &str, f: fn(&mut DslValue, bool) -> Result<(), String>, decode: bool) -> Result<(), String> {
-    let semio_framework_value::DslValue::Object(entries) = v else { return Err("Puzzle3d JSON object required".into()) };
+    let DslValue::Object(entries) = v else { return Err("Puzzle3d JSON object required".into()) };
     if let Some((_, v)) = entries.iter_mut().find(|(name, _)| name == key) {
         if !matches!(v, DslValue::Null) {
             f(v, decode)?;
@@ -10,7 +10,7 @@ fn field(v: &mut DslValue, key: &str, f: fn(&mut DslValue, bool) -> Result<(), S
     Ok(())
 }
 fn rows(v: &mut DslValue, f: fn(&mut DslValue, bool) -> Result<(), String>, decode: bool) -> Result<(), String> {
-    let semio_framework_value::DslValue::Array(values) = v else { return Err("Puzzle3d JSON array required".into()) };
+    let DslValue::Array(values) = v else { return Err("Puzzle3d JSON array required".into()) };
     for v in values {
         f(v, decode)?;
     }
@@ -21,7 +21,7 @@ fn word(v: &mut DslValue, decode: bool) -> Result<(), String> {
         if v.as_f64().is_some_and(f64::is_finite) {
             return Ok(());
         }
-        let semio_framework_value::DslValue::Object(entries) = v else { return Err("Puzzle3d JSON finite number or closed binary64 object required".into()) };
+        let DslValue::Object(entries) = v else { return Err("Puzzle3d JSON finite number or closed binary64 object required".into()) };
         if entries.len() != 1 || entries[0].0 != "bits" {
             return Err("Puzzle3d JSON scalar requires only bits".into());
         }
@@ -30,10 +30,10 @@ fn word(v: &mut DslValue, decode: bool) -> Result<(), String> {
             return Err("Puzzle3d JSON bits require sixteen lowercase hexadecimal digits".into());
         }
         let bits = u64::from_str_radix(raw, 16).map_err(|e| e.to_string())?;
-        *v = semio_framework_value::DslValue::float(f64::from_bits(bits));
+        *v = DslValue::float(f64::from_bits(bits));
     } else {
         let raw = v.as_f64().ok_or("Puzzle3d owned scalar required")?.to_bits();
-        *v = semio_framework_value::DslValue::object([("bits".into(), semio_framework_value::DslValue::String(format!("{raw:016x}")))]);
+        *v = DslValue::object([("bits".into(), DslValue::String(format!("{raw:016x}")))]);
     }
     Ok(())
 }

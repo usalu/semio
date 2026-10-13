@@ -31,7 +31,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveFrame {
             return Ok(Vec::new());
         }
         let at = (*to).min(base.frames.len() - 1);
-        Ok(if at == *from { Vec::new() } else { vec![GifMutation::MoveFrame(move_frame::MoveFrame { from: at, to: *from })] })
+        Ok(if at == *from { Vec::new() } else { vec![GifMutation::MoveFrame(MoveFrame { from: at, to: *from })] })
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Move frame", "Einzelbild verschieben")

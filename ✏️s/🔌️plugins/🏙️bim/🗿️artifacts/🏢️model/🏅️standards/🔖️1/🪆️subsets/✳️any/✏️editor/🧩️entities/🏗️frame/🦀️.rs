@@ -3,7 +3,7 @@
 //! or panel override is, and the pickers (curtain wall types, materials, door and window types) of the reference rows. The grid and the panels are text: `spacing 1.5` or `lines 1, 2.5`, and
 //! `glass`, `empty`, `solid material`, `door type` or `window type`.
 
-use super::ceilings::{parse_slope, slope_text};
+use super::ceilings::parse_slope;
 use super::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, Created, EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::{Assigned, CurtainGrid, CurtainPanel, CurtainPanelOverride, CurtainWallType, ModelMutation, ModelSnapshot, Profile};

@@ -59,7 +59,7 @@ pub struct Block3dVortexKind {
 /// `vortex_kinds_of`/`vortex_kind_from_parts`). Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM:
 /// replaces the former inline `vortex_kinds: Vec<Block3dVortexKind>` field, which duplicated the
 /// `kit.catalog`/type-registry vocabulary this ticket composes instead.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]

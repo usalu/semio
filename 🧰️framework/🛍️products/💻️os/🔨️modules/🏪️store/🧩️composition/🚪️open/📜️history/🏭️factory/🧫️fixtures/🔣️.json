@@ -424,7 +424,7 @@
       "field": "none",
       "value": "stdio.semio",
       "inputBytes": 260,
-      "retiredBytes": 1384,
+      "retiredBytes": 360,
       "error": null,
       "handoffs": 1
     },
@@ -433,7 +433,7 @@
       "field": "schema",
       "value": "stdio.semio.flow",
       "inputBytes": 265,
-      "retiredBytes": 1389,
+      "retiredBytes": 365,
       "error": "identity",
       "handoffs": 0
     },
@@ -442,7 +442,7 @@
       "field": "document",
       "value": "evil-member",
       "inputBytes": 272,
-      "retiredBytes": 1396,
+      "retiredBytes": 372,
       "error": "identity",
       "handoffs": 0
     },
@@ -451,7 +451,7 @@
       "field": "parent",
       "value": "evil-parent!s.flow.flow@1/*",
       "inputBytes": 260,
-      "retiredBytes": 1384,
+      "retiredBytes": 360,
       "error": "identity",
       "handoffs": 0
     },
@@ -460,7 +460,7 @@
       "field": "slot",
       "value": "foreign",
       "inputBytes": 260,
-      "retiredBytes": 1384,
+      "retiredBytes": 360,
       "error": "identity",
       "handoffs": 0
     },
@@ -469,7 +469,7 @@
       "field": "child",
       "value": "evil-member",
       "inputBytes": 272,
-      "retiredBytes": 1396,
+      "retiredBytes": 372,
       "error": "identity",
       "handoffs": 0
     },
@@ -478,7 +478,7 @@
       "field": "kind",
       "value": "s.other.semio",
       "inputBytes": 260,
-      "retiredBytes": 1384,
+      "retiredBytes": 360,
       "error": "identity",
       "handoffs": 0
     },
@@ -487,7 +487,7 @@
       "field": "standard",
       "value": "v2",
       "inputBytes": 260,
-      "retiredBytes": 1384,
+      "retiredBytes": 360,
       "error": "identity",
       "handoffs": 0
     },
@@ -496,7 +496,7 @@
       "field": "subset",
       "value": "tree",
       "inputBytes": 260,
-      "retiredBytes": 1384,
+      "retiredBytes": 360,
       "error": "identity",
       "handoffs": 0
     }
@@ -521,21 +521,21 @@
       "at": "ready",
       "event": "cancel",
       "error": "cancelled",
-      "retiredBytes": 1384
+      "retiredBytes": 360
     },
     {
       "id": "generation-before-semantic-handoff",
       "at": "ready",
       "event": "generation",
       "error": "stale",
-      "retiredBytes": 1384
+      "retiredBytes": 360
     },
     {
       "id": "operation-before-semantic-handoff",
       "at": "ready",
       "event": "operation",
       "error": "stale",
-      "retiredBytes": 1384
+      "retiredBytes": 360
     }
   ],
   "lifecycle": [

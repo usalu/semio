@@ -14,11 +14,11 @@ pub struct InsertLayer {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "layer", kind: "insert-layer", record: "InsertLayer" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { index, layer } = self;
         protocol::MutationOutcome::new(diff_insert_layer(*index, layer.clone()))
     }
-    fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
         let Self { layer, .. } = self;
         Ok(vec![DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: layer.name.clone() })])
     }

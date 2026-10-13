@@ -36,11 +36,11 @@ impl<'a> Node<'a>{
  fn key(self,index:usize)->Result<&'a str,ValueError>{match self{Self::Root(cause)=>root_key(cause,index),Self::Scope(scope)=>{let mut present=0;for(value,key)in[(&scope.plugin_id,"pluginId"),(&scope.app_id,"appId"),(&scope.instance_id,"instanceId"),(&scope.module,"module"),(&scope.body_key,"bodyKey")]{if value.is_some(){if present==index{return Ok(key)}present+=1}}Err(invalid())},Self::Progress(_)=>["copiedItems","copiedBytes","retainedCapacityBytes","releasedBytes"].get(index).copied().ok_or_else(invalid),Self::Span(_)=>["line","column","length"].get(index).copied().ok_or_else(invalid),Self::Cause(cause)=>match index{0=>Ok("message"),1 if cause.code.is_some()=>Ok("code"),_=>Err(invalid())},Self::Params(params)=>params.0.get(index).map(|entry|entry.0.as_str()).ok_or_else(invalid),_=>Err(invalid())}}
 }
 impl ExtensionInvocationCause{
- fn node(&self,path:&[usize])->Result<Node<'_>,ValueError>{let Some((&0,rest))=path.split_first()else{return Err(invalid())};let mut node=Node::Root(self);for &index in rest{node=node.child(index)?}Ok(node)}
+ fn node(&self,path:&[usize])->Result<Node<'_>,ValueError>{let mut node=Node::Root(self);for &index in path{node=node.child(index)?}Ok(node)}
 }
 impl FieldProjectionSource for ExtensionInvocationCause{
  fn projection_identity(&self)->usize{match self{Self::Fault(fault)=>fault.scope.as_ref()as *const FaultScope as usize,Self::Value(error)=>error.message.as_ptr()as usize,Self::Inference(error)=>error.source_identity()}}
- fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{if path.is_empty(){Ok(V::Record(&[1]))}else{Ok(self.node(path)?.view())}}
+ fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{Ok(self.node(path)?.view())}
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.node(path)?.key(index)}
 }
 

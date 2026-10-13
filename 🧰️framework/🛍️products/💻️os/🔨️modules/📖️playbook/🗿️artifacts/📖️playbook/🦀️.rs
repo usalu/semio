@@ -341,13 +341,14 @@ pub mod generation_forms {
     //! a set of named "generations" (parameter presets) — moved here (from `semio-framework-plugin`) since
     //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
-    use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, DslValue, FromValue, PlaybookBlock, PlaybookSpec, PlaybookValues, ToValue};
+    use super::{default_value_for_block, flatten_playbook_blocks, DslValue, FromValue, PlaybookSpec, PlaybookValues, ToValue};
+    #[cfg(test)] use super::{PlaybookBlock};
     use ui_wgpu::wgpu::ActionDescriptor;
     use semio_framework_ui_locale::Label;
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework_ui_locale::Terminology;
-    use ui_wgpu::wgpu::UiControlNode;
+    
     use ui_wgpu::wgpu::UiNode;
     use ui_wgpu::wgpu::UiPresence;
     use ui_wgpu::wgpu::UiTreeActionPlacement;

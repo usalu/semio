@@ -14,12 +14,12 @@ pub struct RemoveEntity {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity", kind: "remove-entity", record: "RemoveEntity" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
+    fn diff(&self, _base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
         let Self { id } = self;
         protocol::MutationOutcome::new(diff::diff_remove_entity(*id))
     }
     fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
-        let entity = |id: u64| base.entities.iter().find(|e| e.id == id);
+        let _entity = |id: u64| base.entities.iter().find(|e| e.id == id);
         let Self { id } = self;
         Ok(vec![match base.entities.iter().position(|e| e.id == *id) {
             Some(index) => IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity: base.entities[index].clone() }),

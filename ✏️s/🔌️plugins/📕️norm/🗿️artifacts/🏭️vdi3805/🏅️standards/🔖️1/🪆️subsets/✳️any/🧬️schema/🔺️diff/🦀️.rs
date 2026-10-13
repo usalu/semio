@@ -99,7 +99,7 @@ pub struct Vdi3805ProductsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::CatalogueProduct> for Vdi3805ProductsPatch {
-    fn commit_into(&self, row: &mut crate::CatalogueProduct, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::CatalogueProduct, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.title {
             row.title = value.clone();
         }
@@ -226,7 +226,7 @@ pub struct Vdi3805GeometryConnectionsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::ConnectionPoint> for Vdi3805GeometryConnectionsPatch {
-    fn commit_into(&self, row: &mut crate::ConnectionPoint, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::ConnectionPoint, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.medium {
             row.medium = value.clone();
         }

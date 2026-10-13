@@ -67,10 +67,10 @@ plugin-root = ["semio-framework-plugin/component-guest"]
 
 [dependencies]
 # 🧩️ Composition Dependencies
-semio-s-artifact-stdio-binary = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-deflate = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-zip = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-epw = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-binary = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+semio-s-artifact-stdio-epw = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }

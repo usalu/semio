@@ -46,6 +46,12 @@ struct FailClosedOp {
     live: bool,
 }
 
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for FailClosedOp {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> { self.operation.canonical_tree_node() }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, ValueError> { self.operation.canonical_tree_child(ordinal) }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, ValueError> { self.operation.canonical_tree_key(ordinal) }
+}
+
 impl FailClosedOp {
     fn of(operation: DemoMutation, fault: Fault) -> Self {
         Self { operation, fault, live: true }

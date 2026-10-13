@@ -59,7 +59,7 @@ pub fn definition() -> WindowKindDefinition {
             utilities::volume_brush::UTILITY_ID.into(),
             utilities::world_relocate::UTILITY_ID.into(),
         ],
-        interactions: vec![semio_framework_plugin::InteractionRef::new(crate::editor::puzzle5d::PUZZLE5D_INTERACTION_DOMAIN)],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(PUZZLE5D_INTERACTION_DOMAIN)],
         params_schema: None,
         artifact_snapshot_schema: None,
         input_event_schema: None,

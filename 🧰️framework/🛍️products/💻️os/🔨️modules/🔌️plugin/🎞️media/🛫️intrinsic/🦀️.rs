@@ -7,12 +7,12 @@ type IntrinsicMediaParts = (String, String, Vec<u8>);
 struct IntrinsicMediaEncoding { cursor: Option<Box<MediaPackCursor>>, parts: MediaControlled<IntrinsicMediaParts> }
 impl IntrinsicMediaEncoding {
     fn new() -> Self { Self { cursor: None, parts: MediaControlled::new((String::new(), String::new(), Vec::new())).ok().unwrap() } }
-    fn demand(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, MediaValueError> {
+    fn demand(&self, copy: usize) -> Result<RetirementDemand, MediaValueError> {
         if let Some(cursor) = &self.cursor {
             if !cursor.terminal_is_empty() { return cursor.retirement_demands(); }
-            return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Option<Box<MediaPackCursor>>>(), capacity_bytes: 0, release_bytes: std::mem::size_of::<MediaPackCursor>(), depth: 1 });
+            return Ok(RetirementDemand { copy_bytes: size_of::<Option<Box<MediaPackCursor>>>(), capacity_bytes: 0, release_bytes: size_of::<MediaPackCursor>(), depth: 1 });
         }
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: self.parts.next_copy_byte_demand()?, capacity_bytes: self.parts.next_capacity_byte_demand(copy)?, release_bytes: self.parts.next_release_byte_demand()?, depth: self.parts.next_depth_demand()? })
+        Ok(RetirementDemand { copy_bytes: self.parts.next_copy_byte_demand()?, capacity_bytes: self.parts.next_capacity_byte_demand(copy)?, release_bytes: self.parts.next_release_byte_demand()?, depth: self.parts.next_depth_demand()? })
     }
     fn close(&mut self, grant: MediaGrant) -> Result<MediaStep, MediaValueError> {
         if let Some(cursor) = &mut self.cursor {
@@ -28,9 +28,9 @@ impl IntrinsicMediaEncoding {
 }
 impl MediaRetireOwned for IntrinsicMediaEncoding {
     fn retirement(self) -> Box<dyn MediaRetirementCursor> { Box::new(self) }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<Self>()) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
     fn controlled_retirement_supported() -> bool { true }
-    fn retirement_element_copy_bytes() -> usize { std::mem::size_of::<Self>() }
+    fn retirement_element_copy_bytes() -> usize { size_of::<Self>() }
 }
 impl MediaRetirementCursor for IntrinsicMediaEncoding {
     fn close_step(&mut self, grant: MediaGrant) -> MediaRetirementStep {
@@ -46,7 +46,6 @@ impl MediaRetirementCursor for IntrinsicMediaEncoding {
 struct IntrinsicMediaSource<'a>(&'a DslValue);
 impl IntrinsicMediaSource<'_> {
     fn at(&self, path: &[usize]) -> Result<&DslValue, MediaValueError> {
-        let Some((0, path)) = path.split_first() else { return Err(media_projection_error()); };
         let mut value = self.0;
         for index in path { value = match value { DslValue::Array(items) => items.get(*index), DslValue::Object(items) => items.get(*index).map(|(_, value)| value), _ => None }.ok_or_else(media_projection_error)?; }
         Ok(value)
@@ -56,7 +55,6 @@ impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for Intr
     fn projection_identity(&self) -> usize { self.0 as *const DslValue as usize }
     fn projection_view(&self, path: &[usize]) -> Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>, MediaValueError> {
         use semio_framework_dsl_record::native_encoding::FieldProjectionView as View;
-        if path.is_empty() { return Ok(View::Record(&[1])); }
         Ok(match self.at(path)? { DslValue::Null => View::IntrinsicNull, DslValue::Bool(value) => View::IntrinsicBool(*value), DslValue::Number(value) => View::IntrinsicNumber(*value), DslValue::String(text) => View::IntrinsicText(text), DslValue::Bytes(bytes) => View::IntrinsicBytes(bytes), DslValue::Array(items) => View::IntrinsicArray(items.len()), DslValue::Object(items) => View::IntrinsicObject(items.len()) })
     }
     fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, MediaValueError> { match self.at(path)? { DslValue::Object(items) => items.get(index).map(|(key, _)| key.as_str()).ok_or_else(media_projection_error), _ => Err(media_projection_error()) } }
@@ -83,7 +81,7 @@ fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mu
         *slot = Some(IntrinsicMediaEncoding::new()); let state = slot.as_mut().unwrap();
         wallet.copy_encode_text_into(native, port, &mut state.parts.original_mut().unwrap().0, 2)?;
         wallet.copy_encode_text_into(native, schema, &mut state.parts.original_mut().unwrap().1, 2)?;
-        let cursor_bytes = std::mem::size_of::<MediaPackCursor>(); let header_bytes = std::mem::size_of::<Option<Box<MediaPackCursor>>>();
+        let cursor_bytes = size_of::<MediaPackCursor>(); let header_bytes = size_of::<Option<Box<MediaPackCursor>>>();
         wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: header_bytes, maximum_capacity_bytes: cursor_bytes, maximum_release_bytes: 0, maximum_depth: 2 })?;
         native.checkpoint()?; native.charge(cursor_bytes)?; state.cursor = Some(Box::new(MediaPackCursor::default()));
         wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: header_bytes, retained_capacity_bytes: cursor_bytes, released_bytes: 0 })?;
@@ -124,7 +122,7 @@ fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mu
             if state.parts.original().unwrap().2.len() != length { return Err(media_projection_error()); }
             close_intrinsic_cursor(state.cursor.as_mut().unwrap(), native, wallet)
         })?;
-        wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: std::mem::size_of::<IntrinsicMediaParts>(), ..Default::default() })?;
+        wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: size_of::<IntrinsicMediaParts>(), ..Default::default() })?;
         state.parts.take_original().ok_or_else(media_projection_error)
     })
 }
@@ -133,7 +131,7 @@ fn copy_media_text_parts(port: &str, schema: &str, text: &str, owner: &mut store
     owner.receive::<(String, String, String), (String, String, String)>(|slot, native, wallet| {
         *slot = Some((String::new(), String::new(), String::new())); let parts = slot.as_mut().unwrap();
         wallet.copy_encode_text_into(native, port, &mut parts.0, 2)?; wallet.copy_encode_text_into(native, schema, &mut parts.1, 2)?; wallet.copy_encode_text_into(native, text, &mut parts.2, 2)?;
-        wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: std::mem::size_of::<(String, String, String)>(), ..Default::default() })?;
+        wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: size_of::<(String, String, String)>(), ..Default::default() })?;
         Ok(slot.take().unwrap())
     })
 }

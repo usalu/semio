@@ -510,7 +510,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec LowpolyBuilderFacets {
         construction: LowpolyBuilderConstruction,
         analysis: LowpolyAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::LowpolyComposerComposition,
+        composition: LowpolyComposerComposition,
     }
     builder: LowpolyBuilder,
     analyzer: LowpolyAnalyzer,

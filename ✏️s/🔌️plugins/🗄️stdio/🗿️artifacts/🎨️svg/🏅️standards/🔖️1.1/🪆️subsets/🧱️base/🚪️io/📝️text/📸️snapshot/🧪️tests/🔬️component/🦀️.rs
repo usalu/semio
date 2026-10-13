@@ -27,8 +27,8 @@ fn assert_owned_literal_roundtrip(snapshot:&SvgSnapshot){
     assert_eq!(restored,*snapshot);
     restored.retire_sqlite_snapshot();
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-        let payload=snapshot.encode_sqlite_snapshot_native(encoding,&mut control).expect("literal controlled native state");
-        let restored=SvgSnapshot::decode_sqlite_snapshot_native(&payload,&mut control).expect("literal controlled native reconstruction");
+        let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut control, native_owner)).expect("literal controlled native state");
+        let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| SvgSnapshot::decode_sqlite_snapshot_native(&payload,&mut control, native_owner)).expect("literal controlled native reconstruction");
         assert_eq!(restored,*snapshot);
         restored.retire_sqlite_snapshot();
     }

@@ -47,7 +47,7 @@ fn local_interaction_retained_update_every_cancel_frontier_retires_exact_owners(
     let fixture = fixture(); let cases = cases();
     let case = cases["cases"].as_array().unwrap().iter().find(|row| row["id"] == fixture["cancelSourceCase"]).unwrap();
     for bytes in [1, 64, 4096] {
-        let mut last_cut = false;
+        let mut last_cut = false; let mut adopted = false;
         for cut in 0..10_000 {
             let root = LocalInteractionRoot::from_cold(from_json(case["before"].clone()));
             let patch = LocalInteractionRootPatch::from_cold(from_json(case["restore"]["domains"]["graph"].clone()));
@@ -57,10 +57,11 @@ fn local_interaction_retained_update_every_cancel_frontier_retires_exact_owners(
             if update.is_complete() { last_cut = true; }
             update.begin_close().unwrap(); assert!(update.take().is_none());
             released += close(update, bytes);
-            assert_eq!(released as u64, fixture["cancelOwnedStringBytes"].as_u64().unwrap(), "cut {cut}, grant {bytes}");
+            let (owned, domain) = (fixture["cancelOwnedKeyBytes"].as_u64().unwrap(), fixture["cancelDomainKeyBytes"].as_u64().unwrap());
+            if released as u64 == owned + domain { adopted = true; } else { assert!(!adopted && released as u64 == owned, "cut {cut}, grant {bytes}"); }
             if last_cut { break; }
         }
-        assert!(last_cut);
+        assert!(last_cut && adopted);
     }
 }
 

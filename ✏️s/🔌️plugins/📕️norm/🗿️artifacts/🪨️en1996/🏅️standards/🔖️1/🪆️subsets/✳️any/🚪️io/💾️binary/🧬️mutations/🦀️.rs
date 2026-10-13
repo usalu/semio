@@ -26,9 +26,10 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::artifact_schema::mutations::En1996Mutation;
-use protocol::{OpBinary, OpText};
+use protocol::{OpBinary};
+#[cfg(test)] use protocol::{OpText};
 
 impl OpBinary for En1996Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

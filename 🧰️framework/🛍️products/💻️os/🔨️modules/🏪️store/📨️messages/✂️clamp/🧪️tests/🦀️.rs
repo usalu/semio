@@ -82,15 +82,17 @@ fn edit_replay_clamping_preserves_every_fatal_mutation_status() {
         started_at: String::new(), finished_at: None,
     };
     let edits = HashMap::from([(edit.id.clone(), edit)]);
-    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["fatal-status".into()], 0, "demo.doc", EffectiveSupersessions::new(), &edits).unwrap();
+    let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), vec!["fatal-status".into()], 0, "demo.doc", EffectiveSupersessions::new(), &edits).unwrap().with_retirement_factories(Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<DemoSnapshot>::default()), Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<SeverityMutation>::default()));
     while !replay.is_finished() { replay.step(&edits, &mut || true).unwrap(); }
     assert_eq!(replay.progress().done, replay.progress().total);
     assert_eq!(replay.progress().done, law["settlement"]["finishedWork"]["done"].as_u64().unwrap() as u32);
-    let result = replay.finish().unwrap();
+    let mut result = replay.finish().unwrap();
     assert_eq!(result.report().outcomes.len(), count);
     assert_eq!(result.report().worst, Some(semio_framework_diagnostic::Severity::Fatal));
     assert!(result.report().outcomes.iter().all(|outcome| outcome.worst == Some(semio_framework_diagnostic::Severity::Fatal)));
     assert!(result.report().outcomes.iter().any(|outcome| outcome.messages.is_empty()));
+    result.begin_retirement();
+    super::raw_replay_retirement::tests::close(&mut result);
     eprintln!("[DEBUG] all {count} fatal mutation statuses preserved after cooperative message settlement");
 }
 /// 🧾️ Each original owner pays its complete advertised physical release.

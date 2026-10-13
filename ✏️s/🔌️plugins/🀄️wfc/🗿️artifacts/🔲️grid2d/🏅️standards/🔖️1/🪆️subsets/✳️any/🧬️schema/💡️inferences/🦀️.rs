@@ -16,8 +16,6 @@
 //! `Grid2dContradiction`/`Grid2dEntropy` is sound.
 
 use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
-use semio_s_plugin_wfc_engine as wfc;
-use std::collections::BTreeMap;
 
 //#region 📦️RetainedPayload
 

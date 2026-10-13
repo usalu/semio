@@ -16,7 +16,7 @@ pub type SetDeclarationPayload = SetDeclarationMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDeclarationMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "declaration", kind: "set-declaration", record: "SetDeclaration" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         protocol::MutationOutcome::new(XmlDiff { prolog: None, epilog: None, declaration: Some(self.declaration.clone()), doctype: None, root: None })
     }
 

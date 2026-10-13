@@ -498,7 +498,7 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
     }
 
     /// 📦️ Each variant sets only the slots of the fields it owns.
-    fn diff(&self, base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfigDiff> {
+    fn diff(&self, _base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfigDiff> {
         protocol::MutationOutcome::new(match self {
             LowpolyConfigMutation::SetActiveObject(SetActiveObjectEdit { object_id }) => LowpolyConfigDiff { active_object_id: Some(object_id.clone()), ..Default::default() },
             LowpolyConfigMutation::SetPaintUtility(SetPaintUtilityEdit { value }) => LowpolyConfigDiff { paint_utility: Some(value.clone()), ..Default::default() },

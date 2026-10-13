@@ -40,7 +40,7 @@ pub fn inverse(p: &GltfReorderSceneRootNodesPayload, base: &GltfSnapshot) -> Vec
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::reorder_scene_root_nodes::mutation(super::reorder_scene_root_nodes::GltfReorderSceneRootNodesPayload { scene: p.scene, order: base.document.scenes[p.scene].nodes.clone() })]
+    vec![mutation(GltfReorderSceneRootNodesPayload { scene: p.scene, order: base.document.scenes[p.scene].nodes.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -60,7 +60,7 @@ pub fn mutation(payload: GltfReorderSceneRootNodesPayload) -> super::GltfMutatio
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderSceneRootNodesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "scene-root-nodes", kind: "reorder-scene-root-nodes", record: "ReorderedSceneRootNodes" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

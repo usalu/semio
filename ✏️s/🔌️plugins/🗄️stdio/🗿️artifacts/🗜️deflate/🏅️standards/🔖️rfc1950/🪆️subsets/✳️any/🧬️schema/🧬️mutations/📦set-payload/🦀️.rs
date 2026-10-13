@@ -20,12 +20,12 @@ pub struct SetPayload {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "payload", kind: "set-payload", record: "SetPayload" };
 
-    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
+    fn diff(&self, _base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
         let Self { payload } = self;
         protocol::MutationOutcome::new( diff_set_payload(payload.clone()) )
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {
-        Ok(vec![DeflateMutation::SetPayload(set_payload::SetPayload { payload: base.payload.clone() })])
+        Ok(vec![DeflateMutation::SetPayload(SetPayload { payload: base.payload.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set payload", "Nutzlast setzen")

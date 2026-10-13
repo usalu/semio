@@ -54,7 +54,7 @@ pub mod set_icc;
 pub mod set_metadata_entry;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioImageSnapshot, diff = SemioImageDiff, schema = "SemioImageMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -83,7 +83,7 @@ pub const KINDS: &[&str] = &["set-dimensions", "set-colorspace", "set-bit-depth"
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioImageSnapshot) -> protocol::MutationOutcome<SemioImageDiff> {
-    <SemioImageMutation as protocol::Mutation<SemioImageSnapshot>>::diff(mutation, base)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, base)
 }
 
 

@@ -36,7 +36,7 @@ pub(crate) mod context {
     impl Drop for WriterApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0);
+                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -75,7 +75,7 @@ pub(crate) mod context {
         let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
         let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
         retire_writer_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.expect("load jack");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load jack");
         app
     }
 
@@ -92,12 +92,12 @@ pub(crate) mod context {
     pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
         let mut meta = meta("local");
         meta.view_state = Some(main_window_view());
-        let mut result = app.dispatch_typed(command, &meta).await.expect("dispatch");
+        let mut result = app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         result.requested_effects.extend(drain_typed_operations(app).await);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -106,7 +106,7 @@ pub(crate) mod context {
     /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
     /// committed through its reserved job, then published — all three steps or the projection never moves.
     pub async fn history_verb(app: &mut WriterApp, action: &str) -> InvocationResult {
-        let admitted = app.handle_action(action, None, &meta("local")).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
+        let admitted = app.handle_action(action, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
         let settled = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
         drain_typed_operations(app).await;
         settled
@@ -125,7 +125,7 @@ pub(crate) mod context {
     /// per turn where the helper drains every presented page, so a command publishing an artifact
     /// AND a config lane reported only one of them.
     pub async fn drain_typed_operations(app: &mut WriterApp) -> Vec<semio_framework_plugin::Effect> {
-        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("Writer retained operations did not settle: {fault:?}"));
+        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("Writer retained operations did not settle: {fault:?}"));
         receipt.effects
     }
     
@@ -140,7 +140,7 @@ pub(crate) mod context {
         meta.view_state = Some(main_window_view());
         args.push((semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String(WRITER_TYPING_BUFFER.into())));
         app.set_tool_clock_ms(Some(now_ms));
-        let result = app.handle_action(action, Some(&semio_framework_value::DslValue::Object(args)), &meta).await.unwrap_or_else(|fault| panic!("typing delivery {action}: {fault:?}"));
+        let result = app.handle_action(action, Some(&semio_framework_value::DslValue::Object(args)), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("typing delivery {action}: {fault:?}"));
         drain_typed_operations(app).await;
         result
     }
@@ -679,11 +679,11 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     let instance = 7;
     app.bind_instance_id(instance).await;
     let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
-    app.dispatch_typed(WriterCommand::SetActiveExample(crate::editor::writer::commands::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta).await.expect("example dispatch");
+    app.dispatch_typed(WriterCommand::SetActiveExample(crate::editor::writer::commands::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
         app.maintenance_step(1, 4_096).unwrap();
-        app.advance_typed_operation_publication().await.unwrap();
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
@@ -701,7 +701,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     PluginApp::begin_document_archive_load(&mut *app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 91).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
@@ -729,6 +729,6 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         .collect();
     assert_eq!(body, crate::writer_text(&snapshot), "the genesis-derived document member must carry the loaded document's authored body");
     assert!(!body.is_empty(), "the genesis-derived document member must not be empty after a member-less archive load");
-    artifact_app_laws::close_registered_fixture_app(&mut *app);
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 //#endregion 🔖️ExampleArchiveLoad

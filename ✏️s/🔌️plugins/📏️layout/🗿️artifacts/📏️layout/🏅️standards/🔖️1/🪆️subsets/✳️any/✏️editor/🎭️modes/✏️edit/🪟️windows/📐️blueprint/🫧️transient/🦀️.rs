@@ -16,16 +16,6 @@ pub struct LayoutWindowTransient {
     pub transform_tool: Option<Box<LayoutTransformToolState>>,
 }
 
-impl semio_framework_value::retirement::RetireOwned for LayoutDropPreviewState {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::sequence(vec![
-            semio_framework_value::retirement::RetireOwned::retirement(self.kind),
-            semio_framework_value::retirement::RetireOwned::retirement(self.x),
-            semio_framework_value::retirement::RetireOwned::retirement(self.y),
-        ])
-    }
-}
-
 semio_framework_value::artifact_retire_struct!(LayoutWindowTransient { drop_preview, engagement_input, transform_tool });
 
 semio_framework_plugin::transient_root! {

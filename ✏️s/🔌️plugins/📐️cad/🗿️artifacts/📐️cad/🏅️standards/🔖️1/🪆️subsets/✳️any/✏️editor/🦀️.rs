@@ -19,7 +19,7 @@ use crate::editor::cad::commands::utility::set_dislocate_option;
 use crate::editor::cad::config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions, SetEdit, SetContributionsEdit};
 use crate::editor::cad::engine::interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
 use crate::editor::cad::modes::edit;
-use crate::editor::cad::modes::edit::tools::transform::{cad_child_leaves_emit, cad_import_object_emit, cad_pane_models, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
+use crate::editor::cad::modes::edit::tools::transform::{cad_import_object_emit, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
 use crate::editor::cad::modes::edit::windows::transient::{self as window_transient, CadWorldWindowTransient};
 use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 use crate::editor::cad::panels::{catalogue, document, inspection};
@@ -32,7 +32,8 @@ use crate::standards::v1::subsets::any::schema::inferences::{
     CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
 use crate::{artifact_kind, CadCamera, CadComposedPanes, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{insert_element::InsertElement, remove_element::RemoveElement, set_element::SetElement, SemioModelMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{remove_element::RemoveElement, set_element::SetElement, SemioModelMutation};
+#[cfg(test)] use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{insert_element::InsertElement};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -1395,11 +1396,11 @@ struct CadRetainedCommandWork {
 }
 
 impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadRetainedCommandWork {
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -1500,7 +1501,7 @@ impl semio_framework_plugin::ArtifactReservedJob for CadMediaJob {}
 struct CadMediaWork {
     port: String,
     media: Option<Media>,
-    children: Option<semio_framework_plugin::ChildContentView>,
+    children: Option<ChildContentView>,
     pending: Option<(String, String, semio_framework_value::DslValue)>,
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     priced_bytes: usize,
@@ -1511,7 +1512,7 @@ struct CadMediaWork {
 }
 
 impl CadMediaWork {
-    fn new(port: String, media: Media, children: Option<semio_framework_plugin::ChildContentView>) -> Self {
+    fn new(port: String, media: Media, children: Option<ChildContentView>) -> Self {
         Self { port, media: Some(media), children, pending: None, retirement: None, priced_bytes: 0, price_checksum: 0, pricing_complete: false, consumed: false, closing: false }
     }
     fn borrowed_source(&self) -> Result<&[u8], Fault> {
@@ -1550,11 +1551,11 @@ impl CadMediaWork {
 }
 
 impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str { "importCadFile" }
     fn workspace_identity(&self) -> u64 { self.borrowed_source().map_or(0, |source| (source.as_ptr() as usize as u64).wrapping_add(source.len() as u64)) }
@@ -1712,7 +1713,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation>
     }
 
     fn begin_demand(&self, _mutation: &CadConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<CadConfigStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<CadConfigStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>)> {
@@ -1860,7 +1861,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for
     }
 
     fn begin_demand(&self, _mutation: &CadMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<CadArtifactStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<CadArtifactStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>)> {

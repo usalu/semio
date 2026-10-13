@@ -22,13 +22,13 @@ pub struct InsertFace {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertFace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "face", kind: "insert-face", record: "InsertFace" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { index, face } = self;
         protocol::MutationOutcome::new(diff_insert_face(*index, face.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
-        Ok({ vec![ObjMutation::RemoveFace(remove_face::RemoveFace { index: (*index).min(base.faces.len()) })] })
+        Ok(vec![ObjMutation::RemoveFace(remove_face::RemoveFace { index: (*index).min(base.faces.len()) })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert face", "Fläche einfügen")

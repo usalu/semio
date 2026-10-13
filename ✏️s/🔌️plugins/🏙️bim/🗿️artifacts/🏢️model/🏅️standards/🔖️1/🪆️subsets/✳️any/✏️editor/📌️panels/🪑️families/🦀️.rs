@@ -21,12 +21,12 @@ use semio_framework_plugin::PanelTabKind;
 use semio_framework_plugin::PanelTreeBuilder;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::LabelText;
 
 //#region 🔖️Constants
+/// 🪪️ The unique id of this panel tab, a child of the framework catalogue tab.
+pub const PANEL_TAB_ID: &str = "bim.panel.families";
 pub const BODY_KEY: &str = "bim.edit.families";
 const ROOT: &str = "bim-families";
 //#endregion 🔖️Constants
@@ -35,7 +35,7 @@ const ROOT: &str = "bim-families";
 /// 🧱️ Stitched into the app manifest by `crate::editor::bim::create_bim_app`.
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
-        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
+        kind: PanelTabKind::App(PANEL_TAB_ID.into()),
         label: BimLabels::localized(|labels| labels.panel_family_browser),
         group: PanelGroup::Workbench,
         body_key: Some(BODY_KEY.into()),

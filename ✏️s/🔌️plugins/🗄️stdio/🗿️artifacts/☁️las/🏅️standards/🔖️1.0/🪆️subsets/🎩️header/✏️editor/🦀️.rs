@@ -13,7 +13,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -86,7 +85,7 @@ const LAS_ANY_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.las.tool-command.v1";
 const LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
-fn lasAnyEditor_example_snapshot(example_id: &str) -> LasSnapshot {
+fn las_any_editor_example_snapshot(example_id: &str) -> LasSnapshot {
     if example_id == crate::examples::demo::ID {
         <LasSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -94,7 +93,7 @@ fn lasAnyEditor_example_snapshot(example_id: &str) -> LasSnapshot {
     }
 }
 
-fn lasAnyEditor_command_id(command: &LasAnyEditCommand) -> &'static str {
+fn las_any_editor_command_id(command: &LasAnyEditCommand) -> &'static str {
     if let LasAnyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         LasAnyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
@@ -102,7 +101,7 @@ fn lasAnyEditor_command_id(command: &LasAnyEditCommand) -> &'static str {
     }
 }
 
-fn lasAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<LasAnyEditCommand, Fault> {
+fn las_any_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<LasAnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| LasAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(LasAnyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -110,11 +109,11 @@ fn lasAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_
     }
 }
 
-fn lasAnyEditor_retained_extent(command: &LasAnyEditCommand, _snapshot: &LasSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn las_any_editor_retained_extent(command: &LasAnyEditCommand, _snapshot: &LasSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, LasAnyEditCommand::SetActiveExample { .. }).then_some(1)
 }
 
-fn lasAnyEditor_retained_reduce(
+fn las_any_editor_retained_reduce(
     command: &LasAnyEditCommand,
     _snapshot: &LasSnapshot,
     _config: &NoConfig,
@@ -126,7 +125,7 @@ fn lasAnyEditor_retained_reduce(
 ) -> Result<Emit<LasMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         LasAnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&lasAnyEditor_example_snapshot(example_id), LAS_ANY_DOCUMENT_SCHEMA)],
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&las_any_editor_example_snapshot(example_id), LAS_ANY_DOCUMENT_SCHEMA)],
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -212,7 +211,7 @@ impl ArtifactEditor for LasAnyEditor {
         if !LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if lasAnyEditor_command_id(&request.command) != request.tool_id {
+        if las_any_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -236,10 +235,10 @@ impl ArtifactEditor for LasAnyEditor {
                 operation,
                 completion: request.completion,
             },
-            lasAnyEditor_command_id,
+            las_any_editor_command_id,
             LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lasAnyEditor_retained_reduce, lasAnyEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, las_any_editor_retained_reduce, las_any_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -248,9 +247,9 @@ impl ArtifactEditor for LasAnyEditor {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn command_id(command: &Self::Command) -> &'static str { lasAnyEditor_command_id(command) }
+    fn command_id(command: &Self::Command) -> &'static str { las_any_editor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { lasAnyEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { las_any_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> LasSnapshot {
         LasSnapshot::default()
@@ -268,7 +267,7 @@ impl ArtifactEditor for LasAnyEditor {
         match command {
             LasAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             LasAnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&lasAnyEditor_example_snapshot(example_id), LAS_ANY_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&las_any_editor_example_snapshot(example_id), LAS_ANY_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }
@@ -302,6 +301,9 @@ impl editing::SnapshotEditingEditor for LasAnyEditor {
             ["header", field, ..] => {
                 let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(&snapshot.header), "/header", event).map_err(|error| fail(error.to_string()))?;
                 let new = <LasHeader as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+                if new == snapshot.header {
+                    return Ok(Some(Vec::new()));
+                }
                 let leaf = match *field {
                     "versionMajor" | "versionMinor" => LasMutation::SetVersion(set_version::SetVersion { major: new.version_major, minor: new.version_minor }),
                     "systemIdentifier" => LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: new.system_identifier }),
@@ -321,6 +323,9 @@ impl editing::SnapshotEditingEditor for LasAnyEditor {
                 let current = snapshot.vlrs.get(index).ok_or_else(|| fail(format!("VLR {index} does not exist")))?;
                 let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(current), &format!("/vlrs/{index}"), event).map_err(|error| fail(error.to_string()))?;
                 let vlr = <LasVlr as semio_framework_value::FromValue>::from_value(edited).map_err(|error| fail(error.to_string()))?;
+                if vlr == *current {
+                    return Ok(Some(Vec::new()));
+                }
                 Ok(Some(vec![LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index }), LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr })]))
             }
             _ => Ok(None),

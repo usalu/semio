@@ -367,7 +367,7 @@ impl OpBinary for DocxMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `DocxMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

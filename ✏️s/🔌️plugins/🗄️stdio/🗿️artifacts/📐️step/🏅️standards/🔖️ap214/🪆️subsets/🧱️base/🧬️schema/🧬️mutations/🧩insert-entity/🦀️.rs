@@ -15,11 +15,11 @@ pub struct InsertEntity {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for InsertEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "entity", kind: "insert-entity", record: "InsertEntity" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+    fn diff(&self, _base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
         let Self { index, entity } = self;
         protocol::MutationOutcome::new(StepDiff { entities: Some(StepEntitiesDiff { added: vec![StepEntityAdded { index: *index, entity: entity.clone() }], ..Default::default() }), ..Default::default() })
     }
-    fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
         let Self { entity, .. } = self;
         Ok(vec![StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: entity.id })])
     }

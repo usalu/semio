@@ -3,12 +3,10 @@
 use crate::JackSnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
-use crate::standards::v1::subsets::any::schema::operations::{apply_trinity_graph_mutation, apply_trinity_graph_mutations, create_trinity_graph_envelope, dispatch_trinity_graph_mutations, inverse_trinity_graph_mutation, validate_trinity_graph_operation, OwnedTrinityGraphStore, TrinityGraphEnvelope, TrinityGraphStore, };
-use crate::standards::v1::subsets::any::io::binary::mutations::new_trinity_graph_store;
 
 //#region 🧾️DerivedRegistry
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
-pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("SetQuery", crate::standards::v1::subsets::any::io::text::mutations::set_query::TEXT_OPCODE)];
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("SetQuery", set_query::TEXT_OPCODE)];
 //#endregion 🧾️DerivedRegistry
 
 //#region 🌉️ExternalCodecBridge
@@ -74,7 +72,7 @@ impl OpText for TrinityGraphOperationDsl {
                 return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+        Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);

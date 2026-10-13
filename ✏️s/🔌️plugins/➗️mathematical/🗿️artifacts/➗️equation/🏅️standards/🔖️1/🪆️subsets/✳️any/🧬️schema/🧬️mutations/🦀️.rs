@@ -19,7 +19,6 @@ use crate::{EquationDiff, EquationSnapshot};
 // interim (not-yet-serde-free) state. No `#[value(tag = …)]`: this enum is externally-tagged (the
 // derive's default representation when `tag` is absent), matching the committed
 // `🦠️mutation/🔣️.json` fixtures' `{"VariantName": {...}}` shape one-for-one.
-use semio_framework_value::ToValue;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // 🪆️ The 18 mutation leaf modules no longer live under this catalog's own `super::` (this

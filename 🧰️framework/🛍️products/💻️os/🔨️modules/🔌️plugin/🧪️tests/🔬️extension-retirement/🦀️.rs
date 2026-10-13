@@ -304,6 +304,15 @@ mod extension_retirement_tests {
         assert!(registry.terminal_is_empty());
     }
 
+    async fn poll_extension_response(runtime: &PluginRuntime<crate::app::NoPluginApp>, mut events: Vec<semio_framework::kernel::Event>, request: u64) -> bool {
+        let budget = semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
+        for _ in 0..64 {
+            let turn = crate::reactor::poll_kernel(runtime, std::mem::take(&mut events), None, None, budget, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
+            if turn.effects.iter().any(|effect| matches!(effect, semio_framework::kernel::Effect::Respond { req, result: semio_framework::kernel::RequestOutcome::Ok(bytes) } if req.0 == request && bytes.is_empty())) { return true; }
+        }
+        false
+    }
+
     #[test]
     fn extension_bundle_resource_retirement_runs_through_suspend_and_exported_poll() {
         ::semio_framework_async::poll::resolve_ready(async {
@@ -334,11 +343,9 @@ mod extension_retirement_tests {
             assert_eq!(first.status, semio_framework::kernel::TurnStatus::MoreWork);
             assert!(invoked(extension_invoke("echo", b"sealed", &mut crate::app::artifact_app_laws::fixture_step_context()).await).is_err());
             let control = |req, capability: &str| semio_framework::kernel::Event::Request { req: semio_framework::kernel::RequestId(req), from: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId("0".into()) }, capability: capability.into(), payload: Vec::new() };
-            let paused = crate::reactor::poll_kernel(&runtime, vec![control(1,fixture["controls"]["cancel"].as_str().unwrap())], None, None, semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
-            assert!(paused.effects.iter().any(|effect| matches!(effect, semio_framework::kernel::Effect::Respond { req, result: semio_framework::kernel::RequestOutcome::Ok(bytes) } if req.0 == 1 && bytes.is_empty())));
+            assert!(poll_extension_response(&runtime, vec![control(1,fixture["controls"]["cancel"].as_str().unwrap())], 1).await, "the retained invocation answers the paused control request within its bounded turns");
             assert!(!terminal.load(Ordering::SeqCst));
-            let resumed = crate::reactor::poll_kernel(&runtime, vec![control(2,fixture["controls"]["resume"].as_str().unwrap())], None, None, semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
-            assert!(resumed.effects.iter().any(|effect| matches!(effect, semio_framework::kernel::Effect::Respond { req, result: semio_framework::kernel::RequestOutcome::Ok(bytes) } if req.0 == 2 && bytes.is_empty())));
+            assert!(poll_extension_response(&runtime, vec![control(2,fixture["controls"]["resume"].as_str().unwrap())], 2).await, "the retained invocation answers the resumed control request within its bounded turns");
             for _ in 0..10000 {
                 let turn = crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
                 if extension_terminal_is_empty() { assert_eq!(turn.status, semio_framework::kernel::TurnStatus::Idle); assert!(terminal.load(Ordering::SeqCst)); break; }
@@ -361,8 +368,9 @@ mod extension_retirement_tests {
             assert!(yielded(extension_close_step(RetainedCloneGrant { maximum_release_bytes: small_bytes as usize, ..lifecycle }).unwrap()));
             assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             assert!(!extension_terminal_is_empty());
-            let zero = semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 0, max_patch_bytes: adequate_bytes, ..budget };
-            crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,zero, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
+            let unfunded = semio_framework::kernel::RetainedTurnInput { grant: RetainedCloneGrant { maximum_items: 0, ..crate::app::artifact_app_laws::fixture_retained_turn().grant }, ..crate::app::artifact_app_laws::fixture_retained_turn() };
+            let zero = semio_framework::kernel::Budget { retained: unfunded, fuel: 0, max_patch_bytes: adequate_bytes, ..budget };
+            crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,zero, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context_for(unfunded)).await.unwrap();
             assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             let adequate = semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 1, max_patch_bytes: adequate_bytes, ..budget };
             extension_cancel_close();
@@ -373,11 +381,17 @@ mod extension_retirement_tests {
             crate::reactor::poll_kernel(&runtime,vec![semio_framework::kernel::Event::QuotaChanged { quotas: semio_framework::kernel::QuotaSchema::default() }],None,None,adequate, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
             assert!(extension_retirement_demands(small_bytes as usize).unwrap().release_bytes < demand.release_bytes);
             assert!(invoked(extension_invoke("echo",b"sealed", &mut crate::app::artifact_app_laws::fixture_step_context()).await).is_err());
+            let mut retired = false;
             for _ in 0..1000 {
                 crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,small, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
-                if extension_terminal_is_empty() { return; }
+                if extension_terminal_is_empty() { retired = true; break; }
             }
-            panic!("the lifecycle release ceiling does not retire the retained allocation under the small actor patch budget");
+            assert!(retired, "the lifecycle release ceiling does not retire the retained allocation under the small actor patch budget");
+            for _ in 0..1000 {
+                if crate::reactor::retained_extension_invocation_occupancy() == 0 { return; }
+                crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,adequate, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
+            }
+            panic!("the exported polls do not retire every extension invocation owner");
         });
     }
 }

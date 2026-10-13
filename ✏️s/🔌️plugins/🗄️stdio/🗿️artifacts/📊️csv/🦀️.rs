@@ -300,7 +300,6 @@ pub mod schema {
 
 pub use standards::v_rfc4180::subsets::any::examples;
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -341,7 +340,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

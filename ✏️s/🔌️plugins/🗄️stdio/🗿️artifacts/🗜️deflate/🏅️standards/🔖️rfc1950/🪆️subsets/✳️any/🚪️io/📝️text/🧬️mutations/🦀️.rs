@@ -37,4 +37,3 @@ impl OpText for DeflateMutation {
     }
 }
 }
-pub use mutations_codec::*;

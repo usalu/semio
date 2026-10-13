@@ -18,7 +18,7 @@ pub type SetTextPayload = SetTextMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         protocol::MutationOutcome::new(diff_at_path(&self.path.0, XmlNodeDiff::Text { text: Some(self.text.clone()) }))
     }
 

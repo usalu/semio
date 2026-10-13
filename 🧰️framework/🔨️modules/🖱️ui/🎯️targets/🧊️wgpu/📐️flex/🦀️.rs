@@ -907,10 +907,10 @@ impl FlexTree {
             if !grid.columns.terminal_is_empty(){return grid.columns.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)}
             if !grid.rows.is_empty(){return Ok(0)}
             if !grid.rows.terminal_is_empty(){return grid.rows.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)}
-            return Ok(std::mem::size_of::<ui_contract::GridLayout>())
+            return Ok(size_of::<ui_contract::GridLayout>())
         }
         if !self.flows.is_empty(){return Ok(0)}
-        fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(std::mem::size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"flex backing extent overflow"))}
+        fn bytes<T>(value:&Vec<T>)->Result<usize,semio_framework_value::ValueError>{value.capacity().checked_mul(size_of::<T>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"flex backing extent overflow"))}
         if self.flows.capacity()!=0{return bytes(&self.flows)}if self.grids.capacity()!=0{return bytes(&self.grids)}if self.intrinsic.capacity()!=0{return bytes(&self.intrinsic)}if self.resolved.capacity()!=0{return bytes(&self.resolved)}if self.main.capacity()!=0{return bytes(&self.main)}bytes(&self.cross)
     }
     pub(crate) fn close_granted(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{

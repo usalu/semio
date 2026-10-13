@@ -208,7 +208,7 @@ impl FlowAuthoringFactory {
 
 impl ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation> for FlowAuthoringFactory {
     fn operation_wire_source<'a>(&self, mutation: &'a FlowMutation) -> Option<ArtifactPreparedOperationSource<'a>> {
-        mutations::prepared_operation_wire_source(mutation)
+        prepared_operation_wire_source(mutation)
     }
 
     fn begin_batch_digest(&self, _edit: &mut Option<Box<crate::os_spr::Edit<FlowMutation>>>, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn crate::os_store::ArtifactStoreBatchDigest<FlowMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {

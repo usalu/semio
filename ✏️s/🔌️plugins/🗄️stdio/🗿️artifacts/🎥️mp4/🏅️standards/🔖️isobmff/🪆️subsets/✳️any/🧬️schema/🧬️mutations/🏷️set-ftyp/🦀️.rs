@@ -14,12 +14,12 @@ pub struct SetFtyp {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetFtyp {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "ftyp", kind: "set-ftyp", record: "SetFtyp" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
+    fn diff(&self, _base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         let Self { ftyp } = self;
         protocol::MutationOutcome::new(Mp4Diff { ftyp: Some(ftyp.clone()), movie: None, tracks: None })
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-        Ok(vec![Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: base.ftyp.clone() })])
+        Ok(vec![Mp4Mutation::SetFtyp(SetFtyp { ftyp: base.ftyp.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set ftyp", "ftyp-Box setzen")

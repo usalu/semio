@@ -2551,34 +2551,36 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(codec)
     }
 
-    fn validate_typed_snapshot_subset<P: store::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<semio_framework_diagnostic::Diagnostic>, IoError> {
+    fn validate_typed_snapshot_subset<P: store::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, IoError> {
         store::validate_owned_sqlite_snapshot_subset(snapshot, dialect, database, control).map(|outcome| outcome.diagnostics)
     }
 
-    /// 📤️ Exports the complete owned snapshot through its exact registered relational model.
+    /// 📤️ Exports the complete owned snapshot through its exact registered relational model, as the original caller that owns and closes the retirement recipient.
     pub async fn io_export_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, snapshot: &P, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<Vec<u8>> {
         typed_snapshot_codec::<P>(dialect)?;
-        let mut control = SqliteSnapshotControl::new(progress, limits);
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
-        let mut database = snapshot.to_sqlite_database(&mut control).map_err(IoError::from_value_error)?;
-        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ProjectSnapshot, &mut control).map_err(IoError::from_value_error)?;
-        let diagnostics = validate_typed_snapshot_subset(dialect, snapshot, &database, &mut control)?;
-        attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, &mut control).map_err(IoError::from_value_error)?;
-        export_sqlite_database_controlled(&database, &mut control).map(|value| IoOutcome { value, diagnostics }).map_err(IoError::from_value_error)
+        SqliteSnapshotControl::run_as_original_caller(progress, limits, |control| {
+            control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
+            let mut database = snapshot.to_sqlite_database(control).map_err(IoError::from_value_error)?;
+            validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ProjectSnapshot, control).map_err(IoError::from_value_error)?;
+            let diagnostics = validate_typed_snapshot_subset(dialect, snapshot, &database, control)?;
+            attach_sqlite_snapshot_metadata(&mut database, dialect, encoding, control).map_err(IoError::from_value_error)?;
+            export_sqlite_database_controlled(&database, control).map(|value| IoOutcome { value, diagnostics }).map_err(IoError::from_value_error)
+        })
     }
 
-    /// 📥️ Reconstructs every typed snapshot field directly from its declared relational tables.
+    /// 📥️ Reconstructs every typed snapshot field directly from its declared relational tables, as the original caller that owns and closes the retirement recipient.
     pub async fn io_import_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, bytes: &[u8], limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<P> {
         typed_snapshot_codec::<P>(dialect)?;
-        let mut control = SqliteSnapshotControl::new(progress, limits);
-        let mut database = import_sqlite_database_controlled(bytes, &mut control).map_err(IoError::from_value_error)?;
-        let (actual, _) = take_sqlite_snapshot_metadata_controlled(&mut database, &mut control).map_err(IoError::from_value_error)?;
-        if actual != *dialect { return Err(refusal(ValueRefusalKind::InvalidValue, "typed SQLite snapshot dialect does not match requested dialect")); }
-        validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, &mut control).map_err(IoError::from_value_error)?;
-        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
-        let value = P::from_sqlite_database(&database, &mut control).map_err(IoError::from_value_error)?;
-        let diagnostics = validate_typed_snapshot_subset(dialect, &value, &database, &mut control)?;
-        Ok(IoOutcome { value, diagnostics })
+        SqliteSnapshotControl::run_as_original_caller(progress, limits, |control| {
+            let mut database = import_sqlite_database_controlled(bytes, control).map_err(IoError::from_value_error)?;
+            let (actual, _) = take_sqlite_snapshot_metadata_controlled(&mut database, control).map_err(IoError::from_value_error)?;
+            if actual != *dialect { return Err(refusal(ValueRefusalKind::InvalidValue, "typed SQLite snapshot dialect does not match requested dialect")); }
+            validate_snapshot_schema(&database, P::SQLITE_SCHEMA, SqliteSnapshotPhase::ReconstructSnapshot, control).map_err(IoError::from_value_error)?;
+            control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
+            let value = P::from_sqlite_database(&database, control).map_err(IoError::from_value_error)?;
+            let diagnostics = validate_typed_snapshot_subset(dialect, &value, &database, control)?;
+            Ok(IoOutcome { value, diagnostics })
+        })
     }
 
     fn validate_snapshot_metadata_receiving(table:&SqliteTable,port:&mut crate::sqlite_snapshot::artifact::receiving::Port<'_,'_,'_,store::NativeSnapshotBodyWallet>)->Result<SnapshotEncoding,ValueError>{
@@ -2606,9 +2608,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let mut schema=SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';').len()+"semio_snapshot".len();for table in &database.tables{port.work(1,0)?;if table.name.eq_ignore_ascii_case("semio_snapshot"){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"domain schema cannot claim reserved snapshot metadata"))}schema=schema.checked_add(table.name.len()).and_then(|bytes|bytes.checked_add(table.sql.len())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata schema extent overflow"))?;for row in &table.rows{port.work(1,0)?;rows=rows.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata row census overflow"))?;for value in &row.values{port.work(1,0)?;bytes=bytes.checked_add(match value{SqliteValue::Null=>0,SqliteValue::Integer(_)|SqliteValue::Real(_)=>8,SqliteValue::Text(text)=>text.len(),SqliteValue::Blob(bytes)=>bytes.len()}).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata value extent overflow"))?;}}}
             if rows>limits.max_rows{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata exceeds original row ceiling"))}if bytes>limits.max_value_bytes||schema>limits.max_schema_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata exceeds original value or schema ceiling"))}
             for(index,text)in[&dialect.artifact_kind,&dialect.standard,&dialect.subset].into_iter().enumerate(){if text.is_empty(){return Err(invalid())}for(position,character)in text.chars().enumerate(){if position%256==0{port.work(1,0)?}if character.is_control()||index==0&&character=='@'||index==2&&character=='/'{return Err(invalid())}}}Ok(())})();native.record_progress(body.progress())?;preflight?;
-        frame.metadata=Some(native.receive::<Projection,SqliteTable>(|slot,native,body|{*slot=Some(Projection::new());let projected=slot.as_mut().unwrap();let mut port=Port{control,native:Direction::Decode(native),body};port.vector(1,&mut projected.database.tables,1)?;port.work(2,std::mem::size_of::<SqliteTable>())?;projected.database.tables.push(SqliteTable{name:String::new(),sql:String::new(),rows:Vec::new()});let table=&mut projected.database.tables[0];port.text("semio_snapshot",&mut table.name,2)?;port.text(SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';'),&mut table.sql,2)?;port.vector(1,&mut table.rows,2)?;
-            row(projected,1,6,&mut port)?;for text in[&dialect.artifact_kind,&dialect.standard,&dialect.subset]{text_cell(projected,text,&mut port)?}cell(projected,Scalar::Integer(1),&mut port)?;text_cell(projected,encoding.as_str(),&mut port)?;push_row(projected,0,&mut port)?;port.work(1,std::mem::size_of::<SqliteTable>())?;Ok(projected.database.tables.pop().unwrap())})?);
-        let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=(||{let mut port=Port{control,native:Direction::Decode(native.native()),body:&mut body};let database=frame.database.as_mut().unwrap();let count=database.tables.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata table census overflow"))?;crate::sqlite_snapshot::artifact::receiving::relocate_vector(&mut database.tables,&mut frame.tables,count,1,&mut port)?;port.work(1,std::mem::size_of::<SqliteTable>())?;database.tables.push(frame.metadata.take().unwrap());Ok(())})();native.record_progress(body.progress())?;result
+        frame.metadata=Some(native.receive::<Projection,SqliteTable>(|slot,native,body|{*slot=Some(Projection::new());let projected=slot.as_mut().unwrap();let mut port=Port{control,native:Direction::Decode(native),body};port.vector(1,&mut projected.database.tables,1)?;port.work(2,size_of::<SqliteTable>())?;projected.database.tables.push(SqliteTable{name:String::new(),sql:String::new(),rows:Vec::new()});let table=&mut projected.database.tables[0];port.text("semio_snapshot",&mut table.name,2)?;port.text(SNAPSHOT_METADATA_SQL.trim().trim_end_matches(';'),&mut table.sql,2)?;port.vector(1,&mut table.rows,2)?;
+            row(projected,1,6,&mut port)?;for text in[&dialect.artifact_kind,&dialect.standard,&dialect.subset]{text_cell(projected,text,&mut port)?}cell(projected,Scalar::Integer(1),&mut port)?;text_cell(projected,encoding.as_str(),&mut port)?;push_row(projected,0,&mut port)?;port.work(1,size_of::<SqliteTable>())?;Ok(projected.database.tables.pop().unwrap())})?);
+        let mut body=store::NativeSnapshotBodyWallet::new(native.remaining_grant());let result=(||{let mut port=Port{control,native:Direction::Decode(native.native()),body:&mut body};let database=frame.database.as_mut().unwrap();let count=database.tables.len().checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"snapshot metadata table census overflow"))?;crate::sqlite_snapshot::artifact::receiving::relocate_vector(&mut database.tables,&mut frame.tables,count,1,&mut port)?;port.work(1,size_of::<SqliteTable>())?;database.tables.push(frame.metadata.take().unwrap());Ok(())})();native.record_progress(body.progress())?;result
     }
 
     fn run_snapshot_hop(snapshots:&NativeSnapshotMap,hop:&IoEntryDescriptor,input:&mut Option<IoPayload>,native:&mut IoRunControl<'_,'_>,control:&mut SqliteSnapshotControl<'_>)->IoResult<IoPayload>{
@@ -2616,7 +2618,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         if input.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot hop original input is absent")))}
         if is_sqlite_snapshot(&hop.into){
             return native.snapshot_decode().map_err(IoError::from_value_error)?.receive_nested::<SnapshotHopFrame,IoResult<IoPayload>>(|slot,native|{
-                let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<IoPayload>>(),..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot input transfer exceeds original physical grant"))}native.native().checkpoint()?;*slot=Some(SnapshotHopFrame::new(input.take().unwrap()));native.record_progress(moved)?;let frame=slot.as_mut().unwrap();
+                let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<IoPayload>>(),..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot input transfer exceeds original physical grant"))}native.native().checkpoint()?;*slot=Some(SnapshotHopFrame::new(input.take().unwrap()));native.record_progress(moved)?;let frame=slot.as_mut().unwrap();
                 let result=(||{
                     control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1).map_err(IoError::from_value_error)?;
                     let payload=frame.input.as_ref().unwrap();let size=match payload{IoPayload::Binary(bytes)=>bytes.len(),IoPayload::Text(text)=>text.len()};
@@ -2636,14 +2638,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }).map_err(IoError::from_value_error)?;
         }
         native.snapshot_encode().map_err(IoError::from_value_error)?.receive_nested::<SnapshotHopFrame,IoResult<IoPayload>>(|slot,native|{
-            let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<IoPayload>>(),..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot input transfer exceeds original physical grant"))}native.native().checkpoint()?;*slot=Some(SnapshotHopFrame::new(input.take().unwrap()));native.record_progress(moved)?;let frame=slot.as_mut().unwrap();
+            let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<IoPayload>>(),..Default::default()};if !moved.fits(native.remaining_grant()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot input transfer exceeds original physical grant"))}native.native().checkpoint()?;*slot=Some(SnapshotHopFrame::new(input.take().unwrap()));native.record_progress(moved)?;let frame=slot.as_mut().unwrap();
             let result=(||{
                 control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1).map_err(IoError::from_value_error)?;
                 let IoPayload::Binary(bytes)=frame.input.as_ref().unwrap()else{return Err(refusal(ValueRefusalKind::InvalidValue,"SQLite snapshot import requires a binary payload"))};
                 frame.database=Some(import_sqlite_database_controlled(bytes,control).map_err(IoError::from_value_error)?);
                 let database=frame.database.as_mut().unwrap();let index=database.tables.iter().position(|table|table.name=="semio_snapshot").ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"SQLite file has no semantic snapshot metadata")).map_err(IoError::from_value_error)?;
                 let encoding=metadata_encoding(&database.tables[index],control,native).map_err(IoError::from_value_error)?;
-                let shifted=database.tables.len()-index;let copy=shifted.checked_mul(std::mem::size_of::<SqliteTable>()).and_then(|copy|copy.checked_add(3*std::mem::size_of::<SqliteValue>()+std::mem::size_of::<ArtifactDialect>())).ok_or_else(||IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer extent overflow")))?;
+                let shifted=database.tables.len()-index;let copy=shifted.checked_mul(size_of::<SqliteTable>()).and_then(|copy|copy.checked_add(3*size_of::<SqliteValue>()+size_of::<ArtifactDialect>())).ok_or_else(||IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer extent overflow")))?;
                 let moved=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};if !moved.fits(native.remaining_grant()){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot metadata transfer exceeds original physical grant")))}native.native().checkpoint().map_err(IoError::from_value_error)?;
                 frame.metadata=Some(database.tables.remove(index));let row=&mut frame.metadata.as_mut().unwrap().rows[0];
                 let take=|cell:&mut SqliteValue|match std::mem::replace(cell,SqliteValue::Null){SqliteValue::Text(text)=>text,_=>unreachable!()};

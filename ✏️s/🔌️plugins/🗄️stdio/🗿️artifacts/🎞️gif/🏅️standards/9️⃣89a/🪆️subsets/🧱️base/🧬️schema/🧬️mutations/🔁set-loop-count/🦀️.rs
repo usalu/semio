@@ -21,7 +21,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetLoopCount {
         protocol::MutationOutcome::new(GifDiff { loop_count: (*loop_count != base.loop_count).then_some(*loop_count), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-        Ok(vec![GifMutation::SetLoopCount(set_loop_count::SetLoopCount { loop_count: base.loop_count })])
+        Ok(vec![GifMutation::SetLoopCount(SetLoopCount { loop_count: base.loop_count })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set loop count", "Wiederholungsanzahl setzen")

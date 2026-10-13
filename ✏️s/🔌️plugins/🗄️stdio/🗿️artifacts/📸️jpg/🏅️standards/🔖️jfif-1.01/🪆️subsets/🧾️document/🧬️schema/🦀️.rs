@@ -1,6 +1,6 @@
 //! 🧬️ JpgArtifact schema — full artifact state.
 
-use crate::JpgSnapshot;
+#[cfg(test)] use crate::JpgSnapshot;
 pub use crate::schema::snapshot::JpgSnapshot as JpgArtifact;
 
 /// 🧬️ Declares the canonical owned image schema facets.

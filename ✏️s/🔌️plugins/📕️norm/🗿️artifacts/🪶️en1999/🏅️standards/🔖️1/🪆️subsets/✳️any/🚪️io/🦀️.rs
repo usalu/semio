@@ -175,7 +175,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec En1999BuilderFacets {
         construction: En1999BuilderConstruction,
         analysis: En1999AnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::En1999ComposerComposition,
+        composition: En1999ComposerComposition,
     }
     builder: En1999Builder,
     analyzer: En1999Analyzer,

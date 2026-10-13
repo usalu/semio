@@ -4,13 +4,13 @@ use semio_framework_value::{RetirementDemand,RetirementTurnError,advance_retirem
 
 /// 📬️ Original inline outcome with separately admitted presence and in-place terminal removal.
 pub struct JobOutcomeSlot {
-    original: std::mem::MaybeUninit<StepOutcome>,
+    original: MaybeUninit<StepOutcome>,
     present: bool,
 }
 
 impl JobOutcomeSlot {
-    pub fn empty() -> Self { Self { original: std::mem::MaybeUninit::uninit(), present: false } }
-    pub fn from_outcome(outcome: StepOutcome) -> Self { Self { original: std::mem::MaybeUninit::new(outcome), present: true } }
+    pub fn empty() -> Self { Self { original: MaybeUninit::uninit(), present: false } }
+    pub fn from_outcome(outcome: StepOutcome) -> Self { Self { original: MaybeUninit::new(outcome), present: true } }
     pub fn retain(&mut self, outcome: StepOutcome) -> Result<(), StepOutcome> {
         if self.present { return Err(outcome); }
         self.original.write(outcome);
@@ -38,9 +38,9 @@ impl std::fmt::Debug for JobOutcomeSlot { fn fmt(&self, formatter: &mut std::fmt
 impl Drop for JobOutcomeSlot { fn drop(&mut self) { assert!(std::thread::panicking() || self.is_empty(), "job outcome slot abandoned its original carrier"); } }
 
 /// 🧩️ Original inline worker job whose terminal removal never transfers its carrier by value.
-pub struct WorkerJobSource<J>{pub(super) original:std::mem::MaybeUninit<J>,pub(super) present:bool,pub(super) operation:OperationId,pub(super) generation:Generation}
+pub struct WorkerJobSource<J>{pub(super) original:MaybeUninit<J>,pub(super) present:bool,pub(super) operation:OperationId,pub(super) generation:Generation}
 impl<J> WorkerJobSource<J>{
-    pub(super) fn from_job(job:J,operation:OperationId,generation:Generation)->Self{Self{original:std::mem::MaybeUninit::new(job),present:true,operation,generation}}
+    pub(super) fn from_job(job:J,operation:OperationId,generation:Generation)->Self{Self{original:MaybeUninit::new(job),present:true,operation,generation}}
     pub(super) fn original(&self)->Option<&J>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
     pub(super) fn original_mut(&mut self)->Option<&mut J>{if self.present{Some(unsafe{self.original.assume_init_mut()})}else{None}}
     pub(super) fn is_empty(&self)->bool{!self.present}
@@ -57,9 +57,9 @@ impl<J:InteractiveJob> WorkerJobSource<J>{
 impl<J> Drop for WorkerJobSource<J>{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"worker job slot abandoned its original carrier");}}
 
 /// 🛟️ Original inline fault payload whose terminal carrier is dropped in place under its presence grant.
-pub struct JobPayloadSlot { pub(super) original: std::mem::MaybeUninit<RetainedJobPayload>, pub(super) present: bool }
+pub struct JobPayloadSlot { pub(super) original: MaybeUninit<RetainedJobPayload>, pub(super) present: bool }
 impl JobPayloadSlot {
-    pub fn from_payload(payload:RetainedJobPayload)->Self {Self{original:std::mem::MaybeUninit::new(payload),present:true}}
+    pub fn from_payload(payload:RetainedJobPayload)->Self {Self{original:MaybeUninit::new(payload),present:true}}
     pub fn original(&self)->Option<&RetainedJobPayload>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
     pub fn original_mut(&mut self)->Option<&mut RetainedJobPayload>{if self.present{Some(unsafe{self.original.assume_init_mut()})}else{None}}
     pub fn is_empty(&self)->bool{!self.present}

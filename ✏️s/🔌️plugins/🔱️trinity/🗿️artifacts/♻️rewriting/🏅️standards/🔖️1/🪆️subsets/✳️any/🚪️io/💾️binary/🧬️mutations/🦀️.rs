@@ -63,12 +63,7 @@ pub mod remove_parameter_binding;
 pub mod set_rule_layout_points;
 
 mod native_codec {
-use super::*;
-use crate::RewritingSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::operations::{
-    apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, RewriteRuleEnvelope, RewriteRuleStore,
-};
 
 impl protocol::OpBinary for RewriteRuleMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

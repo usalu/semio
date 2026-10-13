@@ -7,7 +7,7 @@ fn push<T>(values: &mut Vec<T>, value: T, control: &mut NativeEncodeControl<'_>)
     if values.len() == values.capacity() {
         let capacity = values.capacity().max(4).checked_mul(2).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "JSON logical frontier capacity overflow"))?;
         let additional = capacity - values.capacity();
-        let bytes = additional.checked_mul(std::mem::size_of::<T>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "JSON logical frontier byte size overflow"))?;
+        let bytes = additional.checked_mul(size_of::<T>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "JSON logical frontier byte size overflow"))?;
         control.charge(bytes)?;
         values.try_reserve_exact(additional).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "JSON logical frontier allocation failed"))?;
         control.checkpoint()?;

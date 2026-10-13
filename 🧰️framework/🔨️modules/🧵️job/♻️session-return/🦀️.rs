@@ -8,7 +8,7 @@ impl<J:InteractiveJob+'static> WorkerJobSession<J>{
  pub fn terminal_frame_release_bytes(&self)->Result<usize,ValueError>{
   if !self.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original worker session authority is not terminal"));}
   if self.inner.wake_guard.load(Ordering::Acquire)||unsafe{(&*self.inner.waker.get()).is_some()}{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original worker session retains a registered wake owner"));}
-  SessionHandle::<J>::frame_bytes().checked_add(std::mem::size_of::<WorkerJobRetirementNode<J>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original session frame extent overflow"))
+  SessionHandle::<J>::frame_bytes().checked_add(size_of::<WorkerJobRetirementNode<J>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original session frame extent overflow"))
  }
  pub fn return_terminal(mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Self)>{
   let bytes=match self.terminal_frame_release_bytes(){Ok(bytes)=>bytes,Err(error)=>return Err((error,self))};

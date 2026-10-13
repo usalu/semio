@@ -7,7 +7,7 @@ use crate::editor::lowpoly::engine::LowpolyDocument;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{document_object_row_id, is_paint_utility, LowpolyView, LowpolyWorldSelection, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
-use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
+use crate::editor::lowpoly::lowpoly_window_measures;
 use crate::schema::mesh_data_from_transfer;
 use semio_framework_plugin::{scene_surface, world3d_camera_json, world3d_scene, InteractionRef, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;

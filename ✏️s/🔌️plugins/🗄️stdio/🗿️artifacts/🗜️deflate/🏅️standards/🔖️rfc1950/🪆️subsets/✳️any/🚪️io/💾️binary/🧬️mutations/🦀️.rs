@@ -23,4 +23,3 @@ impl OpBinary for DeflateMutation {
     }
 }
 }
-pub use mutations_codec::*;

@@ -254,7 +254,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PlaybookBuilderFacets {
         construction: PlaybookBuilderConstruction,
         analysis: PlaybookAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::PlaybookComposerComposition,
+        composition: PlaybookComposerComposition,
     }
     builder: PlaybookBuilder,
     analyzer: PlaybookAnalyzer,

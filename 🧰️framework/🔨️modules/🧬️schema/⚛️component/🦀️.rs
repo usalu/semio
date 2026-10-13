@@ -7,10 +7,8 @@ use std::collections::HashMap;
 
 use semio_framework_schema_state::{StateClass, parse_state_class_kebab};
 pub use semio_framework_schema_derive::ArtifactSchema;
-use semio_framework_schema_registry::{
-    ArtifactSchemaDescriptor, ArtifactInferenceDescriptor, AppSchemaDescriptor, with_artifact_schema_catalog, with_artifact_inference_catalog, with_app_schema_catalog, register_referenced_schema_documents, register_scope_facet_leaves, register_scope_schema_exports, registered_referenced_schema_documents, resolve_schema_export, schema_export_catalog_entries, scope_schema_exports_registered, scope_schema_facets_registered, with_schema_export_registry, FacetLeaves, SchemaExport, SchemaExportEntries, SchemaExportEntry, SchemaExportRegistry,
-    SchemaExportRegistryError, SchemaFormat, SchemaResolveError, ScopeSchemaExports, RESERVED_FACET_EXPORT_IDS,
-};
+use semio_framework_schema_registry::{ArtifactSchemaDescriptor, AppSchemaDescriptor, with_artifact_schema_catalog, with_artifact_inference_catalog, with_app_schema_catalog, register_scope_schema_exports, with_schema_export_registry, FacetLeaves, SchemaExport, SchemaExportRegistry, SchemaExportRegistryError, SchemaFormat, SchemaResolveError, ScopeSchemaExports};
+#[cfg(test)] use semio_framework_schema_registry::{ArtifactInferenceDescriptor, resolve_schema_export, schema_export_catalog_entries, scope_schema_exports_registered, scope_schema_facets_registered, SchemaExportEntries, SchemaExportEntry, RESERVED_FACET_EXPORT_IDS};
 
 //#region 🔖️Errors
 #[derive(Debug, PartialEq, Eq)]

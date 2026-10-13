@@ -2179,7 +2179,7 @@ impl pack::value::ToValue for PdfSnapshot {
     fn to_value_controlled(&self,control:&mut pack::value::NativeEncodeControl<'_>)->Result<pack::value::DslValue,pack::value::ValueError>{
         use pack::value::{DslValue as V,ValueError as E};
         control.scoped_depth(64,|control|control.scoped_stage(|control|{
-            control.begin_stage(31)?;let mut fields=V::object_encoding_controlled(31,control)?;
+            control.begin_stage(32)?;let mut fields=V::object_encoding_controlled(32,control)?;
             macro_rules! field{($key:literal,$value:expr)=>{{let key=control.copy_text($key)?;let value=$value.map_err(|error:E|error.under($key))?;fields.get_mut().push((key,value));control.step()?;}};}
             field!("schema",self.schema.to_value_controlled(control));
             field!("declaredVersion",self.declared_version.to_value_controlled(control));

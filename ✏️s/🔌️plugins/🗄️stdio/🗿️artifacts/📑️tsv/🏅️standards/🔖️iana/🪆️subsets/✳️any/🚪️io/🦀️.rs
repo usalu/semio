@@ -2,7 +2,6 @@
 //! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
 //! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
 //! 📤️export/🧵️serializers.
-use crate::apply_mutation;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::iana::subsets::any::schema::snapshot::TsvSnapshot;
@@ -48,7 +47,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.tsv", standard: semio_framework_artifact_reference::StandardId("iana"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::of::<TsvSnapshot, crate::standards::iana::subsets::any::schema::mutations::TsvMutation>(crate::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") }, store::ArtifactCodec::of::<TsvSnapshot, crate::standards::iana::subsets::any::schema::mutations::TsvMutation>(crate::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -205,7 +204,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec TsvBuilderFacets {
         construction: TsvBuilderConstruction,
         analysis: TsvAnalyzerAnalysis,
-        composition: crate::standards::iana::subsets::any::io::derived_composition::TsvComposerComposition,
+        composition: TsvComposerComposition,
     }
     builder: TsvBuilder,
     analyzer: TsvAnalyzer,

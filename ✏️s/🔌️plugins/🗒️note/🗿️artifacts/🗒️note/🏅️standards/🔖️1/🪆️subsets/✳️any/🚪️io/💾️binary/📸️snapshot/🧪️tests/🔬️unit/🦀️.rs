@@ -80,7 +80,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.
     let mut store = crate::host::owned::new_note_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_visible(Some(false))], transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_visible(Some(false))], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }

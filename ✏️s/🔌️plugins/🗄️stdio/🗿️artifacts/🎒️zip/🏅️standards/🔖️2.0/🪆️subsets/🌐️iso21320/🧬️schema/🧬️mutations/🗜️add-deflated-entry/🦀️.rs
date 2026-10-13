@@ -19,7 +19,7 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddDeflatedEnt
         let Self { entry, before } = self;
         added_entry_diff(base, entry, before.as_deref(), ZipIso21320Method::Deflate)
     }
-    fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
         let Self { entry, .. } = self;
         Ok(vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })])
     }

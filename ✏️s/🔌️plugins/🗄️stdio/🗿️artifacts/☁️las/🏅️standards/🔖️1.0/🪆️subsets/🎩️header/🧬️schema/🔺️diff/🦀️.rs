@@ -12,7 +12,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use crate::schema::snapshot::{LasHeader, LasPoint, LasVlr};
 use crate::LasSnapshot;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec};
+#[cfg(test)] use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

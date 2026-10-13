@@ -70,11 +70,11 @@ impl RetirementCursor for InputRetirement {
     fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_close_demands(copy).ok().map(|demand|demand.capacity_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_demands(0).ok().map(|demand|demand.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.depth)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for BudgetedInputMerge {
     fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(InputRetirement(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<InputRetirement>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<InputRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 
@@ -121,11 +121,11 @@ impl RetirementCursor for OwnedEntryRetirement{
  fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.next_close_demands(copy).ok().map(|demand|demand.capacity_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_demands(0).ok().map(|demand|demand.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.depth)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for BudgetedOwnedEntry{
  fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(OwnedEntryRetirement(self))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<OwnedEntryRetirement>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OwnedEntryRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 

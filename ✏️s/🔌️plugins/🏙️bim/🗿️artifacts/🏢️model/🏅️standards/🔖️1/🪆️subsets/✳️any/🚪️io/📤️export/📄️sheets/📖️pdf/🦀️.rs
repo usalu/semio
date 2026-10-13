@@ -150,7 +150,7 @@ fn show_text(ink: &mut Ink<'_>, item: &PlanText, placed: &PlacedViewport) {
     }
 }
 
-fn meter<'a>(face: &'a PdfFont, resources: &NativePdfArtifactResources) -> Result<PdfTextLayout<'a>, String> {
+fn meter<'a>(face: &'a PdfFont, resources: &NativePdfArtifactResources<'_>) -> Result<PdfTextLayout<'a>, String> {
     PdfTextLayout::new(face, 1.0, resources).map_err(|error| error.to_string())
 }
 

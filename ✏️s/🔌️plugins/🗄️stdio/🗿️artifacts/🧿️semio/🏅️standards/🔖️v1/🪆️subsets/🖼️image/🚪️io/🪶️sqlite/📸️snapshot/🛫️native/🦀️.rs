@@ -1,5 +1,5 @@
 //! 🖼️ Writes image dimensions, color provenance, independent ICC bytes and every ordered frame.
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageSnapshot,SemioImageFrame,SemioImageMetadataEntry};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};

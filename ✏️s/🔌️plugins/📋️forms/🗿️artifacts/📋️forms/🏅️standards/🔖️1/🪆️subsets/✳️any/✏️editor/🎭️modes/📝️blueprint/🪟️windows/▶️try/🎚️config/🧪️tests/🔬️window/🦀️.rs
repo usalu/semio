@@ -32,8 +32,8 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
 
             async fn dispatch(app: &mut FormsApp, command: FormsCommand, view: &ViewModel) -> Result<semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt, String> {
                 let meta = ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("forms-try-window-ownership") };
-                app.dispatch_typed(command, &meta).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map_err(|error| format!("{error:?}"))
+                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))
             }
 
             fn continuation(receipt: &semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) -> Result<set_try_value::SetTryValueStep, String> {
@@ -110,7 +110,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                     .await
                     .map_err(|error| format!("{error:?}"))?;
                 if restored.as_ref() != Some(&left_config) { return Err("Forms exact Try config changed during reload".into()); }
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 
                 let left_start = dispatch(
                     &mut app,
@@ -183,7 +183,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
             }
             .await;
             if let Err(error) = &outcome { eprintln!("[TRACE] Forms Try exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app);
+            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             outcome.expect("Forms Try exact-window ownership runtime law");
         }))
         .expect("spawn Forms Try window ownership law")

@@ -18,7 +18,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for ReplaceXmlNode {
         addressed_outcome(&DocxMutation::ReplaceXmlNode(self.clone()), base)
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
     Ok({
         addressed_inverse(&DocxMutation::ReplaceXmlNode(self.clone()), base)?
     

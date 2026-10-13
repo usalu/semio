@@ -67,7 +67,8 @@ fn flat_retained_xml_copy_materialize_and_retire_preserve_shared_vocabulary() {
         maximum_capacity_bytes: grant_value["maximumCapacityBytes"].as_u64().unwrap() as usize,
         maximum_depth: grant_value["maximumDepth"].as_u64().unwrap() as usize, maximum_release_bytes: grant_value["maximumReleaseBytes"].as_u64().unwrap() as usize };
     let maximum_turns = grant_value["maximumTurns"].as_u64().unwrap() as usize;
-    let source = RetainedCloneSource::from_authority(Arc::new(retained), ());
+    let unbounded = semio_s_artifact_stdio_contract::testing::unbounded_grant();
+    let (mut source, _) = RetainedCloneSource::admit_owned(retained, (), unbounded).map_err(|(error, _, _)| error).expect("retained XML source admits");
     let mut cursor = RetainedXmlDocument::retained_clone_cursor();
     let mut copied = None;
     for _ in 0..maximum_turns {
@@ -104,5 +105,7 @@ fn flat_retained_xml_copy_materialize_and_retire_preserve_shared_vocabulary() {
         }
     }
     assert!(retirement.terminal_is_empty());
-    drop(source);
+    while !source.terminal_is_empty() {
+        source.close_step(unbounded).expect("retained XML source closes");
+    }
 }

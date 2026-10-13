@@ -85,7 +85,7 @@ mod tests;
 
 
 pub const TEXT_OPCODES: &[(&str, &str)] =
-    &[("CreateCuratedItem", crate::standards::v1::subsets::any::io::text::mutations::create_curated_item::TEXT_OPCODE), ("DeleteCuratedItem", crate::standards::v1::subsets::any::io::text::mutations::delete_curated_item::TEXT_OPCODE), ("ChangeCuratedItemCount", crate::standards::v1::subsets::any::io::text::mutations::change_curated_item_count::TEXT_OPCODE)];
+    &[("CreateCuratedItem", create_curated_item::TEXT_OPCODE), ("DeleteCuratedItem", delete_curated_item::TEXT_OPCODE), ("ChangeCuratedItemCount", change_curated_item_count::TEXT_OPCODE)];
 
 #[path = "🗑️delete-curated-item/🦀️.rs"]
 pub mod delete_curated_item;

@@ -282,7 +282,7 @@ pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapsh
 
 const INTERACTIVE_VIEW_SPAN: f64 = 2000.0;
 
-fn outside_interactive_view(bounds: &crate::LayoutBounds, camera_x: f64, camera_y: f64, zoom: f64) -> bool {
+fn outside_interactive_view(bounds: &LayoutBounds, camera_x: f64, camera_y: f64, zoom: f64) -> bool {
     let span = INTERACTIVE_VIEW_SPAN / zoom.max(0.05);
     let x1 = bounds.x + bounds.width;
     let y1 = bounds.y + bounds.height;

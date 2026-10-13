@@ -13,7 +13,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -86,7 +85,7 @@ const DXF_ANY_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const DXF_ANY_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.dxf.tool-command.v1";
 const DXF_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
-fn dxfAnyEditor_example_snapshot(example_id: &str) -> DxfSnapshot {
+fn dxf_any_editor_example_snapshot(example_id: &str) -> DxfSnapshot {
     if example_id == crate::examples::demo::ID {
         <DxfSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -94,7 +93,7 @@ fn dxfAnyEditor_example_snapshot(example_id: &str) -> DxfSnapshot {
     }
 }
 
-fn dxfAnyEditor_command_id(command: &DxfAnyEditCommand) -> &'static str {
+fn dxf_any_editor_command_id(command: &DxfAnyEditCommand) -> &'static str {
     if let DxfAnyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         DxfAnyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
@@ -102,7 +101,7 @@ fn dxfAnyEditor_command_id(command: &DxfAnyEditCommand) -> &'static str {
     }
 }
 
-fn dxfAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<DxfAnyEditCommand, Fault> {
+fn dxf_any_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<DxfAnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| DxfAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(DxfAnyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -110,11 +109,11 @@ fn dxfAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_
     }
 }
 
-fn dxfAnyEditor_retained_extent(command: &DxfAnyEditCommand, _snapshot: &DxfSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn dxf_any_editor_retained_extent(command: &DxfAnyEditCommand, _snapshot: &DxfSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, DxfAnyEditCommand::SetActiveExample { .. }).then_some(1)
 }
 
-fn dxfAnyEditor_retained_reduce(
+fn dxf_any_editor_retained_reduce(
     command: &DxfAnyEditCommand,
     _snapshot: &DxfSnapshot,
     _config: &NoConfig,
@@ -126,7 +125,7 @@ fn dxfAnyEditor_retained_reduce(
 ) -> Result<Emit<DxfMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         DxfAnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dxfAnyEditor_example_snapshot(example_id), DXF_ANY_DOCUMENT_SCHEMA)],
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dxf_any_editor_example_snapshot(example_id), DXF_ANY_DOCUMENT_SCHEMA)],
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -212,7 +211,7 @@ impl ArtifactEditor for DxfAnyEditor {
         if !DXF_ANY_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if dxfAnyEditor_command_id(&request.command) != request.tool_id {
+        if dxf_any_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -236,10 +235,10 @@ impl ArtifactEditor for DxfAnyEditor {
                 operation,
                 completion: request.completion,
             },
-            dxfAnyEditor_command_id,
+            dxf_any_editor_command_id,
             DXF_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, dxfAnyEditor_retained_reduce, dxfAnyEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, dxf_any_editor_retained_reduce, dxf_any_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -248,9 +247,9 @@ impl ArtifactEditor for DxfAnyEditor {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn command_id(command: &Self::Command) -> &'static str { dxfAnyEditor_command_id(command) }
+    fn command_id(command: &Self::Command) -> &'static str { dxf_any_editor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { dxfAnyEditor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { dxf_any_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> DxfSnapshot {
         DxfSnapshot::default()
@@ -268,7 +267,7 @@ impl ArtifactEditor for DxfAnyEditor {
         match command {
             DxfAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             DxfAnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dxfAnyEditor_example_snapshot(example_id), DXF_ANY_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dxf_any_editor_example_snapshot(example_id), DXF_ANY_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }

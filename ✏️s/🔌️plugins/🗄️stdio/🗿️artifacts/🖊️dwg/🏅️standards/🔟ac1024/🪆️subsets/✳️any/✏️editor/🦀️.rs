@@ -13,7 +13,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -86,7 +85,7 @@ const DWG_AC1024_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.dwg.tool-command.v1";
 const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
-fn dwgAc1024Editor_example_snapshot(example_id: &str) -> DwgSnapshot {
+fn dwg_ac1024_editor_example_snapshot(example_id: &str) -> DwgSnapshot {
     if example_id == crate::examples::demo::ID {
         <DwgSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -94,7 +93,7 @@ fn dwgAc1024Editor_example_snapshot(example_id: &str) -> DwgSnapshot {
     }
 }
 
-fn dwgAc1024Editor_command_id(command: &DwgAc1024EditCommand) -> &'static str {
+fn dwg_ac1024_editor_command_id(command: &DwgAc1024EditCommand) -> &'static str {
     if let DwgAc1024EditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         DwgAc1024EditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
@@ -102,7 +101,7 @@ fn dwgAc1024Editor_command_id(command: &DwgAc1024EditCommand) -> &'static str {
     }
 }
 
-fn dwgAc1024Editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<DwgAc1024EditCommand, Fault> {
+fn dwg_ac1024_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<DwgAc1024EditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| DwgAc1024EditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(DwgAc1024EditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -110,11 +109,11 @@ fn dwgAc1024Editor_command_from_action(action: &str, args: Option<&semio_framewo
     }
 }
 
-fn dwgAc1024Editor_retained_extent(command: &DwgAc1024EditCommand, _snapshot: &DwgSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn dwg_ac1024_editor_retained_extent(command: &DwgAc1024EditCommand, _snapshot: &DwgSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, DwgAc1024EditCommand::SetActiveExample { .. }).then_some(1)
 }
 
-fn dwgAc1024Editor_retained_reduce(
+fn dwg_ac1024_editor_retained_reduce(
     command: &DwgAc1024EditCommand,
     _snapshot: &DwgSnapshot,
     _config: &NoConfig,
@@ -126,7 +125,7 @@ fn dwgAc1024Editor_retained_reduce(
 ) -> Result<Emit<DwgMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         DwgAc1024EditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dwgAc1024Editor_example_snapshot(example_id), DWG_AC1024_DOCUMENT_SCHEMA)],
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dwg_ac1024_editor_example_snapshot(example_id), DWG_AC1024_DOCUMENT_SCHEMA)],
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -212,7 +211,7 @@ impl ArtifactEditor for DwgAc1024Editor {
         if !DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if dwgAc1024Editor_command_id(&request.command) != request.tool_id {
+        if dwg_ac1024_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -236,10 +235,10 @@ impl ArtifactEditor for DwgAc1024Editor {
                 operation,
                 completion: request.completion,
             },
-            dwgAc1024Editor_command_id,
+            dwg_ac1024_editor_command_id,
             DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, dwgAc1024Editor_retained_reduce, dwgAc1024Editor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, dwg_ac1024_editor_retained_reduce, dwg_ac1024_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -248,9 +247,9 @@ impl ArtifactEditor for DwgAc1024Editor {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn command_id(command: &Self::Command) -> &'static str { dwgAc1024Editor_command_id(command) }
+    fn command_id(command: &Self::Command) -> &'static str { dwg_ac1024_editor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { dwgAc1024Editor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { dwg_ac1024_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> DwgSnapshot {
         DwgSnapshot { version: "AC1024".into(), ..DwgSnapshot::default() }
@@ -268,7 +267,7 @@ impl ArtifactEditor for DwgAc1024Editor {
         match command {
             DwgAc1024EditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             DwgAc1024EditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dwgAc1024Editor_example_snapshot(example_id), DWG_AC1024_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&dwg_ac1024_editor_example_snapshot(example_id), DWG_AC1024_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }

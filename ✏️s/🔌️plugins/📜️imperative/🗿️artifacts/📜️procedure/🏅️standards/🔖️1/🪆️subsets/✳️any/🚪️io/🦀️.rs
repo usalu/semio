@@ -281,7 +281,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec ProcedureBuilderFacets {
         construction: ProcedureBuilderConstruction,
         analysis: ProcedureAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::ProcedureComposerComposition,
+        composition: ProcedureComposerComposition,
     }
     builder: ProcedureBuilder,
     analyzer: ProcedureAnalyzer,

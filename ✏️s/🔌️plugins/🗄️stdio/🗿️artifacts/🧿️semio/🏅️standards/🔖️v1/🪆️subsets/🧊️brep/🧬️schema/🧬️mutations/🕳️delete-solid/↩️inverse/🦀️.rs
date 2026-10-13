@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteSolid`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{create_solid, delete_solid, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::mutations::{create_solid, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse

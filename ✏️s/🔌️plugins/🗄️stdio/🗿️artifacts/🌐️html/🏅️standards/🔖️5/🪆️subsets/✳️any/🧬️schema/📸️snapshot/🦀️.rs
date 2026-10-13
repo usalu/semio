@@ -20,9 +20,7 @@
 //! vocabulary addresses nodes by child index. The two normative placements a purely literal reader
 //! gets wrong are applied by [`normalize_html_root_whitespace`] — see its own doc comment.
 
-use semio_framework_diagnostic::TextSpan;
 use framework_schema::ArtifactSchema;
-use semio_framework_diagnostic::TextError;
 
 //#region 🔖️Ids
 pub const STDIO_HTML_DOCUMENT_SCHEMA: &str = "stdio.html";

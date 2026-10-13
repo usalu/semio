@@ -4,14 +4,10 @@
 //! transitively, `semio_s_artifact_stdio_zip::engine` + `semio_s_artifact_stdio_xml::schema::snapshot`.
 
 use crate::standards::v_ecma_376::subsets::base::schema::refusal::{DocxError};
-use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{MAIN_DOCUMENT_CONTENT_TYPE,MAIN_DOCUMENT_PART,REL_TYPE_STYLES,STYLES_CONTENT_TYPE,STYLES_PART,STYLES_REL_TARGET,STRICT_REL_TYPE_OFFICE_DOCUMENT,W_NS};
-use crate::{
-    schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow, DocxXmlPart},
-    DocxSnapshot,
-};
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::STRICT_REL_TYPE_OFFICE_DOCUMENT;
+use crate::DocxSnapshot;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_to_text_checked};
-use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_zip::opc::{self, REL_TYPE_OFFICE_DOCUMENT};
 
 /// 📦️ Serializes each authoritative XML part exactly once alongside non-XML OPC payloads.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -46,4 +42,3 @@ pub fn encode_docx(snap: &DocxSnapshot) -> Result<Vec<u8>, DocxError> {
 }
 //#endregion 🔖️Codec
 
-use crate::standards::v_ecma_376::subsets::base::schema::construction::*;

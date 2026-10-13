@@ -1,10 +1,7 @@
 //! 🖥️ Semio framework OS host — Shape V2 glue.
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 extern crate semio_framework_os_kernel as dsl;
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 extern crate semio_framework_os_kernel as protocol;
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 extern crate semio_framework_value_derive as value_derive;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
@@ -25,11 +22,9 @@ macro_rules! test_identity {
 #[path = "../../💾️persistence/🦀️.rs"]
 pub mod persistence;
 
-//#region 🔖️OsHostFull
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
+//#region 🔖️Space
 use semio_framework_artifact_workflow_workflow as workflow_kernel;
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 #[path = "../../../🔨️modules/🪐️space/🦀️.rs"]
 pub mod space;
 
@@ -38,9 +33,9 @@ pub mod space;
 // sync actor's transport is `tokio`/`tokio-tungstenite`, which a WASI-P2 guest never links. Without
 // the same guard here the re-export is an unresolved import on `wasm32-wasip2`, and that single
 // failure masks the rest of this crate's diagnostics.
-#[cfg(all(any(feature = "os-host-full", feature = "space-guest"), not(all(target_arch = "wasm32", target_env = "p2"))))]
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub use store::sync as store_sync;
-//#endregion 🔖️OsHostFull
+//#endregion 🔖️Space
 
 #[path = "../../🦀️.rs"]
 mod host_core;

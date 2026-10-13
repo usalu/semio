@@ -129,7 +129,7 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
     let produced = Generation2dSnapshotRead::new(
-        protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot"),
+        protocol::apply_diff(&*decoded, &before()).expect("committed diff applies to the before-snapshot"),
     );
     assert_eq!(produced, expected_after(), "delete-widget/removes-note-a-and-flags-the-dangling-synapse: committed diff did not carry before to after");
 }

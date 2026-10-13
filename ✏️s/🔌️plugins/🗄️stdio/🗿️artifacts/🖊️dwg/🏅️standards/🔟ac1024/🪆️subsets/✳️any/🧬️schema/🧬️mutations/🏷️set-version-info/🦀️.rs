@@ -25,7 +25,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetVersionInfo {
         }
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok(vec![DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: base.version.clone(), maintenance_version: base.maintenance_version, codepage: base.codepage })])
+        Ok(vec![DwgMutation::SetVersionInfo(SetVersionInfo { version: base.version.clone(), maintenance_version: base.maintenance_version, codepage: base.codepage })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set version info", "Versionsinfo setzen")

@@ -1,5 +1,6 @@
 //! 🧩️ Original graph identities and complete value forests share one admitted relational prefix.
-use super::{SemioValueSnapshot,SemioValue,SemioValueNode,ValueId,ValueSqliteTables,VALUE_TABLES,identity};
+use super::{SemioValueSnapshot, SemioValue, SemioValueNode, ValueId, VALUE_TABLES, identity};
+#[cfg(test)] use super::{ValueSqliteTables};
 use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="🌳️forest/🦀️.rs"]

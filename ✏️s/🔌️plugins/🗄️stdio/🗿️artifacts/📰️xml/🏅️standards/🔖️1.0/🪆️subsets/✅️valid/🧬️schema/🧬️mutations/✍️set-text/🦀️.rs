@@ -14,7 +14,7 @@ pub struct SetText {
 impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
         let Self { path, text } = self;
         protocol::MutationOutcome::new(diff_at_path(&path.0, XmlNodeDiff::Text { text: Some(text.clone()) }))
     }
@@ -29,7 +29,7 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetText {
                         _ => None,
                     })
                     .unwrap_or_default();
-                vec![XmlValidMutation::SetText(set_text::SetText { path: path.clone(), text: prior })]
+                vec![XmlValidMutation::SetText(SetText { path: path.clone(), text: prior })]
             }
         })
     }

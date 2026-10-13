@@ -638,7 +638,8 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType, GltfDecodedAccessor};
+    use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
+    #[cfg(test)] use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfDecodedAccessor};
     use crate::schema::mutations::GltfMutation;
     use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMaterial, GltfMesh, GltfNode, GltfPrimitive, GltfScene};
     use crate::{GltfDiff, GltfSnapshot};
@@ -983,7 +984,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec GltfBuilderFacets {
         construction: GltfBuilderConstruction,
         analysis: GltfAnalyzerAnalysis,
-        composition: crate::standards::v2_0::subsets::any::io::derived_composition::GltfComposerComposition,
+        composition: GltfComposerComposition,
     }
     builder: GltfBuilder,
     analyzer: GltfAnalyzer,

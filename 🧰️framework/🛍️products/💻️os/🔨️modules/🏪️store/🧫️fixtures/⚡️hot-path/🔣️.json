@@ -3,27 +3,27 @@
   "vectors": [
     {
       "id": "apply-stream",
-      "warmup": 1000,
+      "warmup": 400,
       "steps": [{ "kind": "apply", "count": 1000 }],
       "expect": { "folds": 0, "digested": 0, "mirrored": 1000, "rebuilt": 1000 }
     },
     {
       "id": "transaction-stream",
-      "warmup": 2000,
+      "warmup": 400,
       "steps": [{ "kind": "append", "count": 400 }, { "kind": "commit", "count": 1 }],
       "expect": { "folds": 0, "digested": 0, "mirrored": 1, "rebuilt": 401 }
     },
     {
       "id": "apply-after-transaction",
-      "warmup": 2000,
+      "warmup": 400,
       "steps": [{ "kind": "append", "count": 3 }, { "kind": "commit", "count": 1 }, { "kind": "apply", "count": 200 }],
       "expect": { "folds": 0, "digested": 0, "mirrored": 201, "rebuilt": 204 }
     },
     {
       "id": "undo-redo-stream",
-      "warmup": 2000,
+      "warmup": 400,
       "steps": [{ "kind": "undo", "count": 50 }, { "kind": "redo", "count": 50 }],
-      "expect": { "folds": 0, "digested": 1875, "mirrored": 100, "rebuilt": 100 }
+      "expect": { "folds": 0, "digested": 385, "mirrored": 100, "rebuilt": 100 }
     }
   ]
 }

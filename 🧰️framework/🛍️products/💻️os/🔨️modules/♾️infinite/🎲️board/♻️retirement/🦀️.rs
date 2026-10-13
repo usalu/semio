@@ -14,20 +14,20 @@ struct PointBuffer(Vec<Point>);
 struct PointRetirement{source:ManuallyDrop<Vec<Point>>,tail_bytes:usize}
 impl RetireOwned for PointBuffer{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(PointRetirement{source:ManuallyDrop::new(self.0),tail_bytes:0})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<PointRetirement>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<PointRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for PointRetirement{
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-  if !self.source.is_empty(){let remaining=std::mem::size_of::<Point>()-self.tail_bytes;let bytes=remaining.min(grant.maximum_copy_bytes);if bytes==0{return RetirementStep::BudgetExhausted}self.tail_bytes+=bytes;if self.tail_bytes==std::mem::size_of::<Point>(){self.source.pop();self.tail_bytes=0;}return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})}
-  let bytes=self.source.capacity()*std::mem::size_of::<Point>();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted}if bytes>0{drop(std::mem::take(&mut *self.source));return RetirementStep::Bytes(bytes)}RetirementStep::Complete
+  if !self.source.is_empty(){let remaining=size_of::<Point>()-self.tail_bytes;let bytes=remaining.min(grant.maximum_copy_bytes);if bytes==0{return RetirementStep::BudgetExhausted}self.tail_bytes+=bytes;if self.tail_bytes==size_of::<Point>(){self.source.pop();self.tail_bytes=0;}return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})}
+  let bytes=self.source.capacity()*size_of::<Point>();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted}if bytes>0{drop(std::mem::take(&mut *self.source));return RetirementStep::Bytes(bytes)}RetirementStep::Complete
  }
  fn terminal_is_empty(&self)->bool{self.source.is_empty()&&self.source.capacity()==0&&self.tail_bytes==0}
  fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.source.is_empty()))}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn next_close_byte_demand(&self)->Option<usize>{Some(if self.source.is_empty(){self.source.capacity()*std::mem::size_of::<Point>()}else{0})}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(if self.source.is_empty(){self.source.capacity()*size_of::<Point>()}else{0})}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl Drop for PointRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original point backing abandoned");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.source)}}}}
 

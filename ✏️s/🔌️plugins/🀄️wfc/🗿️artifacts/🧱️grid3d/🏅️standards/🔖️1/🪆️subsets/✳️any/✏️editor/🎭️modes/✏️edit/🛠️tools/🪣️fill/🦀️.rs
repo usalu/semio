@@ -8,7 +8,6 @@ use crate::schema::inferences::{Grid3dAssignment, Grid3dInferenceCommit};
 
 
 
-use crate::host::inferences::{solve};
 use crate::schema::snapshot::Grid3dSnapshot;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
 use semio_framework_plugin::Fault;

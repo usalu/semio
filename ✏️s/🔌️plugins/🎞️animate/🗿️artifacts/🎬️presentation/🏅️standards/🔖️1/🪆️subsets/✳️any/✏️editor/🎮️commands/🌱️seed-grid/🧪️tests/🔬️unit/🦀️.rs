@@ -50,11 +50,11 @@ async fn clear_tiles_action_empties_tiles_and_clears_the_selection_inline() {
     let instance_id = artifact_app_laws::meta("local").instance_id;
     app.bind_instance_id(instance_id).await;
     dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
-    artifact_app_laws::settle_registered_typed_operation(&mut *app, instance_id).await.expect("seed settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut *app, instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("seed settles");
     dispatch(&mut app, PresentationCommand::ClearTiles(clear_tiles::ClearTiles {})).await;
-    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, instance_id).await.expect("clear settles");
+    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("clear settles");
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "the clearing interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert!(app.interaction_state().await.selection.get(PRESENTATION_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "the tiles selection is empty after the inline clear");
-    artifact_app_laws::close_registered_fixture_app(&mut *app);
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }

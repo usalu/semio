@@ -15,12 +15,12 @@ pub struct SetPointsByReturn {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPointsByReturn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "points-by-return", kind: "set-points-by-return", record: "SetPointsByReturn" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         let Self { counts } = self;
         protocol::MutationOutcome::new(diff::diff_set_points_by_return(*counts))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-        Ok(vec![LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: base.header.points_by_return })])
+        Ok(vec![LasMutation::SetPointsByReturn(SetPointsByReturn { counts: base.header.points_by_return })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set points by return", "Punktanzahl pro Echo setzen")

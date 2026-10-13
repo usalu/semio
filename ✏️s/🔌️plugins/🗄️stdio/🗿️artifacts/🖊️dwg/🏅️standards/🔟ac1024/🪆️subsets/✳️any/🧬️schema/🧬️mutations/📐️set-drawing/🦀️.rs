@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetDrawing {
         protocol::MutationOutcome::new(DwgDiff { drawing: (base.drawing != self.drawing).then(|| self.drawing.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.drawing != self.drawing).then(|| DwgMutation::SetDrawing(set_drawing::SetDrawing { drawing: base.drawing.clone() })).into_iter().collect())
+        Ok((base.drawing != self.drawing).then(|| DwgMutation::SetDrawing(SetDrawing { drawing: base.drawing.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set logical drawing", "Logische Zeichnung setzen")

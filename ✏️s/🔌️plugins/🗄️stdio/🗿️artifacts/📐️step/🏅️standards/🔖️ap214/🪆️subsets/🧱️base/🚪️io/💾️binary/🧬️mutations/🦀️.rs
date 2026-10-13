@@ -147,7 +147,6 @@ impl OpBinary for StepMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `StepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

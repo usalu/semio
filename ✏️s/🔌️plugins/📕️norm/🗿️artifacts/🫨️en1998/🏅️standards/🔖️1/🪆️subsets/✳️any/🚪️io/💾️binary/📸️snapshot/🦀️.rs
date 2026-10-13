@@ -45,4 +45,4 @@ pub fn decode_en1998_pack(bytes: &[u8]) -> Result<En1998Snapshot, String> {
 }
 pub use native_snapshot_codec::*;
 
-crate::impl_norm_artifact_record!(@binary crate::En1998Snapshot, extension="en1998", envelope_id="norm.en1998", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+crate::impl_norm_artifact_record!(@binary En1998Snapshot, extension="en1998", envelope_id="norm.en1998", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);

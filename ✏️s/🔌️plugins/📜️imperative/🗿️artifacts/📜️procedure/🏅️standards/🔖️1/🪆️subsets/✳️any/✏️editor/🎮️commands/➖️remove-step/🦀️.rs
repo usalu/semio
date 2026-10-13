@@ -2,7 +2,7 @@
 //! prunes its id from the `steps` selection.
 
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
-use crate::schema::operations::{move_step, remove_step};
+use crate::schema::operations::remove_step;
 use crate::mutations::ProcedureMutation;
 use crate::ProcedureSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -19,7 +19,7 @@ fn persistent_protocol_canonical_fields_preserve_original_projection_pointers_an
    edit.id.reserve(8192);if let Some(meta)=edit.mutation_meta.first_mut(){meta.label.as_mut().unwrap().reserve(8192);}
    let id_pointer=edit.id.as_ptr();let forwards_pointer=edit.forwards.as_ptr();
    let demand=RetainedCloneSource::<Edit<bool>>::owned_constructor_demand::<()>();
-   let birth=RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
+   let birth=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Edit<bool>>::constructor_copy_bytes(),maximum_capacity_bytes:demand.capacity_bytes,maximum_depth:demand.depth,..Default::default()};
    let((mut source,progress),heap)=observe_heap_allocations_on_this_thread(||RetainedCloneSource::admit_owned(edit,(),birth).unwrap_or_else(|(error,_,_)|panic!("original protocol source: {error}")));
    assert!(progress.fits(birth));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,0));
    let original=source.borrow();assert_eq!(original.get().id.as_ptr(),id_pointer);assert_eq!(original.get().forwards.as_ptr(),forwards_pointer);
@@ -31,7 +31,7 @@ fn persistent_protocol_canonical_fields_preserve_original_projection_pointers_an
     if let Some(meta)=owner.mutation_meta.first(){let field=meta.canonical_tree_child(11).unwrap();assert_eq!(field as*const dyn ArtifactCanonicalJsonTree as*const (),&meta.transaction as*const Option<TransactionRef> as*const ());}
     owner.canonical_tree_node().unwrap()
    });assert!(matches!(fields,Node::Object(_)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   let(projection,heap)=observe_heap_allocations_on_this_thread(||source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   let((projection,_),heap)=observe_heap_allocations_on_this_thread(||source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:semio_framework_value::retained_clone::RetainedCloneBinding::alias_copy_bytes(),maximum_depth:2,..Default::default()}).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
    let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();
    let((mut cursor,progress),heap)=observe_heap_allocations_on_this_thread(||ArtifactCanonicalJsonTreeCursor::admit(projection,grant(demand)).unwrap_or_else(|(error,_)|panic!("original protocol tree: {error}")));
    assert_eq!(progress.copied_bytes,demand.copy_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));

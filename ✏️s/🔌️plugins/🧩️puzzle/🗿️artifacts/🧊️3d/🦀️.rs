@@ -164,7 +164,7 @@ impl semio_framework_value::FromValue for Puzzle3dScale {
             other => f64::from_value(other).map(Puzzle3dScale::Uniform),
         }
     }
-    fn from_value_controlled(value:&semio_framework_value::DslValue,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{c.charge(std::mem::size_of::<Self>())?;match value{semio_framework_value::DslValue::Array(_)=><[f64;3] as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Vec3),_=><f64 as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Uniform)}}
+    fn from_value_controlled(value:&semio_framework_value::DslValue,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{c.charge(size_of::<Self>())?;match value{semio_framework_value::DslValue::Array(_)=><[f64;3] as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Vec3),_=><f64 as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Uniform)}}
 
 }
 
@@ -199,7 +199,7 @@ impl semio_framework_dsl_record::DslField for Puzzle3dScale {
         if items.len() != 1 && items.len() != 3 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Puzzle3d Scale requires one or three scalars")) }
         control.scoped_stage(|control| {
             control.begin_stage(items.len())?;
-            control.charge(std::mem::size_of::<Self>())?;
+            control.charge(size_of::<Self>())?;
             let x = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[0], control)?;
             if items.len() == 1 { return Ok(Self::Uniform(x)) }
             let y = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[1], control)?;

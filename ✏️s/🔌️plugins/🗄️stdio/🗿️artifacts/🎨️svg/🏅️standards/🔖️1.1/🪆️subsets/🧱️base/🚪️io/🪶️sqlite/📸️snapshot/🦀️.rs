@@ -16,18 +16,18 @@ fn validate_root(doc: &SvgDocument) -> Result<(), ValueError> { doc.validate_att
 impl ArtifactSqliteSnapshot for SvgSnapshot {
     fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
         native_owner.receive::<Self,Self>(|slot,native_control,body|{
-            let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(crate::standards::v1_1::subsets::base::io::sqlite::snapshot::native::decode(payload,control,native_control)?,|value:Self|crate::schema::snapshot::retire_svg_document(value.doc));
+            let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native::decode(payload,control,native_control)?,|value:Self|crate::schema::snapshot::retire_svg_document(value.doc));
             validate_root(&owner.as_mut().doc)?;
             let value=owner.take();
-            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: std::mem::size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
+            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
             *slot = Some(value);
-            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Self>(), ..Default::default() })?;
+            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() })?;
             Ok(slot.take().expect("received snapshot slot"))
         })
     }
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{validate_root(&self.doc)?;crate::standards::v1_1::subsets::base::io::sqlite::snapshot::native::encode(self,encoding,control,native_owner)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{validate_root(&self.doc)?;native::encode(self,encoding,control,native_owner)}
     fn retire_sqlite_snapshot(self){crate::schema::snapshot::retire_svg_document(self.doc)}
-    fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { crate::standards::v1_1::subsets::base::io::sqlite::snapshot::native::preflight(self,encoding,control) }
+    fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { native::preflight(self,encoding,control) }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
         if dialect.artifact_kind!="s.stdio.svg"||dialect.standard!="1.1"{return Err(semio_framework_os_kernel::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"SVG owned snapshot dialect differs from SVG 1.1")));}

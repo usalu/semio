@@ -30685,6 +30685,28 @@
       }
     },
     {
+      "name": "📦️generate✨️dsl-derive🗂️schema-index",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-derive-rs:generate-schema-index",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1695
+      }
+    },
+    {
+      "name": "📦️check✨️dsl-derive🗂️schema-index",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-derive-rs:check-schema-index",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1696
+      }
+    },
+    {
       "name": "🧬schema💡️inference🧪source-ownership",
       "type": "node-terminal",
       "request": "launch",
@@ -34450,7 +34472,7 @@
       "name": "⚖️gate🗄️stdio✏️editors🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run-many --target=test --projects=\"@semio-tech/stdio-*-rs\" --exclude=@semio-tech/stdio-artifact-contract-rs --parallel=2 -- --features component-app-assembly --lib editor",
+      "command": "bun nx run-many --target=test --projects=\"@semio-tech/stdio-*-rs\" --exclude=@semio-tech/stdio-artifact-contract-rs --parallel=2 -- --lib editor",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -34505,7 +34527,7 @@
       "name": "⚖️gate📷️png🖼️raster🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-png-rs:test --skip-nx-cache --args=\"--features component-app-assembly --lib pixel_region -- --nocapture\"",
+      "command": "bun nx run @semio-tech/stdio-png-rs:test --skip-nx-cache --args=\"--lib pixel_region -- --nocapture\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -39348,7 +39370,7 @@
       "name": "⚖️gate🪟️bmp🔤️source🦀️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-bmp-rs:test --skip-nx-cache --args=\"--features component-app-assembly --lib source_hex_consumption -- --nocapture\"",
+      "command": "bun nx run @semio-tech/stdio-bmp-rs:test --skip-nx-cache --args=\"--lib source_hex_consumption -- --nocapture\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -39402,7 +39424,7 @@
       "name": "⚖️gate🎞️gif🪶️sqlite📦️assembly🦀️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-gif-rs:test --skip-nx-cache --args=\"--features component-app-assembly --lib sqlite_snapshot_ --no-fail-fast\"",
+      "command": "bun nx run @semio-tech/stdio-gif-rs:test --skip-nx-cache --args=\"--lib sqlite_snapshot_ --no-fail-fast\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -43671,7 +43693,7 @@
       "name": "⚖️test-publication-revision📖️pdf🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-pdf-rs:test --skip-nx-cache -- quick --features component-app-assembly --lib selected_object_fields_commit_through_the_value_argument",
+      "command": "bun nx run @semio-tech/stdio-pdf-rs:test --skip-nx-cache -- quick --lib selected_object_fields_commit_through_the_value_argument",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43687,7 +43709,7 @@
       "name": "⚖️test-natural-file📖️pdf🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-pdf-rs:test --skip-nx-cache -- long --features component-app-assembly --lib -E \"test(natural_file_route_)\"",
+      "command": "bun nx run @semio-tech/stdio-pdf-rs:test --skip-nx-cache -- long --lib -E \"test(natural_file_route_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43703,7 +43725,7 @@
       "name": "⚖️test-natural-file🔊️wav🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-wav-rs:test --skip-nx-cache -- long --features component-app-assembly --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
+      "command": "bun nx run @semio-tech/stdio-wav-rs:test --skip-nx-cache -- long --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43720,7 +43742,7 @@
       "name": "⚖️test-natural-file📸️jpg🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-jpg-rs:test --skip-nx-cache -- long --features component-app-assembly --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
+      "command": "bun nx run @semio-tech/stdio-jpg-rs:test --skip-nx-cache -- long --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43737,7 +43759,7 @@
       "name": "⚖️test-natural-file🎵️mp3🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-mp3-rs:test --skip-nx-cache -- long --features component-app-assembly --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
+      "command": "bun nx run @semio-tech/stdio-mp3-rs:test --skip-nx-cache -- long --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43754,7 +43776,7 @@
       "name": "⚖️test-natural-file🎥️mp4🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-mp4-rs:test --skip-nx-cache -- long --features component-app-assembly --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
+      "command": "bun nx run @semio-tech/stdio-mp4-rs:test --skip-nx-cache -- long --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43771,7 +43793,7 @@
       "name": "⚖️test-natural-file📼️avi🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-avi-rs:test --skip-nx-cache -- long --features component-app-assembly --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
+      "command": "bun nx run @semio-tech/stdio-avi-rs:test --skip-nx-cache -- long --lib -E \"test(natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -44090,7 +44112,7 @@
       "name": "⚖️test-source-typed-diagnostic📊️csv🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-csv-rs:test --skip-nx-cache --args='long --offline --features component-app-assembly --lib -E \"test(malformed_source_is_admitted_by_bounded_preflight_then_reports_its_exact_typed_span)\"'",
+      "command": "bun nx run @semio-tech/stdio-csv-rs:test --skip-nx-cache --args='long --offline --lib -E \"test(malformed_source_is_admitted_by_bounded_preflight_then_reports_its_exact_typed_span)\"'",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -54723,7 +54745,7 @@
       "name": "🧪️test🗄️stdio🎥️mp4⏯️playback-export🦀️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-mp4-rs:test --skip-nx-cache --features component-app-assembly --lib -E \"test(playback_export_route_is_registered_cancellable_and_fully_retired) | test(playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes)\"",
+      "command": "bun nx run @semio-tech/stdio-mp4-rs:test --skip-nx-cache --lib -E \"test(playback_export_route_is_registered_cancellable_and_fully_retired) | test(playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-STDIO-ARTIFACT-EDITING-EXPERIENCE/🗑️generated/mp4-live-export-route"
@@ -54737,7 +54759,7 @@
       "name": "🧪️test🗄️stdio📼️avi⏯️playback-export🦀️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-avi-rs:test --skip-nx-cache --features component-app-assembly --lib -E \"test(playback_export_route_is_registered_cancellable_and_fully_retired) | test(playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes)\"",
+      "command": "bun nx run @semio-tech/stdio-avi-rs:test --skip-nx-cache --lib -E \"test(playback_export_route_is_registered_cancellable_and_fully_retired) | test(playback_export_route_streams_the_real_fixture_with_exact_mime_and_bytes)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️26/COMPLETE-STDIO-ARTIFACT-EDITING-EXPERIENCE/🗑️generated/avi-live-export-route"
@@ -55305,7 +55327,7 @@
       "name": "🧪️test💻️host🧾️actor🦀️retirement",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-host-rs:test-long --excludeTaskDependencies --skip-nx-cache -- rust --features os-host-full workflow_host_preserves_the_opened_actor_context -- --nocapture",
+      "command": "bun nx run @semio-tech/framework-os-host-rs:test-long --excludeTaskDependencies --skip-nx-cache -- rust workflow_host_preserves_the_opened_actor_context -- --nocapture",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "9_gates",
@@ -56739,7 +56761,7 @@
       "name": "🧪️test📐️step🦀️class-intent-codecs",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-step-rs:test --skip-nx-cache -- long --features component-app-assembly class_native_committed_intents_have_canonical_codecs_and_exact_semantics --status-level pass --final-status-level all -- --nocapture",
+      "command": "bun nx run @semio-tech/stdio-step-rs:test --skip-nx-cache -- long class_native_committed_intents_have_canonical_codecs_and_exact_semantics --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
         "NEXTEST_SUCCESS_OUTPUT": "immediate"
@@ -57203,7 +57225,7 @@
       "name": "🧪️test🗄️stdio🪜️step🦀️class-semantics",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/stdio-step-rs:test --skip-nx-cache -- long --features component-app-assembly -E \"test(/class_native_committed_intents_have_canonical_codecs_and_exact_semantics|derived_construction::tests::|history_edit_step_reference_closure/)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+      "command": "bun nx run @semio-tech/stdio-step-rs:test --skip-nx-cache -- long -E \"test(/class_native_committed_intents_have_canonical_codecs_and_exact_semantics|derived_construction::tests::|history_edit_step_reference_closure/)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
         "NEXTEST_SUCCESS_OUTPUT": "immediate"
@@ -59763,7 +59785,7 @@
       "name": "⚖️gate🗄️stdio🪶️sqlite🧬️initial-record🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run-many --target=test --projects=@semio-tech/stdio-jpg-rs,@semio-tech/stdio-tiff-rs,@semio-tech/stdio-pdf-rs --parallel=1 --skip-nx-cache --args=\"--lib --features component-app-assembly ordinary_and_controlled_initial_record_pack_body_diagnostic --no-fail-fast\"",
+      "command": "bun nx run-many --target=test --projects=@semio-tech/stdio-jpg-rs,@semio-tech/stdio-tiff-rs,@semio-tech/stdio-pdf-rs --parallel=1 --skip-nx-cache --args=\"--lib ordinary_and_controlled_initial_record_pack_body_diagnostic --no-fail-fast\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "9_gates",
@@ -89664,6 +89686,17 @@
       }
     },
     {
+      "name": "⚖️test-schema-index-source🗣️dsl✨️derive🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-derive-rs:test-schema-index-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.04735
+      }
+    },
+    {
       "name": "⚖️tiles-check🗺️gismap🟦️",
       "type": "node-terminal",
       "request": "launch",
@@ -93232,6 +93265,305 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.058606497
+      }
+    },
+    {
+      "name": "⚖️test-uncontrolled-owners-retirement🌱️🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-value:test-uncontrolled-owners-source --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609601
+      }
+    },
+    {
+      "name": "⚖️test-retained-structural-refusal🔌️plugin🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test-retained-structural-refusal-source --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609602
+      }
+    },
+    {
+      "name": "⚖️test-retained-structural-refusal🔌️plugin🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin:test-retained-structural-refusal-native --skip-nx-cache --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NEXTEST_SUCCESS_OUTPUT": "immediate",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🗑️generated/retained-structural-refusal"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609603
+      }
+    },
+    {
+      "name": "⚖️test-preparation-law🎥️shooting🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/shooting-shooting-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test preparation_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609604
+      }
+    },
+    {
+      "name": "⚖️test-authoring-law🎥️shooting🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/shooting-shooting-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test authoring_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609605
+      }
+    },
+    {
+      "name": "⚖️test-preparation-law📷️png🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-png-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test preparation_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609606
+      }
+    },
+    {
+      "name": "⚖️test-preparation-law🪟️bmp🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-bmp-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test preparation_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609607
+      }
+    },
+    {
+      "name": "⚖️test-preparation-law🕸️dag🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dag-dag-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test preparation_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609608
+      }
+    },
+    {
+      "name": "⚖️test-preparation-law🧿️stdio-semio🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:test --skip-nx-cache --excludeTaskDependencies -- long --features component-app-assembly --test preparation_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609609
+      }
+    },
+    {
+      "name": "⚖️test-preparation-law🌦️epw🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-epw-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test preparation_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05860961
+      }
+    },
+    {
+      "name": "⚖️test-preparation-law🔤️txt🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-txt-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test preparation_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609611
+      }
+    },
+    {
+      "name": "⚖️test-paged-seal-digest📡️replication🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-replication-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test paged_seal_digest -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609612
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law🧊️block-3d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/block-3d-rs:test --skip-nx-cache --excludeTaskDependencies -- long --features component-app-assembly --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609613
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law✒️writer🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/writer-writer-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609614
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law🔌️wires🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/reasoning-wires-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609615
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law📋️forms🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/forms-forms-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609616
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law📐️cad🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/cad-cad-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609617
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law🎬️sequence🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/sequence-sequence-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609618
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law🪐️space🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-space-space-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609619
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law🗂️collection🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-space-collection-rs:test --skip-nx-cache --excludeTaskDependencies -- long --test retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05860962
+      }
+    },
+    {
+      "name": "⚖️test-retirement-law🌊️flow🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-framework-os-flow-core:test --skip-nx-cache --excludeTaskDependencies -- long --test flow_retirement_law -- --nocapture",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NEXTEST_SUCCESS_OUTPUT": "immediate"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058609621
       }
     },
     {

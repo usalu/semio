@@ -35,7 +35,8 @@ pub use genesis::{ArtifactGenesis, ArtifactGenesisWitness};
 // former `#[derive(Serialize, Deserialize)]` (needed transitively for `authors: Vec<Author>`) goes
 // with it; no production or test consumer anywhere in the repo ever called `serde_json` on
 // `Author` directly, so its derive drops outright rather than going `cfg_attr(test, …)`.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Author {
     pub id: String,
@@ -165,7 +166,7 @@ impl<T> HistoryPageChunk<T> {
 }
 
 fn history_value_page<T>() -> Box<[Option<T>]> {
-    let bytes = std::mem::size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
+    let bytes = size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
     assert!(bytes <= ARTIFACT_HISTORY_CONTIGUOUS_CEILING, "one history catalog page must stay under the 64 KiB contiguous ceiling");
     let mut slots = Vec::new();
     slots.try_reserve_exact(ARTIFACT_HISTORY_PAGE_SLOTS).expect("history catalog page allocation");
@@ -213,9 +214,9 @@ impl<T> HistoryPageStack<T> {
     /// 🧮 Quotes the exact original first stack page and its directory.
     pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.pages != 0 { return Ok(Default::default()); }
-        let capacity_bytes = std::mem::size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
-            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<HistoryValuePage<T>>()))
-            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<HistoryPageChunk<T>>()))
+        let capacity_bytes = size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .and_then(|bytes| bytes.checked_add(size_of::<HistoryValuePage<T>>()))
+            .and_then(|bytes| bytes.checked_add(size_of::<HistoryPageChunk<T>>()))
             .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history stack original page extent overflowed"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
     }
@@ -235,9 +236,9 @@ impl<T> HistoryPageStack<T> {
     /// 🎟️ Reports all backing allocations required by exactly the next pushed entry.
     pub fn next_push_allocation_bytes(&self) -> usize {
         if self.len < self.capacity() { return 0; }
-        std::mem::size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
-            .saturating_add(std::mem::size_of::<HistoryValuePage<T>>())
-            .saturating_add(if self.pages as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { std::mem::size_of::<HistoryPageChunk<T>>() } else { 0 })
+        size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .saturating_add(size_of::<HistoryValuePage<T>>())
+            .saturating_add(if self.pages as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { size_of::<HistoryPageChunk<T>>() } else { 0 })
     }
 
     pub fn new() -> Self {
@@ -332,8 +333,8 @@ impl<T> HistoryPageStack<T> {
     pub fn next_empty_page_release_byte_demand(&self) -> Option<usize> {
         if self.len != 0 { return None; }
         if self.pages == 0 { return Some(0); }
-        let page = std::mem::size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)?.checked_add(std::mem::size_of::<HistoryValuePage<T>>())?;
-        page.checked_add(if (self.pages as usize - 1) % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { std::mem::size_of::<HistoryPageChunk<T>>() } else { 0 })
+        let page = size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)?.checked_add(size_of::<HistoryValuePage<T>>())?;
+        page.checked_add(if (self.pages as usize - 1) % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { size_of::<HistoryPageChunk<T>>() } else { 0 })
     }
 
     /// ♻️ Releases one fixed empty page; callers retire entries before releasing resident storage.
@@ -555,16 +556,16 @@ impl<T> ExactSizeIterator for HistoryPageIter<'_, T> {}
 
 impl<T: ToValue> ToValue for HistoryPageStack<T> {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
 }
 
 impl<T: FromValue> FromValue for HistoryPageStack<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let values = Vec::<T>::from_value(value)?;
-        let mut stack = Self::try_new().map_err(|reason|semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::AllocationFailed,reason))?;
+        let mut stack = Self::try_new().map_err(|reason|ValueError::new(protocol::value::ValueRefusalKind::AllocationFailed,reason))?;
         for value in values {
-            stack.try_push(value).map_err(|_| semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,"history catalog address space exhausted"))?;
+            stack.try_push(value).map_err(|_| ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,"history catalog address space exhausted"))?;
         }
         Ok(stack)
     }
@@ -707,7 +708,7 @@ impl<T> ArtifactHistoryPageChunk<T> {
 }
 
 fn artifact_history_slot_page<T>() -> Box<[std::mem::MaybeUninit<ArtifactHistorySlot<T>>]> {
-    let bytes = std::mem::size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
+    let bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
     assert!(bytes <= ARTIFACT_HISTORY_CONTIGUOUS_CEILING, "one history ledger page must stay under the 64 KiB contiguous ceiling");
     let mut slots = Vec::new();
     slots.try_reserve_exact(ARTIFACT_HISTORY_PAGE_SLOTS).expect("history ledger page allocation");
@@ -771,9 +772,9 @@ impl<T> ArtifactHistoryLedger<T> {
     /// 🧮 Quotes the exact slot backing, original page and directory before birth.
     pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.page_count != 0 { return Ok(Default::default()); }
-        let capacity_bytes = std::mem::size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
-            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<ArtifactHistorySlotPage<T>>()))
-            .and_then(|bytes| bytes.checked_add(std::mem::size_of::<ArtifactHistoryPageChunk<T>>()))
+        let capacity_bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .and_then(|bytes| bytes.checked_add(size_of::<ArtifactHistorySlotPage<T>>()))
+            .and_then(|bytes| bytes.checked_add(size_of::<ArtifactHistoryPageChunk<T>>()))
             .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger original page extent overflowed"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
     }
@@ -847,9 +848,9 @@ impl<T> ArtifactHistoryLedger<T> {
     /// 🎟️ Reports backing required by the next unoccupied history reservation.
     pub fn next_reservation_allocation_bytes(&self) -> usize {
         if self.reservation.is_some() || self.free_head.is_some() || (self.initialized as usize) < self.allocated_slots() { return 0; }
-        std::mem::size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
-            .saturating_add(std::mem::size_of::<ArtifactHistorySlotPage<T>>())
-            .saturating_add(if self.page_count as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { std::mem::size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })
+        size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+            .saturating_add(size_of::<ArtifactHistorySlotPage<T>>())
+            .saturating_add(if self.page_count as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })
     }
 
     pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
@@ -1321,7 +1322,7 @@ impl<T> ArtifactHistoryLedger<T> {
         if chunk.next.is_some() || usize::from(chunk.count) != offset + 1 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page directory differs from its actual last allocation")); }
         let page = chunk.pages[offset].as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history page slot backing is absent"))?;
         let slots = std::alloc::Layout::array::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>(page.slots.len()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history slot backing layout overflow"))?.size();
-        slots.checked_add(std::mem::size_of::<ArtifactHistorySlotPage<T>>()).and_then(|bytes| bytes.checked_add(if offset == 0 { std::mem::size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history page whole release extent overflow"))
+        slots.checked_add(size_of::<ArtifactHistorySlotPage<T>>()).and_then(|bytes| bytes.checked_add(if offset == 0 { size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history page whole release extent overflow"))
     }
 
     /// ♻️ Releases one real native page only after its visibility owners and full release grant.
@@ -1376,14 +1377,14 @@ impl<T: Clone> Clone for ArtifactHistoryLedger<T> {
 /// codec. Same admission path (`try_from_preflighted`) every other ledger construction uses.
 impl<T: ToValue> ToValue for ArtifactHistoryLedger<T> {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
 }
 
 impl<T: FromValue> FromValue for ArtifactHistoryLedger<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let values = Vec::<T>::from_value(value)?;
-        Self::try_from_preflighted(values).map_err(|rejected| semio_framework_value::ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,format!("a history ledger within its page address space ({} entries rejected)", rejected.len())))
+        Self::try_from_preflighted(values).map_err(|rejected| ValueError::new(protocol::value::ValueRefusalKind::OwnershipLimit,format!("a history ledger within its page address space ({} entries rejected)", rejected.len())))
     }
 }
 
@@ -1405,7 +1406,7 @@ impl<T> Clone for ArtifactHistoryIter<'_, T> {
 /// needs for each of its four group-visibility-consistent fields.
 impl<T: ToValue> ToValue for ArtifactHistoryIter<'_, T> {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::Array(self.clone().map(semio_framework_value::ToValue::to_value).collect())
+        DslValue::Array(self.clone().map(ToValue::to_value).collect())
     }
 }
 
@@ -1571,7 +1572,7 @@ pub(crate) struct ArtifactVcsRead<'a, P, Mutation> {
 /// 🧬️ Projects logical admitted genesis facts and the history decision captured by this read.
 impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcsRead<'_, P, Mutation> where P::Snapshot:ToValue {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::Object(vec![
+        DslValue::Object(vec![
             ("genesis".to_string(), self.genesis.genesis_facts().to_value()),
             ("edits".to_string(), self.edits.to_value()),
             ("changes".to_string(), self.changes.to_value()),
@@ -1629,8 +1630,8 @@ pub enum VcsError {
     NoCheckpoint,
     EmptyApply,
     MutationApply(MutationApplyError),
-    InverseRefused(semio_framework_value::ValueError),
-    NativeEncoding(semio_framework_value::ValueError),
+    InverseRefused(ValueError),
+    NativeEncoding(ValueError),
     NothingToUndo,
     ForeignEdit(String),
     NothingToRedo,
@@ -1762,7 +1763,7 @@ impl std::error::Error for VcsError {
     }
 }
 
-impl From<semio_framework_value::ValueError> for VcsError {fn from(error:semio_framework_value::ValueError)->Self{Self::NativeEncoding(error)}}
+impl From<ValueError> for VcsError {fn from(error:ValueError)->Self{Self::NativeEncoding(error)}}
 
 impl From<MutationApplyError> for VcsError {
     fn from(error: MutationApplyError) -> Self {

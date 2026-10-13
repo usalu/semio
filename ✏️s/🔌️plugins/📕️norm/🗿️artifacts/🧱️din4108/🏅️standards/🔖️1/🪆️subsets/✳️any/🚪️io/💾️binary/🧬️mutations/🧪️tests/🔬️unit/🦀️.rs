@@ -15,7 +15,7 @@ async fn document_text_round_trips_through_store() {
     let envelope = store::create_document_envelope("norm.din4108/v1", "din4108", Din4108Snapshot::default(), None);
     let mut store = store::os_store::test_support::plain_test_store(envelope).await;
     let mutation = Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: 1.2 });
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     store::os_store::test_support::close_plain_test_store(&mut store);

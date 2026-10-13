@@ -104,7 +104,7 @@ impl Chain {
         let count = snapshot.railings.values().filter(|railing| railing.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_railing, count);
         let id = ctx.mint("railing");
-        let railing = Railing { storey, path: self.vertices.iter().map(|p| point2(*p)).collect(), height: RAILING_HEIGHT, post_spacing: RAILING_POSTS, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: crate::Phase::New, name };
+        let railing = Railing { storey, path: self.vertices.iter().map(|p| point2(*p)).collect(), height: RAILING_HEIGHT, post_spacing: RAILING_POSTS, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: Phase::New, name };
         Step::write(ctx, ModelMutation::CreateRailing(crate::mutations::create_railing::CreateRailing { id, railing }))
     }
 

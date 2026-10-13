@@ -28,7 +28,7 @@ impl MemberGroupPreparation {
         use semio_framework_value::RetirementDemand;
         if self.history.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if self.displaced.is_some() {
-            let capacity_bytes = if self.applied.capacity() != 0 || self.cursor.capacity() != 0 { std::mem::size_of::<ArtifactStoreStringVectorRetirement>() } else if self.revision.is_some() { std::mem::size_of::<ArtifactStoreRevisionAccumulatorRetirement>() } else if self.checkpoint.is_some() { std::mem::size_of::<ArtifactStoreStringRetirement>() } else { 0 };
+            let capacity_bytes = if self.applied.capacity() != 0 || self.cursor.capacity() != 0 { size_of::<ArtifactStoreStringVectorRetirement>() } else if self.revision.is_some() { size_of::<ArtifactStoreRevisionAccumulatorRetirement>() } else if self.checkpoint.is_some() { size_of::<ArtifactStoreStringRetirement>() } else { 0 };
             return Ok(RetirementDemand { capacity_bytes, depth: 1, ..Default::default() });
         }
         let release_bytes = if Arc::strong_count(&self.visibility) == 1 { std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<crate::os_vcs::ArtifactGroupVisibility>()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "group visibility frame layout overflow"))?.0.pad_to_align().size() } else { 0 };
@@ -68,7 +68,7 @@ where
             if group.revision.is_none(){group.revision=Some(CursorRevisionAccumulator{identity_digest:self.revision_accumulator.identity_digest,applied:crate::os_vcs::HistoryPageStack::empty(),redo:crate::os_vcs::HistoryPageStack::empty(),applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()});}
             if group.ordinal<self.applied_edit_ids.len(){
                 let source=&self.applied_edit_ids[group.ordinal];
-                ownership.copied_bytes=if group.phase<2{source.len()}else{std::mem::size_of::<CursorRevisionRecord>()};
+                ownership.copied_bytes=if group.phase<2{source.len()}else{size_of::<CursorRevisionRecord>()};
                 group.demand=match group.phase{0=>group.applied.next_push_allocation_bytes()+source.len(),1=>group.cursor.next_push_allocation_bytes()+source.len(),_=>group.revision.as_ref().unwrap().applied.next_push_allocation_bytes()};
                 if grant.maximum_capacity_bytes<group.demand||grant.maximum_copy_bytes<ownership.copied_bytes{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 ownership.retained_capacity_bytes=group.demand;
@@ -100,7 +100,7 @@ where
                         destination.try_push(source.clone()).map_err(|_|"member appended catalog exhausted")?;group.phase+=1;
                     },
                     5=>{
-                        let revision=group.revision.as_mut().unwrap();group.demand=revision.applied.next_push_allocation_bytes();ownership.copied_bytes=std::mem::size_of::<CursorRevisionRecord>();ownership.retained_capacity_bytes=group.demand;
+                        let revision=group.revision.as_mut().unwrap();group.demand=revision.applied.next_push_allocation_bytes();ownership.copied_bytes=size_of::<CursorRevisionRecord>();ownership.retained_capacity_bytes=group.demand;
                         if grant.maximum_capacity_bytes<group.demand||grant.maximum_copy_bytes<ownership.copied_bytes{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                         let previous=revision.applied.last().map_or(revision.identity_digest,|record|record.prefix_digest);
                         revision.applied.try_push(CursorRevisionRecord{ledger_key:None,id_digest:CursorRevisionAccumulator::hash_record(b"edit-id",&[stage.edit.as_ref().unwrap().id.as_bytes()]),edit_digest:stage.digest,prefix_digest:CursorRevisionAccumulator::hash_record(b"applied",&[&previous,&stage.digest])}).map_err(|_|"member appended revision exhausted")?;group.phase=6;
@@ -131,7 +131,7 @@ where
                         if let Some((index,flag))=stage.unit_flags.last(){let key=(CursorRevisionAccumulator::hash_record(b"edit-id",&[stage.edit.as_ref().unwrap().id.as_bytes()]),*index);let revision=group.revision.as_mut().unwrap();reserve_index!(revision.unit_flags,&key);revision.unit_flags.insert_reserved(key,*flag,grant.retained_grant()).map_err(|(error,_,_)|error.to_string())?;publication.stage.as_mut().unwrap().unit_flags.pop();}else{group.phase=11;}
                     },
                     _=>{
-                        let capacity=std::mem::size_of::<durable_group::StagedRootRetirement<P,Mu>>();let release=std::mem::size_of::<Edit<Mu>>();group.demand=capacity;
+                        let capacity=size_of::<durable_group::StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();group.demand=capacity;
                         if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                         let ownership=durable_group::stage_prebuilt_batch_root(self,publication,grant)?;let group=publication.group_preparation.as_mut().unwrap();group.phase=12;group.completed=group.completed.saturating_add(1);
                         return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),ownership));
@@ -155,7 +155,7 @@ where
         Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.progress(),RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 
-    pub(super) fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    pub(super) fn abort_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         let error = |message: &'static str| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }

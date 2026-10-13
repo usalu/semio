@@ -1160,7 +1160,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Generation3dBuilderFacets {
         construction: Generation3dBuilderConstruction,
         analysis: Generation3dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Generation3dComposerComposition,
+        composition: Generation3dComposerComposition,
     }
     builder: Generation3dBuilder,
     analyzer: Generation3dAnalyzer,

@@ -61,7 +61,7 @@ async fn the_editor_declares_the_example_pickers_verb() {
 async fn the_example_switch_joins_its_exact_retained_factory() {
     use semio_framework_plugin::PluginApp;
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_html_editor());
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<HtmlEditor>>::with_registry(EditorApp::<HtmlEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<HtmlEditor>>::with_registry(EditorApp::<HtmlEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy());
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
@@ -95,9 +95,9 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<HtmlEditor
 /// switch's `Effect::LoadDocument`.
 async fn kit_fixture_holding(document: &HtmlSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HtmlEditor>, _>(async { semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HtmlEditor>, _>(async { semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_HTML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
     app
 }
 
@@ -107,8 +107,8 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
     let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
-    app.handle_action(action, Some(&args), &meta).await?;
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action(action, Some(&args), &meta, &mut identity).await)?;
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).map(|_| ())
 }
 
 /// ⚖️ LAW: `textEdit` — the verb the `TextWindowKit` mints for `🪟️main` — reaches the host through this
@@ -120,7 +120,7 @@ async fn the_kit_verb_loads_the_document_through_its_exact_retained_factory() {
     let mut app = kit_fixture_holding(&HtmlSnapshot::default()).await;
     dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("textEdit settles");
     assert_eq!(app.snapshot().expect("html snapshot"), target);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 /// ⚖️ LAW: `textEdit` with text that is not this artifact's DSL is refused loudly with
@@ -132,7 +132,7 @@ async fn text_edit_refuses_text_that_is_not_the_artifacts_dsl() {
     let fault = dispatch_settled(&mut app, "textEdit", &[("text", "not a dsl document")]).await.expect_err("invalid text is refused");
     assert!(format!("{fault:?}").contains("stdio.html.invalid-text"), "{fault:?}");
     assert_eq!(app.snapshot().expect("html snapshot"), example);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 /// ⚖️ LAW: the window's DSL envelope is a whole-document dump, so an Apply is a load and publishes no mutation row.
@@ -151,7 +151,7 @@ fn an_applied_envelope_is_a_load_and_publishes_no_mutation() {
 fn replacing_the_whole_source_is_refused_as_a_load() {
     use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
     let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&html_example_snapshot(crate::examples::demo::ID)) };
-    assert_eq!(<HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &HtmlSnapshot::default()).expect_err("a load, not an edit").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(<HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &HtmlSnapshot::default()).err().expect("a load, not an edit").code.0, "snapshot-edit.unsupported-path");
 }
 //#endregion 🪟️DetailsLaws
 semio_framework_plugin::history_edit_acceptance_law!("stdio", HtmlEditor, || semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() }, "../..");
@@ -169,5 +169,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_node() {
     assert!(matches!(renamed.artifact_mutations.as_slice(), [HtmlMutation::SetElementName(_)]));
     let removed = emit(SnapshotEditEvent::RemoveValue { path: "/root/children/1".into() }).expect("a node removal resolves");
     assert!(matches!(removed.artifact_mutations.as_slice(), [HtmlMutation::RemoveNode(_)]));
-    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }

@@ -9,14 +9,17 @@
 //! functions a specific artifact's collections need (mirrors bcf's own local generic engine,
 //! `f6-final-summary.md` §4.4, minus the container type itself, which now has one shared home).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
+#[cfg(test)] use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
+use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
+#[cfg(test)] use crate::standards::v1::subsets::model::schema::snapshot::{Property, PsetValue};
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec, MutationDiff};
+use protocol::{MutationDiff};
+#[cfg(test)] use protocol::{DiffCodec};
 
 /// 🧮️ Whether the sparse triple can reproduce `other`'s ORDER. [`apply_named`] keeps every surviving
 /// member where it already stood and pushes `added` onto the tail, so the key sequence it produces is
@@ -193,7 +196,7 @@ pub struct SemioModelDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
-    fn apply(&self, base: &SemioModelSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioModelSnapshot> {
+    fn apply(&self, base: &SemioModelSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |added| added.item.id.clone(), ["spatial"])?;

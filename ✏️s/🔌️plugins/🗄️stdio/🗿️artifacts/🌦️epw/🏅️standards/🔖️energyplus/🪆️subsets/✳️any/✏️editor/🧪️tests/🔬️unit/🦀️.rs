@@ -61,9 +61,9 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<semio_framework_plug
 
 async fn kit_fixture_holding(document: &EpwSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<semio_framework_plugin::EditorApp<EpwEditor>, _>(async { semio_framework_plugin::App { definition: create_epw_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<semio_framework_plugin::EditorApp<EpwEditor>, _>(async { semio_framework_plugin::App { definition: create_epw_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_EPW_DOCUMENT_SCHEMA) else { panic!("EPW fixture load must carry the document") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("host loads EPW document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads EPW document");
     app
 }
 
@@ -80,10 +80,10 @@ async fn set_cell_reaches_the_document_through_the_registered_native_factory() {
         ("value".into(), semio_framework_value::DslValue::String("2026".into())),
     ]);
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    app.handle_action("set-cell", Some(&args), &meta).await.expect("set-cell starts");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("set-cell settles");
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-cell", Some(&args), &meta, &mut identity).await).expect("set-cell starts");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("set-cell settles");
     assert_eq!(app.snapshot().expect("EPW snapshot").records[0].year, "2026");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", super::EpwEditor, || semio_framework_plugin::App { definition: super::create_epw_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any");
@@ -105,5 +105,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
     assert_eq!(state.records[1].dry_bulb_temp, "21.5");
     let removed = emit(SnapshotEditEvent::RemoveValue { path: "/records/0".into() }).expect("a record removal resolves");
     assert!(matches!(removed.artifact_mutations.as_slice(), [EpwMutation::RemoveRecord(_)]));
-    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }

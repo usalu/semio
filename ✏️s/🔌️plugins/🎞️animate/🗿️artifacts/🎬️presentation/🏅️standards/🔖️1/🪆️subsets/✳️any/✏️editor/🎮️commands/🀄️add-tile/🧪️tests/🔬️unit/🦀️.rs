@@ -52,7 +52,7 @@ async fn delete_selection_removes_only_the_selected_tile() {
         ("merge".to_string(), semio_framework_value::DslValue::String("replace".into())),
         ("method".to_string(), semio_framework_value::DslValue::String("pick".into())),
     ]);
-    app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("select");
+    app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("select");
     crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::DeleteSelection(delete_selection::DeleteSelection {})).await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 3, "only the selected tile is removed");
 }

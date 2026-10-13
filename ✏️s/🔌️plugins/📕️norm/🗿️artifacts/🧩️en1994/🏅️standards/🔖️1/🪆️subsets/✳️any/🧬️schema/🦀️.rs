@@ -19,11 +19,11 @@ pub struct En1994Artifact {
     #[state(artifact)]
     pub steel_f_y_pa: f64,
     #[state(artifact)]
-    pub beams: Vec<crate::CompositeBeam>,
+    pub beams: Vec<CompositeBeam>,
     #[state(artifact)]
-    pub columns: Vec<crate::CompositeColumn>,
+    pub columns: Vec<CompositeColumn>,
     #[state(artifact)]
-    pub slabs: Vec<crate::CompositeSlab>,
+    pub slabs: Vec<CompositeSlab>,
     #[state(artifact)]
     pub fire_rating: String,
     #[state(artifact)]
@@ -114,8 +114,8 @@ pub fn en1994_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 
 //#region 🔖️ComplianceHelpers
 /// 📐️ Pure EN 1994 compliance helpers — geometry-derived resistances and clause checks.
-use crate::document::{CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-use crate::{CompositeBeam, CompositeColumn, CompositeSlab, En1994Snapshot};
+use crate::document::LocalizedCopy;
+use crate::{CompositeBeam, CompositeColumn, CompositeSlab};
 
 /// 🇪️🇺️ National-annex NDPs for EN 1994.
 /// Steel stability γ_M1: EN 1994-1-1 §2.4.1.2 → EN 1993-1-1 (EN recommended 1,00; DIN EN 1993-1-1/NA 1,10).

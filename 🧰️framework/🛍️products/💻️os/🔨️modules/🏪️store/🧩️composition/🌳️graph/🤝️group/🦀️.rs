@@ -73,11 +73,11 @@ impl GroupOwnsPreparation {
     pub fn terminal_is_empty(&self) -> bool { self.phase == Phase::Closed }
     pub fn next_preparation_demands(&self, graph: &CompositionGraph) -> RetirementDemand {
         let (copy_bytes, capacity_bytes) = match self.phase {
-            Phase::Reserve if self.expected != 0 => (std::mem::size_of::<Vec<Option<Row>>>(), self.expected.saturating_mul(std::mem::size_of::<Option<Row>>())),
-            Phase::Reserve | Phase::Edges | Phase::MergeReserve => (std::mem::size_of::<OwnsRoot>(), graph.owns.len().saturating_add(self.additions.len()).saturating_mul(std::mem::size_of::<Row>())),
+            Phase::Reserve if self.expected != 0 => (size_of::<Vec<Option<Row>>>(), self.expected.saturating_mul(size_of::<Option<Row>>())),
+            Phase::Reserve | Phase::Edges | Phase::MergeReserve => (size_of::<OwnsRoot>(), graph.owns.len().saturating_add(self.additions.len()).saturating_mul(size_of::<Row>())),
             Phase::Merge => {
-                if self.original_index < graph.owns.len() && (self.addition_index == self.additions.len() || graph.owns.0[self.original_index].0 < self.additions[self.addition_index].as_ref().expect("retained addition").0) { let bytes = row_bytes(&graph.owns.0[self.original_index]); (std::mem::size_of::<Row>().saturating_add(bytes), bytes) }
-                else if self.addition_index < self.additions.len() { (std::mem::size_of::<Row>(), 0) } else { (0, 0) }
+                if self.original_index < graph.owns.len() && (self.addition_index == self.additions.len() || graph.owns.0[self.original_index].0 < self.additions[self.addition_index].as_ref().expect("retained addition").0) { let bytes = row_bytes(&graph.owns.0[self.original_index]); (size_of::<Row>().saturating_add(bytes), bytes) }
+                else if self.addition_index < self.additions.len() { (size_of::<Row>(), 0) } else { (0, 0) }
             }
             _ => (0, 0),
         };
@@ -94,27 +94,27 @@ impl GroupOwnsPreparation {
             let row = self.additions[index].as_ref().expect("moving edge");
             if row.0 != child || row.1.0 != parent || row.1.1 != slot { return Err(GroupOwnsError::EdgeChanged); }
             let swapping = index != 0 && self.additions[index - 1].as_ref().expect("sorted neighbor").0 > row.0;
-            return Ok(RetirementDemand { copy_bytes: usize::from(swapping) * std::mem::size_of::<Option<Row>>() * 2, ..empty });
+            return Ok(RetirementDemand { copy_bytes: usize::from(swapping) * size_of::<Option<Row>>() * 2, ..empty });
         }
         if let Some(row) = &self.active {
             if row.0 != child || row.1.0 != parent || row.1.1 != slot { return Err(GroupOwnsError::EdgeChanged); }
-            return Ok(RetirementDemand { copy_bytes: if self.ancestor.is_none() { std::mem::size_of::<Row>() } else { 0 }, ..empty });
+            return Ok(RetirementDemand { copy_bytes: if self.ancestor.is_none() { size_of::<Row>() } else { 0 }, ..empty });
         }
         let prior = graph.owns.get(child).or_else(|| self.additions.binary_search_by(|row| row.as_ref().expect("retained edge").0.as_str().cmp(child)).ok().map(|index| &self.additions[index].as_ref().expect("retained edge").1));
         if let Some((owner, owner_slot)) = prior { return if owner == parent && owner_slot == slot { Ok(empty) } else { Err(GroupOwnsError::AlreadyOwned) }; }
         let bytes = Self::edge_birth_bytes(parent, slot, child).ok_or(GroupOwnsError::Capacity)?;
-        Ok(RetirementDemand { copy_bytes: bytes.saturating_add(std::mem::size_of::<Row>()), capacity_bytes: bytes, ..empty })
+        Ok(RetirementDemand { copy_bytes: bytes.saturating_add(size_of::<Row>()), capacity_bytes: bytes, ..empty })
     }
     pub fn next_close_copy_byte_demand(&self) -> usize {
-        if self.retired.is_none() && (self.active.is_some() || !self.replacement.is_empty() || !self.additions.is_empty()) { std::mem::size_of::<Row>() } else { 0 }
+        if self.retired.is_none() && (self.active.is_some() || !self.replacement.is_empty() || !self.additions.is_empty()) { size_of::<Row>() } else { 0 }
     }
     pub fn next_close_capacity_byte_demand(&self, _: usize) -> usize { 0 }
     pub fn next_close_depth_demand(&self) -> usize { usize::from(self.phase != Phase::Closed) }
     pub fn next_close_release_byte_demand(&self) -> usize {
         if let Some(row) = &self.retired { return row_release(row); }
         if self.active.is_some() || !self.replacement.is_empty() || !self.additions.is_empty() { return 0; }
-        if self.replacement.capacity() != 0 { return self.replacement.capacity().saturating_mul(std::mem::size_of::<Row>()); }
-        if self.additions.capacity() != 0 { return self.additions.capacity().saturating_mul(std::mem::size_of::<Option<Row>>()); }
+        if self.replacement.capacity() != 0 { return self.replacement.capacity().saturating_mul(size_of::<Row>()); }
+        if self.additions.capacity() != 0 { return self.additions.capacity().saturating_mul(size_of::<Option<Row>>()); }
         if self.authority.is_some() { return arc_release(&self.authority); }
         arc_release(&self.visibility)
     }
@@ -266,7 +266,7 @@ impl CompositionGraph {
 
 impl CompositionGraph {
     pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(if self.owns_group.is_none() && self.owns_retiring.is_none() && !self.owns.is_empty() { std::mem::size_of::<Row>() } else if self.owns_retiring.is_none() && self.owns.capacity() == 0 && self.owns_authority.is_none() { self.links.copy_demand() } else { 0 })
+        Ok(if self.owns_group.is_none() && self.owns_retiring.is_none() && !self.owns.is_empty() { size_of::<Row>() } else if self.owns_retiring.is_none() && self.owns.capacity() == 0 && self.owns_authority.is_none() { self.links.copy_demand() } else { 0 })
     }
     pub fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     pub fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
@@ -274,7 +274,7 @@ impl CompositionGraph {
         if self.owns_group.is_some() { return Ok(0); }
         if let Some(row) = self.owns_retiring.as_ref() { return Ok(row_release(row)); }
         if !self.owns.is_empty() { return Ok(0); }
-        if self.owns.capacity() != 0 { return Ok(self.owns.capacity().saturating_mul(std::mem::size_of::<Row>())); }
+        if self.owns.capacity() != 0 { return Ok(self.owns.capacity().saturating_mul(size_of::<Row>())); }
         if self.owns_authority.is_some() { return Ok(arc_release(&self.owns_authority)); }
         Ok(self.links.release_demand())
     }

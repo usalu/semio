@@ -512,3 +512,17 @@ fn source_preserves_wide_integers_with_an_independent_json_oracle() {
     let oracle: serde_json::Value = serde_json::from_str(source).unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&snapshot_edit_source(&parsed)).unwrap(), oracle);
 }
+
+#[test]
+fn an_octet_string_equals_the_json_array_of_its_octets() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🟰️octet-equivalence/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let octets = row["octets"].as_array().unwrap().iter().map(|octet| octet.as_u64().unwrap() as u8).collect::<Vec<_>>();
+        let json = serde_json::to_string(&row["json"]).unwrap();
+        let spelled: DslValue = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let independent = serde_json::to_value(&octets).unwrap();
+        assert_eq!(independent == row["json"], row["equivalent"].as_bool().unwrap(), "{}: independent serde_json oracle", row["name"]);
+        assert_eq!(values_equivalent(&DslValue::Bytes(octets.clone()), &spelled), row["equivalent"].as_bool().unwrap(), "{}", row["name"]);
+        assert_eq!(values_equivalent(&spelled, &DslValue::Bytes(octets)), row["equivalent"].as_bool().unwrap(), "{} is symmetric", row["name"]);
+    }
+}

@@ -1,7 +1,10 @@
 //! 🌳️ Intrinsic Drawing value projection and bounded native construction.
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode,PathSegment};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2,SemioTransform};
-use semio_framework_value::{DslValue,ToValue,FromValue,ValueError,ValueRefusalKind,DecodedValue,NativeDecodeControl,NativeEncodeControl};
+use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode};
+#[cfg(test)] use crate::standards::v1::subsets::drawing::schema::snapshot::{PathSegment};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
+#[cfg(test)] use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2};
+use semio_framework_value::{DslValue, ToValue, FromValue, ValueError, ValueRefusalKind, DecodedValue, NativeEncodeControl};
+#[cfg(test)] use semio_framework_value::{NativeDecodeControl};
 
 #[path="🧾️original/🦀️.rs"]
 mod original;
@@ -10,7 +13,7 @@ pub use original::{decode_node,decode_style,decode_layer,decode_snapshot};
 pub(crate) fn retire_values(values:Vec<DslValue>){<Vec<DslValue> as FromValue>::retire_decoded(values);}
 
 pub(crate) fn encode_push<T>(items:&mut Vec<T>,value:T,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
-    if items.len()==items.capacity(){let additional=items.capacity().max(1);control.charge(additional.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Drawing frontier overflow"))?)?;items.try_reserve_exact(additional).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Drawing frontier allocation"))?;}
+    if items.len()==items.capacity(){let additional=items.capacity().max(1);control.charge(additional.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Drawing frontier overflow"))?)?;items.try_reserve_exact(additional).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Drawing frontier allocation"))?;}
     items.push(value);Ok(())
 }
 
@@ -38,7 +41,7 @@ pub fn encode_node(value:&DrawNode,control:&mut NativeEncodeControl<'_>)->Result
                 Output::Node(DrawNode::Group{transform,children})=>{encode_push(&mut pending,Output::Group(transform,children.len()),control)?;for child in children.iter().rev(){encode_push(&mut pending,Output::Node(child),control)?;control.step()?;}control.step()?;continue;},
                 Output::Group(transform,count)=>{let start=built.get().len().checked_sub(count).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Drawing projected children"))?;let mut children=DecodedValue::new(control.allocate_vec::<DslValue>(count)?,retire_values);for child in built.get_mut().drain(start..){children.get_mut().push(child);}let mut v=object(3,control)?;add(v.get_mut(),"kind",&"group",control)?;add(v.get_mut(),"transform",transform,control)?;add_owned(v.get_mut(),"children",DecodedValue::new(DslValue::Array(children.take()),<DslValue as FromValue>::retire_decoded),control)?;v},
             };
-            if built.get().len()==built.get().capacity(){let additional=built.get().capacity().max(1);control.charge(additional.checked_mul(std::mem::size_of::<DslValue>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Drawing projected forest overflow"))?)?;built.get_mut().try_reserve_exact(additional).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Drawing projected forest allocation"))?;}
+            if built.get().len()==built.get().capacity(){let additional=built.get().capacity().max(1);control.charge(additional.checked_mul(size_of::<DslValue>()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Drawing projected forest overflow"))?)?;built.get_mut().try_reserve_exact(additional).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Drawing projected forest allocation"))?;}
             built.get_mut().push(output.take());control.step()?;
         }
         if built.get().len()!=1{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Drawing projected root"))}

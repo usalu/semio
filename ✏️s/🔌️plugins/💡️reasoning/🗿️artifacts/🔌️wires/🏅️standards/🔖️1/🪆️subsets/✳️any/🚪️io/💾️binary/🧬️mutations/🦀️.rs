@@ -17,4 +17,3 @@ impl protocol::OpBinary for WiresMutation {
     }
 }
 }
-pub use mutations_codec::*;

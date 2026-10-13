@@ -25,7 +25,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetStyle {
         let Self { name, .. } = self;
         Ok({
             match base.tables.styles.iter().find(|s| &s.name == name) {
-                Some(s) => vec![DxfMutation::SetStyle(set_style::SetStyle { name: name.clone(), style: s.clone() })],
+                Some(s) => vec![DxfMutation::SetStyle(SetStyle { name: name.clone(), style: s.clone() })],
                 None => vec![DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: name.clone() })],
             }
         })

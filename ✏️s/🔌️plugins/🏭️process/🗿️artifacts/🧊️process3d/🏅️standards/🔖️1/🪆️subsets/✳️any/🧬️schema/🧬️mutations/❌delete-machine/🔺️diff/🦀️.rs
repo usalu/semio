@@ -1,7 +1,7 @@
 //! 🔺️ `delete-machine` sparse diff construction — a whole-`Workshop` value diff, built directly
 //! from `base` + payload, never a snapshot clone. Error `target-missing` when the machine is absent.
 
-use crate::diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
+use crate::diff::{Process3dDiff, Process3dMachinesDelta};
 use crate::Process3dSnapshot;
 
 //#region 🔖️Diff

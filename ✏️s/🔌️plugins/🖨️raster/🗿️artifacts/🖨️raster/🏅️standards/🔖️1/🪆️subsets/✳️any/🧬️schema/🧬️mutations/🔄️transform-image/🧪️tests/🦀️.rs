@@ -258,7 +258,7 @@ async fn the_store_folds_a_transform_like_the_leaf() {
     let transform = crop_image("paint", 1, 0, 4, 3);
     let mut store = crate::mutations::RasterStore::new(store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "transform-image", walled_base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![transform.clone()], transaction: None }).await.expect("the transform applies");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![transform.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the transform applies");
     let before = walled_base();
     let expected = apply_raster_mutation(&before, &transform).expect("the leaf applies");
     let projected = store.snapshot().expect("the store projects");

@@ -1,7 +1,7 @@
 //! 📰️ Handcrafted XML document, node, attribute, declaration and entity relations.
 
 use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote, XmlSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
 #[path="💰️backing/🦀️.rs"]
 mod backing;
 
@@ -44,7 +44,7 @@ pub const XML_SQLITE_TABLES: XmlSqliteTables = XmlSqliteTables {
     entity: "xml_entity",
 };
 
-use crate::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView,retire_xml_document,retire_xml_document_with_frontier,retire_nodes,XmlNodeList,XmlDocumentOwner};
+use crate::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView,retire_nodes,XmlNodeList,XmlDocumentOwner};
 struct XmlSnapshots(Vec<XmlSnapshot>);
 impl Drop for XmlSnapshots{fn drop(&mut self){for snapshot in self.0.drain(..){drop(XmlDocumentOwner(Some(snapshot.doc)));}}}
 enum Parent { Root, Misc(&'static str, usize), Child(i64, usize) }
@@ -134,8 +134,8 @@ use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshot for XmlSnapshot {
     fn decode_sqlite_snapshot_native(payload: &semio_framework_os_kernel::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self,ValueError> {
         native_owner.receive::<Self, Self>(|slot, native, body| {
-            let value = crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_decoding::decode(payload, control, native)?;
-            let inline = std::mem::size_of::<Self>();
+            let value = native_decoding::decode(payload, control, native)?;
+            let inline = size_of::<Self>();
             body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: inline, maximum_depth: 1, ..Default::default() })?;
             *slot = Some(value);
             body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: inline, ..Default::default() })?;
@@ -143,7 +143,7 @@ impl ArtifactSqliteSnapshot for XmlSnapshot {
         })
     }
     fn retire_sqlite_snapshot(self) { drop(XmlDocumentOwner(Some(self.doc))); }
-    fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError> { crate::standards::v1_0::subsets::base::io::sqlite::snapshot::native_encoding::encode(self, encoding, control,native_owner) }
+    fn encode_sqlite_snapshot_native(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError> { native_encoding::encode(self, encoding, control,native_owner) }
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { preflight_xml_document(&self.schema, &self.doc, encoding, control) }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;

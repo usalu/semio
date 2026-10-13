@@ -35,7 +35,7 @@ fn clock(app: &mut Fem2dApp) -> Option<FemPlaybackClock> {
 /// 🔁️ Drives the publication the dispatch opened all the way into the stores, the way the plugin
 /// host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem2dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, 1).await.expect("settle the typed operation").effects
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own
@@ -156,7 +156,7 @@ async fn transport_wire(app: &mut Fem2dApp, args: serde_json::Value) {
     let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(results_view());
     let args = semio_framework_plugin::DslValue::from(&args);
-    app.handle_action("setResultAnimation", Some(&args), &meta).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
+    app.handle_action("setResultAnimation", Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
     if !aborting {
         settle(app).await;
     }

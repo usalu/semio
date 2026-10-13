@@ -33,7 +33,7 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetEntityArg {
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
         let Self { id, arg_index, .. } = self;
         Ok(match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
-            Some(v) => vec![StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: *id, arg_index: *arg_index, value: v.clone() })],
+            Some(v) => vec![StepMutation::SetEntityArg(SetEntityArg { id: *id, arg_index: *arg_index, value: v.clone() })],
             None => Vec::new(),
         })
     }

@@ -1,5 +1,4 @@
 //! ⚙️ Shared application and inversion of BmpMutation.
-use crate::schema::{diff::BmpDiff, mutations::BmpMutation};
 use crate::BmpSnapshot;
 
 
@@ -131,8 +130,8 @@ impl<'a> BmpPaintWorkOperation<'a> {
         if region.width==0||region.height==0 {return Err("bmp: retained paint region is empty".into());}
         match paint {BmpRetainedPaint::Indexed(index) if source.image.profile.is_indexed()&&(index as usize)<source.image.palette.len()=>{},BmpRetainedPaint::Direct(_) if source.image.profile.is_direct()=>{},_=>return Err("bmp: retained paint profile differs from the owned image".into())}
         let image=&source.image;
-        let pixels=match &image.pixels {BmpPixels::Indexed {indices}=>indices.len(),BmpPixels::Direct {samples}=>samples.len().checked_mul(std::mem::size_of::<crate::schema::snapshot::BmpNativeSample>()).ok_or("bmp: retained pixel extent overflow")?};
-        let owned_bytes=pixels.checked_add(image.palette.len()*std::mem::size_of::<crate::schema::snapshot::BmpPaletteEntry>()).and_then(|n|n.checked_add(image.opaque_gap.len())).and_then(|n|n.checked_add(image.opaque_trailer.len())).and_then(|n|n.checked_add(source.schema.len()+std::mem::size_of::<BmpSnapshot>())).ok_or("bmp: retained ownership extent overflow")?;
+        let pixels=match &image.pixels {BmpPixels::Indexed {indices}=>indices.len(),BmpPixels::Direct {samples}=>samples.len().checked_mul(size_of::<crate::schema::snapshot::BmpNativeSample>()).ok_or("bmp: retained pixel extent overflow")?};
+        let owned_bytes=pixels.checked_add(image.palette.len()*size_of::<crate::schema::snapshot::BmpPaletteEntry>()).and_then(|n|n.checked_add(image.opaque_gap.len())).and_then(|n|n.checked_add(image.opaque_trailer.len())).and_then(|n|n.checked_add(source.schema.len()+size_of::<BmpSnapshot>())).ok_or("bmp: retained ownership extent overflow")?;
         if owned_bytes>maximum_owned_bytes {return Err("bmp: retained paint exceeds caller ownership limit".into());}
         fn reserve<T>(length:usize)->Result<Vec<T>,String> {let mut values=Vec::new();values.try_reserve_exact(length).map_err(|_|"bmp: retained allocation failed")?;Ok(values)}
         let pixels=match &image.pixels {BmpPixels::Indexed {indices}=>BmpPixels::Indexed {indices:reserve(indices.len())?},BmpPixels::Direct {samples}=>BmpPixels::Direct {samples:reserve(samples.len())?}};
@@ -164,7 +163,7 @@ impl<'a> BmpPaintWorkOperation<'a> {
     pub fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep as Step;
         if !self.closing {return Step::Blocked;}
-        fn retire<T>(values:&mut Vec<T>,maximum_items:usize,maximum_bytes:usize)->Option<(usize,usize)> {let size=std::mem::size_of::<T>();if !values.is_empty() {let count=values.len().min(maximum_items).min(if size==0 {maximum_items}else{maximum_bytes/size});values.truncate(values.len()-count);return Some((count,count*size));}if values.capacity()>0 {let bytes=values.capacity()*size;if maximum_items==0||maximum_bytes<bytes {return Some((0,0));}*values=Vec::new();return Some((1,bytes));}None}
+        fn retire<T>(values:&mut Vec<T>,maximum_items:usize,maximum_bytes:usize)->Option<(usize,usize)> {let size=size_of::<T>();if !values.is_empty() {let count=values.len().min(maximum_items).min(if size==0 {maximum_items}else{maximum_bytes/size});values.truncate(values.len()-count);return Some((count,count*size));}if values.capacity()>0 {let bytes=values.capacity()*size;if maximum_items==0||maximum_bytes<bytes {return Some((0,0));}*values=Vec::new();return Some((1,bytes));}None}
         if let Some(result)=&mut self.result {
             let pending=|values:(usize,usize)|Step::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:values.0,released_bytes:values.1,..Default::default()}};
             if let Some(step)=retire(&mut result.image.palette,maximum_items,maximum_bytes) {return pending(step);}
@@ -173,7 +172,7 @@ impl<'a> BmpPaintWorkOperation<'a> {
             if let Some(step)=retire(&mut result.image.opaque_trailer,maximum_items,maximum_bytes) {return pending(step);}
             if !result.schema.is_empty() {let count=result.schema.len().min(maximum_items).min(maximum_bytes);result.schema.truncate(result.schema.len()-count);return pending((count,count));}
             if result.schema.capacity()>0 {let bytes=result.schema.capacity();if maximum_items==0||maximum_bytes<bytes {return pending((0,0));}result.schema=String::new();return pending((1,bytes));}
-            if maximum_items==0||maximum_bytes<std::mem::size_of::<BmpSnapshot>() {return pending((0,0));}self.result=None;return pending((1,std::mem::size_of::<BmpSnapshot>()));
+            if maximum_items==0||maximum_bytes<size_of::<BmpSnapshot>() {return pending((0,0));}self.result=None;return pending((1,size_of::<BmpSnapshot>()));
         }
         Step::Complete {progress:Default::default()}
     }

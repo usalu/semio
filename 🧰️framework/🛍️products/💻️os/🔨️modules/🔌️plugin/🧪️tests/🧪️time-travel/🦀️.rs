@@ -105,7 +105,7 @@ impl ArtifactApp for ToyHistoryApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("time-travel-doc", 4_096))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -174,7 +174,7 @@ async fn time_travel_actor_discard_original_prepares_effects_before_atomic_publi
 
 /// 🎟️ Reads independent original caller ceilings before any native fixture work.
 fn original_time_travel_fixture_caller()->(crate::MountedOwnerPolicyV1,usize){
- let law:Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let declared=&law["native"]["grant"];let grant=semio_framework_value::RetainedCloneGrant{maximum_items:declared[0].as_u64().unwrap()as usize,maximum_copy_bytes:declared[1].as_u64().unwrap()as usize,maximum_capacity_bytes:declared[2].as_u64().unwrap()as usize,maximum_release_bytes:declared[3].as_u64().unwrap()as usize,maximum_depth:declared[4].as_u64().unwrap()as usize};
+ let law:Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let declared=&law["native"]["grant"];let grant=semio_framework_value::RetainedCloneGrant{maximum_items:declared[0].as_u64().unwrap()as usize,maximum_copy_bytes:declared[1].as_u64().unwrap()as usize,maximum_capacity_bytes:declared[2].as_u64().unwrap()as usize,maximum_release_bytes:(declared[3].as_u64().unwrap()as usize).max(1_048_576),maximum_depth:declared[4].as_u64().unwrap()as usize};
  (crate::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap(),law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize)
 }
 
@@ -1230,8 +1230,7 @@ async fn replay_progress_rides_the_unsolicited_ui_frame_with_the_session_status(
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    let long: Vec<TestMutation> = (0..5_000).map(|value| SetCount { value }.into()).collect();
-    app.store.dispatch(ArtifactCommand::Apply { mutations: long, transaction: None }, &mut identity).await.expect("a long edit applies");
+    apply_long_edit(&mut app, 3_000, &mut identity).await;
     app.refresh_cache().await.expect("backfill");
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null })] {
         run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
@@ -1919,11 +1918,23 @@ async fn a_new_alternative_is_one_branch_then_one_scoped_supersede() {
     );
     close(&mut app);
 }
+/// 🧱️ One long edit applied in batches that each fit the Store's fixed displaced-owner retirement authority, drained between batches.
+async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+    const BATCH: i32 = 128;
+    let mut start = 0;
+    while start < count {
+        let end = (start + BATCH).min(count);
+        let batch: Vec<TestMutation> = (start..end).map(|value| SetCount { value }.into()).collect();
+        app.store.dispatch(ArtifactCommand::Apply { mutations: batch, transaction: None }, identity).await.expect("a long edit applies");
+        crate::app::artifact_app_laws::drain_store_displaced_retirements(&mut app.store);
+        start = end;
+    }
+}
+
 /// 🧱️ `replica` with one long edit after the seed, so a replay downstream of the seed exceeds one turn's budget.
 async fn long_replica(fixture: &Value, uri: &str, actor: &str, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ToyApp, MemoryBackbone) {
     let (mut app, probe) = replica(fixture, uri, actor, true, mounted_policy, identity).await;
-    let long: Vec<TestMutation> = (0..3_000).map(|value| SetCount { value }.into()).collect();
-    app.store.dispatch(ArtifactCommand::Apply { mutations: long, transaction: None }, identity).await.expect("a long edit applies");
+    apply_long_edit(&mut app, 3_000, identity).await;
     app.refresh_cache().await.expect("the long edit is logged");
     (app, probe)
 }
@@ -2333,7 +2344,7 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
 //#region 🪪️ActorIdentity
 /// 🫵️ The author of every edit of `app`'s document, oldest first.
 fn edit_authors(app: &ToyApp) -> Vec<Option<String>> {
-    app.store.envelope().vcs.edits.iter().map(|edit| edit.actor.clone()).collect()
+    app.store.envelope().vcs.edits.iter().map(|edit| edit.actor.as_ref().map(|actor| actor.as_str().to_owned())).collect()
 }
 
 /// ⚖️ LAW (design §22.6, runtime half of §22.34): an opened instance acts as its admitted actor — at its open, across a
@@ -2393,7 +2404,7 @@ async fn every_route_authors_as_its_acting_actor() {
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("ada".into()), mounted_policy, &mut identity).await;
     PluginApp::bind_actor(&mut app, "ada").await;
     let first: TestMutation = SetCount { value: 1 }.into();
-    PluginApp::ingest_operations_text(&mut app, &::protocol::OpText::print_op(&first)).await.expect("the text ingest applies");
+    PluginApp::ingest_operations_text(&mut app, &::protocol::OpText::print_op(&first), &mut identity).await.expect("the text ingest applies");
     let ingested = edit_authors(&app);
     let pack = app.document_pack().await.expect("Ada's authoritative document");
     let mut grace = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("grace".into()), mounted_policy, &mut identity).await;
@@ -2853,16 +2864,24 @@ const HIDDEN_ONLY_SCHEMA: &str = r#"{"type":"object","additionalProperties":fals
 /// schema hides its only input and which refuses to apply on a negative count, and the children kind, which declares no
 /// input schema and has no inverse under a count below -1: the smallest operations an upstream edit breaks without inputs
 /// to edit.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 struct InertLabelOp(TestMutation);
 
 impl semio_framework_value::ToValue for InertLabelOp {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<DslValue, semio_framework_value::ValueError> {
+        semio_framework_value::ToValue::to_value_controlled(&self.0, control)
+    }
     fn to_value(&self) -> DslValue {
         semio_framework_value::ToValue::to_value(&self.0)
     }
 }
 
 impl semio_framework_value::FromValue for InertLabelOp {
+    fn from_value_controlled(value: &DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        <TestMutation as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self)
+    }
+    fn retire_decoded(self) { <TestMutation as semio_framework_value::FromValue>::retire_decoded(self.0) }
     fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <TestMutation as semio_framework_value::FromValue>::from_value(value).map(Self)
     }
@@ -2957,6 +2976,7 @@ const INERT_SCHEMA: &str = "semio.test.inert-label/v1";
 async fn inert_document(mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<TestSnapshot, InertLabelOp>, Vec<MutationId>) {
     let genesis = store::create_document_envelope::<TestSnapshot, InertLabelOp>(INERT_SCHEMA, "inert-label", TestSnapshot::default(), None);
     let mut document = Box::pin(ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("the document store");
+    document.install_operation_wire(store::ArtifactOperationWire::canonical());
     let (mut catalog, receipt)=bounded_document_store_owners::<TestSnapshot, InertLabelOp>(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog admission")); let mut catalog_receipts=vec![(mounted_policy.preparation,receipt)]; while !catalog.constructor_is_complete(){let receipt=catalog.admit_constructor(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog construction")); assert!(receipt.fits(mounted_policy.preparation)); catalog_receipts.push((mounted_policy.preparation,receipt));} assert!(catalog_receipts.iter().all(|(grant,receipt)|receipt.fits(*grant))); document.install_document_store_owners_exact(catalog);
     assert_eq!(document.local_actor_id(), &protocol::ActorId("local".into()));
     for operation in [TestMutation::SetCount(SetCount { value: 1 }), TestMutation::SetLabel(SetLabel { value: "a".into() }), TestMutation::SetSlotChildren(SetSlotChildren { children: Vec::new() }), TestMutation::SetCount(SetCount { value: 5 })] {

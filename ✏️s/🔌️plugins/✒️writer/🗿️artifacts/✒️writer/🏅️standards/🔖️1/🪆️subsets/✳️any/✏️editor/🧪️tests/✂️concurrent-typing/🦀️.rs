@@ -40,8 +40,8 @@ async fn type_run(replica: &mut Replica, author: &mut Author, run: &str) {
         author.seq += 1;
         let caret_bytes = next.chars().take(author.caret + 1).map(char::len_utf8).sum();
         let command = WriterCommand::TextSplice(text_splice::TextSplice { start: splice.start, deleted: splice.deleted, insert: splice.insert, before: splice.before, after: splice.after, seq: author.seq, anchor: caret_bytes, caret: caret_bytes });
-        replica.dispatch_typed(command, &author_meta(author.actor)).await.expect("the keystroke applies");
-        settle_registered_typed_operation(replica, meta(author.actor).instance_id).await.expect("the keystroke publishes");
+        replica.dispatch_typed(command, &author_meta(author.actor), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the keystroke applies");
+        settle_registered_typed_operation(replica, meta(author.actor).instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the keystroke publishes");
         author.view = next;
         author.caret += 1;
     }
@@ -49,9 +49,9 @@ async fn type_run(replica: &mut Replica, author: &mut Author, run: &str) {
 
 /// 🔀️ Both replicas fold each other's events and must agree.
 async fn exchange(a: &mut Replica, b: &mut Replica) -> String {
-    a.tick_backbone().await.expect("a folds b's events");
-    b.tick_backbone().await.expect("b folds a's events");
-    a.tick_backbone().await.expect("a folds b's rebased events");
+    a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
+    b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
+    a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's rebased events");
     let (left, right) = (text_of(a), text_of(b));
     assert_eq!(left, right, "both replicas must fold the same text");
     left
@@ -60,8 +60,8 @@ async fn exchange(a: &mut Replica, b: &mut Replica) -> String {
 #[semio_framework_async_macros::async_test]
 async fn two_authors_typing_at_once_keep_both_runs_and_undo_only_their_own() {
     let (mut a, mut b) = paired_registered_apps_with_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _>("mem://writer-concurrent-typing", || async { semio_framework_plugin::App { definition: crate::editor::writer::create_writer_app(), examples: Vec::new() } }).await;
-    a.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: "Doc: \nend".into() }), &author_meta("actor-a")).await.expect("a seeds the text");
-    settle_registered_typed_operation(&mut a, meta("actor-a").instance_id).await.expect("the seed publishes");
+    a.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: "Doc: \nend".into() }), &author_meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a seeds the text");
+    settle_registered_typed_operation(&mut a, meta("actor-a").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the seed publishes");
     assert_eq!(exchange(&mut a, &mut b).await, "Doc: \nend");
     let mut alice = Author { actor: "actor-a", view: "Doc: \nend".into(), caret: 5, seq: 0 };
     let mut bob = Author { actor: "actor-b", view: "Doc: \nend".into(), caret: 5, seq: 0 };
@@ -78,13 +78,13 @@ async fn two_authors_typing_at_once_keep_both_runs_and_undo_only_their_own() {
     type_run(&mut b, &mut bob, "B").await;
     let different_points = exchange(&mut a, &mut b).await;
     assert!(different_points.starts_with('B') && different_points.contains("Aend"), "runs at different points land where their authors put them: {different_points:?}");
-    let admitted = a.handle_action("undo", None, &author_meta("actor-a")).await.expect("a's undo is admitted");
+    let admitted = a.handle_action("undo", None, &author_meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's undo is admitted");
     settle_framework_reserved_admission(&mut a, admitted).await.expect("a's undo commits");
-    settle_registered_typed_operation(&mut a, meta("actor-a").instance_id).await.expect("a's undo publishes");
+    settle_registered_typed_operation(&mut a, meta("actor-a").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's undo publishes");
     let undone = exchange(&mut a, &mut b).await;
     assert!(!undone.contains("Aend") && undone.starts_with('B') && undone.contains("beta"), "a's undo removes only a's own run on both replicas: {undone:?}");
     a.detach_backbone().await.expect("a releases its backbone");
     b.detach_backbone().await.expect("b releases its backbone");
-    close_registered_fixture_app(&mut a);
-    close_registered_fixture_app(&mut b);
+    close_registered_fixture_app(&mut a, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut b, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }

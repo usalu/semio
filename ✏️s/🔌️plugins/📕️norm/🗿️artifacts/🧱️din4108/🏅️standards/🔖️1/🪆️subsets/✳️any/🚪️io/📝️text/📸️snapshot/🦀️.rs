@@ -74,6 +74,6 @@ use framework_schema::ArtifactSchema;
 
 
 }
-pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use snapshot_wire_codec::*;
 
-crate::impl_norm_artifact_record!(@text crate::Din4108Snapshot, extension="din4108", envelope_id="norm.din4108");
+crate::impl_norm_artifact_record!(@text Din4108Snapshot, extension="din4108", envelope_id="norm.din4108");

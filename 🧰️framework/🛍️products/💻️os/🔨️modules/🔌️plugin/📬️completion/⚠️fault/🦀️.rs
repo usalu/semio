@@ -29,7 +29,7 @@ pub(crate) fn borrowed_report(origin:FaultOrigin,code:&str,severity:Severity,mes
  let mut frame=Frame{bytes:[0;480],len:0};frame.write(b"{\"origin\":");frame.string(origin,16);frame.write(b",\"code\":");let code_start=frame.len;if !frame.string(code,128){frame.len=code_start;frame.string("interactive-job.fault-capacity",128);}frame.write(b",\"severity\":");frame.string(severity,16);frame.write(b",\"message\":");frame.string(message,224);frame.write(b",\"scope\":{},\"retryable\":");frame.write(if retryable{b"true"}else{b"false"});frame.write(b"}");ArtifactBoundedToolFault::from_inline_report(frame.bytes,frame.len)
 }
 /// 🧮️ Prices transfer of every byte in the concrete bounded report carrier, including its inline frame and length.
-pub(crate) const fn borrowed_report_copy_bytes()->usize{std::mem::size_of::<ArtifactBoundedToolFault>()}
+pub(crate) const fn borrowed_report_copy_bytes()->usize{size_of::<ArtifactBoundedToolFault>()}
 #[cfg(test)]
 mod tests{
  use super::*;

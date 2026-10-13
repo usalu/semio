@@ -33,7 +33,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetVertex {
         let Self { index, .. } = self;
         Ok({
             match base.vertices.get(*index) {
-                Some(v) => vec![ObjMutation::SetVertex(set_vertex::SetVertex { index: *index, vertex: v.clone() })],
+                Some(v) => vec![ObjMutation::SetVertex(SetVertex { index: *index, vertex: v.clone() })],
                 None => Vec::new(),
             }
         })

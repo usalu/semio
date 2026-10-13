@@ -102,7 +102,7 @@ impl OpBinary for SemioModelMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioModelMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
@@ -125,7 +125,7 @@ const TAG_SCALE_ELEMENTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "scal
 mod borrowed;
 
 /// 📦️ Reborrows original typed patch or imported element fields for bounded prestage receipts.
-pub fn prepared_operation_wire_source(mutation: &crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> {
+pub fn prepared_operation_wire_source(mutation: &crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
     use crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation;
     use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource;
     Some(match mutation {

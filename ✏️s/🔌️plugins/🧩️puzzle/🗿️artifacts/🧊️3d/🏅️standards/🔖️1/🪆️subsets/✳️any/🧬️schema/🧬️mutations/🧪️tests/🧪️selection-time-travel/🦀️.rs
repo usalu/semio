@@ -80,7 +80,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
         let id = case.id.as_str();
         let mut store = crate::host::owned::puzzle3d_store(store::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::PUZZLE_3D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }).await.expect("a recorded gesture applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a recorded gesture applies");
         }
         let ids: Vec<protocol::MutationId> = {
             let operations = store.mutation_ops().expect("applied operations");
@@ -110,7 +110,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             drop(result);
             assert_eq!(store.snapshot_ref(), &head, "{id}: a blocked replay is never committed");
         } else {
-            store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+            store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
             assert_eq!(store.snapshot_ref(), &case.replayed, "{id}: the overwritten history folds to the edited state");
             let operations = store.mutation_ops().expect("applied operations");
             assert!(operations[case.at].supersession.is_some(), "{id}: the edited gesture is superseded, never rewritten");

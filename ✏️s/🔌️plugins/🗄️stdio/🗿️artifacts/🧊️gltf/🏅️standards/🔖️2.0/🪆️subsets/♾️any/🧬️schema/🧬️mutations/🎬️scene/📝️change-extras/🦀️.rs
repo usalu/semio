@@ -55,7 +55,7 @@ pub fn inverse(p: &GltfChangeSceneExtraDataPayload, base: &GltfSnapshot) -> Vec<
     if current == &requested(p) {
         return Vec::new();
     }
-    vec![super::change_scene_extra_data::mutation(super::change_scene_extra_data::GltfChangeSceneExtraDataPayload { scene: p.scene, data: presence(current) })]
+    vec![mutation(GltfChangeSceneExtraDataPayload { scene: p.scene, data: presence(current) })]
 }
 
 //#region 🧬️DirectMutation
@@ -75,7 +75,7 @@ pub fn mutation(payload: GltfChangeSceneExtraDataPayload) -> super::GltfMutation
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneExtraDataMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "scene-extra-data", kind: "change-scene-extra-data", record: "ChangedSceneExtraData" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

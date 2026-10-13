@@ -25,10 +25,11 @@ use crate::schema::diff::{self, IfcDiff};
 
 
 
-use crate::schema::snapshot::{IfcEntity, IfcHeader, IfcTypedValue, IfcValue};
+use crate::schema::snapshot::{IfcEntity, IfcValue};
+#[cfg(test)] use crate::schema::snapshot::{IfcHeader, IfcTypedValue};
 use crate::IfcSnapshot;
 
-use protocol::{Mutation};
+#[cfg(test)] use protocol::{Mutation};
 
 //#region 🔖️Mutations
 #[path = "🧭️edit-rules/🦀️.rs"]

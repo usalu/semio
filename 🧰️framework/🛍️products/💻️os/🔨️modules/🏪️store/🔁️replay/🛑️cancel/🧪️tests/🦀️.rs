@@ -50,7 +50,7 @@ pub(crate) fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
         assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
         assert_eq!(heap.released_bytes, step.progress().released_bytes);
         turns += 1;
-        assert!(turns < 100000);
+        assert!(turns < 100000, "replay retirement stalled under its own quote {demands:?}; step {step:?}");
     }
     turns
 }

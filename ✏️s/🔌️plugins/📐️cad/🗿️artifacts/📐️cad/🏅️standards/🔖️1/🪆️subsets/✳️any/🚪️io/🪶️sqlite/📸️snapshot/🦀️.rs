@@ -1,9 +1,8 @@
 //! 🏗️ Complete CAD relational ownership under the actual caller ledger.
-use crate::{CadSnapshot, CadReference, CadNode, CadModelChild, CadDrawingChild};
+use crate::{CadSnapshot, CadReference, CadNode, CadModelChild};
 use crate::CadReferenceIndex;
 use crate::standards::v1::subsets::any::schema::references::{close, invalid};
 use crate::standards::v1::subsets::any::schema::references::frontiers as semantic_frontiers;
-use semio_framework_diagnostic::{TextError, TextSpan};
 use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind};
 use store::{ArtifactSqliteSnapshot, sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, validate_sqlite_database_schema_controlled, artifact::{Projection, Cell, FloatColumn, insert_ieee754, read_binary64, ieee754_is_null}}};
 
@@ -246,7 +245,7 @@ impl ArtifactSqliteSnapshot for CadSnapshot {
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         control.check_rows(1)?;
         let maximum = control.limits().max_rows;
-        let value=store::decode_sqlite_snapshot_record_native(payload, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+        let value=store::decode_sqlite_snapshot_record_native(payload, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
             native_rows(record, native, maximum)?;
             let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::__dsl_from_record_controlled(record, native)?, close::<Self>);
             validate_owned(value.as_mut(), || native.scoped_stage(|native| { native.begin_stage(1)?; native.step() }))?;
@@ -263,8 +262,8 @@ impl ArtifactSqliteSnapshot for CadSnapshot {
         store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), control,native_owner)
     }
 }
-semio_framework_value::artifact_retire_struct!(crate::CadNode { id, label, kind });
-semio_framework_value::artifact_retire_struct!(crate::CadSnapshot { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
+semio_framework_value::artifact_retire_struct!(CadNode { id, label, kind });
+semio_framework_value::artifact_retire_struct!(CadSnapshot { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
 semio_framework_value::artifact_retire_struct!(crate::schema::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
 
 

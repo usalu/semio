@@ -108,7 +108,7 @@ pub const GEOMETRY_INFERENCE_CONTRACT: ArtifactInferencePayloadContract = Artifa
 pub const fn geometry_inference_service() -> ArtifactInferenceService {
     ArtifactInferenceService::new_contextual(
         ArtifactInferenceServiceMetadata {
-            owner: "procedural-generation3d",
+            owner: "procedural",
             artifact_kind: GEOMETRY_ARTIFACT_KIND,
             artifact_schema: GEOMETRY_ARTIFACT_KIND,
             artifact_schema_version: 1,

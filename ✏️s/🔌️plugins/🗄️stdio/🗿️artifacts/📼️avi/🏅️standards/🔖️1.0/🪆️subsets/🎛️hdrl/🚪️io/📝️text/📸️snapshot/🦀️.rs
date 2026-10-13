@@ -31,4 +31,3 @@ impl store::ArtifactDsl for AviSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

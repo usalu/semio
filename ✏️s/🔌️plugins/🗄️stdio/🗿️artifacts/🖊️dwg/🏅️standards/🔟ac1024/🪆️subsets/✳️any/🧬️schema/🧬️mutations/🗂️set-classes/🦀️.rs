@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetClasses {
         protocol::MutationOutcome::new(DwgDiff { classes: (base.classes != self.classes).then(|| self.classes.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.classes != self.classes).then(|| DwgMutation::SetClasses(set_classes::SetClasses { classes: base.classes.clone() })).into_iter().collect())
+        Ok((base.classes != self.classes).then(|| DwgMutation::SetClasses(SetClasses { classes: base.classes.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set classes", "Klassen setzen")

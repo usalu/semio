@@ -37,7 +37,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetGroup {
         let Self { name, .. } = self;
         Ok({
             match base.groups.iter().find(|g| &g.name == name) {
-                Some(g) => vec![ObjMutation::SetGroup(set_group::SetGroup { name: name.clone(), faces: g.faces.clone(), index: None })],
+                Some(g) => vec![ObjMutation::SetGroup(SetGroup { name: name.clone(), faces: g.faces.clone(), index: None })],
                 None => vec![ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: name.clone() })],
             }
         })

@@ -13,34 +13,16 @@
 //! a genuinely generic geometry-kernel working type shared by `booleans`/`trace` and unrelated
 //! plugins (e.g. `🖍️draw`'s own boolean/trace bridging), not the drawing artifact's own schema.
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::fmt;
 
 // #region 🔖️Types
 /// 📐️ Column vector `[x,y]`.
 pub type Vec2 = [f64; 2];
 
-/// ✏️ Path segment in local coordinates.
-// 🧬️ `#[derive(ToValue, FromValue)]` additive alongside `serde`
-// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01) — `serde` is now behind
-// this crate's off-by-default `serde` feature: `semio-framework-os-flow`'s `🖍️drawing/🦀️.rs`
-// (`DrawingNode`, `SceneNode`, and a third private struct, none of them `#[cfg(test)]`) derives
-// `serde::Serialize`/`Deserialize` over `Vec<semio_framework_2d::PathSegment>`/
-// `Option<Vec<...>>` fields and enables the feature on its own `semio-framework-2d` dependency
-// (confirmed: without it, `cargo check -p semio-framework-os-flow` → 15× E0277 `PathSegment:
-// Serialize`/`Deserialize` not satisfied). No in-component crate (`semio-s-plugin-draw`,
-// `semio-s-plugin-flow-extension-draw`) enables it — both convert to/from their own
-// `ToValue`/`FromValue`-only wire types or only touch `DrawingError`/`Vec2` (neither serde-derived),
-// so the feature stays off for every plugin wasm component. `rename_all` cases the tag values;
-// `rename_all_fields` is the only attribute that cases a variant's OWN named fields — in serde and,
-// since ticket 26/09/08/SCOPE-OWNED-SCHEMA-CONTRACTS row 47a, in `value_derive` too. Both are
-// declared on both codecs here because `large_arc` MUST render as `largeArc`: it is the
-// plugin-facing wire name (this crate's `Cargo.toml` marks `ToValue`/`FromValue` as exactly that)
-// and `◻️2d/🟦️.ts:48`'s `PathSegment` mirror reads `segment.largeArc`.
+/// ✏️ Path segment in local coordinates. `ToValue`/`FromValue` are its plugin-facing wire encoding: `large_arc` renders as
+/// `largeArc`, which `◻️2d/🟦️.ts`'s `PathSegment` mirror reads. Serde (de)serialization is owned by its only serde user,
+/// `semio-framework-os-flow`'s `🖍️drawing` kernel, through an explicit conversion type there.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PathSegment {
     Move { to: Vec2 },

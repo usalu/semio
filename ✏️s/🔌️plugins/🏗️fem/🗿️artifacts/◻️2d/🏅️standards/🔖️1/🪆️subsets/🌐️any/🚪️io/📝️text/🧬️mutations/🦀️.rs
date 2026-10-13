@@ -1,7 +1,6 @@
 //! ⚡️ Fem2d artifact — OpText/OpBinary codecs + grammar for `Fem2dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation,Fem2dMutation};
-use crate::central_apply::apply_fem2d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
 
 //#region 📖️SemioGrammar
@@ -148,7 +147,7 @@ pub(crate) fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String
     let mut pairs = Vec::new();
     for node in &nodes {
         let flags = active.iter().find(|(id, _)| id == node).map_or([false; 3], |(_, flags)| *flags);
-        for (at, name) in crate::standards::v1::subsets::any::schema::mutations::PLANAR_DOFS.iter().enumerate() {
+        for (at, name) in PLANAR_DOFS.iter().enumerate() {
             let held = doc.supports.iter().any(|support| &support.node_id == node && support.fixed.iter().any(|dof| fem2d_dof_name(*dof) == *name));
             if flags[at] && held {
                 pairs.push((node.clone(), (*name).to_string()));

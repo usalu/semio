@@ -334,10 +334,24 @@ pub mod testing {
         RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
     }
 
-    /// 🧹️ One cooperative-maintenance unit of `app`, funded from its own quote over a `body`-byte body.
+    /// 🧾️ Takes every ownership receipt, progress page, composed result and local-interaction reply a publication turn left in the outboxes of `app`, the way the framework's registered settle does, so the next turn is not held back by an unread one.
+    pub fn drain_outboxes<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A) {
+        let _ = (app.take_constructor_receipt(), app.take_typed_operation_preparation_receipt(), app.take_typed_operation_retirement_receipt(), app.take_history_command_receipt(), app.take_tool_run_receipt());
+        while app.take_typed_operation_ui_progress().is_some() {}
+        while app.take_typed_operation_composed_result().is_some() {}
+        while let Some(reply) = app.take_local_interaction_query_reply() {
+            if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                let _ = app.acknowledge_local_interaction_query(&token);
+            }
+        }
+    }
+
+    /// 🧹️ One cooperative-maintenance unit of `app` over a `body`-byte body: the mounted policy's maintenance grant, widened to the owner's own quote on every axis the way the plugin runtime funds a lifecycle turn.
     pub fn maintain_items<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A, items: usize, body: usize) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::Fault> {
         let demand = app.maintenance_retirement_demands(body).map_err(|error| semio_framework_plugin::Fault::from(error.into_message()))?;
-        app.maintenance_step(funded_turn(demand, items))
+        let policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
+        app.maintenance_step(RetainedCloneGrant { maximum_items: policy.maximum_items.max(items), maximum_copy_bytes: policy.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: policy.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: policy.maximum_release_bytes.max(demand.release_bytes), maximum_depth: policy.maximum_depth.max(demand.depth) })
     }
 
     /// 🧹️ One single-item cooperative-maintenance unit of `app`.

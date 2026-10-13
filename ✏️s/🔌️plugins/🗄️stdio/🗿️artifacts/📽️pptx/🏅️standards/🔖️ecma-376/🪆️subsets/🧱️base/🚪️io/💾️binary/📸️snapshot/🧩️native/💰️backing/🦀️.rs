@@ -9,7 +9,7 @@ fn retire(value: PptxSnapshot) {
 fn measured(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, native: &mut NativeEncodeControl<'_>) -> Result<usize, ValueError> {
     native.begin_stage(0)?;
     let mut writer = OpcNativeWriter { control: native, output: None, count: 0, rows: 0, limits, encoding };
-    super::write(snapshot, &mut writer)?;
+    write(snapshot, &mut writer)?;
     let count = writer.count;
     native.checkpoint()?;
     Ok(count)
@@ -40,7 +40,7 @@ pub(crate) fn encode(snapshot: &PptxSnapshot, encoding: SnapshotEncoding, contro
             let mut bytes = native.allocate_vec::<u8>(total)?;
             native.begin_stage(total)?;
             let mut writer = OpcNativeWriter { control: native, output: Some(&mut bytes), count: 0, rows: 0, limits, encoding };
-            super::write(snapshot, &mut writer)?;
+            write(snapshot, &mut writer)?;
             if writer.count != total || bytes.len() != total {
                 return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "PPTX measured native fields differ from emitted fields"));
             }
@@ -72,7 +72,7 @@ pub(crate) fn input(bytes: &[u8], binary: bool, control: &mut SqliteSnapshotCont
                         store::semio_format::split_text_preamble_controlled(text, "stdio.pptx", store::semio_format::Component::Dsl, 1, native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()
                     };
                     native.begin_stage(body.len())?;
-                    let snapshot = DecodedValue::new(super::read(&mut OpcNativeReader { bytes: body, position: 0, rows: 0, limits, binary, control: native })?, retire);
+                    let snapshot = DecodedValue::new(read(&mut OpcNativeReader { bytes: body, position: 0, rows: 0, limits, binary, control: native })?, retire);
                     native.checkpoint()?;
                     Ok(snapshot.take())
                 })()

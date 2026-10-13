@@ -20,9 +20,7 @@ type SharedStudioPorts = Arc<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>>;
 use crate::time::{rfc3339_utc_epoch_ms, utc_minute_text};
 use semio_framework_artifact_space_space::{empty_space_snapshot, space_backbone_uri, SpaceKind, SpaceMutation, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, S_SPACE_SCHEMA};
 use semio_framework_os::{
-    create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document,
-    materialize_backbone_snapshot, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort,
-    WorkflowMutation, WorkflowSnapshot, S_WORKFLOW_SCHEMA,
+    create_backbone_document, decode_backbone_payload, draft_catalog_for, draft_uri, empty_workflow_snapshot, encode_backbone_payload, export_backbone_pack, export_os_space_pack, list_os_space_catalog_entries, load_os_space_document, seed_os_space_catalog_if_empty, DraftCatalog, MemoryBackbonePort, OsBackbonePort, OsBackbonePorts, OsSpaceDocument, OsWorkflowArtifactDocument, SpaceBackbonePort, WorkflowSnapshot, S_WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};
@@ -342,14 +340,14 @@ pub async fn list_all_space_catalog_entries() -> Vec<semio_framework_os::OsSpace
 //#region 🔖️HomeSpaceRows
 /// 🪪️ Returns the current host-owned session identity only when both exact fields satisfy the shared
 /// view-context identifier contract.
-pub fn home_session_identity(view: &semio_framework_plugin::ViewModel) -> Option<&semio_framework_plugin::ViewSessionIdentity> {
+pub fn home_session_identity(view: &ViewModel) -> Option<&ViewSessionIdentity> {
     let identity = view.session_identity.as_ref()?;
     view_session_identity_valid(identity).then_some(identity)
 }
 
 /// 🪪️ Applies the shared view-context bounds to an already selected host session identity.
-pub fn view_session_identity_valid(identity: &semio_framework_plugin::ViewSessionIdentity) -> bool {
-    let admitted = |value: &str| !value.is_empty() && value.chars().count() <= semio_framework::VIEW_CONTEXT_IDENTIFIER_CHARS && !value.chars().any(|character| character.is_control());
+pub fn view_session_identity_valid(identity: &ViewSessionIdentity) -> bool {
+    let admitted = |value: &str| !value.is_empty() && value.chars().count() <= VIEW_CONTEXT_IDENTIFIER_CHARS && !value.chars().any(|character| character.is_control());
     admitted(&identity.user_id) && admitted(&identity.display_name)
 }
 
@@ -526,19 +524,19 @@ fn admit_space_retained_mutation<P, M: ::protocol::OpBinary + ::protocol::Mutati
     Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, retained_bytes))
 }
 
-fn prepare_space_retained_one_item<P, M>(base: &P, mutation: &M, maximum_bytes: usize) -> Result<(P, Vec<M>), semio_framework_value::ValueError>
+fn prepare_space_retained_one_item<P, M>(base: &P, mutation: &M, maximum_bytes: usize) -> Result<(P, Vec<M>), ValueError>
 where
     M: ::protocol::Mutation<P> + ::protocol::OpBinary,
 {
-    admit_space_retained_mutation::<P, M>(mutation, maximum_bytes).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "s.space.retained.mutation-envelope"))?;
+    admit_space_retained_mutation::<P, M>(mutation, maximum_bytes).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "s.space.retained.mutation-envelope"))?;
     let inverse = ::protocol::Mutation::inverse(mutation, base)?;
     let diff = ::protocol::Mutation::diff(mutation, base).into_parts().0;
-    let post = ::protocol::apply_diff(&diff, base).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "s.space.retained.diff-apply"))?;
+    let post = ::protocol::apply_diff(&diff, base).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "s.space.retained.diff-apply"))?;
     Ok((post, inverse))
 }
 
-fn space_refusal(message: &'static str) -> semio_framework_value::ValueError {
-    semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
+fn space_refusal(message: &'static str) -> ValueError {
+    ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
 }
 
 /// 🏭️ The exact one-item Store preparation authority every migrated `🪐️space` tool needs: a
@@ -570,7 +568,7 @@ where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
-    fn begin_batch_digest(&self, edit: &mut Option<Box<::protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<::protocol::Edit<M>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, RetainedCloneProgress)>, ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
@@ -581,14 +579,14 @@ where
         admit_space_retained_mutation::<P, M>(mutation, self.maximum_bytes)
     }
 
-    fn begin_demand(&self, _mutation: &M, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &M, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
         if lane != store::HistoryLane::Document {
             return Err(space_refusal("s.space.retained.lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<SpaceOneItemPreparation<P, M>>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<SpaceOneItemPreparation<P, M>>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, RetainedCloneProgress), (ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) {
             Ok(demand) => demand,
             Err(error) => return Err((error, request)),
@@ -615,7 +613,7 @@ where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -643,7 +641,7 @@ where
         };
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
     fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
@@ -666,23 +664,23 @@ where
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
         Ok(self.owners.close_demands(0)?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError> {
         Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
         Ok(self.owners.close_demands(0)?.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
         Ok(self.owners.close_demands(0)?.depth)
     }
 

@@ -25,7 +25,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLayer {
         let Self { name, .. } = self;
         Ok({
             match base.tables.layers.iter().find(|l| &l.name == name) {
-                Some(l) => vec![DxfMutation::SetLayer(set_layer::SetLayer { name: name.clone(), layer: l.clone() })],
+                Some(l) => vec![DxfMutation::SetLayer(SetLayer { name: name.clone(), layer: l.clone() })],
                 None => vec![DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: name.clone() })],
             }
         })

@@ -15,7 +15,7 @@ pub(super) struct FlowDagAction{
     output_preparation:Option<DagOutputPreparation>,output_prepared:bool,
     decode:Option<NativeDecodeContinuation>,encode:Option<NativeEncodeContinuation>,decode_started:bool,encode_started:bool,
     retirement:Option<Box<dyn ErasedSnapshotRetirement>>,transitions:u64,
-    close_capacity:usize,close_copy:usize,close_release:usize,receipt:semio_framework_value::retained_clone::RetainedCloneProgress,
+    close_capacity:usize,close_copy:usize,close_release:usize,receipt:RetainedCloneProgress,
 }
 impl FlowDagAction{
     pub(super) fn new(operation:u16,args:&FlowArguments)->Self{
@@ -34,7 +34,7 @@ impl FlowDagAction{
             if let Some(displaced)=self.displaced.as_mut(){
                 if budget.retained.maximum_items==0||budget.retained.maximum_depth==0{return FlowFeatureStep::Yield}
                 *displaced.original_mut().expect("pre-admitted untouched displaced custody")=self.application.as_mut().unwrap().commit(&mut domain.host.dag);
-                self.receipt=self.receipt.checked_add(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}).expect("bounded atomic exchange receipt");self.retirement=self.displaced.take().map(|owner|owner as Box<dyn ErasedSnapshotRetirement>);return self.program.finish_domain(ok())
+                self.receipt=self.receipt.checked_add(RetainedCloneProgress{copied_items:1,..Default::default()}).expect("bounded atomic exchange receipt");self.retirement=self.displaced.take().map(|owner|owner as Box<dyn ErasedSnapshotRetirement>);return self.program.finish_domain(ok())
             }
             let source=match text(args,"json"){Ok(value)=>value,Err(error)=>return self.program.finish_domain(Err(error))};
             let observer=self.observer.clone();let mut observe=|_|observer.observe();
@@ -69,14 +69,14 @@ impl FlowDagAction{
     }
     fn drain_retirement(&mut self,admitted:RetainedCloneGrant)->Result<bool,FlowFailure>{
         if self.retirement.as_ref().is_some_and(|owner|owner.terminal_is_empty()){
-            let bytes=std::mem::size_of_val(self.retirement.as_ref().unwrap().as_ref());if admitted.maximum_items==0||admitted.maximum_depth==0||bytes>admitted.maximum_release_bytes||bytes>self.close_release{return Ok(false)}self.close_release-=bytes;self.receipt=self.receipt.checked_add(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}).map_err(dag_input_failure)?;self.retirement=None;return Ok(false)
+            let bytes=size_of_val(self.retirement.as_ref().unwrap().as_ref());if admitted.maximum_items==0||admitted.maximum_depth==0||bytes>admitted.maximum_release_bytes||bytes>self.close_release{return Ok(false)}self.close_release-=bytes;self.receipt=self.receipt.checked_add(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}).map_err(dag_input_failure)?;self.retirement=None;return Ok(false)
         }
         let owner=self.retirement.as_deref_mut().map(|owner|owner as &mut dyn ErasedSnapshotRetirement);
         if let Some(owner)=owner{
             let copy=owner.next_copy_byte_demand().map_err(dag_input_failure)?.min(admitted.maximum_copy_bytes);let capacity=owner.next_capacity_byte_demand(copy).map_err(dag_input_failure)?;let release=owner.next_release_byte_demand().map_err(dag_input_failure)?;let depth=owner.next_depth_demand().map_err(dag_input_failure)?;
             if admitted.maximum_items==0||copy>admitted.maximum_copy_bytes||capacity>admitted.maximum_capacity_bytes||release>admitted.maximum_release_bytes||depth>admitted.maximum_depth||copy>self.close_copy||capacity>self.close_capacity||release>self.close_release{return Ok(false)}
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-            let step=owner.close_step(grant).map_err(dag_input_failure)?;let progress=match step{semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)=>progress};self.close_capacity-=progress.retained_capacity_bytes;self.close_copy-=progress.copied_bytes;self.close_release-=progress.released_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;
+            let step=owner.close_step(grant).map_err(dag_input_failure)?;let progress=match step{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};self.close_capacity-=progress.retained_capacity_bytes;self.close_copy-=progress.copied_bytes;self.close_release-=progress.released_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;
             return Ok(false)
         }
         Ok(true)
@@ -93,7 +93,7 @@ impl FlowDagAction{
     }
 }
 impl FlowActionState for FlowDagAction{
-    fn retained_receipt(&self)->Option<semio_framework_value::retained_clone::RetainedCloneProgress>{Some(self.receipt)}
+    fn retained_receipt(&self)->Option<RetainedCloneProgress>{Some(self.receipt)}
     #[cfg(test)]fn operation(&self)->u16{self.operation}
     fn bind_observer(&mut self,observer:Rc<FlowOperationObserver>){self.observer=observer}
     fn bind_admission(&mut self,admission:FlowFeatureAdmission)->Result<(),FlowFailure>{

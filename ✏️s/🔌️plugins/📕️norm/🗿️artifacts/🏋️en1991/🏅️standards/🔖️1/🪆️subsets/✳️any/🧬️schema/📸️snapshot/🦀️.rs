@@ -1,6 +1,6 @@
 //! 🧬️ En1991 snapshot schema — complete design-load-assumption subject.
 
-use crate::{AccidentalCase, FloorArea, RoofArea, SelfWeightElement, WindFace};
+use crate::{FloorArea, RoofArea, SelfWeightElement, WindFace};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -175,16 +175,16 @@ pub struct En1991Snapshot {
     pub assumed_silo_wall_friction: f64,
     #[dsl(table)]
     #[state(artifact)]
-    pub floors: Vec<crate::FloorArea>,
+    pub floors: Vec<FloorArea>,
     #[dsl(table)]
     #[state(artifact)]
-    pub self_weight_elements: Vec<crate::SelfWeightElement>,
+    pub self_weight_elements: Vec<SelfWeightElement>,
     #[dsl(table)]
     #[state(artifact)]
-    pub roofs: Vec<crate::RoofArea>,
+    pub roofs: Vec<RoofArea>,
     #[dsl(table)]
     #[state(artifact)]
-    pub wind_faces: Vec<crate::WindFace>,
+    pub wind_faces: Vec<WindFace>,
     #[dsl(table)]
     #[state(artifact)]
     pub accidental_cases: Vec<crate::AccidentalCase>,

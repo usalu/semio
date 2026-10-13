@@ -115,4 +115,4 @@ impl OpText for SemioValueMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;

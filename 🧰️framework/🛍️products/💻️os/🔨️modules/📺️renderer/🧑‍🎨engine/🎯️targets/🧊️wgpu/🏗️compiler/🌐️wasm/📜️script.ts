@@ -12,7 +12,7 @@ import { preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️mod
 
 import { CARGO_RELAY_SCRIPT } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { cargoDirectories } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { cargoProvenancePhysicalControlV1, writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import { cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
@@ -70,7 +70,7 @@ export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<v
     const raw=join(observationRoot,"raw.wasm");copyFileSync(rawSource,raw);
     const staged=new Map<string,string>([[rawSource,raw]]);
     for(const unit of capture.units)for(const artifact of unit.artifacts)if(artifact.path.replaceAll("\\","/").startsWith(temporary.replaceAll("\\","/")+"/")&&!staged.has(artifact.path)){const path=join(observationRoot,"compiler",relative(temporary,artifact.path));mkdirSync(dirname(path),{recursive:true});copyFileSync(artifact.path,path);staged.set(artifact.path,path);}
-    const compiler=join(observationRoot,"cargo-unit-provenance-trunk-"+basename(observationRoot)+".json");const physical=new CurrentPhysicalOwnerV1(workspace,cargoProvenancePhysicalControlV1({cancelled:()=>signal.aborted,onProgress:row=>console.log("[cargo-provenance] "+JSON.stringify(row))}));await writeCompletedCargoInvocationProvenanceV1(compiler,{...capture,units:capture.units.map((unit:any,index:number)=>({...unit,evidence:{version:1,kind:"received",paths:unit.depInfo.map((row:any)=>row.path),producer:{path:producer,sha256:producerSha256,unit:index}}}))},staged,resolve(environment.CARGO_HOME??join(homedir(),".cargo")),physical);
+    const compiler=join(observationRoot,"cargo-unit-provenance-trunk-"+basename(observationRoot)+".json");const physical=new CurrentPhysicalOwnerV1(workspace,cargoProvenancePhysicalControlV1({cancelled:()=>signal.aborted,onProgress:cargoProvenanceProgressSinkV1(row=>console.log("[cargo-provenance] "+JSON.stringify(row)))}));await writeCompletedCargoInvocationProvenanceV1(compiler,{...capture,units:capture.units.map((unit:any,index:number)=>({...unit,evidence:{version:1,kind:"received",paths:unit.depInfo.map((row:any)=>row.path),producer:{path:producer,sha256:producerSha256,unit:index}}}))},staged,resolve(environment.CARGO_HOME??join(homedir(),".cargo")),physical);
     const files = new Map<string, string>();
     for (const entry of readdirSync(dist, { recursive: true, withFileTypes: true })) if (entry.isFile() && entry.name !== "index.html") {
       const path = join(entry.parentPath, entry.name);

@@ -32,7 +32,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for StampBaseProfile {
         let text = |value: Option<SvgAttributeValue>| value.and_then(|value| value.text().map(str::to_owned));
         let (base_profile, base_profile_index) = prior_attribute(base, &[], "baseProfile");
         let (version, version_index) = prior_attribute(base, &[], "version");
-        Ok(vec![SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: text(base_profile), version: text(version), base_profile_index, version_index })])
+        Ok(vec![SvgTinyMutation::StampBaseProfile(StampBaseProfile { base_profile: text(base_profile), version: text(version), base_profile_index, version_index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Stamp base profile", "Basisprofil kennzeichnen")

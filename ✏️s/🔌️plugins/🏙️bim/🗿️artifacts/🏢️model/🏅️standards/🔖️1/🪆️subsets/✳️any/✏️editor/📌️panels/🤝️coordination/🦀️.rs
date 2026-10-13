@@ -10,13 +10,16 @@ use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashGroup, ClashKind, ClashSetResult};
 use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
 use crate::{comments_of, Issue, IssueStatus, ModelInference, ModelSnapshot, Rule, RuleSeverity};
-use semio_framework_plugin::{BuiltNode, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiValue, FRAMEWORK_PANEL_TAB_INSPECTION_ID};
+use semio_framework_plugin::{BuiltNode, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiValue};
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 
 //#region 🔖️Constants
 pub const CLASHES_KEY: &str = "bim.edit.clashes";
 pub const RULES_KEY: &str = "bim.edit.rules";
 pub const ISSUES_KEY: &str = "bim.edit.issues";
+const CLASHES_TAB_ID: &str = "bim.panel.clashes";
+const RULES_TAB_ID: &str = "bim.panel.rules";
+const ISSUES_TAB_ID: &str = "bim.panel.issues";
 const CLASHES_ROOT: &str = "bim-clashes";
 const RULES_ROOT: &str = "bim-rules";
 const ISSUES_ROOT: &str = "bim-issues";
@@ -29,23 +32,23 @@ pub const STATUSES: [IssueStatus; 4] = [IssueStatus::Open, IssueStatus::InProgre
 //#endregion 🔖️Constants
 
 //#region 🔖️Definitions
-fn definition(label: LocalizedLabel, key: &str) -> PanelTabDefinition {
-    PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label, group: PanelGroup::Details, body_key: Some(key.into()), children: Vec::new() }
+fn definition(id: &str, label: LocalizedLabel, key: &str) -> PanelTabDefinition {
+    PanelTabDefinition { kind: PanelTabKind::App(id.into()), label, group: PanelGroup::Details, body_key: Some(key.into()), children: Vec::new() }
 }
 
 /// 🧱️ The clash panel tab, stitched into the app manifest by `create_bim_app`.
 pub fn clashes_definition() -> PanelTabDefinition {
-    definition(BimLabels::localized(|labels| labels.panel_clashes), CLASHES_KEY)
+    definition(CLASHES_TAB_ID, BimLabels::localized(|labels| labels.panel_clashes), CLASHES_KEY)
 }
 
 /// 🧱️ The rules panel tab.
 pub fn rules_definition() -> PanelTabDefinition {
-    definition(BimLabels::localized(|labels| labels.panel_rules), RULES_KEY)
+    definition(RULES_TAB_ID, BimLabels::localized(|labels| labels.panel_rules), RULES_KEY)
 }
 
 /// 🧱️ The issues panel tab.
 pub fn issues_definition() -> PanelTabDefinition {
-    definition(BimLabels::localized(|labels| labels.panel_issues), ISSUES_KEY)
+    definition(ISSUES_TAB_ID, BimLabels::localized(|labels| labels.panel_issues), ISSUES_KEY)
 }
 //#endregion 🔖️Definitions
 

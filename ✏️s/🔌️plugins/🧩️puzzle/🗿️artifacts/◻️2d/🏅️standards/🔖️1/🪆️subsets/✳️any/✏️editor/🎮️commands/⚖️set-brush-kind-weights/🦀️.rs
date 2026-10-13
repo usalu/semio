@@ -1,7 +1,7 @@
 //! 🖌️ `set-brush-kind-weights` command.
 
 use crate::editor::puzzle2d::{puzzle2d_kind_ids, puzzle2d_window_and_measures_scope, Puzzle2dActionCtx};
-use semio_framework_pack_json::{json,Value,Object};
+use semio_framework_pack_json::{json,Value};
 use std::collections::BTreeMap;
 
 pub fn puzzle2d_uniform_kind_weights(ids: &[String]) -> BTreeMap<String, f64> {

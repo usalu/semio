@@ -108,10 +108,10 @@ fn removing_each_archive_member_undoes_to_its_exact_original_position() {
     let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for entry in &snapshot.entries {
         let mutation = ZipMutation::RemoveEntry(crate::schema::mutations::remove_entry::RemoveEntry { name: entry.name.clone() });
-        let next = protocol::apply_diff(&mutation.diff(&snapshot).diff(), &snapshot).unwrap();
+        let next = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
         let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1);
-        assert_eq!(protocol::apply_diff(&inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
+        assert_eq!(protocol::apply_diff(inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
     }
 }
 
@@ -124,7 +124,7 @@ fn archive_insertions_use_the_neutral_following_member_anchor() {
     let mutation = ZipMutation::AddEntry(crate::schema::mutations::add_entry::AddEntry { entry, before: Some(row["insertion"]["before"].as_str().unwrap().into()) });
     assert_eq!(ZipMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     assert_eq!(ZipMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-    let next = protocol::apply_diff(&mutation.diff(&snapshot).diff(), &snapshot).unwrap();
+    let next = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
     let mut expected = row["snapshot"].clone();
     expected["entries"].as_array_mut().unwrap().insert(row["insertion"]["index"].as_u64().unwrap() as usize, row["insertion"]["entry"].clone());
     let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&next)).unwrap();
@@ -167,7 +167,7 @@ fn cp437_comment_edit_promotes_saves_reopens_and_undoes_exactly() {
     let emit = edit_node(&source, COMMENT_NODE_ID, "edited 🎒", &text_revision(&source.comment)).unwrap();
     let mutation = emit.artifact_mutations.into_iter().next().expect("comment mutation");
     assert_eq!(mutation, ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "edited 🎒".into(), comment_utf8: true }));
-    let next = protocol::apply_diff(&mutation.diff(&source).diff(), &source).unwrap();
+    let next = protocol::apply_diff(mutation.diff(&source).diff(), &source).unwrap();
     let encoded = crate::standards::v2_0::subsets::base::io::encode_zip(&next).unwrap();
     let oracle = zip::ZipArchive::new(std::io::Cursor::new(&encoded)).unwrap();
     assert_eq!(oracle.comment(), "edited 🎒".as_bytes());
@@ -175,7 +175,7 @@ fn cp437_comment_edit_promotes_saves_reopens_and_undoes_exactly() {
     assert_eq!(reopened, next);
 
     let inverse = mutation.inverse(&source).expect("valid retained mutation inverse fixture").into_iter().next().expect("comment inverse");
-    let restored = protocol::apply_diff(&inverse.diff(&reopened).diff(), &reopened).unwrap();
+    let restored = protocol::apply_diff(inverse.diff(&reopened).diff(), &reopened).unwrap();
     let restored_bytes = crate::standards::v2_0::subsets::base::io::encode_zip(&restored).unwrap();
     let restored_oracle = zip::ZipArchive::new(std::io::Cursor::new(&restored_bytes)).unwrap();
     assert_eq!(restored_oracle.comment(), &[0x82]);
@@ -270,25 +270,25 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
     let row = fixture();
     let original: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let name = row["rename"]["name"].as_str().unwrap();
     let value = row["rename"]["value"].as_str().unwrap();
     let arguments = semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(entry_node_id(name))), ("value".into(), semio_framework_value::DslValue::String(value.into())), ("revision".into(), semio_framework_value::DslValue::String(text_revision(name)))]);
     let meta = artifact_app_laws::meta("local");
-    app.handle_action("set-node", Some(&arguments), &meta).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-node", Some(&arguments), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
     let mut expected = original.clone();
     expected.entries[0].name = value.into();
     assert_eq!(app.snapshot().unwrap(), expected);
-    artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), original);
-    artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), expected);
     let saved = <ZipSnapshot as store::ArtifactPack>::encode_pack(&expected);
     assert_eq!(<ZipSnapshot as store::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 /// ⚖️ LAW (agent lane, ticket 26/09/23 G12 session 14c): an agent's archive rename without a `revision` is admitted against the
@@ -303,9 +303,9 @@ async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Muta
     let row = fixture();
     let original: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let registered = definition.clone();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition: registered, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition: registered, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let name = row["rename"]["name"].as_str().unwrap();
     let value = row["rename"]["value"].as_str().unwrap();
     let address = |revision: Option<String>| {
@@ -314,12 +314,12 @@ async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Muta
         )
     };
     assert_eq!(agent_target_revision(&original, &address(None)).unwrap(), Some(text_revision(name)), "the fill is the token the draft binding carries");
-    let omitted = artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None), &view).await.expect("the agent lane admits an omitted revision");
-    let bound = artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name))), &view).await.expect("the draft binding's revision");
+    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None), &view, &mut identity).await).expect("the agent lane admits an omitted revision");
+    let bound = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name))), &view, &mut identity).await).expect("the draft binding's revision");
     assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
-    assert!(artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale"))), &view).await.is_err(), "a stale token is refused on the agent lane too");
-    assert!(app.handle_action("set-node", Some(&address(None)), &artifact_app_laws::meta("local")).await.is_err(), "the shell lane still requires the draft binding's revision");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale"))), &view, &mut identity).await).is_err(), "a stale token is refused on the agent lane too");
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-node", Some(&address(None)), &artifact_app_laws::meta("local"), &mut identity).await).is_err(), "the shell lane still requires the draft binding's revision");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -345,10 +345,10 @@ async fn iso_archive_draft_uses_the_registered_retained_factory() {
 #[test]
 fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revision() {
     use protocol::OpBinary;
-    use semio_framework_job::{Generation, InteractiveJob, Operation, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
+    use semio_framework_job::{Generation, InteractiveJob, JobOutcomeBorrow, Operation, OperationId, RevisionId, StepBudget, StepContext};
     use semio_framework_plugin::action_bus::{ActionBus, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
     use semio_framework_plugin::app::{AppOperationContext, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ChildContentView, InteractionHoverState};
-    use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
+    use semio_framework_plugin::retained_command::{ArtifactOwnedContextHandle, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
     use semio_framework_plugin::{EditorApp, HistoryView};
     use semio_s_artifact_stdio_contract::editing::{BoundedNativeEditToolJobFactory, BoundedNativeEditingEditor};
     use std::sync::Arc;
@@ -382,15 +382,15 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
                 history: Arc::new(HistoryView::empty()),
                 interaction_state: Arc::new(Default::default()),
                 interaction_hover: Arc::new(InteractionHoverState::new()),
-                context: Some(Arc::new(ArtifactOwnedToolJobContext::new(
+                context: Some(ArtifactOwnedContextHandle::admit(ArtifactOwnedToolJobContext::new(
                     7,
                     None,
                     revision,
                     0,
                     0,
                     ArtifactOwnedToolJobSnapshots { children: Arc::new(ChildContentView::EMPTY), draft: Arc::new(Default::default()), transient: Arc::new(Default::default()), window_config: None, window_transient: None },
-                ))),
-                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "zip-replay".into(), operation_id: 41, generation: 3, canonical_base_revision: revision, authoring_seed: "authoring-seed-test".into() },
+                ), semio_s_artifact_stdio_contract::testing::unbounded_grant()).0),
+                operation: AppOperationContext { app_instance_id: 7, parent_document_id: "zip-replay".into(), operation_id: 41, generation: 3, canonical_base_revision: revision, authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() },
                 completion,
             },
             Editor::command_id,
@@ -398,11 +398,6 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
             Editor::NATIVE_MAXIMUM_WORK_ITEMS,
             Editor::native_edit_work("set-node"),
         )
-    };
-    let retire = |payload: &mut semio_framework_job::RetainedJobPayload| {
-        while !payload.terminal_is_empty() {
-            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-        }
     };
     let completion = ArtifactToolCompletion::<App>::test_new();
     let consumer = completion.clone();
@@ -412,21 +407,19 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
     let mut sequence = 0;
     let mut saved = None;
     for _ in 0..64 {
-        let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-        match original.job.step(&mut cx) {
-            StepOutcome::PreviewReady(mut value) => retire(&mut value),
-            StepOutcome::CheckpointReady(mut value) => {
-                let bytes = value.state.single_page().unwrap();
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
+        match original.job.step(&mut cx).expect("ZIP resolver step") {
+            Some(JobOutcomeBorrow::PreviewReady { .. }) | Some(JobOutcomeBorrow::Yield { .. }) | None => {}
+            Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => {
+                let bytes = state.single_page().unwrap();
                 if bytes.get(5) == Some(&1) && bytes.get(56) == Some(&1) {
                     saved = Some(bytes.to_vec());
                 }
-                retire(&mut value.state);
                 if saved.is_some() {
                     break;
                 }
             }
-            StepOutcome::Yield => {}
-            _ => panic!("ZIP resolver must yield a checkpoint before completion"),
+            Some(other) => panic!("ZIP resolver must yield a checkpoint before completion: {other:?}"),
         }
     }
     let saved = saved.expect("checkpoint after exactly one member");
@@ -435,7 +428,7 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
         if original.job.terminal_is_empty() {
             break;
         }
-        let _ = original.job.close_step(1, usize::MAX);
+        let _ = original.job.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());
     }
     assert!(original.job.terminal_is_empty());
     assert!(consumer.test_take_emit().unwrap().is_none());
@@ -449,29 +442,24 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
         let mut completed = false;
         let mut faulted = false;
         for _ in 0..96 {
-            let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
-            match resumed.job.step(&mut cx) {
-                StepOutcome::PreviewReady(mut value) => retire(&mut value),
-                StepOutcome::CheckpointReady(mut value) => {
-                    let bytes = value.state.single_page().unwrap();
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
+            match resumed.job.step(&mut cx).expect("ZIP resumed step") {
+                Some(JobOutcomeBorrow::PreviewReady { .. }) | Some(JobOutcomeBorrow::Yield { .. }) | None => {}
+                Some(JobOutcomeBorrow::CheckpointReady { state, .. }) => {
+                    let bytes = state.single_page().unwrap();
                     if bytes.get(5) == Some(&1) {
                         assert_ne!(bytes.get(56), Some(&1), "resumed work must not rescan the first member");
                     }
-                    retire(&mut value.state);
                 }
-                StepOutcome::Complete(mut value) => {
-                    retire(&mut value.state);
-                    retire(&mut value.output);
+                Some(JobOutcomeBorrow::Complete { .. }) => {
                     completed = true;
                     break;
                 }
-                StepOutcome::Fault(mut value) => {
-                    retire(&mut value.detail);
+                Some(JobOutcomeBorrow::Fault { .. }) => {
                     faulted = true;
                     break;
                 }
-                StepOutcome::Yield => {}
-                StepOutcome::Cancelled => panic!("uncancelled ZIP resume"),
+                Some(JobOutcomeBorrow::Cancelled { .. }) => panic!("uncancelled ZIP resume"),
             }
         }
         assert_eq!(completed, should_complete);
@@ -486,7 +474,7 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
             if resumed.job.terminal_is_empty() {
                 break;
             }
-            let _ = resumed.job.close_step(1, usize::MAX);
+            let _ = resumed.job.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());
         }
         assert!(resumed.job.terminal_is_empty());
     }

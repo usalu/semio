@@ -198,7 +198,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
 
     /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Vdi3805Snapshot>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
-        let base = doc.snapshot.clone();
+        let _base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media)
     }
     //#endregion ðï¸MediaPorts
@@ -232,7 +232,7 @@ impl semio_framework::ToolJobFactory for Vdi3805BoundedCommandJobFactory {
         semio_framework::ToolJobFactory::payload_schema_id(&self.0)
     }
 
-    fn classification(&self) -> semio_framework_plugin::InteractiveJobClassification {
+    fn classification(&self) -> InteractiveJobClassification {
         semio_framework::ToolJobFactory::classification(&self.0)
     }
 
@@ -258,7 +258,7 @@ impl semio_framework::ToolJobFactory for Vdi3805BoundedCommandJobFactory {
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Vdi3805BoundedCommandJobFactory {
     type Owner = semio_framework_plugin::EditorApp<Vdi3805PlayApp>;
     const TOOL_IDS: &'static [&'static str] = crate::app_surface::NORM_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = <Vdi3805PlayApp as semio_framework_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = <Vdi3805PlayApp as ArtifactEditor>::DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = crate::app_surface::NORM_PUBLICATION_CONTRACTS;
 }
 

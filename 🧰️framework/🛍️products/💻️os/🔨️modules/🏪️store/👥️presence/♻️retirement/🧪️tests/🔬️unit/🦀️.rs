@@ -137,11 +137,12 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     };
     let mut job=Some(job);let mut params=Some(params);let original=params.as_ref().unwrap();
     let now=original.now_us;let deadline=now().expect("original capture clock")+original.config.step_budget_us;
+    let admission_grant=RetainedCloneGrant { maximum_copy_bytes: 1 << 20, ..CLOSE_GRANT };
     let mut admission_receipt=RetainedCloneProgress::default();
-    let mut admission=semio_framework_job::WorkerJobAdmissionContext::new(original.operation,original.generation,semio_framework_job::StepBudget::new(original.config.fuel_per_step,deadline,CLOSE_GRANT),now,&mut admission_receipt).unwrap();
+    let mut admission=semio_framework_job::WorkerJobAdmissionContext::new(original.operation,original.generation,semio_framework_job::StepBudget::new(original.config.fuel_per_step,deadline,admission_grant),now,&mut admission_receipt).unwrap();
     let(admitted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::MountedWorkerJobSession::try_admit_owned(&mut job,&mut params,&mut admission));
     let(mut session,receipt)=admitted.unwrap().expect("original fixture grant funds exact mounted capture admission");drop(admission);
-    assert!(job.is_none()&&params.is_none());assert_eq!(receipt,admission_receipt);assert!(receipt.fits(CLOSE_GRANT));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
+    assert!(job.is_none()&&params.is_none());assert_eq!(receipt,admission_receipt);assert!(receipt.fits(admission_grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
     let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
     for _ in 0..100_000 {
         session.pump_one(&pool, semio_framework_async::Lane::Interactive, CLOSE_GRANT).unwrap_or_else(|_| panic!("mounted Presence capture must pump its exact worker"));
@@ -181,7 +182,7 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         if let Some(step) = returned {
             assert!(step.progress().fits(CLOSE_GRANT));
-            assert_eq!(step.progress(), RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<semio_framework_async::CancelToken>(), ..Default::default() });
+            assert_eq!(step.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
             assert!(matches!(step, RetainedCloneStep::Complete(_)));
             cancel_handbacks += 1;
         } else {

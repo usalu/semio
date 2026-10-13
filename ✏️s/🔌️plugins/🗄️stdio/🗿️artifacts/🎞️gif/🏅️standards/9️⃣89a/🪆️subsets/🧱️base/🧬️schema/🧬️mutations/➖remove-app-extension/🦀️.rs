@@ -15,7 +15,7 @@ pub struct RemoveAppExtension {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveAppExtension {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "app-extension", kind: "remove-app-extension", record: "RemoveAppExtension" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(GifDiff { app_extensions: Some(GifAppExtensionsDiff { removed: vec![*index], ..Default::default() }), ..Default::default() })
     }

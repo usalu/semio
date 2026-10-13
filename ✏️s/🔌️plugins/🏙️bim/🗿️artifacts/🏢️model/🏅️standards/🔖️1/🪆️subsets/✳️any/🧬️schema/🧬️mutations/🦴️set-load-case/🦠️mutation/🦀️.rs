@@ -1,6 +1,5 @@
 //! 🦴️ Authored set-load-case semantic leaf.
-use crate::{LoadCase, LoadCasePatch, ModelDiff, ModelMutation, ModelSnapshot};
-use crate::{StructuralLocation, Restraints, Point3};
+use crate::{LoadCasePatch, ModelDiff, ModelMutation, ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

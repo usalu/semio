@@ -414,7 +414,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation>
         if lane != store::HistoryLane::Document {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fem2d-artifact-lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Fem2dArtifactPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Fem2dArtifactPreparation>(), depth: 1 })
     }
 
     fn begin(
@@ -659,7 +659,7 @@ pub struct Fem2dPlayApp;
 
 impl ArtifactEditor for Fem2dPlayApp {
     /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         crate::editor::fem2d::commands::gumball::fem_fault_notices()
     }
 
@@ -1113,7 +1113,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         doc: &ArtifactView<'_, Fem2dSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Fem2dMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -1158,7 +1158,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         }
     }
 
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view: Option<&ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         crate::editor::fem2d::session::reconcile(doc)
     }
 

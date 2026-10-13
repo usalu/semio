@@ -16,7 +16,7 @@ async fn presentation_deck_materializes() {
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
             transaction: None,
-        })
+        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     assert_eq!(crate::presentation_working_scene(&store.snapshot().expect("projection")).1.len(), 1);
@@ -33,7 +33,7 @@ async fn document_text_round_trip_with_operation_applied() {
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
             transaction: None,
-        })
+        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     test_support::assert_document_text_round_trip(&store).await;

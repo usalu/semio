@@ -121,14 +121,14 @@ struct SemioMeshSetVertexWork {
 
 fn resolve_unique_mesh_target(snapshot: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> Result<(usize, usize), Fault> {
     let mut mesh_index = None;
-    for (index, mesh) in snapshot.meshes.iter().enumerate().filter(|(_, mesh)| mesh.id == mesh_id) {
+    for (index, _mesh) in snapshot.meshes.iter().enumerate().filter(|(_, mesh)| mesh.id == mesh_id) {
         if mesh_index.replace(index).is_some() {
             return Err(Fault::from(format!("mesh id '{mesh_id}' is ambiguous")));
         }
     }
     let mesh_index = mesh_index.ok_or_else(|| Fault::from(format!("mesh '{mesh_id}' does not exist")))?;
     let mut primitive_index = None;
-    for (index, primitive) in snapshot.meshes[mesh_index].primitives.iter().enumerate().filter(|(_, primitive)| primitive.id == primitive_id) {
+    for (index, _primitive) in snapshot.meshes[mesh_index].primitives.iter().enumerate().filter(|(_, primitive)| primitive.id == primitive_id) {
         if primitive_index.replace(index).is_some() {
             return Err(Fault::from(format!("primitive id '{primitive_id}' is ambiguous in mesh '{mesh_id}'")));
         }
@@ -169,7 +169,7 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.semio.mesh.set-vertex.command-mismatch"));
         };
         let text = args.mesh_id.len().saturating_add(args.primitive_id.len());
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: text, capacity_bytes: text.saturating_add(std::mem::size_of::<SemioMeshMutation>()), release_bytes: 0, depth: 1 })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: text, capacity_bytes: text.saturating_add(size_of::<SemioMeshMutation>()), release_bytes: 0, depth: 1 })
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioMeshEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioMeshEditor>>, Fault> {

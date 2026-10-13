@@ -77,7 +77,7 @@ use semio_framework_plugin::CLEAR_SELECTION_ACTION_ID;
 use semio_framework_plugin::INTERACTION_HOVER_ACTION_ID;
 use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_plugin::{AppOperationContext, ArtifactToolPublicationContract, ArtifactToolPublicationLane};
-use serde_json::{json, Value};
+#[cfg(test)] use serde_json::{json, Value};
 use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
 
@@ -172,14 +172,14 @@ impl LayoutInteractionSnapshot {
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` (all granularity `"element"`) —
 /// shared by the canvas pointer commands (wrapped into a `Effect::DispatchAction`) and any
 /// document-tree row whose click should select a real canvas element (wrapped into an `ActionDescriptor`).
-pub fn layout_select_action_args(ids: &[String], merge: &str) -> semio_framework::DslValue {
-    let targets: Vec<semio_framework::DslValue> = ids.iter().map(|id| semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
+pub fn layout_select_action_args(ids: &[String], merge: &str) -> DslValue {
+    let targets: Vec<DslValue> = ids.iter().map(|id| semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })).collect();
     semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "targets": semio_framework_pack_json::to_json_string(&targets), "merge": merge, "method": "pick" })
 }
 
 /// 🐁️ Builds `interactionHover`'s JSON args for the `"pointer"` channel — `id: None` clears hover.
-pub fn layout_hover_action_args(id: Option<&str>) -> semio_framework::DslValue {
-    let targets: Vec<semio_framework::DslValue> = id.map(|id| vec![semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })]).unwrap_or_default();
+pub fn layout_hover_action_args(id: Option<&str>) -> DslValue {
+    let targets: Vec<DslValue> = id.map(|id| vec![semio_framework::dsl_value!({ "granularity": LAYOUT_GRANULARITY_ELEMENT, "id": id })]).unwrap_or_default();
     semio_framework::dsl_value!({ "domainId": LAYOUT_INTERACTION_ELEMENTS, "channel": "pointer", "targets": semio_framework_pack_json::to_json_string(&targets) })
 }
 
@@ -237,7 +237,7 @@ fn layout_authoring_surface(surface: Option<&ContextMenuSurfaceTarget>) -> bool 
     surface.map_or(true, |target| target.surface_id != LAYOUT_PLAY_SURFACE_PREVIEW)
 }
 
-fn layout_context_menu_item(id: &str, label: &str, icon: &str, action: &str, args: Option<semio_framework::DslValue>, destructive: bool, disabled: bool) -> ContextMenuItemSpec {
+fn layout_context_menu_item(id: &str, label: &str, icon: &str, action: &str, args: Option<DslValue>, destructive: bool, disabled: bool) -> ContextMenuItemSpec {
     ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
@@ -635,10 +635,10 @@ impl LayoutWindowWork {
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<LayoutPlayApp>> for LayoutWindowWork {
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str { self.tool_id }
 
@@ -656,7 +656,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>,
-    _cx: &mut semio_framework_job::StepContext<'_>,
+    _cx: &mut StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<LayoutPlayApp>>, Fault> {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id {
@@ -1536,7 +1536,7 @@ impl ArtifactEditor for LayoutPlayApp {
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let mut engagements = Self::window_engagements(doc, cfg, view_state);
         let Some(window_id) = view_state.window_id.as_ref() else { return HashMap::new() };
@@ -1578,7 +1578,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::LAYOUT_DIALECT)
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),
-                label: semio_framework_ui_locale::LocalizedLabel::native("Layout", "Layout"),
+                label: LocalizedLabel::native("Layout", "Layout"),
                 source_format: "layout.layout".into(),
                 component_kind: "layout".into(),
                 dimension: "2d".into(),

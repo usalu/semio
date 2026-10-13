@@ -35,7 +35,7 @@ use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff,
 use crate::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
 use crate::StepSnapshot;
 
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 
 //#region 🔖️Mutations
 #[path = "🧭️edit-rules/🦀️.rs"]

@@ -149,7 +149,7 @@ pub use semio_framework_plugin::ui_node_list;
 /// path for an example switch, a JSON load or an import: the whole document is load content, never mutation rows and never
 /// a before/after diff. The spr is a fresh, edit-free op-log for `document` (`store::empty_document_spr`).
 pub fn reset_document_effect(document: &RemodelingSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <RemodelingSnapshot as store::ArtifactPack>::encode_pack(document);
+    let pack = <RemodelingSnapshot as ArtifactPack>::encode_pack(document);
     let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("remodeling", REMODELING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
@@ -479,7 +479,7 @@ mod args_bridge {
             "setCamera" => {
                 let nested = field(args, "camera");
                 let source = if nested.is_some() { nested } else { args };
-                let default = crate::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig::default().camera;
+                let default = model::windows::model::config::RemodelingModelWindowConfig::default().camera;
                 RemodelingCommand::SetCamera(set_camera::SetCamera {
                     camera: store::Viewport3dOrbit {
                         position: vec3(source, "position").unwrap_or(default.position),
@@ -709,7 +709,7 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
             let (emit, next) = imported?;
             let window_transient = match next == resting {
                 true => Vec::new(),
-                false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(crate::editor::remodeling::commands::import_video_frame_payload::import_window_required)?, next)?],
+                false => vec![transient::addressed(input.context.and_then(|context| context.view_state.as_ref()).ok_or_else(import_video_frame_payload::import_window_required)?, next)?],
             };
             self.completed = true;
             return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { window_transient, ..Default::default() } });
@@ -786,7 +786,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedC
 
 impl ArtifactEditor for RemodelingPlayApp {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         use semio_framework_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
             [

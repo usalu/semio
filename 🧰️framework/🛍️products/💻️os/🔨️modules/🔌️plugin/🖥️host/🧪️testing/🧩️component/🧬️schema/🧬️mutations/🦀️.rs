@@ -2,7 +2,8 @@
 use crate::{Snapshot,Diff};
 use semio_framework_os_kernel::{os_spr as protocol,os_store as store};
 use semio_framework_value_derive::{ToValue,FromValue};
-#[derive(Clone,Debug,PartialEq,ToValue,FromValue)]
+#[derive(Clone,Debug,PartialEq,ToValue,FromValue,semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Mutation {}
 impl protocol::Mutation<Snapshot> for Mutation {
     type Diff=Diff;

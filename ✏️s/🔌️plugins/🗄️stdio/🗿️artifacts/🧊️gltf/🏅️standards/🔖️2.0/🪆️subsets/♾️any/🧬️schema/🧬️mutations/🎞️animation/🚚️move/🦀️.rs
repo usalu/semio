@@ -36,7 +36,7 @@ pub fn inverse(p: &GltfMoveAnimationPayload, base: &GltfSnapshot) -> Vec<super::
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::move_animation::mutation(super::move_animation::GltfMoveAnimationPayload { index: p.position, position: p.index })]
+    vec![mutation(GltfMoveAnimationPayload { index: p.position, position: p.index })]
 }
 
 //#region 🧬️DirectMutation
@@ -56,7 +56,7 @@ pub fn mutation(payload: GltfMoveAnimationPayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveAnimationMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "animation", kind: "move-animation", record: "MovedAnimation" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

@@ -243,7 +243,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PlaygroundBuilderFacets {
         construction: derived_construction::PlaygroundBuilderConstruction,
         analysis: derived_analysis::PlaygroundAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::PlaygroundComposerComposition,
+        composition: derived_composition::PlaygroundComposerComposition,
     }
     builder: PlaygroundBuilder,
     analyzer: PlaygroundAnalyzer,

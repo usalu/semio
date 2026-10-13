@@ -2,7 +2,7 @@
 
 use crate::document::AnnexChoice;
 use crate::{
-    Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition,
+    Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition,
     TightnessClass,
 };
 use framework_schema::ArtifactSchema;
@@ -247,7 +247,7 @@ impl En1992Snapshot {
     /// 🗜️ Failing prestressed member — transfer stress / losses exceed §5.10 limits.
 
     /// 🧵 Prestressed beam PS1 subject (used by compliant/failing prestressed examples).
-    pub fn prestressed_beam_member() -> crate::RcMember {
+    pub fn prestressed_beam_member() -> RcMember {
         use crate::*;
         RcMember {
             id: "beam-PS1".into(),

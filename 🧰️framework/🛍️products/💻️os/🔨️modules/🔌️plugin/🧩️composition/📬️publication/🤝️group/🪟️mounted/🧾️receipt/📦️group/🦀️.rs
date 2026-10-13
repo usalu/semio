@@ -158,7 +158,7 @@ impl MountedGroupReceipt {
     /// 🍂️ Borrows the next exact original field or empty-vector backing retirement demand.
     pub(crate) fn next_close_byte_demand(&self)->usize{if self.transferred{return 0;}match self.close_phase{0=>self.mutations.last().map_or(self.mutations.capacity()*size_of::<KernelMutation>(),|mutation|Self::mutation_demand(mutation,self.close_field)),1=>self.undo_ids.last().map_or(self.undo_ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity()),2=>self.inverses.last().map_or(self.inverses.capacity()*size_of::<InverseMutation>(),|inverse|Self::inverse_demand(inverse,self.close_field)),3=>self.member_edits.last().map_or(self.member_edits.capacity()*size_of::<EditRef>(),|edit|edit.edit_id.capacity()),4=>self.command_children.last().map_or(self.command_children.capacity()*size_of::<String>(),Self::text_demand),5=>self.invocation.next_close_byte_demand(),6=>self.parent.next_close_byte_demand(),7=>self.child.next_close_byte_demand(),8=>self.edit.next_close_byte_demand(),_=>0}}
     /// 📏️ Quotes the fixed causal field path or the selected original byte cursor.
-    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if (5..=8).contains(&self.close_phase) {
             let owner = match self.close_phase { 5 => &self.invocation, 6 => &self.parent, 7 => &self.child, _ => &self.edit };
@@ -170,7 +170,7 @@ impl MountedGroupReceipt {
             1 | 3 | 4 => 2,
             _ => 1,
         };
-        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand(), depth, ..Default::default() })
+        Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth, ..Default::default() })
     }
     /// ♻️ Closes one retained causal field per turn and funds every indivisible allocation before taking it.
     pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
@@ -196,9 +196,11 @@ impl Drop for MountedGroupReceipt{fn drop(&mut self){assert!(std::thread::panick
 include!("🧪️tests/🦀️.rs");
 
 mod command {use super::*;include!("📚️command/🦀️.rs");}
-pub(crate) use command::{PagedCommandLog,CommandAppend,CommandAppendRefusal,CommandPrune,MountedCommandEntry,MountedCommandEntrySource,MountedCommandEntryRefusal};
+pub(crate) use command::{PagedCommandLog, CommandAppend, CommandAppendRefusal, CommandPrune, MountedCommandEntry, MountedCommandEntrySource};
+#[cfg(test)] pub(crate) use command::{MountedCommandEntryRefusal};
 mod member { use super::*; include!("👤️member/🦀️.rs"); }
-pub(crate) use member::{MountedMemberReceipt,MountedMemberReceiptSource,MountedMemberReceiptOutput};
+pub(crate) use member::{MountedMemberReceipt, MountedMemberReceiptSource};
+#[cfg(test)] pub(crate) use member::{MountedMemberReceiptOutput};
 
 #[cfg(test)]
 pub(crate) use member::{MemberReceiptOperation,MemberReceiptPublication,member_receipt_fixture,member_receipt_source};

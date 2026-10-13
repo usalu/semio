@@ -15,4 +15,3 @@ impl protocol::OpBinary for ShootingPresenceMutation {
     }
 }
 }
-pub use mutations_codec::*;

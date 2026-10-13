@@ -28,7 +28,7 @@ pub(crate) mod context {
     impl Drop for SequenceApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -151,8 +151,8 @@ pub(crate) mod context {
     }
 
     pub async fn dispatch_addressed(app: &mut SequenceApp, command: SequenceCommand, meta: &semio_framework_plugin::ActionMeta) -> InvocationResult {
-        let mut result = app.0.dispatch_typed(command, meta).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SEQUENCE_TEST_INSTANCE).await.expect("settle the typed operation");
+        let mut result = app.0.dispatch_typed(command, meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SEQUENCE_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
     }
@@ -181,7 +181,7 @@ pub(crate) mod context {
         let targets = serde_json::to_string(&target_list).expect("targets json");
         let admitted = app
             .0
-            .handle_action("interactionSelect", Some(semio_framework_plugin::dsl_value!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })).as_ref(), &meta("test"))
+            .handle_action("interactionSelect", Some(semio_framework_plugin::dsl_value!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })).as_ref(), &meta("test"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
             .await
             .expect("interactionSelect");
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect admission settles");
@@ -213,9 +213,9 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 2);
     context::dispatch(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 })).await;
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 3, "addStep must land one step in the content child");
-    settle_history_verb(&mut app.0, "undo", receiver).await;
+    settle_history_verb(&mut app.0, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 2, "undo must retire the child-lane group");
-    settle_history_verb(&mut app.0, "redo", receiver).await;
+    settle_history_verb(&mut app.0, "redo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(live_host_snapshot(&app).await.steps.len(), 3, "redo must reapply the child-lane group");
 }
 
@@ -244,18 +244,18 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     // lane and leaves the parent's composed handle untouched, so a parent-side probe can never move.
     let genesis = live_host_snapshot(&instance_a).await.steps.iter().map(|step| (step.id.clone(), step.x)).collect::<Vec<_>>();
     let receiver = meta("actor-a").instance_id;
-    instance_a.0.dispatch_typed(SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }), &meta("actor-a")).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a.0, receiver).await.expect("a's edit publishes");
-    instance_b.0.dispatch_typed(SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }), &meta("actor-b")).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b.0, receiver).await.expect("b's edit publishes");
-    instance_a.tick_backbone().await.expect("a folds b's events");
-    instance_b.tick_backbone().await.expect("b folds a's events");
+    instance_a.0.dispatch_typed(SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
+    instance_b.0.dispatch_typed(SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b's edit publishes");
+    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
     let positions = |snapshot: &SequenceHostSnapshot| snapshot.steps.iter().map(|step| (step.id.clone(), step.x)).collect::<Vec<_>>();
     assert_eq!(positions(&*live_host_snapshot(&instance_a).await), positions(&*live_host_snapshot(&instance_b).await), "both instances must converge on the same snapshot");
-    let admitted = instance_a.0.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
+    let admitted = instance_a.0.handle_action("commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a commits a checkpoint");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut instance_a.0, receiver).await.expect("a's checkpoint publication settles");
-    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's checkpoint publication settles");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's checkpoint");
     assert_eq!(positions(&*live_host_snapshot(&instance_a).await), positions(&*live_host_snapshot(&instance_b).await), "a replicated checkpoint keeps both instances converged");
     assert_ne!(positions(&*live_host_snapshot(&instance_a).await), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     // 🔌️ Both paired ends have to detach before either guard closes: a live backbone end blocks the

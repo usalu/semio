@@ -1,2 +1,2 @@
 semio playbook.playbook.dsl v1
-schema=playbook.program id=facade-generator version="1" title="Facade Panel Generator" flow=child_id=playbook-demo-flow target="playbook-demo-flow!s.stdio.semio@v1/flow"
+schema=playbook.program id=facade-generator version="1" title="Facade Panel Generator" flow=child_id=playbook-demo-flow target=artifact-id=playbook-demo-flow artifact-kind=s.stdio.semio standard=v1 subset=flow

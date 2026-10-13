@@ -8,11 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::JackSnapshot;
 use semio_framework_diagnostic::TextError;
-use semio_framework_diagnostic::TextSpan;
 use store::ArtifactDsl;
-use store::PackDecodeOptions;
-use store::PackEncodeOptions;
-use store::PackError;
 
 #[path = "🧬️records/🦀️.rs"]
 mod records;
@@ -24,9 +20,9 @@ pub(crate) fn print_pack_record_text(snapshot: &JackSnapshot) -> String {
 }
 
 /// 📖️ Parses a derived text body back through `JackPackRecord`, with the same decode steps as the pack.
-pub(crate) fn parse_pack_record_text(body: &str) -> Result<JackSnapshot, semio_framework_diagnostic::TextError> {
+pub(crate) fn parse_pack_record_text(body: &str) -> Result<JackSnapshot, TextError> {
     let record = semio_framework_dsl_record::parse(body, &JackPackRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-    let mut snapshot = JackPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let mut snapshot = JackPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
     crate::attach_bundled_content(&mut snapshot);
     Ok(snapshot)
 }

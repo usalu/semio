@@ -16,12 +16,12 @@ pub struct InsertElementPayload {
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for InsertElementPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "element", kind: "insert-element", record: "InsertedElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { parent, index, node } = self;
         protocol::MutationOutcome::new(diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { children: Some(SvgChildrenDiff { added: vec![SvgChildAdded { index: *index, item: node.clone() }], ..Default::default() }), ..Default::default() })))
     }
 
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
         let Self { parent, index, .. } = self;
         Ok(vec![super::SvgMutation::RemoveElement(super::RemoveElementPayload { parent: parent.clone(), index: *index })])
     }

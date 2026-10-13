@@ -25,7 +25,6 @@ use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactReta
 use semio_framework_plugin::AppIo;
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactKindSpec;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
 use semio_framework_plugin::ArtifactPresentation;
@@ -295,7 +294,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutat
     }
 
     fn begin_demand(&self, _mutation: &Block2dMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Block2dStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Block2dStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation, Block2dMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation, Block2dMutation>)> {

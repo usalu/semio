@@ -100,10 +100,10 @@ impl<'a> DrawingRenamePreparationCursor<'a> {
             if self.comparison.terminal_is_empty() { self.phase = 4; }
             return Ok(DrawingRenamePreparationStep::Pending(step.progress()));
         }
-        if grant.maximum_copy_bytes < std::mem::size_of::<DrawingRenamePlan<'a>>() { return Ok(DrawingRenamePreparationStep::Pending(Default::default())); }
+        if grant.maximum_copy_bytes < size_of::<DrawingRenamePlan<'a>>() { return Ok(DrawingRenamePreparationStep::Pending(Default::default())); }
         let plan = DrawingRenamePlan { disposition: self.disposition.expect("settled Drawing rename disposition"), payload: self.payload.expect("retained Drawing rename payload"), node: self.node };
         self.output = Some(plan);
-        Ok(DrawingRenamePreparationStep::Complete { plan, progress: RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<DrawingRenamePlan<'a>>(), ..Default::default() } })
+        Ok(DrawingRenamePreparationStep::Complete { plan, progress: RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<DrawingRenamePlan<'a>>(), ..Default::default() } })
     }
 
     pub fn take(&mut self) -> Option<DrawingRenamePlan<'a>> {

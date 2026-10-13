@@ -26,13 +26,13 @@ pub struct ArtifactHandle(pub u128);
 /// `BrokerCapabilityGrant.token` gets in `🎠️kernel/🦀️.rs`'s own doc.
 impl semio_framework_value::ToValue for ArtifactHandle {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::String(self.0.to_string())
+        DslValue::String(self.0.to_string())
     }
 }
 impl semio_framework_value::FromValue for ArtifactHandle {
     fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            semio_framework_value::DslValue::String(s) => s.parse().map(ArtifactHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for ArtifactHandle, found {s:?}"))),
+            DslValue::String(s) => s.parse().map(ArtifactHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for ArtifactHandle, found {s:?}"))),
             other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for ArtifactHandle, found {other:?}"))),
         }
     }
@@ -47,13 +47,13 @@ pub struct WindowHandle(pub u128);
 /// decimal-string mirror).
 impl semio_framework_value::ToValue for WindowHandle {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::String(self.0.to_string())
+        DslValue::String(self.0.to_string())
     }
 }
 impl semio_framework_value::FromValue for WindowHandle {
     fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            semio_framework_value::DslValue::String(s) => s.parse().map(WindowHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for WindowHandle, found {s:?}"))),
+            DslValue::String(s) => s.parse().map(WindowHandle).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for WindowHandle, found {s:?}"))),
             other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for WindowHandle, found {other:?}"))),
         }
     }
@@ -71,13 +71,13 @@ pub struct CapabilityToken(pub u128);
 /// decimal-string mirror).
 impl semio_framework_value::ToValue for CapabilityToken {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::String(self.0.to_string())
+        DslValue::String(self.0.to_string())
     }
 }
 impl semio_framework_value::FromValue for CapabilityToken {
     fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         match value {
-            semio_framework_value::DslValue::String(s) => s.parse().map(CapabilityToken).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for CapabilityToken, found {s:?}"))),
+            DslValue::String(s) => s.parse().map(CapabilityToken).map_err(|_| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a u128 decimal string for CapabilityToken, found {s:?}"))),
             other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string for CapabilityToken, found {other:?}"))),
         }
     }
@@ -1397,10 +1397,10 @@ pub fn import_payload_chunks(payload: &str) -> Vec<ImportChunk> {
 /// multi-file pick. Integers are minted as [`Number::UInt`] carriers, never floats: the guest's
 /// [`ImportStaging`] reads `chunk`/`chunkCount` with `DslValue::as_u64`, which a `Float` never answers.
 pub fn import_chunk_arguments(name: &str, chunk: &ImportChunk, fan_out: Option<(usize, usize)>) -> DslValue {
-    let uint = |value: usize| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value as u64));
+    let uint = |value: usize| DslValue::Number(semio_framework_value::Number::UInt(value as u64));
     let mut entries = vec![
-        (IMPORT_ARGUMENT_PAYLOAD.to_string(), semio_framework_value::DslValue::String(chunk.payload.clone())),
-        (IMPORT_ARGUMENT_NAME.to_string(), semio_framework_value::DslValue::String(name.to_string())),
+        (IMPORT_ARGUMENT_PAYLOAD.to_string(), DslValue::String(chunk.payload.clone())),
+        (IMPORT_ARGUMENT_NAME.to_string(), DslValue::String(name.to_string())),
         (IMPORT_ARGUMENT_CHUNK.to_string(), uint(chunk.chunk)),
         (IMPORT_ARGUMENT_CHUNK_COUNT.to_string(), uint(chunk.chunk_count)),
     ];
@@ -1408,7 +1408,7 @@ pub fn import_chunk_arguments(name: &str, chunk: &ImportChunk, fan_out: Option<(
         entries.push((IMPORT_ARGUMENT_INDEX.to_string(), uint(index)));
         entries.push((IMPORT_ARGUMENT_TOTAL.to_string(), uint(total)));
     }
-    semio_framework_value::DslValue::Object(entries)
+    DslValue::Object(entries)
 }
 
 //#region 📥️ImportStaging
@@ -1488,18 +1488,18 @@ impl ImportStaging {
     /// `(name, fan-out, chunk_count)`: a re-pick restarts its run at chunk 0, a chunk the run already admitted is a
     /// retransmission acknowledged at the cursor, any other out-of-order chunk drops the run as a gap.
     pub fn admit_args(&mut self, args: Option<&DslValue>) -> Result<ImportArguments, ImportStagingRefusal> {
-        let Some(semio_framework_value::DslValue::Object(entries)) = args else {
+        let Some(DslValue::Object(entries)) = args else {
             return Ok(ImportArguments::NotAnImport);
         };
         let field = |key: &str| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value);
         let Some(count) = field(IMPORT_ARGUMENT_CHUNK_COUNT) else {
             return Ok(ImportArguments::NotAnImport);
         };
-        let position = |value: Option<&DslValue>| value.and_then(semio_framework_value::DslValue::as_u64).and_then(|value| usize::try_from(value).ok());
+        let position = |value: Option<&DslValue>| value.and_then(DslValue::as_u64).and_then(|value| usize::try_from(value).ok());
         let chunk_count = position(Some(count)).ok_or(ImportStagingRefusal::Envelope)?;
         let chunk = position(field(IMPORT_ARGUMENT_CHUNK)).ok_or(ImportStagingRefusal::Envelope)?;
-        let payload = field(IMPORT_ARGUMENT_PAYLOAD).and_then(semio_framework_value::DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
-        let name = field(IMPORT_ARGUMENT_NAME).and_then(semio_framework_value::DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
+        let payload = field(IMPORT_ARGUMENT_PAYLOAD).and_then(DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
+        let name = field(IMPORT_ARGUMENT_NAME).and_then(DslValue::as_str).ok_or(ImportStagingRefusal::Envelope)?;
         let fan_out = match (field(IMPORT_ARGUMENT_INDEX), field(IMPORT_ARGUMENT_TOTAL)) {
             (None, None) => None,
             (index, total) => match (position(index), position(total)) {
@@ -1515,14 +1515,14 @@ impl ImportStaging {
         }
         let envelope = [IMPORT_ARGUMENT_PAYLOAD, IMPORT_ARGUMENT_NAME, IMPORT_ARGUMENT_CHUNK, IMPORT_ARGUMENT_CHUNK_COUNT, IMPORT_ARGUMENT_INDEX, IMPORT_ARGUMENT_TOTAL];
         let whole = |text: String| {
-            let uint = |value: usize| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value as u64));
-            let mut arguments = vec![(IMPORT_ARGUMENT_PAYLOAD.to_string(), semio_framework_value::DslValue::String(text)), (IMPORT_ARGUMENT_NAME.to_string(), semio_framework_value::DslValue::String(name.to_string()))];
+            let uint = |value: usize| DslValue::Number(semio_framework_value::Number::UInt(value as u64));
+            let mut arguments = vec![(IMPORT_ARGUMENT_PAYLOAD.to_string(), DslValue::String(text)), (IMPORT_ARGUMENT_NAME.to_string(), DslValue::String(name.to_string()))];
             if let Some((index, total)) = fan_out {
                 arguments.push((IMPORT_ARGUMENT_INDEX.to_string(), uint(index)));
                 arguments.push((IMPORT_ARGUMENT_TOTAL.to_string(), uint(total)));
             }
             arguments.extend(entries.iter().filter(|(key, _)| !envelope.contains(&key.as_str())).cloned());
-            ImportArguments::Whole(semio_framework_value::DslValue::Object(arguments))
+            ImportArguments::Whole(DslValue::Object(arguments))
         };
         if chunk_count == 1 {
             return Ok(whole(payload.to_string()));
@@ -2727,7 +2727,7 @@ pub use semio_framework_ui_contract::{PresenceUpdate, UiPatch, UiPatchOp};
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Budget {
-    pub retained: semio_framework_actor::RetainedTurnInput,
+    pub retained: RetainedTurnInput,
     pub fuel: u64,
     pub deadline_ms: u32,
     pub max_effects: u32,
@@ -3555,7 +3555,7 @@ impl<'de> Deserialize<'de> for UiTurnPatches {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TurnResult {
-    pub retained_receipt: semio_framework_actor::RetainedTurnReceipt,
+    pub retained_receipt: RetainedTurnReceipt,
     pub ui_patches: UiTurnPatches,
     pub effects: Vec<Effect>,
     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): render-plane presence derived this turn by the

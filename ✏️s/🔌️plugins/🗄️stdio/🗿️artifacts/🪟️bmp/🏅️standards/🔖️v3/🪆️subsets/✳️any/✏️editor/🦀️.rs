@@ -83,24 +83,24 @@ const STDIO_BMP_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[semio_s_artifact_s
 const STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.bmp.tool-command.v1";
 const STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn bmpEditor_example_snapshot(example_id: &str) -> BmpSnapshot {
+fn bmp_editor_example_snapshot(example_id: &str) -> BmpSnapshot {
     if example_id == crate::examples::demo::ID {
         <BmpSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         BmpSnapshot::default()
     }
 }
-fn bmpEditor_native_command_id(command: &BmpNativeEditCommand) -> &'static str {
+fn bmp_editor_native_command_id(command: &BmpNativeEditCommand) -> &'static str {
     match command {
         BmpNativeEditCommand::PaintIndexedRegion(_) => paint_region::INDEXED_ACTION_ID,
         BmpNativeEditCommand::PaintDirectRegion(_) => paint_region::DIRECT_ACTION_ID,
         BmpNativeEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
-fn bmpEditor_command_id(command: &BmpEditCommand) -> &'static str {
-    editing::snapshot_editing_command_id(command, bmpEditor_native_command_id)
+fn bmp_editor_command_id(command: &BmpEditCommand) -> &'static str {
+    editing::snapshot_editing_command_id(command, bmp_editor_native_command_id)
 }
-fn bmpEditor_native_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BmpNativeEditCommand, Fault> {
+fn bmp_editor_native_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BmpNativeEditCommand, Fault> {
     match action {
         paint_region::INDEXED_ACTION_ID => Ok(BmpNativeEditCommand::PaintIndexedRegion(paint_region::PaintIndexedRegionCommand::from_action(args)?)),
         paint_region::DIRECT_ACTION_ID => Ok(BmpNativeEditCommand::PaintDirectRegion(paint_region::PaintDirectRegionCommand::from_action(args)?)),
@@ -108,13 +108,13 @@ fn bmpEditor_native_command_from_action(action: &str, args: Option<&semio_framew
         _ => Err(Fault::from(format!("action '{action}' is not a BMP editor action"))),
     }
 }
-fn bmpEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BmpEditCommand, Fault> {
-    editing::snapshot_editing_command_from_action(action, args, bmpEditor_native_command_from_action)
+fn bmp_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<BmpEditCommand, Fault> {
+    editing::snapshot_editing_command_from_action(action, args, bmp_editor_native_command_from_action)
 }
-fn bmpEditor_retained_extent(command: &BmpEditCommand, _snapshot: &BmpSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn bmp_editor_retained_extent(command: &BmpEditCommand, _snapshot: &BmpSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, BmpEditCommand::Native(BmpNativeEditCommand::SetActiveExample { .. })).then_some(1)
 }
-fn bmpEditor_retained_reduce(
+fn bmp_editor_retained_reduce(
     command: &BmpEditCommand,
     _snapshot: &BmpSnapshot,
     _config: &NoConfig,
@@ -126,7 +126,7 @@ fn bmpEditor_retained_reduce(
 ) -> Result<Emit<BmpMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         BmpEditCommand::Native(BmpNativeEditCommand::SetActiveExample { example_id }) => {
-            Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bmpEditor_example_snapshot(example_id), STDIO_BMP_DOCUMENT_SCHEMA)], ..Default::default() })
+            Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bmp_editor_example_snapshot(example_id), STDIO_BMP_DOCUMENT_SCHEMA)], ..Default::default() })
         }
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
@@ -180,7 +180,7 @@ const STDIO_BMP_PAINT_REGION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: paint_region::INDEXED_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: paint_region::DIRECT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
-const fn bmpEditor_paint_region_execution_contract() -> ToolExecutionContract {
+const fn bmp_editor_paint_region_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(paint_region::MAXIMUM_RAW_BYTES, 64, paint_region::CAPACITY.work_items() as u64, 65_536, 7_500)
 }
 struct BmpPaintRegionFactory {
@@ -204,7 +204,7 @@ impl ToolJobFactory for BmpPaintRegionFactory {
         InteractiveJobClassification::Migrated
     }
     fn execution_contract(&self) -> ToolExecutionContract {
-        bmpEditor_paint_region_execution_contract()
+        bmp_editor_paint_region_execution_contract()
     }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         Ok(ArtifactRetainedCommandJob::new(payload))
@@ -278,7 +278,7 @@ impl ArtifactEditor for BmpEditor {
         .with_factory_type::<EditorApp<BmpEditor>, BmpEditorExampleFactory>()];
         for tool_id in paint_region::TOOL_IDS {
             proofs.push(
-                ArtifactBoundedFirstStepProof::new::<EditorApp<BmpEditor>>(OWNER_FILE, CONTROLLER, "BmpPaintRegionFactory", tool_id, "stdio.bmp", bmpEditor_paint_region_execution_contract())
+                ArtifactBoundedFirstStepProof::new::<EditorApp<BmpEditor>>(OWNER_FILE, CONTROLLER, "BmpPaintRegionFactory", tool_id, "stdio.bmp", bmp_editor_paint_region_execution_contract())
                     .with_factory_type::<EditorApp<BmpEditor>, BmpPaintRegionFactory>(),
             );
         }
@@ -295,7 +295,7 @@ impl ArtifactEditor for BmpEditor {
             return editing::build_snapshot_edit_tool_job::<Self>(request);
         }
         if paint_region::TOOL_IDS.contains(&request.tool_id.as_str()) {
-            if bmpEditor_command_id(&request.command) != request.tool_id {
+            if bmp_editor_command_id(&request.command) != request.tool_id {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-bmp-paint-region-tool-mismatch"));
             }
             let operation = AppOperationContext {
@@ -320,7 +320,7 @@ impl ArtifactEditor for BmpEditor {
                     operation,
                     completion: request.completion,
                 },
-                bmpEditor_command_id,
+                bmp_editor_command_id,
                 paint_region::MAXIMUM_RAW_BYTES,
                 paint_region::CAPACITY.work_items(),
                 Box::new(paint_region::PaintRegionWork::new(tool_id)),
@@ -330,7 +330,7 @@ impl ArtifactEditor for BmpEditor {
         if !STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if bmpEditor_command_id(&request.command) != request.tool_id {
+        if bmp_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -354,10 +354,10 @@ impl ArtifactEditor for BmpEditor {
                 operation,
                 completion: request.completion,
             },
-            bmpEditor_command_id,
+            bmp_editor_command_id,
             STDIO_BMP_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, bmpEditor_retained_reduce, bmpEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, bmp_editor_retained_reduce, bmp_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -373,10 +373,10 @@ impl ArtifactEditor for BmpEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_BMP_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
-        bmpEditor_command_id(command)
+        bmp_editor_command_id(command)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        bmpEditor_command_from_action(action, args)
+        bmp_editor_command_from_action(action, args)
     }
 
     fn initial_snapshot() -> Self::Snapshot {
@@ -395,7 +395,7 @@ impl ArtifactEditor for BmpEditor {
         match command {
             BmpEditCommand::Edit(event) => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             BmpEditCommand::Native(BmpNativeEditCommand::SetActiveExample { example_id }) => {
-                Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bmpEditor_example_snapshot(example_id), STDIO_BMP_DOCUMENT_SCHEMA)], ..Default::default() })
+                Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&bmp_editor_example_snapshot(example_id), STDIO_BMP_DOCUMENT_SCHEMA)], ..Default::default() })
             }
             BmpEditCommand::Native(BmpNativeEditCommand::PaintIndexedRegion(_) | BmpNativeEditCommand::PaintDirectRegion(_)) => Err(Fault::from("BMP region painting requires the cancellable retained route")),
         }

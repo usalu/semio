@@ -10,12 +10,13 @@
 
 use super::super::element_solids::plan_kit::point;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
-use crate::{ModelSnapshot, Ramp};
+use crate::{Ramp};
+#[cfg(test)] use crate::{ModelSnapshot};
 use semio_framework_geometry::bulge::{corner_join, BulgeSeg};
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::vector::cross;
 use semio_framework_geometry::Point;
-use std::collections::BTreeMap;
+#[cfg(test)] use std::collections::BTreeMap;
 
 //#region 🔖️Values
 /// 📏️ Slopes and rises below this are zero; the tolerance of every comparison with the slope limit.

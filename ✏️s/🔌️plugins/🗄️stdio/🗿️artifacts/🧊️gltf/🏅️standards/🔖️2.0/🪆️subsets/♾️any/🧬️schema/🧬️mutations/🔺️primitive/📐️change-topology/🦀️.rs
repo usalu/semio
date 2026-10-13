@@ -38,7 +38,7 @@ pub fn inverse(p: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) 
     if base.document.meshes[p.mesh].primitives[p.primitive].mode == p.mode {
         return Vec::new();
     }
-    vec![super::change_primitive_topology_mode::mutation(super::change_primitive_topology_mode::GltfChangePrimitiveTopologyModePayload { mesh: p.mesh, primitive: p.primitive, mode: base.document.meshes[p.mesh].primitives[p.primitive].mode })]
+    vec![mutation(GltfChangePrimitiveTopologyModePayload { mesh: p.mesh, primitive: p.primitive, mode: base.document.meshes[p.mesh].primitives[p.primitive].mode })]
 }
 
 //#region 🧬️DirectMutation
@@ -58,7 +58,7 @@ pub fn mutation(payload: GltfChangePrimitiveTopologyModePayload) -> super::GltfM
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimitiveTopologyModeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "primitive-topology-mode", kind: "change-primitive-topology-mode", record: "ChangedPrimitiveTopologyMode" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

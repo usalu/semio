@@ -80,8 +80,7 @@ pub type Wfc2dSnapshotBinary = Vec<u8>;
 //#endregion 🚚️Carrier
 
 mod native_codec {
-use super::*;
-use crate::schema::snapshot::{Wfc2dRule, Wfc2dSlot, Wfc2dSlotEdge, Wfc2dSnapshot, Wfc2dTile, Wfc2dTileMedia, WFC_2D_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::Wfc2dSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::{Wfc2dSnapshotDsl,wfc2d_document_to_dsl,wfc2d_document_from_dsl};
 
 impl store::ArtifactPack for Wfc2dSnapshotDsl {

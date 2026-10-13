@@ -440,7 +440,7 @@ pub trait ObjectSink {
     /// ➕ Stores `value` as a new indirect object and returns its reference.
     fn add(&mut self, value: PdfObject) -> ObjRef;
     /// 📦️ Resolves admitted foreign native bodies only at the native lowering boundary.
-    fn resolve_artifact(&self, _reference: &semio_framework_artifact_reference::ArtifactRef) -> super::lexer::PResult<PdfObject> { Err(super::lexer::PdfEngineError::Unsupported("native artifact resolution is unavailable".into())) }
+    fn resolve_artifact(&self, _reference: &semio_framework_artifact_reference::ArtifactRef) -> PResult<PdfObject> { Err(PdfEngineError::Unsupported("native artifact resolution is unavailable".into())) }
 }
 //#endregion 🔖️Sources
 

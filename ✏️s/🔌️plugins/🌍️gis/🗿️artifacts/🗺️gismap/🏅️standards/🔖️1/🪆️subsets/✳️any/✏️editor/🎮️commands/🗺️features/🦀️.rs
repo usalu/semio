@@ -104,18 +104,18 @@ fn feature_anchor(entries: &[(String, DslValue)]) -> Option<(f64, f64)> {
         return Some((lon, lat));
     }
     let points = entries.iter().find(|(key, _)| key == "points").and_then(|(_, value)| value.as_array())?;
-    let first = points.first().and_then(semio_framework_value::DslValue::as_array)?;
+    let first = points.first().and_then(DslValue::as_array)?;
     Some((first.first()?.as_f64()?, first.get(1)?.as_f64()?))
 }
 
 /// 🚚️ Translates every `points` vertex by `(delta_lon, delta_lat)`, leaving non-numeric vertices alone.
 fn translate_points(value: &DslValue, delta_lon: f64, delta_lat: f64) -> DslValue {
     let Some(points) = value.as_array() else { return value.clone() };
-    semio_framework_value::DslValue::Array(
+    DslValue::Array(
         points
             .iter()
-            .map(|point| match (point.as_array().and_then(|pair| pair.first()).and_then(semio_framework_value::DslValue::as_f64), point.as_array().and_then(|pair| pair.get(1)).and_then(semio_framework_value::DslValue::as_f64)) {
-                (Some(lon), Some(lat)) => semio_framework_value::DslValue::Array(vec![DslValue::float(lon + delta_lon), DslValue::float(lat + delta_lat)]),
+            .map(|point| match (point.as_array().and_then(|pair| pair.first()).and_then(DslValue::as_f64), point.as_array().and_then(|pair| pair.get(1)).and_then(DslValue::as_f64)) {
+                (Some(lon), Some(lat)) => DslValue::Array(vec![DslValue::float(lon + delta_lon), DslValue::float(lat + delta_lat)]),
                 _ => point.clone(),
             })
             .collect(),
@@ -216,7 +216,7 @@ pub mod add_feature {
         let id = minted_feature_id(before, prefix);
         let label = if payload.label.is_empty() { id.clone() } else { payload.label.clone() };
         let data = minted_feature_data(&payload.collection, &id, &label, payload.lon, payload.lat, payload.span);
-        let item = MapFeature { id, data: semio_framework_value::DslValue::from(&data) };
+        let item = MapFeature { id, data: DslValue::from(&data) };
         Ok(Emit::mutations(create_operation(&payload.collection, before.len(), item).into_iter().collect()))
     }
 }
@@ -317,7 +317,7 @@ pub fn patch_routes_operations(document: &GisMapSnapshot, route_ids: &[String], 
     if route_ids.is_empty() {
         return Emit::default();
     }
-    let dsl_value = semio_framework_value::DslValue::String(value.to_string());
+    let dsl_value = DslValue::String(value.to_string());
     let operations: Vec<GisMapMutation> = document
         .routes
         .iter()

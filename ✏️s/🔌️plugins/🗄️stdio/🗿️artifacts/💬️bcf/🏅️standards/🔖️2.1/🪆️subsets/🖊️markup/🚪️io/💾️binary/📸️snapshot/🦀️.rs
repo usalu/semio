@@ -33,7 +33,6 @@ impl store::ArtifactPack for BcfSnapshot {
     fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod diff_codec {
@@ -46,4 +45,3 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 }
-pub use diff_codec::*;

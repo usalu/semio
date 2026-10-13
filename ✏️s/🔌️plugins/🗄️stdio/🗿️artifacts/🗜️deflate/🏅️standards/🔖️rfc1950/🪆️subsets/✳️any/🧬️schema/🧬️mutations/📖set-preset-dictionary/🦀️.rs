@@ -19,13 +19,13 @@ pub struct SetPresetDictionary {
 impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDictionary {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preset-dictionary", kind: "set-preset-dictionary", record: "SetPresetDictionary" };
 
-    fn diff(&self, base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
+    fn diff(&self, _base: &DeflateSnapshot) -> protocol::MutationOutcome<<DeflateMutation as Mutation<DeflateSnapshot>>::Diff> {
         let Self { dict_id } = self;
         protocol::MutationOutcome::new( diff_set_preset_dictionary(*dict_id) )
     }
     fn inverse(&self, base: &DeflateSnapshot) -> Result<Vec<DeflateMutation>, semio_framework_value::ValueError> {
         Ok({
-            vec![DeflateMutation::SetPresetDictionary(set_preset_dictionary::SetPresetDictionary { dict_id: base.dict_id })]
+            vec![DeflateMutation::SetPresetDictionary(SetPresetDictionary { dict_id: base.dict_id })]
         })
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

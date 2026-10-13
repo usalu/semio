@@ -777,7 +777,7 @@ pub(crate) fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> 
 }
 
 /// 📝️ Binds a native attribute into its semantic value owner.
-pub fn bind_svg_attribute(name:&str,text:&str)->Result<crate::schema::snapshot::SvgAttributeValue,String> {
+pub fn bind_svg_attribute(name:&str,text:&str)->Result<SvgAttributeValue,String> {
     use crate::schema::snapshot::{SvgAttributeValue as V,SvgLength,SvgPoint};
     Ok(match name {
         "clip-path" if text.trim().starts_with("url(")=>{let inner=text.trim().strip_prefix("url(").and_then(|v|v.strip_suffix(')')).ok_or("invalid SVG clip-path reference")?.trim().trim_matches(|c|c=='\''||c=='"');if let Some(id)=inner.strip_prefix('#'){V::LocalReference(id.to_owned())}else{V::Text(text.to_owned())}},
@@ -794,12 +794,12 @@ pub fn bind_svg_attribute(name:&str,text:&str)->Result<crate::schema::snapshot::
     })
 }
 /// 📝️ Formats a typed SVG attribute only at emission.
-pub fn print_svg_attribute(value:&crate::schema::snapshot::SvgAttributeValue)->String {
+pub fn print_svg_attribute(value:&SvgAttributeValue)->String {
     use crate::schema::snapshot::SvgAttributeValue as V;
     match value { V::Text(text)=>text.clone(),V::LocalReference(id)=>format!("url(#{id})"),V::Number(number)=>fmt_num(*number),V::Length(length)=>format!("{}{}",fmt_num(length.magnitude),length.unit),V::ViewBox(value)=>view_box_to_string(value),V::Transform(ops)=>transform_list_to_string(ops),V::Points(points)=>points_to_string(&points.iter().map(|point|(point.x,point.y)).collect::<Vec<_>>()),V::PathData(commands)=>path_data_to_string(commands) }
 }
 /// 🌳️ Projects native XML into SVG node owners.
-pub fn bind_svg_node(node:XmlNode)->Result<crate::schema::snapshot::SvgNode,String> {
+pub fn bind_svg_node(node:XmlNode)->Result<SvgNode,String> {
     use crate::schema::snapshot::{SvgNode as N,SvgAttr};
     enum Frame{Visit(XmlNode),Finish(String,Vec<SvgAttr>,usize)}
     let mut frames=vec![Frame::Visit(node)];let mut nodes=Vec::new();
@@ -811,7 +811,7 @@ pub fn bind_svg_node(node:XmlNode)->Result<crate::schema::snapshot::SvgNode,Stri
                 for attr in attrs{match bind_svg_attribute(&attr.name,&attr.value){Ok(value)=>owned.push(SvgAttr{name:attr.name,value}),Err(error)=>{
                     let mut native=children;for frame in frames{if let Frame::Visit(node)=frame{native.push(node);}}
                     semio_s_artifact_stdio_xml::schema::snapshot::ownership::retire_xml_document(XmlDocument{prolog:native,..Default::default()});
-                    crate::schema::snapshot::retire_svg_document(crate::schema::snapshot::SvgDocument{prolog:nodes,..Default::default()});return Err(error);
+                    retire_svg_document(SvgDocument{prolog:nodes,..Default::default()});return Err(error);
                 }}}
                 frames.push(Frame::Finish(name,owned,children.len()));frames.extend(children.into_iter().rev().map(Frame::Visit));
             },
@@ -820,7 +820,7 @@ pub fn bind_svg_node(node:XmlNode)->Result<crate::schema::snapshot::SvgNode,Stri
     }}Ok(nodes.pop().expect("one SVG root was bound"))
 }
 /// 🌳️ Iteratively projects SVG owners into native XML for physical emission.
-pub fn native_svg_node(node:&crate::schema::snapshot::SvgNode)->XmlNode {
+pub fn native_svg_node(node:&SvgNode)->XmlNode {
     use crate::schema::snapshot::SvgNode as N;
     enum Frame<'a>{Visit(&'a N),Finish(String,Vec<XmlAttr>,usize)}
     let mut frames=vec![Frame::Visit(node)];let mut nodes=Vec::new();
@@ -833,10 +833,10 @@ pub fn native_svg_node(node:&crate::schema::snapshot::SvgNode)->XmlNode {
     }}nodes.pop().expect("one native SVG root was projected")
 }
 /// 🌳️ Admits each native document lane into its owned SVG value.
-pub fn bind_svg_document(doc:XmlDocument)->Result<crate::schema::snapshot::SvgDocument,String> {
+pub fn bind_svg_document(doc:XmlDocument)->Result<SvgDocument,String> {
     use semio_framework_dsl_record::__rt::DecodedFieldOwner;
     let mut native=DecodedFieldOwner::new(doc,semio_s_artifact_stdio_xml::schema::snapshot::ownership::retire_xml_document);
-    let mut owned=DecodedFieldOwner::new(crate::schema::snapshot::SvgDocument::default(),crate::schema::snapshot::retire_svg_document);
+    let mut owned=DecodedFieldOwner::new(SvgDocument::default(),retire_svg_document);
     owned.as_mut().declaration=native.as_mut().declaration.take();owned.as_mut().doctype=native.as_mut().doctype.take();
     while let Some(node)=native.as_mut().prolog.pop(){owned.as_mut().prolog.push(bind_svg_node(node)?);}owned.as_mut().prolog.reverse();
     if let Some(node)=native.as_mut().root.take(){owned.as_mut().root=Some(bind_svg_node(node)?);}
@@ -844,7 +844,7 @@ pub fn bind_svg_document(doc:XmlDocument)->Result<crate::schema::snapshot::SvgDo
     Ok(owned.take())
 }
 /// 🌳️ Lowers each SVG document lane for physical XML emission.
-pub fn native_svg_document(doc:&crate::schema::snapshot::SvgDocument)->XmlDocument {
+pub fn native_svg_document(doc:&SvgDocument)->XmlDocument {
     XmlDocument{declaration:doc.declaration.clone(),doctype:doc.doctype.clone(),prolog:doc.prolog.iter().map(native_svg_node).collect(),root:doc.root.as_ref().map(native_svg_node),epilog:doc.epilog.iter().map(native_svg_node).collect()}
 }
 

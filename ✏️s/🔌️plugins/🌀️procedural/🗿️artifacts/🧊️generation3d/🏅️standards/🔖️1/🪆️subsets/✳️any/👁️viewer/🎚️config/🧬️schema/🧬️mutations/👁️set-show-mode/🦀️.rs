@@ -14,7 +14,7 @@ pub struct SetShowMode {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetShowMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "show-mode", kind: "set-show-mode", record: "SetShowMode" };
 
-    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
         protocol::MutationOutcome::new(Generation3dViewConfigPatch { show_mode: Some(self.value.clone()), ..Default::default() })
     }
 

@@ -21,13 +21,13 @@ impl MeshTessellationJob{
     fn prepared_edge_uv(&self,id:u32)->Result<[f64;2],ValueError>{
         let edge=self.mesh.halfedges.get(id as usize).ok_or_else(||refusal("original mesh UV halfedge is absent"))?;
         let attribute=self.semantic_attribute(MeshAttributeSemantic::Uv);
-        let value=super::tessellation_corner_emission::sample(attribute,id,edge,edge.face.ok_or_else(||refusal("original mesh UV face is absent"))? as usize);
+        let value=tessellation_corner_emission::sample(attribute,id,edge,edge.face.ok_or_else(||refusal("original mesh UV face is absent"))? as usize);
         if attribute.is_some()&&value.is_none(){return Err(refusal("original mesh edge authored UV sample is absent"));}
         let uv=if let Some(value)=value{if value.len()!=2{return Err(refusal("original mesh edge authored UV extent is invalid"));}[value[0].as_f64().ok_or_else(||refusal("original mesh edge authored UV is not numeric"))?,value[1].as_f64().ok_or_else(||refusal("original mesh edge authored UV is not numeric"))?]}else{edge.uv.map(f64::from)};
         if uv.iter().any(|value|!value.is_finite()||value.abs()>f32::MAX as f64){return Err(refusal("original mesh edge UV is invalid"));}Ok(uv)
     }
     /// 🧮️ Prices one complete edge row only after its original natural membership insertion.
-    pub(super) fn next_edge_copy_byte_demand(&self,local:usize)->Result<usize,ValueError>{self.prepared_edge(local)?;Ok(if self.edge_pending.is_some(){10*std::mem::size_of::<f32>()+std::mem::size_of::<u32>()+std::mem::size_of::<u8>()}else{0})}
+    pub(super) fn next_edge_copy_byte_demand(&self,local:usize)->Result<usize,ValueError>{self.prepared_edge(local)?;Ok(if self.edge_pending.is_some(){10*size_of::<f32>()+size_of::<u32>()+size_of::<u8>()}else{0})}
     /// 🎟️ Quotes the original natural edge Set before any new row is transferred to it.
     pub(super) fn next_edge_capacity_byte_demand(&self,local:usize,copy:usize)->Result<usize,ValueError>{
         let(_,_,_,key)=self.prepared_edge(local)?;
@@ -57,6 +57,6 @@ impl MeshTessellationJob{
         let(_,edge,next,_)=self.prepared_edge(local)?;let(a,b)=(self.prepared_edge_uv(id)?,self.prepared_edge_uv(edge.next)?);
         let seam=self.mesh.uv_seams.contains(&id)||if let Some(twin)=edge.twin{let twin_edge=self.mesh.halfedges.get(twin as usize).ok_or_else(||refusal("original mesh edge twin is absent"))?;self.mesh.uv_seams.contains(&twin)||a!=self.prepared_edge_uv(twin_edge.next)?||b!=self.prepared_edge_uv(twin)?}else{false};
         let positions=[self.mesh.vertices[edge.vertex as usize].position,self.mesh.vertices[next.vertex as usize].position];let out=self.output.as_mut().unwrap();out.edge_positions.extend_from_slice(&positions[0]);out.edge_positions.extend_from_slice(&positions[1]);out.edge_ids.push(id);out.edge_uvs.extend_from_slice(&a.map(|value|value as f32));out.edge_uvs.extend_from_slice(&b.map(|value|value as f32));out.edge_is_seam.push(u8::from(seam));self.edge_pending=None;
-        self.edge_receipt.0=RetainedCloneProgress{copied_items:1,copied_bytes:10*std::mem::size_of::<f32>()+std::mem::size_of::<u32>()+std::mem::size_of::<u8>(),..Default::default()};Ok(RetainedCloneStep::Complete(self.edge_receipt.0))
+        self.edge_receipt.0=RetainedCloneProgress{copied_items:1,copied_bytes:10*size_of::<f32>()+size_of::<u32>()+size_of::<u8>(),..Default::default()};Ok(RetainedCloneStep::Complete(self.edge_receipt.0))
     }
 }

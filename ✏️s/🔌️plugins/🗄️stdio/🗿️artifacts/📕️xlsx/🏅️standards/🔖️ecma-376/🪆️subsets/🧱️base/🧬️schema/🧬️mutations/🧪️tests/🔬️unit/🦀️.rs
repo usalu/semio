@@ -203,8 +203,8 @@ fn two_cell_base() -> XlsxSnapshot {
 fn assert_only_part_modified(diff: &XlsxDiff, part: &str) {
     assert!(diff.opc.is_none(), "a cell edit never reaches the lossless OPC lane");
     let parts = diff.xml_parts.as_ref().expect("xml parts diff present");
-    assert!(parts.removed.is_empty() && parts.added.is_empty(), "a cell edit neither adds nor removes a part");
-    assert_eq!(parts.modified.iter().map(|modified| modified.key.as_str()).collect::<Vec<_>>(), vec![part], "a cell edit modifies only its worksheet part");
+    assert!(parts.removed.is_empty() && parts.inserted.is_empty() && parts.moved.is_empty(), "a cell edit neither adds nor removes a part");
+    assert_eq!(parts.modified.iter().map(|modified| modified.id.as_str()).collect::<Vec<_>>(), vec![part], "a cell edit modifies only its worksheet part");
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -359,6 +359,10 @@ async fn kinds_match_enum_and_catalog() {
             XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { .. }) => "insert-shared-string",
             XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { .. }) => "remove-shared-string",
             XlsxMutation::SetSharedString(set_shared_string::SetSharedString { .. }) => "set-shared-string",
+            XlsxMutation::SetRelationship(set_relationship::SetRelationship { .. }) => "set-relationship",
+            XlsxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { .. }) => "remove-relationship",
+            XlsxMutation::SetContentType(set_content_type::SetContentType { .. }) => "set-content-type",
+            XlsxMutation::RemoveContentType(remove_content_type::RemoveContentType { .. }) => "remove-content-type",
         }
     }
     let samples = [
@@ -371,6 +375,10 @@ async fn kinds_match_enum_and_catalog() {
         XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value: String::new(), index: None, node: None }),
         XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index: 0 }),
         XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index: 0, value: String::new(), node: None }),
+        XlsxMutation::SetRelationship(set_relationship::SetRelationship { owner: String::new(), id: String::new(), rel_type: String::new(), target: String::new(), external: false, index: None }),
+        XlsxMutation::RemoveRelationship(remove_relationship::RemoveRelationship { owner: String::new(), id: String::new() }),
+        XlsxMutation::SetContentType(set_content_type::SetContentType { is_override: false, name: String::new(), content_type: String::new(), index: None }),
+        XlsxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override: false, name: String::new() }),
     ];
     let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
     assert_eq!(from_enum, KINDS, "KINDS must list every XlsxMutation variant, in declaration order");

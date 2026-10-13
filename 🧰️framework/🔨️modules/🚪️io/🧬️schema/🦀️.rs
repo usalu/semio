@@ -3,10 +3,9 @@
 use semio_framework_diagnostic::Diagnostic;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_value::serde::{Deserialize, Serialize};
 
 
-use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef,Dialect,StandardId,SubsetId};
+use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
 #[path="♻️retirement/🦀️.rs"]mod retirement;
 
 //#region 🔖️Payload
@@ -119,7 +118,7 @@ impl IoError {
                 }
                 control.step()?;
             }
-            control.charge(std::mem::size_of::<Self>())?;
+            control.charge(size_of::<Self>())?;
             let cause = ValueError::from_value_controlled(cause.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "missing IO error cause"))?, control)?;
             let cause = semio_framework_value::DecodedValue::new(cause, drop);
             let diagnostics = <Vec<Diagnostic> as semio_framework_value::FromValue>::from_value_controlled(diagnostics.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "missing IO error diagnostics"))?, control)?;
@@ -136,13 +135,13 @@ impl IoError {
     pub fn from_text_error_controlled(error: semio_framework_diagnostic::TextError, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<Self, ValueError> {
         control.scoped_stage(|control| {
             control.begin_stage(1)?;
-            control.charge(std::mem::size_of::<Self>())?;
+            control.charge(size_of::<Self>())?;
             let message = control.copy_text(&error.message)?;
             let mut diagnostics = control.allocate_vec::<Diagnostic>(1)?;
             let code = control.copy_text("io.text-refusal")?;
             let expected = match error.expected {
                 Some(expected) => {
-                    control.charge(std::mem::size_of::<semio_framework_diagnostic::ExpectedSet>())?;
+                    control.charge(size_of::<semio_framework_diagnostic::ExpectedSet>())?;
                     let mut tokens = control.allocate_vec::<String>(1)?;
                     tokens.push(expected);
                     Some(semio_framework_diagnostic::ExpectedSet { tokens, keywords: Vec::new(), keys: Vec::new() })

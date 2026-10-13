@@ -2,7 +2,7 @@
 //! matching `📥️insert-array-element`/`🔀reorder-columns`'s own remove-then-clamped-insert shape.
 //! Error `target-missing` when the step is absent, Warning `no-op` when already at that position.
 
-use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
+use crate::diff::Process3dStepsDelta;
 use crate::diff::Process3dDiff;
 use crate::Process3dSnapshot;
 

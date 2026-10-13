@@ -22,4 +22,3 @@ impl store::ArtifactPack for ShootingSnapshot{
  fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
 }
 }
-pub use snapshot_codec::*;

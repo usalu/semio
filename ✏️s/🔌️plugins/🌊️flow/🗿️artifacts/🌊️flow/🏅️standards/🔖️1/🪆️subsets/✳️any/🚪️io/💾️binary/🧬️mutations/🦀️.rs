@@ -17,4 +17,3 @@ impl protocol::OpBinary for FlowMutation {
     }
 }
 }
-pub use mutations_codec::*;

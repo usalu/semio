@@ -128,8 +128,8 @@ impl<T:RetireOwned+Sync> crate::FactoryPayloadRetirement for ReadOwnershipRegist
     fn close_state_birth_bytes(&self)->usize {0}
     fn close_state_constructor_depth(&self)->usize {0}
     fn close_state_constructor_copy_bytes(&self)->usize {0}
-    fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(Default::default())}
-    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:crate::RetainedCloneGrant)->Result<crate::RetainedCloneStep,crate::ValueError>{Ok(crate::RetainedCloneStep::Complete(Default::default()))}
+    fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
+    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Ok(RetainedCloneStep::Complete(Default::default()))}
     fn close_state_preparation_is_complete(_:&Self::CloseState)->bool{true}
     fn prepare_close_state(&self)->Self::CloseState {None}
     fn transfer_payload(value:Self,state:&mut Self::CloseState) {*state=Some(crate::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted typed registry lost its retirement support: {error}")));}

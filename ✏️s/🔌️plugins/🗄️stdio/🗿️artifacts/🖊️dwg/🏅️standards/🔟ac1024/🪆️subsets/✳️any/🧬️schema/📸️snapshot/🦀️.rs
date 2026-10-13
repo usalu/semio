@@ -5388,9 +5388,9 @@ impl fmt::Display for DwgExportError {
 
 impl std::error::Error for DwgExportError {}
 /// 🧭️ Every export refusal is an invalid logical, version, header or writer input to the DWG writer.
-impl From<DwgExportError> for semio_framework_value::ValueError {
+impl From<DwgExportError> for ValueError {
     fn from(error: DwgExportError) -> Self {
-        Self::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())
+        Self::new(ValueRefusalKind::InvalidValue, error.to_string())
     }
 }
 

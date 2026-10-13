@@ -512,7 +512,7 @@ fn animate_presentation_config_fault(message: &'static str) -> semio_framework_v
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparationFactory {
-    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<PresentationConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<PresentationConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
+    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<PresentationConfigMutation>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<PresentationConfigMutation>>, RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
@@ -528,14 +528,14 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
 
     fn begin_demand(&self, mutation: &PresentationConfigMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         self.preflight(mutation, lane).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Animate Presentation config preparation has no admissible lane or byte envelope"))?;
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<AnimatePresentationConfigPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<AnimatePresentationConfigPreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>,
         grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>)> {
+    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         if request.operation != request.authority.operation()
@@ -634,7 +634,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
     fn begin_close(&mut self) {
         self.owners.begin_close();
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }

@@ -47,8 +47,8 @@ pub fn widget_id(widget: &Widget) -> &str {
 /// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
 /// its own, so its contract output channels always preview, which is the only way a grouped
 /// sub-graph's geometry reaches the 3D world at all.
-pub fn widget_previews(widget: &semio_framework_artifact_flow_flow::Widget) -> bool {
-    matches!(widget, semio_framework_artifact_flow_flow::Widget::Neuron { preview: true, .. } | semio_framework_artifact_flow_flow::Widget::OutputPreview { .. } | semio_framework_artifact_flow_flow::Widget::Cluster { .. })
+pub fn widget_previews(widget: &Widget) -> bool {
+    matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. } | Widget::Cluster { .. })
 }
 
 //#endregion 🔖️Helpers

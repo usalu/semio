@@ -225,10 +225,10 @@ impl<P> store::SnapshotRetirementFactory<P> for BoundedTransientRootRetirementFa
 where
     P: store::ArtifactDsl + Send + Sync + 'static,
 {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { std::mem::size_of::<BoundedTransientRootRetirement<P>>() }
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<BoundedTransientRootRetirement<P>>() }
 
     fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
-        let progress = match (RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<BoundedTransientRootRetirement<P>>(), depth: 1 }).admit(grant) {
+        let progress = match (RetainedCloneBirthDemand { capacity_bytes: size_of::<BoundedTransientRootRetirement<P>>(), depth: 1 }).admit(grant) {
             Ok(progress) => progress,
             Err(error) => return Err((error, snapshot)),
         };
@@ -287,23 +287,31 @@ where
         if let Some(progress) = paged_copy(&mut self.retained_bytes, grant) {
             return Ok(PluginLifecycleStep::Progress(progress));
         }
+        if let Some(retired) = self.retired.as_mut().filter(|retired| !retired.returned_reads_terminal_is_empty()) {
+            if retired.live_read_holds_registry() { return Ok(PluginLifecycleStep::Blocked { reason: "displaced transient store awaits the live tracked snapshot read that holds its registry" }); }
+            let step = retired.maintenance_returned_reads_step_root(&BoundedTransientRootRetirementFactory::<P>::default(), grant).map_err(|error| Fault::from(error.into_message()))?;
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
+        }
         self.retired = None;
         let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         Ok(if self.owns_terminal(owner) { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
     }
 
-    fn retirement_demands(&self, _owner: &store::TransientStore<P, M>, _body: usize) -> Result<RetirementDemand, ValueError> {
-        Ok(if self.terminal_root.is_none() {
-            RetirementDemand { depth: 1, ..Default::default() }
-        } else if self.retired.is_some() {
-            RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: 1, ..Default::default() }
-        } else {
-            Default::default()
-        })
+    fn retirement_demands(&self, _owner: &store::TransientStore<P, M>, body: usize) -> Result<RetirementDemand, ValueError> {
+        if self.terminal_root.is_none() {
+            return Ok(RetirementDemand { depth: 1, ..Default::default() });
+        }
+        let Some(retired) = self.retired.as_ref() else { return Ok(Default::default()) };
+        if self.retained_bytes == 0 && !retired.returned_reads_terminal_is_empty() {
+            let mut demand = retired.maintenance_returned_reads_demands_root(&BoundedTransientRootRetirementFactory::<P>::default(), body)?;
+            demand.depth = demand.depth.max(1);
+            return Ok(demand);
+        }
+        Ok(RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: 1, ..Default::default() })
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
     fn terminal_is_empty(&self, owner: &store::TransientStore<P, M>) -> bool {
@@ -352,6 +360,7 @@ impl<P, M> ArtifactOwnedDisposer<store::TransientStore<P, M>> for TransientStore
 where P: Clone + Default + Send + Sync + 'static, M: protocol::Mutation<P> + Send + 'static {
     fn close_step(&mut self, owner: &mut store::TransientStore<P, M>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         if self.terminal_is_empty(owner) { return Ok(PluginLifecycleStep::Complete(Default::default())); }
+        if self.retirement.as_ref().is_some_and(store::TransientStoreRetirement::awaits_live_read) { return Ok(PluginLifecycleStep::Blocked { reason: "transient store retirement awaits the live tracked snapshot read that holds its registry" }); }
         let demand = self.retirement_demands(owner, grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
         depth_refusal(grant, demand, "transient disposal exceeds admitted depth").map_err(|error| Fault::from(error.into_message()))?;
         if yields(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
@@ -380,14 +389,18 @@ where P: Clone + Default + Send + Sync + 'static, M: protocol::Mutation<P> + Sen
 
     fn retirement_demands(&self, owner: &store::TransientStore<P, M>, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty(owner) { return Ok(Default::default()); }
-        if !self.closing { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<store::TransientStoreRetirement<P>>(), depth: 1, ..Default::default() }); }
+        if !self.closing { return Ok(RetirementDemand { copy_bytes: size_of::<store::TransientStoreRetirement<P>>(), depth: 1, ..Default::default() }); }
         if let Some(retirement) = self.retirement.as_ref() { return retirement.retirement_demands(body); }
-        if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.factory_close.as_ref().map_or(Ok(Default::default()), |factory| factory.demands(body))
     }
 
     fn terminal_is_empty(&self, owner: &store::TransientStore<P, M>) -> bool {
         self.closing && owner.close_terminal_is_empty() && self.retirement.is_none() && self.factory.is_none() && self.factory_close.is_none()
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        (self.closing && self.retirement.is_none() && self.factory.is_none() && self.factory_close.is_none()).then_some(size_of::<Self>())
     }
 }
 

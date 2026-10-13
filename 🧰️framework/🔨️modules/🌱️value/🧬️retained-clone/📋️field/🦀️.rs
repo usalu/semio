@@ -47,14 +47,14 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
         match self.child.as_ref() {
             Some(child) if child.terminal_is_empty() => Ok(1),
             Some(child) => child.next_close_depth_demand(),
-            None => super::RetainedCloneBinding::depth_demand(&self.source),
+            None => RetainedCloneBinding::depth_demand(&self.source),
         }
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {
         if !self.closing { return Ok(0); }
         match self.child.as_ref() {
             Some(child) if !child.terminal_is_empty() => child.next_close_copy_byte_demand(),
-            None => super::RetainedCloneBinding::copy_demand(&self.source),
+            None => RetainedCloneBinding::copy_demand(&self.source),
             _ => Ok(0),
         }
     }
@@ -62,7 +62,7 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
         if !self.closing { return Ok(0); }
         match self.child.as_ref() {
             Some(child) if !child.terminal_is_empty() => child.next_close_capacity_byte_demand(maximum_release_bytes),
-            None => super::RetainedCloneBinding::capacity_demand(&self.source,maximum_release_bytes),
+            None => RetainedCloneBinding::capacity_demand(&self.source,maximum_release_bytes),
             _ => Ok(0),
         }
     }
@@ -71,7 +71,7 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
         match self.child.as_ref() {
             Some(child) if child.terminal_is_empty() => Ok(size_of::<T::Cursor>()),
             Some(child) => child.next_close_release_byte_demand(),
-            None => super::RetainedCloneBinding::release_demand(&self.source),
+            None => RetainedCloneBinding::release_demand(&self.source),
         }
     }
     fn terminal_is_empty(&self) -> bool { self.closing && self.child.is_none() && self.source.is_none() }

@@ -7,7 +7,8 @@ use neural_engine as neural;
 use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{Arc};
+#[cfg(test)] use std::sync::{Mutex};
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,queue::RetirementQueue}};
@@ -35,7 +36,7 @@ mod original_retirement;
 use original_retirement::FlowHostPayload;
 #[path="📥️evaluation-source/🦀️.rs"]
 mod evaluation_source;
-use evaluation_source::FlowEvaluationSource;
+#[cfg(test)] use evaluation_source::FlowEvaluationSource;
 use evaluation_source::work::FlowEvaluationWork;
 #[path="📤️publication/🖼️display/🦀️.rs"]
 mod display_publication;
@@ -236,8 +237,8 @@ impl From<semio_framework_pack_json::JsonError> for FlowCoreError {
     }
 }
 
-impl From<semio_framework_value::ValueError> for FlowCoreError {
-    fn from(error: semio_framework_value::ValueError) -> Self {
+impl From<ValueError> for FlowCoreError {
+    fn from(error: ValueError) -> Self {
         Self::Json(error.to_string())
     }
 }
@@ -302,12 +303,12 @@ struct FlowPublicationDisplaced {
     leases:FlowBaselineLeases,
 }
 
-impl semio_framework_value::retirement::RetireOwned for FlowBaselineLeases {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+impl RetireOwned for FlowBaselineLeases {
+    fn retirement(self)->Box<dyn RetirementCursor>{
         use semio_framework_value::retirement::{RetireOwned,sequence,shared::SharedControlledRetirement};
-        let snapshot:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.snapshot{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
-        let channels:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.channels{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
-        let current:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.current{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
+        let snapshot:Box<dyn RetirementCursor>=match self.snapshot{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
+        let channels:Box<dyn RetirementCursor>=match self.channels{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
+        let current:Box<dyn RetirementCursor>=match self.current{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
         sequence(vec![snapshot,channels,current])
     }
     fn retirement_birth_bytes(&self)->Option<usize>{
@@ -1760,7 +1761,7 @@ impl FlowHost {
             return Vec::new();
         };
         let missing = self.blocked_input_ports(widget_id, &operator_info);
-        neural::ColdRetire::retire_cold(operator_info);
+        ColdRetire::retire_cold(operator_info);
         missing
     }
 
@@ -1889,7 +1890,7 @@ impl FlowHost {
     }
 
     fn cluster_tree_from_node(node: &WireNode) -> Option<Tree> {
-        semio_framework_artifact_flow_flow::cluster_tree_from_property(node.properties.get("clusterTree")?).ok()
+        cluster_tree_from_property(node.properties.get("clusterTree")?).ok()
     }
 
     fn dictionary_from_property_bag(bag: &PropertyBag) -> Dictionary {
@@ -3478,10 +3479,10 @@ impl SessionResetSources {
     }
 }
 
-impl semio_framework_value::retirement::RetireOwned for SessionResetSources {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+impl RetireOwned for SessionResetSources {
+    fn retirement(self)->Box<dyn RetirementCursor>{
         use semio_framework_value::retirement::{RetireOwned,deferred,sequence,shared::SharedControlledRetirement};
-        let eval:Box<dyn semio_framework_value::retirement::RetirementCursor>=match self.eval{Some(value)=>Box::new(SharedControlledRetirement::lease(value)),None=>().retirement()};
+        let eval:Box<dyn RetirementCursor>=match self.eval{Some(value)=>Box::new(SharedControlledRetirement::lease(value)),None=>().retirement()};
         sequence(vec![eval,deferred(self.baseline),deferred(self.fields)])
     }
     fn retirement_birth_bytes(&self)->Option<usize>{
@@ -3538,8 +3539,8 @@ enum SessionCollectionOwner {
     Fault(ExtensionEvaluateFault),
 }
 
-impl semio_framework_value::retirement::RetireOwned for SessionCollectionOwner {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+impl RetireOwned for SessionCollectionOwner {
+    fn retirement(self)->Box<dyn RetirementCursor>{
         use semio_framework_value::retirement::{RetireOwned,shared::SharedControlledRetirement};
         match self{
             Self::InvocationOrigins(value)=>value.retirement(),
@@ -3728,7 +3729,7 @@ impl FlowEvalSession {
     }
 
     /// 📏️ Quotes the real new ledger allocation before moving any original request alias.
-    pub fn next_invocation_origin_capacity_bytes(&self)->usize{if self.state.invocation_origin_growth.is_none()&&self.state.invocation_origins.len()==self.state.invocation_origins.capacity(){(self.state.invocation_origins.len()+1)*std::mem::size_of::<FlowInvocationEntry>()}else{0}}
+    pub fn next_invocation_origin_capacity_bytes(&self)->usize{if self.state.invocation_origin_growth.is_none()&&self.state.invocation_origins.len()==self.state.invocation_origins.capacity(){(self.state.invocation_origins.len()+1)*size_of::<FlowInvocationEntry>()}else{0}}
     pub fn next_invocation_origin_reserve_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if self.state.invocation_origin_growth.is_some()&&self.state.invocation_origins.is_empty(){if !self.state.retirement.terminal_is_empty(){return self.state.retirement.demands(copy)}if self.state.invocation_origins.capacity()!=0{return self.state.retirement.admission_demands()}}
         Ok(RetirementDemand{capacity_bytes:self.next_invocation_origin_capacity_bytes(),depth:1,..Default::default()})
@@ -3736,7 +3737,7 @@ impl FlowEvalSession {
     pub fn invocation_origin_reserve_pending(&self)->bool{self.state.invocation_origin_growth.is_some()||self.next_invocation_origin_capacity_bytes()!=0}
     pub fn reserve_invocation_origin_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
         if !self.invocation_origin_reserve_pending()||grant.maximum_items==0{return Ok(Default::default())}let d=self.next_invocation_origin_reserve_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original invocation roster requires source depth"))}if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes{return Ok(Default::default())}
-        if self.state.invocation_origin_growth.is_none(){let mut incoming=Vec::new();incoming.try_reserve_exact(self.state.invocation_origins.len()+1).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original invocation roster birth refused"))?;let bytes=incoming.capacity()*std::mem::size_of::<FlowInvocationEntry>();self.state.invocation_origin_growth=Some(incoming);return Ok(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})}
+        if self.state.invocation_origin_growth.is_none(){let mut incoming=Vec::new();incoming.try_reserve_exact(self.state.invocation_origins.len()+1).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original invocation roster birth refused"))?;let bytes=incoming.capacity()*size_of::<FlowInvocationEntry>();self.state.invocation_origin_growth=Some(incoming);return Ok(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})}
         if let Some(original)=self.state.invocation_origins.pop(){self.state.invocation_origin_growth.as_mut().unwrap().push(original);return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}
         if !self.state.retirement.terminal_is_empty(){return self.state.retirement.step(grant).map(|step|step.progress())}
         if self.state.invocation_origins.capacity()!=0{self.state.retirement.preflight(grant)?;let original=std::mem::take(&mut self.state.invocation_origins);return match self.state.retirement.admit(SessionCollectionOwner::InvocationOrigins(original),grant){Ok(progress)=>Ok(progress),Err((error,SessionCollectionOwner::InvocationOrigins(original)))=>{self.state.invocation_origins=original;Err(error)},Err(_)=>unreachable!("original invocation allocation return")}}

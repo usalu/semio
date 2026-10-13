@@ -6,7 +6,7 @@ use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of an author's view: working storey, plan camera, the line being typed into a window's entry field.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "bim.presence")]
 #[dsl(layout = "lines")]
@@ -72,20 +72,6 @@ impl protocol::DiffAlgebra<BimPresence> for BimPresenceDiff {
     }
 }
 
-impl semio_framework_value::retirement::RetireOwned for BimPresence {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let store::Viewport2d { x, y, zoom } = self.camera;
-        semio_framework_value::retirement::sequence(vec![
-            semio_framework_value::retirement::RetireOwned::retirement(self.engagement_input),
-            semio_framework_value::retirement::RetireOwned::retirement(self.storey),
-            semio_framework_value::retirement::RetireOwned::retirement(self.owned_worksets),
-            semio_framework_value::retirement::leaf(x),
-            semio_framework_value::retirement::leaf(y),
-            semio_framework_value::retirement::leaf(zoom),
-        ])
-    }
-}
-
 impl store::ArtifactDsl for BimPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -134,7 +120,7 @@ impl ArtifactPack for BimPresence {
 
 //#region 🔖️PresenceMutation
 /// 👥️ The one presence mutation: set the whole shareable record.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub enum BimPresenceMutation {
     #[dsl(key = "set")]
@@ -145,22 +131,6 @@ pub enum BimPresenceMutation {
         #[dsl(block)]
         camera: store::Viewport2d,
     },
-}
-
-impl semio_framework_value::retirement::RetireOwned for BimPresenceMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Set { engagement_input, storey, owned_worksets, camera: store::Viewport2d { x, y, zoom } } => semio_framework_value::retirement::sequence(vec![
-                semio_framework_value::retirement::leaf(0u8),
-                semio_framework_value::retirement::RetireOwned::retirement(engagement_input),
-                semio_framework_value::retirement::RetireOwned::retirement(storey),
-                semio_framework_value::retirement::RetireOwned::retirement(owned_worksets),
-                semio_framework_value::retirement::leaf(x),
-                semio_framework_value::retirement::leaf(y),
-                semio_framework_value::retirement::leaf(zoom),
-            ]),
-        }
-    }
 }
 
 impl Mutation<BimPresence> for BimPresenceMutation {

@@ -13,7 +13,8 @@ use crate::editor::rewriting::window_config;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
 use crate::{LayoutPoint, RewritingSnapshot, REWRITE_RULE_SCHEMA, TRINITY_REWRITING_DIALECT};
-use semio_framework_graph::manifest::{PropertyBag,PropertyValue};
+use semio_framework_graph::manifest::{PropertyBag};
+#[cfg(test)] use semio_framework_graph::manifest::{PropertyValue};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_plugin::ActionKind;
@@ -68,7 +69,8 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
 use semio_framework_2d::compute::EngineHandles;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{ArtifactPack};
+#[cfg(test)] use store::{ArtifactDsl};
 
 //#region 🔖️Constants
 pub(crate) const TRINITY_REWRITING_PLAY_CONTROLLER_ID: &str = "trinity-rewriting-play";
@@ -701,7 +703,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
 
     const DIALECT: Dialect = TRINITY_REWRITING_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::rewriting_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::rewriting_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
@@ -794,7 +796,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     }
 
     /// 📢️ The localized notices of the editor's own refusal codes (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         crate::content::rewriting_fault_notices()
     }
 

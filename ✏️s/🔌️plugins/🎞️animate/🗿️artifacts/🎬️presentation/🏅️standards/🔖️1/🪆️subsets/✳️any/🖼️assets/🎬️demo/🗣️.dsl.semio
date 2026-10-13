@@ -63,4 +63,4 @@ crop {
 crop {
   x=0.7238 y=0.6 width=0.1492 height=0.25
 } }
-] presentation=child_id=presentation-a764f59aa463eed1 target="presentation-a764f59aa463eed1!s.stdio.semio@v1/presentation" animation=child_id=animation-00526326d773a674 target="animation-00526326d773a674!s.stdio.semio@v1/animation"
+] presentation=child_id=presentation-a764f59aa463eed1 target=artifact-id=presentation-a764f59aa463eed1 artifact-kind=s.stdio.semio standard=v1 subset=presentation animation=child_id=animation-00526326d773a674 target=artifact-id=animation-00526326d773a674 artifact-kind=s.stdio.semio standard=v1 subset=animation

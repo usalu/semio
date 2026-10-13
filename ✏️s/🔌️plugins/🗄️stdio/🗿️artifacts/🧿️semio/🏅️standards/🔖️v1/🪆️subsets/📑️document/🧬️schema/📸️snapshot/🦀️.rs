@@ -7,7 +7,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️DocumentModel
 /// 🎨️ Character-level formatting for one `DocRun`. Named struct (never a bare tuple) per the f6
 /// §4.3 `DslField`-for-tuples gap this schema style avoids everywhere.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct RunStyle {
@@ -27,7 +27,7 @@ pub struct RunStyle {
     pub link: Option<String>,
 }
 /// ✍️ One inline run of literal text plus its formatting.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocRun {
@@ -49,7 +49,7 @@ impl DocRun {
 /// explicit `#[value(bound(...))]` override — the shared `engine::triples` copy lacks that
 /// override; per this ticket's "shared infra gaps → report only" rule, fixed here locally rather
 /// than editing that shared file).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocStyle {
@@ -62,7 +62,7 @@ pub struct DocStyle {
 }
 /// 🖼️ One embedded raster/vector image, addressed by id from `DocBlock::Image`. Derives
 /// `Default` for the same shared-`engine::triples`-bound reason as `DocStyle` above.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocImage {
@@ -75,7 +75,7 @@ pub struct DocImage {
 }
 /// 🔲 One list item — recursively holds its own block content (a list item may itself contain
 /// paragraphs, nested lists, tables, …), matching CommonMark/WordprocessingML's own model.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocListItem {
@@ -83,7 +83,7 @@ pub struct DocListItem {
     pub blocks: Vec<DocBlock>,
 }
 /// 🔲️ One table cell — recursively holds block content.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocTableCell {
@@ -91,7 +91,7 @@ pub struct DocTableCell {
     pub blocks: Vec<DocBlock>,
 }
 /// ➖️ One table row.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct DocTableRow {
@@ -105,7 +105,7 @@ pub struct DocTableRow {
 /// 🩹 Derives `Default` (`#[default]` on the fieldless `PageBreak` variant) for the same shared
 /// `engine::triples::IndexedTripleDiff<D,T>` bound reason `DocStyle` documents above — `DocBlock`
 /// is used as `T` in `BlocksDiff = IndexedTripleDiff<DocBlockDiff, DocBlock>`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum DocBlock {
@@ -165,7 +165,7 @@ impl DocBlock {
 pub const STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.document";
 //#endregion 🔖️Ids
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.document")]
 pub struct SemioDocumentSnapshot {

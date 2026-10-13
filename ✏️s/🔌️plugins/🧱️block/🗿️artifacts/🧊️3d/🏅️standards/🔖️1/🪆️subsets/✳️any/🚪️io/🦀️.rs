@@ -228,7 +228,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Block3dBuilderFacets {
         construction: Block3dBuilderConstruction,
         analysis: Block3dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Block3dComposerComposition,
+        composition: Block3dComposerComposition,
     }
     builder: Block3dBuilder,
     analyzer: Block3dAnalyzer,

@@ -24,9 +24,9 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RenameEntry {
             protocol::MutationOutcome::new(diff::diff_rename_entry(name, new_name))
         }
     }
-    fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
         let Self { name, new_name } = self;
-        Ok(vec![ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name: new_name.clone(), new_name: name.clone() })])
+        Ok(vec![ZipIso21320Mutation::RenameEntry(RenameEntry { name: new_name.clone(), new_name: name.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Rename entry", "Eintrag umbenennen")

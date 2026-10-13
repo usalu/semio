@@ -12,7 +12,7 @@ impl OperationWireRows{
 impl ErasedSnapshotRetirement for OperationWireRows{
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError>{Ok(0)}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.active.as_ref().map(Vec::capacity).or_else(||self.rows.as_ref().map(|rows|rows.last().map(Vec::capacity).unwrap_or_else(||rows.capacity()*std::mem::size_of::<Vec<u8>>()))).unwrap_or(0))}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.active.as_ref().map(Vec::capacity).or_else(||self.rows.as_ref().map(|rows|rows.last().map(Vec::capacity).unwrap_or_else(||rows.capacity()*size_of::<Vec<u8>>()))).unwrap_or(0))}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
     fn terminal_is_empty(&self)->bool{self.active.is_none()&&self.rows.is_none()}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{

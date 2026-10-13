@@ -1,9 +1,8 @@
 //! 🔺️ Diff for `ReorderColumns`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::table::schema::diff::{SemioTableColumnDiff, SemioTableDiff, SemioTableRowDiff};
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableSnapshot};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::table::schema::diff::{SemioTableDiff, SemioTableRowDiff};
+use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Moves one column: the `columns` triple removes its base index and re-adds it at the landing position, and every row moves the same cell.

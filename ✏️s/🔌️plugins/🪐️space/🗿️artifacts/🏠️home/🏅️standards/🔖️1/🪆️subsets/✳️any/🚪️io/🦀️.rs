@@ -269,7 +269,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec HomeBuilderFacets {
         construction: HomeBuilderConstruction,
         analysis: SHomeAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::SHomeComposerComposition,
+        composition: SHomeComposerComposition,
     }
     builder: HomeBuilder,
     analyzer: SHomeAnalyzer,

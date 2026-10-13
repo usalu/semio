@@ -48,7 +48,7 @@ pub fn settings_action() -> ActionDefinition {
 /// config-store mutation — but it touches no pointer in `ENERGY_SIMULATION_RUN_SETTINGS`, so a
 /// recolour never restarts a live run.
 pub fn result_field_action() -> ActionDefinition {
-    let options = crate::editor::model::results::ResultField::ALL
+    let options = ResultField::ALL
         .iter()
         .map(|field| {
             ActionArgOption::new(

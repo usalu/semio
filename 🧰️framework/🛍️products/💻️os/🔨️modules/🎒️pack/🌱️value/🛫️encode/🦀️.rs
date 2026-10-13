@@ -158,7 +158,7 @@ pub(super) fn document(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptio
         let mut payload=Output::allocated(measure.length,control)?;{let mut encoder=Encoder{symbols:&symbols,options,control,writer:Some(&mut writer),chunking:true,next_chunk:0};encoder.fields(Some(spec),record,0,&mut payload)?;}
         
         if payload.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Pack document size changed after admission").into())}let bytes=payload.bytes.unwrap();let start=writer.position();let size=usize::try_from(options.frame_size.max(1)).map_err(|_|ValueError::new(ValueRefusalKind::OwnershipLimit,"Pack frame size exceeds address space"))?;let frames=bytes.len().div_ceil(size);control.scoped_stage(|control|{control.begin_stage(frames)?;for frame in bytes.chunks(size){writer.segment(crate::KIND_DOCUMENT,frame,control)?;control.step()?;}Ok::<_,PackRefusal>(())})?;let end=writer.position();
-        let hash=super::schema_hash_controlled(spec,control)?;
+        let hash=schema_hash_controlled(spec,control)?;
         
         let manifest=crate::os_pack::format::Manifest{schema_name:String::new(),schema_hash:hash,doc_span:crate::os_pack::ByteRange{offset:start,len:end-start},doc_frame_count:frames as u64,symbols_span:crate::os_pack::ByteRange{offset:0,len:0},chunk_table_span:crate::os_pack::ByteRange{offset:0,len:0},field_index_span:crate::os_pack::ByteRange{offset:0,len:0},uncompressed_body_len:bytes.len()as u64,field_count:record.fields.values().filter(|value|!matches!(value,FieldValue::Absent)).count()as u64,chunk_count:0,symbol_count:symbols.entries.len()as u64};writer.finish(&manifest,control)
     }))

@@ -44,7 +44,7 @@ impl Generation2dDiff {
     }
 }
 
-semio_framework_os_kernel::diff_text!(crate::standards::v1::subsets::any::schema::diff::Generation2dDiff);
+semio_framework_os_kernel::diff_text!(Generation2dDiff);
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

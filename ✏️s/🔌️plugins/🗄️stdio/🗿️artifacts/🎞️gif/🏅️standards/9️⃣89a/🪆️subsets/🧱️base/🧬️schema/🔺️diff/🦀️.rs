@@ -12,10 +12,11 @@
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
-use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifRgb, GifSnapshot};
+use crate::standards::v89a::subsets::any::schema::snapshot::{GifAppExtension, GifColorTable, GifDisposal, GifFrame, GifPlainText, GifSnapshot};
+#[cfg(test)] use crate::standards::v89a::subsets::any::schema::snapshot::{GifRgb};
 use framework_schema::ArtifactSchema;
 use protocol::os_spr::command::DiffAlgebra;
-use protocol::{DiffCodec};
+#[cfg(test)] use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔖️IndexTransport

@@ -30,10 +30,8 @@ use crate::editor::puzzle3d::precompute::geometry::{
     CollisionStepResult,
 };
 use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
-use crate::standards::v1::subsets::any::schema::{
-    BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPlacePayload, BrushPreviewState, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome,
-    SceneConfig,
-};
+use crate::standards::v1::subsets::any::schema::{BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPreviewState, EngineSceneObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, SceneConfig};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, EngineSceneSnapshot};
 use crate::Puzzle3dError;
 use semio_framework_job::default_now_us;
 use std::collections::{HashMap, VecDeque};
@@ -1214,7 +1212,7 @@ impl Puzzle3dCollisionSession {
         let meshes = self.mesh_sources.values().map(|mesh| mesh.url.len().saturating_add(mesh.positions.len().saturating_mul(4)).saturating_add(mesh.indices.len().saturating_mul(4))).fold(0_usize, usize::saturating_add);
         self.scene_synced
             .as_ref()
-            .map_or(0, |scene| scene.scene_snapshot.objects.len().saturating_mul(size_of::<crate::standards::v1::subsets::any::schema::EngineSceneObject>()))
+            .map_or(0, |scene| scene.scene_snapshot.objects.len().saturating_mul(size_of::<EngineSceneObject>()))
             .saturating_add(meshes)
             .saturating_add(self.brush_placed.len().saturating_mul(size_of::<PlacedCollisionEntry>()))
             .saturating_add(self.brush_index.entry_len().saturating_mul(size_of::<CollisionAabb>()))

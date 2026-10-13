@@ -79,7 +79,7 @@ pub(crate) mod context {
     /// 🧰️ A registry-backed app so kind discipline (View actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
     pub fn app_with_registry() -> Puzzle5dTestApp {
-        let mut app = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
+        let mut app = semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle5dPlayApp>>(puzzle5d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity)));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(1));
         Puzzle5dTestApp(app)
     }
@@ -151,7 +151,9 @@ pub(crate) mod context {
         Ok(())
     }
 
-    fn settle(app: &mut Puzzle5dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
+    type Identity<'a, 'b> = &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>;
+
+    fn settle(app: &mut Puzzle5dApp, result: Result<InvocationResult, Fault>, identity: Identity<'_, '_>) -> Result<InvocationResult, Fault> {
         let mut result = result?;
         let mut fault = None;
         for _ in 0..1_048_576 {
@@ -159,8 +161,9 @@ pub(crate) mod context {
                 drain_settled(app, &mut result, &mut fault)?;
                 return fault.map_or(Ok(result), Err);
             }
-            crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-            block_on(app.advance_typed_operation_publication())?;
+            crate::puzzle_job::testing::maintain(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes)?;
+            block_on(app.advance_typed_operation_publication(identity, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation))?;
+            crate::puzzle_job::testing::drain_outboxes(app);
             // 📄️ EVERY presented page and EVERY completion per turn, never one:
             // `has_pending_typed_operations` counts the outboxes and the mounted operations but NOT a
             // page already presented and waiting for its ACK, so a turn that leaves a second page — or
@@ -204,19 +207,25 @@ pub(crate) mod context {
                 | "setInteractionGranularity"
         ) {
             let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
-            let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
-            return settle(app, result);
+            return semio_framework_plugin::with_authoring_identity!(|identity| {
+                let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut identity)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
+                settle(app, result, &mut identity)
+            });
         }
-        let result = block_on(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
-        settle(app, result)
+        semio_framework_plugin::with_authoring_identity!(|identity| {
+            let result = block_on(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut identity));
+            settle(app, result, &mut identity)
+        })
     }
 
     /// 📥️ [`dispatch`] through the SDK's own action dispatch (`handle_action`) instead of the typed channel — the lane a
     /// shell's picked-file chunks take, where the framework's import staging admits them first.
     pub fn dispatch_through_action(app: &mut Puzzle5dApp, action: &str, args: &semio_framework_value::DslValue) -> Result<InvocationResult, Fault> {
         let action_meta = action_meta(action, None, None);
-        let result = block_on(app.handle_action(action, Some(args), &action_meta));
-        settle(app, result)
+        semio_framework_plugin::with_authoring_identity!(|identity| {
+            let result = block_on(app.handle_action(action, Some(args), &action_meta, &mut identity));
+            settle(app, result, &mut identity)
+        })
     }
     
     /// 🩺️ `dispatch` for an app command, with the publication ladder's own census traced on stderr: every
@@ -227,7 +236,11 @@ pub(crate) mod context {
         let action_meta = action_meta(action, args, window_id);
         let base = semio_framework_plugin::app::typed_operation_unit_census();
         let started = std::time::Instant::now();
-        let mut result = block_on(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta))?;
+        semio_framework_plugin::with_authoring_identity!(|identity| dispatch_traced_with(app, action, args, window_id, &action_meta, base, started, &mut identity))
+    }
+
+    fn dispatch_traced_with(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, action_meta: &ActionMeta, base: semio_framework_plugin::app::TypedOperationUnitCensus, started: std::time::Instant, identity: Identity<'_, '_>) -> Result<InvocationResult, Fault> {
+        let mut result = block_on(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), action_meta, identity))?;
         let mut fault = None;
         let mut lanes: std::collections::BTreeMap<String, u64> = std::collections::BTreeMap::new();
         let mut next_turn = 1_u64;
@@ -239,8 +252,9 @@ pub(crate) mod context {
                 eprintln!("{action} settled turn={turn} ms={} census={} pages={lanes:?} fault={fault:?}", started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base);
                 return fault.map_or(Ok(result), Err);
             }
-            crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-            let unit = block_on(app.advance_typed_operation_publication());
+            crate::puzzle_job::testing::maintain(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes)?;
+            let unit = block_on(app.advance_typed_operation_publication(identity, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation));
+            crate::puzzle_job::testing::drain_outboxes(app);
             while let Some(page) = app.take_typed_operation_result_page(1) {
                 *lanes.entry(format!("{:?}", page.lane)).or_default() += 1;
                 if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
@@ -268,10 +282,12 @@ pub(crate) mod context {
     /// window instance view state carries the armed utility does.
     pub fn dispatch_armed(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: &str, utility_id: &str) -> Result<InvocationResult, Fault> {
         let mut view = window_view(window_id, window_id);
-        view.active_utility_by_window_id.cold_insert(window_id.to_string(), utility_id.to_string());
+        view.active_utility_by_window_id.insert(window_id.to_string(), utility_id.to_string());
         let action_meta = ActionMeta { view_state: Some(view), ..meta("local") };
-        let result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), Some(window_id.to_string())), &action_meta));
-        settle(app, result)
+        semio_framework_plugin::with_authoring_identity!(|identity| {
+            let result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), Some(window_id.to_string())), &action_meta, &mut identity));
+            settle(app, result, &mut identity)
+        })
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -324,16 +340,7 @@ pub(crate) mod context {
     /// two-app law did not get there.
     #[track_caller]
     pub fn close_app(app: &mut Puzzle5dApp) {
-        for _ in 0..1_048_576 {
-            if app.close_terminal_is_empty() {
-                return;
-            }
-            let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 5D registered app close quote");
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if matches!(PluginApp::close_step(app, grant).expect("Puzzle 5D registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
-                break;
-            }
-        }
+        artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
         assert!(app.close_terminal_is_empty(), "Puzzle 5D registered app close did not reach terminal-empty ownership");
     }
     
@@ -404,7 +411,7 @@ pub(crate) mod context {
     //#endregion 🎚️Measures
 
     pub fn projection_of(app: &Puzzle5dApp) -> Value {
-        parse(&app.snapshot().expect("projection").value().to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot JSON")
+        semio_framework_pack_json::from_dsl_value(app.snapshot().expect("projection").value())
     }
     
     pub fn part_count(app: &Puzzle5dApp) -> usize {
@@ -776,7 +783,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-    ::semio_framework_async::poll::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None })).expect("apply");
+    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity))).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
@@ -2238,7 +2245,7 @@ fn export_import_round_trips_every_shipped_example_byte_for_byte() {
         assert!(!document.parts.is_empty(), "a round trip over an empty document proves nothing");
         let exported = export_snapshot::puzzle5d_export_json(&document);
         let root = import_snapshot::puzzle5d_decode_document(&exported).expect("the whole export decodes as a puzzle 5d document");
-        let reimported: Puzzle5dDocument = crate::editor::puzzle5d::puzzle5d_record_from_projection(root).expect("the decoded root is a puzzle 5d document");
+        let reimported: Puzzle5dDocument = crate::editor::puzzle5d::component::puzzle5d_record_from_projection(root).expect("the decoded root is a puzzle 5d document");
         assert_eq!(export_snapshot::puzzle5d_export_json(&reimported), exported, "{} did not round-trip byte-for-byte", document.label.clone().unwrap_or_default());
     }
 }

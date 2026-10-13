@@ -4,8 +4,7 @@
 //! no `serde_json::Value`, no bare tuples/nested fixed arrays (geometry fields reuse
 //! `engine::geometry`'s named structs throughout).
 
-use crate::standards::v1::subsets::base::schema::geometry::native::{NativeF64,NativeF32};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioRgba, SemioTransform};
 
 
 use framework_schema::ArtifactSchema;

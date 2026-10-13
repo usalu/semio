@@ -342,23 +342,23 @@ impl RetainedXmlDocument {
         }
         let mut total = 0usize;
         add(&mut total, self.nodes.len())?;
-        add(&mut total, self.prolog.len().saturating_add(self.epilog.len()).saturating_add(usize::from(self.root.is_some())).checked_mul(std::mem::size_of::<usize>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML root validation overflow"))?)?;
-        add(&mut total, self.nodes.len().checked_mul(std::mem::size_of::<Option<XmlNode>>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML node materialization overflow"))?)?;
-        add(&mut total, self.prolog.len().checked_mul(std::mem::size_of::<XmlNode>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML prolog materialization overflow"))?)?;
-        add(&mut total, self.epilog.len().checked_mul(std::mem::size_of::<XmlNode>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML epilog materialization overflow"))?)?;
+        add(&mut total, self.prolog.len().saturating_add(self.epilog.len()).saturating_add(usize::from(self.root.is_some())).checked_mul(size_of::<usize>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML root validation overflow"))?)?;
+        add(&mut total, self.nodes.len().checked_mul(size_of::<Option<XmlNode>>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML node materialization overflow"))?)?;
+        add(&mut total, self.prolog.len().checked_mul(size_of::<XmlNode>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML prolog materialization overflow"))?)?;
+        add(&mut total, self.epilog.len().checked_mul(size_of::<XmlNode>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML epilog materialization overflow"))?)?;
         for node in self.nodes.iter() {
             match &node.value {
                 RetainedXmlNodeKind::Element { name, attribute_count, first_child, .. } => {
                     text(&mut total, name)?;
-                    add(&mut total, attribute_count.checked_mul(std::mem::size_of::<XmlAttr>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML attribute materialization overflow"))?)?;
+                    add(&mut total, attribute_count.checked_mul(size_of::<XmlAttr>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML attribute materialization overflow"))?)?;
                     let mut children = 0usize;
                     let mut child = *first_child;
                     while let Some(ordinal) = child {
                         children = children.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML child materialization overflow"))?;
                         child = self.nodes.get(ordinal).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "retained XML child ordinal is out of range"))?.next_sibling;
                     }
-                    add(&mut total, children.checked_mul(std::mem::size_of::<usize>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML child frontier overflow"))?)?;
-                    add(&mut total, children.checked_mul(std::mem::size_of::<XmlNode>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML child owner overflow"))?)?;
+                    add(&mut total, children.checked_mul(size_of::<usize>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML child frontier overflow"))?)?;
+                    add(&mut total, children.checked_mul(size_of::<XmlNode>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML child owner overflow"))?)?;
                 }
                 RetainedXmlNodeKind::Text { text: value } | RetainedXmlNodeKind::CData { text: value } | RetainedXmlNodeKind::Comment { text: value } => text(&mut total, value)?,
                 RetainedXmlNodeKind::ProcessingInstruction { target, data } => {
@@ -373,7 +373,7 @@ impl RetainedXmlDocument {
         }
         if let Some(doctype) = &self.doctype {
             text(&mut total, &doctype.name)?;
-            add(&mut total, doctype.declarations.len().checked_mul(std::mem::size_of::<XmlDtdDeclaration>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML DTD materialization overflow"))?)?;
+            add(&mut total, doctype.declarations.len().checked_mul(size_of::<XmlDtdDeclaration>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained XML DTD materialization overflow"))?)?;
             if let Some(external) = &doctype.external_id {
                 match external {
                     RetainedXmlExternalId::System { system_id } => text(&mut total, system_id)?,

@@ -13,17 +13,14 @@ pub use semio_s_artifact_stdio_contract::{apply_mutation, apply_mutation_checked
 
 use semio_framework_plugin::io::FormatDescriptor;
 use semio_framework_plugin::{ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_dispatch_macros::dyn_enum_close;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::__semio_dispatch_PluginApp;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::plugin_app_close_prelude::*;
 
-#[cfg(feature = "component-app-assembly")]
 dyn_enum_close! {
     pub enum BinaryApps: PluginApp {
         Editor(VcsArtifactApp<EditorApp<editor::binary::BinaryEditor>>),
@@ -79,7 +76,7 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration
         .formats(formats)
         .inferences([standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor()])
         .composers(standards::v_raw::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.binary", standard: semio_framework_artifact_reference::StandardId("raw"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<BinarySnapshot, BinaryMutation>(STDIO_BINARY_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") })
         .try_build()
 }
 
@@ -92,7 +89,6 @@ pub fn declaration(definition: ArtifactDefinition) -> Result<ArtifactDeclaration
 /// too is a follow-up, not required for the carrier law or for this tree to register cleanly
 /// (see `📓️w2-p-report.md` `## openQuestions`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact() -> declarations::ArtifactDeclaration<BinaryApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -158,10 +154,8 @@ pub mod standards {
     pub mod v_raw {
         // 🌳️ Standard root (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, W2-P
         // pilot): `standard() -> StandardDeclaration`, mounts subset `any` below.
-        #[cfg(feature = "component-app-assembly")]
         #[path = "🏅️standards/🔖️raw/🦀️.rs"]
         mod component;
-        #[cfg(feature = "component-app-assembly")]
         pub use component::*;
 
         // 🐜️ `⚙️engine/` dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
@@ -299,7 +293,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -340,7 +333,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

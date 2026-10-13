@@ -9,9 +9,9 @@ async fn insert_then_remove_before_matches_canonical_shape() {
     let merged = absorb_splices(&d1, &d2);
 
     let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-    let mid = BinaryDiff protocol::apply_diff(&{ splices: d1.clone() }, &base).unwrap();
-    let after = BinaryDiff protocol::apply_diff(&{ splices: d2.clone() }, &mid).unwrap();
-    assert_eq!(BinaryDiff protocol::apply_diff(&{ splices: merged }, &base).unwrap(), after);
+    let mid = protocol::apply_diff(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
+    let after = protocol::apply_diff(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
+    assert_eq!(protocol::apply_diff(&BinaryDiff { splices: merged }, &base).unwrap(), after);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -21,9 +21,9 @@ async fn insert_insert_same_offset_both_survive() {
     let merged = absorb_splices(&d1, &d2);
 
     let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-    let mid = BinaryDiff protocol::apply_diff(&{ splices: d1.clone() }, &base).unwrap();
-    let after = BinaryDiff protocol::apply_diff(&{ splices: d2.clone() }, &mid).unwrap();
-    assert_eq!(BinaryDiff protocol::apply_diff(&{ splices: merged }, &base).unwrap(), after);
+    let mid = protocol::apply_diff(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
+    let after = protocol::apply_diff(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
+    assert_eq!(protocol::apply_diff(&BinaryDiff { splices: merged }, &base).unwrap(), after);
     assert!(after.bytes.windows(2).any(|w| w == [0xBB, 0xAA]) || after.bytes.contains(&0xAA) && after.bytes.contains(&0xBB));
 }
 
@@ -34,9 +34,9 @@ async fn modify_then_remove_drops_the_modify() {
     let merged = absorb_splices(&d1, &d2);
 
     let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
-    let mid = BinaryDiff protocol::apply_diff(&{ splices: d1.clone() }, &base).unwrap();
-    let after = BinaryDiff protocol::apply_diff(&{ splices: d2.clone() }, &mid).unwrap();
-    assert_eq!(BinaryDiff protocol::apply_diff(&{ splices: merged }, &base).unwrap(), after);
+    let mid = protocol::apply_diff(&BinaryDiff { splices: d1.clone() }, &base).unwrap();
+    let after = protocol::apply_diff(&BinaryDiff { splices: d2.clone() }, &mid).unwrap();
+    assert_eq!(protocol::apply_diff(&BinaryDiff { splices: merged }, &base).unwrap(), after);
 }
 
 #[semio_framework_async_macros::async_test]

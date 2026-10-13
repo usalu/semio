@@ -593,7 +593,7 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
             // Accidental torsion §4.3.3.2.4: e_ai = ±0.05 L_i; δ = 1 + 0.6 x/L_e amplifies storey forces.
             let plan_w = if system.direction == "y" { building.plan_length_m } else { building.plan_width_m };
             let e_ai = 0.05 * plan_w.max(0.0);
-            let (delta_torsion, e_tot) = if building.plan_width_m > 0.0 && building.plan_length_m > 0.0 {
+            let (delta_torsion, _e_tot) = if building.plan_width_m > 0.0 && building.plan_length_m > 0.0 {
                 let st = building.storeys.first();
                 let e0 = st.map(|s| {
                     let cm = if system.direction == "y" { s.centre_of_mass_x_m } else { s.centre_of_mass_y_m };
@@ -1312,7 +1312,7 @@ fn evaluate_silos_tanks(report: &mut CheckReport, document: &En1998Snapshot, ann
     }
 }
 
-fn building_base_shear_n(document: &En1998Snapshot, building_id: &str, annex_params: &AnnexParams, gamma_i: f64, a_g: f64, s: f64, tb: f64, tc: f64, td: f64) -> f64 {
+fn building_base_shear_n(document: &En1998Snapshot, building_id: &str, _annex_params: &AnnexParams, gamma_i: f64, a_g: f64, s: f64, tb: f64, tc: f64, td: f64) -> f64 {
     let Some(building) = document.buildings.iter().find(|b| b.id == building_id) else { return 0.0 };
     let total_height: f64 = building.storeys.iter().map(|st| st.height_m).sum();
     let n = building.storeys.len();

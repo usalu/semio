@@ -162,14 +162,14 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::io::{PptxAnalyzer as PptxAnyAnalyzer, PptxParts};
-    use crate::PptxSnapshot;
-    use semio_framework_diagnostic::Diagnostic;
-    use semio_framework_diagnostic::FaultCode;
-    use semio_framework_diagnostic::FaultScope;
+    #[cfg(test)] use crate::PptxSnapshot;
+    #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
+    #[cfg(test)] use semio_framework_diagnostic::FaultCode;
+    #[cfg(test)] use semio_framework_diagnostic::FaultScope;
     use semio_framework_diagnostic::Severity;
-    use semio_framework_diagnostic::TextSpan;
+    #[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use semio_s_artifact_stdio_zip::opc::OpcPackage;
+    #[cfg(test)] use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
@@ -219,7 +219,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PptxTransitionalBuilderFacets {
         construction: PptxTransitionalBuilderConstruction,
         analysis: PptxTransitionalAnalyzerAnalysis,
-        composition: super::io::derived_composition::PptxTransitionalComposerComposition,
+        composition: PptxTransitionalComposerComposition,
     }
     builder: PptxTransitionalBuilder,
     analyzer: PptxTransitionalAnalyzer,

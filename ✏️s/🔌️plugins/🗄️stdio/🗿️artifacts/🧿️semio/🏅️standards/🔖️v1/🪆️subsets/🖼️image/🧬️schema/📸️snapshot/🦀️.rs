@@ -25,7 +25,7 @@ pub const STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.image";
 /// 🎨️ Source pixel colorspace — every frame's `rgba8` buffer is always normalized to RGBA8 on
 /// decode (per the master plan's snapshot spec), so this field records the SOURCE colorspace for
 /// honest round-trip/re-encode decisions, not a second in-memory pixel layout.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioColorspace {
@@ -42,7 +42,7 @@ pub enum SemioColorspace {
 /// 🖼️ One decoded frame: always-RGBA8 pixels (row-major, `width*height*4` bytes) plus its
 /// animation delay. A single-frame image (png/jpg/bmp/tiff) has exactly one `SemioImageFrame`
 /// with `delay_ms: 0`. Strong entity — per-field diffable (see `🔺️diff`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioImageFrame {
@@ -55,7 +55,7 @@ pub struct SemioImageFrame {
 //#region 🔖️Metadata
 /// 🏷️ One textual metadata entry (png tEXt/iTXt, exif-as-text, gif comment-extension-derived, …)
 /// — name-keyed by `key`. Weak/value entity: its "diff" is the whole new value, never sub-diffed.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioImageMetadataEntry {
@@ -66,7 +66,7 @@ pub struct SemioImageMetadataEntry {
 //#endregion 🔖️Metadata
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.image")]

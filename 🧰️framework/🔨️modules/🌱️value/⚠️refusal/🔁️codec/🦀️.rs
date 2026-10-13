@@ -18,11 +18,11 @@ impl ValueRefusalKind {
         })
     }
 }
-impl crate::ToValue for ValueRefusalKind {
+impl ToValue for ValueRefusalKind {
     fn to_value(&self) -> DslValue { DslValue::String(self.as_str().into()) }
     fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { ValueRefusalKind::to_value_controlled(self, control) }
 }
-impl crate::FromValue for ValueRefusalKind {
+impl FromValue for ValueRefusalKind {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::String(text) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected refusal kind text")) };
         kind(&text)

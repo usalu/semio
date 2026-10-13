@@ -9,7 +9,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 use crate::artifact_schema::mutations::Din18599Mutation;
 use crate::artifact_schema::mutations::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_element_u, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class, replace_elements, replace_zones, update_climate, update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
 use crate::{
-    Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem,
+    Attachment, AutomationClass, BuildingCategory, CalculationMethod, MonthlyClimate, UseClass,
 };
 use protocol::OpText;
 

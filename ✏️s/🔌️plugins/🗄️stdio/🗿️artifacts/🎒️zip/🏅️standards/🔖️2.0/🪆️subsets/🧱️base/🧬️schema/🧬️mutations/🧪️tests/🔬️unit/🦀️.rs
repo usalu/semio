@@ -10,7 +10,7 @@ async fn logical_mutations_diff_and_codecs_round_trip() {
         assert_eq!(ZipMutation::parse_op(&text).expect("text operation"), mutation);
         let bytes = mutation.encode_op().expect("binary operation");
         assert_eq!(ZipMutation::decode_op(&bytes).expect("binary operation"), mutation);
-        assert_eq!(protocol::apply_diff(&mutation.diff(&base).diff(), &base).unwrap(), {
+        assert_eq!(protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap(), {
             let mut next = base.clone();
             apply_mutation(&mut next, &mutation);
             next

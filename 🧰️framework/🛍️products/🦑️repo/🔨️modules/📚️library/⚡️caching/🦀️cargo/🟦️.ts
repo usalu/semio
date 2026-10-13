@@ -1,5 +1,7 @@
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { admitCargoPrebuildPlanV1, type CargoPrebuildPlanV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { repoCacheDirectory } from "../🟦️.ts";
 
 /** 🏛️ Caller-owned values forwarded to a canonical execution without reading ambient state. */
@@ -63,4 +65,18 @@ export const WASM_PUBLICATION_PROFILE = "wasm-release";
 /** 🔐 Selects the canonical publication profile from the caller's actual Cargo deliverable root. */
 export function publicationWasmPath(repoRoot: string, wasmOut: string): string {
   return join(cargoTargetDirectory(repoRoot), "wasm32-wasip2", WASM_PUBLICATION_PROFILE, wasmOut);
+}
+
+/** 🗺️ Plans one Cargo pass per workspace over every plugin and extension component its manifest declares, found through
+ * Cargo's own `metadata` so membership, features and renames are never re-derived here. */
+export function componentPrebuildPlanV1(repoRoot: string, workspaces: readonly string[]): CargoPrebuildPlanV1 {
+  return admitCargoPrebuildPlanV1({ version: 1, workspaces: workspaces.map((workspace) => {
+    const manifest = resolve(repoRoot, workspace, "Cargo.toml");
+    const metadata = spawnSync("cargo", ["metadata", "--no-deps", "--format-version", "1", "--locked", "--offline", "--manifest-path", manifest], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+    if (metadata.status !== 0) throw new Error(`cargo metadata failed for ${manifest}: ${metadata.stderr.slice(0, 500)}`);
+    const packages = (JSON.parse(metadata.stdout).packages as { name: string; metadata?: { component?: { package?: string }; semio?: { "component-kind"?: string } } }[])
+      .filter((row) => row.metadata?.component?.package && ["plugin", "extension"].includes(row.metadata.semio?.["component-kind"] ?? ""))
+      .map((row) => row.name).sort();
+    return { manifest, packages };
+  }).filter((workspace) => workspace.packages.length > 0) });
 }

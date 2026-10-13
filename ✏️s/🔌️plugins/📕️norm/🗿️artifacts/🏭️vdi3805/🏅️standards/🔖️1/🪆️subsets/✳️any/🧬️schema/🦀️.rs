@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use crate::{GenericAttributes, CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
 use ::framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -108,11 +108,11 @@ pub fn vdi3805_artifact_schema_descriptor() -> ::semio_framework_schema_registry
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
-use crate::document::{AnnexChoice, ClauseId, LocalizedCopy, NormError, SubjectRef};
+use crate::document::{AnnexChoice, ClauseId, LocalizedCopy, SubjectRef};
+#[cfg(test)] use crate::document::{NormError};
 /// 📐️ Pure VDI 3805 compliance helpers — native-text parsing with typed record families,
 /// Part 1 structural validation, and sheet attribute catalogues.
 use crate::*;
-use ::dsl;
 
 const FAMILY: &str = "VDI 3805";
 pub const ANNEX: AnnexChoice = AnnexChoice::De;

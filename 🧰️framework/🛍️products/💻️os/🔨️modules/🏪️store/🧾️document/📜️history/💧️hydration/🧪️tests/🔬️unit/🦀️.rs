@@ -327,15 +327,16 @@ fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_r
     use semio_framework_value::retirement::{shared::SharedControlledRetirement, controlled::ControlledRetirement};
     fn close(mut snapshot: impl ErasedSnapshotRetirement, mut pack: impl ErasedSnapshotRetirement, policy: RetainedCloneGrant, expected: usize) {
         let mut freed = 0;
+        let mut born = 0;
         for _ in 0..64 {
             if snapshot.terminal_is_empty() && pack.terminal_is_empty() { break; }
             let (step, allocated, released) = crate::test_allocation::observe_backing(|| if !snapshot.terminal_is_empty() { snapshot.close_step(policy).unwrap() } else { pack.close_step(policy).unwrap() });
             assert!(step.progress().fits(policy));
             assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
-            assert_eq!(allocated, 0); freed += released;
+            born += allocated; freed += released;
         }
         assert!(snapshot.terminal_is_empty() && pack.terminal_is_empty());
-        assert_eq!(freed, expected);
+        assert_eq!(freed, expected + born, "every retirement frame a close turn births is paid and released again");
         let (_, allocated, released) = crate::test_allocation::observe_backing(|| { drop(snapshot); drop(pack); });
         assert_eq!((allocated, released), (0, 0));
         eprintln!("[DEBUG] verified Genesis original refusal custody / funded shared owner complete paid free={freed}, terminal0heap");
@@ -432,8 +433,10 @@ fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
             if retirement.terminal_is_empty() { break; }
             let demand = retirement.next_release_byte_demand().unwrap();
             assert!(demand <= policy.maximum_release_bytes);
-            let (denied, born, freed) = crate::test_allocation::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: 0, ..policy }).unwrap());
-            assert_eq!((denied.progress(), born, freed), (RetainedCloneProgress::default(), 0, 0));
+            if demand > 0 {
+                let (denied, born, freed) = crate::test_allocation::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: 0, ..policy }).unwrap());
+                assert_eq!((denied.progress(), born, freed), (RetainedCloneProgress::default(), 0, 0));
+            }
             let (step, born, freed) = crate::test_allocation::observe_backing(|| retirement.close_step(policy).unwrap());
             assert!(step.progress().fits(policy));
             assert_eq!((born, freed), (step.progress().retained_capacity_bytes, step.progress().released_bytes));

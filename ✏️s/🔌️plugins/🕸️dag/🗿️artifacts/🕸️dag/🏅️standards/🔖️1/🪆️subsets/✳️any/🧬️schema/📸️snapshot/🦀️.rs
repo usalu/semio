@@ -34,7 +34,7 @@ impl semio_framework_value::FromValue for DagSnapshot {
     fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
         let entries = value.object_controlled(control)?;
         semio_framework_value::DslValue::deny_fields_controlled(entries, &["schema", "content"], control)?;
-        control.charge(std::mem::size_of::<Self>())?;
+        control.charge(size_of::<Self>())?;
         let schema = semio_framework_value::DslValue::field_controlled(entries, "schema", control)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Dag schema"))?;
         let schema = <String as semio_framework_value::FromValue>::from_value_controlled(schema, control)?;
         let child = semio_framework_value::DslValue::field_controlled(entries, "content", control)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing Dag content"))?;

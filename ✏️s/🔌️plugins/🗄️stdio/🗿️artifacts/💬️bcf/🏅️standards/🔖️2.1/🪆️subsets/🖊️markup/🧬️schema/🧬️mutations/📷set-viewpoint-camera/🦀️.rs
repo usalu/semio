@@ -24,7 +24,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointCamera {
         let Self { topic_guid, guid, .. } = self;
         Ok({
             match find_viewpoint(base, topic_guid, guid) {
-                Some(v) => vec![BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: topic_guid.clone(), guid: guid.clone(), camera: v.camera.clone() })],
+                Some(v) => vec![BcfMutation::SetViewpointCamera(SetViewpointCamera { topic_guid: topic_guid.clone(), guid: guid.clone(), camera: v.camera.clone() })],
                 None => Vec::new(),
             }
         })

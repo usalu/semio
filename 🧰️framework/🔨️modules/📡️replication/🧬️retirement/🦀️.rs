@@ -1,9 +1,12 @@
 //! 📡️ Replication-owned delta retirement implements the neutral contract.
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence, leaf, deferred, deferred_birth_bytes_for, sequence_birth_bytes};
+/// 🗃️ A map delta retires through its ordered entry tree, so it is controlled exactly when its value type is.
 impl<V: RetireOwned> RetireOwned for crate::MapDelta<V> {
+    fn controlled_retirement_supported() -> bool { <std::collections::BTreeMap<String, crate::MapEntryDelta<V>> as RetireOwned>::controlled_retirement_supported() }
     fn retirement(self) -> Box<dyn RetirementCursor> {
         self.into_entries().retirement()
     }
+    fn retirement_birth_bytes(&self) -> Option<usize> { self.entries().retirement_birth_bytes() }
 }
 impl<V: RetireOwned> RetireOwned for crate::MapEntryDelta<V> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
@@ -43,20 +46,20 @@ impl RetireOwned for crate::MutationId {
     fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}
     fn controlled_retirement_supported()->bool{String::controlled_retirement_supported()}
 }
-impl semio_framework_value::retirement::RetireOwned for crate::InputReplacement {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+impl RetireOwned for crate::InputReplacement {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
             Self::Input { schema, payload } => sequence(vec![deferred(schema), deferred(payload)]),
-            Self::Withdrawn => semio_framework_value::retirement::sequence(Vec::new()),
+            Self::Withdrawn => sequence(Vec::new()),
         }
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { match self { Self::Input { schema, payload } => sequence_birth_bytes(&[deferred_birth_bytes_for(schema), deferred_birth_bytes_for(payload)]), Self::Withdrawn => sequence_birth_bytes(&[]) } }
     fn controlled_retirement_supported() -> bool { true }
 }
-impl semio_framework_value::retirement::RetireOwned for crate::MutationOrigin {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+impl RetireOwned for crate::MutationOrigin {
+    fn retirement(self) -> Box<dyn RetirementCursor> {
         match self {
-            Self::Owner => semio_framework_value::retirement::sequence(Vec::new()),
+            Self::Owner => sequence(Vec::new()),
             Self::Contributed { plugin_id, mutation_id, payload_hash } => sequence(vec![deferred(plugin_id), deferred(mutation_id.0), deferred(payload_hash.0)]),
             Self::Transaction { initiator } => sequence(vec![deferred(initiator.artifact_id), deferred(initiator.artifact_kind), deferred(initiator.dialect)]),
         }

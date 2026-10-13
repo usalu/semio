@@ -44,7 +44,7 @@ impl RetirementCursor for ClaimRetirement {
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
   let Some(source)=self.source.as_ref()else{return RetirementStep::Complete;};
   if source.is_claimed(){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}
-  let returned=source.has_returned_alias();let copy=if returned{std::mem::size_of::<usize>()}else{std::mem::size_of::<PublicationClaim>()};let release=if returned{0}else{PublicationClaimHandle::frame_bytes()};
+  let returned=source.has_returned_alias();let copy=if returned{size_of::<usize>()}else{size_of::<PublicationClaim>()};let release=if returned{0}else{PublicationClaimHandle::frame_bytes()};
   if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
   if returned {source.drain_returned_alias();return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()});}
   let original=self.source.take().unwrap().return_original();let unique=original.is_some();if let Some(original)=original{assert!(original.returned.load(Ordering::Acquire).is_null(),"original claim frame cannot return a live alias");drop(original);}
@@ -52,9 +52,9 @@ impl RetirementCursor for ClaimRetirement {
  }
  fn terminal_is_empty(&self)->bool { self.source.is_none() }
  fn next_close_byte_demand(&self)->Option<usize> {Some(self.source.as_ref().map_or(0,|source|if source.has_returned_alias(){0}else{PublicationClaimHandle::frame_bytes()}))}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{let Some(source)=self.source.as_ref()else{return Ok(0);};if source.is_claimed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}Ok(if source.has_returned_alias(){std::mem::size_of::<usize>()}else{std::mem::size_of::<PublicationClaim>()})}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{let Some(source)=self.source.as_ref()else{return Ok(0);};if source.is_claimed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}Ok(if source.has_returned_alias(){size_of::<usize>()}else{size_of::<PublicationClaim>()})}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn terminal_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
@@ -62,8 +62,8 @@ mod tests;
 
 impl RetireOwned for PublicationClaimHandle {
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(ClaimRetirement{source:Some(self)})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<ClaimRetirement>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ClaimRetirement>())}
  fn controlled_retirement_supported()->bool{true}
- fn retirement_element_copy_bytes()->usize{std::mem::size_of::<Self>()}
+ fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
 

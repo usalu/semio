@@ -158,9 +158,8 @@ pub fn en1990_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 /// 📐️ Pure EN 1990 compliance helpers — combinations, partial-factor tables and national-annex
 /// implementations are pure over `ActionSet`/`&impl NationalAnnex`. Snapshot-level `evaluate` lives
 /// in `💡️inferences`. `na_de`/`na_en` are depended on by sibling EN 199x artifacts.
-use crate::document::{
-    CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef,
-};
+use crate::document::{CheckReport, CheckResult, ClauseId, DesignSituation, ImposedCategory, LimitState, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+#[cfg(test)] use crate::document::{CheckStatus};
 
 pub use crate::document::NationalAnnex;
 

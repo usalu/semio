@@ -3,8 +3,7 @@
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::{FlowMutation, FlowSnapshot};
-use flow::{FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_infinite_dag::DagDrawLod;
+use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

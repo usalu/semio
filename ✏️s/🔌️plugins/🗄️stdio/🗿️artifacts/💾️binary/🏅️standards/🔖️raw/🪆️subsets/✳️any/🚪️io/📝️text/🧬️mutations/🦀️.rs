@@ -39,4 +39,3 @@ impl OpText for BinaryMutation {
     }
 }
 }
-pub use mutations_codec::*;

@@ -735,7 +735,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
 
     const DIALECT: Dialect = TRINITY_JACK_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::jack_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::jack_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
@@ -934,7 +934,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
     }
 
     /// 📢️ The localized notices of the editor's own refusal codes (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         crate::jack_fault_notices()
     }
 
@@ -1022,7 +1022,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         let content = || crate::jack_content_from_children(snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content", fault.message));
         let root = match body_key {
             TRINITY_JACK_PLAY_BODY_GRAPH => edit::windows::graph::render(TRINITY_JACK_PLAY_SURFACE_GRAPH, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &*content()?, crate::editor::jack::window_config::current(cfg)),
-            TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &crate::editor::jack::graph_from_document_or_default(snapshot, &doc.children), None),
+            TRINITY_JACK_PLAY_BODY_EDITOR => edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, snapshot, &graph_from_document_or_default(snapshot, &doc.children), None),
             TRINITY_JACK_PLAY_BODY_RESULTS => edit::windows::results::render(TRINITY_JACK_PLAY_SURFACE_RESULTS, TRINITY_JACK_PLAY_CONTROLLER_ID, None, None),
             TRINITY_JACK_PLAY_BODY_ARTIFACT => crate::editor::jack::panels::document::render(&*content()?, cfg.snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_ARTIFACT)),
             TRINITY_JACK_PLAY_BODY_CATALOGUE => crate::editor::jack::panels::catalogue::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, TRINITY_JACK_PLAY_BODY_CATALOGUE)),
@@ -1048,7 +1048,7 @@ impl ArtifactEditor for TrinityJackPlayApp {
         }
         if body_key == TRINITY_JACK_PLAY_BODY_EDITOR {
             let selection = transient.window::<JackEditorWindowTransientOwner>().and_then(|window| window.selection.as_ref());
-            let root = edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, doc.snapshot, &crate::editor::jack::graph_from_document_or_default(doc.snapshot, &doc.children), selection)?;
+            let root = edit::windows::editor::render(TRINITY_JACK_PLAY_SURFACE_EDITOR, TRINITY_JACK_PLAY_CONTROLLER_ID, doc.snapshot, &graph_from_document_or_default(doc.snapshot, &doc.children), selection)?;
             return Ok(semio_framework_plugin::built_to_component_tree(root));
         }
         Self::render(body_key, doc, cfg, view_state)
@@ -1104,7 +1104,7 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.trinity".into(),
-                label: semio_framework_ui_locale::LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
+                label: LocalizedLabel::native("Trinity Graph", "Trinity-Graph"),
                 source_format: "trinity.graph".into(),
                 component_kind: "trinity".into(),
                 dimension: "graph".into(),

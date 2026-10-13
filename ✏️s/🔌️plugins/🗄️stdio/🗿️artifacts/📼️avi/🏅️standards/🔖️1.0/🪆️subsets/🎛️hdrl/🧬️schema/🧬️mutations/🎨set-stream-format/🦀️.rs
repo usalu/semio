@@ -15,7 +15,7 @@ pub struct SetStreamFormat {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-format", kind: "set-stream-format", record: "SetStreamFormat" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         let Self { stream_index, strf } = self;
         protocol::MutationOutcome::new(stream_diff_for(*stream_index, AviStreamDiff { strf: Some(strf.clone()), ..AviStreamDiff::default() }))
     }
@@ -23,7 +23,7 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamFormat {
         let Self { stream_index, .. } = self;
         Ok({
             match base.streams.get(*stream_index) {
-                Some(stream) => vec![AviMutation::SetStreamFormat(set_stream_format::SetStreamFormat { stream_index: *stream_index, strf: stream.strf.clone() })],
+                Some(stream) => vec![AviMutation::SetStreamFormat(SetStreamFormat { stream_index: *stream_index, strf: stream.strf.clone() })],
                 None => Vec::new(),
             }
         })

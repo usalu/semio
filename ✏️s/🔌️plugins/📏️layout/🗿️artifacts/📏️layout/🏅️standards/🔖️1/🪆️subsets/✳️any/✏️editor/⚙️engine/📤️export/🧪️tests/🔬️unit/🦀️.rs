@@ -220,7 +220,7 @@ async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_who
     app.bind_instance_id(INSTANCE).await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
-    let result = app.dispatch_typed(crate::editor::layout::LayoutCommand::ExportPdf(crate::editor::layout::commands::export_pdf::ExportPdf { page_id: None }), &meta).await.expect("exportPdf dispatch");
+    let result = app.dispatch_typed(crate::editor::layout::LayoutCommand::ExportPdf(crate::editor::layout::commands::export_pdf::ExportPdf { page_id: None }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("exportPdf dispatch");
     assert!(result.mutations.is_empty(), "an export never mutates the document");
     let mut download: Option<(u64, String, String, Option<String>, usize)> = None;
     let mut turns = 0usize;
@@ -228,7 +228,7 @@ async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_who
         turns += 1;
         assert!(turns < 65_536, "the export never quiesced");
         app.maintenance_step(1, 16_384).expect("maintenance step");
-        app.advance_typed_operation_publication().await.expect("publication unit");
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("publication unit");
         if let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
             assert_ne!(page.lane, TypedOperationResultLane::Fault, "export faulted: {}", String::from_utf8_lossy(page.bytes()));
             if page.lane == TypedOperationResultLane::Download {
@@ -263,7 +263,7 @@ async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_who
     let pdf = decode_base64(std::str::from_utf8(&assembled).expect("base64 is ASCII")).expect("base64 payload");
     assert_eq!(assert_pdf_structure(&pdf), 3, "font stream + two page streams");
     assert!(String::from_utf8_lossy(&pdf).contains("/Count 2 >>"));
-    artifact_app_laws::close_registered_fixture_app(&mut app.0);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 //#endregion 📕️PdfDocument
 

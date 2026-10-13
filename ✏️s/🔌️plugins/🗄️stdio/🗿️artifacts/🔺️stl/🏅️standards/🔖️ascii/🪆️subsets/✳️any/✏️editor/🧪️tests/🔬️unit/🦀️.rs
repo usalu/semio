@@ -35,6 +35,6 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
     assert_eq!(state.triangles[1].vertices[0][2], 2.5);
     let whole = emit(editing::SnapshotEditEvent::SetValue { path: "/triangles/0".into(), value: semio_framework_value::ToValue::to_value(&StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[1.0, 0.0, 0.0]; 3] }) }).expect("a whole-triangle set resolves");
     assert!(matches!(whole.artifact_mutations.as_slice(), [StlMutation::SetTriangleNormal(_), StlMutation::SetTriangleVertices(_)]));
-    let unnamed = emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("the schema stamp has no kind");
+    let unnamed = emit(editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("the schema stamp has no kind");
     assert_eq!(unnamed.code.0, "snapshot-edit.unsupported-path");
 }

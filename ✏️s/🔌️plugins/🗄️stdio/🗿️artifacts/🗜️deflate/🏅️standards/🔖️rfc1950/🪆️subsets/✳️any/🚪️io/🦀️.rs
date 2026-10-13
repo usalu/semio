@@ -533,8 +533,8 @@ impl DeflateEncodeJob {
         self.input
             .capacity()
             .checked_add(self.writer.out.capacity())
-            .and_then(|bytes| bytes.checked_add(self.head.capacity().checked_mul(std::mem::size_of::<i32>())?))
-            .and_then(|bytes| bytes.checked_add(self.previous.capacity().checked_mul(std::mem::size_of::<i32>())?))
+            .and_then(|bytes| bytes.checked_add(self.head.capacity().checked_mul(size_of::<i32>())?))
+            .and_then(|bytes| bytes.checked_add(self.previous.capacity().checked_mul(size_of::<i32>())?))
             .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained Deflate ownership overflow"))
     }
 
@@ -756,12 +756,12 @@ impl RetainedZlibEncoder {
         }
         let code_bytes = 288usize
             .checked_add(32)
-            .and_then(|items| items.checked_mul(std::mem::size_of::<(u32, u8)>()))
+            .and_then(|items| items.checked_mul(size_of::<(u32, u8)>()))
             .ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib code ownership overflow"))?;
         let admitted = input
             .capacity()
-            .checked_add(HASH_SIZE.checked_mul(std::mem::size_of::<i32>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib hash ownership overflow"))?)
-            .and_then(|bytes| bytes.checked_add(WINDOW.checked_mul(std::mem::size_of::<i32>())?))
+            .checked_add(HASH_SIZE.checked_mul(size_of::<i32>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib hash ownership overflow"))?)
+            .and_then(|bytes| bytes.checked_add(WINDOW.checked_mul(size_of::<i32>())?))
             .and_then(|bytes| bytes.checked_add(code_bytes))
             .and_then(|bytes| bytes.checked_add(raw_limit))
             .and_then(|bytes| bytes.checked_add(file_limit))
@@ -775,8 +775,8 @@ impl RetainedZlibEncoder {
         job.writer.out.try_reserve_exact(raw_limit).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "retained zlib raw output allocation failed"))?;
         let actual = job
             .retained_owned_bytes()?
-            .checked_add(literal_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib literal-code ownership overflow"))?)
-            .and_then(|bytes| bytes.checked_add(distance_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>())?))
+            .checked_add(literal_codes.capacity().checked_mul(size_of::<(u32, u8)>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib literal-code ownership overflow"))?)
+            .and_then(|bytes| bytes.checked_add(distance_codes.capacity().checked_mul(size_of::<(u32, u8)>())?))
             .and_then(|bytes| bytes.checked_add(file_limit))
             .ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained zlib actual ownership overflow"))?;
         if actual > maximum_owned_bytes {
@@ -864,8 +864,8 @@ impl RetainedZlibEncoder {
     pub fn owned_bytes(&self) -> Result<usize, semio_framework_value::ValueError> {
         self.job
             .retained_owned_bytes()?
-            .checked_add(self.literal_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>()).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained zlib literal-code ownership overflow"))?)
-            .and_then(|bytes| bytes.checked_add(self.distance_codes.capacity().checked_mul(std::mem::size_of::<(u32, u8)>())?))
+            .checked_add(self.literal_codes.capacity().checked_mul(size_of::<(u32, u8)>()).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained zlib literal-code ownership overflow"))?)
+            .and_then(|bytes| bytes.checked_add(self.distance_codes.capacity().checked_mul(size_of::<(u32, u8)>())?))
             .and_then(|bytes| bytes.checked_add(self.raw.capacity()))
             .and_then(|bytes| bytes.checked_add(self.frame.capacity()))
             .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit, "retained zlib encoder ownership overflow"))
@@ -926,7 +926,8 @@ impl RetainedZlibEncoder {
 
 #[path = "📤️publication/🦀️.rs"]
 mod publication;
-use publication::{close_result, Kind as PublicationKind, Publication};
+use publication::{Kind as PublicationKind, Publication};
+#[cfg(test)] use publication::{close_result};
 
 /// ♻️ Closes the lent publication from the next step's own wallet before encoding resumes.
 fn retire_delivered_publication<'a>(publication: &mut Option<Box<Publication>>, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
@@ -1847,7 +1848,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec DeflateBuilderFacets {
         construction: DeflateBuilderConstruction,
         analysis: DeflateAnalyzerAnalysis,
-        composition: crate::standards::v_rfc1950::subsets::any::io::derived_composition::DeflateComposerComposition,
+        composition: DeflateComposerComposition,
     }
     builder: DeflateBuilder,
     analyzer: DeflateAnalyzer,

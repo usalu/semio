@@ -5,16 +5,16 @@ use protocol::OpBinary;
 
 //#region 🧾️DerivedRegistry
 pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[
-    ("SetInfoTitle", "setInfoTitle", self::set_info_title::BINARY_TAG),
-    ("SetInfoAuthor", "setInfoAuthor", self::set_info_author::BINARY_TAG),
-    ("InsertJavascriptAction", "insertJavascriptAction", self::insert_javascript_action::BINARY_TAG),
-    ("RemoveJavascriptAction", "removeJavascriptAction", self::remove_javascript_action::BINARY_TAG),
-    ("InsertLaunchAction", "insertLaunchAction", self::insert_launch_action::BINARY_TAG),
-    ("RemoveLaunchAction", "removeLaunchAction", self::remove_launch_action::BINARY_TAG),
-    ("InsertSignatureField", "insertSignatureField", self::insert_signature_field::BINARY_TAG),
-    ("RemoveSignatureField", "removeSignatureField", self::remove_signature_field::BINARY_TAG),
-    ("EmbedFontFile", "embedFontFile", self::embed_font_file::BINARY_TAG),
-    ("RemoveFontFile", "removeFontFile", self::remove_font_file::BINARY_TAG),
+    ("SetInfoTitle", "setInfoTitle", set_info_title::BINARY_TAG),
+    ("SetInfoAuthor", "setInfoAuthor", set_info_author::BINARY_TAG),
+    ("InsertJavascriptAction", "insertJavascriptAction", insert_javascript_action::BINARY_TAG),
+    ("RemoveJavascriptAction", "removeJavascriptAction", remove_javascript_action::BINARY_TAG),
+    ("InsertLaunchAction", "insertLaunchAction", insert_launch_action::BINARY_TAG),
+    ("RemoveLaunchAction", "removeLaunchAction", remove_launch_action::BINARY_TAG),
+    ("InsertSignatureField", "insertSignatureField", insert_signature_field::BINARY_TAG),
+    ("RemoveSignatureField", "removeSignatureField", remove_signature_field::BINARY_TAG),
+    ("EmbedFontFile", "embedFontFile", embed_font_file::BINARY_TAG),
+    ("RemoveFontFile", "removeFontFile", remove_font_file::BINARY_TAG),
 ];
 //#endregion 🧾️DerivedRegistry
 

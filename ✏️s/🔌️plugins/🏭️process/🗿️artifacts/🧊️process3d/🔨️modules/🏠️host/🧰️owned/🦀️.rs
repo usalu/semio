@@ -417,7 +417,7 @@ impl Process3dStoreInitializationAuthority {
                     return Process3dTurn::Yield;
                 }
                 let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
-                let Some(operation) = operation else {
+                let Some(_operation) = operation else {
                     self.phase = Process3dStoreInitializationPhase::CommitApplied { position, edit };
                     return Process3dTurn::Yield;
                 };

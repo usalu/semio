@@ -3,7 +3,7 @@
 //! `s.stdio.semio@v1/graph` vocabulary — no parent leaf reads the child.
 use crate::RewritingSnapshot;
 use semio_framework_diagnostic::Severity;
-use semio_framework_plugin::app::{ChildContentView, ChildEmit,ChildEmitPreparation};
+use semio_framework_plugin::app::{ChildContentView,ChildEmitPreparation};
 use semio_framework_plugin::{Emit, Fault};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;

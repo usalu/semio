@@ -1,6 +1,6 @@
 //! 🧬️ Direct remove-used-extension mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::top_level_collections::*;
+#[cfg(test)] use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
@@ -58,7 +58,7 @@ pub fn mutation(payload: GltfWithdrawUsedExtensionPayload) -> super::GltfMutatio
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveUsedExtensionMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "used-extension", kind: "remove-used-extension", record: "RemovedUsedExtension" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

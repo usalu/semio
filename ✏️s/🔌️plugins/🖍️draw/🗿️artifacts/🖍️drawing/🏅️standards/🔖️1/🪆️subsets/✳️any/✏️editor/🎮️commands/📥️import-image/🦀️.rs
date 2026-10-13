@@ -1,7 +1,8 @@
 //! 📥️ Encoded PNG and JPEG import enters the retained image-admission route.
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation,Effect,RequestId};
-use crate::{DrawingSnapshot,DrawingMutation,DrawingImageAsset};
+use crate::{DrawingSnapshot, DrawingMutation};
+#[cfg(test)] use crate::{DrawingImageAsset};
 #[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword="import-image")]
 pub struct ImportImage {pub payload:String,#[value(default)] pub name:Option<String>,#[value(default)] pub parent_id:Option<String>,#[value(default)] pub index:Option<usize>}

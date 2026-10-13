@@ -61,7 +61,7 @@ impl ArtifactViewer for Din18599Viewer {
         Din18599Snapshot::default()
     }
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::din18599_child_restore_projection(snapshot)
     }
 

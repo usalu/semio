@@ -13,7 +13,7 @@ fn reference_peers(document: &Puzzle5dDocument, part_id: &str, radius: f64, gate
             || entries.iter().any(|entry| {
                 let rule_source = entry.get("source").and_then(semio_framework_pack_json::Value::as_str).unwrap_or("");
                 let rule_target = entry.get("target").and_then(semio_framework_pack_json::Value::as_str).unwrap_or("");
-                let bidirectional = entry.get("bidirectional").and_then(serde_json::Value::as_bool).unwrap_or(false);
+                let bidirectional = entry.get("bidirectional").and_then(semio_framework_pack_json::Value::as_bool).unwrap_or(false);
                 (rule_source == source && rule_target == target) || (bidirectional && rule_source == target && rule_target == source)
             })
     };

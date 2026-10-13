@@ -206,4 +206,4 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 
 use crate::standards::v1::subsets::image::io::text::diff::{hex_encode, hex_decode, hex_encode_str, hex_decode_str, parse_u8, parse_u32, enc_colorspace, dec_colorspace, enc_frame, dec_frame, enc_frame_diff, dec_frame_diff, enc_metadata_entry, dec_metadata_entry, enc_frames_diff, dec_frames_diff, enc_metadata_diff, dec_metadata_diff};
 }
-pub use diff_codec::*;
+#[cfg(test)] pub use diff_codec::*;

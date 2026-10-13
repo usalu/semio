@@ -17,4 +17,3 @@ impl protocol::OpText for FlowMutation {
     }
 }
 }
-pub use mutations_codec::*;

@@ -20,7 +20,7 @@ pub struct RemoveVertex {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveVertex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "vertex", kind: "remove-vertex", record: "RemoveVertex" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(diff_remove_vertex(*index))
     }

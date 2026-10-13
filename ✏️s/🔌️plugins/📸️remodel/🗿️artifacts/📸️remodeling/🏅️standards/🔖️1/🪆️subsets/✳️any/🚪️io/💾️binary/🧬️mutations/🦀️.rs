@@ -26,7 +26,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::schema::mutations::RemodelingMutation;
 
 impl protocol::OpBinary for RemodelingMutation {

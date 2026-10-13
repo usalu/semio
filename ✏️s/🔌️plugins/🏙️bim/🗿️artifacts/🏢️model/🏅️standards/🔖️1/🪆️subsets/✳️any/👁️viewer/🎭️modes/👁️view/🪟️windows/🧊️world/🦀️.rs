@@ -7,7 +7,6 @@ use crate::render::world::{scene, WorldView};
 use crate::viewer::bim::terminology::BimViewerLabels;
 use crate::{ModelInference, ModelSnapshot};
 use semio_framework_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
-use semio_framework_ui_locale::LocalizedLabel;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

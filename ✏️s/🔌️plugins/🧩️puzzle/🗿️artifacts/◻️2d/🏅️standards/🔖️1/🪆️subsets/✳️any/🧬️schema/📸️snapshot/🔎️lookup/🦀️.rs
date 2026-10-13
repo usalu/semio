@@ -89,7 +89,7 @@ impl Puzzle2dLookupCursor {
     pub fn begin_close(&mut self) { self.closing = true; self.comparison.begin_close(); }
 
     pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        if self.output.is_some() { return Ok(std::mem::size_of_val(&self.output)); }
+        if self.output.is_some() { return Ok(size_of_val(&self.output)); }
         if !self.comparison.terminal_is_empty() { return self.comparison.next_close_copy_byte_demand(); }
         RetainedCloneBinding::copy_demand(if self.source.is_some() { &self.source } else { &self.target })
     }
@@ -117,7 +117,7 @@ impl Puzzle2dLookupCursor {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.output.is_some() {
-            let bytes = std::mem::size_of_val(&self.output);
+            let bytes = size_of_val(&self.output);
             if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.output = None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));

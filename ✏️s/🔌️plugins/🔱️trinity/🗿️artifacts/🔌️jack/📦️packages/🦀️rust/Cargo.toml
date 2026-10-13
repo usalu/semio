@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-dispatch-macros", "dep:semio-framework-geometry", "dep:semio-framework-canvas", "dep:semio-framework-ui-contract", "dep:semio-framework-graph-layout-run", "dep:semio-framework-tool-run"]
-
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -31,19 +27,19 @@ semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { workspace = true, optional = true }
+semio-framework = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-geometry = { workspace = true, optional = true }
+semio-framework-geometry = { workspace = true }
 semio-framework-graph = { workspace = true }
-semio-framework-graph-layout-run = { workspace = true, optional = true }
+semio-framework-graph-layout-run = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust", optional = true }
+semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-schema = { workspace = true }
-semio-framework-tool-run = { workspace = true, optional = true }
+semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
@@ -54,8 +50,8 @@ semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
 
 [dev-dependencies]
 semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }

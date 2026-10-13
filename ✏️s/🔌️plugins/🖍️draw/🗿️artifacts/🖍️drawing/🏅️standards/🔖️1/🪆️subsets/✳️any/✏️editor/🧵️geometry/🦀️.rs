@@ -3,8 +3,6 @@ use crate::DrawingSnapshot;
 use crate::schema::scene_identity::SceneIdentity;
 use crate::schema::scene_identity::admission::{scene_admission,SceneAdmissionStatus};
 use crate::schema::scene_preparation::{DocumentVectorJob,DocumentVectorRetirement,DocumentSceneLimits,DocumentAlgorithmLimits};
-use crate::schema::scene_booleans::DocumentBooleanLimits;
-use crate::schema::scene_trace::DocumentTraceLimits;
 use crate::schema::scene_retirement::ScenePlanCloseJob;
 use crate::schema::scene_paint::scene::{ScenePaintJob,ScenePaintRetirement,PreparedScene,PreparedSceneCloseJob,PaintedSceneLimits};
 use semio_framework::kernel::{Effect,JobPlacement};
@@ -126,7 +124,7 @@ fn prepare_source(id:SceneIdentity,document:&DrawingSnapshot)->bool{
 pub fn prepare_query(source:SceneIdentity,document:&DrawingSnapshot)->bool{prepare_source(source,document)}
 /// 🔁️ Start one revision job and cancel only its superseded private candidate.
 pub fn reconcile(doc:&ArtifactView<'_,DrawingSnapshot>)->Vec<Effect>{let Some(render)=doc.render_operation()else{return Vec::new()};reconcile_source(render,||doc.take_snapshot_read())}
-fn reconcile_source(render:AppRenderOperationContext,take:impl FnOnce()->Result<store::SnapshotRead<DrawingSnapshot>,semio_framework_plugin::Fault>)->Vec<Effect>{MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=render.app_instance_id as usize%INSTANCES;let Some(mut i)=r.instances[index].filter(|i|i.identity.matches(identity(render)))else{return Vec::new()};let Some(slot)=i.pending else{return Vec::new()};let Some(next)=r.counter.checked_add(1).filter(|next|*next<=COUNTER_MAX)else{return Vec::new()};let Ok(read)=take()else{return Vec::new()};r.counter=next;let job=TAG|next;let mut effects=Vec::with_capacity(2);
+fn reconcile_source(render:AppRenderOperationContext,take:impl FnOnce()->Result<store::SnapshotRead<DrawingSnapshot>,Fault>)->Vec<Effect>{MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=render.app_instance_id as usize%INSTANCES;let Some(mut i)=r.instances[index].filter(|i|i.identity.matches(identity(render)))else{return Vec::new()};let Some(slot)=i.pending else{return Vec::new()};let Some(next)=r.counter.checked_add(1).filter(|next|*next<=COUNTER_MAX)else{return Vec::new()};let Ok(read)=take()else{return Vec::new()};r.counter=next;let job=TAG|next;let mut effects=Vec::with_capacity(2);
  if let Some(old)=i.candidate.filter(|old|Some(*old)!=i.visual){r.retiring[old]=true;if let Some(state)=r.shells[old].borrow_mut().as_mut(){state.cancelled=true;effects.push(Effect::CancelJob{job:state.job_id});}}
  *r.shells[slot].borrow_mut()=Some(State::new(i.identity,job,read));i.pending=None;i.candidate=Some(slot);r.instances[index]=Some(i);effects.push(Effect::SpawnJob{job,kind:KIND.to_string(),input:input(slot,i.identity,job),placement:JobPlacement::Isolated});effects
 })}

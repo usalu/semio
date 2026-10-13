@@ -140,7 +140,6 @@ impl OpBinary for PlyMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `PlyMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

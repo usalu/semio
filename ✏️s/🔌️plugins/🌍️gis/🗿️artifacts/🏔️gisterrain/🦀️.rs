@@ -68,9 +68,9 @@ pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<
 }
 
 /// 🔑️ Construction seed for an initial terrain mesh; persisted identity survives later edits.
-pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_map: Option<&crate::schema::ImportedMap>) -> String {
+pub fn gis_terrain_mesh_content_key(exaggeration: f64, imported_map: Option<&schema::ImportedMap>) -> String {
     let identity = imported_map.map(|map| {
-        let bytes = store::pack_rt::encode_document(&crate::schema::ImportedMap::__dsl_spec(), &map.__dsl_to_record(), &store::PackEncodeOptions::default()).expect("authored imported map native record");
+        let bytes = store::pack_rt::encode_document(&schema::ImportedMap::__dsl_spec(), &map.__dsl_to_record(), &store::PackEncodeOptions::default()).expect("authored imported map native record");
         store::content_id("gisterrain-map", &bytes)
     }).unwrap_or_default();
     format!("{:016x}|{}", exaggeration.to_bits(), identity)

@@ -80,7 +80,7 @@ async fn inverse_law() {
         // 🔁️ diff-level round trip
         let d = m.diff(&base);
         let mid = protocol::apply_diff(d.diff(), &base).unwrap();
-        let back = protocol::apply_diff(d.diff().inverse(&base), &mid).unwrap();
+        let back = protocol::apply_diff(&d.diff().inverse(&base), &mid).unwrap();
         assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
     }
 }

@@ -1,5 +1,5 @@
 //! 🖼️ Image asset admission and removal use sparse document deltas and exact inverses.
-use crate::{DrawingSnapshot,DrawingImageAsset};
+use crate::DrawingSnapshot;
 use crate::mutations::{DrawingMutation,import_image_asset};
 use crate::diff::{DrawingDiff,DrawingAssetsDelta};
 #[derive(Clone,Debug,PartialEq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_dsl_record_derive::DslRecord,dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]

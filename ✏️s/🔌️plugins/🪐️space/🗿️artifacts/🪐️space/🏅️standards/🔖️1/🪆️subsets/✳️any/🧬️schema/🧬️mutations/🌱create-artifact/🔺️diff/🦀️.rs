@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateArtifact` — a real insert at `index` or append (never a whole-snapshot
 //! capture).
-use crate::standards::v1::subsets::any::schema::diff::{SSpaceArtifactPatch, SSpaceArtifactsDelta, SSpaceDiff};
+use crate::standards::v1::subsets::any::schema::diff::{SSpaceArtifactsDelta, SSpaceDiff};
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff

@@ -84,7 +84,8 @@ pub mod sqlite;
 
 pub mod derived_construction {
     use crate::schema::snapshot::{set_element_attr, CommonAttrs, PathCommand, SvgElement, ViewBox};
-    use crate::standards::v1_1::subsets::base::io::text::snapshot::{svg_element_to_xml_node,svg_document_to_typed,native_svg_document,bind_svg_node,bind_svg_attribute};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::{svg_element_to_xml_node, bind_svg_node, bind_svg_attribute};
+    #[cfg(test)] use crate::standards::v1_1::subsets::base::io::text::snapshot::{svg_document_to_typed, native_svg_document};
     use crate::{SvgDiff, SvgMutation, SvgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
     use crate::schema::snapshot::SvgNode;
@@ -534,7 +535,7 @@ pub mod derived_analysis {
     use crate::standards::v1_1::subsets::base::io::text::snapshot::{svg_document_to_typed,native_svg_document};
     use crate::SvgSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use crate::schema::snapshot::{SvgNode};
+    #[cfg(test)] use crate::schema::snapshot::{SvgNode};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text};
 
     //#region 🔖️Parts
@@ -630,7 +631,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec SvgBuilderFacets {
         construction: SvgBuilderConstruction,
         analysis: SvgAnalyzerAnalysis,
-        composition: crate::standards::v1_1::subsets::base::io::derived_composition::SvgComposerComposition,
+        composition: SvgComposerComposition,
     }
     builder: SvgBuilder,
     analyzer: SvgAnalyzer,

@@ -18,4 +18,3 @@ use std::collections::HashSet;
 
 semio_framework_os_kernel::diff_binary!(crate::standards::v_utf_8::subsets::any::schema::diff::TxtDiff);
 }
-pub use diff_codec::*;

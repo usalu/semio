@@ -22,12 +22,12 @@ async fn sqlite_snapshot_zip_actual_declaration_keeps_full_owned_fields_over_io(
 #[test]
 fn sqlite_snapshot_zip_all_member_header_policy_and_ordered_extra_fields_roundtrip() {
     let snapshot = fixture();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(database.tables.len(), 12);
     assert!(database.tables.iter().flat_map(|table| &table.rows).flat_map(|row| &row.values).all(|value| !matches!(value, SqliteValue::Blob(_))));
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-    let restored = ZipSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let restored = ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(restored, snapshot);
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&restored))).unwrap();
     assert_eq!(oracle, serde_json::from_str::<serde_json::Value>(include_str!("../🧫️fixtures/🔣️.json")).unwrap());
@@ -40,21 +40,21 @@ fn sqlite_snapshot_zip_all_member_header_policy_and_ordered_extra_fields_roundtr
             3 => broken.table_mut("zip_entry").unwrap().rows[1].values[2] = SqliteValue::Integer(0),
             _ => { broken.table_mut("zip_local_header").unwrap().rows.pop(); },
         }
-        assert!(ZipSnapshot::from_sqlite_database(&broken, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err());
+        assert!(ZipSnapshot::from_sqlite_database(&broken,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).is_err());
     }
     let limits = SqliteDatabaseLimits { max_value_bytes: 0, ..SqliteDatabaseLimits::default() };
-    assert!(ZipSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false, SqliteDatabaseLimits::default())).is_err());
+    assert!(ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false,SqliteDatabaseLimits::default())).is_err());
     let empty = ZipSnapshot::default();
-    let database = empty.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
-    assert_eq!(ZipSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(), empty);
+    let database = empty.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
+    assert_eq!(ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap(), empty);
 }
 
 #[test]
 fn sqlite_snapshot_zip_independent_archive_member_header_and_payload_edits() {
     use std::{io::Write, process::{Command, Stdio}};
     let mut snapshot = fixture();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let script = "import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const rows=db.query('SELECT e.name,h.external_attributes,f.tag FROM zip_entry e JOIN zip_central_header h ON h.id=e.id JOIN zip_central_extra_field f ON f.header_id=h.id ORDER BY e.ordinal,f.ordinal').all();if(rows.length!==2||rows[1].tag!==51966||rows[0].external_attributes!==4294967295)throw Error('header relationships');db.query('UPDATE zip_entry_byte SET value=42 WHERE entry_id=1 AND ordinal=2').run();db.query('UPDATE zip_central_header SET comment=? WHERE id=1').run('SQLite Kommentar');db.query('UPDATE zip_local_extra_field_byte SET value=128 WHERE extra_field_id=1 AND ordinal=1').run();await Bun.write(Bun.stdout,db.serialize());db.close();";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
@@ -65,7 +65,7 @@ fn sqlite_snapshot_zip_independent_archive_member_header_and_payload_edits() {
     snapshot.entries[0].data[2] = 42;
     snapshot.entries[0].metadata.central.comment = "SQLite Kommentar".into();
     snapshot.entries[0].metadata.local.extra_fields[0].data[1] = 128;
-    assert_eq!(ZipSnapshot::from_sqlite_database(&edited, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(), snapshot);
+    assert_eq!(ZipSnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap(), snapshot);
 }
 
 #[test]
@@ -111,7 +111,7 @@ fn sqlite_snapshot_zip_erased_binary_and_text_keep_all_unsigned16_methods_and_no
  use store::sqlite_snapshot::SnapshotEncoding;
  let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚦️subsets.json")).unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.zip".into(),standard:"2.0".into(),subset:"*".into()};let codec=<ZipSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
  for method in cases["methodCodes"].as_array().unwrap(){let mut snapshot=fixture();snapshot.schema="owned noncanonical snapshot".into();snapshot.entries[0].metadata.compression_method=method.as_u64().unwrap()as u16;snapshot.entries[0].metadata.local.flags=65535;snapshot.entries[1].metadata.central.version_needed=65535;let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
-  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=(codec.import)(&snapshot.schema,&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;let restored=(codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(restored,database);assert_eq!(ZipSnapshot::from_sqlite_database(&restored,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap(),snapshot);}
+  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema,&dialect,&mut Some(database.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(restored,database);assert_eq!(ZipSnapshot::from_sqlite_database(&restored,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap(),snapshot);}
  }
 
 
@@ -122,10 +122,10 @@ fn sqlite_snapshot_zip_native_encoding_admits_owned_model_and_refuses_budget_or_
  use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let snapshot=ZipSnapshot::default();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-  snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+  semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();
   let mut limits=SqliteDatabaseLimits::default();limits.max_value_bytes=1;
-  assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());
-  let mut reached=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);
+  assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err());
+  let mut reached=false;assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative{reached=true;false}else{true}},SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(reached);
  }
 }
 
@@ -136,8 +136,8 @@ fn sqlite_snapshot_zip_native_encoding_bounds_escaped_text_and_cancels_borrowed_
  let mut snapshot=ZipSnapshot::default();snapshot.comment="\n\\\"".repeat(cases["largeTextBytes"].as_u64().unwrap() as usize);snapshot.entries=vec![ZipEntry::default();cases["workItems"].as_u64().unwrap() as usize];
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let mut limits=SqliteDatabaseLimits::default();limits.max_value_bytes=cases["smallBudgetBytes"].as_u64().unwrap() as usize;
-  assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());
-  let mut reached=false;assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>=cases["cancelAfterWork"].as_u64().unwrap() as usize{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached,"member admission walk must checkpoint before native ownership");
+  assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err());
+  let mut reached=false;assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>=cases["cancelAfterWork"].as_u64().unwrap() as usize{reached=true;false}else{true}},SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(reached,"member admission walk must checkpoint before native ownership");
  }
 }
 
@@ -150,14 +150,14 @@ fn sqlite_snapshot_zip_declared_controlled_native_input_output_and_exact_rows(){
     let limits=SqliteDatabaseLimits{max_rows:rows,..SqliteDatabaseLimits::default()};
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         let payload=native_payload(&snapshot,encoding);
-        assert_eq!(ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
-        assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),payload);
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),payload);
         let short=SqliteDatabaseLimits{max_rows:rows-1,..limits};
-        assert!(ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err());
-        assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err());
         let tiny=SqliteDatabaseLimits{max_value_bytes:cases["tinyBytes"].as_u64().unwrap() as usize,..limits};
-        assert!(ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,tiny)).is_err());
-        assert!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,tiny)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,tiny), native_owner)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,tiny), native_owner)).is_err());
     }
 }
 #[test]
@@ -168,12 +168,12 @@ fn sqlite_snapshot_zip_owned_native_copy_and_collection_work_can_cancel_interior
     let limits=SqliteDatabaseLimits{max_value_bytes:cases["maximumBytes"].as_u64().unwrap() as usize,..SqliteDatabaseLimits::default()};
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         let payload=native_payload(&snapshot,encoding);
-        assert_eq!(ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),snapshot);
-        assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),payload);
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),payload);
         for phase in [SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::EncodeNative]{
             let mut interior=false;let mut callback=|event:SqliteSnapshotProgress|{if event.phase==phase&&event.total==total&&event.completed>=threshold&&event.completed<total{interior=true;false}else{true}};
             let mut control=SqliteSnapshotControl::new(&mut callback,limits);
-            let canceled=match phase{SqliteSnapshotPhase::DecodeNative=>ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut control).is_err(),_=>snapshot.encode_sqlite_snapshot_native(encoding,&mut control).is_err()};
+            let canceled=match phase{SqliteSnapshotPhase::DecodeNative=>semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut control, native_owner)).is_err(),_=>semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut control, native_owner)).is_err()};
             assert!(canceled);assert!(interior,"actual owned ZIP string copy {phase:?}");
         }
     }
@@ -184,7 +184,7 @@ fn sqlite_snapshot_zip_owned_native_copy_and_collection_work_can_cancel_interior
         for phase in [SqliteSnapshotPhase::DecodeNative,SqliteSnapshotPhase::EncodeNative]{
             let mut interior=false;let mut callback=|event:SqliteSnapshotProgress|{if event.phase==phase&&event.total==count&&event.completed>=threshold&&event.completed<count{interior=true;false}else{true}};
             let mut control=SqliteSnapshotControl::new(&mut callback,limits);
-            let canceled=match phase{SqliteSnapshotPhase::DecodeNative=>ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut control).is_err(),_=>snapshot.encode_sqlite_snapshot_native(encoding,&mut control).is_err()};
+            let canceled=match phase{SqliteSnapshotPhase::DecodeNative=>semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut control, native_owner)).is_err(),_=>semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut control, native_owner)).is_err()};
             assert!(canceled);assert!(interior,"actual ZIP member construction {phase:?}");
         }
     }
@@ -198,12 +198,12 @@ fn norm_independent_complete_extent(source:&ZipSnapshot)->serde_json::Value{
 fn sqlite_snapshot_zip_complete_independent_native_semantic_limits(){
  use store::{ArtifactSqliteSnapshot as _,sqlite_snapshot::*};let contract:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️semantic.json")).unwrap();
  for case in contract["cases"].as_array().unwrap(){let source=norm_complete_source(case);let extent=norm_independent_complete_extent(&source);assert_eq!(extent["rows"],case["rows"]);assert_eq!(extent["valueBytes"],case["valueBytes"]);assert_eq!(extent["schemaBytes"],contract["schemaBytes"]);assert_eq!(extent["tableWidths"],contract["tableWidths"]);let limits=SqliteDatabaseLimits{max_rows:case["rows"].as_u64().unwrap()as usize,max_value_bytes:case["valueBytes"].as_u64().unwrap()as usize,max_schema_bytes:contract["schemaBytes"].as_u64().unwrap()as usize,max_tables:12,max_columns:11,..SqliteDatabaseLimits::default()};let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),source);
-  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let payload=source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),source);
-   for short in[SqliteDatabaseLimits{max_rows:limits.max_rows-1,..limits},SqliteDatabaseLimits{max_value_bytes:limits.max_value_bytes-1,..limits},SqliteDatabaseLimits{max_schema_bytes:limits.max_schema_bytes-1,..limits},SqliteDatabaseLimits{max_tables:11,..limits},SqliteDatabaseLimits{max_columns:10,..limits}]{assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"relational copied limits {short:?}");assert!(ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"reconstruct copied limits {short:?}");assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"preflight copied limits {encoding:?} {short:?}");assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"encoder copied limits {encoding:?} {short:?}");assert!(ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"decoder copied limits {encoding:?} {short:?}");}
+  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),source);
+   for short in[SqliteDatabaseLimits{max_rows:limits.max_rows-1,..limits},SqliteDatabaseLimits{max_value_bytes:limits.max_value_bytes-1,..limits},SqliteDatabaseLimits{max_schema_bytes:limits.max_schema_bytes-1,..limits},SqliteDatabaseLimits{max_tables:11,..limits},SqliteDatabaseLimits{max_columns:10,..limits}]{assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"relational copied limits {short:?}");assert!(ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"reconstruct copied limits {short:?}");assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short)).is_err(),"preflight copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"encoder copied limits {encoding:?} {short:?}");assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,short), native_owner)).is_err(),"decoder copied limits {encoding:?} {short:?}");}
   }
  }eprintln!("[DEBUG] ZIP independently measured complete copied native semantic limits");
 }
 #[test]
 fn sqlite_snapshot_zip_complete_independent_copied_columns_admission(){
- use store::{ArtifactSqliteSnapshot as _,sqlite_snapshot::*};let source=fixture();let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let limits=SqliteDatabaseLimits{max_columns:10,..SqliteDatabaseLimits::default()};assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"preflight copied columns {encoding:?}");assert!(source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"encoder copied columns {encoding:?}");assert!(ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"decoder copied columns {encoding:?}");}
+ use store::{ArtifactSqliteSnapshot as _,sqlite_snapshot::*};let source=fixture();let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let limits=SqliteDatabaseLimits{max_columns:10,..SqliteDatabaseLimits::default()};assert!(source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());assert!(ZipSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert!(source.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err(),"preflight copied columns {encoding:?}");assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| source.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err(),"encoder copied columns {encoding:?}");assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| ZipSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err(),"decoder copied columns {encoding:?}");}
 }

@@ -112,22 +112,22 @@ impl ToValue for FemDof {
             FemDof::Ry => "Ry",
             FemDof::Rz => "Rz",
         };
-        semio_framework_value::DslValue::String(name.to_string())
+        DslValue::String(name.to_string())
     }
 }
 impl FromValue for FemDof {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            semio_framework_value::DslValue::String(s) => match s.as_str() {
+            DslValue::String(s) => match s.as_str() {
                 "Tx" => Ok(FemDof::Tx),
                 "Ty" => Ok(FemDof::Ty),
                 "Tz" => Ok(FemDof::Tz),
                 "Rx" => Ok(FemDof::Rx),
                 "Ry" => Ok(FemDof::Ry),
                 "Rz" => Ok(FemDof::Rz),
-                other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown FemDof variant `{other}`"))),
+                other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown FemDof variant `{other}`"))),
             },
-            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }

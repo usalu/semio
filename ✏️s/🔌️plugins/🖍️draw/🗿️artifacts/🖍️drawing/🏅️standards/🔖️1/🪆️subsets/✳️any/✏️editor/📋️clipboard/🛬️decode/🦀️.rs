@@ -22,7 +22,7 @@ fn append<T:FromValue>(list:&mut PagedList<T,{usize::MAX}>,source:&DslValue,cont
     while !list.has_reserved_slot(){let bytes=list.next_allocation_bytes()?;control.charge(bytes)?;list.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}
     let value=T::from_value_controlled(source,control)?;list.push_reserved(value).map_err(|_|invalid())
 }
-fn reserve<T>(values:&mut Vec<T>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let capacity=(values.capacity().max(1)*2).min(MAX_NODES);if capacity<=values.len(){return Err(invalid());}control.charge(capacity*std::mem::size_of::<T>())?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing clipboard vector allocation failed"))?;}Ok(())}
+fn reserve<T>(values:&mut Vec<T>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let capacity=(values.capacity().max(1)*2).min(MAX_NODES);if capacity<=values.len(){return Err(invalid());}control.charge(capacity*size_of::<T>())?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing clipboard vector allocation failed"))?;}Ok(())}
 impl ClipboardHydration{
     pub(super) fn new(source:DslValue)->Self{Self{packet:DrawingClipboard{schema:String::new(),roots:Vec::new(),selected:Vec::new(),assets:Default::default()},tasks:PagedList::new(),at:0,source,rejected:None,rejected_task:None,pending_node:None,pending_asset:None,retired_key:None,asset_append:0,rejected_error:None,initialized:false,nodes:0}}
     fn queue(&mut self,path:&[usize],kind:Kind,source:DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{

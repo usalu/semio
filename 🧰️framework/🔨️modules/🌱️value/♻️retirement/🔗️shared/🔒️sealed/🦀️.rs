@@ -36,13 +36,13 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  pub fn birth_bytes()->usize{super::arc_bytes::<T>()}
  pub fn prepare_birth(grant:RetainedCloneGrant)->Result<SealedSharedBirth<T>,ValueError>{
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<Self::birth_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed issuance requires genuine header birth authority"));}
-  let issuance=NEXT_ISSUANCE.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted"))?;
+  let issuance=NEXT_ISSUANCE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted"))?;
   Ok(SealedSharedBirth{issuance,marker:std::marker::PhantomData})
  }
  pub fn admit(value:T,issuer:SharedIssuer<T>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,T)>{
   let refusal=if grant.maximum_items==0{Some(ValueRefusalKind::WorkLimit)}else if grant.maximum_depth==0{Some(ValueRefusalKind::DepthLimit)}else if grant.maximum_capacity_bytes<Self::birth_bytes(){Some(ValueRefusalKind::OwnershipLimit)}else{None};
   if let Some(kind)=refusal{return Err((ValueError::literal(kind,"sealed shared source birth is not funded"),value));}
-  let issuance=match NEXT_ISSUANCE.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)){Ok(issuance)=>issuance,Err(_)=>return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted"),value))};
+  let issuance=match NEXT_ISSUANCE.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)){Ok(issuance)=>issuance,Err(_)=>return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"sealed original issuance space exhausted"),value))};
   Ok((Self{source:ManuallyDrop::new(Some(Arc::new(value))),issuer,issuance},RetainedCloneProgress{copied_items:1,retained_capacity_bytes:Self::birth_bytes(),..Default::default()}))
  }
  pub fn try_duplicate(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{

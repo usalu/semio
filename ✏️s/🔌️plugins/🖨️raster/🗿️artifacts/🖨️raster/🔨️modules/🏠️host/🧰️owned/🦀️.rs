@@ -1407,7 +1407,7 @@ impl RasterMutationCandidateAuthority {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        let outcome = protocol::Mutation::diff(operation, &*snapshot);
+                        let outcome = Mutation::diff(operation, &*snapshot);
                         let refused = outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
                         let (diff, _) = outcome.into_parts();
                         let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::apply_diff(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };
@@ -3218,7 +3218,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for RasterRejectedConflictAutho
         _source: &store::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "raster-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+        Err(store::OwnedSchemaDecodeDiagnostic { code: "raster-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT, refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
@@ -3237,12 +3237,12 @@ impl store::ArtifactEnvelopeSprConflictAuthority for RasterRejectedConflictAutho
         Ok(0)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
         if grant.maximum_items == 0 {
-            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         self.terminal = true;
-        Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()))
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
 
     fn terminal_is_empty(&self) -> bool {

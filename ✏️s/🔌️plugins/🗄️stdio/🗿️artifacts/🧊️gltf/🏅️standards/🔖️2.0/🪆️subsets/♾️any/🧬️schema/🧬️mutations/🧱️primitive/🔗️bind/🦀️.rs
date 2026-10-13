@@ -34,7 +34,7 @@ pub fn inverse(p: &GltfBindPrimitiveMaterialPayload, base: &GltfSnapshot) -> Vec
     }
     match base.document.meshes[p.mesh].primitives[p.primitive].material {
         Some(current) if current == p.material => Vec::new(),
-        Some(current) => vec![super::bind_primitive_material::mutation(super::bind_primitive_material::GltfBindPrimitiveMaterialPayload { mesh: p.mesh, primitive: p.primitive, material: current })],
+        Some(current) => vec![mutation(GltfBindPrimitiveMaterialPayload { mesh: p.mesh, primitive: p.primitive, material: current })],
         None => vec![super::unbind_primitive_material::mutation(super::unbind_primitive_material::GltfUnbindPrimitiveMaterialPayload { mesh: p.mesh, primitive: p.primitive })],
     }
 }
@@ -56,7 +56,7 @@ pub fn mutation(payload: GltfBindPrimitiveMaterialPayload) -> super::GltfMutatio
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitiveMaterialMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "primitive-material", kind: "bind-primitive-material", record: "BoundPrimitiveMaterial" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

@@ -12,7 +12,7 @@ pub enum SemioError {
     InvalidBinaryHeader(String),
     UnknownEnvelope(String),
     AmbiguousEnvelope,
-    DecodingControl(semio_framework_value::ValueError),
+    DecodingControl(ValueError),
 }
 
 impl std::fmt::Display for SemioError {
@@ -31,11 +31,11 @@ impl std::error::Error for SemioError {}
 
 impl SemioError {
     /// 🧭️ Preserves envelope controller refusals at the first-party value boundary.
-    pub fn into_value_error(self) -> semio_framework_value::ValueError {
+    pub fn into_value_error(self) -> ValueError {
         match self {
             Self::DecodingControl(error) => error,
-            error @ Self::UnknownEnvelope(_) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, error.to_string()),
-            error @ (Self::InvalidPreamble(_) | Self::InvalidBinaryHeader(_) | Self::AmbiguousEnvelope) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()),
+            error @ Self::UnknownEnvelope(_) => ValueError::new(ValueRefusalKind::UnsupportedOwner, error.to_string()),
+            error @ (Self::InvalidPreamble(_) | Self::InvalidBinaryHeader(_) | Self::AmbiguousEnvelope) => ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()),
         }
     }
 }
@@ -272,10 +272,10 @@ impl RetainedTextEnvelope {
                 self.record(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;
             }else if self.retirement.is_some(){
                 if self.retirement.as_ref().unwrap().terminal_is_empty(){
-                    self.admit(1,RetirementDemand{copy_bytes:std::mem::size_of::<Option<String>>(),depth:1,..Default::default()})?;
+                    self.admit(1,RetirementDemand{copy_bytes:size_of::<Option<String>>(),depth:1,..Default::default()})?;
                     control.step()?;
                     self.retirement.take();let output=self.output.take();self.complete=true;
-                    self.record(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<String>>(),..Default::default()})?;
+                    self.record(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<String>>(),..Default::default()})?;
                     return Ok(output)
                 }
                 let original=self.remaining_grant();let owner=self.retirement.as_ref().unwrap();let copy=owner.next_copy_byte_demand()?;let quantum=maximum_copy_bytes.max(copy).min(original.maximum_copy_bytes);
@@ -284,7 +284,7 @@ impl RetainedTextEnvelope {
                 let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quantum,..original};
                 match self.retirement.as_mut().unwrap().step(grant){Ok(step)=>self.record(step.progress())?,Err(error)=>{self.record(error.retained_progress())?;return Err(error)}}
             }else if self.segment==8{
-                let copy=std::mem::size_of::<RetainedTextEnvelopeSources>();self.admit(1,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})?;
+                let copy=size_of::<RetainedTextEnvelopeSources>();self.admit(1,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()})?;
                 let sources=RetainedTextEnvelopeSources{identity:self.identity.take(),body:self.body.take()};
                 let owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(sources).map_err(|(error,sources)|{self.identity=sources.identity;self.body=sources.body;error})?;self.retirement=Some(owner);
                 self.record(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;

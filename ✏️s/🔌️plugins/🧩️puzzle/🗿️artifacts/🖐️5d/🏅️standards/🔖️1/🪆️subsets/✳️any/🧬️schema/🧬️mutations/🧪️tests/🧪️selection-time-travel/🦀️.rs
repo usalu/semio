@@ -80,7 +80,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
         let id = case.id.as_str();
         let mut store = crate::host::owned::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }).await.expect("a recorded gesture applies");
+            semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut identity).await).expect("a recorded gesture applies");
         }
         let ids: Vec<protocol::MutationId> = {
             let operations = store.mutation_ops().expect("applied operations");
@@ -89,7 +89,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             operations.iter().map(|operation| operation.mutation_id.clone()).collect()
         };
         let head = store.snapshot_ref().clone();
-        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[case.at].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_5D_SCHEMA.into(), payload: case.replacement.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+        let drafts: protocol::HistoryInputDrafts = [(ids[case.at].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_5D_SCHEMA.into(), payload: case.replacement.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
         let mut preview = store.state_before(&ids[case.at], &drafts).expect("the preview base folds").as_ref().clone();
         apply_puzzle5d_mutation(&mut preview, &case.replacement).expect("the draft applies to its base");
         assert_eq!(preview, case.preview, "{id}: the preview is the state before the edited gesture plus the draft, nothing downstream");
@@ -110,7 +110,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             drop(result);
             assert_eq!(store.snapshot_ref(), &head, "{id}: a blocked replay is never committed");
         } else {
-            store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+            semio_framework_plugin::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).expect("overwrite commits");
             assert_eq!(store.snapshot_ref(), &case.replayed, "{id}: the overwritten history folds to the edited state");
             let operations = store.mutation_ops().expect("applied operations");
             assert!(operations[case.at].supersession.is_some(), "{id}: the edited gesture is superseded, never rewritten");

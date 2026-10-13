@@ -28,7 +28,7 @@ fn snapshot_of(text: &str) -> XlsxSnapshot {
 }
 
 fn mutation(base: &XlsxSnapshot) -> XlsxMutation {
-    XlsxMutation::SetCell(SetCell { address: xlsx_cell_address(base, "Sheet1", 4, 1).expect("the total cell has an address"), value: XlsxCellValue::Formula { expr: "SUM(B1:B3)".into(), cached: None } })
+    XlsxMutation::SetCell(SetCell { address: xlsx_cell_address(base, "Sheet1", 4, 1).expect("the total cell has an address"), value: XlsxCellValue::Formula { expr: "SUM(B1:B3)".into(), cached: None } , node: None })
 }
 
 /// 🧾️ The committed snapshots are exactly `build_minimal_xlsx` of the declared workbooks.
@@ -61,8 +61,8 @@ async fn produces_a_diff_of_the_worksheet_part_only() {
     let raised = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::diff(&mutation(&base), &base);
     assert!(raised.diff().opc.is_none(), "set-cell/widens: a formula edit must never reach into the lossless OPC lane");
     let parts = raised.diff().xml_parts.as_ref().expect("set-cell/widens: the XML parts diff must be present");
-    assert!(parts.removed.is_empty() && parts.added.is_empty(), "set-cell/widens: the worksheet is patched in place — no part is added or removed");
-    assert_eq!(parts.modified.iter().map(|part| part.key.clone()).collect::<Vec<_>>(), vec![xlsx_cell_address(&base, "Sheet1", 4, 1).expect("the total cell has an address").part_path], "set-cell/widens: only the worksheet part is patched, keyed by its OPC path");
+    assert!(parts.removed.is_empty() && parts.inserted.is_empty() && parts.moved.is_empty(), "set-cell/widens: the worksheet is patched in place — no part is added or removed");
+    assert_eq!(parts.modified.iter().map(|part| part.id.clone()).collect::<Vec<_>>(), vec![xlsx_cell_address(&base, "Sheet1", 4, 1).expect("the total cell has an address").part_path], "set-cell/widens: only the worksheet part is patched, keyed by its OPC path");
 }
 
 /// ↩️ The concrete inverse is one `set-cell` restoring the widened-from formula, and the inverse sum law holds for the edit.

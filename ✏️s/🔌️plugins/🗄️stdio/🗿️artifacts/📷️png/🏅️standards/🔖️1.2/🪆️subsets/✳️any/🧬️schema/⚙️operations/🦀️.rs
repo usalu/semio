@@ -1,5 +1,4 @@
 //! ⚙️ Shared application and inversion of PngMutation.
-use crate::schema::{diff::PngDiff, mutations::PngMutation};
 use crate::PngSnapshot;
 
 
@@ -121,7 +120,7 @@ pub fn png_rgba8_preview(image:&PngImage)->Result<Vec<u8>,String> {
 }
 
 fn retire_png_vec_step<T>(values: &mut Vec<T>, maximum_items: usize, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let item_bytes = std::mem::size_of::<T>();
+    let item_bytes = size_of::<T>();
     if !values.is_empty() {
 
         let released_items = values.len().min(maximum_items);
@@ -170,12 +169,12 @@ impl<'a> PngNativePaintWorkOperation<'a> {
     pub fn try_new_retained(snapshot:std::sync::Arc<PngSnapshot>,region:PngRegion,paint:PngNativePaint,maximum_owned_bytes:usize)->Result<Self,String> { Self::prepare(PngPaintSource::Retained(snapshot),"",region,paint,maximum_owned_bytes) }
     fn prepare(reader:PngPaintSource<'a>,revision:&str,region:PngRegion,paint:PngNativePaint,maximum_owned_bytes:usize)->Result<Self,String> {
         let snapshot=reader.snapshot();if !revision.is_empty()&&(revision.len()!=16||!revision.bytes().all(|byte|byte.is_ascii_hexdigit())) {return Err("png: stale source revision has an invalid exact identity".into());}validate_native_paint_target(snapshot,region,paint)?;let source=&snapshot.image;
-        let total=source.samples.len().checked_mul(2).and_then(|n|n.checked_add(source.text_chunks.len()*std::mem::size_of::<crate::schema::snapshot::PngTextChunk>())).and_then(|n|n.checked_add(source.ancillary_chunks.len()*std::mem::size_of::<crate::schema::snapshot::PngAncillaryChunk>())).and_then(|n|n.checked_add(4096)).ok_or("png: retained sample ownership overflow")?;
+        let total=source.samples.len().checked_mul(2).and_then(|n|n.checked_add(source.text_chunks.len()*size_of::<crate::schema::snapshot::PngTextChunk>())).and_then(|n|n.checked_add(source.ancillary_chunks.len()*size_of::<crate::schema::snapshot::PngAncillaryChunk>())).and_then(|n|n.checked_add(4096)).ok_or("png: retained sample ownership overflow")?;
         if total>maximum_owned_bytes {return Err("png: retained sample paint exceeds caller ownership limit".into());}
         let mut samples=Vec::new();samples.try_reserve_exact(source.samples.len()).map_err(|_|"png: retained sample allocation failed")?;
         let mut text_chunks=Vec::new();text_chunks.try_reserve_exact(source.text_chunks.len()).map_err(|_|"png: retained text row allocation failed")?;let mut ancillary_chunks=Vec::new();ancillary_chunks.try_reserve_exact(source.ancillary_chunks.len()).map_err(|_|"png: retained ancillary row allocation failed")?;
         let image=PngImage {width:source.width,height:source.height,bit_depth:source.bit_depth,color_type:source.color_type,interlace:source.interlace,samples,palette:source.palette.clone(),transparency:source.transparency.clone(),gamma:source.gamma,chromaticities:source.chromaticities,srgb:source.srgb,physical_dims:source.physical_dims,timestamp:source.timestamp,background:source.background.clone(),text_chunks,ancillary_chunks};
-        let schema=snapshot.schema.clone();let revision=revision.to_owned();let owned_bytes=image.samples.capacity()*2+image.text_chunks.capacity()*std::mem::size_of::<crate::schema::snapshot::PngTextChunk>()+image.ancillary_chunks.capacity()*std::mem::size_of::<crate::schema::snapshot::PngAncillaryChunk>()+schema.capacity()+revision.capacity()+image.palette.as_ref().map_or(0,|palette|palette.capacity()*std::mem::size_of::<crate::schema::snapshot::PngRgb>())+match &image.transparency {Some(PngTransparency::Indexed {alpha})=>alpha.capacity(),_=>0};
+        let schema=snapshot.schema.clone();let revision=revision.to_owned();let owned_bytes=image.samples.capacity()*2+image.text_chunks.capacity()*size_of::<crate::schema::snapshot::PngTextChunk>()+image.ancillary_chunks.capacity()*size_of::<crate::schema::snapshot::PngAncillaryChunk>()+schema.capacity()+revision.capacity()+image.palette.as_ref().map_or(0,|palette|palette.capacity()*size_of::<crate::schema::snapshot::PngRgb>())+match &image.transparency {Some(PngTransparency::Indexed {alpha})=>alpha.capacity(),_=>0};
         let expected_revision=!revision.is_empty();let mut hash=PngRevisionHash(0xcbf29ce484222325);hash.text(&schema);for n in [u64::from(image.width),u64::from(image.height),u64::from(image.bit_depth),u64::from(image.color_type.to_u8()),u64::from(image.interlace)] {hash.number(n);}hash.number(source.samples.len()as u64);
         Ok(Self {source:Some(reader),revision,region,paint,result:Some(PngSnapshot {schema,image}),stage:0,cursor:0,field:0,byte:0,paint_cursor:0,owned_bytes,maximum_owned_bytes,hash,expected_revision,keyword_characters:0,after_raster:false,closing:false})
     }

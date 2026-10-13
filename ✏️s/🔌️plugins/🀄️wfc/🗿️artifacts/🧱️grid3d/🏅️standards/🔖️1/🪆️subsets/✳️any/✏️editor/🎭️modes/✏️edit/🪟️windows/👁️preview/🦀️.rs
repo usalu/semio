@@ -17,7 +17,6 @@ use crate::host::inferences::solve;
 
 
 
-use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
 use semio_framework_plugin::world3d_camera_json;
 use semio_framework_plugin::world3d_scene;

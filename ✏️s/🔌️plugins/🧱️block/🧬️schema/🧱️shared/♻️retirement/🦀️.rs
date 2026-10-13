@@ -1,6 +1,5 @@
 //! ♻️ Shared Block records retire at their plugin owner.
 use crate::{BlockKindIdentity, BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation, BlockCamera2d, BlockCamera3d, BlockMeta, BlockOptionalText, BlockOptionalNumber, BlockOptionalOrientation, BlockOptionalScale, BlockAttributePatch, BlockAuthorPatch, BlockCompatibilityRulePatch, BlockRepresentationPatch};
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 //#region 🧱️SharedRows
 semio_framework_value::artifact_retire_struct!(BlockKindIdentity { id, name, label, variant, description, icon, unit });
 semio_framework_value::artifact_retire_struct!(BlockAttribute { key, value, definition });
@@ -18,10 +17,5 @@ semio_framework_value::artifact_retire_struct!(BlockAuthorPatch { name, email })
 semio_framework_value::artifact_retire_struct!(BlockCompatibilityRulePatch { source, target, bidirectional });
 semio_framework_value::artifact_retire_struct!(BlockRepresentationPatch { name, mesh_url, lod, description, tags_removed, tags_added, attributes_removed, attributes_added });
 
-impl RetireOwned for BlockCamera3d {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        let BlockCamera3d { position, target, zoom } = self;
-        semio_framework_value::artifact_retirement_sequence![Vec::from(position), Vec::from(target), zoom]
-    }
-}
+semio_framework_value::artifact_retire_struct!(BlockCamera3d { position, target, zoom });
 //#endregion 🧱️SharedRows

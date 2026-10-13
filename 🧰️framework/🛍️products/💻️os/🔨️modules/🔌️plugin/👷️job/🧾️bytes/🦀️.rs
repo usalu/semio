@@ -3,7 +3,7 @@ use semio_framework_job::{InteractiveJobCloseStep,Operation};
 use semio_framework_value::{RetirementDemand,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 
 pub(crate) fn demands(raw:&Vec<u8>,operation:&Option<Operation>)->RetirementDemand{
- RetirementDemand{copy_bytes:if !raw.is_empty(){1}else if raw.capacity()!=0{0}else if operation.is_some(){std::mem::size_of::<Operation>()}else{0},capacity_bytes:0,release_bytes:if raw.is_empty(){raw.capacity()}else{0},depth:usize::from(!raw.is_empty()||raw.capacity()!=0||operation.is_some())}
+ RetirementDemand{copy_bytes:if !raw.is_empty(){1}else if raw.capacity()!=0{0}else if operation.is_some(){size_of::<Operation>()}else{0},capacity_bytes:0,release_bytes:if raw.is_empty(){raw.capacity()}else{0},depth:usize::from(!raw.is_empty()||raw.capacity()!=0||operation.is_some())}
 }
 
 pub(crate) fn close(raw:&mut Vec<u8>,operation:&mut Option<Operation>,grant:RetainedCloneGrant)->InteractiveJobCloseStep{

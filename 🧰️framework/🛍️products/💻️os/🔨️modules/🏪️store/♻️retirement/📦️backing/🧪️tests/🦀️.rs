@@ -209,7 +209,7 @@ fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let owners = super::super::tests::demo_closable_store_owners();
     let envelope = create_document_envelope::<super::super::tests::DemoSnapshot, super::super::fixture_mutations::demo::DemoMutation>("demo/v1", "catalog-cancel", super::super::tests::DemoSnapshot::default(), None);
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: 0, maximum_depth: 64 };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: owners.uninstalled_envelope_retirement_demands(&envelope).copy_bytes, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: 0, maximum_depth: 64 };
     let (born, progress) = owners.retire_envelope_uninstalled(envelope, grant).unwrap_or_else(|_| panic!("catalog envelope birth is funded"));
     assert!(progress.fits(grant));
     let mut owner = Some(born);

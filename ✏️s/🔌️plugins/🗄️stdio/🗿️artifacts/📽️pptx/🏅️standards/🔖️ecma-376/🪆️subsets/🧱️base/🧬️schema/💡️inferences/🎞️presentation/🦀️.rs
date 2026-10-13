@@ -76,7 +76,7 @@ fn text_frame_from_xml(tx_body: &XmlNode) -> Vec<PptxParagraph> {
 /// 🔎️ Reads `p:spPr/a:xfrm`'s `a:off`/`a:ext` (defaulting each missing field to `0`, same
 /// convention this codec pair uses for "not present in the XML").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn position_from_xml(shape_children: &[XmlNode]) -> crate::schema::snapshot::PptxTransform {
+fn position_from_xml(shape_children: &[XmlNode]) -> PptxTransform {
     use crate::schema::snapshot::PptxTransform;
     let Some(sp_pr) = find_local_child(shape_children, "spPr") else { return PptxTransform::default() };
     let Some(xfrm) = find_local_child(element_children(sp_pr), "xfrm") else { return PptxTransform::default() };

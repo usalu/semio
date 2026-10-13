@@ -49,5 +49,27 @@
       "SEMIO_LOCKED_LOCALE": "de",
       "SEMIO_LOCKED_TERMINOLOGY": "reuse"
     }
-  ]
+  ],
+  "spool": {
+    "forwarded": [
+      "> nx run @semio-tech/process-plugin:component-release",
+      " NX   Running target build for project @semio-tech/semio-tech-play and 375 tasks it depends on",
+      "\u001b[1m\u001b[7m NX \u001b[27m\u001b[22m Successfully ran target build",
+      " Successfully ran target build for project x and 3 tasks it depends on",
+      "Failed tasks:",
+      "Tasks not run because their dependencies failed or --nx-bail=true:",
+      "Tasks stopped before they finished:",
+      "  Run duration:      496m 28s",
+      "[budget] Nx exceeded 1000ms"
+    ],
+    "suppressed": [
+      "@semio-tech/process-plugin: [cargo-provenance] {\"phase\":\"read\",\"bytes\":10,\"totalBytes\":20,\"work\":3}",
+      "@semio-tech/process-plugin: warning: unused import: `x`",
+      "- @semio-tech/process-plugin:component-dev",
+      "   Compiling serde v1.0.228",
+      ""
+    ],
+    "forwardBytes": 1000,
+    "heartbeatMs": 1000
+  }
 }

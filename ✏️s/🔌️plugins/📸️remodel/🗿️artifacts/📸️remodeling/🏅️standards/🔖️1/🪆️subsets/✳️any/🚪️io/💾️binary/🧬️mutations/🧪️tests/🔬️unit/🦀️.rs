@@ -22,7 +22,7 @@ async fn store_roundtrips_through_document_text() {
     store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<crate::RemodelingSnapshot, RemodelingMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     let mut feature_params = store.snapshot().expect("initial projection").params.feature;
     feature_params.target_count = 12345;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::update_feature_params(feature_params)], transaction: None }).await.expect("apply");
+    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::update_feature_params(feature_params)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     store.close_owned_unscheduled().expect("remodeling document store closes through its exact bounded owners");

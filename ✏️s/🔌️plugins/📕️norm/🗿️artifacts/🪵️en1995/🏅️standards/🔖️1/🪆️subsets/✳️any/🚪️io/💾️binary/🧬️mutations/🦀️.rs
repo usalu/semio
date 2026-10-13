@@ -26,7 +26,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::artifact_schema::mutations::En1995Mutation;
 use protocol::{OpBinary, OpText};
 

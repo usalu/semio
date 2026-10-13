@@ -29,8 +29,8 @@ fn window_meta() -> ActionMeta {
 
 async fn seeded(text: &str) -> Replica {
     let mut app = replica().await;
-    app.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: text.into() }), &window_meta()).await.expect("the seed is admitted");
-    settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("the seed publishes");
+    app.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: text.into() }), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the seed is admitted");
+    settle_registered_typed_operation(&mut app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the seed publishes");
     app
 }
 
@@ -38,9 +38,9 @@ async fn seeded(text: &str) -> Replica {
 async fn deliver(app: &mut Replica, action: &str, mut args: Vec<(String, semio_framework_value::DslValue)>, now_ms: u64) -> Result<InvocationResult, Fault> {
     args.push((TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String(WRITER_TYPING_BUFFER.into())));
     app.set_tool_clock_ms(Some(now_ms));
-    let result = app.handle_action(action, Some(&semio_framework_value::DslValue::Object(args)), &window_meta()).await;
+    let result = app.handle_action(action, Some(&semio_framework_value::DslValue::Object(args)), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     if result.is_ok() {
-        settle_registered_typed_operation(app, meta("local").instance_id).await.expect("the delivery publishes");
+        settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the delivery publishes");
     }
     result
 }
@@ -112,14 +112,14 @@ fn rendered(app: &Replica) -> String {
 }
 
 async fn undo(app: &mut Replica) {
-    let admitted = app.handle_action("undo", None, &meta("local")).await.expect("the undo is admitted");
+    let admitted = app.handle_action("undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the undo is admitted");
     semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("the undo commits");
-    settle_registered_typed_operation(app, meta("local").instance_id).await.expect("the undo publishes");
+    settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the undo publishes");
 }
 
 async fn history_edit(app: &mut Replica, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) {
     let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    let result = app.handle_action(verb, Some(&args), &window_meta()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = app.handle_action(verb, Some(&args), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -132,7 +132,7 @@ async fn pump_time_travel(app: &mut Replica, done: impl Fn(Option<HistoryTimeTra
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.advance_typed_operation_publication().await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
@@ -161,7 +161,7 @@ async fn one_typing_run_is_one_edit_and_one_row_with_its_transaction() {
     assert_eq!(row.label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "„hello“ tippen");
     undo(&mut app).await;
     assert_eq!(committed(&app), "Doc: \nend", "one undo reverts the whole run");
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// ⚖️ LAW: two runs separated by idle are two transactions. The first keystroke after the idle bound commits the run before
@@ -180,7 +180,7 @@ async fn two_runs_separated_by_idle_are_two_transactions() {
     let ids: Vec<_> = rows[rows_before..].iter().map(|row| row.transaction.as_ref().expect("a run row").id.clone()).collect();
     assert_ne!(ids[0], ids[1], "two runs, two transactions");
     assert_eq!(committed(&app), "abcd");
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// ⚖️ LAW: a caret jump splits the run, by the host's commit signal on a pure caret move and by the run's own algebra when
@@ -202,7 +202,7 @@ async fn a_caret_jump_splits_the_run() {
     end_run(&mut app, "blur", now).await;
     assert_eq!(edit_rows(&mut app).await.len(), rows_before + 3);
     assert_eq!(committed(&app), format!("Z{}Y", text.replacen("first", "firstX", 1)));
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// ⚖️ LAW: a run open when a history edit begins commits first, so no typed text is lost to it; while the history edit freezes
@@ -234,7 +234,7 @@ async fn a_frozen_document_refuses_typing_with_zero_trace() {
     assert_eq!(edit_rows(&mut app).await.len(), rows_before + 1, "no run opened that a later signal could commit");
     history_edit(&mut app, "historyEditExit", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// ⚖️ LAW: a peer never sees an open run in its document or history; the run reaches it as ONE edit once it commits.
@@ -244,20 +244,20 @@ async fn a_peer_sees_the_run_only_once_it_commits() {
     let peer_rows = edit_rows(&mut b).await.len();
     let mut author = Author::at("", 0);
     let now = type_run(&mut a, &mut author, "shared", 1_000, 80).await;
-    a.tick_backbone().await.expect("a announces");
-    b.tick_backbone().await.expect("b folds");
+    a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a announces");
+    b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds");
     assert_eq!((writer_text(&b.snapshot().expect("b")), edit_rows(&mut b).await.len()), (String::new(), peer_rows), "the open run never leaves its author");
     end_run(&mut a, "blur", now).await;
-    a.tick_backbone().await.expect("a announces the run");
-    b.tick_backbone().await.expect("b folds the run");
+    a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a announces the run");
+    b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds the run");
     assert_eq!(writer_text(&b.snapshot().expect("b")), "shared");
     let rows = edit_rows(&mut b).await;
     assert_eq!(rows.len(), peer_rows + 1, "the run reaches the peer as ONE edit");
     assert!(rows.last().and_then(|row| row.transaction.as_ref()).is_some_and(|transaction| transaction.tool.ends_with("#textSplice")), "the peer's row names the run's transaction");
     a.detach_backbone().await.expect("a releases its backbone");
     b.detach_backbone().await.expect("b releases its backbone");
-    close_registered_fixture_app(&mut a);
-    close_registered_fixture_app(&mut b);
+    close_registered_fixture_app(&mut a, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut b, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// ⚖️ LAW: time travel edits the run's committed text, never the keystrokes. The run's net `/insert` superseded with other
@@ -294,8 +294,8 @@ async fn a_run_edited_in_history_replays_deterministically() {
     assert_eq!(committed(&app), seed.replacen("Doc: ", "Doc: howdy", 1) + "!", "the overwrite folds the edited run and replays the later one");
     let mut fresh = session("howdy").await;
     assert_eq!(app.snapshot().expect("edited head"), fresh.snapshot().expect("fresh head"), "the edited log equals a fresh session typing the edited run");
-    close_registered_fixture_app(&mut app);
-    close_registered_fixture_app(&mut fresh);
+    close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut fresh, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// ⚖️ LAW: 200 typed characters in one uninterrupted run, far more than the 64-slot edit ledger holds, never spend the ledger:
@@ -315,5 +315,5 @@ async fn two_hundred_typed_characters_are_one_edit() {
     assert_eq!((edit_rows(&mut app).await.len(), app.edit_transactions().len()), (rows_before + 1, edits_before + 1), "one run, one edit, one row");
     undo(&mut app).await;
     assert_eq!(committed(&app), "", "one undo reverts all 200 characters");
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }

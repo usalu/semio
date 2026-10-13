@@ -1,8 +1,7 @@
 //! ✨️ EN 1999 artifact schema — aluminium structure subject + DIN EN 1999 clause checks.
 
-use crate::document::{
-    AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef,
-};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+#[cfg(test)] use crate::document::{CheckStatus};
 use crate::snapshot::{ColdFormedSheet, AluminiumShell, AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, FatigueDetail, FireScenario, SupportCondition};
 use crate::En1999Snapshot;
 use framework_schema::ArtifactSchema;
@@ -425,7 +424,7 @@ pub mod part_en1990 {
     }
 
     /// 🔗 Governing ULS effects for a connection from its own characteristic actions.
-    pub fn governing_connection_effects(conn: &crate::snapshot::AluminiumConnection, annex: AnnexChoice) -> GoverningEffects {
+    pub fn governing_connection_effects(conn: &AluminiumConnection, annex: AnnexChoice) -> GoverningEffects {
         let proxy = AluminiumMember {
             id: conn.id.clone(),
             section_id: String::new(),
@@ -444,7 +443,7 @@ pub mod part_en1990 {
     }
 
     /// 🪟 SLS effects for connection actions (EN 1990 ψ on connection-local actions).
-    pub fn sls_connection_effects(conn: &crate::snapshot::AluminiumConnection, annex: AnnexChoice, kind: &str) -> GoverningEffects {
+    pub fn sls_connection_effects(conn: &AluminiumConnection, annex: AnnexChoice, kind: &str) -> GoverningEffects {
         let proxy = AluminiumMember {
             id: conn.id.clone(),
             section_id: String::new(),
@@ -463,7 +462,7 @@ pub mod part_en1990 {
     }
 
     /// ❄️ Governing ULS effects for cold-formed sheeting (EN 1990 on characteristic actions).
-    pub fn governing_cold_formed_effects(sheet: &crate::snapshot::ColdFormedSheet, annex: AnnexChoice) -> GoverningEffects {
+    pub fn governing_cold_formed_effects(sheet: &ColdFormedSheet, annex: AnnexChoice) -> GoverningEffects {
         let proxy = AluminiumMember {
             id: sheet.id.clone(),
             section_id: String::new(),
@@ -482,7 +481,7 @@ pub mod part_en1990 {
     }
 
     /// 🫙 Governing ULS membrane stresses for shells (n_k→σ_x, m_y_k→σ_θ, v_z_k→τ).
-    pub fn governing_shell_effects(shell: &crate::snapshot::AluminiumShell, annex: AnnexChoice) -> GoverningEffects {
+    pub fn governing_shell_effects(shell: &AluminiumShell, annex: AnnexChoice) -> GoverningEffects {
         let proxy = AluminiumMember {
             id: shell.id.clone(),
             section_id: String::new(),
@@ -501,7 +500,7 @@ pub mod part_en1990 {
     }
 
     /// 🪟 SLS effects for cold-formed sheeting.
-    pub fn sls_cold_formed_effects(sheet: &crate::snapshot::ColdFormedSheet, annex: AnnexChoice, kind: &str) -> GoverningEffects {
+    pub fn sls_cold_formed_effects(sheet: &ColdFormedSheet, annex: AnnexChoice, kind: &str) -> GoverningEffects {
         let proxy = AluminiumMember {
             id: sheet.id.clone(),
             section_id: String::new(),
@@ -520,7 +519,7 @@ pub mod part_en1990 {
     }
 
     /// 🪟 SLS membrane stresses for shells.
-    pub fn sls_shell_effects(shell: &crate::snapshot::AluminiumShell, annex: AnnexChoice, kind: &str) -> GoverningEffects {
+    pub fn sls_shell_effects(shell: &AluminiumShell, annex: AnnexChoice, kind: &str) -> GoverningEffects {
         let proxy = AluminiumMember {
             id: shell.id.clone(),
             section_id: String::new(),
@@ -821,7 +820,7 @@ pub mod part_1_1 {
 }
 
 pub mod part_1_2 {
-    use super::*;
+    #[cfg(test)] use super::*;
     /// 🔥️ EN 1999-1-2 strength reduction k_θ (simplified table curve).
     pub fn k_theta(theta_a: f64) -> f64 {
         if theta_a <= 100.0 { 1.0 }
@@ -905,7 +904,7 @@ pub mod part_1_3 {
 }
 
 
-fn elements_digest(section: &crate::snapshot::AluminiumSection) -> String {
+fn elements_digest(section: &AluminiumSection) -> String {
     if section.elements.is_empty() {
         return format!("kind={k};D={d:.4};t={t:.4}", k=section.kind, d=section.outer_diameter, t=section.web_thickness);
     }
@@ -923,7 +922,7 @@ fn actions_digest(actions: &[crate::snapshot::MemberAction]) -> String {
     )).collect::<Vec<_>>().join(" | ")
 }
 
-fn member_support_digest(member: &crate::snapshot::AluminiumMember) -> String {
+fn member_support_digest(member: &AluminiumMember) -> String {
     format!(
         "support={sup};c1={c1:.4};LcrY={ly:.4};LcrZ={lz:.4};LcrT={lt:.4};Llt={llt:.4};restrained={r}",
         sup=member.support.code(), c1=member.c1, ly=member.buckling_length_y, lz=member.buckling_length_z,
@@ -975,7 +974,7 @@ fn utilization_check(
 
 /// 📋️ Evaluate one member against EN 1999-1-1 cross-section and stability clauses.
 pub fn check_member(
-    member: &crate::snapshot::AluminiumMember,
+    member: &AluminiumMember,
     section: &AluminiumSection,
     material: &AluminiumMaterial,
     annex: AnnexChoice,
@@ -1711,7 +1710,7 @@ pub fn check_member(
     out
 }
 
-pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial, member: Option<&crate::snapshot::AluminiumMember>, member_ids: &[String], annex: AnnexChoice) -> Vec<CheckResult> {
+pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial, member: Option<&AluminiumMember>, member_ids: &[String], annex: AnnexChoice) -> Vec<CheckResult> {
     let params = na_de::AnnexParams::for_choice(annex);
     let Some(alloy) = part_1_1::resolve_alloy(&material.designation) else {
         return vec![CheckResult::assess(
@@ -2064,7 +2063,7 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
 
 pub fn check_fire(
     fire: &FireScenario,
-    member: &crate::snapshot::AluminiumMember,
+    member: &AluminiumMember,
     section: &AluminiumSection,
     material: &AluminiumMaterial,
     annex: AnnexChoice,
@@ -2181,7 +2180,7 @@ pub fn check_fire(
     )
 }
 
-pub fn check_fatigue(fat: &FatigueDetail, member: Option<&crate::snapshot::AluminiumMember>, annex: AnnexChoice) -> CheckResult {
+pub fn check_fatigue(fat: &FatigueDetail, member: Option<&AluminiumMember>, annex: AnnexChoice) -> CheckResult {
     let gmf = part_1_3::gamma_mf(annex);
     let dc = part_1_3::detail_category_delta_sigma_c(&fat.detail_category).unwrap_or(fat.delta_sigma_c);
     let member_scale = match member {
@@ -2260,7 +2259,7 @@ pub fn check_fatigue(fat: &FatigueDetail, member: Option<&crate::snapshot::Alumi
 }
 
 
-fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &AluminiumMaterial, annex: AnnexChoice) -> Vec<CheckResult> {
+fn check_cold_formed(sheet: &ColdFormedSheet, material: &AluminiumMaterial, annex: AnnexChoice) -> Vec<CheckResult> {
     let Some(alloy) = part_1_1::resolve_alloy(&material.designation) else {
         return vec![CheckResult::assess(
             format!("en1999.1-4.alloy.{}", sheet.id),
@@ -2533,7 +2532,7 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
     out
 }
 
-fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMaterial, annex: AnnexChoice) -> Vec<CheckResult> {
+fn check_shell(shell: &AluminiumShell, material: &AluminiumMaterial, annex: AnnexChoice) -> Vec<CheckResult> {
     let Some(alloy) = part_1_1::resolve_alloy(&material.designation) else {
         return vec![CheckResult::assess(
             format!("en1999.1-5.alloy.{}", shell.id),

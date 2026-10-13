@@ -68,7 +68,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .inferences([standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor()])
         .composers(standards::riff_pcm::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<WavSnapshot, WavMutation>(STDIO_WAV_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.wav", standard: semio_framework_artifact_reference::StandardId("riff-pcm"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<WavSnapshot, WavMutation>(STDIO_WAV_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") })
         .try_build()
 }
 
@@ -185,7 +185,6 @@ pub mod examples {
     pub mod demo;
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -226,7 +225,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

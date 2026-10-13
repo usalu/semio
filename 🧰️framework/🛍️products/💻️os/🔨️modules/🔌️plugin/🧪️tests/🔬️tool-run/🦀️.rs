@@ -129,6 +129,11 @@ fn original_mounted_child_frontier_closes_after_actual_ack_under_original_policy
  crate::app::test_original_mounted_child_frontier::<ToyRunApp>(||vec![SetCount{value:17}.into(),SetLabel{value:"original child metadata 🧵\0".repeat(8192)}.into()],grant);
 }
 
+#[test]
+fn a_mounted_operation_reports_the_structural_refusal_it_retains(){
+ crate::app::test_retained_structural_refusal::<ToyRunApp>();
+}
+
 impl ToyRunJob {
     fn retirement_demand<T:semio_framework_value::retirement::RetireOwned>(owner:&semio_framework_value::retirement::controlled::ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?,..Default::default()})}
     fn auxiliary_demands(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{
@@ -426,7 +431,7 @@ impl ArtifactApp for ToyRunApp {
         if body_key != text(&fixture()["traceLane"]["bodyKey"]) {
             let run = doc
                 .tool_run()
-                .map_or_else(String::new, |run| format!(" completed={} steps={} payload={}", run.progress.completed, run.progress.steps.len(), run.payload.as_deref().and_then(|payload| payload.try_into().ok()).map_or(0, u32::from_le_bytes)));
+                .map_or_else(String::new, |run| format!(" completed={} steps={} payload={}", run.progress.completed, run.progress.steps.len(), run.payload.as_deref().and_then(|payload| payload.as_slice().try_into().ok()).map_or(0, u32::from_le_bytes)));
             return built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={}{run}", doc.snapshot.count)));
         }
         let provisional = |unit: i32| doc.tool_run().is_some_and(|run| run.provisional_entities.contains(&(unit as u64)));
@@ -456,11 +461,11 @@ impl ArtifactApp for ToyRunApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("tool-run-doc", 4_096))
+        Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("tool-run-cfg", 131_072))
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -581,8 +586,9 @@ async fn toy_manifest() -> App {
     App::from_builder(builder.mode_tools("edit", tools).await).await
 }
 
-/// 🎟️ The neutral fixture declares independent ceilings before original app admission.
-fn toy_fixture_caller_policy()->(crate::MountedOwnerPolicyV1,usize){let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let g=&law["native"]["grant"];let grant=RetainedCloneGrant{maximum_items:number(&g[0])as usize,maximum_copy_bytes:number(&g[1])as usize,maximum_capacity_bytes:number(&g[2])as usize,maximum_release_bytes:number(&g[3])as usize,maximum_depth:number(&g[4])as usize};(crate::MountedOwnerPolicyV1{preparation:grant,maintenance:grant,close:grant}.validate().unwrap(),number(&law["native"]["maximumIdentityBytes"])as usize)}
+/// 🎟️ The neutral fixture declares independent ceilings before original app admission. Its MAINTENANCE grant carries the shipped interactive item batch and copy page (a tool-run unit hands its job one item and needs another for the job's own step, so the one-item native grant can never step a run) and its CLOSE grant the shipped copy page (a window partition's store catalog quotes 21 408 copy bytes for its factory tickets, which the 16 KiB native grant can never fund).
+fn toy_fixture_caller_policy()->(crate::MountedOwnerPolicyV1,usize){let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let g=&law["native"]["grant"];let grant=RetainedCloneGrant{maximum_items:number(&g[0])as usize,maximum_copy_bytes:number(&g[1])as usize,maximum_capacity_bytes:number(&g[2])as usize,maximum_release_bytes:number(&g[3])as usize,maximum_depth:number(&g[4])as usize};let interactive=crate::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;let maintenance=RetainedCloneGrant{maximum_items:grant.maximum_items.max(interactive.maximum_items),maximum_copy_bytes:grant.maximum_copy_bytes.max(interactive.maximum_copy_bytes),..grant};let close=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.max(interactive.maximum_copy_bytes),..grant};(crate::MountedOwnerPolicyV1{preparation:grant,maintenance,close}.validate().unwrap(),number(&law["native"]["maximumIdentityBytes"])as usize)}
+
 struct ToyFixtureCaller<'a>{policy:crate::MountedOwnerPolicyV1,identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'a>,receipts:Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt>}
 impl ToyFixtureCaller<'_>{
     fn retain_original_receipts<P:PluginApp>(&mut self,app:&mut P){
@@ -593,7 +599,7 @@ impl ToyFixtureCaller<'_>{
         if let Some((grant,progress))=app.take_tool_run_receipt(){assert_eq!(grant,self.policy.maintenance);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::ToolRun{grant,progress});}
     }
 }
-async fn advance_toy<P:PluginApp>(app:&mut P,caller:&mut ToyFixtureCaller<'_>)->Result<(),Fault>{caller.retain_original_receipts(app);let result=app.advance_typed_operation_publication(&mut caller.identity,caller.policy.preparation).await;caller.retain_original_receipts(app);result}
+async fn advance_toy<P:PluginApp>(app:&mut P,caller:&mut ToyFixtureCaller<'_>)->Result<(),Fault>{caller.retain_original_receipts(app);let result=app.advance_typed_operation_publication(&mut caller.identity,caller.policy.maintenance).await;caller.retain_original_receipts(app);result}
 
 async fn toy_app(target: u64, caller:&mut ToyFixtureCaller<'_>) -> ToyApp {
     let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
@@ -920,6 +926,31 @@ async fn tool_run_remote_ingest_rebases_and_a_revalidation_conflict_returns_to_c
     drop((probe, remote_probe));
     close(&mut app, &mut caller);
     close(&mut remote, &mut caller);
+}
+
+/// 🪪️ Law: the runtime mints the document, config, draft and interaction stores each with its canonical operation wire, and each authors a row through it.
+/// The fixture is deliberately leaked: its close ladder is the registered-fixture close law, not this one.
+#[semio_framework_async_macros::async_test]
+async fn the_runtime_installs_its_canonical_operation_wire_on_every_store_it_mints_and_each_authors_through_it() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
+    let mut app = artifact_app_laws::new_registered_app::<ToyRunApp, _>(toy_manifest(), protocol::ActorId(text(&fixture()["actor"]).into()), caller.policy, &mut caller.identity).await;
+    assert!(app.store.operation_wire().is_some(), "the document store mints with its semantic wire");
+    assert!(app.config_store.operation_wire().is_some(), "the config store mints with its canonical wire");
+    assert!(app.draft_store.operation_wire().is_some(), "the draft store mints with its canonical wire");
+    assert!(app.interaction_store.operation_wire().is_some(), "the interaction store mints with its canonical wire");
+    let config_mutation: <ToyRunApp as ArtifactApp>::ConfigMutation = ChangeTestConfigSelection { selected: Some("7".to_string()) }.into();
+    let rows = app.config_store.authored_operation_bytes(std::slice::from_ref(&config_mutation), &mut caller.identity).expect("the config mutation authors through the runtime's wire");
+    assert_eq!(rows.len(), 1);
+    assert!(rows[0].starts_with(b"op"), "{:?}", String::from_utf8_lossy(&rows[0]));
+    let interaction = <crate::app::InteractionConfigMutation>::set_state(protocol::InteractionState::default());
+    let interaction_rows = app.interaction_store.authored_operation_bytes(std::slice::from_ref(&interaction), &mut caller.identity).expect("the interaction mutation authors through the runtime's wire");
+    let oracle = format!("op{}", serde_json::json!({ "setInteractionState": { "activeGranularity": {}, "activeMode": {}, "hover": {}, "selection": {} } }));
+    assert_eq!(String::from_utf8(interaction_rows[0].clone()).expect("canonical JSON is text"), oracle, "the interaction wire is the independent serde_json document");
+    std::mem::forget(app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1755,6 +1786,91 @@ async fn a_published_window_config_closes_through_its_own_published_physical_dem
     close(&mut app, &mut caller);
 }
 
+/// ⚖️ LAW: a MOUNTED typed operation that publishes a window config keeps its published receipt while the window authority refresh
+/// is still yielding for the displaced snapshot's custody, resumes that refresh on its next unit and queues the page of exactly the
+/// retained receipt — it never advances the already published store again ("awaits an ACK without its retained host page").
+#[semio_framework_async_macros::async_test]
+async fn a_mounted_window_config_publication_resumes_its_refresh_and_queues_the_retained_receipt() {
+    let (mounted_policy,maximum_identity_bytes)=toy_fixture_caller_policy();
+    let mut observer=|_|true;
+    let identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(maximum_identity_bytes,&mut observer).unwrap();
+    let mut caller=ToyFixtureCaller{policy:mounted_policy,identity,receipts:Vec::new()};
+
+    let fixture = fixture();
+    let window_id = text(&fixture["windowSettingsReads"]["startWindowId"]);
+    let mut app = toy_app(1, &mut caller).await;
+    let view = window_view(window_id, None);
+    let authority = app.window_config_store.capture(Some(&view)).await.expect("window authority capture").expect("the world window owns a config partition");
+    let generation_before = authority.snapshot.generation();
+    let revision = app.store.content_revision_now();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.store.generation_now()), 17);
+    let lease = app.tool_cancellations.begin(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).expect("cancellation lease");
+    let mutation = WindowConfigMutation::of::<ToyWorldWindowConfig>(window_id, ChangeTestConfigSelection { selected: Some("5".into()) }.into());
+    let mut mounted = test_blank_mounted_operation::<ToyRunApp>();
+    mounted.verb = "setWorldSelection".into();
+    mounted.meta = ActionMeta { actor: text(&fixture["actor"]).into(), instance_id: 7, view_state: Some(view) };
+    mounted.operation = operation;
+    mounted.canonical_revision = revision;
+    mounted.artifact_generation = operation.generation.0;
+    mounted.window_config_authority = Some(authority);
+    mounted.publication_lanes = &[ArtifactToolPublicationLane::WindowConfig];
+    mounted.cancellation_lease = Some(lease);
+    mounted.terminal_seen = true;
+    mounted.publication = Some(ArtifactToolCompletionValue::Emit(Ok(Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }), EphemeralEmit::default()));
+    let grant = mounted_policy.maintenance;
+    let mut yielded_with_retained_receipt = 0;
+    let mut page = None;
+    for _ in 0..4096 {
+        app.publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit of a window config publication resumes: {fault:?}"));
+        mounted.publication_ownership_progress.take();
+        if mounted.pending_window_config_receipt.is_some() {
+            yielded_with_retained_receipt += 1;
+        }
+        if let Some(found) = mounted.take_result_page() {
+            page = Some(found);
+            break;
+        }
+    }
+    let page = page.expect("the retained window config receipt reaches its result page");
+    assert_eq!(page.lane, TypedOperationResultLane::WindowConfig);
+    assert!(yielded_with_retained_receipt > 0, "the first refresh unit yields while the displaced snapshot awaits custody");
+    assert!(mounted.pending_window_config_receipt.is_none() && mounted.published_window_config);
+    assert!(mounted.window_config_authority.as_ref().is_some_and(|authority| authority.snapshot.generation() > generation_before), "the captured authority was refreshed to the published generation");
+    assert!(mounted.acknowledge_result_page(page.token).expect("exact ACK"));
+    let mut terminal = false;
+    for _ in 0..4096 {
+        app.publish_mounted_typed_operation_unit(&mut mounted, grant).unwrap_or_else(|fault| panic!("every unit after the window config ACK resumes: {fault:?}"));
+        mounted.publication_ownership_progress.take();
+        if mounted.granted_retirement_ready() && mounted.granted_retirement_pending() {
+            let quoted = plugin_demand_grant(mounted.granted_retirement_demands(grant.maximum_copy_bytes).expect("quoted granted retirement"));
+            mounted.granted_retirement_step(quoted).expect("granted retirement of the acknowledged publication");
+        }
+        if let Some(page) = mounted.take_result_page() {
+            terminal = page.lane == TypedOperationResultLane::Terminal;
+            assert!(mounted.acknowledge_result_page(page.token).expect("exact ACK"));
+            break;
+        }
+    }
+    assert!(terminal, "the acknowledged window config operation ends with its terminal page");
+    for _ in 0..4096 {
+        if mounted.terminal_is_empty() {
+            break;
+        }
+        if mounted.lease_retirement_ready() {
+            let quoted = plugin_demand_grant(mounted.lease_retirement_demands(&app.tool_cancellations, grant.maximum_copy_bytes).expect("quoted cancellation lease retirement"));
+            mounted.lease_retirement_step(&app.tool_cancellations, quoted).expect("cancellation lease retirement");
+            continue;
+        }
+        let quoted = plugin_demand_grant(mounted.retirement_demands(grant.maximum_copy_bytes).expect("quoted mounted retirement"));
+        match mounted.retirement_step(quoted).expect("mounted retirement step") {
+            PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => assert!(progress.fits(quoted)),
+            PluginLifecycleStep::AwaitingInput { reason } | PluginLifecycleStep::Blocked { reason } => panic!("the published window config operation retires: {reason}"),
+        }
+    }
+    assert!(mounted.terminal_is_empty(), "the published window config operation retires every owner");
+    close(&mut app, &mut caller);
+}
+
 /// ⚖️ LAW: a tick dirties the bodies of the window kinds the run declares it renders in, next to the panel and the scene
 /// windows, and those bodies read the run's progress, step ring and latest tick payload through `ArtifactView::tool_run()`.
 #[semio_framework_async_macros::async_test]
@@ -2073,7 +2189,7 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
             let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original fixture close demand");
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
             assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
-            match app.close_step(grant).expect("close step") {
+            match { let step = app.close_step(grant).expect("close step"); let _ = app.take_constructor_receipt(); step } {
                 crate::app::PluginLifecycleStep::Progress(progress) => {
                     assert!(progress.fits(grant));
                     let released_items = progress.copied_items;

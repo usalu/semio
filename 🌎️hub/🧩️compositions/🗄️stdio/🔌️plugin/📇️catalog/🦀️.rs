@@ -3,7 +3,7 @@
 use semio_framework_plugin::io::FormatDescriptor;
 use semio_framework_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
 use semio_s_artifact_stdio_contract::registry::ContributionRegistry;
-use semio_s_artifact_stdio_contract::{kernel, native_codec_hash, pack, ArtifactContribution, NativeCodecFactory};
+use semio_s_artifact_stdio_contract::{native_codec_hash, ArtifactContribution, NativeCodecFactory};
 pub use semio_s_artifact_stdio_contract::{ArtifactAssembly, CapabilityCounts, CapabilityLedger, NativeCodecFactoryReceipt};
 use std::collections::{BTreeMap, BTreeSet};
 

@@ -2,9 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 use crate::Puzzle3dSnapshot;
-use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
-use crate::standards::v1::subsets::any::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 
 /// 🏪️ THE constructor for a puzzle3d document store, app-side or standalone. A bare

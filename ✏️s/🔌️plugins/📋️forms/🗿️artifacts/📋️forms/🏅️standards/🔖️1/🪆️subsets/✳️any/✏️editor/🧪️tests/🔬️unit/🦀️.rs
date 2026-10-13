@@ -71,13 +71,13 @@ pub(crate) mod context {
     /// EVERY result page — on a mounted app `dispatch_typed` only QUEUES the operation, so a test
     /// reading `app.snapshot()` straight afterwards observes the pre-dispatch document.
     pub async fn settle(app: &mut FormsApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation")
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation")
     }
 
     /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
     /// was driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
     pub fn close(app: &mut FormsApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     }
     
     pub async fn config(app: &FormsApp) -> FormsConfig {
@@ -90,7 +90,7 @@ pub(crate) mod context {
     }
     
     pub async fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         settle(app).await;
         result
     }

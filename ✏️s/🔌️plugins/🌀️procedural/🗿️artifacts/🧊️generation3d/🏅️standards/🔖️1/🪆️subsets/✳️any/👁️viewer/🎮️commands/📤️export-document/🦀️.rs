@@ -36,7 +36,7 @@ pub fn retained_meshes(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &Conf
 }
 
 /// 📤️ Encodes the viewed document in the picked format and hands the shell one download.
-pub fn handle(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
+pub fn handle(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     emit(payload, doc, None)
 }
 

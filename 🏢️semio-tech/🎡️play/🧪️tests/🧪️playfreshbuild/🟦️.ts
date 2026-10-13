@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { join, relative } from "node:path";
 
 /** 🧪️ Proves fresh release isolation against the language-neutral contract and Nx's argument parser. */
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: { playFreshBuildEnvironment: (workspace: string, generation: string, inherited: Readonly<Record<string, string | undefined>>) => Record<string, string | undefined>; playViteCacheDirectory: (fallback: string, environment: Readonly<Record<string, string | undefined>>) => string; PLAY_FRESH_BUILD_ARGS: readonly string[] }): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: { playFreshBuildEnvironment: (workspace: string, generation: string, inherited: Readonly<Record<string, string | undefined>>) => Record<string, string | undefined>; playViteCacheDirectory: (fallback: string, environment: Readonly<Record<string, string | undefined>>) => string; playFreshBuildArgs: (resources: { cpus: number; memoryBytes: number }) => readonly string[]; playFreshParallel: (resources: { cpus: number; memoryBytes: number }) => number; PLAY_COMPONENT_WORKSPACES: readonly string[]; PLAY_FRESH_GENERATION_PREFIX: string }): Promise<void> {
   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const parse = createRequire(import.meta.url)("yargs-parser");
   const { describe, expect, it } = vitest;
@@ -37,18 +37,32 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(environments[0].CARGO_BUILD_BUILD_DIR).not.toBe(environments[1].CARGO_BUILD_BUILD_DIR);
       expect(inherited.CARGO_TARGET_DIR).toBe("shared-target");
     });
+    it("places each generation directly under the cache root with the contract prefix", () => {
+      expect(dependencies.PLAY_FRESH_GENERATION_PREFIX).toBe(fixture.generationPrefix);
+    });
     it("isolates Vite storage inside the current invocation's graph storage", () => {
       const generation = join("/workspace", "isolated", fixture.generations[0]), environment = dependencies.playFreshBuildEnvironment("/workspace", generation, {});
       expect(relative(generation, dependencies.playViteCacheDirectory("shared-vite", environment))).toBe(fixture.viteStorage.split("/").join(process.platform === "win32" ? "\\" : "/"));
       expect(dependencies.playViteCacheDirectory("shared-vite", {})).toBe("shared-vite");
     });
     it("requests the complete Nx build graph with task and remote cache bypass", () => {
-      const parsed = parse(dependencies.PLAY_FRESH_BUILD_ARGS, { boolean: ["skip-nx-cache", "skip-remote-cache"] });
-      expect(parsed._).toEqual(["run", fixture.target]);
-      expect(parsed["skip-nx-cache"]).toBe(true);
-      expect(parsed["skip-remote-cache"]).toBe(true);
-      expect(parsed.parallel).toBe(fixture.parallel);
-      expect(parsed.excludeTaskDependencies).toBeUndefined();
+      for (const row of fixture.parallelRows) {
+        const parsed = parse(dependencies.playFreshBuildArgs({ cpus: row.cpus, memoryBytes: row.memoryGiB * 1024 ** 3 }), { boolean: ["skip-nx-cache", "skip-remote-cache"] });
+        expect(parsed._).toEqual(["run", fixture.target]);
+        expect(parsed["skip-nx-cache"]).toBe(true);
+        expect(parsed["skip-remote-cache"]).toBe(true);
+        expect(parsed.parallel).toBe(row.parallel);
+        expect(parsed.excludeTaskDependencies).toBeUndefined();
+      }
+    });
+    it("bounds parallel Nx tasks by cores and by memory", () => {
+      for (const row of fixture.parallelRows) expect(dependencies.playFreshParallel({ cpus: row.cpus, memoryBytes: row.memoryGiB * 1024 ** 3 })).toBe(row.parallel);
+    });
+    it("compiles every component workspace in one Cargo pass per profile and spools the nested Nx output", () => {
+      expect(dependencies.PLAY_COMPONENT_WORKSPACES).toEqual(fixture.componentWorkspaces);
+      const environment = dependencies.playFreshBuildEnvironment("/workspace", join("/workspace", "isolated", fixture.generations[0]), {});
+      expect(relative(join("/workspace", "isolated", fixture.generations[0]), environment.SEMIO_CARGO_PREBUILD_PLAN!)).toBe(fixture.storage.SEMIO_CARGO_PREBUILD_PLAN);
+      expect(relative(join("/workspace", "isolated", fixture.generations[0]), environment.SEMIO_NX_OUTPUT_LOG!)).toBe(fixture.storage.SEMIO_NX_OUTPUT_LOG);
     });
   });
 }

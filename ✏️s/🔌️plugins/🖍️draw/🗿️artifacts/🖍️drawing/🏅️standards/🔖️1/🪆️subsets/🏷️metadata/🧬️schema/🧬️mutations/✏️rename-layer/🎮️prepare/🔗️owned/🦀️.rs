@@ -114,12 +114,12 @@ impl DrawingOwnedRenamePreparationCursor {
                     let progress = self.path.reserve_one(grant.maximum_capacity_bytes).map_err(|error| ValueError::from(error.refusal()))?;
                     return Ok(pending(RetainedCloneProgress { copied_items: usize::from(progress.progressed), retained_capacity_bytes: progress.allocated_bytes, ..Default::default() }));
                 }
-                if grant.maximum_copy_bytes < std::mem::size_of::<usize>() { return Ok(pending(Default::default())); }
+                if grant.maximum_copy_bytes < size_of::<usize>() { return Ok(pending(Default::default())); }
                 let index = lookup.path_index(self.path.len()).expect("actual retained Drawing ordinal");
                 self.path.push_reserved(index).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "Drawing ordinal placement refused"))?;
-                return Ok(pending(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<usize>(), ..Default::default() }));
+                return Ok(pending(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), ..Default::default() }));
             }
-            let bytes = std::mem::size_of::<Option<RetainedOwnedProjection<DrawingLayerNode>>>();
+            let bytes = size_of::<Option<RetainedOwnedProjection<DrawingLayerNode>>>();
             if grant.maximum_copy_bytes < bytes { return Ok(pending(Default::default())); }
             self.node = lookup.take().expect("completed owned Drawing lookup");
             lookup.begin_close();
@@ -157,10 +157,10 @@ impl DrawingOwnedRenamePreparationCursor {
             if self.comparison.terminal_is_empty() { self.phase = 4; }
             return Ok(pending(step.progress()));
         }
-        if grant.maximum_copy_bytes < std::mem::size_of::<DrawingOwnedRenamePlan>() { return Ok(pending(Default::default())); }
+        if grant.maximum_copy_bytes < size_of::<DrawingOwnedRenamePlan>() { return Ok(pending(Default::default())); }
         let disposition = self.disposition.expect("settled owned Drawing rename disposition");
         self.output = Some(DrawingOwnedRenamePlan { disposition, node: self.node.take(), payload: self.payload.take(), path: std::mem::take(&mut self.path), closing: false });
-        Ok(DrawingOwnedRenamePreparationStep::Complete { disposition, progress: RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<DrawingOwnedRenamePlan>(), ..Default::default() } })
+        Ok(DrawingOwnedRenamePreparationStep::Complete { disposition, progress: RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<DrawingOwnedRenamePlan>(), ..Default::default() } })
     }
 
     /// 🫴️ Transfers the actual old-name projection exactly once, retaining no original payload reference.
@@ -209,9 +209,9 @@ impl DrawingOwnedRenamePreparationCursor {
 
 fn close_path(path: &mut PagedList<usize, {usize::MAX}>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     if !path.is_empty() {
-        if grant.maximum_copy_bytes < std::mem::size_of::<usize>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if grant.maximum_copy_bytes < size_of::<usize>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
         path.pop();
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<usize>(), ..Default::default() }));
+        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), ..Default::default() }));
     }
     if !path.terminal_is_empty() {
         let progress = path.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;

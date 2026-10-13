@@ -82,8 +82,8 @@ async fn publish_batch(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>, op
         .begin_outbound_apply_batch(semio_framework_job::OperationId(operation), store.generation_now(), store.content_revision_now(), store.local_actor_id().0.clone(), mutations, Some(&factory), reference.cloned())
         .unwrap_or_else(|rejected| panic!("batch admission: {}", rejected.reason));
     publication.set_transaction_open(open);
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 512, ..one_item_test_policy() };
-    for _ in 0..4_096 {
+    let grant = batch_turn_grant();
+    for _ in 0..1_048_576 {
         if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("bounded batch step") {
             break;
         }

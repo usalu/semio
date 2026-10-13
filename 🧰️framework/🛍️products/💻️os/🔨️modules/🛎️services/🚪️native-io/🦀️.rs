@@ -213,8 +213,8 @@ impl NativeIoJob {
 
     fn close_target(&self) -> Result<(NativeIoCloseTarget, RetirementDemand), ValueError> {
         use NativeIoCloseTarget::*;
-        if let Some(writer)=self.fault_writer.as_ref(){return Ok(if writer.terminal_is_empty(){(ClearFaultWriter,RetirementDemand{copy_bytes:std::mem::size_of_val(&self.fault_writer),depth:1,..Default::default()})}else{(FaultWriter,native_io_child_demands(writer.retirement_demands()?)?)});}
-        if let Some(detail)=self.fault_detail.as_ref(){return Ok(if detail.terminal_is_empty(){(ClearFaultDetail,RetirementDemand{copy_bytes:std::mem::size_of_val(&self.fault_detail),depth:1,..Default::default()})}else{(FaultDetail,native_io_child_demands(detail.retirement_demands()?)?)});}
+        if let Some(writer)=self.fault_writer.as_ref(){return Ok(if writer.terminal_is_empty(){(ClearFaultWriter,RetirementDemand{copy_bytes:size_of_val(&self.fault_writer),depth:1,..Default::default()})}else{(FaultWriter,native_io_child_demands(writer.retirement_demands()?)?)});}
+        if let Some(detail)=self.fault_detail.as_ref(){return Ok(if detail.terminal_is_empty(){(ClearFaultDetail,RetirementDemand{copy_bytes:size_of_val(&self.fault_detail),depth:1,..Default::default()})}else{(FaultDetail,native_io_child_demands(detail.retirement_demands()?)?)});}
         let release = |target, bytes, depth| Ok((target, RetirementDemand { release_bytes: bytes, depth, ..Default::default() }));
         match &self.state {
             NativeIoState::Reading { writer, .. } | NativeIoState::ReadingBuffered { writer, .. } | NativeIoState::ReadingPage { writer, .. } | NativeIoState::ReadingPageBuffered { writer, .. } | NativeIoState::ClosingWriterFault { writer, .. } if !writer.terminal_is_empty() => return Ok((Writer, native_io_child_demands(writer.retirement_demands()?)?)),
@@ -262,7 +262,7 @@ impl NativeIoJob {
                         let writer=self.fault_writer.get_or_insert_with(||semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::Fault));
                         match writer.write_slice_page(cx,error.as_bytes(),&mut self.fault_cursor){Ok(complete)=>self.fault_complete=complete,Err(semio_framework_job::JobPayloadAdmissionFault::OpportunityExhausted)=>{},Err(_)=>return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original native I/O fault payload exceeded received authority"))};return Ok(None);
                     }
-                    let copied_bytes=std::mem::size_of::<semio_framework_job::RetainedJobPayloadWriter>()+std::mem::size_of::<semio_framework_job::RetainedJobPayload>();let grant=cx.retained_grant();
+                    let copied_bytes=size_of::<semio_framework_job::RetainedJobPayloadWriter>()+size_of::<semio_framework_job::RetainedJobPayload>();let grant=cx.retained_grant();
                     if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(None)}
                     let original=self.fault_writer.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O fault writer absent"))?;
                     match original.finish(){Ok(detail)=>self.fault_detail=Some(detail),Err(original)=>{self.fault_writer=Some(original);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O fault payload unfinished"))}}

@@ -32,7 +32,7 @@
   },
   "execution": "linked",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -50,8 +50,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "4c5dcac3e631883cc6235de06e9804c49365d03796ad633bf0f4a320de3993a3",
-    "coreWasmSha256": "ea98e7372a1682b69abfe933528d74e91f26abd7bcd3f47565acfe36549de294",
-    "descriptorSha256": "99e8b3c3ac8c37cc1c5f34f059ddaa8d4a83a08daf73b738229dfaf9cfeedbd1"
+    "wasmSha256": "25c5d46a2957931812dd710f8a554348745e58f37763fafecdfb31a4706dceae",
+    "coreWasmSha256": "3b346573396e1e7d5891392b03a070cb55cb949619a65332a1f5eaa5f5920de4",
+    "descriptorSha256": "36e426390a98f26db2ebf744a926d8a45921476f3fe3b0ae4f983e86ef54633f"
   }
 }

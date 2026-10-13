@@ -329,6 +329,28 @@ fn flat_run(frame: &mut NativeFrame, output: &mut [u8], grant: RetainedCloneGran
             frame.ordinal += count;
             Ok((count != 0).then_some(at))
         }
+        Phase::ObjectNext if frame.ordinal < frame.length => {
+            let (mut at, mut count, mut prefixed) = (0, 0, false);
+            {
+                let reference = frame.owner.borrow()?;
+                let object = reference.get();
+                while frame.ordinal + count < frame.length {
+                    let ordinal = frame.ordinal + count;
+                    let start = at;
+                    if ordinal != 0 && !put(output, &mut at, b',') { break; }
+                    match flat_text(object.canonical_tree_key(ordinal)?, &mut output[at..])? { Some(written) => at += written, None => { at = start; break; } }
+                    if !put(output, &mut at, b':') { at = start; break; }
+                    match flat_encode(object.canonical_tree_child(ordinal)?, &mut output[at..], 0)? {
+                        Some(written) => { at += written; count += 1; }
+                        None if start == 0 => { prefixed = true; break; }
+                        None => { at = start; break; }
+                    }
+                }
+            }
+            frame.ordinal += count;
+            if prefixed { frame.phase = Phase::ObjectChild; }
+            Ok((at != 0).then_some(at))
+        }
         Phase::Text => {
             let reference = frame.owner.borrow()?;
             let text = match reference.get().canonical_tree_node()? { Node::String(text) => text.into(), Node::Text(text) => text, _ => return Err(refusal("canonical native text role changed")) };

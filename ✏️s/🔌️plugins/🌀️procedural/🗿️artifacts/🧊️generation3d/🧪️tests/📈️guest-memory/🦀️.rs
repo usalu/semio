@@ -43,7 +43,7 @@ async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (us
     let package = PackageRef { package: PackageId("poll-turn-memory".to_string()), hash: PackageHash(hash) };
     let compiled = runtime.compile(&package, &bytes).await.expect("the staged actor component compiles");
     let max_frames: u32 = std::env::var("SEMIO_POLL_TURN_LEAK_FRAMES").ok().and_then(|value| value.parse().ok()).unwrap_or(64);
-    let budget = Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames };
+    let budget = Budget { retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn(), fuel: u64::MAX, deadline_ms: 60_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames };
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect("the staged actor component instantiates");
     let instantiated = instance.guest_linear_memory_bytes().expect("a wasmtime instance owns linear memory");
     let app_id = std::env::var("SEMIO_POLL_TURN_LEAK_APP").unwrap_or_else(|_| "s.procedural.generation3d@1/*#editor".to_string());
@@ -64,7 +64,7 @@ async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (us
     let mut hot = 0_usize;
     if std::env::var("SEMIO_POLL_TURN_LEAK_EXPORT").as_deref() == Ok("checkpoint") {
         for _ in 0..turns {
-            runtime.checkpoint(&mut instance).await.expect("checkpoint export");
+            runtime.checkpoint(&mut instance, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("checkpoint export");
             readings.push(instance.guest_linear_memory_bytes().expect("a wasmtime instance owns linear memory"));
         }
         return (instantiated, readings, Vec::new());
@@ -75,7 +75,7 @@ async fn drive_idle_poll_turns(component: &std::path::Path, turns: usize) -> (us
         if turn < opens.len() && !app_id.is_empty() {
             events.push(opens[turn].clone());
         }
-        match runtime.execute_turn(&mut instance, &events, budget).await {
+        match runtime.execute_turn(&mut instance, &events, budget, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await {
             Ok(result) => {
                 if matches!(result.status, TurnStatus::MoreWork) {
                     hot += 1;
@@ -155,7 +155,7 @@ async fn drive_diagnostics_turns(component: &std::path::Path, turns: usize, arme
     let hash = *semio_framework_hash::hash(&bytes).as_bytes();
     let package = PackageRef { package: PackageId(format!("poll-turn-diagnostics-{armed}")), hash: PackageHash(hash) };
     let compiled = runtime.compile(&package, &bytes).await.expect("the staged actor component compiles");
-    let budget = Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 64 };
+    let budget = Budget { retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn(), fuel: u64::MAX, deadline_ms: 60_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 64 };
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect("the staged actor component instantiates");
     let app_id = std::env::var("SEMIO_POLL_TURN_LEAK_APP").unwrap_or_else(|_| "s.procedural.generation3d@1/*#editor".to_string());
     let mut events: Vec<Event> = vec![Event::InstanceOpen {
@@ -168,7 +168,7 @@ async fn drive_diagnostics_turns(component: &std::path::Path, turns: usize, arme
         quotas: Default::default(),
     }];
     for turn in 0..turns {
-        match runtime.execute_turn(&mut instance, &events, budget).await {
+        match runtime.execute_turn(&mut instance, &events, budget, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await {
             Ok(result) => {
                 events = result.lifecycle_receipt.map(|receipt| vec![Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt })]).unwrap_or_default();
             }

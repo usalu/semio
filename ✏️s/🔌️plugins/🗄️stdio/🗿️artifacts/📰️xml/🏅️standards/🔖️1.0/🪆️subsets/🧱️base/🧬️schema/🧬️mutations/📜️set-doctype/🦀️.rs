@@ -16,7 +16,7 @@ pub type SetDoctypePayload = SetDoctypeMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "doctype", kind: "set-doctype", record: "SetDoctype" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         protocol::MutationOutcome::new(XmlDiff { prolog: None, epilog: None, declaration: None, doctype: Some(self.doctype.clone()), root: None })
     }
 

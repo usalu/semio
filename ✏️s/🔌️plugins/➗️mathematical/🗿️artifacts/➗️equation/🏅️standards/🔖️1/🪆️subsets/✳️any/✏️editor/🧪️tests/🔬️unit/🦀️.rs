@@ -44,7 +44,7 @@ pub(crate) mod context {
     /// mounted app `dispatch_typed` only QUEUES the operation, so a test reading `app.snapshot()`
     /// straight afterwards would observe the pre-dispatch document.
     pub async fn settle(app: &mut MathApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
     }
 
     /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
@@ -58,7 +58,7 @@ pub(crate) mod context {
     impl OwnedMathApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
         }
     }
 
@@ -84,7 +84,7 @@ pub(crate) mod context {
     }
     
     pub async fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -215,7 +215,7 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
         ));
     }
     let mut checkpoint = [0_u8; 40];
-    assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), 40);
+    assert_eq!(uninterrupted.checkpoint(&mut checkpoint, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("checkpoint"), 40);
     let aba_operation = retained_operation(14);
     let mut stale_aba = EquationRetainedCommandWork::new("nodeGraphEdit", equation_operation_identity("nodeGraphEdit", &aba_operation), extent);
     assert!(stale_aba.restore(&checkpoint).is_err());

@@ -89,7 +89,7 @@ pub(crate) fn parse_semio_diff(line: &str) -> Result<SemioDiff, String> {
     }
 }
 
-impl protocol::DiffText for SemioDiff {
+impl DiffText for SemioDiff {
 fn print_diff(&self) -> String {
     print_semio_diff(self)
 }

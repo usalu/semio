@@ -7,7 +7,7 @@ mod document_contract_tests;
 
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_surface::terrain::tiles;
+#[cfg(test)] use semio_framework_surface::terrain::tiles;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 

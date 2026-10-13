@@ -223,7 +223,7 @@ impl RetainedOpcPackage {
             Ok(())
         }
         fn array<T>(total: &mut usize, count: usize) -> Result<(), ValueError> {
-            add(total, count.checked_mul(std::mem::size_of::<T>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained OPC materialization array overflow"))?)
+            add(total, count.checked_mul(size_of::<T>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "retained OPC materialization array overflow"))?)
         }
         let mut total = 0usize;
         array::<OpcPart>(&mut total, self.parts.len())?;

@@ -137,11 +137,11 @@ pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> G
 pub fn genesis_gis_map_child_pack(document: &GisMapSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use store::ArtifactPack;
     if slot == "drawing" && child_id == document.drawing.child_id {
-        let drawing = crate::schema::gis_map_snapshot_to_drawing(document);
+        let drawing = schema::gis_map_snapshot_to_drawing(document);
         return Some(<SemioDrawingSnapshot as ArtifactPack>::encode_pack(&drawing));
     }
     if slot == "value" && child_id == document.value.child_id {
-        let descriptor = crate::schema::gis_map_descriptor_value(document);
+        let descriptor = schema::gis_map_descriptor_value(document);
         let value = gis_map_value_from_descriptor(&descriptor);
         return Some(<SemioValueSnapshot as ArtifactPack>::encode_pack(&value));
     }

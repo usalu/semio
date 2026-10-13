@@ -77,7 +77,7 @@ fn refusal(kind:ValueRefusalKind,reason:&'static str,physical_bytes:usize)->Tran
 fn progress(phase:PackTransportPhase,bytes:usize,committed_bytes:usize)->PackTransportProgress{PackTransportProgress{phase,category:None,bytes,committed_bytes}}
 
 fn create_with<P:PackTransportPolicy+'static,A:FnOnce(&mut Vec<ContextCell<P>>)->bool>(mut admission:TransportAdmission,policy:P,allocate:A)->Result<PackTransportContext,TransportContextRefusal<P>>{
- let requested=std::mem::size_of::<ContextCell<P>>();let before=admission.committed_bytes;
+ let requested=size_of::<ContextCell<P>>();let before=admission.committed_bytes;
  let fail=|cause,admission,policy|TransportContextRefusal{cause,admission,policy};
  let Some(remaining)=admission.maximum_bytes.checked_sub(before) else{return Err(fail(TransportContextRefusalCause::Admission(refusal(ValueRefusalKind::OwnershipLimit,"context admission baseline exceeds maximum",0)),admission,policy));};
  if requested>isize::MAX as usize||requested>remaining{return Err(fail(TransportContextRefusalCause::Admission(refusal(ValueRefusalKind::OwnershipLimit,"context cell exceeds finite physical credit",0)),admission,policy));}
@@ -96,7 +96,7 @@ fn create_with<P:PackTransportPolicy+'static,A:FnOnce(&mut Vec<ContextCell<P>>)-
 }
 
 fn reserve_error_with<E:Error+Send+Sync+'static,A:FnOnce(&mut Vec<TransportCell<E>>)->bool>(context:&PackTransportContext,category:PackTransportCategory,retry:PackRetryDisposition,allocate:A)->Result<SharedTransportReservation<E>,PackError>{
- let requested=std::mem::size_of::<TransportCell<E>>();
+ let requested=size_of::<TransportCell<E>>();
  let fail=|kind,reason,physical_bytes|PackError::Refusal(crate::PackRefusal::TransportAdmission{category,refusal:refusal(kind,reason,physical_bytes)});
  {
   let admission=context.admission().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -135,7 +135,7 @@ unsafe fn release<P:PackTransportPolicy>(pointer:NonNull<()>,capacity:usize){
   let storage=unsafe{Vec::from_raw_parts(pointer.cast::<ContextCell<P>>().as_ptr(),1,capacity)};
   let cell=&storage[0];
   let committed=cell.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).committed_bytes;
-  if !std::thread::panicking(){cell.policy.progress(PackTransportProgress{phase:PackTransportPhase::ContextClosed,category:None,bytes:capacity*std::mem::size_of::<ContextCell<P>>(),committed_bytes:committed});}
+  if !std::thread::panicking(){cell.policy.progress(PackTransportProgress{phase:PackTransportPhase::ContextClosed,category:None,bytes:capacity*size_of::<ContextCell<P>>(),committed_bytes:committed});}
   drop(storage);
  }
 }

@@ -94,7 +94,6 @@ impl OpBinary for StlMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `StlMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

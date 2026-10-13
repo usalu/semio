@@ -96,7 +96,8 @@ impl protocol::DiffAlgebra<VcsDemoConfig> for VcsDemoConfigDiff {
 /// `VcsPlayApp` field writes), plus a generic `Snapshot` every variant's
 /// `backwards()` returns (see `shooting_op::ShootingConfigMutation`'s identical doc for why this
 /// whole-config-snapshot-undo shape is correct and sufficient here).
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum VcsDemoConfigMutation {
     #[dsl(key = "noop")]

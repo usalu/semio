@@ -45,12 +45,12 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparati
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "ephemeral preparation depth overflow"))?; Ok(demand) };
         if let Some(owner) = self.retirement.as_ref() { return nested(crate::os_store::artifact_retirement_box_demands(owner, body)?); }
-        if let Some(task) = self.task.as_ref() { return if task.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(task.as_ref()), depth: 1, ..Default::default() }) } else { nested(RetirementDemand { copy_bytes: task.next_copy_byte_demand()?, capacity_bytes: task.next_capacity_byte_demand(body)?, release_bytes: task.next_release_byte_demand()?, depth: task.next_depth_demand()? }) }; }
+        if let Some(task) = self.task.as_ref() { return if task.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(task.as_ref()), depth: 1, ..Default::default() }) } else { nested(RetirementDemand { copy_bytes: task.next_copy_byte_demand()?, capacity_bytes: task.next_capacity_byte_demand(body)?, release_bytes: task.next_release_byte_demand()?, depth: task.next_depth_demand()? }) }; }
         if let Some(mutation) = self.mutation.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.mutation_retirement.as_ref().expect("original mutation factory").retirement_birth_bytes(mutation), depth: 2, ..Default::default() }); }
         if self.prepared.is_some() || self.base.as_ref().is_some_and(|base| matches!(base.0, ArtifactEphemeralBaseOwner::Transient(_))) { return Ok(RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(), depth: 2, ..Default::default() }); }
         if self.base.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if let Some(registry) = self.base_registry.as_ref() { if registry.strong_count() == 1 && registry.has_returned() { return nested(registry.returned_admission_demands::<P>(|_| RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(), depth: 1, ..Default::default() }).map_err(crate::os_store::SnapshotReadLeaseRefusal::into_value_error)?); } return crate::os_store::snapshot_registry_alias_demands(&self.base_registry); }
-        if self.state_retirement.is_some() || self.mutation_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.state_retirement.is_some() || self.mutation_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.iter().flatten().next() { return nested(factory.demands(body)?); }
         Ok(Default::default())
     }
@@ -204,7 +204,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
         if let Some(prepared) = self.prepared.take() { return match ReturnedSnapshotReadRetirement::admit(prepared.next_root, self.state_retirement.as_ref().expect("original state factory").clone(), child) { Ok((owner, receipt)) => { *self.retirement = Some(owner); Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.prepared = Some(ArtifactEphemeralOneItemPrepared { next_root: root }); drop(alias); Err(error) } }; }
         if let Some(base) = self.base.as_mut() {
             match &mut base.0 {
-                ArtifactEphemeralBaseOwner::Transient(root) => {
+                ArtifactEphemeralBaseOwner::Transient(_root) => {
                     let original = self.base.take().expect("observed original transient base");
                     let ArtifactEphemeralBaseOwner::Transient(root) = original.0 else { unreachable!() };
                     return match ReturnedSnapshotReadRetirement::admit(root, self.state_retirement.as_ref().expect("original state factory").clone(), child) { Ok((owner, receipt)) => { *self.retirement = Some(owner); Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.base = Some(ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Transient(root))); drop(alias); Err(error) } };

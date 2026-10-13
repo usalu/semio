@@ -59,7 +59,7 @@ impl store::ArtifactDsl for PlaygroundSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod mutations_codec {

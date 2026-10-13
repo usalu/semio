@@ -13,12 +13,12 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<TiffMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v6_0::subsets::document::io::binary::mutations::insert_ifd::CODEC,
-    crate::standards::v6_0::subsets::document::io::binary::mutations::remove_ifd::CODEC,
-    crate::standards::v6_0::subsets::document::io::binary::mutations::replace_tag::CODEC,
-    crate::standards::v6_0::subsets::document::io::binary::mutations::remove_tag::CODEC,
-    crate::standards::v6_0::subsets::document::io::binary::mutations::paint_region::CODEC,
-    crate::standards::v6_0::subsets::document::io::binary::mutations::replace_samples::CODEC,
+    insert_ifd::CODEC,
+    remove_ifd::CODEC,
+    replace_tag::CODEC,
+    remove_tag::CODEC,
+    paint_region::CODEC,
+    replace_samples::CODEC,
 ];
 //#endregion Registry
 

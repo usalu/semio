@@ -189,7 +189,7 @@ async fn edit_rows(app: &mut LabelReloadInstance) -> Vec<(String, String, String
 /// 🆕️ A fresh registered instance of the fixture app, opened by `actor`.
 async fn open(fixture: &Value, actor: &str) -> LabelReloadInstance {
     let mut app = artifact_app_laws::new_registered_app::<LabelReloadApp, _>(manifest(fixture), protocol::ActorId(actor.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
-    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.to_string()));
+    assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.into()));
     app
 }
 //#endregion 🧰️Harness

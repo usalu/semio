@@ -26,7 +26,7 @@ fn spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&m
 pub(crate) fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:spec,decoding:|control|spec_controlled(control),encoding:|control|spec_controlled(control)}}
 
 pub(crate) fn to_record(snapshot:&DxfSnapshot)->semio_framework_dsl_record::RecordValue{
-    use semio_framework_dsl_record::FieldValue as V;
+    
     semio_framework_dsl_record::RecordValue{fields:[(1,semio_framework_dsl_record::FieldValue::Text(snapshot.schema.clone())),(2,semio_framework_dsl_record::FieldValue::Value(snapshot.header_vars.to_value())),(3,semio_framework_dsl_record::FieldValue::Value(snapshot.tables.to_value())),(4,semio_framework_dsl_record::FieldValue::Value(snapshot.other_tables.to_value())),(5,semio_framework_dsl_record::FieldValue::Value(snapshot.blocks.to_value())),(6,semio_framework_dsl_record::FieldValue::Value(snapshot.entities.to_value()))].into_iter().collect()}
 }
 
@@ -44,23 +44,23 @@ pub(crate) fn to_record_controlled(snapshot:&DxfSnapshot,control:&mut semio_fram
 }
 fn project<T:ToValue>(value:&T,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control).map(semio_framework_dsl_record::FieldValue::Value)})}
 pub(crate) fn from_record(record:&semio_framework_dsl_record::RecordValue)->Result<DxfSnapshot,semio_framework_diagnostic::TextError>{
-    if record.fields.keys().any(|id|!(1..=6).contains(id)){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DXF snapshot contains an undeclared root field",semio_framework_diagnostic::TextSpan::at(1,1)));}
+    if record.fields.keys().any(|id|!(1..=6).contains(id)){return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "DXF snapshot contains an undeclared root field",semio_framework_diagnostic::TextSpan::at(1,1)));}
     let mut fields=Vec::with_capacity(6);
     for(id,key)in[(1,"schema"),(2,"headerVars"),(3,"tables"),(4,"otherTables"),(5,"blocks"),(6,"entities")]{
-        let value=match record.get(id){Some(semio_framework_dsl_record::FieldValue::Text(value))if id==1=>DslValue::String(value.clone()),Some(semio_framework_dsl_record::FieldValue::Value(value))if id>1=>value.clone(),_=>return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DXF snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)))};
+        let value=match record.get(id){Some(semio_framework_dsl_record::FieldValue::Text(value))if id==1=>DslValue::String(value.clone()),Some(semio_framework_dsl_record::FieldValue::Value(value))if id>1=>value.clone(),_=>return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, format!("DXF snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)))};
         fields.push((key.into(),value));
     }
     DxfSnapshot::from_value(DslValue::Object(fields)).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1,1)))
 }
 
 fn owned<T:FromValue>(record:&semio_framework_dsl_record::RecordValue,id:u16,key:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<pack::value::DecodedValue<T>,ValueError>{
-    let Some(semio_framework_dsl_record::FieldValue::Value(value))=record.get(id)else{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DXF snapshot field {key} is missing or has a different shape")))};
+    let Some(semio_framework_dsl_record::FieldValue::Value(value))=record.get(id)else{return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("DXF snapshot field {key} is missing or has a different shape")))};
     let value=T::from_value_controlled(value,control).map_err(|error|error.under(key))?;let owner=pack::value::DecodedValue::new(value,T::retire_decoded);control.step()?;Ok(owner)
 }
 pub(crate) fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<DxfSnapshot,ValueError>{
     control.scoped_stage(|control|->Result<_,ValueError>{
-        control.begin_stage(6)?;if record.fields.keys().any(|id|!(1..=6).contains(id)){return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot contains an undeclared root field"));}
-        let Some(semio_framework_dsl_record::FieldValue::Text(schema))=record.get(1)else{return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot schema is missing or has a different shape"));};let schema=control.copy_text(schema)?;control.step()?;
+        control.begin_stage(6)?;if record.fields.keys().any(|id|!(1..=6).contains(id)){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot contains an undeclared root field"));}
+        let Some(semio_framework_dsl_record::FieldValue::Text(schema))=record.get(1)else{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "DXF snapshot schema is missing or has a different shape"));};let schema=control.copy_text(schema)?;control.step()?;
         let header_vars=owned::<Vec<DxfHeaderVar>>(record,2,"headerVars",control)?;let tables=owned::<DxfTables>(record,3,"tables",control)?;let other_tables=owned::<Vec<DxfOtherTable>>(record,4,"otherTables",control)?;let blocks=owned::<Vec<DxfBlock>>(record,5,"blocks",control)?;let entities=owned::<Vec<DxfEntity>>(record,6,"entities",control)?;
         Ok(DxfSnapshot{schema,header_vars:header_vars.take(),tables:tables.take(),other_tables:other_tables.take(),blocks:blocks.take(),entities:entities.take()})
     })
@@ -87,22 +87,22 @@ impl store::ArtifactDsl for DxfSnapshot {
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "DXF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "DXF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
         };
-        let record = semio_framework_dsl_record::parse(body, &snapshot_text::spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 272 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document })?;
-        snapshot_text::from_record(&record)
+        let record = semio_framework_dsl_record::parse(body, &spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits { max_bytes: 272 * 1024 * 1024, ..semio_framework_diagnostic::Limits::default() }, mode: semio_framework_dsl_record::SourceMode::Document })?;
+        from_record(&record)
     }
     fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&snapshot_text::to_record(self), &snapshot_text::spec(), semio_framework_dsl_record::JoinMode::Document);
+        let body = semio_framework_dsl_record::print(&to_record(self), &spec(), semio_framework_dsl_record::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
@@ -901,4 +901,4 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_block, dec_dxf_entities, dec_dxf_tables, dec_header_var, dec_list, dec_other_table, dec_str, enc_block, enc_dxf_entities, enc_dxf_tables, enc_header_var, enc_list, enc_other_table, enc_str, split_top_level, strip_brackets};
 }
-pub use diff_codec::*;
+#[cfg(test)] pub use diff_codec::*;

@@ -357,7 +357,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PdfHBuilderFacets {
         construction: PdfHBuilderConstruction,
         analysis: PdfHAnalyzerAnalysis,
-        composition: super::io::derived_composition::PdfHComposerComposition,
+        composition: PdfHComposerComposition,
     }
     builder: PdfHBuilder,
     analyzer: PdfHAnalyzer,

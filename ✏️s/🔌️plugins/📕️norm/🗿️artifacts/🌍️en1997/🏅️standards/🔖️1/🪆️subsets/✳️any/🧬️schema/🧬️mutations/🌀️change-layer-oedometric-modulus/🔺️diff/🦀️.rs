@@ -6,7 +6,7 @@ pub fn diff(payload: &ChangeLayerOedometricModulus, base: &En1997Snapshot) -> pr
     if !payload.new_oedometric_modulus.is_finite() || payload.new_oedometric_modulus <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "E_oed must be positive", vec![payload.id.clone()]);
     }
-    let Some(idx) = base.layers.iter().position(|f| f.id == payload.id) else {
+    let Some(_idx) = base.layers.iter().position(|f| f.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("layer {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {

@@ -154,11 +154,10 @@ export function toolJobLatestWinsSelfTests(): number {
     const close = rawCloseBlock(text)?.body;
     const releaseStart = close?.indexOf("if self.raw.capacity()!=0{") ?? -1;
     const release = close && releaseStart >= 0 ? toolJobRustBlock(close, close.indexOf("{", releaseStart))?.body : undefined;
-    return !!close && close.includes("self.raw.len().min(grant.maximum_copy_bytes)")
-      && close.includes("self.raw.truncate(self.raw.len()-bytes)")
+    return !!close && !close.includes("self.raw.is_empty()") && !close.includes("self.raw.truncate(") && !close.includes("self.raw.clear()") && !close.includes("self.raw.len().min(grant.maximum_copy_bytes)")
       && !!release && release.includes("let bytes=self.raw.capacity();if grant.maximum_release_bytes<bytes")
       && release.includes("drop(std::mem::take(&mut self.raw))") && release.includes("released_bytes:bytes")
-      && close.includes("copied_bytes:bytes")
+      && !close.includes("copied_bytes:bytes")
       && !close.includes("grant.maximum_copy_bytes<self.raw.capacity()")
       && text.includes("fn test_raw_allocation_close<A: ArtifactApp>()")
       && text.includes("assert_eq!(heap.released_bytes,progress.released_bytes)");
@@ -170,7 +169,8 @@ export function toolJobLatestWinsSelfTests(): number {
     return rawSource.replace(close.body, close.body.replace(before, after));
   };
   const rawHostiles = [
-    mutateRawClose("self.raw.len().min(grant.maximum_copy_bytes)", "self.raw.capacity().min(grant.maximum_copy_bytes)"),
+    mutateRawClose("if self.raw.capacity()!=0{", "if !self.raw.is_empty(){let bytes=self.raw.len().min(grant.maximum_copy_bytes);self.raw.truncate(self.raw.len()-bytes);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};}if self.raw.capacity()!=0{"),
+    mutateRawClose("if self.raw.capacity()!=0{", "if !self.raw.is_empty(){self.raw.clear();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}if self.raw.capacity()!=0{"),
     mutateRawClose("if grant.maximum_release_bytes<bytes", "if grant.maximum_copy_bytes<self.raw.capacity()"),
     mutateRawClose("released_bytes:bytes", "released_bytes:0"),
     rawSource.replace("assert_eq!(heap.released_bytes,progress.released_bytes)", "assert_eq!(heap.released_bytes,0)"),

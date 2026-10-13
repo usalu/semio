@@ -6,7 +6,7 @@ use crate::editor::sequence::{host_from_host_snapshot, sequence_edit_emit, seque
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions,DagLayoutOrientation};
-use infinite_board_port_directed_dag::{};
+#[cfg(test)] use infinite_board_port_directed_dag::{};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

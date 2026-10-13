@@ -11,12 +11,12 @@ fn demand<T>(buffer:&Vec<T>,count:usize)->Result<usize,ValueError>{
     if !buffer.is_empty(){return Err(refusal(ValueRefusalKind::InvariantViolated,"original mesh buffer reservation must precede payload emission"));}
     if buffer.capacity()>=count{return Ok(0);}
     if buffer.capacity()!=0{return Err(refusal(ValueRefusalKind::InvariantViolated,"original empty mesh buffer has partial unadmitted backing"));}
-    extent(count,std::mem::size_of::<T>())
+    extent(count,size_of::<T>())
 }
 fn reserve<T>(buffer:&mut Vec<T>,count:usize,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<(),ValueError>{
     if demand(buffer,count)?!=0{
         buffer.try_reserve_exact(count).map_err(|_|refusal(ValueRefusalKind::AllocationFailed,"original mesh buffer reservation failed"))?;
-        receipt.retained_capacity_bytes=extent(buffer.capacity(),std::mem::size_of::<T>())?;
+        receipt.retained_capacity_bytes=extent(buffer.capacity(),size_of::<T>())?;
         if receipt.retained_capacity_bytes>grant.maximum_capacity_bytes{return Err(refusal(ValueRefusalKind::OwnershipLimit,"original mesh allocator exceeded admitted backing").with_retained_progress(*receipt));}
     }
     receipt.copied_items=1;Ok(())

@@ -27,8 +27,9 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_block2d_mutation, Block2dMutation};
+#[cfg(test)] use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::{Block2dMutation};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_block2d_mutation};
 
 impl protocol::OpBinary for Block2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

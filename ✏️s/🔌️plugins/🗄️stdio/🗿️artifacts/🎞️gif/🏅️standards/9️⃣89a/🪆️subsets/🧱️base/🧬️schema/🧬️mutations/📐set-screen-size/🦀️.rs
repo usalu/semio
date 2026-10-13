@@ -24,7 +24,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetScreenSize {
         protocol::MutationOutcome::new(GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-        Ok(vec![GifMutation::SetScreenSize(set_screen_size::SetScreenSize { width: base.width, height: base.height })])
+        Ok(vec![GifMutation::SetScreenSize(SetScreenSize { width: base.width, height: base.height })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set screen size", "Bildschirmgröße setzen")

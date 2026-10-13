@@ -783,4 +783,3 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use framework_schema::ArtifactSchema;
 
 }
-pub use diff_wire_codec::*;

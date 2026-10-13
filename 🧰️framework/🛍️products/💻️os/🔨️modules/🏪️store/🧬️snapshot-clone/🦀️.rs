@@ -51,11 +51,11 @@ pub trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
     fn foreign_step_presence(&self) -> bool;
     fn cancel(&mut self);
     fn begin_close(&mut self) -> bool;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError>;
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError>;
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError>;
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError>;
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -225,11 +225,11 @@ struct RetainedClonePreparation<P: RetainedClone, M: RetireOwned + Sync, E: Reta
 }
 
 impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P, M, E> {
-    fn handoff_clone_cursor(&mut self) -> Result<(), semio_framework_value::ValueError> {
+    fn handoff_clone_cursor(&mut self) -> Result<(), ValueError> {
         if self.clone_handoff.is_some() {
             return Ok(());
         }
-        let cursor = self.clone_cursor.take().ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "retained clone preparation lost its cursor before close handoff"))?;
+        let cursor = self.clone_cursor.take().ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "retained clone preparation lost its cursor before close handoff"))?;
         self.clone_handoff = Some(RetainedCloneCursorHandoff::new(cursor));
         Ok(())
     }
@@ -403,6 +403,9 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
                     .advance(self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone preparation lost its source").with_retained_progress(self.ownership))?.borrow(), clone_grant)
                     ?;
                 let progress = admit_retained_clone_progress(clone_grant, step.progress(), "retained clone preparation snapshot clone")?;
+                if progress == RetainedCloneProgress::default() && !matches!(step, RetainedCloneStep::Complete(_)) {
+                    return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "retained-clone.step-grant-too-small: the snapshot clone cursor cannot fund its next contiguous owner within one turn grant").with_retained_progress(self.ownership));
+                }
                 self.record_document_progress(progress)?;
                 if matches!(step, RetainedCloneStep::Complete(_)) {
                     self.copied = Some(self.clone_cursor.as_mut().and_then(RetainedCloneCursor::take).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained clone cursor completed without its owner").with_retained_progress(self.ownership))?);

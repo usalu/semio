@@ -20,7 +20,7 @@ pub struct RemoveFace {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveFace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "face", kind: "remove-face", record: "RemoveFace" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(diff_remove_face(*index))
     }

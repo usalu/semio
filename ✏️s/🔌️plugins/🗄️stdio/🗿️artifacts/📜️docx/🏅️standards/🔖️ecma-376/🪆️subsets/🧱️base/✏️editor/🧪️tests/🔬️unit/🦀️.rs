@@ -198,7 +198,7 @@ fn retained_work_refuses_an_unpaged_large_owner_without_publication() {
     let history = semio_framework_plugin::HistoryView::empty();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
-    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "docx-retained-text".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
+    let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "docx-retained-text".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() };
     let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut work = DocxSetPageWork::default();
     assert!(work
@@ -252,6 +252,24 @@ fn canonical_preparation_recognizes_and_encodes_every_addressed_xml_mutation() {
     }
 }
 
+fn quoted_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
+    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
+}
+
+fn drain_publication(publication: &mut store::ArtifactStoreBatchPublication<DocxSnapshot, DocxMutation>) {
+    for _ in 0..4_096 {
+        if publication.terminal_is_empty() {
+            return;
+        }
+        let demand = publication.retirement_demands(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("DOCX publication close demand");
+        let step = publication.close_step(quoted_grant(demand)).expect("DOCX publication closes");
+        if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+            return;
+        }
+    }
+    panic!("DOCX publication did not retire");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_large_owners() {
     use std::io::Read;
@@ -281,9 +299,9 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
 
     let envelope = store::create_document_envelope(STDIO_DOCX_DOCUMENT_SCHEMA, "docx-retained-opc-lifecycle", imported, None);
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("retained DOCX Store opens");
-    store.install_document_store_owners_exact(<DocxEditor as ArtifactEditor>::build_document_store_owners().expect("DOCX retained Store owners"));
+    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<DocxSnapshot, DocxMutation>().expect("funded DOCX Store owners")).map_err(|(error, _)| error).expect("DOCX Store owners install");
     let factory = <DocxEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("registered DOCX routed preparation factory");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 64 };
 
     let generation = store.generation_now();
     let root = store.snapshot_root();
@@ -304,11 +322,7 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     }
     assert!(progressed, "large retained DOCX cancellation observes copied owner progress");
     assert!(store.cancel_apply_batch(&mut cancelled));
-    for _ in 0..maximum_turns {
-        if cancelled.close_step(grant).expect("cancelled retained DOCX publication closes") == store::SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
+    drain_publication(&mut cancelled);
     assert!(cancelled.terminal_is_empty());
     drop(cancelled);
     assert_eq!(store.generation_now(), generation);
@@ -343,11 +357,7 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     assert_eq!(store.snapshot_ref().opc.part_bytes(part_path).expect("published retained part").len(), part_bytes);
     assert!(store.snapshot_ref().xml_part(&address.part_path).expect("published retained XML main part").document.materialization_owned_bytes().expect("published retained XML owned bytes measure") > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
     assert!(publication.acknowledge());
-    for _ in 0..maximum_turns {
-        if publication.close_step(grant).expect("published retained DOCX publication closes") == store::SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
+    drain_publication(&mut publication);
     assert!(publication.terminal_is_empty());
     drop(publication);
 
@@ -369,25 +379,30 @@ async fn retained_opc_and_xml_store_route_cancels_publishes_saves_and_retires_la
     assert_eq!(reopened_part.iter().last(), Some(fill));
     assert!(reopened.xml_part(&address.part_path).expect("reopened retained XML main part").document.materialization_owned_bytes().expect("reopened retained XML owned bytes measure") > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
 
-    let mut reopened_owners = preparation::document_store_owners();
-    let mut reopened_retirement = reopened_owners.retire_initial_snapshot_owned(reopened);
+    let unbounded = semio_s_artifact_stdio_contract::testing::unbounded_grant();
+    let mut reopened_owners = store::funded_bounded_artifact_store_owners::<DocxSnapshot, DocxMutation>().expect("unused DOCX Store catalog");
+    let (mut reopened_retirement, _) = reopened_owners.retire_initial_snapshot_owned(reopened, unbounded).map_err(|(error, _)| error).expect("reopened retained DOCX retirement admits");
     for _ in 0..maximum_turns {
-        if reopened_retirement.close_step(1, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("reopened retained DOCX retires") == store::SnapshotRetirementStep::Complete {
+        if reopened_retirement.terminal_is_empty() {
             break;
         }
+        reopened_retirement.close_step(unbounded).expect("reopened retained DOCX retires");
     }
     assert!(reopened_retirement.terminal_is_empty());
     drop(reopened_retirement);
     for _ in 0..maximum_turns {
-        let bytes = reopened_owners.next_close_byte_demand();
-        assert!(bytes <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-        if reopened_owners.close_uninstalled_owners_step(1, bytes).expect("unused reopened Store catalog closes") == store::SnapshotRetirementStep::Complete { break; }
+        if reopened_owners.uninstalled_owners_terminal_is_empty() {
+            break;
+        }
+        reopened_owners.close_uninstalled_owners_step(unbounded).expect("unused reopened Store catalog closes");
     }
     assert!(reopened_owners.uninstalled_owners_terminal_is_empty());
 
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<DocxSnapshot, DocxMutation>::new();
     for _ in 0..maximum_turns {
-        if semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("retained DOCX Store closes") == semio_framework_plugin::PluginCloseStep::Complete {
+        let demand = semio_framework_plugin::ArtifactOwnedDisposer::retirement_demands(&disposer, &store, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("retained DOCX Store close demand");
+        let step = semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, quoted_grant(demand)).expect("retained DOCX Store closes");
+        if matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -399,29 +414,29 @@ async fn registered_canonical_page_edit_publishes_once_and_undoes_redoes() {
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = snapshot_with_blocks(vec![DocxBlock::paragraph("before")]);
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let opened = app.snapshot().expect("opened DOCX fixture").clone();
     let original_address = run(&app.snapshot().unwrap()).address;
     let meta = artifact_app_laws::meta("local");
 
-    app.handle_action("set-page", Some(&arguments(&original_address, "after")), &meta).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(&original_address, "after")), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
     assert_eq!(run(&app.snapshot().unwrap()).text, "after");
 
     let current_address = run(&app.snapshot().unwrap()).address;
-    app.handle_action("set-page", Some(&arguments(&current_address, "after")), &meta).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
-    artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(&current_address, "after")), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), opened);
-    artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(run(&app.snapshot().unwrap()).text, "after");
 
-    app.handle_action("set-page", Some(&arguments(&original_address, "refused")), &meta).await.unwrap();
-    assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(&original_address, "refused")), &meta, &mut identity).await).unwrap();
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err());
     assert_eq!(run(&app.snapshot().unwrap()).text, "after");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -430,15 +445,15 @@ async fn registered_run_formatting_action_saves_reopens_and_undoes_redoes() {
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let original = snapshot_with_blocks(vec![DocxBlock::paragraph("format me")]);
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<DocxEditor>, _>(async { semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_DOCX_DOCUMENT_SCHEMA) else { panic!("DOCX fixture produces a document load") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let opened = app.snapshot().expect("opened DOCX fixture").clone();
     let original_address = run(&app.snapshot().unwrap()).address;
     let meta = artifact_app_laws::meta("local");
 
-    app.handle_action("set-run-formatting", Some(&formatting_arguments(&original_address, true, true, false)), &meta).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-run-formatting", Some(&formatting_arguments(&original_address, true, true, false)), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
     let formatted_address = run(&app.snapshot().unwrap()).address;
     assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &formatted_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
@@ -447,16 +462,16 @@ async fn registered_run_formatting_action_saves_reopens_and_undoes_redoes() {
     let reopened_address = run(&reopened).address;
     assert_eq!(docx_run_formatting(&reopened, &reopened_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
-    artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), opened);
-    artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let redone_address = run(&app.snapshot().unwrap()).address;
     assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
 
-    app.handle_action("set-run-formatting", Some(&formatting_arguments(&original_address, false, false, false)), &meta).await.unwrap();
-    assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-run-formatting", Some(&formatting_arguments(&original_address, false, false, false)), &meta, &mut identity).await).unwrap();
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err());
     assert_eq!(docx_run_formatting(&app.snapshot().unwrap(), &redone_address).unwrap(), crate::schema::mutations::DocxRunFormatting { bold: Some(true), italic: Some(true), underline: Some(false) });
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", DocxEditor, || semio_framework_plugin::App { definition: create_docx_editor(), examples: Vec::new() }, "../..");

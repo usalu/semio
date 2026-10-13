@@ -25,8 +25,8 @@ async fn node_graph_wire_connect_and_disconnect_republish_the_owner_assigned_syn
     let connect = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [{ "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" }]
     }));
-    app.handle_action("nodeGraphEdit", Some(&connect), &meta("renderer-wire-connect")).await.expect("wire connect admission");
-    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("wire connect publication");
+    app.handle_action("nodeGraphEdit", Some(&connect), &meta("renderer-wire-connect"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("wire connect admission");
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("wire connect publication");
     assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     let connected = published_host_snapshot(&mut app).await;
     let edges = connected["synapses"].as_array().unwrap();
@@ -37,8 +37,8 @@ async fn node_graph_wire_connect_and_disconnect_republish_the_owner_assigned_syn
     let content = content_snapshot(&app).await;
     assert!(content.edges.iter().any(|edge| edge.id == id && edge.from.node == "slider" && edge.from.port == "number" && edge.to.node == "add" && edge.to.port == "b"));
     let disconnect = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [{ "operation": "disconnect", "synapseId": id }] }));
-    app.handle_action("nodeGraphEdit", Some(&disconnect), &meta("renderer-wire-disconnect")).await.expect("wire disconnect admission");
-    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("wire disconnect publication");
+    app.handle_action("nodeGraphEdit", Some(&disconnect), &meta("renderer-wire-disconnect"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("wire disconnect admission");
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("wire disconnect publication");
     assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     let disconnected = published_host_snapshot(&mut app).await;
     let remaining = disconnected["synapses"].as_array().unwrap();
@@ -65,7 +65,7 @@ async fn a_delete_row_removes_the_named_widget_and_its_wires_as_intent_leaves() 
     let wired: Vec<String> = content_snapshot(&app).await.edges.iter().filter(|edge| edge.from.node == "slider" || edge.to.node == "slider").map(|edge| edge.id.clone()).collect();
     select_graph(&mut app, &["add"], &[]).await;
     dispatch(&mut app, FlowCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![FlowNodeGraphEditOp::Delete { node_ids: vec!["slider".into()], synapse_ids: Vec::new() }] })).await;
-    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("delete child publication");
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("delete child publication");
     assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     assert_eq!(app.snapshot().expect("snapshot").content.child_id, content_id, "a delete publishes through the existing content child");
     let content = content_snapshot(&app).await;
@@ -84,8 +84,8 @@ async fn a_delete_row_removes_the_named_widget_and_its_wires_as_intent_leaves() 
 async fn a_connect_row_is_one_insert_edge_leaf() {
     let mut app = flow_app_closing().await;
     let connect = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [{ "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" }] }));
-    app.handle_action("nodeGraphEdit", Some(&connect), &meta("renderer-wire-connect")).await.expect("connect admission");
-    settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("connect publication");
+    app.handle_action("nodeGraphEdit", Some(&connect), &meta("renderer-wire-connect"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("connect admission");
+    settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("connect publication");
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "{rows:?}");
     assert_eq!(rows[0].mutations.len(), 1, "{:?}", rows[0].op_lines);
@@ -106,7 +106,7 @@ async fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
     )
     .await;
     assert!(result.mutations.is_empty(), "retained Spotlight admission does not publish synchronously");
-    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("Spotlight child publication");
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("Spotlight child publication");
     assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     let snapshot = app.snapshot().expect("snapshot after Spotlight publication");
     assert_eq!(snapshot.content.child_id, content_id, "Spotlight must publish through the existing content child");
@@ -182,8 +182,8 @@ async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
     let args = semio_framework_value::DslValue::from(serde_json::json!({
         "operations": [{ "operation": "move", "gestureId": "node-drag:3", "nodeIds": ["add"], "dx": 284.0, "dy": 48.0 }]
     }));
-    app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-move")).await.expect("nodeGraphEdit move admission");
-    let receipt = settle_registered_typed_operation(&mut *app, 1).await.expect("nodeGraphEdit move publication");
+    app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-move"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("nodeGraphEdit move admission");
+    let receipt = settle_registered_typed_operation(&mut *app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("nodeGraphEdit move publication");
     assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     let snapshot = app.snapshot().expect("snapshot after nodeGraphEdit move");
     assert_eq!(snapshot.content.child_id, content_id, "nodeGraphEdit move must publish through the existing content child");
@@ -205,7 +205,7 @@ async fn node_graph_edit_rejects_an_unknown_operation_instead_of_dropping_it() {
             { "operation": "teleport", "nodeId": "add", "x": 568.0, "y": 96.0 }
         ]
     }));
-    let result = app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-invalid")).await;
+    let result = app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-invalid"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert!(result.is_err(), "one malformed operation must reject the whole bounded edit before its valid prefix is admitted");
     assert!(!app.has_pending_typed_operations(), "atomic refusal cannot leave a retained operation to publish the valid prefix");
     let content = content_snapshot(&app).await;
@@ -223,8 +223,8 @@ async fn release_drag(app: &mut FlowApp, nodes: &[&str], dx: f64, dy: f64) {
 /// 🎭️ [`release_drag`] dispatched by `metadata`'s actor on `metadata`'s instance.
 async fn release_drag_as(app: &mut FlowApp, metadata: &semio_framework_plugin::ActionMeta, nodes: &[&str], dx: f64, dy: f64) {
     let args = semio_framework_value::DslValue::from(serde_json::json!({ "operations": [{ "operation": "move", "gestureId": "node-drag:9", "nodeIds": nodes, "dx": dx, "dy": dy }] }));
-    app.handle_action("nodeGraphEdit", Some(&args), metadata).await.expect("node drag admission");
-    settle_registered_typed_operation(app, metadata.instance_id).await.expect("node drag publication");
+    app.handle_action("nodeGraphEdit", Some(&args), metadata, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("node drag admission");
+    settle_registered_typed_operation(app, metadata.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("node drag publication");
 }
 
 /// 🧩️ Every history row that lists composed-member mutations, oldest first.
@@ -246,7 +246,7 @@ async fn history_edit(app: &mut FlowApp, verb: &str, args: Vec<(&str, semio_fram
 /// 🎭️ [`history_edit`] dispatched by `metadata`'s actor on `metadata`'s instance.
 async fn history_edit_as(app: &mut FlowApp, metadata: &semio_framework_plugin::ActionMeta, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) -> semio_framework_value::DslValue {
     let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    app.handle_action(verb, Some(&args), metadata).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
+    app.handle_action(verb, Some(&args), metadata, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
 }
 
 /// ✏️ Edits the drag `mutation` of member `store` to `dx = 100` through time travel, accepts it and waits for the review.
@@ -282,7 +282,7 @@ async fn pump_time_travel(app: &mut FlowApp, done: impl Fn(Option<semio_framewor
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.advance_typed_operation_publication().await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
@@ -320,8 +320,8 @@ async fn a_release_that_wires_and_drags_is_labelled_by_the_drag() {
         { "operation": "connect", "sourceNodeId": "slider", "sourcePortId": "number", "targetNodeId": "add", "targetPortId": "b" },
         { "operation": "move", "gestureId": "node-drag:4", "nodeIds": ["add"], "dx": 10.0, "dy": 0.0 }
     ] }));
-    app.handle_action("nodeGraphEdit", Some(&args), &meta("renderer-node-drag")).await.expect("wire and drag admission");
-    settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("wire and drag publication");
+    app.handle_action("nodeGraphEdit", Some(&args), &meta("renderer-node-drag"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("wire and drag admission");
+    settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("wire and drag publication");
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "one release is one row: {rows:?}");
     assert!(rows[0].op_lines.first().is_some_and(|line| line.starts_with("insert-edge")), "{:?}", rows[0].op_lines);
@@ -405,7 +405,7 @@ async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {
     let position = |field: &str| (fixture[field][0].as_f64().unwrap(), fixture[field][1].as_f64().unwrap());
     let drag = position("drag");
     release_drag_as(&mut instance_a, &metadata_a, &[node], drag.0, drag.1).await;
-    instance_b.tick_backbone().await.expect("b folds a's drag");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's drag");
     assert_eq!(node_position(&content_snapshot(&instance_b).await, node), drag, "b holds a's drag");
     let peer_head = member_alternative(&instance_b).await;
     assert_eq!(serde_json::to_value(&peer_head).unwrap(), fixture["peerAlternative"]);
@@ -415,7 +415,7 @@ async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {
     let mutation = member_rows(&mut instance_a).await[0].mutations[0].mutation_id.clone();
     edit_drag_offset(&mut instance_a, &metadata_a, &store, mutation).await;
     finalize_as_alternative(&mut instance_a, &metadata_a, "Closer").await;
-    instance_b.tick_backbone().await.expect("b folds a's member finalize");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's member finalize");
     assert_eq!(node_position(&content_snapshot(&instance_a).await, node), position("authorAfterFinalize"), "the author views its edited branch");
     assert!(member_alternative(&instance_a).await.is_some(), "the author views its new alternative");
     assert_eq!(node_position(&content_snapshot(&instance_b).await, node), position("peerAfterFinalize"), "shared registration preserves the peer's own trunk projection");
@@ -469,8 +469,8 @@ async fn a_blocking_member_replay_refuses_to_finalize_and_exits_with_zero_trace(
     let mut app = flow_app_closing().await;
     let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
     let before: Vec<String> = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).collect();
-    app.handle_action("addWidget", Some(&semio_framework_value::DslValue::from(serde_json::json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 }))), &meta("add-widget")).await.expect("addWidget admission");
-    settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("addWidget publication");
+    app.handle_action("addWidget", Some(&semio_framework_value::DslValue::from(serde_json::json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 }))), &meta("add-widget"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("addWidget admission");
+    settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("addWidget publication");
     let added = content_snapshot(&app).await.nodes.iter().map(|node| node.id.clone()).find(|id| !before.contains(id)).expect("the added node");
     release_drag(&mut app, &[added.as_str()], 10.0, 0.0).await;
     let rows = member_rows(&mut app).await;
@@ -494,8 +494,8 @@ async fn slide(app: &mut FlowApp, gesture: &str, value: Option<f64>, phase: Opti
     let operations: Vec<serde_json::Value> = value.map(|value| serde_json::json!({ "operation": "setSlider", "widgetId": "slider", "value": value })).into_iter().collect();
     let mut args = vec![("operations".to_string(), semio_framework_value::DslValue::from(serde_json::Value::Array(operations))), ("gesture".to_string(), semio_framework_value::DslValue::String(gesture.into()))];
     args.extend(phase.map(|(key, value)| (key.to_string(), value)));
-    app.handle_action("nodeGraphEdit", Some(&semio_framework_value::DslValue::Object(args)), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("slider dispatch admission");
-    let _ = settle_registered_typed_operation(app, meta("local").instance_id).await;
+    app.handle_action("nodeGraphEdit", Some(&semio_framework_value::DslValue::Object(args)), &crate::editor::flow::unit_tests::context::flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("slider dispatch admission");
+    let _ = settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 fn slider_value(content: &SemioFlowSnapshot) -> Option<String> {
@@ -533,15 +533,15 @@ async fn a_dragged_inline_slider_is_one_child_transaction_and_a_cancel_leaves_ze
 async fn patching_a_widget_value_is_one_absolute_node_param_leaf() {
     let mut app = flow_app_closing().await;
     let patch = |value: &str| semio_framework_value::DslValue::from(serde_json::json!({ "widgetIds": ["slider"], "field": "value", "value": value }));
-    app.handle_action("patchFlowWidgets", Some(&patch("7.5")), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("patch admission");
-    settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("patch publication");
+    app.handle_action("patchFlowWidgets", Some(&patch("7.5")), &crate::editor::flow::unit_tests::context::flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("patch admission");
+    settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("patch publication");
     assert_eq!(slider_value(&content_snapshot(&app).await).as_deref(), Some("7.5"));
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), 1, "{rows:?}");
     assert_eq!(rows[0].mutations.len(), 1, "one leaf, not a whole-content snapshot: {:?}", rows[0].mutations);
     assert!(rows[0].op_lines.iter().all(|line| !line.contains("set-snapshot")), "{:?}", rows[0].op_lines);
-    app.handle_action("patchFlowWidgets", Some(&patch("7.5")), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("unchanged patch admission");
-    let _ = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await;
+    app.handle_action("patchFlowWidgets", Some(&patch("7.5")), &crate::editor::flow::unit_tests::context::flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("unchanged patch admission");
+    let _ = settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(member_rows(&mut app).await.len(), 1, "a value the widget already holds is no edit");
 }
 //#endregion 🔖️ComposedChildHistory

@@ -12,7 +12,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -86,7 +85,7 @@ const IFC2X3_ANY_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const IFC2X3_ANY_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.ifc.2x3.tool-command.v1";
 const IFC2X3_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
-fn ifc2x3AnyEditor_example_snapshot(example_id: &str) -> Ifc2x3Snapshot {
+fn ifc2x3_any_editor_example_snapshot(example_id: &str) -> Ifc2x3Snapshot {
     if example_id == crate::examples::demo::ID {
         <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -94,7 +93,7 @@ fn ifc2x3AnyEditor_example_snapshot(example_id: &str) -> Ifc2x3Snapshot {
     }
 }
 
-fn ifc2x3AnyEditor_command_id(command: &Ifc2x3AnyEditCommand) -> &'static str {
+fn ifc2x3_any_editor_command_id(command: &Ifc2x3AnyEditCommand) -> &'static str {
     if let Ifc2x3AnyEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         Ifc2x3AnyEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
@@ -102,7 +101,7 @@ fn ifc2x3AnyEditor_command_id(command: &Ifc2x3AnyEditCommand) -> &'static str {
     }
 }
 
-fn ifc2x3AnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Ifc2x3AnyEditCommand, Fault> {
+fn ifc2x3_any_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Ifc2x3AnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| Ifc2x3AnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(Ifc2x3AnyEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -110,11 +109,11 @@ fn ifc2x3AnyEditor_command_from_action(action: &str, args: Option<&semio_framewo
     }
 }
 
-fn ifc2x3AnyEditor_retained_extent(command: &Ifc2x3AnyEditCommand, _snapshot: &Ifc2x3Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn ifc2x3_any_editor_retained_extent(command: &Ifc2x3AnyEditCommand, _snapshot: &Ifc2x3Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, Ifc2x3AnyEditCommand::SetActiveExample { .. }).then_some(1)
 }
 
-fn ifc2x3AnyEditor_retained_reduce(
+fn ifc2x3_any_editor_retained_reduce(
     command: &Ifc2x3AnyEditCommand,
     _snapshot: &Ifc2x3Snapshot,
     _config: &NoConfig,
@@ -126,7 +125,7 @@ fn ifc2x3AnyEditor_retained_reduce(
 ) -> Result<Emit<Ifc2x3Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         Ifc2x3AnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc2x3AnyEditor_example_snapshot(example_id), IFC2X3_ANY_DOCUMENT_SCHEMA)],
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc2x3_any_editor_example_snapshot(example_id), IFC2X3_ANY_DOCUMENT_SCHEMA)],
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -217,7 +216,7 @@ impl ArtifactEditor for Ifc2x3AnyEditor {
         if !IFC2X3_ANY_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if ifc2x3AnyEditor_command_id(&request.command) != request.tool_id {
+        if ifc2x3_any_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -241,17 +240,19 @@ impl ArtifactEditor for Ifc2x3AnyEditor {
                 operation,
                 completion: request.completion,
             },
-            ifc2x3AnyEditor_command_id,
+            ifc2x3_any_editor_command_id,
             IFC2X3_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, ifc2x3AnyEditor_retained_reduce, ifc2x3AnyEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, ifc2x3_any_editor_retained_reduce, ifc2x3_any_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn command_id(command: &Self::Command) -> &'static str { ifc2x3AnyEditor_command_id(command) }
+    semio_s_artifact_stdio_contract::snapshot_editing_publication_authority!();
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { ifc2x3AnyEditor_command_from_action(action, args) }
+    fn command_id(command: &Self::Command) -> &'static str { ifc2x3_any_editor_command_id(command) }
+
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { ifc2x3_any_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Ifc2x3Snapshot {
         Ifc2x3Snapshot::default()
@@ -269,7 +270,7 @@ impl ArtifactEditor for Ifc2x3AnyEditor {
         match command {
             Ifc2x3AnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             Ifc2x3AnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc2x3AnyEditor_example_snapshot(example_id), IFC2X3_ANY_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&ifc2x3_any_editor_example_snapshot(example_id), IFC2X3_ANY_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }

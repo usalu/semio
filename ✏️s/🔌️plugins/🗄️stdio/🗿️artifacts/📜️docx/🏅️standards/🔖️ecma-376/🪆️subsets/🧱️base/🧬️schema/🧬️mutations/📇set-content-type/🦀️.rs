@@ -25,8 +25,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetContentType {
         opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::content_type_write_diff(opc, self.is_override, &self.name, &self.content_type, self.index)))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
-        let previous = opc_layer::with_package(base, |opc| opc_layer::content_type_at(opc, self.is_override, &self.name)).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+        let previous = opc_layer::with_package(base, |opc| opc_layer::content_type_at(opc, self.is_override, &self.name)).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
         Ok(match previous {
             Some((at, content_type)) => vec![DocxMutation::SetContentType(Self { is_override: self.is_override, name: self.name.clone(), content_type, index: Some(at) })],
             None => vec![DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override: self.is_override, name: self.name.clone() })],

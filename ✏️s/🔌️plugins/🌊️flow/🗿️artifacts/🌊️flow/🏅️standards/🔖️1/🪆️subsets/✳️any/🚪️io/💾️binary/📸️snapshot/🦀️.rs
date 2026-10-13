@@ -47,4 +47,4 @@ impl store::ArtifactPack for FlowSnapshot{
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

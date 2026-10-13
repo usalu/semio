@@ -233,7 +233,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Fem2dBuilderFacets {
         construction: Fem2dBuilderConstruction,
         analysis: Fem2dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Fem2dComposerComposition,
+        composition: Fem2dComposerComposition,
     }
     builder: Fem2dBuilder,
     analyzer: Fem2dAnalyzer,

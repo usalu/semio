@@ -1,6 +1,6 @@
 //! ⚡️ GIS map artifact — OpText/OpBinary codecs + grammar for `GisMapMutation`.
 
-use crate::schema::mutations::{inverse_gis_map_mutation, GisMapMutation};
+use crate::schema::mutations::GisMapMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

@@ -69,7 +69,7 @@ ui_scene = { path = "../../🎬️scene/📦️packages/🦀️rust", package = 
 # ⛓️ Consumed directly for the `wgpu-engine` widgets that still take `Camera3d` by value (see
 # `widgets.rs`); `semio-framework-ui-scene`'s `math` module re-exports `Mat4`/`Vec3` from here too.
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
-semio-framework-2d = { path = "../../../◻️2d/📦️packages/🦀️rust", default-features = false, optional = true }
+semio-framework-2d = { path = "../../../◻️2d/📦️packages/🦀️rust", optional = true }
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", optional = true }
 # 🖼️ Owned PNG codec (first-party, its only dependency is the owned DEFLATE module) backing
 # `🎯️targets/🧊️wgpu/🖌️paint`'s `🖼️UiImageSources` region: a `Component::Image` whose `src` is a
@@ -88,7 +88,9 @@ serde_json = { version = "1.0.140", optional = true }
 # `no_std` + `libm` like `ui-render`: embedded font bytes only, no fontique path/mmap sources.
 parley = { version = "0.5.0", default-features = false, features = ["libm"], optional = true }
 swash = { version = "0.2.6", default-features = false, features = ["render", "std"], optional = true }
-bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
+# 🧷️ `extern_crate_alloc` (requested by `image`) and `min_const_generics` (requested by `font-types`) are pinned here, in
+# every hub component's closure, so all components compile one `bytemuck` unit.
+bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"], optional = true }
 # ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): restored after an
 # attempt to move this behind a `not(target_env = "p2")` target table — reverted because
 # `♾️infinite`'s `🌍️world/🦀️.rs` unconditionally names wgpu-engine symbols that need this

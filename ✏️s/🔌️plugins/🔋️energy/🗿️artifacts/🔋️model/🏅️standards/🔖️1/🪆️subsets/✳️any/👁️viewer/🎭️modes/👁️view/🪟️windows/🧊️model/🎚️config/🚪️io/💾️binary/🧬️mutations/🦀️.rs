@@ -15,4 +15,3 @@ impl protocol::OpBinary for EnergyModelViewerWindowConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

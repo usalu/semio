@@ -11,7 +11,6 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_pack_json::json;
 
 pub const UTILITY_ID: &str = "areaBrush";
 

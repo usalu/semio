@@ -33,7 +33,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetFace {
         let Self { index, .. } = self;
         Ok({
             match base.faces.get(*index) {
-                Some(v) => vec![ObjMutation::SetFace(set_face::SetFace { index: *index, face: v.clone() })],
+                Some(v) => vec![ObjMutation::SetFace(SetFace { index: *index, face: v.clone() })],
                 None => Vec::new(),
             }
         })

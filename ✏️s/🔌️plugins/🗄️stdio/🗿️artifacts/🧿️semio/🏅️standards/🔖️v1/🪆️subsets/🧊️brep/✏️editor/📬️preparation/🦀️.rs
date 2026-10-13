@@ -142,6 +142,7 @@ mod tests {
             match edit.advance(&mut post, &mutation, grant()).expect("brep edit turn") {
                 PagedOneItemEditStep::Progress(progress) => assert!(progress.fits(grant()) && progress.copied_items <= 1),
                 PagedOneItemEditStep::Complete(progress, inverse) => break (progress, inverse),
+                PagedOneItemEditStep::CompleteRows(..) => panic!("the edit completes with one inverse mutation"),
             }
             turns += 1;
             assert!(turns < 50_000);
@@ -165,7 +166,7 @@ mod tests {
         let error = loop {
             match edit.advance(&mut post, &mutation, grant()) {
                 Ok(PagedOneItemEditStep::Progress(_)) => {}
-                Ok(PagedOneItemEditStep::Complete(..)) => panic!("absent vertex must not complete"),
+                Ok(PagedOneItemEditStep::Complete(..) | PagedOneItemEditStep::CompleteRows(..)) => panic!("absent vertex must not complete"),
                 Err(error) => break error,
             }
         };
@@ -182,7 +183,7 @@ mod tests {
         let starved = RetainedCloneGrant { maximum_copy_bytes: 0, ..grant() };
         match edit.advance(&mut post, &mutation, starved).expect("starved brep edit turn") {
             PagedOneItemEditStep::Progress(progress) => assert_eq!(progress, RetainedCloneProgress::default()),
-            PagedOneItemEditStep::Complete(..) => panic!("starved grant must not complete"),
+            PagedOneItemEditStep::Complete(..) | PagedOneItemEditStep::CompleteRows(..) => panic!("starved grant must not complete"),
         }
         assert_eq!(post, source);
     }

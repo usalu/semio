@@ -564,7 +564,6 @@ impl store::ArtifactPack for SemioBrepSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {

@@ -27,12 +27,7 @@ semio-framework = { workspace = true, optional = true }
 semio-framework-artifact-space-space = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true, optional = true }
 semio-framework-plugin = { workspace = true, optional = true }
-
-[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["space-guest"], optional = true }
-
-[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", features = ["os-host-full"], optional = true }
+semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", optional = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

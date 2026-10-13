@@ -484,6 +484,7 @@ const BACKBONE_EFFECT_DOCUMENT_SCHEMA = "os.effect.backbone";
 
 export interface BackboneWorkerTransportOptions {
   readonly actor: string;
+  readonly actorIdentityGrant: ArtifactActorConfig["actorIdentityGrant"];
   readonly hub: Extract<PersistenceBinding, { readonly kind: "hub" }>;
 }
 
@@ -498,7 +499,7 @@ export function createBackboneWorkerTransport(worker: BackboneWorkerLike, uri: s
   function ensureOpen(): void {
     if (opened) return;
     opened = true;
-    const config: ArtifactActorConfig = { documentId: uri, schema: BACKBONE_EFFECT_DOCUMENT_SCHEMA, bindings: [options.hub], actor: options.actor };
+    const config: ArtifactActorConfig = { documentId: uri, schema: BACKBONE_EFFECT_DOCUMENT_SCHEMA, bindings: [options.hub], actor: options.actor, actorIdentityGrant: options.actorIdentityGrant };
     worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...config }) });
   }
   return {

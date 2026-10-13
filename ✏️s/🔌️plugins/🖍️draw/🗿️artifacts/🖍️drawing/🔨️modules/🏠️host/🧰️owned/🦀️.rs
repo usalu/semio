@@ -4,7 +4,8 @@
 type DrawingRebuiltLayerOwners = (DrawingNativeLayers, Option<DrawingLayerNode>, Vec<DrawingLayerNode>, Vec<DrawingLayerNode>);
 
 use crate::op::DrawingMutation;
-use crate::{DrawingAttributes, DrawingImageAsset, DrawingLayerBase, DrawingLayerNode, DrawingSnapshot, FillStyle, GradientStop, PathSegment, StrokeStyle};
+use crate::{DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle, PathSegment, StrokeStyle};
+#[cfg(test)] use crate::{GradientStop};
 use protocol::{Mutation, OpBinary};
 use store::ErasedSnapshotRetirement as _;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep};
@@ -3824,7 +3825,7 @@ impl DrawingMutationCandidateAuthority {
                         let clone=self.asset_clone.get_or_insert_with(DrawingNativeCloneAuthority::new);
                         if !clone.step(mutation_ref.project(2, drawing_mutation_asset), cx)?{return Ok(false);}
                     }
-                    DrawingMutation::CreateLayer(value) => {
+                    DrawingMutation::CreateLayer(_value) => {
                         if self.layer_clone.is_none() {
                             *self.layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new()));
                             cx.consume_fuel(1);
@@ -3879,10 +3880,10 @@ impl DrawingMutationCandidateAuthority {
                         if !value.size.is_finite() || value.size <= 0.0 { return Err("drawing-store.text-size-invalid"); }
                         if !self.prepare_native_text(mutation_ref.project(6, drawing_mutation_content), cx)? { return Ok(false); }
                     }
-                    DrawingMutation::SetLayerBlendMode(value) => { if !self.prepare_native_text(mutation_ref.project(7, drawing_mutation_blend_mode), cx)? { return Ok(false); } }
-                    DrawingMutation::RenameLayer(value) => { if !self.prepare_native_text(mutation_ref.project(8, drawing_mutation_new_name), cx)? { return Ok(false); } }
-                    DrawingMutation::SetLayerBooleanOperation(value) => { if !self.prepare_native_text(mutation_ref.project(9, drawing_mutation_boolean_operation), cx)? { return Ok(false); } }
-                    DrawingMutation::UpdatePathGeometry(value) => {
+                    DrawingMutation::SetLayerBlendMode(_value) => { if !self.prepare_native_text(mutation_ref.project(7, drawing_mutation_blend_mode), cx)? { return Ok(false); } }
+                    DrawingMutation::RenameLayer(_value) => { if !self.prepare_native_text(mutation_ref.project(8, drawing_mutation_new_name), cx)? { return Ok(false); } }
+                    DrawingMutation::SetLayerBooleanOperation(_value) => { if !self.prepare_native_text(mutation_ref.project(9, drawing_mutation_boolean_operation), cx)? { return Ok(false); } }
+                    DrawingMutation::UpdatePathGeometry(_value) => {
                         if self.segments_clone.is_none() {
                             *self.segments_clone = Some(DrawingSegmentsCloneAuthority::new());
                             cx.consume_fuel(1);
@@ -4075,7 +4076,7 @@ impl DrawingMutationCandidateAuthority {
                             drop(clone);
                         }
                     }
-                    DrawingMutation::SetLayerBooleanOperation(value) => {
+                    DrawingMutation::SetLayerBooleanOperation(_value) => {
                         let DrawingLayerNode::Boolean(target) = DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else {
                             return Err("drawing-store.mutation-boolean-target");
                         };
@@ -4588,7 +4589,7 @@ impl DrawingStoreInitializationAuthority {
             let superseded = runtime.effective_forward(entry, index, &envelope.schema).is_some_and(|effective| effective.superseded());
             if superseded {
                 let original = entry.forwards.get(index).expect("Drawing superseded forward remains retained");
-                let mutation_id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| protocol::Mutation::<DrawingSnapshot>::mutation_id(original)).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
+                let mutation_id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| Mutation::<DrawingSnapshot>::mutation_id(original)).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
                 runtime.supersessions().get(&mutation_id).map(|supersession| store::admit_replacement::<DrawingSnapshot, DrawingMutation>(original, &supersession.replacement, &envelope.schema))
             } else {
                 None
@@ -5018,7 +5019,7 @@ impl DrawingStoreInitializationAuthority {
                 DrawingInitializationTurn::Yield
             }
             DrawingStoreInitializationPhase::MoveInitialOwner => {
-                let envelope = self.envelope.as_ref().expect("Drawing envelope remains retained during initial owner move");
+                let _envelope = self.envelope.as_ref().expect("Drawing envelope remains retained during initial owner move");
                 let initial = self.initial_clone.take().expect("Drawing initial clone remains retained until the runtime adopts it");
                 match self.runtime.as_mut().expect("retained initializer runtime").adopt_current_owned(initial, std::sync::Arc::new(DrawingSnapshotRetirementFactory::default())) {
                     Ok(()) => self.phase = self.resume_phase.take().expect("retained mutation resume phase"),

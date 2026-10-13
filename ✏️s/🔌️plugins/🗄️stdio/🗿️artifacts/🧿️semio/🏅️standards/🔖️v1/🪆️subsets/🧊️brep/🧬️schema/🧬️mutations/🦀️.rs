@@ -26,7 +26,6 @@
 //! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::brep::schema::diff::{SemioBrepDiff};
 
 
@@ -76,7 +75,7 @@ use super::replace_surface;
 /// structured-payload replacements (`replace-curve`/`replace-surface`) and the one scalar
 /// reposition (`move-vertex`).
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep")]
 pub enum SemioBrepMutation {

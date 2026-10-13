@@ -28,8 +28,8 @@ struct MountedPrivateChildGroup<M:SpaceMember+MemberFactory> {
 
 impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
     fn new(captured_millis:i64,expires_at_us:u64)->Self{Self{identity:MountedChildGroupIdentityIssuer::new(),parent_issuer:MountedArtifactHandleIssuer::new(),parent_issuer_closed:false,parent_handle:None,parent_touched:false,group_id:ManuallyDrop::new(None),parent_batch:ManuallyDrop::new(None),publication:ManuallyDrop::new(None),receipts:ManuallyDrop::new(None),command:None,append:None,output:ManuallyDrop::new(None),record:ManuallyDrop::new(None),record_close_field:0,displaced_shell_redo:ManuallyDrop::new(Vec::new()),phase:0,captured_millis,expires_at_us,open_sequence:0,context:None,closing:false}}
-    fn frame_birth_bytes()->usize{std::mem::size_of::<Self>()}
-    fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    fn frame_birth_bytes()->usize{size_of::<Self>()}
+    fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         use mounted_child_group_receipt::mounted_nested_retirement_demand as nested;
         let release = |release_bytes, depth| RetirementDemand { release_bytes, depth, ..Default::default() };
@@ -149,7 +149,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         Ok(result)
     }
 
-    fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>)->Result<semio_framework_value::retained_clone::RetainedCloneStep,Fault>{
+    fn advance_private_child_group(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>)->Result<RetainedCloneStep,Fault>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         let step=(||->Result<RetainedCloneStep,Fault>{
         let operation=mounted.operation.operation.0;
@@ -158,7 +158,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         if owner.closing{return Err(plugin_sdk_fault("mounted private publication requires bounded retirement after cancellation"));}
         if owner.phase>=9{return Ok(RetainedCloneStep::Complete(Default::default()));}
         let structural=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});
-        let error=|error:semio_framework_value::ValueError|plugin_sdk_fault(error.to_string());
+        let error=|error:ValueError|plugin_sdk_fault(error.to_string());
         if owner.phase==0{
             if owner.identity.ready(){*owner.group_id=owner.identity.take_ready(self.mounted_policy.maintenance);owner.phase=1;return Ok(structural());}
             let source=MountedChildGroupIdentitySource{parent:&self.store.envelope().id,actor:&mounted.meta.actor,revision:mounted.canonical_revision,instance:mounted.meta.instance_id,operation};
@@ -169,7 +169,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
             return owner.parent_issuer.advance(&self.store.envelope().id,self.mounted_policy.maintenance).map_err(error);
         }
         if owner.phase==2{
-            let birth=A::owned_mutation_batch_birth_bytes().ok_or_else(||plugin_sdk_fault("owned child publication requires the parent app's exact retained mutation factory"))?;
+            let _birth=A::owned_mutation_batch_birth_bytes().ok_or_else(||plugin_sdk_fault("owned child publication requires the parent app's exact retained mutation factory"))?;
             let grant=self.mounted_policy.maintenance;
             let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_mut()else{return Err(plugin_sdk_fault("mounted group lost its original typed emission"));};
             owner.parent_touched=!emit.artifact_mutations.is_empty();
@@ -187,24 +187,24 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
             match PrivateChildPublicationGroup::try_new(source){Ok(group)=>{*owner.publication=Some(group);owner.phase=4;return Ok(structural());},Err(source)=>{*owner.parent_batch=Some(source.parent);*owner.group_id=Some(source.group_id);emit.owned_child_emits=source.children;emit.transaction=source.transaction;return Err(plugin_sdk_fault("mounted private group refused its exact original child source"));}}
         }
         let group=owner.publication.as_mut().expect("admitted private publication retains its original group");
-        if !group.inputs_ready(){let envelope=self.store.envelope();let dialect=envelope.dialect.as_ref().ok_or_else(||plugin_sdk_fault("private group requires its parent's original declared dialect"))?;let capacity=group.next_input_capacity_byte_demand(&self.children,&envelope.id,dialect,&mounted.meta.actor).map_err(error)?;return group.advance_inputs(&self.children,&envelope.id,dialect,&mounted.meta.actor,mounted.operation.operation,mounted.operation.generation,owner.expires_at_us,semio_framework_job::default_now_us().unwrap_or(0),self.mounted_policy.maintenance).map_err(error);}
+        if !group.inputs_ready(){let envelope=self.store.envelope();let dialect=envelope.dialect.as_ref().ok_or_else(||plugin_sdk_fault("private group requires its parent's original declared dialect"))?;let _capacity=group.next_input_capacity_byte_demand(&self.children,&envelope.id,dialect,&mounted.meta.actor).map_err(error)?;return group.advance_inputs(&self.children,&envelope.id,dialect,&mounted.meta.actor,mounted.operation.operation,mounted.operation.generation,owner.expires_at_us,semio_framework_job::default_now_us().unwrap_or(0),self.mounted_policy.maintenance).map_err(error);}
         if !group.openings_ready(){
-            if owner.context.is_none(){let birth=semio_framework_job::StepContextOwner::birth_bytes();let grant=self.mounted_policy.maintenance;let(context,progress)=semio_framework_job::StepContextOwner::new(mounted.operation.operation,mounted.operation.generation,grant).map_err(error)?;owner.context=Some(context);return Ok(RetainedCloneStep::Progress(progress));}
-            let demand=group.next_open_retirement_demands(64).map_err(error)?;if demand.copy_bytes>64||demand.depth>64{return Err(plugin_sdk_fault("private open retirement exceeds its original copy or depth admission"));}let birth=group.next_open_birth_demand()?;if birth.depth>64{return Err(plugin_sdk_fault("private open birth exceeds its original depth admission"));}let capacity=birth.capacity_bytes.max(demand.capacity_bytes);let grant=self.mounted_policy.maintenance;let cancel=mounted.cancellation_lease.as_ref().ok_or_else(||plugin_sdk_fault("private child opening requires its original operation lease"))?.token.clone();let deadline=semio_framework_job::default_now_us().unwrap_or(0).saturating_add(INTERACTIVE_TURN_WORKER_WALL_US);let mut actual_retained_progress=Default::default();let mut cx=owner.context.as_ref().unwrap().context(semio_framework_job::StepBudget::new(1,deadline,grant),cancel,semio_framework_job::default_now_us,&mut owner.open_sequence,&mut actual_retained_progress).ok_or_else(||plugin_sdk_fault("private child opening context is already closing"))?;return group.advance_openings(&mut cx,grant,M::begin_open);
+            if owner.context.is_none(){let _birth=semio_framework_job::StepContextOwner::birth_bytes();let grant=self.mounted_policy.maintenance;let(context,progress)=semio_framework_job::StepContextOwner::new(mounted.operation.operation,mounted.operation.generation,grant).map_err(error)?;owner.context=Some(context);return Ok(RetainedCloneStep::Progress(progress));}
+            let demand=group.next_open_retirement_demands(64).map_err(error)?;if demand.copy_bytes>64||demand.depth>64{return Err(plugin_sdk_fault("private open retirement exceeds its original copy or depth admission"));}let birth=group.next_open_birth_demand()?;if birth.depth>64{return Err(plugin_sdk_fault("private open birth exceeds its original depth admission"));}let _capacity=birth.capacity_bytes.max(demand.capacity_bytes);let grant=self.mounted_policy.maintenance;let cancel=mounted.cancellation_lease.as_ref().ok_or_else(||plugin_sdk_fault("private child opening requires its original operation lease"))?.token.clone();let deadline=semio_framework_job::default_now_us().unwrap_or(0).saturating_add(INTERACTIVE_TURN_WORKER_WALL_US);let mut actual_retained_progress=Default::default();let mut cx=owner.context.as_ref().unwrap().context(semio_framework_job::StepBudget::new(1,deadline,grant),cancel,semio_framework_job::default_now_us,&mut owner.open_sequence,&mut actual_retained_progress).ok_or_else(||plugin_sdk_fault("private child opening context is already closing"))?;return group.advance_openings(&mut cx,grant,M::begin_open);
         }
         if owner.receipts.is_none(){let birth=MountedGroupMemberReceipts::frame_birth_bytes();let grant=self.mounted_policy.maintenance;let receipts=MountedGroupMemberReceipts::new(group,&mounted.meta.actor,owner.parent_handle.unwrap()).map_err(error)?;*owner.receipts=Some(Box::new(receipts));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:grant.maximum_items,retained_capacity_bytes:birth,..Default::default()}));}
         let receipts=owner.receipts.as_mut().unwrap();
-        if let Some(index)=receipts.receipt_index(){if group.prepared_publication(index).is_some(){let capacity=receipts.next_capacity_byte_demand(group,&mounted.meta.actor).map_err(error)?;let release=receipts.next_release_byte_demand(group,&mounted.meta.actor).map_err(error)?;return receipts.advance_receipt(group,&self.children,&mounted.meta.actor,self.mounted_policy.maintenance).map_err(error);}}
-        if !group.publications_ready(){let capacity=group.next_publication_capacity_byte_demand(&self.store,&self.children)?.max(4096);return group.advance_publications(&mut self.store,&mut self.children,mounted.operation.operation,self.mounted_policy.maintenance);}
+        if let Some(index)=receipts.receipt_index(){if group.prepared_publication(index).is_some(){let _capacity=receipts.next_capacity_byte_demand(group,&mounted.meta.actor).map_err(error)?;let _release=receipts.next_release_byte_demand(group,&mounted.meta.actor).map_err(error)?;return receipts.advance_receipt(group,&self.children,&mounted.meta.actor,self.mounted_policy.maintenance).map_err(error);}}
+        if !group.publications_ready(){let _capacity=group.next_publication_capacity_byte_demand(&self.store,&self.children)?.max(4096);return group.advance_publications(&mut self.store,&mut self.children,mounted.operation.operation,self.mounted_policy.maintenance);}
         if !group.projection_ready(){return group.advance_projection(&self.store,self.mounted_policy.maintenance);}
         if !group.entries_ready(){return group.advance_entries(&mut self.children,&self.child_content_root,self.mounted_policy.maintenance);}
-        let grant=self.mounted_policy.maintenance;let step=group.close_displaced_view_step(&self.child_content_root,grant)?;semio_framework_value::retained_clone::admit_retained_clone_progress(grant,step.progress(),"mounted private displaced view").map_err(semio_framework_value::ValueError::into_fault)?;if step.progress()!=Default::default()||!matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()));}
+        let grant=self.mounted_policy.maintenance;let step=group.close_displaced_view_step(&self.child_content_root,grant)?;semio_framework_value::retained_clone::admit_retained_clone_progress(grant,step.progress(),"mounted private displaced view").map_err(ValueError::into_fault)?;if step.progress()!=Default::default()||!matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()));}
         let graph=self.composition.ownership_graph_mut();if !group.ready(graph){let demand=group.next_graph_demands(graph,&self.children)?;if demand.copy_bytes>4096{return Err(plugin_sdk_fault("mounted graph source words exceed the admitted per-turn work frontier"));}let grant=self.mounted_policy.maintenance;return group.advance_graph(graph,&self.children,grant);}
-        if !receipts.final_ready(){let capacity=receipts.next_final_capacity_byte_demand(group.group_id()).map_err(error)?;let release=receipts.next_final_release_byte_demand();return receipts.advance_final(group.group_id(),self.mounted_policy.maintenance).map_err(error);}
+        if !receipts.final_ready(){let _capacity=receipts.next_final_capacity_byte_demand(group.group_id()).map_err(error)?;let _release=receipts.next_final_release_byte_demand();return receipts.advance_final(group.group_id(),self.mounted_policy.maintenance).map_err(error);}
         let label=self.registry.get(&mounted.verb).map(|definition|&definition.label).or_else(||self.registry.get_command(&mounted.verb).map(|definition|&definition.label));
         let source=MountedCommandEntrySource{action_id:&mounted.verb,label,captured_millis:owner.captured_millis,kind,count:1,parent_touched:group.parent_touched(),child_edit_count:group.child_count()};
         if owner.command.is_none(){owner.command=Some(MountedCommandEntry::new(source).map_err(|_|plugin_sdk_fault("mounted command entry refused its original timestamp authority"))?);return Ok(structural());}
-        let command=owner.command.as_mut().unwrap();if !command.ready(){let capacity=command.next_capacity_byte_demand(source).map_err(|_|plugin_sdk_fault("mounted command entry source changed before prestage"))?;return command.advance(source,self.mounted_policy.maintenance).map_err(|_|plugin_sdk_fault("mounted command entry lost its original borrowed label source"));}
+        let command=owner.command.as_mut().unwrap();if !command.ready(){let _capacity=command.next_capacity_byte_demand(source).map_err(|_|plugin_sdk_fault("mounted command entry source changed before prestage"))?;return command.advance(source,self.mounted_policy.maintenance).map_err(|_|plugin_sdk_fault("mounted command entry lost its original borrowed label source"));}
         if owner.append.is_none(){owner.append=Some(self.command_log.prepare_append().map_err(|_|plugin_sdk_fault("mounted command history refused its next original page"))?);return Ok(structural());}
         let append=owner.append.as_mut().unwrap();match self.command_log.validate_append(append){Ok(())=>{},Err(mounted_child_group_receipt_group::CommandAppendRefusal::Unfunded)=>{return Ok(append.admit_step(self.mounted_policy.maintenance));},Err(mounted_child_group_receipt_group::CommandAppendRefusal::Stale)=>{let step=append.close_step(self.mounted_policy.maintenance);owner.append=None;return Ok(step);},Err(_)=>return Err(plugin_sdk_fault("mounted command append lost its exact original history authority"))}
         owner.phase=9;Ok(RetainedCloneStep::Complete(Default::default()))
@@ -212,7 +212,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         let ready=self.private_child_groups.get(mounted.operation.operation.0).is_some_and(|owner|owner.phase>=9);
         Ok(if ready{step}else{RetainedCloneStep::Progress(step.progress())})
     }
-    fn admit_private_child_group_frame(&mut self,operation:u64,captured_millis:i64,expires_at_us:u64,grant:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,Fault>{
+    fn admit_private_child_group_frame(&mut self,operation:u64,captured_millis:i64,expires_at_us:u64,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.private_child_groups.get(operation).is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
@@ -242,7 +242,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         if !fresh{let fault=plugin_sdk_fault("mounted private group rejected its stale original parent or child frontier");self.private_child_groups.get_mut(operation).unwrap().closing=true;mounted.terminal_fault=Some(ArtifactBoundedToolFault::from_fault(&fault));lease.cancel();return Err(fault);}
         let step=match self.advance_private_child_group(mounted){Ok(step)=>step,Err(fault)=>{self.private_child_groups.get_mut(operation).unwrap().closing=true;mounted.terminal_fault=Some(ArtifactBoundedToolFault::from_fault(&fault));mounted.cancellation_lease.as_ref().unwrap().cancel();return Err(fault);}};
         if step.progress()!=Default::default(){mounted.publication_progress=mounted.publication_progress.saturating_add(1);}
-        if !matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){return Ok(());}
+        if !matches!(step,RetainedCloneStep::Complete(_)){return Ok(());}
         if !self.typed_composed_outbox.can_push(){return Ok(());}
         let generation=self.child_content_generation.checked_add(1).ok_or_else(||plugin_sdk_fault("private child frontier generation exhausted"))?;
         if !self.child_content_root.is_empty()&&!self.child_content_retirements.can_insert(generation){return Ok(());}
@@ -263,17 +263,17 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M>{
         let output=owner.output.take().unwrap();self.typed_composed_outbox.push(ComposedGestureResult{operation,mutations:output.mutations,inverse_group:output.inverse_group}).unwrap_or_else(|_|unreachable!("validated fixed private receiver retains its exact original free slot"));
         owner.closing=true;mounted.owned_child_committed=true;mounted.owned_child_result_pending=true;mounted.command_logged=true;mounted.published_artifact=true;mounted.artifact_generation=self.store.generation_now();mounted.canonical_revision=self.store.content_revision_now();mounted.operation.base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(mounted.canonical_revision[..8].try_into().unwrap()));mounted.operation.generation=semio_framework_job::Generation(mounted.artifact_generation);page.token=mounted.next_token();mounted.queue_page(page)
     }
-    fn private_child_group_close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    fn private_child_group_close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_,operation))=self.private_child_groups.next_id_from(0) else {
             let release_bytes=self.private_child_groups.empty_backing_byte_demand().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"private group registry still owns its original slot"))?;
-            return Ok(semio_framework_value::RetirementDemand { release_bytes, depth:usize::from(release_bytes!=0), ..Default::default() });
+            return Ok(RetirementDemand { release_bytes, depth:usize::from(release_bytes!=0), ..Default::default() });
         };
         self.private_child_group_operation_close_demands(operation,body)
     }
     fn next_closing_private_child_group(&self)->Option<u64>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|index|self.private_child_groups.entry(index).and_then(|(operation,owner)|(owner.closing&&self.tool_operations.get(*operation).is_none_or(|mounted|!mounted.owned_child_result_pending)).then_some(*operation)))}
-    fn private_child_group_operation_close_demands(&self, operation:u64, body:usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    fn private_child_group_operation_close_demands(&self, operation:u64, body:usize) -> Result<RetirementDemand, ValueError> {
         let Some(owner)=self.private_child_groups.get(operation)else{return Ok(Default::default());};
-        if owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:MountedPrivateChildGroup::<M>::frame_birth_bytes(),depth:1,..Default::default()});}
+        if owner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:MountedPrivateChildGroup::<M>::frame_birth_bytes(),depth:1,..Default::default()});}
         mounted_child_group_receipt::mounted_nested_retirement_demand(owner.retirement_demands(body)?,1)
     }
     fn private_child_groups_terminal_is_empty(&self)->bool{self.private_child_groups.is_empty()&&self.private_child_groups.empty_backing_byte_demand()==Some(0)}

@@ -14,11 +14,13 @@ import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execu
 import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
 
-/** 🧩️ The ONE cargo `rustc` argument list that links a plugin/extension component: `component-<profile>` and
- * the plugin's own `describe` both build exactly this unit, so the shared build-dir compiles it once and the
- * described bytes are the shipped bytes. */
-export function pluginComponentRustcArgs(packageName: string, profile: string): string[] {
-  return ["-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", profile, ...(process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? ["--", "-C", "strip=none"] : [])];
+/** 🧩️ The ONE cargo invocation that links a plugin/extension component: `component-<profile>` and the batched prebuild
+ * of every component select exactly this unit (`cargo build -p <package> --lib`, per-package features), so the shared
+ * build-dir compiles it once, the prebuild's units are the narrow build's units, and the described bytes are the shipped
+ * bytes. Only the diagnostic `SEMIO_PLUGIN_SYMBOLS=1` build needs compiler arguments, hence `cargo rustc`. */
+export function pluginComponentCargo(packageName: string, profile: string): { readonly command: "build" | "rustc"; readonly args: string[] } {
+  const args = ["-p", packageName, "--lib", "--target", "wasm32-wasip2", "--profile", profile];
+  return process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? { command: "rustc", args: [...args, "--", "-C", "strip=none"] } : { command: "build", args };
 }
 
 /** 🌊️ `bun ⚡️caching/🦀️cargo/📜️script.ts relay <cargo args…>` — the relay [[runCmd]] routes every POSIX `cargo` through
@@ -74,12 +76,14 @@ export class NativeScript extends BundleScript {
       const cargo = Bun.TOML.parse(readFileSync(resolve(this.repoRoot, manifest), "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { "component-kind"?: string } } } };
       if (!cargo.package?.name || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package?.metadata?.semio?.["component-kind"] ?? "")) throw new Error(`Not a plugin component manifest: ${manifest}`);
       const packageName=cargo.package.name;
+      const cargoInvocation = pluginComponentCargo(packageName, `wasm-${operation}`);
       await buildRepositoryCargoArtifacts(
         manifest,
-        pluginComponentRustcArgs(packageName, `wasm-${operation}`),
+        cargoInvocation.args,
         this.repoRoot,
         {
-          command: "rustc",
+          command: cargoInvocation.command,
+          deliverables: [".wasm"],
           output: `dist/component-${operation}`,
           validate: (files) => {
             assert.equal(files.size, 1, "Component output must contain only the linked WASM component");

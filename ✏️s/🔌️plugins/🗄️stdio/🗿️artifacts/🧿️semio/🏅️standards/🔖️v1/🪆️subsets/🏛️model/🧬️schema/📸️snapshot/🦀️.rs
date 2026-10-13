@@ -12,8 +12,8 @@
 //!   subset's own collections (spatial parent pointers, element→spatial containment, relation
 //!   endpoints) is checked by the composer's `SemioModelValidator`.
 
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
+#[cfg(test)] use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 
 
 use framework_schema::ArtifactSchema;
@@ -25,7 +25,7 @@ pub const STDIO_SEMIOMODEL_DOCUMENT_SCHEMA: &str = "stdio.semio.model";
 //#region 🔖️Spatial
 /// 🏢️ ifc/4 spatial-structure levels this subset targets (`IfcSite`/`IfcBuilding`/
 /// `IfcBuildingStorey`/`IfcSpace`) — the master plan's exact "(site/building/storey/space)" list.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SpatialKind {
@@ -44,7 +44,7 @@ pub enum SpatialKind {
 /// `added: Vec<T>` field spuriously infers `T: Default`, same root cause bcf's own diff module
 /// documents) means every strong-entity type reachable through a `NamedTripleDiff<K,D,T>` needs
 /// `Default` purely to satisfy that derive, not because any real code constructs a default one.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SpatialNode {
@@ -64,7 +64,7 @@ pub struct SpatialNode {
 /// (never a lying black-hole variant).
 /// 🧪️ `Default` (first variant, `Wall`) is the same `serde_derive` technical workaround as
 /// `SpatialKind`'s -- see `SpatialNode`'s doc comment.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum ElementClass {
@@ -86,7 +86,7 @@ pub enum ElementClass {
 /// 📐️ Owned by `model`: geometry reference resolved BY ID into a sibling subset's own snapshot
 /// (`brep`/`mesh`) — never inline duplication (w1b-type-ownership.md cross-reuse summary). Named
 /// variants throughout, never a bare tuple (f6-final-summary.md §4.3).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum GeometryRef {
@@ -102,7 +102,7 @@ pub enum GeometryRef {
 
 /// 🏷️ IFC property-set value — weak value type, whole-value replaced in diffs, never sub-diffed
 /// (schema-design.md's strong/weak entity split).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PsetValue {
@@ -111,7 +111,7 @@ pub enum PsetValue {
     Boolean { value: bool },
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Property {
@@ -120,7 +120,7 @@ pub struct Property {
 }
 
 /// 📦️ IFC "Pset_*"-shaped named property bag.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct PropertySet {
@@ -132,7 +132,7 @@ pub struct PropertySet {
 /// 🏛️ Owned by `model`: one spatial/physical element — the master plan's
 /// "elements{class enum, placement, GeometryRef{Brep|Mesh|None}, psets}". `Default` is the same
 /// `serde_derive` technical workaround as `SpatialNode`'s (see that struct's doc comment).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioModelElement {
@@ -156,7 +156,7 @@ pub struct SemioModelElement {
 /// `Other{label}` catch-all, same rationale as `ElementClass::Other`.
 /// 🧪️ `Default` (first variant, `Aggregates`) is the same `serde_derive` technical workaround as
 /// `SpatialKind`'s -- see `SpatialNode`'s doc comment.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum RelationKind {
@@ -176,7 +176,7 @@ pub enum RelationKind {
 /// shared `🧰️triples` engine; the master plan's 3-field description is the payload this key
 /// wraps, not a rejection of having one). `Default` is the same `serde_derive` technical
 /// workaround as `SpatialNode`'s.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ModelRelation {
@@ -188,7 +188,7 @@ pub struct ModelRelation {
 //#endregion 🔖️Relation
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.model")]

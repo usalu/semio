@@ -1,12 +1,14 @@
 //! 🧭️ Accessible workset management and per-window option switcher; authored changes reuse entity commands.
 use crate::{ModelSnapshot, ModelInference};
 use crate::editor::bim::{kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text, ui_capacity_error}, terminology::BimLabels};
-use semio_framework_plugin::{BuiltNode, PanelTreeBuilder, PanelTabDefinition, PanelTabKind, PanelGroup, TreeWindows, UiAssemblyResult, FRAMEWORK_PANEL_TAB_INSPECTION_ID, Buildable, HasChildren};
+use semio_framework_plugin::{BuiltNode, PanelTreeBuilder, PanelTabDefinition, PanelTabKind, PanelGroup, TreeWindows, UiAssemblyResult, Buildable, HasChildren};
 use semio_framework_ui_locale::Label;
 use std::collections::BTreeMap;
 pub const BODY_KEY: &str = "bim.edit.options";
+/// 🪪️ The unique id of this panel tab, a child of the framework inspection tab.
+pub const PANEL_TAB_ID: &str = "bim.panel.options";
 /// 🧱️ One shared management panel, registered with the artifact editor.
-pub fn definition() -> PanelTabDefinition { PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()), label: BimLabels::localized(|labels| labels.panel_options), group: PanelGroup::Details, body_key: Some(BODY_KEY.into()), children: Vec::new() } }
+pub fn definition() -> PanelTabDefinition { PanelTabDefinition { kind: PanelTabKind::App(PANEL_TAB_ID.into()), label: BimLabels::localized(|labels| labels.panel_options), group: PanelGroup::Details, body_key: Some(BODY_KEY.into()), children: Vec::new() } }
 fn create(kind: &str, parent: &str, name: &str) -> UiAssemblyResult<BuiltNode> {
     tree_item_with_icon(format!("bim.options.create.{kind}.{parent}"), Label::data(name), "plus", bim_action("createEntity", Some(ui_value_map([("kind", ui_value_text(kind)?), ("parent", ui_value_text(parent)?), ("name", ui_value_text(name)?)])?)))
 }

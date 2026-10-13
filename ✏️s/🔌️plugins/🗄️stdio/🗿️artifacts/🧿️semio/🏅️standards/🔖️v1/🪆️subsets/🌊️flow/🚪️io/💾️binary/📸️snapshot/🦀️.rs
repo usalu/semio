@@ -573,7 +573,7 @@ impl store::ArtifactPack for SemioFlowSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {

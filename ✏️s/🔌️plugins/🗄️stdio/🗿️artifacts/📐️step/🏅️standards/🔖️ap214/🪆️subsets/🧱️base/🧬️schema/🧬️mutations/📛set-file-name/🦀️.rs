@@ -20,7 +20,7 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileName {
         protocol::MutationOutcome::new(StepDiff { file_name: (base.header.file_name != *file_name).then(|| file_name.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-        Ok(vec![StepMutation::SetFileName(set_file_name::SetFileName { file_name: base.header.file_name.clone() })])
+        Ok(vec![StepMutation::SetFileName(SetFileName { file_name: base.header.file_name.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set file name", "Dateiname setzen")

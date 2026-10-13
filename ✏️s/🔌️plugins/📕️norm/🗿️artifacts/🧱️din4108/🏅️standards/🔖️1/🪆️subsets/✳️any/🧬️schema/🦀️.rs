@@ -25,11 +25,11 @@ pub struct Din4108Artifact {
     #[state(artifact)]
     pub bb2_details_conform: bool,
     #[state(artifact)]
-    pub zones: Vec<crate::ThermalZone>,
+    pub zones: Vec<ThermalZone>,
     #[state(artifact)]
-    pub elements: Vec<crate::EnvelopeElement>,
+    pub elements: Vec<EnvelopeElement>,
     #[state(artifact)]
-    pub thermal_bridges: Vec<crate::ThermalBridge>,
+    pub thermal_bridges: Vec<ThermalBridge>,
 }
 //#endregion 🔖️Artifact
 

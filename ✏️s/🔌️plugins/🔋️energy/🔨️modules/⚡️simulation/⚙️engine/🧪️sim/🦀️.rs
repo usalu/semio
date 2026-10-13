@@ -155,7 +155,7 @@ pub enum EnergyWireRejection {
 pub struct EnergyWirePacket {
     kind: EnergyWireKind,
     identity: EnergyWireIdentity,
-    payload: semio_framework_job::RetainedJobPayload,
+    payload: RetainedJobPayload,
     preview: Option<EnergyJobPreview>,
     reservation: Option<EnergyCommitReservation>,
 }
@@ -1961,7 +1961,7 @@ pub struct EnergyJobAuthority {
     finalization: FinalizationWork,
     result_build: ResultBuildWork,
     output_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
-    output_payload: Option<semio_framework_job::RetainedJobPayload>,
+    output_payload: Option<RetainedJobPayload>,
     commit_census: Option<CommitCensusWork>,
     commit_reservation: Option<EnergyCommitReservation>,
     commit_acknowledged: bool,
@@ -2314,7 +2314,7 @@ impl EnergyJobAuthority {
         EnergyWireIdentity { operation: self.operation.operation.0, base_revision: self.operation.base_revision.0, generation: self.operation.generation.0, seed: self.operation.seed, sequence }
     }
 
-    fn start_wire(&mut self, kind: EnergyWireKind, sequence: u64, stream: semio_framework_job::JobPayloadStream) -> Result<(), EnergyWireRejection> {
+    fn start_wire(&mut self, kind: EnergyWireKind, sequence: u64, stream: JobPayloadStream) -> Result<(), EnergyWireRejection> {
         if self.numerical_census.operations != 1 || self.numerical_census.process_jobs != 1 {
             return Err(EnergyWireRejection::Operations);
         }
@@ -2401,7 +2401,7 @@ impl EnergyJobAuthority {
             Ok(sequence) => sequence,
             Err(_) => return EnergyRun::Fault,
         };
-        if self.start_wire(EnergyWireKind::Preview, sequence, semio_framework_job::JobPayloadStream::Preview).is_err() {
+        if self.start_wire(EnergyWireKind::Preview, sequence, JobPayloadStream::Preview).is_err() {
             return EnergyRun::Yield;
         }
         EnergyRun::Yield
@@ -2552,7 +2552,7 @@ impl EnergyJobAuthority {
     }
 
     fn begin_fault(&mut self) -> EnergyRun {
-        if self.start_wire(EnergyWireKind::Fault, 0, semio_framework_job::JobPayloadStream::Fault).is_ok() {
+        if self.start_wire(EnergyWireKind::Fault, 0, JobPayloadStream::Fault).is_ok() {
             EnergyRun::Yield
         } else {
             Self::fault()
@@ -3781,7 +3781,7 @@ impl EnergyJobAuthority {
             EnergyJobStage::PublishTimestep => {
                 if self.checkpoint_due {
                     self.checkpoint_due = false;
-                    if self.start_wire(EnergyWireKind::Checkpoint, self.hour_index as u64, semio_framework_job::JobPayloadStream::CheckpointState).is_err() {
+                    if self.start_wire(EnergyWireKind::Checkpoint, self.hour_index as u64, JobPayloadStream::CheckpointState).is_err() {
                         return EnergyRun::Yield;
                     }
                     return EnergyRun::Yield;
@@ -3855,7 +3855,7 @@ impl EnergyJobAuthority {
                     }
                 }
                 if self.output_writer.is_none() && self.output_payload.is_none() {
-                    self.output_writer = Some(semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CommitOutput));
+                    self.output_writer = Some(semio_framework_job::RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
                     return EnergyRun::Yield;
                 }
                 match self.encode_output_step(context) {

@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
+use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader, StepTypedValue};
 use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 

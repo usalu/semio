@@ -1,7 +1,8 @@
 //! 🧬️ DxfArtifact schema — full artifact state (mirrors `DxfSnapshot`'s persisted fields
 //! one-for-one; see `📸️snapshot/🦀️.rs` module docs for the full typed-model rationale).
 
-use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfCircle, DxfLine, DxfOther, DxfHeaderVar, DxfOtherTable, DxfTables};
+use crate::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfOtherTable, DxfTables};
+#[cfg(test)] use crate::schema::snapshot::{DxfCircle, DxfLine, DxfOther};
 use crate::DxfSnapshot;
 use framework_schema::ArtifactSchema;
 

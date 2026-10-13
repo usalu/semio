@@ -6,7 +6,6 @@
 //! full spec shape (typed `target`/`interpolation`, the 4-variant `AnimValue` union). Named structs
 //! throughout — no bare tuples (f6-final-summary.md §4.3), rotation reuses the shared
 //! `engine::geometry::SemioQuaternion{x,y,z,w}` instead of a local 4-field redefinition.
-use crate::standards::v1::subsets::base::schema::geometry::native;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use framework_schema::ArtifactSchema;
 //#region 🔖️Ids
@@ -18,7 +17,7 @@ pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation"
 /// (`KHR_*` animation-pointer style extensions target arbitrary properties by name).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
 #[value(tag = "kind", rename_all = "camelCase")]
-#[derive(Default, semio_framework_value::CanonicalJsonTree)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum AnimTargetProperty {
     #[default]
@@ -31,7 +30,7 @@ pub enum AnimTargetProperty {
     },
 }
 /// 🎯️ A channel's animated node + which of its properties is driven.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimTarget {
@@ -44,7 +43,7 @@ pub struct AnimTarget {
 /// 📈️ gltf `sampler.interpolation` — how `keyframes` are resampled between `t` values.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-#[derive(Default, semio_framework_value::CanonicalJsonTree)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum AnimInterpolation {
     #[default]
@@ -59,7 +58,7 @@ pub enum AnimInterpolation {
 /// translation/scale, `Quat` for rotation (reuses the shared named quaternion, never a bare
 /// `[f64;4]`), `Weights` for morph-target weight vectors (arity = mesh's own primitive count, not
 /// fixed — hence `Vec<f64>`, not a fixed array).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum AnimValue {
@@ -78,7 +77,7 @@ impl Default for AnimValue {
 /// ⏱️ One sample point on a channel's timeline. Real GIFs/glTF exporters expect `t` non-decreasing
 /// across a channel's own `keyframes` (a `SubsetValidator` referential invariant, see the
 /// `🎹️composer` module) but this type itself stores whatever was decoded, honestly.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimKeyframe {
@@ -91,7 +90,7 @@ pub struct AnimKeyframe {
 /// 🎚️ One animated property track: gltf `channel` + its `sampler`, flattened into a single owned
 /// keyframe list (this snapshot does not separately model gltf's accessor-indirection — the
 /// keyframes ARE the resolved sample data).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimChannel {
@@ -106,7 +105,7 @@ pub struct AnimChannel {
 /// 🎬️ One gltf `animation` entry — an optional display `name` (gltf's own `animation.name` is
 /// optional and not spec-required to be unique, hence `Option<String>` rather than a name key) plus
 /// its ordered `channels`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct AnimTimeline {
@@ -117,7 +116,7 @@ pub struct AnimTimeline {
 }
 //#endregion 🔖️Timeline
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.animation")]
 pub struct SemioAnimationSnapshot {

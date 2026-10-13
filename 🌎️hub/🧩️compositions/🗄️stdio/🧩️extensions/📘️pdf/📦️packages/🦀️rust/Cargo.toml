@@ -97,7 +97,7 @@ plugin-root = ["semio-framework-plugin/component-guest"]
 
 [dependencies]
 # 🧩️ Composition Dependencies
-semio-s-artifact-stdio-pdf = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-pdf = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }

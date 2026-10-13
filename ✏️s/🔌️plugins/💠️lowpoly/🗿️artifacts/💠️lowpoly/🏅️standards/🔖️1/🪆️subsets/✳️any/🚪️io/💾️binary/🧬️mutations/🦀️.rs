@@ -26,7 +26,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 /// 💾️ Binary JSON operation payloads with the artifact's physical byte representation.
-impl protocol::OpBinary for crate::schema::mutations::LowpolyMutation {
+impl OpBinary for LowpolyMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(crate::standards::v1::subsets::any::io::text::lowpoly_json_encode(self).into_bytes())
     }

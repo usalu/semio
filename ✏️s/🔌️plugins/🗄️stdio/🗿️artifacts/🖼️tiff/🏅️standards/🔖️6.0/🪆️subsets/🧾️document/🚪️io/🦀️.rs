@@ -463,10 +463,10 @@ fn dir_size(count: usize) -> Result<usize, String> {
 
 fn values_owned_bytes(value:&TiffValues)->Result<usize,semio_framework_value::ValueError>{
  use semio_framework_value::{ValueError,ValueRefusalKind};let overflow=||ValueError::new(ValueRefusalKind::OwnershipLimit,"TIFF owned metadata allocation overflow");
- let bytes=match value{TiffValues::Byte(v)|TiffValues::Undefined(v)=>v.len(),TiffValues::Ascii(v)=>v.iter().try_fold(v.len().checked_mul(std::mem::size_of::<String>()).ok_or_else(overflow)?,|n,text|n.checked_add(text.len()).ok_or_else(overflow))?,TiffValues::SByte(v)=>v.len(),TiffValues::Short(v)=>v.len()*2,TiffValues::SShort(v)=>v.len()*2,TiffValues::Long(v)=>v.len()*4,TiffValues::SLong(v)=>v.len()*4,TiffValues::Float(v)=>v.len()*4,TiffValues::Double(v)=>v.len()*8,TiffValues::Rational(v)=>v.len()*8,TiffValues::SRational(v)=>v.len()*8};Ok(bytes)
+ let bytes=match value{TiffValues::Byte(v)|TiffValues::Undefined(v)=>v.len(),TiffValues::Ascii(v)=>v.iter().try_fold(v.len().checked_mul(size_of::<String>()).ok_or_else(overflow)?,|n,text|n.checked_add(text.len()).ok_or_else(overflow))?,TiffValues::SByte(v)=>v.len(),TiffValues::Short(v)=>v.len()*2,TiffValues::SShort(v)=>v.len()*2,TiffValues::Long(v)=>v.len()*4,TiffValues::SLong(v)=>v.len()*4,TiffValues::Float(v)=>v.len()*4,TiffValues::Double(v)=>v.len()*8,TiffValues::Rational(v)=>v.len()*8,TiffValues::SRational(v)=>v.len()*8};Ok(bytes)
 }
 
-fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> Result<usize, String> {
+fn out_of_line_size(entries: &[TiffTag], _bo: TiffByteOrder) -> Result<usize, String> {
     entries.iter().try_fold(0usize, |total, tag| {
         let length = native_value_count(&tag.values)? as usize * tag.values.kind().element_size();
         total.checked_add(if length <= 4 { 0 } else { length + length % 2 }).ok_or_else(|| "tiff: value layout overflow".into())
@@ -510,7 +510,7 @@ fn encode_tiff_preserving_storage(snapshot: &NativeSnapshot,c:&mut semio_framewo
     }
     let mut entries_per_ifd = c.allocate_vec::<Vec<TiffTag>>(snapshot.ifds.len()).map_err(|e|e.to_string())?;
     for ifd in &snapshot.ifds {
-        let mut entries=c.allocate_vec::<TiffTag>(ifd.entries.len()+2).map_err(|e|e.to_string())?;c.begin_stage(ifd.entries.len()).map_err(|e|e.to_string())?;for tag in &ifd.entries{c.charge(values_owned_bytes(&tag.values).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;entries.push(tag.clone());c.step().map_err(|e|e.to_string())?;}c.charge(2*std::mem::size_of::<TiffTag>()+ifd.storage.chunks.len()*16).map_err(|e|e.to_string())?;
+        let mut entries=c.allocate_vec::<TiffTag>(ifd.entries.len()+2).map_err(|e|e.to_string())?;c.begin_stage(ifd.entries.len()).map_err(|e|e.to_string())?;for tag in &ifd.entries{c.charge(values_owned_bytes(&tag.values).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?;entries.push(tag.clone());c.step().map_err(|e|e.to_string())?;}c.charge(2*size_of::<TiffTag>()+ifd.storage.chunks.len()*16).map_err(|e|e.to_string())?;
         entries.extend(storage_tags(ifd)?);
         entries.sort_by_key(|tag| tag.tag);
         if entries.windows(2).any(|pair| pair[0].tag == pair[1].tag) {
@@ -804,7 +804,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec TiffBuilderFacets {
         construction: TiffBuilderConstruction,
         analysis: TiffAnalyzerAnalysis,
-        composition: crate::standards::v6_0::subsets::document::io::derived_composition::TiffComposerComposition,
+        composition: TiffComposerComposition,
     }
     builder: TiffBuilder,
     analyzer: TiffAnalyzer,

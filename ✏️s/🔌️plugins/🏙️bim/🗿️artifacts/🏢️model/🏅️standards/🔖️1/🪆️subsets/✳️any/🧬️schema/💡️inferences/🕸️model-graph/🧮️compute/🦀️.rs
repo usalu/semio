@@ -10,7 +10,7 @@ use super::super::super::diagnostics::{self, Inputs as FindingInputs};
 use super::super::super::effective_properties::{self, EffectiveProperties};
 use super::super::super::energy_envelope::{self, EnvelopeSpace};
 use super::super::super::element_solids::roofs::RoofFallback;
-use super::super::super::element_solids::{self, beams, ceilings, columns, curtain_walls, dep_object, dep_value, fillers, placement_of, rail_hosts, railings, ramps, roofs, slabs, stairs, wall_sweeps, walls, ElementSolid, SolidEntry, SolidFamily};
+use super::super::super::element_solids::{self, beams, ceilings, columns, curtain_walls, dep_object, dep_value, fillers, placement_of, rail_hosts, railings, ramps, roofs, slabs, stairs, wall_sweeps, walls, SolidEntry, SolidFamily};
 use super::super::super::opening_frames::{self, cut_rect, frame_of, CutRect, HostExtent, OpeningCut, OpeningFrame};
 use super::super::super::components::{self, ComponentEntry, ComponentValue};
 use super::super::super::element_solids::components as component_solids;
@@ -429,7 +429,7 @@ fn solid_value(snapshot: &ModelSnapshot, solid: &element_solids::SolidKey, index
     let built: Option<SolidEntry> = match solid.family {
         SolidFamily::Wall => snapshot.walls.get(id).zip(index.layouts.get(id)).map(|(wall, layout)| SolidEntry { solid: walls::wall_solid(snapshot, wall, layout, &walls::cuts_of(index.frames.values().copied())), fallback: None }),
         SolidFamily::CurtainWall => snapshot.curtain_walls.get(id).zip(index.curtains.get(id)).map(|(curtain, layout)| {
-            let cuts: Vec<opening_frames::OpeningCut> = snapshot.openings.iter().filter(|(_, opening)| opening.host == id).filter_map(|(opening, _)| index.frames.get(opening.as_str())).filter(|frame| frame.valid).map(|frame| frame.cut).collect();
+            let cuts: Vec<OpeningCut> = snapshot.openings.iter().filter(|(_, opening)| opening.host == id).filter_map(|(opening, _)| index.frames.get(opening.as_str())).filter(|frame| frame.valid).map(|frame| frame.cut).collect();
             SolidEntry { solid: curtain_walls::curtain_solid_in(snapshot, curtain, layout, &cuts, &profiles), fallback: None }
         }),
         SolidFamily::Window | SolidFamily::Door => snapshot.openings.get(id).zip(index.frames.get(id)).and_then(|(opening, frame)| fillers::filler_solid(snapshot, opening, frame)).map(|solid| SolidEntry { solid, fallback: None }),
@@ -458,8 +458,8 @@ fn room_value(snapshot: &ModelSnapshot, storey: &str, index: &Index<'_>) -> Stor
     rooms_from(snapshot, storey, &index.level(storey), &obstacles)
 }
 
-fn view_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> view_linework::ViewLinework {
-    let Some(view) = snapshot.views.get(id) else { return view_linework::ViewLinework { view: id.to_string(), kind: crate::ViewKind::Plan, scale: 0, detail: crate::DetailLevel::Medium, lines: plan_linework::Sheet::default().finish("", 0.0) } };
+fn view_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> ViewLinework {
+    let Some(view) = snapshot.views.get(id) else { return ViewLinework { view: id.to_string(), kind: crate::ViewKind::Plan, scale: 0, detail: crate::DetailLevel::Medium, lines: plan_linework::Sheet::default().finish("", 0.0) } };
     let storey = view.storey.as_deref().unwrap_or_default();
     let plan = PlanInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), curtains: index.curtains.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), components: index.component_values(), meps: index.meps.clone(), rooms: index.rooms.get(storey).copied(), annotations: index.annotations.get(storey).copied() };
     let inputs = ViewInputs { plan, solids: index.solids.iter().map(|(element, entry)| (*element, &entry.solid)).collect() };
@@ -544,8 +544,8 @@ fn members_of<'a>(snapshot: &'a ModelSnapshot, index: &Index<'a>, member: impl F
     snapshot.spaces.iter().filter(|(_, space)| member(space)).map(|(id, space)| (space, index.measured.get(id.as_str()).copied().flatten())).collect()
 }
 
-fn zone_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> zones::ZoneTotals {
-    snapshot.zones.get(id).map_or_else(zones::ZoneTotals::default, |zone| zones::zone_totals(zone, &members_of(snapshot, index, |space| space.zone.as_deref() == Some(id))))
+fn zone_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> ZoneTotals {
+    snapshot.zones.get(id).map_or_else(ZoneTotals::default, |zone| zones::zone_totals(zone, &members_of(snapshot, index, |space| space.zone.as_deref() == Some(id))))
 }
 
 fn scheme_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> zones::SchemeTotals {

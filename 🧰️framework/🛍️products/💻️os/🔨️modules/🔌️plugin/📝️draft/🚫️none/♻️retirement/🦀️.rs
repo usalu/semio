@@ -52,11 +52,11 @@ impl<T> Drop for ZeroPayloadRetirement<T> {
 struct ZeroPayloadRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
 
 fn admit_zero_payload_birth<V>(grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
-    RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<ZeroPayloadRetirement<V>>(), depth: 1 }.admit(grant)
+    RetainedCloneBirthDemand { capacity_bytes: size_of::<ZeroPayloadRetirement<V>>(), depth: 1 }.admit(grant)
 }
 
 impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
-    fn retirement_birth_bytes(&self, _value: &T) -> usize { std::mem::size_of::<ZeroPayloadRetirement<T>>() }
+    fn retirement_birth_bytes(&self, _value: &T) -> usize { size_of::<ZeroPayloadRetirement<T>>() }
 
     fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
         match admit_zero_payload_birth::<T>(grant) {
@@ -67,7 +67,7 @@ impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for ZeroPa
 }
 
 impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<T>) -> usize { std::mem::size_of::<ZeroPayloadRetirement<std::sync::Arc<T>>>() }
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<T>) -> usize { size_of::<ZeroPayloadRetirement<Arc<T>>>() }
 
     fn retire(&self, snapshot: Arc<T>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> {
         match admit_zero_payload_birth::<Arc<T>>(grant) {
@@ -81,7 +81,7 @@ impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPaylo
 pub(super) fn zero_payload_store_owners<P, M>() -> Result<store::DocumentStoreOwners<P, M>, ValueError>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + Sync + 'static,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + 'static,
+    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
     let capacity_bytes = store::DocumentStoreOwners::<P, M>::source_birth_bytes::<ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;
     store::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes, depth: 1 }, |grant| {

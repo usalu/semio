@@ -67,7 +67,7 @@ impl ArtifactViewer for XmlAnyViewer {
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> XmlSnapshot {
-        XmlSnapshot::default()
+        XmlSnapshot::with_empty_root()
     }
 
     fn handle(

@@ -32,7 +32,7 @@ mod tests;
 
 
 pub const BINARY_TAGS: &[(&str, u8)] =
-    &[("CreateCuratedItem", crate::standards::v1::subsets::any::io::binary::mutations::create_curated_item::BINARY_TAG), ("DeleteCuratedItem", crate::standards::v1::subsets::any::io::binary::mutations::delete_curated_item::BINARY_TAG), ("ChangeCuratedItemCount", crate::standards::v1::subsets::any::io::binary::mutations::change_curated_item_count::BINARY_TAG)];
+    &[("CreateCuratedItem", create_curated_item::BINARY_TAG), ("DeleteCuratedItem", delete_curated_item::BINARY_TAG), ("ChangeCuratedItemCount", change_curated_item_count::BINARY_TAG)];
 
 #[path = "🗑️delete-curated-item/🦀️.rs"]
 pub mod delete_curated_item;
@@ -46,12 +46,12 @@ pub mod change_curated_item_count;
 mod native_codec {
 use super::*;
 use crate::schema::mutations::SourcingMutation;
-use crate::schema::mutations::{change_curated_item_count, create_curated_item, delete_curated_item};
-use crate::CuratedItem;
-use protocol::OpText;
+#[cfg(test)] use crate::schema::mutations::{change_curated_item_count, create_curated_item, delete_curated_item};
+#[cfg(test)] use crate::CuratedItem;
+#[cfg(test)] use protocol::OpText;
 use crate::standards::v1::subsets::any::io::text::mutations::{SourcingMutationDsl,sourcing_mutation_to_dsl,sourcing_mutation_from_dsl};
 
-impl protocol::OpBinary for SourcingMutationDsl {
+impl OpBinary for SourcingMutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
@@ -60,7 +60,7 @@ impl protocol::OpBinary for SourcingMutationDsl {
     }
 }
 
-impl protocol::OpBinary for SourcingMutation {
+impl OpBinary for SourcingMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         sourcing_mutation_to_dsl(self).encode_op()
     }

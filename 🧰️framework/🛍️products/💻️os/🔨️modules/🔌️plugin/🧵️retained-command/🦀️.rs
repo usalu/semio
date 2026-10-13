@@ -3,10 +3,11 @@
 use crate::app::{AppOperationContext, ArtifactApp, ArtifactOwnedToolJobContext, ArtifactToolCompletion, ArtifactDownloadOutput, Emit, EphemeralEmit, HistoryView, InteractionHoverState};
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::Fault;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, JobPublicationKind, RetainedFaultPublication, RetainedJobPayload, RetainedJobPublication, StepContext};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedFaultPublication, RetainedJobPublication, StepContext};
 use std::sync::Arc;
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirement::controlled::ControlledRetirement};
+use semio_framework_os_kernel as store;
 use std::mem::MaybeUninit;
 
 #[path="♻️metadata/🦀️.rs"]
@@ -183,7 +184,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
         Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "artifact command normal-work demand is undeclared"))
     }
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault>;
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault>;
     fn checkpoint_byte(&self, _index: usize) -> Option<u8> { None }
     fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
         if checkpoint.is_empty() {
@@ -193,6 +194,10 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
         }
     }
     fn terminal_frame_release_bytes(&self)->Option<usize>{None}
+    /// 📣️ Whether this work reports phase previews and resumable checkpoints; a one-shot reducer finishes inside its first step, has no mid-work state to resume and owns no progress worth a host round trip.
+    fn reports_progress(&self) -> bool {
+        true
+    }
     fn begin_close(&mut self) {}
     fn close_step(&mut self, _grant:RetainedCloneGrant) -> InteractiveJobCloseStep {
         InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}
@@ -234,10 +239,14 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedArtifactCommandWork<A> {
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
+    fn reports_progress(&self) -> bool {
+        false
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
         let ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
         if self.consumed {
             return Err(Fault::from("retained-command-bounded-work-repeated"));
@@ -275,16 +284,15 @@ pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
     pub command_id: fn(&A::Command) -> &'static str,
     pub maximum_raw_bytes: usize,
     pub maximum_work_items: usize,
-    pub raw: Vec<u8>,
     pub admission_refusal:Option<ArtifactRetainedAdmissionRefusal>,
     pub work: Box<dyn ArtifactCommandWork<A>>,
 }
 
 impl<A: ArtifactApp> ArtifactRetainedCommandPayload<A> {
     pub fn new(inputs: ArtifactRetainedCommandInputs<A>, command_id: fn(&A::Command) -> &'static str, maximum_raw_bytes: usize, maximum_work_items: usize, work: Box<dyn ArtifactCommandWork<A>>) -> Self {
-        let (raw,admission_refusal)=admission::admit_raw(maximum_raw_bytes,maximum_work_items);
+        let admission_refusal=admission::admit_limits(maximum_raw_bytes,maximum_work_items);
         let ArtifactRetainedCommandInputs { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion } = inputs;
-        Self { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, raw, admission_refusal,work }
+        Self { command, snapshot, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, admission_refusal,work }
 
     }
 }
@@ -347,7 +355,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     download:Option<ArtifactDownloadOutput>,
     download_retirement:Option<ControlledRetirement<ArtifactDownloadOutput>>,
     completion_retirement:Option<ControlledRetirement<ArtifactToolCompletion<A>>>,
-    context_retirement:Option<ControlledRetirement<ArtifactOwnedContextHandle<A>>>,
+    input_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
     ephemeral: Option<EphemeralEmit<A>>,
     phase: ArtifactRetainedCommandPhase,
     checkpoint_pending: bool,
@@ -356,7 +364,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
-    fn controlled_close_step(step:Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>)->InteractiveJobCloseStep{match step{Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
+    fn controlled_close_step(step:Result<RetainedCloneStep,ValueError>)->InteractiveJobCloseStep{match step{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}}
     fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if !self.publication.terminal_is_empty(){return self.publication.retirement_demands();}
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
@@ -366,7 +374,6 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         if let Some(owner)=self.fault_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
         if self.decode_error.is_some(){return protocol::protocol_error_retirement_demand(&self.decode_error);}
         if self.admission_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
-        if !self.raw.is_empty(){return Ok(RetirementDemand{copy_bytes:1,depth:1,..Default::default()});}
         if self.raw.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()});}
         for input in [&self.checkpoint_input,&self.raw_input]{if let Some(owner)=input.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?});}}
         if self.download.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
@@ -380,9 +387,15 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         }
         if self.ephemeral.is_some(){return Err(Self::unadmitted_input());}
         if let Some(work)=self.work.as_ref(){return if work.terminal_is_empty(){Ok(RetirementDemand{release_bytes:work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?,depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:work.next_close_copy_byte_demand()?,capacity_bytes:work.next_close_capacity_byte_demand(copy)?,release_bytes:work.next_close_release_byte_demand()?,depth:work.next_close_depth_demand()?})};}
-        if self.context.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
-        if let Some(owner)=self.context_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
-        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.operation.is_some(){return Err(Self::unadmitted_input());}
+        if let Some(owner)=self.input_retirement.as_ref(){return store::artifact_retirement_box_demands(owner,copy);}
+        if self.command.is_some(){return store::artifact_retirement_owned_birth_demands(&self.command);}
+        if self.snapshot.is_some(){return store::artifact_retirement_shared_lease_birth_demands(&self.snapshot);}
+        if self.config.is_some(){return store::artifact_retirement_shared_lease_birth_demands(&self.config);}
+        if self.history.is_some(){return store::artifact_retirement_shared_lease_birth_demands(&self.history);}
+        if self.interaction_state.is_some(){return store::artifact_retirement_shared_lease_birth_demands(&self.interaction_state);}
+        if self.interaction_hover.is_some(){return store::artifact_retirement_shared_lease_birth_demands(&self.interaction_hover);}
+        if self.operation.is_some(){return store::artifact_retirement_owned_birth_demands(&self.operation);}
+        if self.context.is_some(){return store::artifact_retirement_owned_birth_demands(&self.context);}
         if self.completion.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(owner)=self.completion_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
         Ok(Default::default())
@@ -402,7 +415,11 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     }
 
     fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
-        let phase = if payload.admission_refusal.is_some(){ArtifactRetainedCommandPhase::Fault}else if checkpoint_input.is_some() {
+        let (raw,admission_refusal)=match (payload.admission_refusal,raw_input.as_ref()) {
+            (None,Some(input))=>admission::admit_raw(input.declared_bytes(),payload.maximum_raw_bytes),
+            (refusal,_)=>(Vec::new(),refusal),
+        };
+        let phase = if admission_refusal.is_some(){ArtifactRetainedCommandPhase::Fault}else if checkpoint_input.is_some() {
             ArtifactRetainedCommandPhase::CheckpointPages
         } else if raw_input.is_some() {
             ArtifactRetainedCommandPhase::WirePages
@@ -438,15 +455,15 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             checkpoint_page_cursor: 0,
             checkpoint_page_offset: 0,
             raw_input,
-            raw: payload.raw,
-            admission_refusal:payload.admission_refusal,
+            raw,
+            admission_refusal,
             raw_page_cursor: 0,
             raw_page_offset: 0,
             emit: None,
             download:None,
             download_retirement:None,
             completion_retirement:None,
-            context_retirement:None,
+            input_retirement:None,
             ephemeral: None,
             phase,
             checkpoint_pending: false,
@@ -554,8 +571,18 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         Ok(())
     }
 
+    fn reports_progress(&self) -> bool {
+        self.work.as_ref().is_none_or(|work| work.reports_progress())
+    }
+
+    fn checkpoint_due(&mut self) {
+        self.checkpoint_pending = self.reports_progress();
+    }
+
     fn preview(&mut self, bytes: &'static [u8]) {
-        self.pending_publication = Some(ArtifactCommandPublication::Static { kind: JobPublicationKind::Preview, bytes });
+        if self.reports_progress() {
+            self.pending_publication = Some(ArtifactCommandPublication::Static { kind: JobPublicationKind::Preview, bytes });
+        }
     }
 
     fn fault(&mut self, bytes: &'static [u8]) {
@@ -643,7 +670,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 if Self::metadata(cx)? {
                     self.checkpoint_input.take();
                     self.phase = ArtifactRetainedCommandPhase::WirePages;
-                    self.checkpoint_pending = true;
+                    self.checkpoint_due();
                 }
             }
             ArtifactRetainedCommandPhase::WirePages => {
@@ -664,14 +691,14 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                     if self.raw_page_offset == page.len() {
                         self.raw_page_cursor += 1;
                         self.raw_page_offset = 0;
-                        self.checkpoint_pending = true;
+                        self.checkpoint_due();
                         self.preview(br#"{"en":"Reading command page","de":"Befehlsseite wird gelesen"}"#);
                     }
                     return Ok(None);
                 }
                 if Self::metadata(cx)? {
                     self.phase = ArtifactRetainedCommandPhase::Decode;
-                    self.checkpoint_pending = true;
+                    self.checkpoint_due();
                 }
             }
             ArtifactRetainedCommandPhase::Decode => {
@@ -713,8 +740,8 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
                 if cx.retained_progress() == before { Self::metadata(cx)?; }
                 if cx.fuel_remaining() == fuel { cx.consume_fuel(1); }
                 match step {
-                    Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => { cx.set_stage(stage); self.checkpoint_pending = true; self.preview(preview); }
-                    Ok(ArtifactCommandWorkStep::Progress { stage, preview }) => { cx.set_stage(stage); self.work_progress = self.work_progress.saturating_add(1); self.checkpoint_pending = true; self.preview(preview); }
+                    Ok(ArtifactCommandWorkStep::Replay { stage, preview }) => { cx.set_stage(stage); self.checkpoint_due(); self.preview(preview); }
+                    Ok(ArtifactCommandWorkStep::Progress { stage, preview }) => { cx.set_stage(stage); self.work_progress = self.work_progress.saturating_add(1); self.checkpoint_due(); self.preview(preview); }
                     Ok(ArtifactCommandWorkStep::CompleteDownload { download, ephemeral }) => {
                         self.download = Some(download); self.ephemeral = Some(ephemeral); self.phase = ArtifactRetainedCommandPhase::Publish;
                         self.preview(r#"{"en":"Publishing download","de":"Download wird veröffentlicht"}"#.as_bytes());
@@ -808,7 +835,6 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
         if let Some(owner)=self.fault_retirement.as_mut(){let step=owner.step(grant);if owner.terminal_is_empty(){self.fault_retirement.take();}return Self::controlled_close_step(step);}
         if self.decode_error.is_some(){return Self::controlled_close_step(protocol::close_protocol_error_one(&mut self.decode_error,grant));}
         if self.admission_refusal.take().is_some(){return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
-        if !self.raw.is_empty(){let bytes=self.raw.len().min(grant.maximum_copy_bytes);if bytes==0{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.raw.truncate(self.raw.len()-bytes);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};}
         if self.raw.capacity()!=0{let bytes=self.raw.capacity();if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}drop(std::mem::take(&mut self.raw));return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
         for input in [&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){input.take();}return match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step};}}
         if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()};}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
@@ -824,7 +850,17 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
         }
         if self.ephemeral.is_some(){return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::UnsupportedOwner,progress:Default::default()};}
         if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return work.close_step(grant);}let Some(bytes)=work.terminal_frame_release_bytes()else{return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::UnsupportedOwner,progress:Default::default()};};if grant.maximum_release_bytes<bytes{return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()};}self.work.take();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}};}
-        if self.command.is_some()||self.snapshot.is_some()||self.config.is_some()||self.history.is_some()||self.interaction_state.is_some()||self.interaction_hover.is_some()||self.context.is_some()||self.operation.is_some(){return InteractiveJobCloseStep::Refused{kind:ValueRefusalKind::UnsupportedOwner,progress:Default::default()};}
+        if self.input_retirement.is_some(){return Self::controlled_close_step(store::artifact_retirement_box_close_step(&mut self.input_retirement,grant));}
+        let admitted=if self.command.is_some(){Some(store::artifact_retirement_admit_owned(&mut self.command,&mut self.input_retirement,grant))}
+            else if self.snapshot.is_some(){Some(store::artifact_retirement_admit_shared_lease(&mut self.snapshot,&mut self.input_retirement,grant))}
+            else if self.config.is_some(){Some(store::artifact_retirement_admit_shared_lease(&mut self.config,&mut self.input_retirement,grant))}
+            else if self.history.is_some(){Some(store::artifact_retirement_admit_shared_lease(&mut self.history,&mut self.input_retirement,grant))}
+            else if self.interaction_state.is_some(){Some(store::artifact_retirement_admit_shared_lease(&mut self.interaction_state,&mut self.input_retirement,grant))}
+            else if self.interaction_hover.is_some(){Some(store::artifact_retirement_admit_shared_lease(&mut self.interaction_hover,&mut self.input_retirement,grant))}
+            else if self.operation.is_some(){Some(store::artifact_retirement_admit_owned(&mut self.operation,&mut self.input_retirement,grant))}
+            else if self.context.is_some(){Some(store::artifact_retirement_admit_owned(&mut self.context,&mut self.input_retirement,grant))}
+            else{None};
+        if let Some(step)=admitted{return Self::controlled_close_step(step);}
         if let Some(completion)=self.completion.take(){match ControlledRetirement::new(completion){Ok(owner)=>self.completion_retirement=Some(owner),Err((error,original))=>{self.completion=Some(original);return InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()};}}return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
         if let Some(owner)=self.completion_retirement.as_mut(){let step=owner.step(grant);if owner.terminal_is_empty(){self.completion_retirement.take();}return Self::controlled_close_step(step);}
         InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()}
@@ -857,7 +893,7 @@ impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A> {
             && self.interaction_state.is_none()
             && self.interaction_hover.is_none()
             && self.context.is_none()
-            && self.context_retirement.is_none()
+            && self.input_retirement.is_none()
             && self.operation.is_none()
             && self.completion.is_none()
             && self.completion_retirement.is_none()
@@ -908,7 +944,7 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
             download:None,
             download_retirement:None,
             completion_retirement:None,
-            context_retirement:None,
+            input_retirement:None,
             ephemeral: None,
             phase: ArtifactRetainedCommandPhase::Complete,
             checkpoint_pending: false,

@@ -29,7 +29,6 @@ impl store::ArtifactDsl for XmlSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {

@@ -5,13 +5,13 @@ use crate::standards::v5::subsets::any::io::text::snapshot::{is_void_element};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
 use store::{io_schema::IoPayload,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
 fn add(value:usize,amount:usize)->Result<usize,ValueError>{value.checked_add(amount).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native size overflow"))}
-fn grow_decode<T>(values:&mut Vec<T>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let count=values.capacity().max(1);control.charge(count.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native collection overflow"))?)?;values.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"HTML native allocation failed"))?;}Ok(())}
-fn grow_encode<T>(values:&mut Vec<T>,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let count=values.capacity().max(1);control.charge(count.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native collection overflow"))?)?;values.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"HTML native allocation failed"))?;}Ok(())}
+fn grow_decode<T>(values:&mut Vec<T>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let count=values.capacity().max(1);control.charge(count.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native collection overflow"))?)?;values.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"HTML native allocation failed"))?;}Ok(())}
+fn grow_encode<T>(values:&mut Vec<T>,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let count=values.capacity().max(1);control.charge(count.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native collection overflow"))?)?;values.try_reserve_exact(count).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"HTML native allocation failed"))?;}Ok(())}
 /// 🪢️ Each continuation owns the vector containing its popped-node spare slot.
 struct HtmlContinuation{work:Vec<HtmlNode>,previous:*mut HtmlContinuation}
-const _:()=assert!(std::mem::size_of::<HtmlContinuation>()==std::mem::size_of::<Vec<HtmlNode>>()+std::mem::size_of::<*mut HtmlContinuation>());
-const _:()=assert!(std::mem::size_of::<HtmlContinuation>()<=std::mem::size_of::<(String,Vec<HtmlAttr>,Vec<HtmlNode>)>());
-const _:()=assert!(std::mem::size_of::<HtmlContinuation>()<=std::mem::size_of::<HtmlNode>()&&std::mem::align_of::<HtmlContinuation>()<=std::mem::align_of::<HtmlNode>());
+const _:()=assert!(size_of::<HtmlContinuation>()==size_of::<Vec<HtmlNode>>()+size_of::<*mut HtmlContinuation>());
+const _:()=assert!(size_of::<HtmlContinuation>()<=size_of::<(String,Vec<HtmlAttr>,Vec<HtmlNode>)>());
+const _:()=assert!(size_of::<HtmlContinuation>()<=size_of::<HtmlNode>()&&align_of::<HtmlContinuation>()<=align_of::<HtmlNode>());
 pub(crate) fn retire_node(root:HtmlNode){
  #[cfg(test)]crate::standards::v5::subsets::any::io::sqlite::snapshot::lifecycle_tests::retirement_visit();
  let HtmlNode::Element{children,..}=root else{return};let mut work=children;let mut previous=std::ptr::null_mut::<HtmlContinuation>();
@@ -75,9 +75,9 @@ fn normalized_domain(reader:&mut Reader<'_, '_, '_>,doctype:Option<&str>,maximum
  }
  Ok(())
 }
-pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<HtmlSnapshot,ValueError>{
+pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<HtmlSnapshot,ValueError>{
  let limits=control.limits();let length=match payload{IoPayload::Text(text)=>text.len(),IoPayload::Binary(bytes)=>bytes.len()};quota(length,limits.max_file_bytes,ValueRefusalKind::WorkLimit,"HTML native file exceeds caller limit")?;
- control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,progress|{
+ control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,_progress|{
   let native_before=native_control.owned_bytes();
     let result=native_control.scoped_maximum(match native_before.checked_add(remaining){Some(maximum)=>maximum,None=>return(Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)}, |native| {
 
@@ -101,7 +101,7 @@ impl Sink<'_, '_>{
 }
 pub(crate) fn encode(snapshot:&HtmlSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<IoPayload,ValueError>{let native_control=native_owner.native();
  let limits=control.limits();let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};let prefix=store::semio_format::declared_envelope_prefix_len("stdio.html",component,1)?;let maximum=limits.max_file_bytes.checked_sub(prefix).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML native envelope exceeds caller file limit"))?;
- control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,progress|{
+ control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,_progress|{
   let native_before=native_control.owned_bytes();
     let result=native_control.scoped_maximum(match native_before.checked_add(remaining){Some(maximum)=>maximum,None=>return(Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)}, |native| {
 

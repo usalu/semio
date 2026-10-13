@@ -2,7 +2,8 @@
 
 use crate::artifact_schema::mutations::En1995Mutation;
 
-use protocol::{OpBinary, OpText};
+use protocol::{OpText};
+#[cfg(test)] use protocol::{OpBinary};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

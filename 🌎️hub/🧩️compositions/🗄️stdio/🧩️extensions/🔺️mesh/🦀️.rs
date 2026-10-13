@@ -52,4 +52,4 @@ pub fn plugin() -> Result<Plugin<StdioMeshApps>, PluginAssemblyError> {
 }
 
 #[cfg(feature = "plugin-root")]
-semio_framework_plugin::plugin_exports!(plugin, StdioMeshApps);
+semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, StdioMeshApps);

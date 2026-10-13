@@ -1,7 +1,7 @@
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 //! 🎪 `stdio.gltf` artifact — stdio reference format.
-use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
+#[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
 
 extern crate semio_framework_os_kernel as dsl;
@@ -697,7 +697,7 @@ pub mod standards {
     pub mod v2_0 {
         #[path = "🏅️standards/🔖️2.0/🦀️.rs"]
         mod component;
-        pub use component::*;
+        #[cfg(test)] pub use component::*;
         // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
         // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
         // so every existing `standards::v2_0::engine::*`/root `engine::*` path still resolves.
@@ -717,7 +717,7 @@ pub mod standards {
             pub mod any {
                 #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🦀️.rs"]
                 mod component;
-                pub use component::*;
+                #[cfg(test)] pub use component::*;
                 #[path = "."]
                 pub mod schema {
                     #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🦀️.rs"]
@@ -1128,7 +1128,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -1167,7 +1166,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]
@@ -1209,4 +1207,4 @@ pub mod viewer {
 pub use crate::standards::v2_0::subsets::any::io::{GltfBuilderConstruction, GltfAccessorSpec, GltfParts, GltfAnalyzerAnalysis, GltfBuilderFacets, GltfBuilder, GltfAnalyzer, GltfComposer};
 
 /// ♻️ This synchronous executable retains no callback child between invocations.
-fn gltf_inference_demands(_request:&semio_framework_plugin::ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}
+fn gltf_inference_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}

@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `EditRun`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
 use crate::standards::v1::subsets::text::schema::diff::{SemioTextDiff, SemioTextRunDiff};
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 

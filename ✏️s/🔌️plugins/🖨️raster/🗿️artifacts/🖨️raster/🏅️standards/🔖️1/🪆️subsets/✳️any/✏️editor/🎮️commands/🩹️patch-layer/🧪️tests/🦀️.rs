@@ -125,7 +125,7 @@ async fn layer_transform_controls_publish_independent_reversible_edits(){
         let mut source=empty_raster_snapshot();source.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&source.layers[0]).to_owned();
         let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"transform-controls",source,None);
         let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
-        let mut app=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.unwrap();let mut history=vec![app.snapshot().unwrap()];
+        let mut app=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();let mut history=vec![app.snapshot().unwrap()];
         for row in fixture["controls"].as_array().unwrap(){
             context::dispatch(&mut app,RasterCommand::PatchLayer(PatchLayer {layer_id:id.clone(),field:row["field"].as_str().unwrap().into(),value:row["value"].to_string()})).await;
             let next=app.snapshot().unwrap();

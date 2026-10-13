@@ -110,7 +110,7 @@ semio_framework_value::artifact_retire_struct!(JackEditorWindowTransient { selec
 semio_framework_value::artifact_retire_struct!(SetEditorSelection { selection });
 
 fn editor_window_transient_footprint(_: &JackEditorWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(std::mem::size_of::<JackEditorWindowTransient>()))
+    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<JackEditorWindowTransient>()))
 }
 
 fn editor_window_transient_transfer(mutation: JackEditorWindowTransientMutation) -> JackEditorWindowTransient {

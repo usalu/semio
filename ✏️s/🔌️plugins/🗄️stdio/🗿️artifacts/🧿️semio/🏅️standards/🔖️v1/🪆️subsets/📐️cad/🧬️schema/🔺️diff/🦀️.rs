@@ -201,7 +201,7 @@ pub fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRec
 
 //#region 🔖️Apply
 impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
-    fn apply(&self, base: &SemioCadSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioCadSnapshot> {
+    fn apply(&self, base: &SemioCadSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioCadSnapshot> {
         let mut next = base.clone();
         if let Some(ld) = &self.layers {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |added| added.item.name.clone(), ["layers"])?;

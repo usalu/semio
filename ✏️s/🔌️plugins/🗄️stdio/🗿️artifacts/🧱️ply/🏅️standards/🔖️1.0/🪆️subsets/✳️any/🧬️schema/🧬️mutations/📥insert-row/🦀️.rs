@@ -16,7 +16,7 @@ pub struct InsertRow {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "row", kind: "insert-row", record: "InsertRow" };
 
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
         let Self { element_name, index, row } = self;
         protocol::MutationOutcome::new(diff_insert_row(element_name, *index, row.clone()))
     }

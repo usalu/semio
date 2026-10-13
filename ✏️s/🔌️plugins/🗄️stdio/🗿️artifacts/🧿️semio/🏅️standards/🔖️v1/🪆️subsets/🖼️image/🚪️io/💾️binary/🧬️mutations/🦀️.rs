@@ -81,7 +81,6 @@ impl protocol::OpBinary for SemioImageMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioImageMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

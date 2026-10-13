@@ -25,13 +25,13 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetComment {
 
     fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         let Self { topic_guid, guid, date, author, text, viewpoint_ref } = self;
-        protocol::MutationOutcome::new({ wrap_comment_diff(base, topic_guid, guid, BcfCommentDiff { date: date.clone(), author: author.clone(), text: text.clone(), viewpoint_ref: viewpoint_ref.clone() }) })
+        protocol::MutationOutcome::new(wrap_comment_diff(base, topic_guid, guid, BcfCommentDiff { date: date.clone(), author: author.clone(), text: text.clone(), viewpoint_ref: viewpoint_ref.clone() }))
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
         let Self { topic_guid, guid, date, author, text, viewpoint_ref } = self;
         Ok({
             match find_comment(base, topic_guid, guid) {
-                Some(c) => vec![BcfMutation::SetComment(set_comment::SetComment {
+                Some(c) => vec![BcfMutation::SetComment(SetComment {
                     topic_guid: topic_guid.clone(),
                     guid: guid.clone(),
                     date: date.as_ref().map(|_| c.date.clone()),

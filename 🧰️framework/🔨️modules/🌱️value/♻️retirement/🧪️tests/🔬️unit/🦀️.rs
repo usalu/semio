@@ -29,7 +29,8 @@ fn shared_full_grant_owns_original_aliases_weak_backing_and_each_physical_releas
 fn erased_controlled_owner_retains_exact_independent_grants_and_returns_refused_ownership() {
     use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, value::observe_retirement_allocations};
     struct Unsupported(String);
-    impl RetireOwned for Unsupported { fn retirement(self) -> Box<dyn RetirementCursor> { self.0.retirement() } }
+    /// 🚫️ Deliberately refuses controlled retirement so the erased admission returns the original owner.
+    impl RetireOwned for Unsupported { fn retirement(self) -> Box<dyn RetirementCursor> { self.0.retirement() } fn controlled_retirement_supported() -> bool { false } }
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️erased-controlled/🔣️.json")).unwrap();
     let text = law["text"].as_str().unwrap();
     let unsupported = Unsupported(text.into());

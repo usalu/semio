@@ -106,7 +106,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         if grant.maximum_depth<depth{return Ok(empty);}
         let Some((key,value))=node.entry.as_ref()else{return Ok(RetainedCloneProgress{copied_items:1,..empty})};
         if keep(key,value){return Ok(RetainedCloneProgress{copied_items:1,..empty});}
-        let copied_bytes=std::mem::size_of::<(K,V)>();
+        let copied_bytes=size_of::<(K,V)>();
         if grant.maximum_copy_bytes<copied_bytes{return Ok(empty);}
         let free=self.free_head;
         let original=self.extract_slot_if(index,|_,_|false).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained native slot lost its original row"))?;
@@ -186,8 +186,8 @@ impl<V:semio_framework_value::ToValue> semio_framework_value::ToValue for Histor
     fn to_value(&self)->semio_framework_value::DslValue {semio_framework_value::DslValue::Object(self.iter().map(|(key,value)|(key.clone(),value.to_value())).collect())}
 }
 impl<V:semio_framework_value::FromValue> semio_framework_value::FromValue for HistoryFoldIndex<String,V> {
-    fn from_value(value:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError> {
-        let mut index=Self::new();for(key,value)in value.into_object()? {if index.contains_key(&key){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"duplicate ordered key"));}index.insert(key,V::from_value(value)?);}Ok(index)
+    fn from_value(value:semio_framework_value::DslValue)->Result<Self,ValueError> {
+        let mut index=Self::new();for(key,value)in value.into_object()? {if index.contains_key(&key){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"duplicate ordered key"));}index.insert(key,V::from_value(value)?);}Ok(index)
     }
 }
 #[cfg(any(test,feature="history-index-serde"))]

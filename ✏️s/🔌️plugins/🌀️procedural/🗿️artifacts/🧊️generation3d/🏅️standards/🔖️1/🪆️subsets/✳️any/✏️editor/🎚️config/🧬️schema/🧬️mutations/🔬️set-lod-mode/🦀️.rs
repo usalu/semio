@@ -14,7 +14,7 @@ pub struct SetLodMode {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetLodMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
 
-    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
+    fn diff(&self, _base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
         protocol::MutationOutcome::new(Generation3dConfigPatch { lod_mode: Some(self.value.clone()), ..Default::default() })
     }
 

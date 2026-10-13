@@ -148,7 +148,7 @@ impl<P> ArtifactDerivedSnapshot<P> {
 }
 
 /// ⏪️ Store-owned history replay whose input edits and projection origin cannot be supplied by the caller.
-pub struct ArtifactDerivedReplay<P, Mu: self::Mutation<P>> {
+pub struct ArtifactDerivedReplay<P, Mu: Mutation<P>> {
     replay: Option<EditReplay<P, Mu>>,
     plan: Option<HistoryReadPlan>,
     plan_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<HistoryReadPlan>>,
@@ -157,10 +157,10 @@ pub struct ArtifactDerivedReplay<P, Mu: self::Mutation<P>> {
     revision: [u8; 32],
 }
 
-impl<P, Mu: self::Mutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
+impl<P, Mu: Mutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
     /// 📈️ Reports genuine cumulative work inside the currently sealed operation producer.
-    pub fn operation_preparation_progress(&self) -> replay_preparation::ArtifactReplayPreparationProgress {
-        self.replay.as_ref().map_or_else(replay_preparation::ArtifactReplayPreparationProgress::default, |replay|replay.operation_preparation_progress())
+    pub fn operation_preparation_progress(&self) -> ArtifactReplayPreparationProgress {
+        self.replay.as_ref().map_or_else(ArtifactReplayPreparationProgress::default, |replay|replay.operation_preparation_progress())
     }
 
     fn retain_completed_plan(&mut self) -> &mut HistoryReadPlan {
@@ -172,11 +172,11 @@ impl<P, Mu: self::Mutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
     pub fn planning_retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {artifact_retirement_owner_demands(&self.plan_retirement,body)}
 
     /// ♻️ Closes one original planner residue frontier under the caller's independent grants.
-    pub fn retire_completed_plan(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError> {artifact_retirement_owner_close(&mut self.plan_retirement,grant)}
+    pub fn retire_completed_plan(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {artifact_retirement_owner_close(&mut self.plan_retirement,grant)}
 }
 
 /// 🕰️ A generation-fenced cursor resolving a preview's inputs and folding its prefix under the caller's deadline.
-pub struct ArtifactDerivedHistoryPreview<P, Mu: self::Mutation<P>> {
+pub struct ArtifactDerivedHistoryPreview<P, Mu: Mutation<P>> {
     plan: Option<HistoryReadPlan>,
     plan_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<HistoryReadPlan>>,
     drafts: protocol::HistoryInputDrafts,
@@ -192,7 +192,7 @@ pub struct ArtifactDerivedHistoryPreview<P, Mu: self::Mutation<P>> {
     finished: bool,
 }
 
-impl<P, Mu: self::Mutation<P>> ArtifactDerivedHistoryPreview<P, Mu> {
+impl<P, Mu: Mutation<P>> ArtifactDerivedHistoryPreview<P, Mu> {
     /// 📶️ Work completed while planning or folding the selected prefix.
     pub fn progress(&self) -> ReplayProgress { self.plan.as_ref().map_or(self.progress, |plan| plan.progress) }
 
@@ -215,10 +215,10 @@ impl<P, Mu: self::Mutation<P>> ArtifactDerivedHistoryPreview<P, Mu> {
     pub fn planning_retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {artifact_retirement_owner_demands(&self.plan_retirement,body)}
 
     /// 🧹️ Closes one completed planner frontier without dropping any ungranted backing.
-    pub fn retire_completed_plan(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError> {artifact_retirement_owner_close(&mut self.plan_retirement,grant)}
+    pub fn retire_completed_plan(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {artifact_retirement_owner_close(&mut self.plan_retirement,grant)}
 }
 
-impl<P, Mu: self::Mutation<P>> Drop for ArtifactDerivedHistoryPreview<P, Mu> {
+impl<P, Mu: Mutation<P>> Drop for ArtifactDerivedHistoryPreview<P, Mu> {
     fn drop(&mut self) {
         if let Some(state) = self.state.take() {
             retire_shared_projection::<P, Mu>(state);
@@ -271,7 +271,7 @@ mod history_read_admission;
 pub use history_read_admission::PreparedHistoryReadRetirement;
 
 
-struct ArtifactHistoryReadRetirement<P, Mu: self::Mutation<P>> {
+struct ArtifactHistoryReadRetirement<P, Mu: Mutation<P>> {
     derived: std::mem::ManuallyDrop<Option<ArtifactDerivedSnapshot<P>>>,
     derived_alias: std::mem::ManuallyDrop<Option<Arc<P>>>,
     preview: std::mem::ManuallyDrop<Option<ArtifactDerivedHistoryPreview<P, Mu>>>,
@@ -289,18 +289,18 @@ struct ArtifactHistoryReadRetirement<P, Mu: self::Mutation<P>> {
 
 
 impl<P, Mu> ArtifactHistoryReadRetirement<P, Mu>
-where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
+where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
     fn derived_snapshot_demands(&self)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
         if self.registry_retirement.is_some(){return Some(snapshot_registry_alias_demands(&self.registry_retirement))}
         if self.derived_alias.is_some(){return Some(Ok(semio_framework_value::RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}))}
         self.derived.is_some().then_some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}))
     }
-    fn close_derived_snapshot(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>,ValueError>{
+    fn close_derived_snapshot(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         let Some(demand)=self.derived_snapshot_demands()else{return Ok(None)};let demand=demand?;
         if grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
         if self.registry_retirement.is_some(){return snapshot_registry_alias_close_step(&mut self.registry_retirement,grant).map(Some)}
-        if self.derived_alias.is_some(){let child=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let Some((owner,receipt))=ReturnedSnapshotReadRetirement::admit_original(&mut self.derived_alias,self.snapshots.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"derived original lost its snapshot issuer"))?,child)?else{unreachable!("preflight retains derived original alias")};*self.active=Some(owner);return Ok(Some(RetainedCloneStep::Progress(receipt)))}
+        if self.derived_alias.is_some(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let Some((owner,receipt))=ReturnedSnapshotReadRetirement::admit_original(&mut self.derived_alias,self.snapshots.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"derived original lost its snapshot issuer"))?,child)?else{unreachable!("preflight retains derived original alias")};*self.active=Some(owner);return Ok(Some(RetainedCloneStep::Progress(receipt)))}
         let ArtifactDerivedSnapshot{owner,registry,..}=self.derived.take().unwrap();*self.derived_alias=Some(owner);*self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(registry));Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))
     }
     fn plan_demands(&self,body:usize)->Option<Result<semio_framework_value::RetirementDemand,ValueError>> {
@@ -308,7 +308,7 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
         if self.preview.as_ref().is_some_and(|owner|owner.plan.is_some()||owner.plan_retirement.is_some())||self.replay.as_ref().is_some_and(|owner|owner.plan.is_some()||owner.plan_retirement.is_some()) {return Some(Ok(semio_framework_value::RetirementDemand {depth:1,..Default::default()}));}
         None
     }
-    fn close_plan(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>,ValueError> {
+    fn close_plan(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
         let Some(demand)=self.plan_demands(grant.maximum_copy_bytes) else{return Ok(None)};
         let demand=demand?;if grant.maximum_items==0 {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history plan retirement requires its original owner depth"));}
@@ -328,7 +328,7 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
         if preview.state.is_some() {return Some(Ok(RetirementDemand {capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}));}
         Some(Ok(RetirementDemand {depth:1,..Default::default()}))
     }
-    fn close_preview(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>,ValueError> {
+    fn close_preview(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
         let Some(demand)=self.preview_demands(grant.maximum_copy_bytes)else{return Ok(None)};let demand=demand?;
         if grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_copy_bytes<demand.copy_bytes {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
@@ -339,7 +339,7 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
         if !preview.drafts.terminal_is_empty() {let drafts=std::mem::take(&mut preview.drafts);*self.draft_retirement=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(drafts).unwrap_or_else(|_|unreachable!("draft schema declares controlled retirement")));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})));}
         if let Some(snapshot)=preview.state.take() {
             let factory=self.snapshots.as_ref().expect("original preview retains its snapshot issuer").clone();
-            let child_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant};
+            let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant};
             return match ReturnedSnapshotReadRetirement::admit(snapshot,factory,child_grant) {Ok((owner,progress))=>{*self.active=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Err((error,snapshot,factory))=>{preview.state=Some(snapshot);drop(factory);Err(error)}};
         }
         *self.registry_retirement=Some(SnapshotReadRegistryAliasRetirement::new(preview.registry.clone()));drop(self.preview.take());
@@ -350,12 +350,12 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
         if let Some(owner)=self.factory_retirement.iter().flatten().next() {return Some(owner.demands(body).and_then(|mut demand| {demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory retirement depth overflow"))?;Ok(demand)}));}
         (self.snapshots.is_some()||self.mutations.is_some()).then_some(Ok(semio_framework_value::RetirementDemand {depth:1,..Default::default()}))
     }
-    fn close_factories(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>,ValueError> {
+    fn close_factories(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
         let Some(demand)=self.factory_demands(grant.maximum_copy_bytes)else{return Ok(None)};let demand=demand?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(Some(RetainedCloneStep::Progress(Default::default())));}if grant.maximum_depth<demand.depth {return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory retirement requires its original owner depth"));}
         if let Some(slot)=self.factory_retirement.iter_mut().find(|owner|owner.is_some()) {
             let owner=slot.as_mut().unwrap();
-            let child_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant};
+            let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant};
             let step=owner.step(child_grant)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child_grant,step,owner.terminal_is_empty(),"history factory authority")?;
             if owner.terminal_is_empty() {drop(slot.take());}
@@ -368,12 +368,12 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
         let demand=if let Some(owner)=self.finished.as_ref(){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}));}owner.retirement_demands(body)}else if let Some(owner)=self.loaded_replay.as_ref().or_else(||self.replay.as_ref().and_then(|owner|owner.replay.as_ref())){if owner.terminal_is_empty(){return Some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}));}owner.retirement_demands(body)}else{return self.replay.is_some().then_some(Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()}));};
         Some(demand.and_then(|mut demand|{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history raw replay retirement depth overflow"))?;Ok(demand)}))
     }
-    fn close_raw_replay(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>,ValueError> {
+    fn close_raw_replay(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress,admit_retained_clone_close};
         let Some(demand)=self.raw_replay_demands(grant.maximum_copy_bytes)else{return Ok(None)};let demand=demand?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         let moved=RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});
-        let child=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+        let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         if let Some(owner)=self.finished.as_mut(){if owner.terminal_is_empty(){drop(self.finished.take());return Ok(Some(moved));}owner.begin_retirement();let step=owner.close_original_step(child)?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original finished replay").map(Some);}
         if let Some(owner)=self.loaded_replay.as_mut(){if owner.terminal_is_empty(){drop(self.loaded_replay.take());return Ok(Some(moved));}owner.begin_retirement();let step=owner.close_original_step(child)?;return admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history original loaded replay").map(Some);}
         let derived=self.replay.as_mut().expect("observed original derived replay");
@@ -382,16 +382,20 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
     }
 }
 impl<P, Mu> ErasedSnapshotRetirement for ArtifactHistoryReadRetirement<P, Mu>
-where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+where P: Send + Sync + 'static, Mu: Mutation<P> + Send + 'static {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::RetainedCloneStep;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.active.is_some() {return artifact_retirement_box_close_step(&mut self.active,grant);}
-        if let Some(step)=self.close_derived_snapshot(grant)?{return Ok(RetainedCloneStep::Progress(step.progress()))}
-        if let Some(step) = self.close_plan(grant)? { return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if let Some(step) = self.close_preview(grant)? { return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if let Some(step) = self.close_raw_replay(grant)? { return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if let Some(step) = self.close_factories(grant)? { return Ok(RetainedCloneStep::Progress(step.progress())); }
+        let moved = |step: RetainedCloneStep| match step {
+            RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }),
+            RetainedCloneStep::Progress(progress) => RetainedCloneStep::Progress(progress),
+        };
+        if let Some(step)=self.close_derived_snapshot(grant)?{return Ok(moved(step))}
+        if let Some(step) = self.close_plan(grant)? { return Ok(moved(step)); }
+        if let Some(step) = self.close_preview(grant)? { return Ok(moved(step)); }
+        if let Some(step) = self.close_raw_replay(grant)? { return Ok(moved(step)); }
+        if let Some(step) = self.close_factories(grant)? { return Ok(moved(step)); }
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual owners require exact constructor admission"))
     }
@@ -402,7 +406,7 @@ where P: Send + Sync + 'static, Mu: self::Mutation<P> + Send + 'static {
     fn next_depth_demand(&self) -> Result<usize, ValueError> { if let Some(active)=self.active.as_ref(){return artifact_retirement_box_demands(active,0).map(|demand|demand.depth);} self.derived_snapshot_demands().or_else(||self.plan_demands(0)).or_else(||self.preview_demands(0)).or_else(||self.raw_replay_demands(0)).or_else(||self.factory_demands(0)).map_or_else(|| if self.terminal_is_empty() { Ok(0) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "history read residual depth authority is not admitted")) }, |demand| demand.map(|demand| demand.depth)) }
 }
 
-impl<P, Mu: self::Mutation<P>> Drop for ArtifactHistoryReadRetirement<P, Mu> {
+impl<P, Mu: Mutation<P>> Drop for ArtifactHistoryReadRetirement<P, Mu> {
     fn drop(&mut self) { assert!(std::thread::panicking() || (self.derived.is_none() && self.derived_alias.is_none() && self.preview.is_none() && self.replay.is_none() && self.loaded_replay.is_none() && self.finished.is_none() && self.active.is_none() && self.plan_retirement.is_none() && self.draft_retirement.is_none() && self.registry_retirement.is_none() && self.snapshots.is_none() && self.mutations.is_none() && self.factory_retirement.iter().all(Option::is_none)), "history read retirement dropped before its exact terminal witness"); }
 }
 
@@ -462,7 +466,7 @@ impl SnapshotReadLeaseStateLock {
     fn new(state: SnapshotReadLeaseRegistryState) -> Self { Self { held: std::sync::atomic::AtomicBool::new(false), poisoned: std::sync::atomic::AtomicBool::new(false), state: std::cell::UnsafeCell::new(state) } }
     fn try_lock(&self) -> std::sync::TryLockResult<SnapshotReadLeaseStateGuard<'_>> {
         if self.held.compare_exchange(false, true, std::sync::atomic::Ordering::Acquire, std::sync::atomic::Ordering::Relaxed).is_err() { return Err(std::sync::TryLockError::WouldBlock); }
-        let guard = SnapshotReadLeaseStateGuard { lock: self, panicking_on_entry: std::thread::panicking(), not_send: std::marker::PhantomData };
+        let guard = SnapshotReadLeaseStateGuard { lock: self, panicking_on_entry: std::thread::panicking(), not_send: PhantomData };
         if self.poisoned.load(std::sync::atomic::Ordering::Relaxed) { Err(std::sync::TryLockError::Poisoned(std::sync::PoisonError::new(guard))) } else { Ok(guard) }
     }
     fn get_mut(&mut self) -> std::sync::LockResult<&mut SnapshotReadLeaseRegistryState> {
@@ -471,7 +475,7 @@ impl SnapshotReadLeaseStateLock {
     }
 }
 
-struct SnapshotReadLeaseStateGuard<'a> { lock: &'a SnapshotReadLeaseStateLock, panicking_on_entry: bool, not_send: std::marker::PhantomData<*mut ()> }
+struct SnapshotReadLeaseStateGuard<'a> { lock: &'a SnapshotReadLeaseStateLock, panicking_on_entry: bool, not_send: PhantomData<*mut ()> }
 
 impl std::ops::Deref for SnapshotReadLeaseStateGuard<'_> {
     type Target = SnapshotReadLeaseRegistryState;
@@ -600,14 +604,14 @@ impl SnapshotReadLeaseRegistry {
 
     fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let state = self.state.try_lock().map_err(|reason| match reason { std::sync::TryLockError::WouldBlock => SnapshotReadLeaseRefusal::Busy.into_value_error(), std::sync::TryLockError::Poisoned(_) => SnapshotReadLeaseRefusal::Poisoned.into_value_error() })?;
-        let release_bytes = state.slots.len().checked_mul(std::mem::size_of::<SnapshotReadLeaseSlot>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "snapshot registry backing layout overflow"))?;
+        let release_bytes = state.slots.len().checked_mul(size_of::<SnapshotReadLeaseSlot>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "snapshot registry backing layout overflow"))?;
         Ok(semio_framework_value::RetirementDemand { release_bytes, depth: usize::from(release_bytes != 0), ..Default::default() })
     }
-    fn close_empty_backing_step(&self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_empty_backing_step(&self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         let mut state = match self.state.try_lock() { Ok(state) => state, Err(std::sync::TryLockError::WouldBlock) => return Ok(RetainedCloneStep::Progress(Default::default())), Err(std::sync::TryLockError::Poisoned(_)) => return Err(SnapshotReadLeaseRefusal::Poisoned.into_value_error()) };
         if state.free_len != SNAPSHOT_READ_LEASE_CAPACITY || self.returned.load(std::sync::atomic::Ordering::Acquire) != 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let bytes = state.slots.len().checked_mul(std::mem::size_of::<SnapshotReadLeaseSlot>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "snapshot registry backing layout overflow"))?;
+        let bytes = state.slots.len().checked_mul(size_of::<SnapshotReadLeaseSlot>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "snapshot registry backing layout overflow"))?;
         if bytes == 0 { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "registry backing requires admitted depth")); }
@@ -668,7 +672,7 @@ impl SnapshotReadLeaseRegistry {
         Ok(demand(&owner))
     }
 
-    fn try_admit_one_returned<T: Send + Sync + 'static, R>(&self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, admission: impl FnOnce(Arc<T>, semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(R, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Arc<T>)>) -> Result<(Option<R>, semio_framework_value::retained_clone::RetainedCloneProgress), SnapshotReadLeaseRefusal> {
+    fn try_admit_one_returned<T: Send + Sync + 'static, R>(&self, grant: RetainedCloneGrant, admission: impl FnOnce(Arc<T>, RetainedCloneGrant) -> Result<(R, RetainedCloneProgress), (ValueError, Arc<T>)>) -> Result<(Option<R>, RetainedCloneProgress), SnapshotReadLeaseRefusal> {
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         if grant.maximum_items == 0 { return Ok((None, Default::default())); }
         if grant.maximum_depth == 0 { return Err(SnapshotReadLeaseRefusal::Admission(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "returned read admission requires depth"))); }
@@ -731,12 +735,13 @@ struct SnapshotReadLeaseRegistryOwner(Option<SnapshotReadRegistryAliasRetirement
 impl SnapshotReadLeaseRegistryOwner {
     fn new() -> Self { Self(Some(SnapshotReadRegistryAliasRetirement::new(SnapshotReadRegistryHandle::new()))) }
     fn terminal_is_empty(&self) -> bool { self.0.as_ref().is_none_or(|owner| owner.terminal_is_empty()) }
+    fn closed(&self) -> bool { self.0.is_none() }
     fn occupied_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.occupied_count()) }
     fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.0.as_ref().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
-    fn close_empty_backing_step(&self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> { self.0.as_ref().map_or(Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())), |owner| owner.close_empty_backing_step(grant)) }
+    fn close_empty_backing_step(&self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.0.as_ref().map_or(Ok(RetainedCloneStep::Complete(Default::default())), |owner| owner.close_empty_backing_step(grant)) }
     fn frame_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.frame_byte_demand()) }
-    fn close_frame_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
-        if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !owner.terminal_is_empty()) { return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())); }
+    fn close_frame_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !owner.terminal_is_empty()) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         snapshot_registry_alias_close_step(&mut self.0, grant)
     }
 }
@@ -841,7 +846,7 @@ impl<T: ?Sized> SnapshotRead<T> {
     }
 
     /// 🧬️ Admits this original captured lease as source authority without replacing its registry.
-    pub fn admit_retained_clone_source(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(semio_framework_value::retained_clone::RetainedCloneSource<T,Self>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,Self)>
+    pub fn admit_retained_clone_source(self,grant:RetainedCloneGrant) -> Result<(semio_framework_value::retained_clone::RetainedCloneSource<T,Self>,RetainedCloneProgress),(ValueError,Self)>
     where
         T: Sized + semio_framework_value::retirement::RetireOwned + Sync,
     {
@@ -1030,7 +1035,7 @@ impl ArtifactStoreSupersessionRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreSupersessionRetirement {
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{self.owner.step(grant)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.owner.step(grant)}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(copy)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
@@ -1049,7 +1054,7 @@ impl ArtifactStoreStringRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreStringRetirement {
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{self.owner.step(grant)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.owner.step(grant)}
     fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(copy)}
@@ -1086,7 +1091,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
         Ok(usize::from(self.values.is_some()))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -1097,7 +1102,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
                 drop(self.active.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
-            let child_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+            let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
             let step = active.close_step(child_grant)?;
             admit_retained_clone_close(child_grant, step, active.terminal_is_empty(), "Store string history child")?;
             return Ok(match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress) });
@@ -1139,7 +1144,7 @@ impl ArtifactStoreRevisionAccumulatorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreRevisionAccumulatorRetirement {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> { self.owner.step(grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.owner.step(grant) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.owner.next_capacity_byte_demand(copy) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_release_byte_demand() }
@@ -1158,7 +1163,7 @@ impl ArtifactStoreCursorRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreCursorRetirement {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> { self.owner.step(grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.owner.step(grant) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.owner.next_capacity_byte_demand(copy) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_release_byte_demand() }
@@ -1185,9 +1190,9 @@ impl<Mutation> ArtifactStoreEditRetirement<Mutation> {
     }
     fn demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         use semio_framework_value::RetirementDemand;
-        if let Some(state)=self.state.as_ref(){if state.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ArtifactStoreEditRetirementState>>(),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:state.next_copy_byte_demand()?,capacity_bytes:state.next_capacity_byte_demand(copy)?,release_bytes:state.next_release_byte_demand()?,depth:state.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original edit metadata depth overflow"))?});}
-        if let Some(forwards)=self.forwards.as_ref(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Vec<Mutation>>(),release_bytes:std::alloc::Layout::array::<Mutation>(forwards.capacity()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original empty forward backing overflow"))?.size(),depth:1,..Default::default()});}
-        if let Some(inverse)=self.inverse.as_ref(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<semio_framework_value::list::PagedList<Mutation,{usize::MAX}>>(),release_bytes:inverse.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()});}
+        if let Some(state)=self.state.as_ref(){if state.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ArtifactStoreEditRetirementState>>(),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:state.next_copy_byte_demand()?,capacity_bytes:state.next_capacity_byte_demand(copy)?,release_bytes:state.next_release_byte_demand()?,depth:state.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original edit metadata depth overflow"))?});}
+        if let Some(forwards)=self.forwards.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<Vec<Mutation>>(),release_bytes:std::alloc::Layout::array::<Mutation>(forwards.capacity()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original empty forward backing overflow"))?.size(),depth:1,..Default::default()});}
+        if let Some(inverse)=self.inverse.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::list::PagedList<Mutation,{usize::MAX}>>(),release_bytes:inverse.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()});}
         Ok(Default::default())
     }
 }
@@ -1251,14 +1256,14 @@ impl ArtifactStoreHistoryMetadataRetirement {
 impl ArtifactStoreHistoryMetadataRetirement {
     fn retained_backing_bytes(state: &ArtifactStoreHistoryMetadataRetirementState) -> Result<usize, ValueError> {
         let mut bytes = 0usize;
-        for extent in [state.string_list.capacity().checked_mul(std::mem::size_of::<String>()), state.authors.capacity().checked_mul(std::mem::size_of::<Author>()), state.pins.capacity().checked_mul(std::mem::size_of::<crate::os_vcs::CompositionPin>())] {
+        for extent in [state.string_list.capacity().checked_mul(size_of::<String>()), state.authors.capacity().checked_mul(size_of::<Author>()), state.pins.capacity().checked_mul(size_of::<crate::os_vcs::CompositionPin>())] {
             bytes = extent.and_then(|extent| bytes.checked_add(extent)).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history metadata backing extent overflow"))?;
         }
         Ok(bytes)
     }
 }
 impl ErasedSnapshotRetirement for ArtifactStoreHistoryMetadataRetirement {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         let Some(state) = self.state.as_mut() else { return Ok(RetainedCloneStep::Complete(empty)); };
@@ -1334,13 +1339,13 @@ impl ArtifactStoreMutationDagRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreMutationDagRetirement {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if grant.maximum_depth < self.demands(grant.maximum_copy_bytes)?.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "mutation DAG exceeds admitted original owner depth")); }
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, ..grant };
+        let grant = RetainedCloneGrant { maximum_items: 1, ..grant };
         if self.envelope.is_some() { return artifact_retirement_owner_close(&mut self.envelope, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if self.identity.is_some() { return artifact_retirement_owner_close(&mut self.identity, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         let dag = self.dag.as_mut().unwrap();
@@ -1386,26 +1391,32 @@ enum ArtifactStoreVcsRetirementPhase {
 
 /// 📏️ Observes every current child demand and the separate physical cursor-shell release.
 pub fn artifact_retirement_box_demands(owner: &Box<dyn ErasedSnapshotRetirement>, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-    if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
+    if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
     let mut demand = owner.next_demand(maximum_body_bytes)?;
     demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))?;
     Ok(demand)
 }
 
+/// 🪆️ Quotes only the depth axis of the boxed turn, so a depth admission never re-derives the other three currencies.
+fn artifact_retirement_box_depth(owner: &Box<dyn ErasedSnapshotRetirement>) -> Result<usize, ValueError> {
+    if owner.terminal_is_empty() { return Ok(1); }
+    owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))
+}
+
 /// 📦️ Retires a current nested payload and its original box in separate fully granted turns.
-pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
     let empty = RetainedCloneProgress::default();
     let Some(owner) = slot.as_mut() else { return Ok(RetainedCloneStep::Complete(empty)); };
     if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-    if grant.maximum_depth < artifact_retirement_box_demands(owner, grant.maximum_copy_bytes)?.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement exceeds admitted depth")); }
+    if grant.maximum_depth < artifact_retirement_box_depth(owner)? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement exceeds admitted depth")); }
     if owner.terminal_is_empty() {
-        let extent = std::mem::size_of_val(owner.as_ref());
+        let extent = size_of_val(owner.as_ref());
         if grant.maximum_release_bytes < extent { return Ok(RetainedCloneStep::Progress(empty)); }
         drop(slot.take());
         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..empty }));
     }
-    let child_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+    let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
     let step = owner.close_step(child_grant)?;
     admit_retained_clone_close(child_grant, step, owner.terminal_is_empty(), "boxed retirement child")?;
     Ok(RetainedCloneStep::Progress(step.progress()))
@@ -1420,7 +1431,7 @@ pub fn artifact_retirement_owned_birth_demands<T: semio_framework_value::retirem
 
 /// 📋️ Admits the complete original derived snapshot and registry under unchanged caller authority.
 pub fn admit_original_snapshot_alias<P,Mu>(original:&mut Option<ArtifactDerivedSnapshot<P>>,snapshots:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,mutations:&Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>
-where P:Send+Sync+'static,Mu:self::Mutation<P>+Send+'static {
+where P:Send+Sync+'static,Mu:Mutation<P>+Send+'static {
     history_read_admission::admit_history_read_retirement(original,snapshots,mutations,grant,|owner,original|*owner.derived=Some(original))
 }
 
@@ -1446,6 +1457,29 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
     }
 }
 
+/// 🔗️ Prices the lease frame of a shared root the holder never owns uniquely: only the last alias pays the deep release.
+pub fn artifact_retirement_shared_lease_birth_demands<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &Option<Arc<T>>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    if pending.is_none() { return Ok(Default::default()); }
+    if !T::controlled_retirement_supported() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "shared lease has no controlled owner authority")); }
+    Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
+}
+
+/// 🔗️ Admits a shared root as a lease without losing the exact original alias on refusal.
+pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &mut Option<Arc<T>>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    let empty = RetainedCloneProgress::default();
+    if active.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "lease admission requires an empty original child slot")); }
+    if pending.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
+    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+    let demand = artifact_retirement_shared_lease_birth_demands(pending)?;
+    if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "lease birth exceeds admitted parent depth")); }
+    if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+    let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+    match semio_framework_value::retirement::shared::admit_shared_retirement(pending.take().expect("lease birth retains its observed original"), child, true) {
+        Ok((owner, progress)) => { *active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
+        Err((error, original)) => { *pending = Some(original); Err(error) }
+    }
+}
+
 /// 🪆️ Observes an inline retained child's fallible demands with its logical parent depth.
 pub fn artifact_retirement_owner_demands<O: ErasedSnapshotRetirement>(owner: &Option<O>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     let Some(owner) = owner.as_ref() else { return Ok(Default::default()); };
@@ -1455,13 +1489,13 @@ pub fn artifact_retirement_owner_demands<O: ErasedSnapshotRetirement>(owner: &Op
 }
 
 /// 🧷️ Closes an inline owner under the original grant and removes it only after its exact terminal witness.
-pub fn artifact_retirement_owner_close<O: ErasedSnapshotRetirement>(slot: &mut Option<O>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+pub fn artifact_retirement_owner_close<O: ErasedSnapshotRetirement>(slot: &mut Option<O>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     use semio_framework_value::retained_clone::{RetainedCloneStep, admit_retained_clone_close};
     if slot.is_none() { return Ok(RetainedCloneStep::Complete(Default::default())); }
     if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
     if grant.maximum_depth < artifact_retirement_owner_demands(slot, grant.maximum_copy_bytes)?.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "inline retirement exceeds admitted depth")); }
     let owner = slot.as_mut().unwrap();
-    let child_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+    let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
     let step = owner.close_step(child_grant)?;
     admit_retained_clone_close(child_grant, step, owner.terminal_is_empty(), "inline retirement child")?;
     if matches!(step, RetainedCloneStep::Complete(_)) { drop(slot.take()); }
@@ -1503,7 +1537,7 @@ impl<T: Send + 'static> ArtifactStoreHistoryLedgerRetirement<T> {
 }
 
 impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerRetirement<T> {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_progress};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -1582,14 +1616,14 @@ impl<Mu> From<semio_framework_value::list::PagedList<Mu, {usize::MAX}>> for Arti
 impl<Mu> ArtifactStoreOperationRowOwners<Mu> {
     fn last(&self) -> Option<&Mu> { match self { Self::Forwards(rows) => rows.last(), Self::Inverse(rows) => rows.last() } }
     fn pop(&mut self) -> Option<Mu> { match self { Self::Forwards(rows) => rows.pop(), Self::Inverse(rows) => rows.pop() } }
-    fn terminal_is_empty(&self) -> bool { match self { Self::Forwards(rows) => rows.is_empty() && (rows.capacity() == 0 || std::mem::size_of::<Mu>() == 0), Self::Inverse(rows) => rows.terminal_is_empty() } }
+    fn terminal_is_empty(&self) -> bool { match self { Self::Forwards(rows) => rows.is_empty() && (rows.capacity() == 0 || size_of::<Mu>() == 0), Self::Inverse(rows) => rows.terminal_is_empty() } }
     fn release_demand(&self) -> Result<usize, ValueError> {
         match self {
-            Self::Forwards(rows) => rows.capacity().checked_mul(std::mem::size_of::<Mu>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "operation row backing overflow")),
+            Self::Forwards(rows) => rows.capacity().checked_mul(size_of::<Mu>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "operation row backing overflow")),
             Self::Inverse(rows) => rows.next_release_allocation_bytes().map_err(ValueError::from),
         }
     }
-    fn release_empty(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn release_empty(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         let empty = RetainedCloneProgress::default();
         if self.last().is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "operation payload remains before backing release")); }
@@ -1597,7 +1631,7 @@ impl<Mu> ArtifactStoreOperationRowOwners<Mu> {
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "operation backing requires admitted depth")); }
         match self {
             Self::Forwards(rows) => {
-                let released_bytes = rows.capacity().checked_mul(std::mem::size_of::<Mu>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "operation row backing overflow"))?;
+                let released_bytes = rows.capacity().checked_mul(size_of::<Mu>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "operation row backing overflow"))?;
                 drop(std::mem::take(rows));
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }))
             }
@@ -1629,7 +1663,7 @@ impl<Mu> ArtifactStoreOperationRowsRetirement<Mu> {
         if !self.rows.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.rows.release_demand()?, depth: 1, ..Default::default() }); }
         if self.identity.is_some() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.identity.as_ref().unwrap().capacity(), depth: 1, ..Default::default() }); }
         if self.strings.is_some() { return artifact_retirement_owner_demands(&self.strings, body); }
-        if self.factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>>(), depth: 1, ..Default::default() }); }
+        if self.factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.closing_factory.as_ref() {
             let mut demand = owner.demands(body)?;
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "operation factory owner depth overflow"))?;
@@ -1639,7 +1673,7 @@ impl<Mu> ArtifactStoreOperationRowsRetirement<Mu> {
     }
 }
 impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRowsRetirement<Mu> {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_progress};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -1649,7 +1683,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant); }
         if let Some(row) = self.pending.take().or_else(|| self.rows.pop()) {
-            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
             return match self.factory.as_ref().expect("operation payload retains its factory").retire_owned(row, child) {
                 Ok((owner, progress)) => { *self.active = Some(owner); admit_retained_clone_progress(child, progress, "operation row retirement birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "operation row original factory changed admitted constructor receipt")); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, row)) => { *self.pending = Some(row); Err(error) }
@@ -1667,7 +1701,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
         }
         let owner = self.closing_factory.as_mut().expect("remaining original operation factory");
-        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
         let step = owner.step(child)?;
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original operation row factory")?;
         if owner.terminal_is_empty() { drop(self.closing_factory.take()); }
@@ -1699,8 +1733,8 @@ struct ArtifactStoreDecodedEditRetirementFactory<Mutation> {
 }
 
 impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Edit<Mutation>> for ArtifactStoreDecodedEditRetirementFactory<Mutation> {
-    fn retirement_birth_bytes(&self, _value: &Edit<Mutation>) -> usize { std::mem::size_of::<ArtifactStoreDecodedEditRetirement<Mutation>>() }
-    fn retire_owned(&self, value: Edit<Mutation>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Edit<Mutation>)> {
+    fn retirement_birth_bytes(&self, _value: &Edit<Mutation>) -> usize { size_of::<ArtifactStoreDecodedEditRetirement<Mutation>>() }
+    fn retire_owned(&self, value: Edit<Mutation>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Edit<Mutation>)> {
         admit_artifact_retirement(value, grant, |value| ArtifactStoreDecodedEditRetirement::new(value, self.mutation_factory.clone()))
     }
 }
@@ -1709,8 +1743,8 @@ impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Edit<Mutation
 struct ArtifactStoreChangeRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<Change> for ArtifactStoreChangeRetirementFactory {
-    fn retirement_birth_bytes(&self, _value: &Change) -> usize { std::mem::size_of::<ArtifactStoreHistoryMetadataRetirement>() }
-    fn retire_owned(&self, value: Change, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Change)> {
+    fn retirement_birth_bytes(&self, _value: &Change) -> usize { size_of::<ArtifactStoreHistoryMetadataRetirement>() }
+    fn retire_owned(&self, value: Change, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Change)> {
         admit_artifact_retirement(value, grant, ArtifactStoreHistoryMetadataRetirement::change)
     }
 }
@@ -1719,8 +1753,8 @@ impl ArtifactOwnedValueRetirementFactory<Change> for ArtifactStoreChangeRetireme
 struct ArtifactStoreCheckpointRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<Checkpoint> for ArtifactStoreCheckpointRetirementFactory {
-    fn retirement_birth_bytes(&self, _value: &Checkpoint) -> usize { std::mem::size_of::<ArtifactStoreHistoryMetadataRetirement>() }
-    fn retire_owned(&self, value: Checkpoint, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Checkpoint)> {
+    fn retirement_birth_bytes(&self, _value: &Checkpoint) -> usize { size_of::<ArtifactStoreHistoryMetadataRetirement>() }
+    fn retire_owned(&self, value: Checkpoint, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Checkpoint)> {
         admit_artifact_retirement(value, grant, ArtifactStoreHistoryMetadataRetirement::checkpoint)
     }
 }
@@ -1729,8 +1763,8 @@ impl ArtifactOwnedValueRetirementFactory<Checkpoint> for ArtifactStoreCheckpoint
 struct ArtifactStoreAlternativeRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<Alternative> for ArtifactStoreAlternativeRetirementFactory {
-    fn retirement_birth_bytes(&self, _value: &Alternative) -> usize { std::mem::size_of::<ArtifactStoreHistoryMetadataRetirement>() }
-    fn retire_owned(&self, value: Alternative, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Alternative)> {
+    fn retirement_birth_bytes(&self, _value: &Alternative) -> usize { size_of::<ArtifactStoreHistoryMetadataRetirement>() }
+    fn retire_owned(&self, value: Alternative, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Alternative)> {
         admit_artifact_retirement(value, grant, ArtifactStoreHistoryMetadataRetirement::alternative)
     }
 }
@@ -1744,17 +1778,17 @@ impl<Mutation> ArtifactStoreDecodedEditRetirement<Mutation> {
         let mutation = self.pending_mutation.as_ref().or_else(|| self.edit.as_ref().and_then(|edit| edit.inverse.last().or_else(|| edit.forwards.last())));
         if let Some(mutation) = mutation { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: self.mutation_factory.as_ref().expect("pending edit retains original mutation factory").retirement_birth_bytes(mutation), depth: 2, ..Default::default() }); }
         let Some(edit) = self.edit.as_ref() else {
-            if self.mutation_factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+            if self.mutation_factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
             return self.closing_factory.as_ref().map_or(Ok(Default::default()), |factory| { let mut demand = factory.demands(body)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "decoded edit factory depth overflow"))?; Ok(demand) });
         };
-        let forwards = edit.forwards.capacity().checked_mul(std::mem::size_of::<Mutation>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "decoded edit backing overflow"))?;
+        let forwards = edit.forwards.capacity().checked_mul(size_of::<Mutation>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "decoded edit backing overflow"))?;
         if forwards != 0 { return Ok(semio_framework_value::RetirementDemand { release_bytes: forwards, depth: 1, ..Default::default() }); }
         if !edit.inverse.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: edit.inverse.next_release_allocation_bytes().map_err(ValueError::from)?, depth: 1, ..Default::default() }); }
-        Ok(semio_framework_value::RetirementDemand { capacity_bytes: std::mem::size_of::<ArtifactStoreEditRetirement<Mutation>>(), depth: 2, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { capacity_bytes: size_of::<ArtifactStoreEditRetirement<Mutation>>(), depth: 2, ..Default::default() })
     }
 }
 impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement<Mutation> {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -1766,7 +1800,7 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         if self.edit.is_none() {
             if self.mutation_factory.is_some() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = self.mutation_factory.take().unwrap(); *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
             let factory = self.closing_factory.as_mut().expect("nonterminal decoded edit retains original closing capability");
-            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             let step = factory.step(child)?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "decoded edit original factory capability")?;
             if factory.terminal_is_empty() { drop(self.closing_factory.take()); }
@@ -1774,12 +1808,12 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         }
         let edit = self.edit.as_mut().expect("decoded edit retains its original owner");
         if let Some(mutation) = self.pending_mutation.take().or_else(|| edit.inverse.pop().or_else(|| edit.forwards.pop())) {
-            return match self.mutation_factory.as_ref().unwrap().retire_owned(mutation, semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) {
-                Ok((owner, progress)) => { *self.active = Some(owner); if !progress.fits(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoded edit original factory changed admitted constructor receipt")); } Ok(RetainedCloneStep::Progress(progress)) }
+            return match self.mutation_factory.as_ref().unwrap().retire_owned(mutation, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) {
+                Ok((owner, progress)) => { *self.active = Some(owner); if !progress.fits(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoded edit original factory changed admitted constructor receipt")); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, mutation)) => { *self.pending_mutation = Some(mutation); Err(error) }
             };
         }
-        if edit.forwards.capacity() != 0 && std::mem::size_of::<Mutation>() != 0 {
+        if edit.forwards.capacity() != 0 && size_of::<Mutation>() != 0 {
             drop(std::mem::take(&mut edit.forwards));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
         }
@@ -1804,10 +1838,10 @@ impl<Mutation> Drop for ArtifactStoreDecodedEditRetirement<Mutation> {
 }
 
 fn artifact_history_ledger_birth<T: Send + 'static, F: semio_framework_value::FactoryPayloadRetirement>() -> Result<usize, ValueError> {
-    std::mem::size_of::<ArtifactStoreHistoryLedgerRetirement<T>>().checked_add(semio_framework_value::factory_arc_birth_bytes::<F>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history owner constructor extent overflow"))
+    size_of::<ArtifactStoreHistoryLedgerRetirement<T>>().checked_add(semio_framework_value::factory_arc_birth_bytes::<F>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history owner constructor extent overflow"))
 }
 
-fn artifact_history_ledger_handoff<T: Send + 'static, F: ArtifactOwnedValueRetirementFactory<T> + semio_framework_value::FactoryPayloadRetirement>(ledger: &mut ArtifactHistoryLedger<T>, factory: F, slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+fn artifact_history_ledger_handoff<T: Send + 'static, F: ArtifactOwnedValueRetirementFactory<T> + semio_framework_value::FactoryPayloadRetirement>(ledger: &mut ArtifactHistoryLedger<T>, factory: F, slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
     let capacity = artifact_history_ledger_birth::<T, F>()?;
     if grant.maximum_items == 0 || grant.maximum_capacity_bytes < capacity { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -1836,7 +1870,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreVcsRetirem
             ArtifactStoreVcsRetirementPhase::Changes if !vcs.changes.backing_is_empty() || !vcs.changes.terminal_is_empty() => artifact_history_ledger_birth::<Change, ArtifactStoreChangeRetirementFactory>()?,
             ArtifactStoreVcsRetirementPhase::Checkpoints if !vcs.checkpoints.backing_is_empty() || !vcs.checkpoints.terminal_is_empty() => artifact_history_ledger_birth::<Checkpoint, ArtifactStoreCheckpointRetirementFactory>()?,
             ArtifactStoreVcsRetirementPhase::Alternatives if !vcs.alternatives.backing_is_empty() || !vcs.alternatives.terminal_is_empty() => artifact_history_ledger_birth::<Alternative, ArtifactStoreAlternativeRetirementFactory>()?,
-            ArtifactStoreVcsRetirementPhase::InitialSnapshot => std::mem::size_of::<ArtifactGenesisRetirement<P>>(),
+            ArtifactStoreVcsRetirementPhase::InitialSnapshot => size_of::<ArtifactGenesisRetirement<P>>(),
             _ => 0,
         };
         Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: if capacity_bytes == 0 { 1 } else { 2 }, ..Default::default() })
@@ -1844,7 +1878,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreVcsRetirem
 }
 
 impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreVcsRetirement<P, Mutation> {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -1914,7 +1948,7 @@ impl<P, Mutation> Drop for ArtifactStoreVcsRetirement<P, Mutation> {
 
 /// 📏️ Quotes the exact cursor frame [`retire_document_envelope`] births before any original field or factory transfers.
 pub fn retire_document_envelope_birth_bytes<P: Send + Sync + 'static, Mutation: Send + 'static>() -> usize {
-    std::mem::size_of::<ArtifactStoreEnvelopeRetirement<P, Mutation>>()
+    size_of::<ArtifactStoreEnvelopeRetirement<P, Mutation>>()
 }
 
 /// ♻️ Admits whole detached document custody before any original field or factory transfers.
@@ -2010,7 +2044,7 @@ impl<P: Send + Sync + 'static> ArtifactGenesisRetirement<P> {
 }
 
 impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactGenesisRetirement<P> {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
@@ -2110,13 +2144,30 @@ pub(crate) fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
     registry: &SnapshotReadLeaseRegistry,
     active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
     factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
-    grant: semio_framework_value::retained_clone::RetainedCloneGrant,
-) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    grant: RetainedCloneGrant,
+) -> Result<RetainedCloneStep, ValueError> {
     use semio_framework_value::retained_clone::RetainedCloneStep;
     if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
     if active.is_some() { return artifact_retirement_box_close_step(active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
     if !registry.has_returned() { return Ok(RetainedCloneStep::Complete(Default::default())); }
     match registry.try_admit_one_returned::<P, _>(grant, |root, grant| match ReturnedSnapshotReadRetirement::admit(root, factory.clone(), grant) { Ok(admitted) => Ok(admitted), Err((error, root, alias)) => { drop(alias); Err((error, root)) } }) {
+        Ok((owner, receipt)) => { *active = owner; if !receipt.fits(grant) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission exceeded its original grant")); } Ok(RetainedCloneStep::Progress(receipt)) },
+        Err(SnapshotReadLeaseRefusal::Busy) => Ok(RetainedCloneStep::Progress(Default::default())),
+        Err(reason) => Err(reason.into_value_error()),
+    }
+}
+
+pub(crate) fn advance_returned_snapshot_read_root<P: Send + Sync + 'static>(
+    registry: &SnapshotReadLeaseRegistry,
+    active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
+    factory: &dyn SnapshotRetirementFactory<P>,
+    grant: RetainedCloneGrant,
+) -> Result<RetainedCloneStep, ValueError> {
+    use semio_framework_value::retained_clone::RetainedCloneStep;
+    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+    if active.is_some() { return artifact_retirement_box_close_step(active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+    if !registry.has_returned() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+    match registry.try_admit_one_returned::<P, _>(grant, |root, grant| factory.retire(root, grant)) {
         Ok((owner, receipt)) => { *active = owner; if !receipt.fits(grant) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission exceeded its original grant")); } Ok(RetainedCloneStep::Progress(receipt)) },
         Err(SnapshotReadLeaseRefusal::Busy) => Ok(RetainedCloneStep::Progress(Default::default())),
         Err(reason) => Err(reason.into_value_error()),
@@ -2222,7 +2273,7 @@ impl ArtifactStoreDisplacedRetirements {
         if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || (demand.copy_bytes != 0 && grant.maximum_copy_bytes == 0) { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if owner.terminal_is_empty() {
-            let bytes = std::mem::size_of_val(owner.as_ref());
+            let bytes = size_of_val(owner.as_ref());
             drop(self.owners.pop_front());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
         }
@@ -2308,8 +2359,8 @@ where
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;
     fn demands(&self, store: &ArtifactStore<P, Mutation>, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
-    fn close_uninstalled_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError>;
-    fn uninstalled_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError>;
+    fn close_uninstalled_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn uninstalled_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn uninstalled_terminal_is_empty(&self) -> bool;
 
     /// 🔭️ Which owner family this disposer is currently draining. `close_step` answers only
@@ -2468,7 +2519,7 @@ impl<T> std::ops::DerefMut for DocumentCatalogOwner<T> {
 
 /// 🏪️ Prices the exact disposer and three complete factory constructor trees without constructing owners.
 pub fn document_store_owners_constructor_birth_bytes<D>(factory_births: [usize; 3]) -> usize {
-    factory_births.into_iter().try_fold(std::mem::size_of::<D>(), usize::checked_add).expect("Store owners constructor layout")
+    factory_births.into_iter().try_fold(size_of::<D>(), usize::checked_add).expect("Store owners constructor layout")
 }
 
 pub struct DocumentStoreOwners<P, Mutation>
@@ -2483,6 +2534,7 @@ where
     one_item_preparation: Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>,
     replay_preparation: Option<Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>>,
     one_item_wire_preparation: Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>,
+    operation_wire: ArtifactOperationWire<Mutation>,
     factory_retirement_tickets: semio_framework_value::FactoryChildTickets<6>,
 }
 
@@ -2505,13 +2557,14 @@ where
     where F1: semio_framework_value::FactoryPayloadRetirement, F2: semio_framework_value::FactoryPayloadRetirement, F3: semio_framework_value::FactoryPayloadRetirement,
     {
         [semio_framework_value::factory_arc_birth_bytes::<F1>(), semio_framework_value::factory_arc_birth_bytes::<F2>(), semio_framework_value::factory_arc_birth_bytes::<F3>()]
-            .into_iter().try_fold(std::mem::size_of::<D>(), |bytes, source| bytes.checked_add(source))
+            .into_iter().try_fold(size_of::<D>(), |bytes, source| bytes.checked_add(source))
             .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "catalog source allocation extent overflow"))
     }
 
     /// 🏗️ Admits original typed sources while retaining unfunded factory tickets inline.
     pub fn admit_sources<F1, F2, F3, D>(snapshots: F1, initial: F2, mutations: F3, disposer: D, grant: RetainedCloneGrant) -> Result<(Self, RetainedCloneProgress), (ValueError, F1, F2, F3, D)>
     where
+        Mutation: ArtifactCanonicalJsonTree,
         F1: SnapshotRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F2: ArtifactOwnedValueRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F3: ArtifactOwnedValueRetirementFactory<Mutation> + semio_framework_value::FactoryPayloadRetirement,
@@ -2529,19 +2582,21 @@ where
     /// 🎟️ Funds exact native source ingress before constructing original typed factories or disposer.
     pub fn admit_source_constructor<F1, F2, F3, D>(grant: RetainedCloneGrant, construct: impl FnOnce() -> (F1, F2, F3, D)) -> Result<(Self, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
     where
+        Mutation: ArtifactCanonicalJsonTree,
         F1: SnapshotRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F2: ArtifactOwnedValueRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F3: ArtifactOwnedValueRetirementFactory<Mutation> + semio_framework_value::FactoryPayloadRetirement,
         D: ArtifactStoreOwnedDisposer<P, Mutation> + 'static,
     {
-        let capacity = Self::source_constructor_capacity::<F1, F2, F3, D>(grant, semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 })?;
+        let capacity = Self::source_constructor_capacity::<F1, F2, F3, D>(grant, RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 })?;
         let (snapshots, initial, mutations, disposer) = construct();
         Ok((Self::from_sources(snapshots, initial, mutations, disposer), RetainedCloneProgress { copied_items: 1, copied_bytes:0, retained_capacity_bytes: capacity, ..Default::default() }))
     }
 
     /// 🏗️🧷️ Funds original semantic preparation source Arcs with the catalog ingress before invoking either source constructor.
-    pub fn admit_source_constructor_with_one_item_preparation<F1, F2, F3, D>(grant: RetainedCloneGrant, preparation_birth: semio_framework_value::retained_clone::RetainedCloneBirthDemand, construct: impl FnOnce() -> (F1, F2, F3, D, Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>)) -> Result<(Self, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
+    pub fn admit_source_constructor_with_one_item_preparation<F1, F2, F3, D>(grant: RetainedCloneGrant, preparation_birth: RetainedCloneBirthDemand, construct: impl FnOnce() -> (F1, F2, F3, D, Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>)) -> Result<(Self, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
     where
+        Mutation: ArtifactCanonicalJsonTree,
         F1: SnapshotRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F2: ArtifactOwnedValueRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F3: ArtifactOwnedValueRetirementFactory<Mutation> + semio_framework_value::FactoryPayloadRetirement,
@@ -2554,7 +2609,7 @@ where
         Ok((owners, RetainedCloneProgress { copied_items: 1, copied_bytes:0, retained_capacity_bytes: capacity, ..Default::default() }))
     }
 
-    fn source_constructor_capacity<F1, F2, F3, D>(grant: RetainedCloneGrant, additional_birth: semio_framework_value::retained_clone::RetainedCloneBirthDemand) -> Result<usize, DocumentStoreOwnersAdmissionError<P, Mutation>>
+    fn source_constructor_capacity<F1, F2, F3, D>(grant: RetainedCloneGrant, additional_birth: RetainedCloneBirthDemand) -> Result<usize, DocumentStoreOwnersAdmissionError<P, Mutation>>
     where F1: semio_framework_value::FactoryPayloadRetirement, F2: semio_framework_value::FactoryPayloadRetirement, F3: semio_framework_value::FactoryPayloadRetirement,
     {
         let capacity = Self::source_birth_bytes::<F1, F2, F3, D>().and_then(|capacity| capacity.checked_add(additional_birth.capacity_bytes).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "catalog original source tree extent overflow"))).map_err(|error| DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
@@ -2569,6 +2624,7 @@ where
 
     fn from_sources<F1, F2, F3, D>(snapshots: F1, initial: F2, mutations: F3, disposer: D) -> Self
     where
+        Mutation: ArtifactCanonicalJsonTree,
         F1: SnapshotRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F2: ArtifactOwnedValueRetirementFactory<P> + semio_framework_value::FactoryPayloadRetirement,
         F3: ArtifactOwnedValueRetirementFactory<Mutation> + semio_framework_value::FactoryPayloadRetirement,
@@ -2580,6 +2636,7 @@ where
             mutation_retirement: DocumentCatalogOwner(Some(Arc::new(mutations))),
             store_disposer: DocumentCatalogOwner(Some(Box::new(disposer))),
             one_item_preparation: None, replay_preparation: None, one_item_wire_preparation: None,
+            operation_wire: ArtifactOperationWire::canonical(),
             factory_retirement_tickets: semio_framework_value::FactoryChildTickets { slots: std::array::from_fn(|_| semio_framework_value::FactoryChildSlot::empty()), prepared: 0 },
         }
     }
@@ -2590,8 +2647,11 @@ where
         mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
         store_disposer: Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>,
         grant: RetainedCloneGrant,
-    ) -> Result<(Self, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>> {
-        let mut owners = Self { snapshot_retirement: DocumentCatalogOwner(Some(snapshot_retirement)), initial_snapshot_retirement: DocumentCatalogOwner(Some(initial_snapshot_retirement)), mutation_retirement: DocumentCatalogOwner(Some(mutation_retirement)), store_disposer: DocumentCatalogOwner(Some(store_disposer)), one_item_preparation: None, replay_preparation: None, one_item_wire_preparation: None, factory_retirement_tickets: semio_framework_value::FactoryChildTickets { slots: std::array::from_fn(|_| semio_framework_value::FactoryChildSlot::empty()), prepared: 0 } };
+    ) -> Result<(Self, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
+    where
+        Mutation: ArtifactCanonicalJsonTree,
+    {
+        let mut owners = Self { snapshot_retirement: DocumentCatalogOwner(Some(snapshot_retirement)), initial_snapshot_retirement: DocumentCatalogOwner(Some(initial_snapshot_retirement)), mutation_retirement: DocumentCatalogOwner(Some(mutation_retirement)), store_disposer: DocumentCatalogOwner(Some(store_disposer)), one_item_preparation: None, replay_preparation: None, one_item_wire_preparation: None, operation_wire: ArtifactOperationWire::canonical(), factory_retirement_tickets: semio_framework_value::FactoryChildTickets { slots: std::array::from_fn(|_| semio_framework_value::FactoryChildSlot::empty()), prepared: 0 } };
         match owners.admit_constructor(grant) {
             Ok(progress) => Ok((owners, progress)),
             Err((error, progress)) => Err(DocumentStoreOwnersAdmissionError { error, owners: Some(owners), progress }),
@@ -2700,7 +2760,7 @@ where
 
     /// 📐️ Quotes the exact original envelope and uninstalled catalog frame before transfer.
     pub fn uninstalled_envelope_retirement_demands(&self, _envelope: &ArtifactEnvelope<P, Mutation>) -> semio_framework_value::RetirementDemand {
-        semio_framework_value::RetirementDemand { copy_bytes:std::mem::size_of::<(Self,ArtifactEnvelope<P,Mutation>)>()+std::mem::size_of::<UninstalledDocumentEnvelopeRetirement<P,Mutation>>()+2*std::mem::size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>(),capacity_bytes:std::mem::size_of::<UninstalledDocumentEnvelopeRetirement<P,Mutation>>(),depth:1,..Default::default() }
+        semio_framework_value::RetirementDemand { copy_bytes:size_of::<(Self,ArtifactEnvelope<P,Mutation>)>()+size_of::<UninstalledDocumentEnvelopeRetirement<P,Mutation>>()+2*size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>(),capacity_bytes:size_of::<UninstalledDocumentEnvelopeRetirement<P,Mutation>>(),depth:1,..Default::default() }
     }
 
     /// 📦️ Admits one whole frame retaining both original envelope and uninstalled catalog.
@@ -2752,20 +2812,20 @@ where
     }
 
     /// 📏️ Borrows every current child currency and the exact final disposer frame.
-    pub fn uninstalled_owners_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn uninstalled_owners_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if !self.constructor_is_complete() { return self.constructor_demands(body); }
         if self.store_disposer.is_some() && !self.store_disposer.uninstalled_terminal_is_empty() {
             let mut demand = self.store_disposer.uninstalled_demands(body)?;
-            demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "catalog disposer depth overflow"))?;
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "catalog disposer depth overflow"))?;
             return Ok(demand);
         }
         if self.factory_aliases_present() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
         if !self.factory_retirement_tickets.terminal_is_empty() {
             let mut demand = self.factory_retirement_tickets.demands(body)?;
-            demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "catalog factory depth overflow"))?;
+            demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "catalog factory depth overflow"))?;
             return Ok(demand);
         }
-        Ok(semio_framework_value::RetirementDemand { release_bytes: self.store_disposer.0.as_ref().map_or(0, |owner| std::mem::size_of_val(owner.as_ref())), depth: usize::from(self.store_disposer.is_some()), ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { release_bytes: self.store_disposer.0.as_ref().map_or(0, |owner| size_of_val(owner.as_ref())), depth: usize::from(self.store_disposer.is_some()), ..Default::default() })
     }
 
     fn factory_aliases_present(&self) -> bool {
@@ -2773,12 +2833,12 @@ where
     }
 
     /// 🧹️ Keeps original aliases, factory tickets and the disposer until their admitted physical turn.
-    pub fn close_uninstalled_owners_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn close_uninstalled_owners_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.uninstalled_owners_terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.uninstalled_owners_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth < demand.depth { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "catalog retirement exceeds admitted depth")); }
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "catalog retirement exceeds admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         if !self.constructor_is_complete() { return self.admit_constructor(RetainedCloneGrant { maximum_items: 1, ..grant }).map(RetainedCloneStep::Progress).map_err(|(error, progress)| error.with_retained_progress(progress)); }
         if self.store_disposer.is_some() && !self.store_disposer.uninstalled_terminal_is_empty() {
@@ -2803,7 +2863,7 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(disposer) = self.store_disposer.0.as_ref() {
-            let extent = std::mem::size_of_val(disposer.as_ref());
+            let extent = size_of_val(disposer.as_ref());
             if grant.maximum_release_bytes < extent { return Ok(RetainedCloneStep::Progress(empty)); }
             drop(self.store_disposer.take());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..empty }));
@@ -2817,19 +2877,19 @@ where
 }
 
 impl<P, M> Drop for DocumentStoreOwners<P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + self::Mutation<P>,
+where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<P>,
 {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.uninstalled_owners_terminal_is_empty(), "document catalog reached Drop before exact handoff or controlled retirement"); }
 }
 
 struct UninstalledDocumentEnvelopeRetirement<P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + self::Mutation<P>,
+where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<P>,
 {
     envelope: Option<ArtifactStoreEnvelopeRetirement<P, M>>,
     owners: Option<DocumentStoreOwners<P, M>>,
 }
 impl<P, M> ErasedSnapshotRetirement for UninstalledDocumentEnvelopeRetirement<P, M>
-where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue + FromValue + self::Mutation<P> + Send + 'static,
+where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue + FromValue + Mutation<P> + Send + 'static,
 {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
@@ -2858,7 +2918,7 @@ where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue
     fn terminal_is_empty(&self) -> bool { self.envelope.is_none() && self.owners.is_none() }
 }
 impl<P, M> UninstalledDocumentEnvelopeRetirement<P, M>
-where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue + FromValue + self::Mutation<P> + Send + 'static,
+where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue + FromValue + Mutation<P> + Send + 'static,
 {
     fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.envelope.is_some() { return artifact_retirement_owner_demands(&self.envelope, body); }
@@ -2877,7 +2937,7 @@ where
     Mutation: Clone + ToValue + FromValue + self::Mutation<Self>,
 {
     type SnapshotOpen: MemberSnapshotOpenOperation<Snapshot = Self>;
-    fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>;
+    fn member_store_owners_birth_demand() -> Result<RetainedCloneBirthDemand, ValueError>;
     fn member_store_owners(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<Self, Mutation>>;
 }
 //#endregion 🧬️OpaqueSnapshotRead
@@ -3215,7 +3275,7 @@ impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactEnvelopeRead<'_, P, Muta
         }
         entries.push(("editMessages".to_string(), self.edit_messages.to_value()));
         entries.push(("conflicts".to_string(), self.conflicts.to_value()));
-        semio_framework_value::DslValue::Object(entries)
+        DslValue::Object(entries)
     }
 }
 
@@ -3867,7 +3927,7 @@ impl<S> PartialEq for ArtifactChild<S> {
 /// round-tripping only `child_id`/`target`.
 impl<S> ToValue for ArtifactChild<S> {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::object([("childId".to_string(), semio_framework_value::ToValue::to_value(&self.child_id)), ("target".to_string(), semio_framework_value::ToValue::to_value(&self.target))])
+        DslValue::object([("childId".to_string(), ToValue::to_value(&self.child_id)), ("target".to_string(), ToValue::to_value(&self.target))])
     }
     fn to_value_controlled(&self, control: &mut protocol::value::NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
         control.scoped_depth(64, |control| {
@@ -3879,34 +3939,34 @@ impl<S> ToValue for ArtifactChild<S> {
                     }
                 });
                 let key = control.copy_text("childId")?;
-                let child_id = semio_framework_value::ToValue::to_value_controlled(&self.child_id, control).map_err(|error| error.under("childId"))?;
+                let child_id = ToValue::to_value_controlled(&self.child_id, control).map_err(|error| error.under("childId"))?;
                 fields.get_mut().push((key, child_id));
                 control.step()?;
                 let key = control.copy_text("target")?;
-                let target = semio_framework_value::ToValue::to_value_controlled(&self.target, control).map_err(|error| error.under("target"))?;
+                let target = ToValue::to_value_controlled(&self.target, control).map_err(|error| error.under("target"))?;
                 fields.get_mut().push((key, target));
                 control.step()?;
-                Ok(semio_framework_value::DslValue::Object(fields.take()))
+                Ok(DslValue::Object(fields.take()))
             })
         })
     }
 }
 
 /// 🌲️ Canonical wire of the persisted child identity: `childId` then `target`; the local owner is not part of the wire.
-impl<S: Sync + 'static> semio_framework_pack_json::ArtifactCanonicalJsonTree for ArtifactChild<S> {
-    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> { Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(2)) }
-    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, ValueError> {
+impl<S: Sync + 'static> ArtifactCanonicalJsonTree for ArtifactChild<S> {
+    fn canonical_tree_node(&self) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> { Ok(ArtifactCanonicalJsonNode::Object(2)) }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, ValueError> {
         match ordinal { 0 => Ok(&self.child_id), 1 => Ok(&self.target), _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical artifact child ordinal is absent")) }
     }
-    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, ValueError> {
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
         match ordinal { 0 => Ok("childId".into()), 1 => Ok("target".into()), _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical artifact child key is absent")) }
     }
 }
 
 impl<S> FromValue for ArtifactChild<S> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let semio_framework_value::DslValue::Object(fields) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for ArtifactChild, found {value:?}")));
+        let DslValue::Object(fields) = value else {
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for ArtifactChild, found {value:?}")));
         };
         let mut child_id = None;
         let mut target = None;
@@ -3914,18 +3974,18 @@ impl<S> FromValue for ArtifactChild<S> {
             match key.as_str() {
                 "childId" => child_id = Some(String::from_value(entry).map_err(|e| e.under("childId"))?),
                 "target" => target = Some(semio_framework_artifact_reference::ArtifactRef::from_value(entry).map_err(|e| e.under("target"))?),
-                _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ArtifactChild has unknown field {key}"))),
+                _ => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ArtifactChild has unknown field {key}"))),
             }
         }
         Ok(ArtifactChild {
-            child_id: child_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing childId"))?,
-            target: target.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing target"))?,
+            child_id: child_id.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing childId"))?,
+            target: target.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing target"))?,
             local_owner: None,
             _snapshot: PhantomData,
         })
     }
     fn from_value_controlled(value: &DslValue, control: &mut protocol::value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
-        let semio_framework_value::DslValue::Object(fields) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for ArtifactChild")) };
+        let DslValue::Object(fields) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for ArtifactChild")) };
         control.scoped_depth(64, |control| {
             control.scoped_stage(|control| {
                 control.begin_stage(fields.len())?;
@@ -3935,14 +3995,14 @@ impl<S> FromValue for ArtifactChild<S> {
                     match key.as_str() {
                         "childId" => child_id = Some(String::from_value_controlled(entry, control).map_err(|error| error.under("childId"))?),
                         "target" => target = Some(semio_framework_artifact_reference::ArtifactRef::from_value_controlled(entry, control).map_err(|error| error.under("target"))?),
-                        _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild has an unknown field")),
+                        _ => return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild has an unknown field")),
                     }
                     control.step()?;
                 }
                 control.checkpoint()?;
                 Ok(Self {
-                    child_id: child_id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing childId"))?,
-                    target: target.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing target"))?,
+                    child_id: child_id.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing childId"))?,
+                    target: target.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ArtifactChild missing target"))?,
                     local_owner: None,
                     _snapshot: PhantomData,
                 })
@@ -4402,7 +4462,7 @@ fn artifact_child_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-fn artifact_child_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+fn artifact_child_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(2)?;
         let mut fields = control.allocate_vec::<semio_framework_dsl_record::FieldSpec>(2)?;
@@ -4415,8 +4475,8 @@ fn artifact_child_spec_controlled<C: semio_framework_dsl_record::NativeSchemaCon
     })
 }
 
-fn artifact_child_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
-    semio_framework_dsl_record::RecordSpecProducer { ordinary: artifact_child_spec, decoding: |control| artifact_child_spec_controlled(control), encoding: |control| artifact_child_spec_controlled(control) }
+fn artifact_child_spec_producer() -> RecordSpecProducer {
+    RecordSpecProducer { ordinary: artifact_child_spec, decoding: |control| artifact_child_spec_controlled(control), encoding: |control| artifact_child_spec_controlled(control) }
 }
 
 // 🚫️async: E1 pure — record conversion with no suspension point, consumed by the sync
@@ -4443,11 +4503,11 @@ fn artifact_child_from_record<S>(record: &semio_framework_dsl_record::RecordValu
 }
 
 impl<S> semio_framework_dsl_record::DslField for ArtifactChild<S> {
-    fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,semio_framework_value::ValueError>{
+    fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{
         use semio_framework_dsl_record::{DslField,native_encoding::{FieldProjectionView as V,projection_path_error}};
         match path{[]=>Ok(V::Record(&[0,1])),[0,rest @ ..]=>DslField::projection_view(&self.child_id,rest),[1,rest @ ..]=>DslField::projection_view(&self.target,rest),_=>Err(projection_path_error())}
     }
-    fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{
+    fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
         use semio_framework_dsl_record::{DslField,native_encoding::projection_path_error};
         match path{[0,rest @ ..]=>DslField::projection_key(&self.child_id,rest,index),[1,rest @ ..]=>DslField::projection_key(&self.target,rest,index),_=>Err(projection_path_error())}
     }
@@ -4455,17 +4515,17 @@ impl<S> semio_framework_dsl_record::DslField for ArtifactChild<S> {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(artifact_child_spec_producer())
     }
-    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
         Ok(semio_framework_dsl_record::Shape::Record(artifact_child_spec_producer()))
     }
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         semio_framework_dsl_record::FieldValue::Record(artifact_child_to_record(self))
     }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, ValueError> {
         <Self as semio_framework_dsl_record::DslField>::to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
     }
-    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
         control.scoped_depth(64, |control| {
             control.scoped_stage(|control| {
                 control.begin_stage(2)?;
@@ -4485,22 +4545,22 @@ impl<S> semio_framework_dsl_record::DslField for ArtifactChild<S> {
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact child Record"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact child Record"));
         };
         Self::from_record_controlled(record, control)
     }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         control.scoped_stage(|control| {
             control.begin_stage(2)?;
             if record.fields.len() != 2 || record.fields.keys().any(|id| *id > 1) {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact child requires its two literal fields"));
+                return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact child requires its two literal fields"));
             }
             let Some(semio_framework_dsl_record::FieldValue::Text(child_id)) = record.get(0) else {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact child identity Text"));
+                return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact child identity Text"));
             };
-            let target = record.get(1).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing artifact child target"))?;
+            let target = record.get(1).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing artifact child target"))?;
             let child_id = control.copy_text(child_id)?;
             control.step()?;
             let target = <semio_framework_artifact_reference::ArtifactRef as semio_framework_dsl_record::DslField>::from_value_controlled(target, control)?;
@@ -4519,7 +4579,7 @@ fn owner_ref_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-fn owner_ref_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+fn owner_ref_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(3)?;
         let mut fields = control.allocate_vec(3)?;
@@ -4530,8 +4590,8 @@ fn owner_ref_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>
         semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
     })
 }
-fn owner_ref_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
-    semio_framework_dsl_record::RecordSpecProducer { ordinary: owner_ref_spec, decoding: |control| owner_ref_spec_controlled(control), encoding: |control| owner_ref_spec_controlled(control) }
+fn owner_ref_spec_producer() -> RecordSpecProducer {
+    RecordSpecProducer { ordinary: owner_ref_spec, decoding: |control| owner_ref_spec_controlled(control), encoding: |control| owner_ref_spec_controlled(control) }
 }
 
 fn owner_ref_to_record(owner: &OwnerRef) -> semio_framework_dsl_record::RecordValue {
@@ -4567,7 +4627,7 @@ impl semio_framework_dsl_record::DslField for OwnerRef {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(owner_ref_spec_producer())
     }
-    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
         Ok(semio_framework_dsl_record::Shape::Record(owner_ref_spec_producer()))
     }
@@ -4597,7 +4657,7 @@ fn link_pin_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-fn link_pin_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+fn link_pin_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(5)?;
         let mut fields = control.allocate_vec(5)?;
@@ -4614,8 +4674,8 @@ fn link_pin_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(
         semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
     })
 }
-fn link_pin_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
-    semio_framework_dsl_record::RecordSpecProducer { ordinary: link_pin_spec, decoding: |control| link_pin_spec_controlled(control), encoding: |control| link_pin_spec_controlled(control) }
+fn link_pin_spec_producer() -> RecordSpecProducer {
+    RecordSpecProducer { ordinary: link_pin_spec, decoding: |control| link_pin_spec_controlled(control), encoding: |control| link_pin_spec_controlled(control) }
 }
 
 fn link_pin_to_record(pin: &LinkPin) -> semio_framework_dsl_record::RecordValue {
@@ -4638,7 +4698,7 @@ fn link_pin_to_record(pin: &LinkPin) -> semio_framework_dsl_record::RecordValue 
     record
 }
 
-fn link_pin_to_record_controlled(pin: &LinkPin, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+fn link_pin_to_record_controlled(pin: &LinkPin, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
     use semio_framework_dsl_record::FieldValue as V;
 use semio_framework_dsl_record::native_encoding::EncodedRecord;
     control.scoped_depth(64, |control| {
@@ -4695,10 +4755,10 @@ fn validate_link_pin_record(record: &semio_framework_dsl_record::RecordValue) ->
     }
     Ok(*ordinal)
 }
-fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<LinkPin, semio_framework_value::ValueError> {
+fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<LinkPin, ValueError> {
     control.scoped_stage(|control| {
         control.checkpoint()?;
-        let ordinal = validate_link_pin_record(record).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+        let ordinal = validate_link_pin_record(record).map_err(|message| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         control.begin_stage(match ordinal {
             0 => 1,
             1 => 2,
@@ -4708,7 +4768,7 @@ fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordVa
         control.step()?;
         let text = |id| match record.get(id) {
             Some(semio_framework_dsl_record::FieldValue::Text(value)) => Ok(value.as_str()),
-            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "link pin field must be Text")),
+            _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "link pin field must be Text")),
         };
         match ordinal {
             0 => Ok(LinkPin::Head),
@@ -4721,7 +4781,7 @@ fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordVa
                 let hash = text(2)?;
                 let media_type = text(4)?;
                 let Some(semio_framework_dsl_record::FieldValue::UInt(size)) = record.get(3) else {
-                    return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "link pin blob size must be UInt"));
+                    return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "link pin blob size must be UInt"));
                 };
                 let hash = control.copy_text(hash)?;
                 control.step()?;
@@ -4775,17 +4835,17 @@ impl semio_framework_dsl_record::DslField for LinkPin {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(link_pin_spec_producer())
     }
-    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
         Ok(semio_framework_dsl_record::Shape::Record(link_pin_spec_producer()))
     }
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         semio_framework_dsl_record::FieldValue::Record(link_pin_to_record(self))
     }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, ValueError> {
         link_pin_to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
     }
-    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
         link_pin_to_record_controlled(self, control)
     }
     fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
@@ -4794,13 +4854,13 @@ impl semio_framework_dsl_record::DslField for LinkPin {
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected link pin Record"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected link pin Record"));
         };
         link_pin_from_record_controlled(record, control)
     }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         link_pin_from_record_controlled(record, control)
     }
 }
@@ -4833,7 +4893,7 @@ fn artifact_link_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-fn artifact_link_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, semio_framework_value::ValueError> {
+fn artifact_link_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(3)?;
         let mut fields = control.allocate_vec(3)?;
@@ -4845,8 +4905,8 @@ fn artifact_link_spec_controlled<C: semio_framework_dsl_record::NativeSchemaCont
         semio_framework_dsl_record::producer::record(None, semio_framework_dsl_record::RecordLayout::Inline, fields, control)
     })
 }
-fn artifact_link_spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
-    semio_framework_dsl_record::RecordSpecProducer { ordinary: artifact_link_spec, decoding: |control| artifact_link_spec_controlled(control), encoding: |control| artifact_link_spec_controlled(control) }
+fn artifact_link_spec_producer() -> RecordSpecProducer {
+    RecordSpecProducer { ordinary: artifact_link_spec, decoding: |control| artifact_link_spec_controlled(control), encoding: |control| artifact_link_spec_controlled(control) }
 }
 
 fn artifact_link_to_record(link: &ArtifactLink) -> semio_framework_dsl_record::RecordValue {
@@ -4857,7 +4917,7 @@ fn artifact_link_to_record(link: &ArtifactLink) -> semio_framework_dsl_record::R
     record
 }
 
-fn artifact_link_to_record_controlled(link: &ArtifactLink, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+fn artifact_link_to_record_controlled(link: &ArtifactLink, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
     use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::FieldValue as V;
 use semio_framework_dsl_record::native_encoding::EncodedRecord;
@@ -4892,20 +4952,20 @@ fn artifact_link_from_record(record: &semio_framework_dsl_record::RecordValue) -
     Ok(ArtifactLink { target, pin, role })
 }
 
-fn artifact_link_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactLink, semio_framework_value::ValueError> {
+fn artifact_link_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactLink, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(3)?;
         if record.fields.len() != 3 || record.fields.keys().any(|id| *id > 2) {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link requires its three declared fields"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link requires its three declared fields"));
         }
-        let target = record.get(0).ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link requires target"))?;
+        let target = record.get(0).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link requires target"))?;
         let Some(semio_framework_dsl_record::FieldValue::Record(pin)) = record.get(1) else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link pin must be Record"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link pin must be Record"));
         };
         let Some(semio_framework_dsl_record::FieldValue::Text(role)) = record.get(2) else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link role must be Text"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "artifact link role must be Text"));
         };
-        validate_link_pin_record(pin).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+        validate_link_pin_record(pin).map_err(|message| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
         let target = <semio_framework_artifact_reference::ArtifactRef as semio_framework_dsl_record::DslField>::from_value_controlled(target, control)?;
         control.step()?;
         let pin = link_pin_from_record_controlled(pin, control)?;
@@ -4921,17 +4981,17 @@ impl semio_framework_dsl_record::DslField for ArtifactLink {
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(artifact_link_spec_producer())
     }
-    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, ValueError> {
         control.checkpoint()?;
         Ok(semio_framework_dsl_record::Shape::Record(artifact_link_spec_producer()))
     }
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
         semio_framework_dsl_record::FieldValue::Record(artifact_link_to_record(self))
     }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, ValueError> {
         artifact_link_to_record_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Record)
     }
-    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, semio_framework_value::ValueError> {
+    fn to_record_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
         artifact_link_to_record_controlled(self, control)
     }
     fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
@@ -4940,13 +5000,13 @@ impl semio_framework_dsl_record::DslField for ArtifactLink {
             other => Err(format!("expected Record, found {other:?}")),
         }
     }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact link Record"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected artifact link Record"));
         };
         artifact_link_from_record_controlled(record, control)
     }
-    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
         artifact_link_from_record_controlled(record, control)
     }
 }
@@ -5161,7 +5221,7 @@ pub trait ArtifactEphemeralOneItemPreparation<P, Mutation>: Send {
     fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<P>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError>;
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
@@ -5280,7 +5340,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         use semio_framework_value::RetirementDemand;
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "ephemeral cleanup depth overflow"))?; Ok(demand) };
         if let Some(owner) = self.preparation.as_ref() {
-            if owner.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
+            if owner.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
             return nested(RetirementDemand { copy_bytes: owner.next_close_copy_byte_demand()?, capacity_bytes: owner.next_close_capacity_byte_demand(body)?, release_bytes: owner.next_close_release_byte_demand()?, depth: owner.next_close_depth_demand()? });
         }
         if let Some(owner) = self.returned_read_retirement.as_ref() { return nested(artifact_retirement_box_demands(owner, body)?); }
@@ -5303,7 +5363,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.begin_close();
         if let Some(owner) = self.preparation.as_mut() {
-            if owner.terminal_is_empty() { self.retained_checkpoint = owner.checkpoint();let bytes = std::mem::size_of_val(owner.as_ref());drop(self.preparation.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty })); }
+            if owner.terminal_is_empty() { self.retained_checkpoint = owner.checkpoint();let bytes = size_of_val(owner.as_ref());drop(self.preparation.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty })); }
             let child = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth - 1 };
             let step = owner.close_step(child)?;let step = semio_framework_value::retained_clone::admit_retained_clone_close(child.retained_grant(), step, owner.terminal_is_empty(), "ephemeral original preparation")?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -5607,13 +5667,13 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
             return Ok(demand);
         }
         if self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.base_root.is_none() {
-            if self.factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+            if self.factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
             if let Some(factory) = self.factory_close.as_ref() { let mut demand = factory.demands(body)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer publication factory depth overflow"))?; return Ok(demand); }
         }
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -5679,6 +5739,10 @@ fn presence_arc_bytes<T>() -> Result<usize, ValueError> {
     std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::new::<T>()).map(|(layout, _)| layout.pad_to_align().size()).map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "presence Arc layout overflow"))
 }
 impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
+    /// 🔗️ Retires one captured alias of a peer roster: a non-final alias releases its Arc handle only, the final one retires every entry through the issuer.
+    pub fn of_alias(root: Arc<PresencePeersRoot<P>>, factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>) -> Self {
+        Self::from_root(root, factory, PresencePeerRootCustody::BaseAlias)
+    }
     fn new(retired: PresencePeersRetiredEntries<P>, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
         Self { root_custody: PresencePeerRootCustody::Displaced, root: std::mem::ManuallyDrop::new(None), owned_root: std::mem::ManuallyDrop::new(None), retired: std::mem::ManuallyDrop::new(retired), waiting: std::mem::ManuallyDrop::new(None), entry: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), factory: Some(factory), factory_close: None, cursor: 0 }
     }
@@ -5694,15 +5758,15 @@ impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
             if let Some(presence) = entry.presence.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence peer lacks original snapshot factory"))?.retirement_birth_bytes(presence), depth: 2, ..Default::default() }); }
             return Ok(RetirementDemand { depth: 1, ..Default::default() });
         }
-        if let Some(waiting) = self.waiting.as_ref() { return Ok(RetirementDemand { release_bytes: presence_arc_bytes::<PresencePeerEntry<P>>()?, depth: 1, ..Default::default() }); }
+        if let Some(_waiting) = self.waiting.as_ref() { return Ok(RetirementDemand { release_bytes: presence_arc_bytes::<PresencePeerEntry<P>>()?, depth: 1, ..Default::default() }); }
         if self.cursor < self.retired.len || self.retired.len != 0 { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        if let Some(root) = self.root.as_ref() { return Ok(RetirementDemand { release_bytes: presence_arc_bytes::<PresencePeersRoot<P>>()?, depth: 1, ..Default::default() }); }
+        if let Some(_root) = self.root.as_ref() { return Ok(RetirementDemand { release_bytes: presence_arc_bytes::<PresencePeersRoot<P>>()?, depth: 1, ..Default::default() }); }
         if self.owned_root.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: 0, depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.as_ref() { return nested(factory.demands(body)?); }
         Ok(Default::default())
     }
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -5749,7 +5813,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeersRetirem
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> { PresencePeersRetirement::close_step(self, grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { PresencePeersRetirement::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { PresencePeersRetirement::terminal_is_empty(self) }
 }
 impl<P> Drop for PresencePeersRetirement<P> {
@@ -5814,10 +5878,10 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         Ok(())
     }
 
-    pub fn maintenance_local_reads_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError>
+    pub fn maintenance_local_reads_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
     where P: Send + Sync + 'static,
     {
-        match self.local_reads.as_ref() { Some(reads) => presence_retirement::advance_returned_local(reads, &mut self.active_returned_local, self.local_retirement_factory.as_ref(), grant), None => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
+        match self.local_reads.as_ref() { Some(reads) => presence_retirement::advance_returned_local(reads, &mut self.active_returned_local, self.local_retirement_factory.as_ref(), grant), None => Ok(RetainedCloneStep::Complete(Default::default())) }
     }
     /// 📏️ Quotes the next returned local-read maintenance turn on every axis without advancing it.
     pub fn maintenance_local_reads_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>
@@ -6046,6 +6110,11 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         self.peer_retirement_factory.is_some()
     }
 
+    /// 🔗️ The installed peer-root retirement issuer, lent to a captured alias so its last holder can retire the roster it ends up owning.
+    pub fn peer_retirement_factory(&self) -> Option<Arc<dyn SnapshotRetirementFactory<P>>> {
+        self.peer_retirement_factory.clone()
+    }
+
     pub fn begin_peer_retirement(&self, retired: PresencePeersRetiredEntries<P>) -> Result<PresencePeersRetirement<P>, PresencePeersRetiredEntries<P>>
     where
         P: Send + Sync + 'static,
@@ -6054,7 +6123,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
         Ok(PresencePeersRetirement::new(retired, factory.clone()))
     }
 
-    pub fn begin_peer_publication(&self, grant: RetainedCloneGrant) -> Result<(PresencePeersPublication<P>, semio_framework_value::retained_clone::RetainedCloneProgress), ValueError>
+    pub fn begin_peer_publication(&self, grant: RetainedCloneGrant) -> Result<(PresencePeersPublication<P>, RetainedCloneProgress), ValueError>
     where P: Send + Sync + 'static,
     {
         if self.close_started { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence store no longer admits peer publication")); }
@@ -6147,15 +6216,45 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     }
 
     /// 🧹️ Advances one returned read through its exact owned-value retirement authority.
-    pub fn maintenance_returned_reads_step(&mut self, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError>
+    pub fn maintenance_returned_reads_step(&mut self, factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
     where
         P: Send + Sync + 'static,
     {
-        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read(reads, &mut self.active_returned_read, factory, grant), None => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())) }
+        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read(reads, &mut self.active_returned_read, factory, grant), None => Ok(RetainedCloneStep::Complete(Default::default())) }
+    }
+
+    /// 🧹️ Advances one returned read through a root-only retirement authority, for stores that own no owned-value factory.
+    pub fn maintenance_returned_reads_step_root(&mut self, factory: &dyn SnapshotRetirementFactory<P>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
+    where
+        P: Send + Sync + 'static,
+    {
+        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read_root(reads, &mut self.active_returned_read, factory, grant), None => Ok(RetainedCloneStep::Complete(Default::default())) }
+    }
+
+    /// 📏️ Quotes the next returned read's birth or physical retirement under a root-only retirement authority.
+    pub fn maintenance_returned_reads_demands_root(&self, factory: &dyn SnapshotRetirementFactory<P>, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>
+    where
+        P: Send + Sync + 'static,
+    {
+        if let Some(owner) = self.active_returned_read.as_ref() { return artifact_retirement_box_demands(owner, body); }
+        match self.reads.as_ref() {
+            Some(reads) if reads.has_returned() => reads.returned_admission_demands::<P>(|root| semio_framework_value::RetirementDemand { capacity_bytes: factory.retirement_birth_bytes(root), depth: 1, ..Default::default() }).map_err(SnapshotReadLeaseRefusal::into_value_error),
+            _ => Ok(Default::default()),
+        }
+    }
+
+    /// 🧾️ A returned read, or its active retirement, still awaits the returned-read pump.
+    pub fn returned_read_pending(&self) -> bool {
+        self.active_returned_read.is_some() || self.reads.as_ref().is_some_and(|reads| reads.has_returned())
     }
 
     pub fn returned_reads_terminal_is_empty(&self) -> bool {
         self.active_returned_read.is_none() && self.reads.as_ref().is_none_or(|reads| reads.terminal_is_empty())
+    }
+
+    /// 🔒️ A live tracked read, not yet returned, is the only owner that keeps the read registry from terminal-empty custody.
+    pub fn live_read_holds_registry(&self) -> bool {
+        self.active_returned_read.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !reads.terminal_is_empty())
     }
 
     pub fn current_weak(&self) -> std::sync::Weak<P> {
@@ -6446,6 +6545,8 @@ impl<P> TransientStoreRetirement<P> {
         Self { root: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.current) }), reads: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.reads) }.map(SnapshotReadRegistryAliasRetirement::new)), active_returned: std::mem::ManuallyDrop::new(unsafe { std::ptr::read(&store.active_returned_read) }), active_root: std::mem::ManuallyDrop::new(None), factory: Some(factory), factory_close: None }
     }
     pub fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.reads.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.factory.is_none() && self.factory_close.is_none() }
+    /// 🔒️ The retirement can only continue once the live tracked read that holds the registry is returned.
+    pub fn awaits_live_read(&self) -> bool { self.root.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !reads.terminal_is_empty()) }
 }
 impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
     pub fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -6456,10 +6557,10 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
         if let Some(active) = self.active_root.as_ref() { return nested(artifact_retirement_box_demands(active, body)?); }
         if self.root.is_some() { return Ok(RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(), depth: 2, ..Default::default() }); }
         if self.reads.is_some() { return snapshot_registry_alias_demands(&self.reads); }
-        if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.factory_close.as_ref().map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
     }
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -6663,7 +6764,7 @@ use semio_framework_dsl_record::Shape;
     const VALUE_BRIDGE_FIELD_ID: u16 = 1;
 
     fn value_bridge_spec() -> RecordSpec {
-        semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![semio_framework_dsl_record::FieldSpec::new(VALUE_BRIDGE_FIELD_ID, "value", semio_framework_dsl_record::Shape::Value)])
+        RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![semio_framework_dsl_record::FieldSpec::new(VALUE_BRIDGE_FIELD_ID, "value", semio_framework_dsl_record::Shape::Value)])
     }
 
     /// 🌱️ Encodes an arbitrary `DslValue` as a complete pack file.
@@ -6679,7 +6780,7 @@ use semio_framework_dsl_record::Shape;
         let (record, _report) = decode_document(bytes, &value_bridge_spec(), &PackDecodeOptions::default())?;
         match record.get(VALUE_BRIDGE_FIELD_ID) {
             Some(semio_framework_dsl_record::FieldValue::Value(dsl_value)) => Ok(dsl_value.clone()),
-            _ => Ok(semio_framework_value::DslValue::Null),
+            _ => Ok(DslValue::Null),
         }
     }
 
@@ -6745,8 +6846,8 @@ use semio_framework_dsl_record::Shape;
 
     /// 📥️ Inverse of [`pack_value_to_base64`].
     pub fn pack_value_from_base64(encoded: &str) -> Result<Vec<u8>, PackError> {
-        let payload = encoded.strip_prefix(PACK_B64_PREFIX).ok_or(PackError::Refusal(pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack base64", offset: 0, detail: "missing pk: prefix".into() }))?;
-        semio_framework_io_base64::base64_standard_decode(payload).map_err(|error| PackError::Refusal(pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack base64", offset: 0, detail: error.to_string() }))
+        let payload = encoded.strip_prefix(PACK_B64_PREFIX).ok_or(PackError::Refusal(PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack base64", offset: 0, detail: "missing pk: prefix".into() }))?;
+        semio_framework_io_base64::base64_standard_decode(payload).map_err(|error| PackError::Refusal(PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack base64", offset: 0, detail: error.to_string() }))
     }
 
     /// 🎬️ Decodes a component-scene `*Json` field when it carries [`pack_value_to_base64`] bytes.
@@ -6754,7 +6855,7 @@ use semio_framework_dsl_record::Shape;
         if encoded.starts_with(PACK_B64_PREFIX) {
             decode_pack_value(&pack_value_from_base64(encoded)?)
         } else {
-            Ok(json_value_to_dsl(&serde_json::from_str(encoded).map_err(|error| PackError::Refusal(pack::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "scene field", offset: 0, detail: error.to_string() }))?))
+            Ok(json_value_to_dsl(&serde_json::from_str(encoded).map_err(|error| PackError::Refusal(PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "scene field", offset: 0, detail: error.to_string() }))?))
         }
     }
 
@@ -6776,7 +6877,7 @@ use semio_framework_dsl_record::Shape;
 
     // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
     fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
-        semio_framework_value::DslValue::from(value)
+        DslValue::from(value)
     }
 
     // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
@@ -6799,15 +6900,15 @@ use semio_framework_dsl_record::Shape;
     // 🚫️async: E1 pure recursive transform, consumed by json_values_equal's `==` (external PartialEq) — see R9
     pub fn renormalize_whole_number_floats(value: DslValue) -> DslValue {
         match value {
-            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(n)) if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 => {
+            DslValue::Number(semio_framework_value::Number::Float(n)) if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 => {
                 if n >= 0.0 {
-                    semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(n as u64))
+                    DslValue::Number(semio_framework_value::Number::UInt(n as u64))
                 } else {
-                    semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(n as i64))
+                    DslValue::Number(semio_framework_value::Number::Int(n as i64))
                 }
             }
-            semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
-            semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(entries.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
+            DslValue::Array(items) => DslValue::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
             other => other,
         }
     }
@@ -6903,9 +7004,9 @@ pub struct OwnedSchemaDecodePages {
 
 impl OwnedSchemaDecodePages {
     /// 📐️ Names the indivisible boxed slot allocation independently of logical page bytes.
-    pub fn allocation_byte_demand(&self)->usize{self.slots.len().checked_mul(std::mem::size_of::<OwnedSchemaDecodePage>()).expect("admitted decode slots have a representable allocation")}
+    pub fn allocation_byte_demand(&self)->usize{self.slots.len().checked_mul(size_of::<OwnedSchemaDecodePage>()).expect("admitted decode slots have a representable allocation")}
     /// 📐️ Prices a fixed slot birth before any original source owner transfers.
-    pub fn allocation_byte_demand_for(maximum_pages:usize)->Option<usize>{maximum_pages.checked_mul(std::mem::size_of::<OwnedSchemaDecodePage>())}
+    pub fn allocation_byte_demand_for(maximum_pages:usize)->Option<usize>{maximum_pages.checked_mul(size_of::<OwnedSchemaDecodePage>())}
     /// 🎫️ Reserves fixed page and byte authority before any input owner is admitted.
     pub fn try_with_credits(credits: OwnedSchemaDecodeCredits) -> Result<Self, OwnedSchemaDecodeAdmissionFault> {
         if credits.maximum_pages == 0 || credits.maximum_bytes == 0 {
@@ -7120,7 +7221,7 @@ impl OwnedSchemaTokenCursor {
     }
 
     fn diagnostic(&self, code: &'static str, offset: usize) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset: offset as u64, line: self.line, column: self.column, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset: offset as u64, line: self.line, column: self.column, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     fn advance(&mut self, byte: u8) {
@@ -7572,7 +7673,7 @@ impl OwnedSchemaRecordCursor {
 
     fn fault(&mut self, code: &'static str, token: OwnedSchemaToken, field_index: Option<u8>) -> OwnedSchemaRecordStep {
         let path = field_index.and_then(|index| self.spec.fields.get(index as usize)).and_then(|field| OwnedSchemaPath::field(field.key)).unwrap_or(OwnedSchemaPath::ROOT);
-        let diagnostic = OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: self.tokens.line, column: self.tokens.column, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+        let diagnostic = OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: self.tokens.line, column: self.tokens.column, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
         self.state = OwnedSchemaRecordState::Fault(diagnostic);
         OwnedSchemaRecordStep::Fault(diagnostic)
     }
@@ -7717,7 +7818,7 @@ impl OwnedSchemaRecordCursor {
         self.tokens.next_close_copy_byte_demand()
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         self.tokens.close_step(grant)
     }
 
@@ -7754,7 +7855,7 @@ impl OwnedSchemaNestedRecordCursor {
 
     fn fault(&mut self, code: &'static str, token: OwnedSchemaToken, field_index: Option<u8>) -> OwnedSchemaNestedRecordStep {
         let path = field_index.and_then(|index| self.spec.fields.get(index as usize)).and_then(|field| OwnedSchemaPath::field(field.key)).unwrap_or(OwnedSchemaPath::ROOT);
-        let diagnostic = OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+        let diagnostic = OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
         self.state = OwnedSchemaRecordState::Fault(diagnostic);
         OwnedSchemaNestedRecordStep::Fault(diagnostic)
     }
@@ -7947,7 +8048,7 @@ pub trait ArtifactEnvelopeVcsFieldAuthority<P, Mutation>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -7966,7 +8067,7 @@ pub trait ArtifactEnvelopeSnapshotFieldAuthority<P>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -7990,7 +8091,7 @@ pub trait ArtifactEnvelopeMutationFieldAuthority<Mutation>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -8008,7 +8109,7 @@ pub trait ArtifactEnvelopeSprConflictAuthority: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -8048,7 +8149,7 @@ pub trait ArtifactOwnedHistoryEntryAuthority<T>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_release_byte_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
     fn next_close_depth_demand(&self) -> Result<usize, OwnedSchemaDecodeDiagnostic>;
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -8100,10 +8201,10 @@ impl<Mutation: Send> ArtifactOwnedSprMutationTarget<Mutation> {
 impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactOwnedSprMutationTarget<Mutation> {
     fn reserve_mutation(&mut self) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic> {
         if self.reservation.is_some() || self.value.is_some() {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-occupied", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-occupied", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
-        self.next_generation = self.next_generation.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-generation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-        let reservation = ArtifactEnvelopeFieldReservation::new(1, self.next_generation).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+        self.next_generation = self.next_generation.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-generation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
+        let reservation = ArtifactEnvelopeFieldReservation::new(1, self.next_generation).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
         self.reservation = Some(reservation);
         Ok(reservation)
     }
@@ -8117,7 +8218,7 @@ impl<Mutation: Send> ArtifactEnvelopeMutationFieldTarget<Mutation> for ArtifactO
 
     fn cancel_mutation_reservation(&mut self, reservation: ArtifactEnvelopeFieldReservation) -> Result<(), OwnedSchemaDecodeDiagnostic> {
         if self.reservation != Some(reservation) {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-stale", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-target-stale", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
         self.reservation = None;
         Ok(())
@@ -8163,19 +8264,19 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         use semio_framework_value::RetirementDemand;
         let diagnostic = self.diagnostic("artifact-spr.mutation-array-close-demand", 0);
         if let Some(owner) = self.active.as_ref() {
-            if owner.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
+            if owner.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
             return Ok(RetirementDemand { copy_bytes: owner.next_close_copy_byte_demand()?, capacity_bytes: owner.next_close_capacity_byte_demand(copy)?, release_bytes: owner.next_close_release_byte_demand()?, depth: owner.next_close_depth_demand()?.checked_add(1).ok_or(diagnostic)? });
         }
         if self.reservation.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if let Some(value) = self.target.value.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.mutation_factory.as_ref().expect("mutation target retains its factory").retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
         if let Some(owner) = self.retirement.as_ref() { return artifact_retirement_box_demands(owner, copy).map_err(|_| diagnostic); }
-        if self.values.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<ArtifactStoreOperationRowOwners<Mutation>>(), depth: 1, ..Default::default() }); }
+        if self.values.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<ArtifactStoreOperationRowOwners<Mutation>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.rows_retirement.as_ref() {
             let mut demand = owner.demands(copy).map_err(|_| diagnostic)?;
             demand.depth = demand.depth.checked_add(1).ok_or(diagnostic)?;
             return Ok(demand);
         }
-        if self.catalog.is_some() || self.mutation_factory.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.catalog.is_some() || self.mutation_factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.factories_close.iter().flatten().next() {
             let mut demand = owner.demands(copy).map_err(|_| diagnostic)?;
             demand.depth = demand.depth.checked_add(1).ok_or(diagnostic)?;
@@ -8193,7 +8294,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
     ) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
         let values = if inverse { ArtifactStoreOperationRowOwners::Inverse(Default::default()) } else {
             let mut values = Vec::new();
-            values.try_reserve_exact(ARTIFACT_ENVELOPE_HISTORY_ITEMS).map_err(|_| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-admission", offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+            values.try_reserve_exact(ARTIFACT_ENVELOPE_HISTORY_ITEMS).map_err(|_| OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-admission", offset: 0, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
             ArtifactStoreOperationRowOwners::Forwards(values)
         };
         Ok(Self {
@@ -8218,7 +8319,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     fn accept(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
@@ -8231,7 +8332,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         if matches!(self.state, ArtifactOwnedSprMutationArrayState::Publishing) {
             if let Some(ArtifactStoreOperationRowOwners::Inverse(values)) = self.values.as_mut() {
                 if !values.has_reserved_slot() {
-                    let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-spr.inverse-page-admission", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+                    let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-spr.inverse-page-admission", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
                     let demand = values.next_allocation_bytes().map_err(|_| diagnostic)?;
                     if demand > ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES { return Err(diagnostic); }
                     let progress = values.reserve_one(demand).map_err(|_| diagnostic)?;
@@ -8241,13 +8342,13 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
             }
             let reservation = self.reservation.ok_or_else(|| self.diagnostic("artifact-spr.mutation-array-reservation-missing", token.start))?;
             let path = self.path;
-            let active = self.active.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-owner-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+            let active = self.active.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-owner-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
             return match active.publish_reserved(&mut self.target, reservation, cx)? {
                 ArtifactEnvelopeFieldDecodeStep::Pending => Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
                 ArtifactEnvelopeFieldDecodeStep::FieldComplete | ArtifactEnvelopeFieldDecodeStep::TokenComplete => {
                     self.reservation = None;
-                    let value = self.target.value.take().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-value-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-                    let values = self.values.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-values-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+                    let value = self.target.value.take().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-value-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
+                    let values = self.values.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.mutation-array-values-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
                     match values {
                         ArtifactStoreOperationRowOwners::Forwards(values) => {
                             if values.len() == values.capacity() {
@@ -8336,7 +8437,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         self.values.take()
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
         let diagnostic = self.diagnostic("artifact-spr.mutation-array-close-authority", 0);
         let empty = RetainedCloneProgress::default();
@@ -8481,7 +8582,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAut
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     /// 🌱️ Installs the exact owner for one edit field, or finishes a scalar field inline. Returns
@@ -8526,27 +8627,27 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAut
     fn accept_active_edit_token(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
         let Some(active) = self.active.as_mut() else {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-field", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-field", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         };
         match active {
             ArtifactOwnedSprEditActive::String { field_id, authority } => match authority.step(source, cx) {
                 OwnedSchemaStringStep::Pending => return Ok(ArtifactEnvelopeFieldDecodeStep::Pending),
                 OwnedSchemaStringStep::Complete => {
                     let Some(index) = Self::string_index(*field_id) else {
-                        return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-string-field", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+                        return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-string-field", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
                     };
                     if index==1 {
                         let grant=cx.retained_grant();
                         if self.strings[1].is_none(){
-                            let original=authority.as_str().ok_or(OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-text",offset:token.start,line:0,column:0,path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-                            let copied_bytes=original.len().checked_add(std::mem::size_of::<Option<String>>()).ok_or(OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-overflow",offset:token.start,line:0,column:0,path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+                            let original=authority.as_str().ok_or(OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-text",offset:token.start,line:0,column:0,path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
+                            let copied_bytes=original.len().checked_add(size_of::<Option<String>>()).ok_or(OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-overflow",offset:token.start,line:0,column:0,path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
                             if grant.maximum_items==0||grant.maximum_depth==0||copied_bytes>grant.maximum_copy_bytes||original.len()>grant.maximum_capacity_bytes{return Ok(ArtifactEnvelopeFieldDecodeStep::Pending);}
-                            let mut value=String::new();value.try_reserve_exact(original.len()).map_err(|_|OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-allocation",offset:token.start,line:0,column:0,path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;value.push_str(original);
+                            let mut value=String::new();value.try_reserve_exact(original.len()).map_err(|_|OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-allocation",offset:token.start,line:0,column:0,path, refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;value.push_str(original);
                             let receipt=RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes:value.capacity(),released_bytes:0};
                             *self.strings[1]=Some(value);cx.consume_retained(receipt).map_err(|error|OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-receipt",offset:token.start,line:0,column:0,path,refusal_kind:error.kind,retained_progress:receipt})?;
                             return Ok(ArtifactEnvelopeFieldDecodeStep::Pending);
                         }
-                        let placement=std::mem::size_of::<Option<semio_framework_value::SharedUtf8>>();
+                        let placement=size_of::<Option<semio_framework_value::SharedUtf8>>();
                         if grant.maximum_copy_bytes<placement{return Ok(ArtifactEnvelopeFieldDecodeStep::Pending);}
                         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-placement,..grant};
                         match semio_framework_value::SharedUtf8::admit(self.strings[1].take().expect("original actor text retained"),child){
@@ -8555,16 +8656,16 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAut
                         }
                     }else{*self.strings[index] = authority.take_string();}
                 }
-                OwnedSchemaStringStep::Cancelled => return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-string-cancelled", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
+                OwnedSchemaStringStep::Cancelled => return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-string-cancelled", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }),
                 OwnedSchemaStringStep::Fault(diagnostic) => return Err(diagnostic),
             },
             ArtifactOwnedSprEditActive::Mutations { field_id, authority } => match authority.accept(token, terminal, source, cx) {
                 Err(diagnostic) => return Err(diagnostic),
                 Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
-                    let index = match *field_id { 3 => 0, 4 => 1, _ => return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-native-array-owner", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }) };
-                    if self.completed_arrays[index].is_some() { return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-array-custody", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }); }
+                    let index = match *field_id { 3 => 0, 4 => 1, _ => return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-native-array-owner", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }) };
+                    if self.completed_arrays[index].is_some() { return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-array-custody", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }); }
                     let Some(values) = authority.take_values() else {
-                        return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-mutation-values", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+                        return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-mutation-values", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
                     };
                     match (*field_id, values) {
                         (3, ArtifactStoreOperationRowOwners::Forwards(values)) => *self.forwards = Some(values),
@@ -8572,7 +8673,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAut
                         (_, values) => {
                             *authority.values = Some(values);
                             authority.taken = false;
-                            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-native-array-owner", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+                            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-spr.edit-native-array-owner", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
                         }
                     }
                 }
@@ -8608,11 +8709,11 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAut
         }
         if let Some(owner) = self.retirement.as_ref() { return artifact_retirement_box_demands(owner, copy).map_err(|_| diagnostic); }
         if let Some(value) = self.value.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.retirement_factory.as_ref().expect("edit retains value factory").retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
-        if self.inverse.is_some() || self.forwards.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<ArtifactStoreOperationRowsRetirement<Mutation>>(), depth: 2, ..Default::default() }); }
-        if let Some(owner)=self.actor_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of_val(&self.actor_close),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand().map_err(|error|diagnostic.with_native(error))?,capacity_bytes:owner.next_capacity_byte_demand(copy).map_err(|error|diagnostic.with_native(error))?,release_bytes:owner.next_release_byte_demand().map_err(|error|diagnostic.with_native(error))?,depth:owner.next_depth_demand().map_err(|error|diagnostic.with_native(error))?.checked_add(1).ok_or(diagnostic)?});}
-        if self.actor.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<semio_framework_value::SharedUtf8>()+std::mem::size_of_val(&self.actor_close),depth:1,..Default::default()});}
+        if self.inverse.is_some() || self.forwards.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<ArtifactStoreOperationRowsRetirement<Mutation>>(), depth: 2, ..Default::default() }); }
+        if let Some(owner)=self.actor_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of_val(&self.actor_close),depth:1,..Default::default()});}return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand().map_err(|error|diagnostic.with_native(error))?,capacity_bytes:owner.next_capacity_byte_demand(copy).map_err(|error|diagnostic.with_native(error))?,release_bytes:owner.next_release_byte_demand().map_err(|error|diagnostic.with_native(error))?,depth:owner.next_depth_demand().map_err(|error|diagnostic.with_native(error))?.checked_add(1).ok_or(diagnostic)?});}
+        if self.actor.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_framework_value::SharedUtf8>()+size_of_val(&self.actor_close),depth:1,..Default::default()});}
         if let Some(value) = self.strings[self.close_string..].iter().find_map(|slot| slot.as_ref()) { return Ok(RetirementDemand { release_bytes: value.capacity(), depth: 1, ..Default::default() }); }
-        if self.retirement_factory.is_some() || self.mutation_factory.is_some() || self.catalog.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.retirement_factory.is_some() || self.mutation_factory.is_some() || self.catalog.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.factories_close.iter().flatten().next() {
             let mut demand = owner.demands(copy).map_err(|_| diagnostic)?;
             demand.depth = demand.depth.checked_add(1).ok_or(diagnostic)?;
@@ -8701,7 +8802,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEnt
         Some(value)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -8852,8 +8953,8 @@ impl<T> ArtifactRepositoryHistoryEntryAuthority<T> {
         if let Some(owner) = self.retirement.as_ref() { return artifact_retirement_box_demands(owner, copy); }
         if let Some(value) = self.value.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.retirement_factory.as_ref().expect("history value retains its factory").retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
         if self.raw_len != 0 { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        if self.raw.is_some() { return Ok(RetirementDemand { release_bytes: std::mem::size_of::<[u8; ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES]>(), depth: 1, ..Default::default() }); }
-        if self.retirement_factory.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>(), depth: 1, ..Default::default() }); }
+        if self.raw.is_some() { return Ok(RetirementDemand { release_bytes: size_of::<[u8; ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES]>(), depth: 1, ..Default::default() }); }
+        if self.retirement_factory.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.factory_close.as_ref() {
             let mut demand = owner.demands(copy)?;
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "history decoder factory depth overflow"))?;
@@ -8863,7 +8964,7 @@ impl<T> ArtifactRepositoryHistoryEntryAuthority<T> {
     }
 
     fn diagnostic(&self, code: &'static str, offset: u64) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 }
 
@@ -8880,9 +8981,9 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
             return Err(self.diagnostic("artifact-envelope.history-entry-cancelled", token.start));
         }
         let path = self.path;
-        let diagnostic = |code| OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+        let diagnostic = |code| OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
         let span = usize::try_from(token.end.saturating_sub(token.start)).unwrap_or(usize::MAX);
-        let raw = self.raw.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-closed-source", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+        let raw = self.raw.as_mut().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-closed-source", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
         let Some(end) = self.raw_len.checked_add(span).filter(|end| *end <= raw.len()) else {
             return Err(diagnostic("artifact-envelope.history-entry-byte-capacity"));
         };
@@ -8907,7 +9008,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
         Some(value)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -9275,7 +9376,7 @@ impl<P, Mutation> ArtifactEnvelopeReturnedFieldDecoder<P, Mutation> {
     /// 📏️ Observes the detached decoder's next turn, or the separate release of its terminal shell.
     fn demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         let Some(owner) = self.owner.as_ref() else { return Ok(Default::default()) };
-        if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
+        if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
         let demand = artifact_envelope_field_demands(owner.as_ref(), maximum_copy_bytes).map_err(artifact_envelope_diagnostic_error)?;
         Ok(semio_framework_value::RetirementDemand { depth: demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "returned artifact envelope field decoder depth overflow"))?, ..demand })
     }
@@ -9357,7 +9458,7 @@ impl<const MAXIMUM_BYTES: usize> OwnedSchemaStringAuthority<MAXIMUM_BYTES> {
     }
 
     fn diagnostic(&self, code: &'static str) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset: self.token.start + self.relative as u64, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset: self.token.start + self.relative as u64, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     fn raw_byte(&self, source: &OwnedSchemaRecordCursor) -> Option<u8> {
@@ -9545,13 +9646,13 @@ pub struct OwnedSchemaHexAuthority<const MAXIMUM_BYTES: usize> {
 impl<const MAXIMUM_BYTES: usize> OwnedSchemaHexAuthority<MAXIMUM_BYTES> {
     pub fn try_new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, token: OwnedSchemaToken, path: OwnedSchemaPath) -> Result<Self, OwnedSchemaDecodeDiagnostic> {
         if token.kind != OwnedSchemaTokenKind::String {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.expected-hex-string", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.expected-hex-string", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
         Ok(Self { operation, generation, token, path, relative: 1, bytes: Box::new([0; MAXIMUM_BYTES]), len: 0, high: None, complete: false, taken: false })
     }
 
     fn fault(&self, code: &'static str) -> OwnedSchemaHexStep {
-        OwnedSchemaHexStep::Fault(OwnedSchemaDecodeDiagnostic { code, offset: self.token.start + self.relative as u64, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+        OwnedSchemaHexStep::Fault(OwnedSchemaDecodeDiagnostic { code, offset: self.token.start + self.relative as u64, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })
     }
 
     fn nibble(byte: u8) -> Option<u8> {
@@ -9663,19 +9764,19 @@ struct OwnedSchemaBoundedArrayAuthority<T> {
 impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
     fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::RetirementDemand;
-        let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-close-demand", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
+        let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-close-demand", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
         if let Some(owner) = self.active_decoder.as_ref() {
-            if owner.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
+            if owner.terminal_is_empty() { return Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }); }
             return Ok(RetirementDemand { copy_bytes: owner.next_close_copy_byte_demand()?, capacity_bytes: owner.next_close_capacity_byte_demand(copy)?, release_bytes: owner.next_close_release_byte_demand()?, depth: owner.next_close_depth_demand()?.checked_add(1).ok_or(diagnostic)? });
         }
         if let Some(owner) = self.active_retirement.as_ref() { return artifact_retirement_box_demands(owner, copy).map_err(|error| diagnostic.with_native(error)); }
         if self.reservation.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if let Some(value) = self.rejected.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.retirement_factory.as_ref().expect("history entry retains its factory").retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
-        if self.values.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<ArtifactHistoryLedger<T>>(), depth: 1, ..Default::default() }); }
+        if self.values.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<ArtifactHistoryLedger<T>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.ledger_retirement.as_ref() {
             return Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand().map_err(|error| diagnostic.with_native(error))?, capacity_bytes: owner.next_capacity_byte_demand(copy).map_err(|error| diagnostic.with_native(error))?, release_bytes: owner.next_release_byte_demand().map_err(|error| diagnostic.with_native(error))?, depth: owner.next_depth_demand().map_err(|error| diagnostic.with_native(error))?.checked_add(1).ok_or(diagnostic)? });
         }
-        if self.retirement_factory.is_some() || self.decoder.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.retirement_factory.is_some() || self.decoder.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.factories_close.iter().flatten().next() {
             let mut demand = owner.demands(copy).map_err(|error| diagnostic.with_native(error))?;
             demand.depth = demand.depth.checked_add(1).ok_or(diagnostic)?;
@@ -9702,7 +9803,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
     }
 
     fn diagnostic(&self, code: &'static str, token: OwnedSchemaToken) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     fn accept(&mut self, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
@@ -9717,15 +9818,15 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
                 step => {
                     match token.kind {
                         OwnedSchemaTokenKind::ObjectStart | OwnedSchemaTokenKind::ArrayStart => {
-                            self.entry_depth = self.entry_depth.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+                            self.entry_depth = self.entry_depth.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
                         }
                         OwnedSchemaTokenKind::ObjectEnd | OwnedSchemaTokenKind::ArrayEnd => {
-                            self.entry_depth = self.entry_depth.checked_sub(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+                            self.entry_depth = self.entry_depth.checked_sub(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-depth", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
                         }
                         _ => {}
                     }
                     if self.entry_depth == 0 {
-                        let value = decoder.take_value().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-owner-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+                        let value = decoder.take_value().ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-entry-owner-missing", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
                         if !decoder.terminal_is_empty() {
                             *self.rejected = Some(value);
                             return Err(self.diagnostic("artifact-envelope.history-entry-live-after-take", token));
@@ -9788,7 +9889,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
         self.values.take()
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close};
         let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.history-close-authority", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
         let empty = RetainedCloneProgress::default();
@@ -9881,17 +9982,17 @@ impl OwnedSchemaEmptyArrayAuthority {
 
     pub fn accept(&mut self, token: OwnedSchemaToken, terminal: bool) -> Result<ArtifactEnvelopeFieldDecodeStep, OwnedSchemaDecodeDiagnostic> {
         if self.complete {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.trailing-empty-array-token", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.trailing-empty-array-token", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
         if !self.opened {
             if token.kind != OwnedSchemaTokenKind::ArrayStart || terminal {
-                return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.expected-empty-array", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+                return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.expected-empty-array", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
             }
             self.opened = true;
             return Ok(ArtifactEnvelopeFieldDecodeStep::TokenComplete);
         }
         if token.kind != OwnedSchemaTokenKind::ArrayEnd || !terminal {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.expected-empty-array-end", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "schema-json.expected-empty-array-end", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
         self.complete = true;
         Ok(ArtifactEnvelopeFieldDecodeStep::FieldComplete)
@@ -10029,7 +10130,7 @@ where
     }
 
     fn diagnostic(code: &'static str) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     fn checked_field_close_demand(&self, demand: semio_framework_value::RetirementDemand) -> Result<semio_framework_value::RetirementDemand, OwnedSchemaDecodeDiagnostic> {
@@ -10503,7 +10604,7 @@ where
                 (step, owner.terminal_is_empty())
             }) {
                 Ok((Ok(step), terminal)) => (step, terminal),
-                Ok((Err(_), _)) => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field owner faulted while closing")),
+                Ok((Err(diagnostic), _)) => return Err(artifact_envelope_diagnostic_error(diagnostic)),
                 Err(ArtifactEnvelopeFieldDecoderRegistryFault::Contended) => return Ok(RetainedCloneStep::Progress(empty)),
                 Err(_) => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact envelope rejected field lease is invalid")),
             };
@@ -10579,7 +10680,7 @@ impl<P, Mutation> ArtifactEnvelopeUnadmittedDecodeRejected<P, Mutation> {
     /// 📏️ Observes the unadmitted decoder as a child, the separate release of its terminal shell, then one fixed page.
     fn demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(fields) = self.fields.as_ref() {
-            if fields.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(fields.as_ref()), depth: 1, ..Default::default() }); }
+            if fields.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: size_of_val(fields.as_ref()), depth: 1, ..Default::default() }); }
             let demand = artifact_envelope_field_demands(fields.as_ref(), maximum_copy_bytes).map_err(artifact_envelope_diagnostic_error)?;
             return Ok(semio_framework_value::RetirementDemand { depth: demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "unadmitted envelope field decoder depth overflow"))?, ..demand });
         }
@@ -10777,7 +10878,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeComplet
     fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.retirement.is_some() { return artifact_retirement_owner_demands(&self.retirement, maximum_copy_bytes); }
         if self.envelope.is_some() { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
-        if self.initial_snapshot_factory.is_some() || self.mutation_factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.initial_snapshot_factory.is_some() || self.mutation_factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         for factory in self.factory_retirement.iter().flatten() {
             let mut demand = factory.demands(maximum_copy_bytes)?;
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "completed factory depth overflow"))?;
@@ -10998,10 +11099,10 @@ impl<P> ArtifactEnvelopeFreshSnapshotTarget<P> {
 impl<P: Send> ArtifactEnvelopeSnapshotFieldTarget<P> for ArtifactEnvelopeFreshSnapshotTarget<P> {
     fn reserve_snapshot(&mut self) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic> {
         if self.reserved.is_some() || self.value.is_some() {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-duplicate", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-duplicate", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
-        self.next_generation = self.next_generation.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-generation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-        let reservation = ArtifactEnvelopeFieldReservation::new(1, self.next_generation).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-invalid", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+        self.next_generation = self.next_generation.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-generation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
+        let reservation = ArtifactEnvelopeFieldReservation::new(1, self.next_generation).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-invalid", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
         self.reserved = Some(reservation);
         Ok(reservation)
     }
@@ -11015,7 +11116,7 @@ impl<P: Send> ArtifactEnvelopeSnapshotFieldTarget<P> for ArtifactEnvelopeFreshSn
 
     fn cancel_snapshot_reservation(&mut self, reservation: ArtifactEnvelopeFieldReservation) -> Result<(), OwnedSchemaDecodeDiagnostic> {
         if self.reserved != Some(reservation) {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-stale", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.snapshot-reservation-stale", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
         self.reserved = None;
         Ok(())
@@ -11098,7 +11199,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVc
     }
 
     fn diagnostic(code: &'static str) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT) , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::field("vcs").unwrap_or(OwnedSchemaPath::ROOT) , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     /// 🎯️ Routes one cursor-attributed token into the exact live nested owner. The owner is taken
@@ -11299,7 +11400,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVc
         let capacity = |capacity_bytes: usize, depth: usize| RetirementDemand { capacity_bytes, depth, ..Default::default() };
         if let Some(snapshot) = self.snapshot.as_ref() {
             if snapshot.terminal_is_empty() {
-                return Ok(RetirementDemand { release_bytes: std::mem::size_of_val(snapshot.as_ref()), depth: 1, ..Default::default() });
+                return Ok(RetirementDemand { release_bytes: size_of_val(snapshot.as_ref()), depth: 1, ..Default::default() });
             }
             let demand = RetirementDemand {
                 copy_bytes: snapshot.next_close_copy_byte_demand()?,
@@ -11330,7 +11431,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshVc
         } else if let Some(ledger) = self.edits.as_ref() {
             Self::ledger_demand::<Edit<Mutation>, ArtifactStoreDecodedEditRetirementFactory<Mutation>>(ledger).map_err(refusal)?
         } else if self.value.is_some() {
-            capacity(std::mem::size_of::<ArtifactStoreVcsRetirement<P, Mutation>>(), 2)
+            capacity(size_of::<ArtifactStoreVcsRetirement<P, Mutation>>(), 2)
         } else if self.genesis_pack.is_some() {
             RetirementDemand { depth: 1, ..Default::default() }
         } else if self.genesis_bytes.is_some() {
@@ -11599,10 +11700,10 @@ impl<P: Send, Mutation: Send> ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
 impl<P: Send + Sync, Mutation: Send> ArtifactEnvelopeDecodedRecordTarget<P, Mutation> for ArtifactEnvelopeFreshRecordTarget<P, Mutation> {
     fn reserve_field(&mut self, field_id: u16) -> Result<ArtifactEnvelopeFieldReservation, OwnedSchemaDecodeDiagnostic> {
         if field_id != ARTIFACT_ENVELOPE_VCS_FIELD || self.reserved.is_some() || self.vcs.is_some() {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
-        self.next_generation = self.next_generation.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-generation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-        let reservation = ArtifactEnvelopeFieldReservation::new(field_id, self.next_generation).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+        self.next_generation = self.next_generation.checked_add(1).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-generation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
+        let reservation = ArtifactEnvelopeFieldReservation::new(field_id, self.next_generation).ok_or(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-reservation", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
         self.reserved = Some(reservation);
         Ok(reservation)
     }
@@ -11624,7 +11725,7 @@ impl<P: Send + Sync, Mutation: Send> ArtifactEnvelopeDecodedRecordTarget<P, Muta
 
     fn cancel_field_reservation(&mut self, reservation: ArtifactEnvelopeFieldReservation) -> Result<(), OwnedSchemaDecodeDiagnostic> {
         if self.reserved != Some(reservation) {
-            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-reservation-stale", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.fresh-field-reservation-stale", offset: 0, line: 0, column: 0, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() });
         }
         self.reserved = None;
         Ok(())
@@ -11693,7 +11794,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
     }
 
     fn diagnostic(field: &'static str, code: &'static str) -> OwnedSchemaDecodeDiagnostic {
-        OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::field(field).unwrap_or(OwnedSchemaPath::ROOT) , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+        OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: OwnedSchemaPath::field(field).unwrap_or(OwnedSchemaPath::ROOT) , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
     fn owners_terminal_empty(&self) -> bool {
@@ -11710,7 +11811,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
                     line: 0,
                     column: 0,
                     path: OwnedSchemaPath::field(field).unwrap_or(OwnedSchemaPath::ROOT),
-                 refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
+                 refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })?;
                 self.active = Some(ArtifactEnvelopeFreshRecordActive::String { field_id, authority });
             }
             ARTIFACT_ENVELOPE_VCS_FIELD => {
@@ -11752,14 +11853,14 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
         let deeper = |depth: usize| depth.checked_add(1).ok_or_else(|| Self::diagnostic("$", "artifact-envelope.close-depth-overflow"));
         if let Some(active) = self.active.as_ref() {
             return Ok(match active {
-                ArtifactEnvelopeFreshRecordActive::Vcs { authority, .. } if authority.terminal_is_empty() => RetirementDemand { release_bytes: std::mem::size_of_val(authority.as_ref()), depth: 1, ..Default::default() },
+                ArtifactEnvelopeFreshRecordActive::Vcs { authority, .. } if authority.terminal_is_empty() => RetirementDemand { release_bytes: size_of_val(authority.as_ref()), depth: 1, ..Default::default() },
                 ArtifactEnvelopeFreshRecordActive::Vcs { authority, .. } => RetirementDemand {
                     copy_bytes: authority.next_close_copy_byte_demand()?,
                     capacity_bytes: authority.next_close_capacity_byte_demand(maximum_copy_bytes)?,
                     release_bytes: authority.next_close_release_byte_demand()?,
                     depth: deeper(authority.next_close_depth_demand()?)?,
                 },
-                ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { authority, .. } if authority.terminal_is_empty() => RetirementDemand { release_bytes: std::mem::size_of_val(authority.as_ref()), depth: 1, ..Default::default() },
+                ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { authority, .. } if authority.terminal_is_empty() => RetirementDemand { release_bytes: size_of_val(authority.as_ref()), depth: 1, ..Default::default() },
                 ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { authority, .. } => RetirementDemand {
                     copy_bytes: authority.next_close_copy_byte_demand()?,
                     capacity_bytes: authority.next_close_capacity_byte_demand(maximum_copy_bytes)?,
@@ -11771,7 +11872,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
         }
         if let Some(owner) = self.pending_completed.as_ref() {
             if owner.terminal_is_empty() {
-                return Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() });
+                return Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() });
             }
             return Ok(RetirementDemand {
                 copy_bytes: owner.next_close_copy_byte_demand().map_err(refusal)?,
@@ -11788,7 +11889,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFreshFi
             return Ok(demand);
         }
         if self.target.vcs.is_some() {
-            return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<ArtifactStoreVcsRetirement<P, Mutation>>(), depth: 2, ..Default::default() });
+            return Ok(RetirementDemand { capacity_bytes: size_of::<ArtifactStoreVcsRetirement<P, Mutation>>(), depth: 2, ..Default::default() });
         }
         let release_bytes = self.schema.as_ref().map_or(0, String::capacity).checked_add(self.id.as_ref().map_or(0, String::capacity)).ok_or_else(|| Self::diagnostic("$", "artifact-envelope.close-byte-demand-overflow"))?;
         Ok(RetirementDemand { release_bytes, depth: 1, ..Default::default() })
@@ -11974,7 +12075,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
                         }
                         return Ok(RetainedCloneStep::Progress(step.progress()));
                     }
-                    released_bytes = std::mem::size_of_val(authority.as_ref());
+                    released_bytes = size_of_val(authority.as_ref());
                 }
                 ArtifactEnvelopeFreshRecordActive::RejectedSnapshot { authority, .. } => {
                     if !authority.terminal_is_empty() {
@@ -11984,7 +12085,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
                         }
                         return Ok(RetainedCloneStep::Progress(step.progress()));
                     }
-                    released_bytes = std::mem::size_of_val(authority.as_ref());
+                    released_bytes = size_of_val(authority.as_ref());
                 }
                 ArtifactEnvelopeFreshRecordActive::Empty { .. } => {}
             }
@@ -12000,7 +12101,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
         }
         if let Some(owner) = self.pending_completed.as_mut() {
             if owner.terminal_is_empty() {
-                let released_bytes = std::mem::size_of_val(owner.as_ref());
+                let released_bytes = size_of_val(owner.as_ref());
                 drop(self.pending_completed.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..empty }));
             }
@@ -12203,6 +12304,9 @@ pub use native_snapshot::{ArtifactNativeSnapshot,ArtifactPackReceiving,NativeSna
 #[path = "📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs"]
 mod sqlite_snapshot_retirement;
 
+#[path = "📦️codec/🪶️snapshot-capability/🪆️workspace-receiving/🦀️.rs"]
+mod sqlite_snapshot_workspace;
+
 #[path = "📦️codec/🪶️snapshot-capability/🛬️native-decoding/🦀️.rs"]
 mod sqlite_snapshot_native_decoding;
 pub use sqlite_snapshot_native_decoding::decode_sqlite_snapshot_record_native;
@@ -12217,10 +12321,10 @@ pub trait ArtifactSqliteSnapshot: Sized {
     fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, ValueError>;
     fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, ValueError>;
 
-    /// 🫴️ Receives original SQL row ownership before any projection effect can refuse.
-    fn to_sqlite_database_receiving(&self,_control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,_owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<crate::sqlite_snapshot::SqliteDatabase,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"snapshot owner has no original SQL projection receiving implementation"))}
-    /// 🪆️ Receives original semantic tree ownership before any reconstruction effect can refuse.
-    fn from_sqlite_database_receiving(_database:&crate::sqlite_snapshot::SqliteDatabase,_control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,_owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"snapshot owner has no original SQL reconstruction receiving implementation"))}
+    /// 🫴️ Receives original SQL row ownership before any projection effect can refuse; the default runs the authored projection under the original owner, whose control carries the operation workspace recipient the codec installed.
+    fn to_sqlite_database_receiving(&self,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<crate::sqlite_snapshot::SqliteDatabase,ValueError>{sqlite_snapshot_workspace::project(self,control,owner)}
+    /// 🪆️ Receives original semantic tree ownership before any reconstruction effect can refuse; the default runs the authored reconstruction under the original owner, whose control carries the operation workspace recipient the codec installed.
+    fn from_sqlite_database_receiving(database:&crate::sqlite_snapshot::SqliteDatabase,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,owner:&mut NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError> {sqlite_snapshot_workspace::reconstruct(database,control,owner)}
 
     /// ♻️ Retires a snapshot through its declared owner after an erased conversion.
     fn retire_sqlite_snapshot(self) {
@@ -12231,20 +12335,20 @@ pub trait ArtifactSqliteSnapshot: Sized {
     fn decode_sqlite_snapshot_native(_payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         native_owner.native().checkpoint()?;
         control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native decoding implementation"))
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native decoding implementation"))
     }
 
     /// 🛫️ Emits native state through an owner-declared bounded and cancellable encoder.
     fn encode_sqlite_snapshot_native(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut NativeSnapshotEncodeOwner<'_, '_>) -> Result<crate::io_schema::IoPayload, ValueError> {
         native_owner.native().checkpoint()?;
         control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native encoding implementation"))
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no controlled native encoding implementation"))
     }
 
     /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
-        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no bounded native encoding preflight"))
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "snapshot owner has no bounded native encoding preflight"))
     }
 
     /// 🛡️ Validates the exact owned subset without lowering fields into a native wire format.
@@ -12255,13 +12359,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         if dialect.subset == "*" {
             return Ok(crate::io_schema::IoOutcome::clean(()));
         }
-        Err(crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate()))))
+        Err(crate::io_schema::IoError::from_value_error(ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate()))))
     }
 
-    /// 🛂️ Validates the authoritative subset with original decode receiving authority.
-    fn validate_sqlite_snapshot_subset_decoding(&self,_dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&crate::sqlite_snapshot::SqliteDatabase,_control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,_native:&mut NativeSnapshotDecodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{Err(crate::io_schema::IoError::from_value_error(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"snapshot subset has no original decode receiving validator")))}
-    /// 🛃️ Validates the authoritative subset with original encode receiving authority.
-    fn validate_sqlite_snapshot_subset_encoding(&self,_dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&crate::sqlite_snapshot::SqliteDatabase,_control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,_native:&mut NativeSnapshotEncodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{Err(crate::io_schema::IoError::from_value_error(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"snapshot subset has no original encode receiving validator")))}
+    /// 🛂️ Validates the authoritative subset with original decode receiving authority; the default applies the authored subset policy.
+    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&crate::sqlite_snapshot::SqliteDatabase,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,native:&mut NativeSnapshotDecodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{sqlite_snapshot_workspace::validate_decoding(self,dialect,database,control,native)}
+    /// 🛃️ Validates the authoritative subset with original encode receiving authority; the default applies the authored subset policy.
+    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&crate::sqlite_snapshot::SqliteDatabase,control:&mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>,native:&mut NativeSnapshotEncodeOwner<'_,'_>)->crate::io_schema::IoResult<()>{sqlite_snapshot_workspace::validate_encoding(self,dialect,database,control,native)}
 
     /// 🪶️ Builds the relational codec only when the snapshot actually implements it.
     fn sqlite_codec() -> ArtifactSqliteSnapshotCodec
@@ -12286,7 +12390,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     let outcome = snapshot.validate_sqlite_snapshot_subset(dialect, database, control)?;
     if outcome.diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-        return Err(crate::io_schema::IoError { cause: semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("owned snapshot violates subset {}", dialect.to_coordinate())), diagnostics: outcome.diagnostics });
+        return Err(crate::io_schema::IoError { cause: ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("owned snapshot violates subset {}", dialect.to_coordinate())), diagnostics: outcome.diagnostics });
     }
     Ok(outcome)
 }
@@ -12386,14 +12490,14 @@ impl<T> BoundedArtifactRetirementFactory<T> {
 
 impl<T: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
     fn retirement_birth_bytes(&self, _: &T) -> usize { semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<T>() }
-    fn retire_owned(&self, value: T, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, T)> {
+    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
         semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
     }
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned + Sync> SnapshotRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
     fn retirement_birth_bytes(&self, _: &Arc<T>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<T>() }
-    fn retire(&self, snapshot: Arc<T>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Arc<T>)> {
+    fn retire(&self, snapshot: Arc<T>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> {
         semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
     }
 }
@@ -12428,20 +12532,29 @@ Mutation:Clone+ToValue+FromValue+self::Mutation<P>+OpBinary+OpText+semio_framewo
 pub fn bounded_artifact_store_owners<P, Mutation>(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<P, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     let demand = bounded_artifact_store_owners_birth_demand::<P, Mutation>().map_err(|error| DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
     if grant.maximum_depth < demand.depth { return Err(DocumentStoreOwnersAdmissionError { error: ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "bounded catalog source exceeds declared owner depth"), owners: None, progress: Default::default() }); }
-    DocumentStoreOwners::admit_source_constructor(grant, || (BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<Mutation>::new(), ArtifactStoreCursorDisposer::<P, Mutation>::new()))
+    DocumentStoreOwners::admit_source_constructor(grant, || (BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<Mutation>::new(), ArtifactStoreCursorDisposer::<P, Mutation>::new())).map(|(owners, progress)| (owners.with_batch_digest(), progress))
 }
 
 /// 🌳️ Admits the original bounded catalog and preparation source tree in one funded ingress.
 pub fn bounded_artifact_store_owners_with_one_item_preparation<P, Mutation>(grant: RetainedCloneGrant, preparation_birth: RetainedCloneBirthDemand, construct: impl FnOnce() -> Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>) -> Result<(DocumentStoreOwners<P, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
-    DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation_birth, || (BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<Mutation>::new(), ArtifactStoreCursorDisposer::<P, Mutation>::new(), construct()))
+    DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation_birth, || (BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<P>::new(), BoundedArtifactRetirementFactory::<Mutation>::new(), ArtifactStoreCursorDisposer::<P, Mutation>::new(), construct())).map(|(owners, progress)| (owners.with_batch_digest(), progress))
+}
+
+impl<P, Mutation> DocumentStoreOwners<P, Mutation>
+where
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+{
+    /// 🔏️ Grants the catalog's operation wire its aggregate-edit digest authority, so the Store commits batches without an app factory.
+    pub fn with_batch_digest(mut self) -> Self { self.operation_wire = self.operation_wire.with_batch_digest(); self }
 }
 
 /// 🏗️ Funds one complete catalog from its own quoted demands for synchronous construction that no scheduler grants.
@@ -12475,70 +12588,23 @@ where
 pub fn funded_bounded_artifact_store_owners<P, Mutation>() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
     fund_document_store_owners(bounded_artifact_store_owners_birth_demand::<P, Mutation>()?, bounded_artifact_store_owners::<P, Mutation>)
 }
 
-/// 📏️ Quotes the bounded catalog together with the [`ArtifactCanonicalAuthoringFactory`] Arc it installs.
-pub fn canonical_authoring_store_owners_birth_demand<P, Mutation>() -> Result<RetainedCloneBirthDemand, ValueError>
+/// 🗃️🧷️ Funds the bounded catalog together with one original preparation authority for a store that no scheduler grants: the authority's source extent is priced from its own constructed Arc and its quoted retirement ticket tree, so the catalog retires it like every other original factory.
+pub fn funded_bounded_artifact_store_owners_with_one_item_preparation<P, Mutation>(preparation: Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>) -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJsonTree + Send + Sync + 'static,
 {
-    let bounded = bounded_artifact_store_owners_birth_demand::<P, Mutation>()?;
-    let capacity_bytes = bounded.capacity_bytes.checked_add(semio_framework_value::factory_arc_birth_bytes::<ArtifactCanonicalAuthoringFactory<P, Mutation>>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "canonical authoring catalog extent overflow"))?;
-    Ok(RetainedCloneBirthDemand { capacity_bytes, depth: bounded.depth })
-}
-
-/// 🗃️ Admits the bounded catalog whose mutation names its own canonical JSON wire, so authoring mints operation identities from the original operation.
-pub fn canonical_authoring_store_owners<P, Mutation>(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<P, Mutation>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, Mutation>>
-where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
-{
-    let preparation = RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<ArtifactCanonicalAuthoringFactory<P, Mutation>>(), depth: 1 };
-    bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || Arc::new(ArtifactCanonicalAuthoringFactory::<P, Mutation>::new()))
-}
-
-/// 🗃️ Funds the canonical authoring catalog for a store that no scheduler grants.
-pub fn funded_canonical_authoring_store_owners<P, Mutation>() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>
-where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
-{
-    fund_document_store_owners(canonical_authoring_store_owners_birth_demand::<P, Mutation>()?, canonical_authoring_store_owners::<P, Mutation>)
-}
-
-/// 🗃️ Names the funded catalog a linked codec's throwaway reduction store installs.
-trait ArtifactCodecCatalog<P, Mutation>
-where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
-{
-    fn funded() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>;
-}
-
-/// 🗃️ The framework's bounded catalog: it retires, but carries no operation wire, so a reduction store over it cannot author.
-struct BoundedCodecCatalog;
-
-impl<P, Mutation> ArtifactCodecCatalog<P, Mutation> for BoundedCodecCatalog
-where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
-{
-    fn funded() -> Result<DocumentStoreOwners<P, Mutation>, ValueError> { funded_bounded_artifact_store_owners::<P, Mutation>() }
-}
-
-/// 🗃️ The canonical authoring catalog: the mutation names its wire, so a reduction store over it authors.
-struct CanonicalCodecCatalog;
-
-impl<P, Mutation> ArtifactCodecCatalog<P, Mutation> for CanonicalCodecCatalog
-where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson,
-{
-    fn funded() -> Result<DocumentStoreOwners<P, Mutation>, ValueError> { funded_canonical_authoring_store_owners::<P, Mutation>() }
+    let overflow = || ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "preparation source extent overflow");
+    let arc = std::alloc::Layout::new::<[usize; 2]>().extend(std::alloc::Layout::for_value(&*preparation)).map_err(|_| overflow())?.0.pad_to_align().size();
+    let additional = RetainedCloneBirthDemand { capacity_bytes: arc.checked_add(preparation.factory_retirement_birth_bytes()).ok_or_else(overflow)?, depth: preparation.factory_retirement_depth_demand() };
+    let base = bounded_artifact_store_owners_birth_demand::<P, Mutation>()?;
+    let birth = RetainedCloneBirthDemand { capacity_bytes: base.capacity_bytes.checked_add(additional.capacity_bytes).ok_or_else(overflow)?, depth: base.depth.max(additional.depth) };
+    fund_document_store_owners(birth, move |grant| bounded_artifact_store_owners_with_one_item_preparation(grant, additional, move || preparation))
 }
 
 /// 🧺️ Runs a throwaway reduction store's close cursor to exact terminal emptiness and forgets the
@@ -12685,20 +12751,9 @@ impl ArtifactCodec {
     pub fn of<P, Mutation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
     {
         let mut codec = Self::bare::<P, Mutation>(schema);
-        codec.snapshot_sqlite = Some(P::sqlite_codec());
-        codec
-    }
-
-    /// 🔏️ Constructs a codec with a required relational snapshot whose mutation names its canonical JSON wire, so its reduction store authors.
-    pub fn of_authoring<P, Mutation>(schema: impl Into<String>) -> Self
-    where
-        P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson + Sync,
-    {
-        let mut codec = Self::bare_authoring::<P, Mutation>(schema);
         codec.snapshot_sqlite = Some(P::sqlite_codec());
         codec
     }
@@ -12707,25 +12762,15 @@ impl ArtifactCodec {
     pub fn bare<P, Mutation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
     {
-        Self::assemble::<P, Mutation, BoundedCodecCatalog>(schema)
+        Self::assemble::<P, Mutation>(schema)
     }
 
-    /// 🔏️ Constructs a native document codec whose reduction store authors from the mutation's own canonical JSON wire.
-    pub fn bare_authoring<P, Mutation>(schema: impl Into<String>) -> Self
+    fn assemble<P, Mutation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + ArtifactCanonicalJson + Sync,
-    {
-        Self::assemble::<P, Mutation, CanonicalCodecCatalog>(schema)
-    }
-
-    fn assemble<P, Mutation, C>(schema: impl Into<String>) -> Self
-    where
-        P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync,
-        C: ArtifactCodecCatalog<P, Mutation>,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
     {
         /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
         /// `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
@@ -12784,12 +12829,11 @@ impl ArtifactCodec {
         /// shallow shell, so an early return here aborts the process instead of reporting the
         /// fault. Capture every fallible step as a value, run the close cursor, forget the
         /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
-        fn apply_ops_binary_impl<'a, 'b, P, Mutation, C>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
+        fn apply_ops_binary_impl<'a, 'b, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
         where
             P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-            Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync,
-            C: ArtifactCodecCatalog<P, Mutation>,
-        {
+            Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+            {
             Box::pin(async move {
                 let mutations: Vec<Mutation> = if ops_vec.is_empty() {
                     Vec::new()
@@ -12823,7 +12867,7 @@ impl ArtifactCodec {
                     };
                     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
                     let mut store = ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await?;
-                    let installed = C::funded().and_then(|owners| store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); error })).map_err(|error| VcsError::ValidationFailed(error.into_message()));
+                    let installed = funded_bounded_artifact_store_owners::<P, Mutation>().and_then(|owners| store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); error })).map_err(|error| VcsError::ValidationFailed(error.into_message()));
                     (store, installed)
                 };
                 let applied = match installed {
@@ -12842,14 +12886,13 @@ impl ArtifactCodec {
             })
         }
 
-        fn replay_envelopes_impl<'a, P, Mutation, C>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
+        fn replay_envelopes_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
         where
             P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_value::retirement::RetireOwned + Sync,
-            Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync,
-            C: ArtifactCodecCatalog<P, Mutation>,
-        {
+            Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+            {
             Box::pin(async move {
-                let files = replay_envelopes_onto_pair::<P, Mutation>(pack, spr, envelopes, C::funded).await?;
+                let files = replay_envelopes_onto_pair::<P, Mutation>(pack, spr, envelopes, funded_bounded_artifact_store_owners::<P, Mutation>).await?;
                 Ok((files.pack, files.spr, files.ops))
             })
         }
@@ -12876,8 +12919,8 @@ impl ArtifactCodec {
             compile_dsl: compile_dsl_impl::<P, Mutation>,
             print_mirror: print_mirror_impl::<P, Mutation>,
             edit_text_from_envelope: edit_text_from_envelope_impl::<P, Mutation>,
-            apply_ops_binary: apply_ops_binary_impl::<P, Mutation, C>,
-            replay_envelopes: replay_envelopes_impl::<P, Mutation, C>,
+            apply_ops_binary: apply_ops_binary_impl::<P, Mutation>,
+            replay_envelopes: replay_envelopes_impl::<P, Mutation>,
         }
     }
 }
@@ -14277,7 +14320,7 @@ enum OpsHeaderLine {
 /// 🌿️ A text record explicitly carries zero trunk/unknown or one authored branch identity.
 fn ops_line_provenance(mut lines: Vec<String>) -> Result<Option<String>, TextError> {
     if lines.len() > 1 {
-        return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("history line admits zero or one identity").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("history line admits zero or one identity").to_string(),TextSpan::at(1,1)));
     }
     Ok(lines.pop())
 }
@@ -14294,7 +14337,7 @@ impl OpText for OpsHeaderLine {
                 return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+        Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
@@ -15057,7 +15100,7 @@ async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messa
             Some(edit.mutation_meta.iter().enumerate().map(|(index, meta)| history_op_meta_from_operation_meta(meta, messages.iter().filter(move |message| message.op_index == Some(index as u32)).map(history_message_from_mutation_message))).collect())
         },
         lane: lane.filter(|lane| !matches!(lane, HistoryLane::Document)).map(|lane| match lane.to_value() {
-            semio_framework_value::DslValue::String(name) => name,
+            DslValue::String(name) => name,
             other => unreachable!("a HistoryLane always encodes as its own camelCase word, got {other:?}"),
         }),
     })
@@ -15309,7 +15352,7 @@ where
     for (index, history_edit) in log.edits.into_iter().enumerate() {
         let edit_id = history_edit.id.clone();
         if let Some(lane) = &history_edit.lane {
-            let lane = HistoryLane::from_value(semio_framework_value::DslValue::String(lane.clone()))
+            let lane = HistoryLane::from_value(DslValue::String(lane.clone()))
                 .map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("history edit {edit_id} names an unknown lane: {error}"), TextSpan::at(1, 1)))?;
             if !lane.is_document().await {
                 lanes.insert(edit_id.clone(), lane);
@@ -15825,7 +15868,7 @@ impl OpText for SupersedeInputLine {
                 return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown supersede input line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+        Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown supersede input line '{line}'")).to_string(),TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
@@ -15860,7 +15903,7 @@ fn print_supersede_inputs<Op: OpText>(out: &mut String, inputs: &[SupersedeInput
 
 /// 📥️ Parses the indented input lines [`print_supersede_inputs`] prints; at least one input is required. All-or-nothing:
 /// on any failure every replacement parsed so far retires through its technology's cold disposal.
-fn parse_supersede_inputs<P, Op: OpText + self::Mutation<P>>(lines: &[&str]) -> Result<Vec<SupersedeInput<Op>>, TextError> {
+fn parse_supersede_inputs<P, Op: OpText + Mutation<P>>(lines: &[&str]) -> Result<Vec<SupersedeInput<Op>>, TextError> {
     let mut inputs: Vec<SupersedeInput<Op>> = Vec::new();
     match parse_supersede_input_lines(lines, &mut inputs) {
         Ok(()) => Ok(inputs),
@@ -15877,7 +15920,7 @@ fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<Supe
     for raw in lines {
         if let Some(operation) = raw.strip_prefix("    ") {
             if !awaiting_replacement {
-                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("replacement operation without a replace line: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("replacement operation without a replace line: {raw:?}")).to_string(),TextSpan::at(1,1)));
             }
             let input = inputs.last_mut().expect("a replace line precedes its replacement");
             input.replacement = Some(Op::parse_op(operation.trim())?);
@@ -15885,10 +15928,10 @@ fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<Supe
             continue;
         }
         if awaiting_replacement {
-            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a replace line needs its 4-space-indented replacement operation").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a replace line needs its 4-space-indented replacement operation").to_string(),TextSpan::at(1,1)));
         }
         let Some(line) = raw.strip_prefix("  ") else {
-            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented supersede input line, got: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented supersede input line, got: {raw:?}")).to_string(),TextSpan::at(1,1)));
         };
         match SupersedeInputLine::parse_op(line.trim())? {
             SupersedeInputLine::Replace { target } => {
@@ -15899,10 +15942,10 @@ fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<Supe
         }
     }
     if awaiting_replacement {
-        return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a replace line needs its 4-space-indented replacement operation").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a replace line needs its 4-space-indented replacement operation").to_string(),TextSpan::at(1,1)));
     }
     if inputs.is_empty() {
-        return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("supersede requires at least one input line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("supersede requires at least one input line").to_string(),TextSpan::at(1,1)));
     }
     Ok(())
 }
@@ -15927,7 +15970,7 @@ fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[SupersedeIn
 
 /// 🗳️ Reads a supersede command's inputs all-or-nothing: on any failure every replacement decoded so far retires through
 /// its technology's cold disposal, so a refused command never drops a live operation.
-fn read_supersede_inputs<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
+fn read_supersede_inputs<P, Op: OpBinary + Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
     let mut inputs = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
     for index in 0..count as usize {
@@ -15968,7 +16011,7 @@ impl OpText for CommandHeaderLine {
                 return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+        Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
@@ -16027,7 +16070,7 @@ async fn parse_undo_policy_token(token: &str) -> Result<UndoPolicy, TextError> {
         "transform-against-concurrent" => Ok(UndoPolicy::TransformAgainstConcurrent),
         "semantic-undo" => Ok(UndoPolicy::SemanticUndo),
         "compensating-action" => Ok(UndoPolicy::CompensatingAction),
-        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown undo policy token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
+        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown undo policy token {other:?}")).to_string(),TextSpan::at(1,1))),
     }
 }
 
@@ -16063,7 +16106,7 @@ async fn parse_history_lane_token(token: &str) -> Result<HistoryLane, TextError>
     match token {
         "document" => Ok(HistoryLane::Document),
         "interaction" => Ok(HistoryLane::Interaction),
-        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown history lane token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
+        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown history lane token {other:?}")).to_string(),TextSpan::at(1,1))),
     }
 }
 
@@ -16098,7 +16141,7 @@ async fn parse_merge_policy_token(token: &str) -> Result<crate::os_spr::MergePol
         "laissez-faire" => Ok(crate::os_spr::MergePolicy::LaissezFaire),
         "normal" => Ok(crate::os_spr::MergePolicy::Normal),
         "vigilant" => Ok(crate::os_spr::MergePolicy::Vigilant),
-        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown merge policy token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
+        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown merge policy token {other:?}")).to_string(),TextSpan::at(1,1))),
     }
 }
 
@@ -16115,7 +16158,7 @@ async fn parse_conflict_resolution_token(token: &str) -> Result<crate::os_spr::C
     match token {
         "accept" => Ok(crate::os_spr::ConflictResolution::Accept),
         "discard" => Ok(crate::os_spr::ConflictResolution::Discard),
-        other => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown conflict resolution token {other:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
+        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown conflict resolution token {other:?}")).to_string(),TextSpan::at(1,1))),
     }
 }
 
@@ -16154,12 +16197,12 @@ async fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> R
 /// 📥️ Parses every already-2-space-indented body line of an `apply`/`amend` command as one
 /// operation each — the command-level twin of `replay_ops`'s indented-op-line branch.
 /// All-or-nothing: on any failure every operation parsed so far retires through its technology's cold disposal.
-async fn parse_indented_ops<P, Op: OpText + self::Mutation<P>>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
+async fn parse_indented_ops<P, Op: OpText + Mutation<P>>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
     let mut mutations = Vec::with_capacity(body_lines.len());
     for raw in body_lines {
         let parsed = match raw.starts_with("  ") {
             true => Op::parse_op(raw.trim()),
-            false => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented op line, got: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
+            false => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented op line, got: {raw:?}")).to_string(),TextSpan::at(1,1))),
         };
         match parsed {
             Ok(operation) => mutations.push(operation),
@@ -16179,7 +16222,7 @@ async fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
     let mut out = String::new();
     for raw in lines {
         if !raw.starts_with("  ") {
-            return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented nested command line, got: {raw:?}")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("expected a 2-space-indented nested command line, got: {raw:?}")).to_string(),TextSpan::at(1,1)));
         }
         out.push_str(&raw[2..]);
         out.push('\n');
@@ -16295,7 +16338,7 @@ pub async fn print_command<Op: OpText>(command: &ArtifactCommand<Op>) -> Result<
 
 /// 📥️ Parses a `print_command`-produced (or hand-authored) command text back into a
 /// `ArtifactCommand`. LAW: `parse_command(&print_command(c)?) == Ok(c)` for every `c`.
-pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Result<ArtifactCommand<Op>, TextError> {
+pub async fn parse_command<P, Op: OpText + Mutation<P>>(text: &str) -> Result<ArtifactCommand<Op>, TextError> {
     let all_lines: Vec<&str> = text.lines().collect();
     let mut header: Option<(u32, &str)> = None;
     let mut body_start = all_lines.len();
@@ -16308,7 +16351,7 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
         body_start = index + 1;
         break;
     }
-    let (header_line_no, header_text) = header.ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("empty command text").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+    let (header_line_no, header_text) = header.ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("empty command text").to_string(),TextSpan::at(1,1)))?;
     let header_line = CommandHeaderLine::parse_op(header_text).map_err(|error| TextError { span: TextSpan::at(header_line_no, error.span.column), ..error })?;
     let body_lines: Vec<&str> = all_lines[body_start..].iter().filter(|line| !line.trim().is_empty() && !line.trim().starts_with('#')).copied().collect();
 
@@ -16317,7 +16360,7 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
             let transaction = transaction_from_text(transaction, tool)?;
             let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
-                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("apply requires at least one operation line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("apply requires at least one operation line").to_string(),TextSpan::at(1,1)));
             }
             Ok(ArtifactCommand::Apply { mutations, transaction })
         }
@@ -16343,7 +16386,7 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
             let lane = parse_history_lane_token(&lane).await?;
             let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
-                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("apply-in-lane requires at least one operation line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("apply-in-lane requires at least one operation line").to_string(),TextSpan::at(1,1)));
             }
             Ok(ArtifactCommand::ApplyInLane { mutations, lane, transaction })
         }
@@ -16356,7 +16399,7 @@ pub async fn parse_command<P, Op: OpText + self::Mutation<P>>(text: &str) -> Res
         CommandHeaderLine::AppendTransaction { transaction, tool } => {
             let mutations = parse_indented_ops::<P, Op>(&body_lines).await?;
             if mutations.is_empty() {
-                return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("append-transaction requires at least one operation line").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)));
+                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("append-transaction requires at least one operation line").to_string(),TextSpan::at(1,1)));
             }
             Ok(ArtifactCommand::AppendTransaction { mutations, transaction: protocol::TransactionRef { id: transaction, tool } })
         }
@@ -16378,7 +16421,7 @@ fn transaction_from_text(transaction: Option<String>, tool: Option<String>) -> R
     match (transaction, tool) {
         (Some(id), Some(tool)) => Ok(Some(protocol::TransactionRef { id, tool })),
         (None, None) => Ok(None),
-        _ => Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a transaction needs both its id and its tool").to_string(),semio_framework_diagnostic::TextSpan::at(1,1))),
+        _ => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("a transaction needs both its id and its tool").to_string(),TextSpan::at(1,1))),
     }
 }
 
@@ -16430,7 +16473,7 @@ fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op]) -> Resul
 
 /// 🪣️ Reads a command's operation list all-or-nothing: on any failure every operation decoded so far retires through its
 /// technology's cold disposal, so a refused list never drops a live operation.
-fn read_command_ops<P, Op: OpBinary + self::Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
+fn read_command_ops<P, Op: OpBinary + Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
     let mut mutations = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
     for index in 0..count as usize {
@@ -16480,27 +16523,27 @@ impl From<crate::os_spr::ProtocolError> for CommandDecodeError {
     }
 }
 
-impl From<crate::os_pack::PackError> for CommandDecodeError {
-    fn from(error: crate::os_pack::PackError) -> Self {
+impl From<PackError> for CommandDecodeError {
+    fn from(error: PackError) -> Self {
         Self::Layout(error.into())
     }
 }
 
-impl From<pack::PackRefusal> for CommandDecodeError {
-    fn from(error:pack::PackRefusal)->Self{Self::Layout(error.into())}
+impl From<PackRefusal> for CommandDecodeError {
+    fn from(error:PackRefusal)->Self{Self::Layout(error.into())}
 }
 
 semio_framework_diagnostic::fault_from_error!(CommandDecodeError, semio_framework_diagnostic::FaultOrigin::Module, "module.store.command");
 
 /// 🧊️ Retires operations nobody will apply through their technology's cold disposal.
-fn retire_operations<P, Op: self::Mutation<P>>(operations: impl IntoIterator<Item = Op>) {
+fn retire_operations<P, Op: Mutation<P>>(operations: impl IntoIterator<Item = Op>) {
     for operation in operations {
         Op::retire_cold(operation);
     }
 }
 
 /// 🪦️ Retires every operation a command owns — its operation list, its supersede replacements, its nested command.
-fn retire_command<P, Op: self::Mutation<P>>(command: ArtifactCommand<Op>) {
+fn retire_command<P, Op: Mutation<P>>(command: ArtifactCommand<Op>) {
     match command {
         ArtifactCommand::Apply { mutations, .. } | ArtifactCommand::ApplyInLane { mutations, .. } | ArtifactCommand::AppendTransaction { mutations, .. } => retire_operations::<P, Op>(mutations),
         ArtifactCommand::Supersede { inputs, .. } | ArtifactCommand::CreateAlternativeWithSupersede { inputs, .. } => retire_supersede_inputs::<P, Op>(inputs),
@@ -16648,7 +16691,7 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
     /// before a failure retires through its technology's cold disposal — a refusal never drops a live operation.
     pub fn decode_command<P>(bytes: &[u8]) -> Result<Self, CommandDecodeError>
     where
-        Op: self::Mutation<P>,
+        Op: Mutation<P>,
     {
         let mut reader = crate::os_pack::ByteReader::new(bytes);
         let command = Self::read_command::<P>(&mut reader)?;
@@ -16663,7 +16706,7 @@ impl<Op: OpBinary> ArtifactCommand<Op> {
     /// 📖️ The command at `reader`; its operation lists come last, so nothing can fail after one was decoded.
     fn read_command<P>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Self, CommandDecodeError>
     where
-        Op: self::Mutation<P>,
+        Op: Mutation<P>,
     {
         let format = reader.read_u8()?;
         if format != COMMAND_BINARY_FORMAT {
@@ -17246,7 +17289,7 @@ impl CursorRevisionAccumulator {
         regrown
     }
 
-    fn index_applied_edit<P, Mu: self::Mutation<P>>(&mut self, position: usize, edit: &Edit<Mu>) {
+    fn index_applied_edit<P, Mu: Mutation<P>>(&mut self, position: usize, edit: &Edit<Mu>) {
         let digest = Self::hash_record(b"edit-id", &[edit.id.as_bytes()]);
         let mut from = self.indexed_edits.get(&digest).filter(|(known, _)| *known == position).map_or(0, |(_, count)| *count).min(edit.forwards.len());
         if from > 0 {
@@ -17388,15 +17431,15 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if let Some(active) = self.close_active.as_ref() { return artifact_retirement_box_demands(active, body); }
         let capacity_bytes = match self.close_phase {
             0 if self.current.is_some() => ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),
-            1 if self.applied_edit_ids.capacity() != 0 => std::mem::size_of::<ArtifactStoreStringVectorRetirement>(),
-            2 if self.redo_edit_ids.capacity() != 0 => std::mem::size_of::<ArtifactStoreStringVectorRetirement>(),
-            3 if self.cursor_applied_edit_ids.capacity() != 0 => std::mem::size_of::<ArtifactStoreStringVectorRetirement>(),
-            4 if self.cursor_redo_edit_ids.capacity() != 0 => std::mem::size_of::<ArtifactStoreStringVectorRetirement>(),
-            5 if self.current_checkpoint_id.is_some() => std::mem::size_of::<ArtifactStoreStringRetirement>(),
-            6 if self.local_actor_id.0.has_owner() => std::mem::size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>>(),
-            7 if self.dag.is_some() => std::mem::size_of::<ArtifactStoreMutationDagRetirement>(),
-            8 => std::mem::size_of::<ArtifactStoreSupersessionRetirement>(),
-            9 => std::mem::size_of::<ArtifactStoreRevisionAccumulatorRetirement>(),
+            1 if self.applied_edit_ids.capacity() != 0 => size_of::<ArtifactStoreStringVectorRetirement>(),
+            2 if self.redo_edit_ids.capacity() != 0 => size_of::<ArtifactStoreStringVectorRetirement>(),
+            3 if self.cursor_applied_edit_ids.capacity() != 0 => size_of::<ArtifactStoreStringVectorRetirement>(),
+            4 if self.cursor_redo_edit_ids.capacity() != 0 => size_of::<ArtifactStoreStringVectorRetirement>(),
+            5 if self.current_checkpoint_id.is_some() => size_of::<ArtifactStoreStringRetirement>(),
+            6 if self.local_actor_id.0.has_owner() => size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>>(),
+            7 if self.dag.is_some() => size_of::<ArtifactStoreMutationDagRetirement>(),
+            8 => size_of::<ArtifactStoreSupersessionRetirement>(),
+            9 => size_of::<ArtifactStoreRevisionAccumulatorRetirement>(),
             _ => 0,
         };
         Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: if capacity_bytes == 0 { 1 } else { 2 }, ..Default::default() })
@@ -17792,7 +17835,7 @@ impl ArtifactEditMessageSlots {
     fn is_empty(&self) -> bool { self.pages.iter().all(Option::is_none) }
     fn admission_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.admitted == ARTIFACT_EDIT_MESSAGE_SLOT_PAGES { return Ok(Default::default()); }
-        let capacity_bytes = std::mem::size_of::<std::mem::MaybeUninit<crate::os_spr::EditMessages>>().checked_mul(ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "message page extent overflowed"))?;
+        let capacity_bytes = size_of::<std::mem::MaybeUninit<crate::os_spr::EditMessages>>().checked_mul(ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "message page extent overflowed"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
     }
     fn admit_next(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
@@ -17807,7 +17850,7 @@ impl ArtifactEditMessageSlots {
         Ok(progress)
     }
     fn release_demands(&self) -> semio_framework_value::RetirementDemand {
-        self.pages.iter().rev().find_map(|page| page.as_ref()).map_or(Default::default(), |page| semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(page.as_ref()), depth: 1, ..Default::default() })
+        self.pages.iter().rev().find_map(|page| page.as_ref()).map_or(Default::default(), |page| semio_framework_value::RetirementDemand { release_bytes: size_of_val(page.as_ref()), depth: 1, ..Default::default() })
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -17853,7 +17896,7 @@ impl ArtifactEditMessageLedgerRetirement {
     fn new(original: ArtifactEditMessageLedger) -> Self { Self { original: std::mem::ManuallyDrop::new(original), active: None } }
     fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.active.is_some() { return artifact_retirement_owner_demands(&self.active, body); }
-        if self.original.len != 0 { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<crate::os_spr::EditMessages>(), depth: 1, ..Default::default() }); }
+        if self.original.len != 0 { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<crate::os_spr::EditMessages>(), depth: 1, ..Default::default() }); }
         macro_rules! extent { ($field:ident) => { if !self.original.$field.is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(self.original.$field.as_ref()), depth: 1, ..Default::default() }); } }; }
         if !self.original.slots.is_empty() { return Ok(self.original.slots.release_demands()); }
         extent!(generations); extent!(occupied); extent!(next); extent!(previous); extent!(buckets); extent!(free);
@@ -17934,7 +17977,7 @@ impl ArtifactEditMessageLedger {
     /// 🧮 Quotes only the next original backing under independent caller policy.
     pub fn admission_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.slots.len() != ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY { return self.slots.admission_demands(); }
-        let width = if self.generations.is_empty() { std::mem::size_of::<u64>() } else if self.occupied.is_empty() { std::mem::size_of::<bool>() } else if self.next.is_empty() || self.previous.is_empty() || self.buckets.is_empty() || self.free.is_empty() { std::mem::size_of::<u16>() } else { return Ok(Default::default()); };
+        let width = if self.generations.is_empty() { size_of::<u64>() } else if self.occupied.is_empty() { size_of::<bool>() } else if self.next.is_empty() || self.previous.is_empty() || self.buckets.is_empty() || self.free.is_empty() { size_of::<u16>() } else { return Ok(Default::default()); };
         let capacity_bytes = width.checked_mul(ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "message index backing extent overflowed"))?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
     }
@@ -18246,7 +18289,7 @@ impl Eq for ArtifactEditMessageLedger {}
 
 impl ToValue for ArtifactEditMessageLedger {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
 }
 
@@ -18259,12 +18302,12 @@ impl ArtifactEditMessageLedgerRejected {
 }
 
 impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.inner.close_step(grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.inner.close_step(grant) }
     fn terminal_is_empty(&self) -> bool { self.inner.terminal_is_empty() }
-    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.inner.next_copy_byte_demand() }
-    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { self.inner.next_capacity_byte_demand(body) }
-    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.inner.next_release_byte_demand() }
-    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.inner.next_depth_demand() }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_copy_byte_demand() }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.inner.next_capacity_byte_demand(body) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_release_byte_demand() }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { self.inner.next_depth_demand() }
 }
 
 impl Drop for ArtifactEditMessageLedgerRejected {
@@ -18296,7 +18339,7 @@ pub use canonical_edit::{
 
 #[path = "🧵️operation-wire/🦀️.rs"]
 mod prepared_operation_wire;
-pub use prepared_operation_wire::{ArtifactCanonicalAuthoringFactory, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
+pub use prepared_operation_wire::{ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactOperationText, ArtifactOperationTextNode, ArtifactOperationTextCursor, ArtifactPreparedOperationSource, ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress, ArtifactPreparedOperationError, ArtifactPreparedOperationOutput, ArtifactPreparedOperations, ArtifactPreparedOperationsOwner, operation_wire_preparation_factory, operation_wire_preparation_factory_birth_bytes, operation_wire_preparation_factory_source_birth_demand};
 
 pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS: usize = 65_536;
 pub const ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES: usize = 1_048_576;
@@ -18378,8 +18421,8 @@ impl ArtifactStoreOneItemGrant {
     pub fn permits_one(self) -> bool {
         self.maximum_items != 0 && self.maximum_depth != 0
     }
-    pub fn retained_grant(self) -> semio_framework_value::retained_clone::RetainedCloneGrant {
-        semio_framework_value::retained_clone::RetainedCloneGrant {
+    pub fn retained_grant(self) -> RetainedCloneGrant {
+        RetainedCloneGrant {
             maximum_items: self.maximum_items,
             maximum_copy_bytes: self.maximum_copy_bytes,
             maximum_capacity_bytes: self.maximum_capacity_bytes,
@@ -18388,7 +18431,7 @@ impl ArtifactStoreOneItemGrant {
         }
     }
     /// 🔁️ Preserves all five currencies of the caller's original independent authority.
-    pub fn from_retained(original:semio_framework_value::retained_clone::RetainedCloneGrant)->Self {
+    pub fn from_retained(original:RetainedCloneGrant)->Self {
         Self{maximum_items:original.maximum_items,maximum_copy_bytes:original.maximum_copy_bytes,maximum_capacity_bytes:original.maximum_capacity_bytes,maximum_release_bytes:original.maximum_release_bytes,maximum_depth:original.maximum_depth}
     }
 }
@@ -18553,12 +18596,12 @@ impl ArtifactStoreOneItemLiveAuthority {
     }
 
     /// 📐️ Measures the original publication authority's exact retained cursor frame.
-    pub fn retirement_birth_demand(&self) -> semio_framework_value::retained_clone::RetainedCloneBirthDemand {
-        semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<canonical_edit::ArtifactStoreOneItemAuthorityRetirement>(), depth: 1 }
+    pub fn retirement_birth_demand(&self) -> RetainedCloneBirthDemand {
+        RetainedCloneBirthDemand { capacity_bytes: size_of::<canonical_edit::ArtifactStoreOneItemAuthorityRetirement>(), depth: 1 }
     }
 
     /// 🧹️ Admits the original authority cursor before moving its Arc or allocating its frame.
-    pub fn retire(self: Arc<Self>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Arc<Self>)> {
+    pub fn retire(self: Arc<Self>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<Self>)> {
         let receipt = match self.retirement_birth_demand().admit(grant) { Ok(receipt) => receipt, Err(error) => return Err((error, self)) };
         Ok((Box::new(canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(self)), receipt))
     }
@@ -18600,8 +18643,8 @@ impl ArtifactStoreOneItemLiveAuthority {
         post_snapshot: Arc<P>,
         mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>,
         snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>,
-        grant: semio_framework_value::retained_clone::RetainedCloneGrant,
-    ) -> Result<(ArtifactStoreOneItemSealer<P, Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Arc<Self>, Edit<Mutation>, Arc<P>, Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>, Arc<dyn SnapshotRetirementFactory<P>>)> where Mutation: semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree {
+        grant: RetainedCloneGrant,
+    ) -> Result<(ArtifactStoreOneItemSealer<P, Mutation>, RetainedCloneProgress), (ValueError, Arc<Self>, Edit<Mutation>, Arc<P>, Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>, Arc<dyn SnapshotRetirementFactory<P>>)> where Mutation: semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree {
         ArtifactStoreOneItemSealer::admit(self, edit, post_snapshot, mutation_retirement, snapshot_retirement, grant)
     }
 
@@ -18684,7 +18727,7 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError>;
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
@@ -18697,12 +18740,14 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
 pub trait ArtifactStoreOneItemPreparationFactory<P, Mutation>: semio_framework_value::FactoryRetirement + Send + Sync {
     /// 🔏️ Admits the original typed aggregate edit's canonical digest owner without replacing its payload.
     fn begin_batch_digest(&self, edit: &mut Option<Box<Edit<Mutation>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ArtifactStoreBatchDigest<Mutation>>, RetainedCloneProgress)>, ValueError>;
-    /// 📦️ Borrows canonical wire fields from this factory's exact original prepared mutation.
+    /// 📦️ Borrows the domain codec wire of this factory's exact original prepared mutation. `None` is the answer of every factory without a domain codec: the
+    /// mutation then authors through its store's installed canonical [`ArtifactOperationWire`], so no factory is ever the only way a lane authors.
     fn operation_wire_source<'a>(&self, _mutation: &'a Mutation) -> Option<ArtifactPreparedOperationSource<'a>> { None }
+    /// 🏷️ Borrows the `(entity, kind)` schema pair of a domain-codec mutation; `None` defers to the store's canonical [`ArtifactOperationWire`].
     fn operation_schema_parts<'a>(&'a self, _mutation: &'a Mutation) -> Option<(&'a str, &'a str)> { None }
     fn preflight(&self, mutation: &Mutation, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
-    fn begin_demand(&self, mutation: &Mutation, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>;
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>)>;
+    fn begin_demand(&self, mutation: &Mutation, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>)>;
 
     /// 🕰️ Declares a server-derived publication clock the factory will stamp on its prepared edit,
     /// so the Store mints the authority at that exact tick instead of its own wall-clock one. A
@@ -18732,11 +18777,11 @@ trait ArtifactStoreBatchItemAuthority<P, Mutation>: Send + Sync {
 
 
     fn preflight(&self, input: &Self::Input, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
-    fn begin_demand(&self, input: &Self::Input, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>;
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Self::Input, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Self::Input, Mutation>)>;
+    fn begin_demand(&self, input: &Self::Input, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Self::Input, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Self::Input, Mutation>)>;
 
     fn input_retirement_birth_bytes(&self, input: &Self::Input) -> usize;
-    fn retire_input(&self, input: Self::Input, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Self::Input)>;
+    fn retire_input(&self, input: Self::Input, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Self::Input)>;
     fn into_retirement_authorities(self) -> [Option<semio_framework_value::FactoryAuthority>; 2];
     fn stamped_clock(&self) -> Option<HybridLogicalTimestamp> {
         None
@@ -18761,13 +18806,13 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
         self.preparation.as_ref().preflight(input, lane)
     }
 
-    fn begin_demand(&self, input: &Mutation, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.preparation.as_ref().begin_demand(input, lane) }
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>)> {
+    fn begin_demand(&self, input: &Mutation, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> { self.preparation.as_ref().begin_demand(input, lane) }
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, Mutation, Mutation>)> {
         self.preparation.as_ref().begin(request, grant)
     }
 
     fn input_retirement_birth_bytes(&self, input: &Mutation) -> usize { self.retirement.retirement_birth_bytes(input) }
-    fn retire_input(&self, input: Mutation, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, Mutation)> { self.retirement.retire_owned(input, grant) }
+    fn retire_input(&self, input: Mutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Mutation)> { self.retirement.retire_owned(input, grant) }
     fn into_retirement_authorities(self) -> [Option<semio_framework_value::FactoryAuthority>; 2] {
         let preparation: Arc<dyn semio_framework_value::FactoryRetirement> = self.preparation;
         let retirement: Arc<dyn semio_framework_value::FactoryRetirement> = self.retirement;
@@ -18785,15 +18830,15 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
 impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P, Mutation> for Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>> {
     type Input = MemberStoreOneItemWire;
 
-    fn input_retirement_birth_bytes(&self, _input: &MemberStoreOneItemWire) -> usize { std::mem::size_of::<ArtifactStoreWireRetirement>() }
-    fn retire_input(&self, input: MemberStoreOneItemWire, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, MemberStoreOneItemWire)> { admit_artifact_retirement(input, grant, |input| ArtifactStoreWireRetirement { schema: Some(input.schema), bytes: Some(input.bytes) }) }
+    fn input_retirement_birth_bytes(&self, _input: &MemberStoreOneItemWire) -> usize { size_of::<ArtifactStoreWireRetirement>() }
+    fn retire_input(&self, input: MemberStoreOneItemWire, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, MemberStoreOneItemWire)> { admit_artifact_retirement(input, grant, |input| ArtifactStoreWireRetirement { schema: Some(input.schema), bytes: Some(input.bytes) }) }
     fn into_retirement_authorities(self) -> [Option<semio_framework_value::FactoryAuthority>; 2] { let authority: Arc<dyn semio_framework_value::FactoryRetirement> = self; [Some(semio_framework_value::FactoryAuthority::new(authority)), None] }
     fn preflight(&self, input: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
         self.as_ref().preflight(input, lane)
     }
 
-    fn begin_demand(&self, input: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.as_ref().begin_demand(input, lane) }
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>)> {
+    fn begin_demand(&self, input: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> { self.as_ref().begin_demand(input, lane) }
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>)> {
         self.as_ref().begin(request, grant)
     }
 }
@@ -18804,7 +18849,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreWireRetirement {
     fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.schema.as_ref().map(|value| value.capacity()).or_else(|| self.bytes.as_ref().map(|value| value.capacity())).unwrap_or(0)) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -18837,34 +18882,35 @@ trait ArtifactStoreBatchSource<P, Mutation>: Send {
     fn operation_schema_parts<'a>(&'a self, mutation: &'a Mutation) -> Option<(&'a str, &'a str)>;
     fn remaining(&self) -> usize;
     fn census_one(&mut self, lane: HistoryLane) -> Result<Option<ArtifactStoreOneItemFootprint>, String>;
-    fn next_begin_demand(&self, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>;
-    fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, ArtifactStoreBatchItemRequest<P, Mutation>)>;
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError>;
+    fn next_begin_demand(&self, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreBatchItemRequest<P, Mutation>)>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
 struct ArtifactStoreBatchSourceOf<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> {
     authority: Option<A>,
-    inputs: std::collections::VecDeque<A::Input>,
+    inputs: VecDeque<A::Input>,
     census: usize,
     footprint: ArtifactStoreOneItemFootprint,
     issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>,
     retirement: Option<Box<dyn member_owned_batch::BatchRetirement>>,
     active_input: Option<Box<dyn ErasedSnapshotRetirement>>,
     authority_close: [Option<semio_framework_value::FactoryAuthority>; 2],
+    wire: Option<ArtifactOperationWire<Mutation>>,
     marker: PhantomData<fn() -> (P, Mutation)>,
 }
 
 impl<P, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSourceOf<P, Mutation, A> {
-    fn new(authority: A, inputs: Vec<A::Input>, issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>) -> Self {
-        Self { authority: Some(authority), inputs: inputs.into(), census: 0, footprint: ArtifactStoreOneItemFootprint { work_items: 0, retained_bytes: 0 }, issuer, retirement: None, active_input: None, authority_close: Default::default(), marker: PhantomData }
+    fn new(authority: A, inputs: Vec<A::Input>, issuer: Option<member_owned_batch::SourceRetirementIssuer<A::Input>>, wire: Option<ArtifactOperationWire<Mutation>>) -> Self {
+        Self { authority: Some(authority), inputs: inputs.into(), census: 0, footprint: ArtifactStoreOneItemFootprint { work_items: 0, retained_bytes: 0 }, issuer, retirement: None, active_input: None, authority_close: Default::default(), wire, marker: PhantomData }
     }
 }
 
 impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> ArtifactStoreBatchSource<P, Mutation> for ArtifactStoreBatchSourceOf<P, Mutation, A> {
-    fn operation_wire_source<'a>(&self, mutation: &'a Mutation) -> Option<ArtifactPreparedOperationSource<'a>> { self.authority.as_ref()?.operation_wire_source(mutation) }
-    fn operation_schema_parts<'a>(&'a self, mutation: &'a Mutation) -> Option<(&'a str, &'a str)> { self.authority.as_ref()?.operation_schema_parts(mutation) }
+    fn operation_wire_source<'a>(&self, mutation: &'a Mutation) -> Option<ArtifactPreparedOperationSource<'a>> { self.authority.as_ref()?.operation_wire_source(mutation).or_else(|| self.wire.and_then(|wire| wire.source(mutation))) }
+    fn operation_schema_parts<'a>(&'a self, mutation: &'a Mutation) -> Option<(&'a str, &'a str)> { self.authority.as_ref()?.operation_schema_parts(mutation).or_else(|| self.wire.and_then(|wire| wire.schema(mutation))) }
     fn remaining(&self) -> usize { self.inputs.len() }
     fn census_one(&mut self, lane: HistoryLane) -> Result<Option<ArtifactStoreOneItemFootprint>, String> {
         let Some(input) = self.inputs.get(self.census) else { return Ok(Some(self.footprint)); };
@@ -18875,12 +18921,12 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         self.census += 1;
         Ok(None)
     }
-    fn next_begin_demand(&self, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
+    fn next_begin_demand(&self, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> {
         let authority=self.authority.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source lost its original item authority"))?;
         let input=self.inputs.front().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batch source has no original input before preparation birth"))?;
         authority.begin_demand(input,lane)
     }
-    fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, ArtifactStoreBatchItemRequest<P, Mutation>)> {
+    fn begin_next(&mut self, request: ArtifactStoreBatchItemRequest<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreBatchItemRequest<P, Mutation>)> {
         let demand=match self.next_begin_demand(request.lane){Ok(demand)=>demand,Err(error)=>return Err((error,request))};
         if let Err(error)=demand.admit(grant.retained_grant()){return Err((error,request));}
         let authority=self.authority.as_ref().expect("observed original batch item authority");
@@ -18896,14 +18942,14 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
             }
         }
     }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch source exceeds admitted depth")); }
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(retirement) = self.retirement.as_mut() {
             if !retirement.terminal_is_empty() { let step = retirement.step(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "batch source typed retirement")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
             self.retirement = None;
@@ -18924,7 +18970,7 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
             };
         }
         if self.inputs.capacity() != 0 {
-            self.inputs = std::collections::VecDeque::new();
+            self.inputs = VecDeque::new();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
         }
         if let Some(authority) = self.authority.take() {
@@ -18943,12 +18989,12 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
     fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch source depth overflow"))?; Ok(demand) };
-        if let Some(retirement) = self.retirement.as_ref() { return if retirement.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(retirement.as_ref()), depth: 1, ..Default::default() }) } else { nested(retirement.demands(maximum_body_bytes)?) }; }
+        if let Some(retirement) = self.retirement.as_ref() { return if retirement.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(retirement.as_ref()), depth: 1, ..Default::default() }) } else { nested(retirement.demands(maximum_body_bytes)?) }; }
         if let Some(issuer) = self.issuer.as_ref() { return Ok(RetirementDemand { capacity_bytes: issuer.birth_bytes, depth: 2, ..Default::default() }); }
         if let Some(active) = self.active_input.as_ref() { return nested(artifact_retirement_box_demands(active, maximum_body_bytes)?); }
         if let Some(input) = self.inputs.front() { return Ok(RetirementDemand { capacity_bytes: self.authority.as_ref().expect("original batch authority").input_retirement_birth_bytes(input), depth: 2, ..Default::default() }); }
-        if self.inputs.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.inputs.capacity().checked_mul(std::mem::size_of::<A::Input>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch source backing layout overflow"))?, depth: 1, ..Default::default() }); }
-        if self.authority.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<A>(), depth: 1, ..Default::default() }); }
+        if self.inputs.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.inputs.capacity().checked_mul(size_of::<A::Input>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch source backing layout overflow"))?, depth: 1, ..Default::default() }); }
+        if self.authority.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<A>(), depth: 1, ..Default::default() }); }
         if let Some(authority) = self.authority_close.iter().find_map(Option::as_ref) { return nested(authority.demands(maximum_body_bytes)?); }
         Ok(Default::default())
     }
@@ -18981,8 +19027,8 @@ pub struct MemberStoreOneItemWireRequest {
 /// 🏭 A member's retained decoder and semantic preparation, never a generic `decode_op` fallback.
 pub trait MemberStoreOneItemWirePreparationFactory<P, Mutation>: semio_framework_value::FactoryRetirement + Send + Sync {
     fn preflight(&self, wire: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
-    fn begin_demand(&self, wire: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError>;
-    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>)>;
+    fn begin_demand(&self, wire: &MemberStoreOneItemWire, lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError>;
+    fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<(Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, RetainedCloneProgress), (ValueError, ArtifactStoreOneItemPreparationRequest<P, MemberStoreOneItemWire, Mutation>)>;
 }
 
 /// 🪪 Erased retained publication; only its exact member may advance the typed candidate.
@@ -19003,7 +19049,7 @@ pub trait ErasedMemberStoreOneItemPublication: Send {
     fn retry(&mut self) -> bool;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -19069,7 +19115,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedMemberStoreOneIte
         self.publication.begin_close();
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
         if self.group_history.is_some() || self.group_displaced.is_some() || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.publication.terminal_is_empty() {
@@ -19174,19 +19220,19 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
         use semio_framework_value::RetirementDemand;
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch stage depth overflow"))?; Ok(demand) };
         if let Some(owner) = self.retiring.as_ref() { return nested(artifact_retirement_box_demands(owner, body)?); }
-        if self.digest_owner.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Box<dyn ArtifactStoreBatchDigest<Mutation>>>(), depth: 1, ..Default::default() }); }
-        if self.folding.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Box<ArtifactStorePreparedRetirement<P, Mutation>>>(), depth: 1, ..Default::default() }); }
-        if self.edit.is_some() { return Ok(RetirementDemand { copy_bytes:std::mem::size_of::<Edit<Mutation>>(), release_bytes: std::mem::size_of::<Edit<Mutation>>(), depth: 1, ..Default::default() }); }
-        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<ArtifactStoreDecodedEditRetirement<Mutation>>(), depth: 2, ..Default::default() }); }
-        if self.unit_flags.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.unit_flags.capacity().checked_mul(std::mem::size_of::<(usize, bool)>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch flags layout overflow"))?, depth: 1, ..Default::default() }); }
+        if self.digest_owner.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Box<dyn ArtifactStoreBatchDigest<Mutation>>>(), depth: 1, ..Default::default() }); }
+        if self.folding.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Box<ArtifactStorePreparedRetirement<P, Mutation>>>(), depth: 1, ..Default::default() }); }
+        if self.edit.is_some() { return Ok(RetirementDemand { copy_bytes:size_of::<Edit<Mutation>>(), release_bytes: size_of::<Edit<Mutation>>(), depth: 1, ..Default::default() }); }
+        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<ArtifactStoreDecodedEditRetirement<Mutation>>(), depth: 2, ..Default::default() }); }
+        if self.unit_flags.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.unit_flags.capacity().checked_mul(size_of::<(usize, bool)>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch flags layout overflow"))?, depth: 1, ..Default::default() }); }
         if let Some(post) = self.post.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.snapshot_retirement.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch stage lacks original snapshot factory"))?.retirement_birth_bytes(post), depth: 2, ..Default::default() }); }
         if let Some(value) = [&self.applied_edit_id, &self.tail_edit_id].into_iter().find(|value| value.capacity() != 0) { return Ok(RetirementDemand { release_bytes: value.capacity(), depth: 1, ..Default::default() }); }
         if self.local_actor.is_some() { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>(), depth: 2, ..Default::default() }); }
-        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.iter().find_map(Option::as_ref) { return nested(factory.demands(body)?); }
         Ok(Default::default())
     }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError>
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
     where P: Send + Sync + 'static, Mutation: Send + 'static,
     {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress};
@@ -19282,10 +19328,10 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "publication depth overflow"))?; Ok(demand) };
         if let Some(group) = self.group_preparation.as_ref() { return group.retirement_demands(); }
         if let Some(owner) = self.preparation.as_ref() {
-            return if owner.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { nested(RetirementDemand { copy_bytes: owner.next_close_copy_byte_demand()?, capacity_bytes: owner.next_close_capacity_byte_demand(body)?, release_bytes: owner.next_close_release_byte_demand()?, depth: owner.next_close_depth_demand()? }) };
+            return if owner.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { nested(RetirementDemand { copy_bytes: owner.next_close_copy_byte_demand()?, capacity_bytes: owner.next_close_capacity_byte_demand(body)?, release_bytes: owner.next_close_release_byte_demand()?, depth: owner.next_close_depth_demand()? }) };
         }
-        if let Some(source) = self.source.as_ref() { return if source.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(source.as_ref()), depth: 1, ..Default::default() }) } else { nested(source.retirement_demands(body)?) }; }
-        if let Some(stage) = self.stage.as_ref() { return if stage.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of::<ArtifactStoreBatchStage<P, Mutation>>(), depth: 1, ..Default::default() }) } else { nested(stage.retirement_demands(body)?) }; }
+        if let Some(source) = self.source.as_ref() { return if source.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(source.as_ref()), depth: 1, ..Default::default() }) } else { nested(source.retirement_demands(body)?) }; }
+        if let Some(stage) = self.stage.as_ref() { return if stage.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of::<ArtifactStoreBatchStage<P, Mutation>>(), depth: 1, ..Default::default() }) } else { nested(stage.retirement_demands(body)?) }; }
         if let Some(verb) = self.verb.as_ref() { return Ok(RetirementDemand { release_bytes: verb.capacity(), depth: 1, ..Default::default() }); }
         if self.receipt.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if let Some(owner) = self.authority_retirement.as_ref() { return nested(artifact_retirement_box_demands(owner, body)?); }
@@ -19406,7 +19452,7 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         }
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError>
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
     where P: Send + Sync + 'static, Mutation: Send + 'static,
     {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress};
@@ -19525,7 +19571,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetiremen
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> { ArtifactStoreBatchPublication::close_step(self, grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { ArtifactStoreBatchPublication::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { ArtifactStoreBatchPublication::terminal_is_empty(self) }
 }
 //#endregion 📬️OneItemPublication
@@ -19623,6 +19669,8 @@ where
     one_item_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>>>,
     replay_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>>>,
     one_item_wire_preparation_factory: std::mem::ManuallyDrop<Option<Arc<dyn MemberStoreOneItemWirePreparationFactory<P, Mutation>>>>,
+    /// 🪪️ The canonical operation wire of this store's mutation vocabulary ([`ArtifactOperationWire`]), installed once at construction.
+    operation_wire: Option<ArtifactOperationWire<Mutation>>,
     factory_retirement_tickets: std::mem::ManuallyDrop<semio_framework_value::FactoryChildTickets<6>>,
     /// 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
     /// this call (`apply_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
@@ -19684,9 +19732,9 @@ impl ArtifactStorePendingReportRetirement {
         use semio_framework_value::RetirementDemand;
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         let Some(report) = self.report.as_ref() else { return Ok(Default::default()); };
-        let capacity_bytes = if !report.outbound.is_empty() { std::mem::size_of::<ArtifactStoreConflictRetirement>() }
-        else if !report.messages.is_empty() { std::mem::size_of::<ArtifactStoreMessageLedgerRetirement>() }
-        else if report.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty()) { std::mem::size_of::<ArtifactStoreStringRetirement>() } else { 0 };
+        let capacity_bytes = if !report.outbound.is_empty() { size_of::<ArtifactStoreConflictRetirement>() }
+        else if !report.messages.is_empty() { size_of::<ArtifactStoreMessageLedgerRetirement>() }
+        else if report.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty()) { size_of::<ArtifactStoreStringRetirement>() } else { 0 };
         if capacity_bytes != 0 { return Ok(RetirementDemand { capacity_bytes, depth: 2, ..Default::default() }); }
         let release_bytes = if report.outbound.capacity() != 0 { std::alloc::Layout::array::<crate::os_spr::MutationEnvelope>(report.outbound.capacity()) }
         else if report.messages.capacity() != 0 { std::alloc::Layout::array::<crate::os_spr::EditMessages>(report.messages.capacity()) }
@@ -19822,6 +19870,7 @@ where
         one_item_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_preparation.take()),
         replay_preparation_factory: std::mem::ManuallyDrop::new(owners.replay_preparation.take()),
         one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_wire_preparation.take()),
+        operation_wire: None,
         factory_retirement_tickets: std::mem::ManuallyDrop::new(factory_retirement_tickets),
         pending_report: std::mem::ManuallyDrop::new(PendingCommandReport::default()),
         durable_group_root: std::mem::ManuallyDrop::new(None),
@@ -19977,6 +20026,7 @@ where
             one_item_preparation_factory: std::mem::ManuallyDrop::new(None),
             replay_preparation_factory: std::mem::ManuallyDrop::new(None),
             one_item_wire_preparation_factory: std::mem::ManuallyDrop::new(None),
+            operation_wire: None,
             factory_retirement_tickets: std::mem::ManuallyDrop::new(semio_framework_value::FactoryChildTickets { slots: std::array::from_fn(|_| semio_framework_value::FactoryChildSlot::empty()), prepared: 0 }),
             tail_undo_cache: std::mem::ManuallyDrop::new(None),
             supersessions: std::mem::ManuallyDrop::new(supersessions),
@@ -20325,7 +20375,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let applicable = outcome.is_applicable(protocol::MergePolicy::default());
         let (diff, _) = outcome.into_parts();
         let next = applicable.then(|| crate::os_spr::apply_diff(&diff, source.snapshot()).ok()).flatten();
-        <<Mutation as self::Mutation<P>>::Diff as self::MutationDiff<P>>::retire_cold(diff);
+        <<Mutation as self::Mutation<P>>::Diff as MutationDiff<P>>::retire_cold(diff);
         Ok(next.map(|owner| self.seal_derived_snapshot(Arc::new(owner))))
     }
 
@@ -20340,7 +20390,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.admit_derived_source(&source.registry, source.generation, source.revision)?;
         let (diff, mut messages) = <Mutation as self::Mutation<P>>::diff(op, source.snapshot()).into_parts();
         let applied = crate::os_spr::apply_diff(&diff, source.snapshot());
-        <<Mutation as self::Mutation<P>>::Diff as self::MutationDiff<P>>::retire_cold(diff);
+        <<Mutation as self::Mutation<P>>::Diff as MutationDiff<P>>::retire_cold(diff);
         let next = match applied {
             Ok(owner) => Some(self.seal_derived_snapshot(Arc::new(owner))),
             Err(error) => {
@@ -20404,7 +20454,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     /// ⏭️ Resolves identities or folds at most one operation between deadline checks; downstream operations are excluded.
-    pub fn step_derived_history_preview(&self, preview: &mut ArtifactDerivedHistoryPreview<P, Mutation>, retirement_grant:semio_framework_value::retained_clone::RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub fn step_derived_history_preview(&self, preview: &mut ArtifactDerivedHistoryPreview<P, Mutation>, retirement_grant:RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         self.admit_derived_source(&preview.registry, preview.generation, preview.revision)?;
         if preview.plan_retirement.is_some() {
             preview.retire_completed_plan(retirement_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
@@ -20469,7 +20519,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     /// ⏭️ Steps sealed planning and replay against this store's actual immutable frontier.
-    pub fn step_derived_report_replay(&self, owner: &mut ArtifactDerivedReplay<P, Mutation>, retirement_grant:semio_framework_value::retained_clone::RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub fn step_derived_report_replay(&self, owner: &mut ArtifactDerivedReplay<P, Mutation>, retirement_grant:RetainedCloneGrant, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         self.admit_derived_source(&owner.registry, owner.generation, owner.revision)?;
         if owner.plan_retirement.is_some() {
             owner.retire_completed_plan(retirement_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
@@ -20630,6 +20680,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     /// 🔐️ Installs the one domain-supplied owner catalog before a store can enter
     /// retained replacement or close. There is no default catalog and a second installation faults.
+    /// The catalog also carries the canonical operation wire of its mutation vocabulary (a catalog cannot be built
+    /// for a mutation without a canonical tree) and hands it to the store unless the store already holds a richer one,
+    /// so a store that can record history (which needs a catalog) can always author.
     pub fn install_document_store_owners_exact(&mut self, mut owners: DocumentStoreOwners<P, Mutation>) -> Result<(), (ValueError, DocumentStoreOwners<P, Mutation>)> {
         if !owners.constructor_is_complete() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"installed original catalog requires every admitted factory ticket before transfer"),owners)); }
         if self.snapshot_retirement_factory.is_some() || self.initial_snapshot_retirement_factory.is_some() || self.mutation_retirement_factory.is_some() || self.owned_disposer.is_some() || self.owned_disposer_terminal { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"store already retains its original owner catalog"),owners)); }
@@ -20641,7 +20694,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         *self.one_item_preparation_factory = owners.one_item_preparation.take();
         *self.replay_preparation_factory = owners.replay_preparation.take();
         *self.one_item_wire_preparation_factory = owners.one_item_wire_preparation.take();
+        self.operation_wire.get_or_insert(owners.operation_wire);
         Ok(())
+    }
+
+    /// 🪪️ Installs a richer-than-catalog operation wire (the SDK's document stores carry the `(entity, kind)` schema pair), once, before the catalog.
+    pub fn install_operation_wire(&mut self, wire: ArtifactOperationWire<Mutation>) {
+        assert!(self.operation_wire.is_none(), "a store installs its canonical operation wire exactly once");
+        self.operation_wire = Some(wire);
+    }
+
+    /// 🪪️ The canonical operation wire this store authors with, when one is installed.
+    pub fn operation_wire(&self) -> Option<ArtifactOperationWire<Mutation>> {
+        self.operation_wire
     }
 
     pub fn owned_disposer_installed(&self) -> bool {
@@ -21062,7 +21127,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "store factory ticket depth overflow"))?;
             return Ok(demand);
         }
-        Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() })
+        Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() })
     }
 
     /// 🧹️ Advances the exact store disposer under the caller's retirement grant.
@@ -21093,7 +21158,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             self.owned_disposer_terminal = true;
-            Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: std::mem::size_of_val(disposer.as_ref()), ..empty }))
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: size_of_val(disposer.as_ref()), ..empty }))
         })();
         if self.owned_disposer_terminal { drop(disposer); } else { *self.owned_disposer = Some(disposer); }
         result
@@ -21192,7 +21257,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     where
         P: Sync,
     {
-        if !self.snapshot_read_leases.has_returned() { return Ok(Default::default()); }
+        if self.snapshot_read_leases.closed() || !self.snapshot_read_leases.has_returned() { return Ok(Default::default()); }
         self.snapshot_read_leases.returned_admission_demands::<P>(|_| self.snapshot_read_retirement_demand()).map_err(SnapshotReadLeaseRefusal::into_value_error)
     }
 
@@ -21223,12 +21288,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             ArtifactStoreCursorDisposerPhase::ReturnedReads if self.snapshot_read_leases.has_returned() => self.snapshot_read_leases.returned_admission_demands::<P>(|_| birth(ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes())).map_err(SnapshotReadLeaseRefusal::into_value_error)?,
             ArtifactStoreCursorDisposerPhase::Displaced if !self.maintenance_retirements_terminal_is_empty() => self.maintenance_retirements_demands(body)?,
             ArtifactStoreCursorDisposerPhase::RuntimeOwners(lane) => birth(match lane {
-                0 | 1 => std::mem::size_of::<ArtifactStoreStringVectorRetirement>(),
-                2 => std::mem::size_of::<ArtifactStoreRevisionAccumulatorRetirement>(),
-                3 | 5 => std::mem::size_of::<ArtifactStoreStringRetirement>(),
-                4 => std::mem::size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>>(),
-                6 => std::mem::size_of::<ArtifactStoreSupersessionRetirement>(),
-                _ => std::mem::size_of::<ArtifactStorePendingReportRetirement>(),
+                0 | 1 => size_of::<ArtifactStoreStringVectorRetirement>(),
+                2 => size_of::<ArtifactStoreRevisionAccumulatorRetirement>(),
+                3 | 5 => size_of::<ArtifactStoreStringRetirement>(),
+                4 => size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>>(),
+                6 => size_of::<ArtifactStoreSupersessionRetirement>(),
+                _ => size_of::<ArtifactStorePendingReportRetirement>(),
             }),
             ArtifactStoreCursorDisposerPhase::PrefixSnapshots => match self.prefix_ring.last() {
                 Some(entry) if Arc::strong_count(&entry.snapshot) == 1 => birth(self.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "prefix retirement requires exact snapshot factory"))?.retirement_birth_bytes(&entry.snapshot)),
@@ -21243,8 +21308,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 else { birth(self.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "current retirement requires exact snapshot factory"))?.retirement_birth_bytes(&self.current)) }
             }
             ArtifactStoreCursorDisposerPhase::Backbone if self.member_inbox.capacity() != 0 || self.backbone.is_some() => birth(ArtifactStoreBackboneRetirement::constructor_capacity_bytes()),
-            ArtifactStoreCursorDisposerPhase::Causal => birth(std::mem::size_of::<ArtifactStoreMutationDagRetirement>()),
-            ArtifactStoreCursorDisposerPhase::Envelope if !self.envelope_detached => birth(std::mem::size_of::<ArtifactStoreEnvelopeRetirement<P, Mutation>>()),
+            ArtifactStoreCursorDisposerPhase::Causal => birth(size_of::<ArtifactStoreMutationDagRetirement>()),
+            ArtifactStoreCursorDisposerPhase::Envelope if !self.envelope_detached => birth(size_of::<ArtifactStoreEnvelopeRetirement<P, Mutation>>()),
             ArtifactStoreCursorDisposerPhase::Complete => Default::default(),
             _ => structural,
         })
@@ -21896,14 +21961,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let stamped=factory.stamped_mutation_id().map(|identity|identity.0.as_str());let line=self.envelope.active_alternative_id.as_deref();
         if stamped.is_some_and(|text|text.is_empty()||text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES)||line.is_some_and(|text|text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES)||verb.is_some_and(|text|text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original metadata exceeds its admitted identity bound"));}
         let text_bytes=stamped.map_or(0,str::len)+line.map_or(0,str::len)+verb.map_or(0,str::len);
-        let copied_bytes=std::mem::size_of::<ArtifactTypedBatchItemAuthority<P,Mutation>>()+std::mem::size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+std::mem::size_of::<ArtifactStoreOneItemLiveAuthority>()+std::mem::size_of::<ArtifactStoreBatchPublication<P,Mutation>>()+std::mem::size_of::<Vec<Mutation>>()+std::mem::size_of::<Option<protocol::TransactionRef>>()+std::mem::size_of_val(actor)+text_bytes;
-        let retained_capacity_bytes=std::mem::size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<ArtifactStoreOneItemLiveAuthority>()+text_bytes;
+        let copied_bytes=size_of::<ArtifactTypedBatchItemAuthority<P,Mutation>>()+size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+size_of::<ArtifactStoreOneItemLiveAuthority>()+size_of::<ArtifactStoreBatchPublication<P,Mutation>>()+size_of::<Vec<Mutation>>()+size_of::<Option<protocol::TransactionRef>>()+size_of_val(actor)+text_bytes;
+        let retained_capacity_bytes=size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<ArtifactStoreOneItemLiveAuthority>()+text_bytes;
         if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_capacity_bytes<retained_capacity_bytes||grant.maximum_depth==0{return Ok(None);}
         let text=|original:&str|{let mut value=String::with_capacity(original.len());value.push_str(original);value};
         let stamped_edit_id=stamped.map(text);let line=line.map(text);let verb=verb.map(text);
         let admitted_items=mutations.len();
         let original_actor=actor.as_mut().unwrap().take_original().expect("observed untouched original captured actor");drop(actor.take());
-        let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None);
+        let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None,self.operation_wire);
         let authority=Arc::new(ArtifactStoreOneItemLiveAuthority{operation,generation:semio_framework_job::Generation(expected_generation),base_revision:expected_revision,base_applied_edit_count:self.applied_edit_ids.len(),next_sequence_number,next_clock,actor:original_actor,line,group_id:None,stamped_edit_id});
         let publication=ArtifactStoreBatchPublication{operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:transaction.take(),outbound,announce_from:0,announce_items:0,transaction_open:false};
         Ok(Some((publication,RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
@@ -21969,7 +22034,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched publication requires an explicit app-owned ArtifactStoreOneItemPreparationFactory".into(), mutations });
         };
         let Some(retirement) = self.mutation_retirement_factory.as_ref() else { return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched inputs require their original mutation retirement authority".into(), mutations }); };
-        let source = ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority { preparation: Arc::clone(factory), retirement: Arc::clone(retirement) }, mutations, None);
+        let source = ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority { preparation: Arc::clone(factory), retirement: Arc::clone(retirement) }, mutations, None, self.operation_wire);
         self.begin_apply_batch_owned(operation, expected_generation, expected_revision, actor, lane, None, source, outbound, transaction).map_err(|rejected| {
             let (reason, mutations) = rejected.into_owners();
             ArtifactStoreBatchAdmissionRejected { reason, mutations }
@@ -22241,7 +22306,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         match publication.phase {
             ArtifactStoreOneItemPublicationPhase::Preparing => {
                 if !publication.source_census_finished {
-                    let copy=std::mem::size_of::<ArtifactStoreOneItemFootprint>()+std::mem::size_of::<usize>();
+                    let copy=size_of::<ArtifactStoreOneItemFootprint>()+size_of::<usize>();
                     if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
                     match publication.source.as_mut().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its retained census source".into()))?.census_one(publication.lane).map_err(VcsError::ValidationFailed)? {
                         Some(footprint) => { publication.footprint = footprint; publication.source_census_finished = true; },
@@ -22264,14 +22329,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                         if publication.stage.is_none() {
                             return Err(VcsError::ValidationFailed("batched publication staged no edit before its cursor turn".into()));
                         }
-                        let copy=std::mem::size_of::<ArtifactStoreOneItemPublicationPhase>();if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                        let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if item_grant.maximum_copy_bytes<copy||item_grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
                         publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
                         return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
                     }
                     let refused = |error: ValueError| VcsError::ValidationFailed(error.into_message());
                     let demand = publication.source.as_ref().expect("validated batched publication item source").next_begin_demand(publication.lane).map_err(refused)?;
                     if demand.admit(item_grant.retained_grant()).is_err() { return Ok(ArtifactStoreOneItemAdvance::Blocked); }
-                    let original_issuer_copy=std::mem::size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>()+std::mem::size_of::<Arc<dyn SnapshotRetirementFactory<P>>>();
+                    let original_issuer_copy=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>()+size_of::<Arc<dyn SnapshotRetirementFactory<P>>>();
                     if item_grant.maximum_copy_bytes<original_issuer_copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
                     let mutation_retirement=self.mutation_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed mutation issuer".into()))?;
                     let snapshot_retirement=self.snapshot_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed snapshot issuer".into()))?;
@@ -22340,7 +22405,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                         return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:step.allocated_bytes,..Default::default()}));
                     }
                 }
-                let copy=std::mem::size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
                 publication.phase = ArtifactStoreOneItemPublicationPhase::PreflightingCommit;
                 Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
             }
@@ -22350,7 +22415,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 let refusal=|error:ValueError|VcsError::ValidationFailed(error.into_message());
                 if let Some(owner)=stage.digest_owner.as_mut(){
                     if owner.ready(){let Some((edit,digest,ownership))=owner.take_edit(grant.retained_grant()).map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.edit=Some(edit);stage.digest=digest;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));}
-                    if owner.terminal_is_empty(){let released=std::mem::size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
+                    if owner.terminal_is_empty(){let released=size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
                     let step=owner.advance_digest(grant.retained_grant()).map_err(refusal)?;let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
                 }
 
@@ -22384,10 +22449,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     return Err(VcsError::ValidationFailed("batched store generation is exhausted".into()));
                 }
                 if !stage.digest_complete{
-                    let factory=self.one_item_preparation_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batch original canonical factory is absent".into()))?;
-                    let Some((owner,ownership))=factory.begin_batch_digest(&mut stage.edit,grant.retained_grant()).map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.digest_owner=Some(owner);return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));
+                    let admitted=match self.one_item_preparation_factory.as_ref(){Some(factory)=>factory.begin_batch_digest(&mut stage.edit,grant.retained_grant()),None=>self.operation_wire.as_ref().ok_or_else(||VcsError::ValidationFailed("batch original canonical digest authority is absent".into()))?.begin_batch_digest(&mut stage.edit,grant.retained_grant())};
+                    let Some((owner,ownership))=admitted.map_err(refusal)?else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};stage.digest_owner=Some(owner);return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));
                 }
-                let copy=std::mem::size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                let copy=size_of::<ArtifactStoreOneItemPublicationPhase>();if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
                 self.displaced_retirements.reserve(12)?;
                 if self.snapshot_retirement_factory.is_none() || self.mutation_retirement_factory.is_none() {
                     return Err(VcsError::ValidationFailed("batched commit lacks exact snapshot or mutation retirement authority".into()));
@@ -22398,7 +22463,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             ArtifactStoreOneItemPublicationPhase::Publishing => {
                 if let Some(edit_id) = self.batch_amend_target(publication.transaction.as_ref()) {
                     let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
-                    let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, unit_flags, .. } = *stage;
+                    let ArtifactStoreBatchStage { edit, post, next_clock, local_actor: _, unit_flags, .. } = *stage;
                     let edit = edit.expect("live staged edit owner");
                     let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
                     let generation_before = self.generation;
@@ -22445,8 +22510,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 }
                 let reservation = self.reserve_edit_history_slot()?;
                 let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
-                let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, applied_edit_id, tail_edit_id, digest, unit_flags, .. } = *stage;
+                let ArtifactStoreBatchStage { edit, post, next_clock, local_actor: _, applied_edit_id, tail_edit_id, digest, unit_flags, .. } = *stage;
                 let edit = edit.expect("live staged edit owner");
+                let digest = if edit.forwards.len() > 1 { CursorRevisionAccumulator::effective_edit_digest::<P, Mutation>(&edit, CursorRevisionAccumulator::edit_digest(&*edit), &self.supersessions) } else { digest };
                 publication.announce_from = 0;
                 publication.announce_items = publication.admitted_items;
                 let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
@@ -22516,7 +22582,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         true
     }
     /// 🧹️ Preserves the original preparation receipt before admitting its final owned Box frame.
-    fn spend_item_close_grant(owner: &mut Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>, grant: ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn spend_item_close_grant(owner: &mut Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         let Some(current) = owner.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if !current.terminal_is_empty() {
@@ -22530,7 +22596,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation Box requires admitted depth")); }
-        let bytes = std::mem::size_of_val(current.as_ref());
+        let bytes = size_of_val(current.as_ref());
         if bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         drop(owner.take());
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }))
@@ -22549,17 +22615,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// decision whose `mutation_id` no longer matched the approval target the WAL verifies.
     fn fold_batch_item(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError> {
         let authority=publication.authority.as_ref().ok_or_else(||VcsError::ValidationFailed("batched fold lost its original authority".into()))?;
-        let control=std::mem::size_of::<usize>();
+        let control=size_of::<usize>();
         if grant.maximum_depth==0||grant.maximum_copy_bytes<control{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
         if publication.stage.is_none(){
-            let capacity=std::mem::size_of::<ArtifactStoreBatchStage<P,Mutation>>();
+            let capacity=size_of::<ArtifactStoreBatchStage<P,Mutation>>();
             if grant.maximum_capacity_bytes<capacity{return Ok(ArtifactStoreOneItemAdvance::Blocked);}
             let mut stage=Self::empty_batch_stage(authority);stage.mutation_retirement=(*self.mutation_retirement_factory).clone();stage.snapshot_retirement=(*self.snapshot_retirement_factory).clone();
             if stage.mutation_retirement.is_none()||stage.snapshot_retirement.is_none(){return Err(VcsError::ValidationFailed("batched fold lacks its exact original retirement issuers".into()));}
             publication.stage=Some(Box::new(stage));return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:control,retained_capacity_bytes:capacity,..Default::default()}));
         }
         let stage=publication.stage.as_mut().unwrap();
-        if stage.edit.is_none(){let capacity=std::mem::size_of::<Edit<Mutation>>();if grant.maximum_capacity_bytes<capacity{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.edit=Some(Box::new(Self::empty_batch_edit(authority)));return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:control,retained_capacity_bytes:capacity,..Default::default()}));}
+        if stage.edit.is_none(){let capacity=size_of::<Edit<Mutation>>();if grant.maximum_capacity_bytes<capacity{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.edit=Some(Box::new(Self::empty_batch_edit(authority)));return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:control,retained_capacity_bytes:capacity,..Default::default()}));}
         macro_rules! reserve_original {($owner:expr,$count:expr,$ty:ty)=>{{let owner=$owner;if owner.capacity()<$count{let capacity=$count.checked_mul(std::mem::size_of::<$ty>()).ok_or_else(||VcsError::ValidationFailed("batch original capacity overflow".into()))?;if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<owner.capacity()*std::mem::size_of::<$ty>(){return Ok(ArtifactStoreOneItemAdvance::Blocked);}let released=owner.capacity()*std::mem::size_of::<$ty>();owner.try_reserve_exact($count-owner.len()).map_err(|_|VcsError::ValidationFailed("batch original reservation failed".into()))?;let actual=owner.capacity()*std::mem::size_of::<$ty>();return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:control,retained_capacity_bytes:actual,released_bytes:released,..Default::default()}));}}};}
         reserve_original!(&mut stage.unit_flags,publication.admitted_items,(usize,bool));
         reserve_original!(&mut stage.edit.as_mut().unwrap().forwards,publication.admitted_items,Mutation);
@@ -22582,18 +22648,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             0=>{if stage.folded==0{copy_string!(target.id,original.id.as_str());}stage.fold_phase=1;},
             1=>{if stage.folded==0{copy_string!(stage.applied_edit_id,target.id.as_str());}stage.fold_phase=2;},
             2=>{if stage.folded==0{copy_string!(stage.tail_edit_id,target.id.as_str());}stage.fold_phase=3;},
-            3=>{if stage.folded==0{let copy=std::mem::size_of::<Edit<Mutation>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.actor=original.actor.take();target.line=original.line.take();target.started_at=std::mem::take(&mut original.started_at);stage.local_actor=cursor.strings[0].take();stage.next_clock=cursor.fold_clock;ownership.copied_bytes=copy;}stage.fold_phase=4;},
+            3=>{if stage.folded==0{let copy=size_of::<Edit<Mutation>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.actor=original.actor.take();target.line=original.line.take();target.started_at=std::mem::take(&mut original.started_at);stage.local_actor=cursor.strings[0].take();stage.next_clock=cursor.fold_clock;ownership.copied_bytes=copy;}stage.fold_phase=4;},
             4=>{if stage.folded==0{if let Some(verb)=publication.verb.as_deref(){let copy=verb.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.verb=Some(verb.to_owned());ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;}}stage.fold_phase=5;},
-            5=>{if !original.inverse.is_empty(){let depth=original.inverse.next_pop_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?.max(target.inverse.next_push_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?);let copy=std::mem::size_of::<Mutation>();if grant.maximum_depth<depth||grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let item=original.inverse.pop().unwrap();target.inverse.push_reserved(item).unwrap_or_else(|_|panic!("original inverse admission lost its reserved slot"));ownership.copied_bytes=copy;}else{stage.fold_phase=6;}},
-            6=>{let copy=std::mem::size_of::<Mutation>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.forwards.push(original.forwards.pop().expect("original one-item forward"));ownership.copied_bytes=copy;stage.fold_phase=7;},
-            7=>{let copy=std::mem::size_of::<MutationMeta>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let meta=&mut original.mutation_meta[0];target.mutation_meta.push(MutationMeta{mutation_id:None,dependencies:std::mem::take(&mut meta.dependencies),base_version:meta.base_version,author_id:meta.author_id.take(),timestamp:meta.timestamp,undo_policy:meta.undo_policy,payload_hash:meta.payload_hash.take(),semantic_kind:None,label:None,group_id:meta.group_id.take(),origin:std::mem::take(&mut meta.origin),transaction:None});ownership.copied_bytes=copy;stage.fold_phase=8;},
+            5=>{if !original.inverse.is_empty(){let depth=original.inverse.next_pop_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?.max(target.inverse.next_push_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?);let copy=size_of::<Mutation>();if grant.maximum_depth<depth||grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let item=original.inverse.pop().unwrap();target.inverse.push_reserved(item).unwrap_or_else(|_|panic!("original inverse admission lost its reserved slot"));ownership.copied_bytes=copy;}else{stage.fold_phase=6;}},
+            6=>{let copy=size_of::<Mutation>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.forwards.push(original.forwards.pop().expect("original one-item forward"));ownership.copied_bytes=copy;stage.fold_phase=7;},
+            7=>{let copy=size_of::<MutationMeta>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let meta=&mut original.mutation_meta[0];target.mutation_meta.push(MutationMeta{mutation_id:None,dependencies:std::mem::take(&mut meta.dependencies),base_version:meta.base_version,author_id:meta.author_id.take(),timestamp:meta.timestamp,undo_policy:meta.undo_policy,payload_hash:meta.payload_hash.take(),semantic_kind:None,label:None,group_id:meta.group_id.take(),origin:std::mem::take(&mut meta.origin),transaction:None});ownership.copied_bytes=copy;stage.fold_phase=8;},
             8=>{let position=target.forwards.len()-1;let primary=publication.admitted_items==1&&!publication.transaction_open;let copy=target.id.len()+if primary{0}else{1+position.checked_ilog10().unwrap_or(0)as usize+1};if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let mut id=String::with_capacity(copy);id.push_str(&target.id);if !primary{use std::fmt::Write;write!(id,"#{position}").unwrap();}target.mutation_meta.last_mut().unwrap().mutation_id=Some(MutationId(id));ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;stage.fold_phase=9;},
             9=>{let kind=target.forwards.last().unwrap().descriptor().semantic_kind;let copy=self.envelope.schema.len()+1+kind.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let mut value=String::with_capacity(copy);value.push_str(&self.envelope.schema);value.push('#');value.push_str(kind);target.mutation_meta.last_mut().unwrap().semantic_kind=Some(SchemaId(value));ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;stage.fold_phase=10;},
             10=>{let source=target.forwards.last().unwrap().descriptor().display_name;let copy=source.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.mutation_meta.last_mut().unwrap().label=Some(source.to_owned());ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;stage.fold_phase=11;},
             11=>{if let Some(transaction)=publication.transaction.as_ref(){let copy=transaction.id.len()+transaction.tool.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.mutation_meta.last_mut().unwrap().transaction=Some(transaction.clone());ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;}stage.fold_phase=12;},
-            12=>{if target.forwards.last().unwrap().may_emit_foreign_steps(){let Some(presence)=cursor.foreign_step_presence else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};let copy=std::mem::size_of::<(usize,bool)>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.unit_flags.push((target.forwards.len()-1,presence));ownership.copied_bytes=copy;}stage.fold_phase=13;},
-            13=>{let copy=std::mem::size_of::<Arc<P>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let incoming=cursor.post.take().expect("original prepared post root");*cursor.post=stage.post.replace(incoming);ownership.copied_bytes=copy;stage.fold_phase=14;},
-            _=>{let copy=std::mem::size_of::<ArtifactStoreOneItemCheckpoint>()+std::mem::size_of::<Box<ArtifactStorePreparedRetirement<P,Mutation>>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let item=publication.preparation.as_ref().unwrap().checkpoint();stage.folded+=1;stage.completed_items=stage.completed_items.saturating_add(item.completed_items);stage.completed_bytes=stage.completed_bytes.saturating_add(item.completed_bytes);stage.digest=cursor.fold_digest;stage.retiring=stage.folding.take().map(|owner|owner as Box<dyn ErasedSnapshotRetirement>);publication.item_closing=true;publication.preparation.as_mut().unwrap().begin_close();ownership.copied_bytes=copy;},
+            12=>{if target.forwards.last().unwrap().may_emit_foreign_steps(){let Some(presence)=cursor.foreign_step_presence else{return Ok(ArtifactStoreOneItemAdvance::Blocked);};let copy=size_of::<(usize,bool)>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}stage.unit_flags.push((target.forwards.len()-1,presence));ownership.copied_bytes=copy;}stage.fold_phase=13;},
+            13=>{let copy=size_of::<Arc<P>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let incoming=cursor.post.take().expect("original prepared post root");*cursor.post=stage.post.replace(incoming);ownership.copied_bytes=copy;stage.fold_phase=14;},
+            _=>{let copy=size_of::<ArtifactStoreOneItemCheckpoint>()+size_of::<Box<ArtifactStorePreparedRetirement<P,Mutation>>>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let item=publication.preparation.as_ref().unwrap().checkpoint();stage.folded+=1;stage.completed_items=stage.completed_items.saturating_add(item.completed_items);stage.completed_bytes=stage.completed_bytes.saturating_add(item.completed_bytes);stage.digest=cursor.fold_digest;stage.retiring=stage.folding.take().map(|owner|owner as Box<dyn ErasedSnapshotRetirement>);publication.item_closing=true;publication.preparation.as_mut().unwrap().begin_close();ownership.copied_bytes=copy;},
         }
         Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership))
     }
@@ -23953,8 +24019,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     /// 📈️ Reports cumulative semantic work from the revision-fenced reprojection owner.
-    pub fn reprojection_operation_preparation_progress(&self) -> Option<replay_preparation::ArtifactReplayPreparationProgress> {
-        self.pending_reprojection.as_ref().map(|pending| pending.replay.as_ref().filter(|(revision, _)| *revision == self.content_revision).map_or_else(replay_preparation::ArtifactReplayPreparationProgress::default, |(_, replay)| replay.operation_preparation_progress()))
+    pub fn reprojection_operation_preparation_progress(&self) -> Option<ArtifactReplayPreparationProgress> {
+        self.pending_reprojection.as_ref().map(|pending| pending.replay.as_ref().filter(|(revision, _)| *revision == self.content_revision).map_or_else(ArtifactReplayPreparationProgress::default, |(_, replay)| replay.operation_preparation_progress()))
     }
 
     /// ✋️ Drops the running replay of the deferred reprojection: the store is untouched, the change stays admitted (a
@@ -24786,27 +24852,32 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 🩹️ Everything the replay builds — its working projection, the command's operations, their inverses — is a
     /// [`ScratchOwner`]: a refusal on ANY exit retires all of it cold, and the caller adopts each part where the store takes it.
     /// 📦️ Materializes the installed original operation source under the caller's retained admission.
-    pub fn authored_operation_bytes(&mut self,mutations:&[Mutation],identity:&mut EntityIdentityAuthority<'_>)->Result<Vec<Vec<u8>>,VcsError>{Self::authored_operation_rows(mutations.len(),mutations.iter(),self.one_item_preparation_factory.as_ref(),&mut self.displaced_retirements,identity)}
+    pub fn authored_operation_bytes(&mut self,mutations:&[Mutation],identity:&mut EntityIdentityAuthority<'_>)->Result<Vec<Vec<u8>>,VcsError>{Self::authored_operation_rows(mutations.len(),mutations.iter(),self.one_item_preparation_factory.as_ref(),self.operation_wire,&mut self.displaced_retirements,identity)}
 
     /// ↩️ Streams the original recorded forward and inverse rows without cloning the durable edit.
     pub fn authored_edit_operation_bytes(&mut self,identity:&mut EntityIdentityAuthority<'_>)->Result<Option<(Vec<Vec<u8>>,Vec<Vec<u8>>)>,VcsError>{
         let Some(edit)=self.envelope.vcs.edits.last()else{return Ok(None)};
-        let forwards=Self::authored_operation_rows(edit.forwards.len(),edit.forwards.iter(),self.one_item_preparation_factory.as_ref(),&mut self.displaced_retirements,identity)?;
-        let inverse=Self::authored_operation_rows(edit.inverse.len(),edit.inverse.iter(),self.one_item_preparation_factory.as_ref(),&mut self.displaced_retirements,identity)?;
+        let forwards=Self::authored_operation_rows(edit.forwards.len(),edit.forwards.iter(),self.one_item_preparation_factory.as_ref(),self.operation_wire,&mut self.displaced_retirements,identity)?;
+        let inverse=Self::authored_operation_rows(edit.inverse.len(),edit.inverse.iter(),self.one_item_preparation_factory.as_ref(),self.operation_wire,&mut self.displaced_retirements,identity)?;
         Ok(Some((forwards,inverse)))
     }
 
-    fn authored_operation_rows<'a>(count:usize,mutations:impl Iterator<Item=&'a Mutation>,factory:Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P,Mutation>>>,retirements:&mut ArtifactStoreDisplacedRetirements,identity:&mut EntityIdentityAuthority<'_>)->Result<Vec<Vec<u8>>,VcsError> where Mutation:'a{
+    /// 🪪️ The one resolution of an authored operation's wire: the installed factory's domain codec when it speaks one, else the store's canonical wire.
+    fn resolve_operation_wire<'a>(factory:Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P,Mutation>>>,wire:Option<ArtifactOperationWire<Mutation>>,mutation:&'a Mutation)->Option<ArtifactPreparedOperationSource<'a>>{
+        factory.and_then(|factory|factory.operation_wire_source(mutation)).or_else(||wire.and_then(|wire|wire.source(mutation)))
+    }
+
+    fn authored_operation_rows<'a>(count:usize,mutations:impl Iterator<Item=&'a Mutation>,factory:Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P,Mutation>>>,wire:Option<ArtifactOperationWire<Mutation>>,retirements:&mut ArtifactStoreDisplacedRetirements,identity:&mut EntityIdentityAuthority<'_>)->Result<Vec<Vec<u8>>,VcsError> where Mutation:'a{
         let slots=count.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"operation wire retirement slots overflow"))?;
         retirements.reserve(slots)?;
-        let mut rows=identity.encode(|control|{control.charge(std::mem::size_of::<operation_identity::OperationWireRows>())?;Ok::<_,ValueError>(Box::new(operation_identity::OperationWireRows::new()))})?;
+        let mut rows=identity.encode(|control|{control.charge(size_of::<operation_identity::OperationWireRows>())?;Ok::<_,ValueError>(Box::new(operation_identity::OperationWireRows::new()))})?;
         let result=(||{
             identity.encode(|control|rows.initialize(count,control))?;
             for mutation in mutations{
-                let mut cursor=identity.encode(|control|{control.charge(std::mem::size_of::<operation_identity::OperationIdentityCursor>())?;Ok::<_,ValueError>(Box::new(operation_identity::OperationIdentityCursor::new()))})?;
-                let encoded=match factory.and_then(|factory|factory.operation_wire_source(mutation)){
+                let mut cursor=identity.encode(|control|{control.charge(size_of::<operation_identity::OperationIdentityCursor>())?;Ok::<_,ValueError>(Box::new(operation_identity::OperationIdentityCursor::new()))})?;
+                let encoded=match Self::resolve_operation_wire(factory,wire,mutation){
                     Some(source)=>identity.encode(|control|cursor.encode_into(source,rows.active(),control)),
-                    None=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"authoring requires the installed original operation wire source")),
+                    None=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"authoring requires an installed canonical operation wire or an original domain codec")),
                 };
                 retirements.push_reserved(cursor);
                 encoded?;rows.append();
@@ -24819,10 +24890,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     fn authored_operation_identity(&mut self,mutation:&Mutation,stamp:(u64,u64,u64),identity:&mut EntityIdentityAuthority<'_>)->Result<(String,[u8;32]),VcsError>{
         self.displaced_retirements.reserve(1)?;
-        let mut cursor=identity.encode(|control|{control.charge(std::mem::size_of::<operation_identity::OperationIdentityCursor>())?;Ok::<_,ValueError>(Box::new(operation_identity::OperationIdentityCursor::new()))})?;
-        let committed=match self.one_item_preparation_factory.as_ref().and_then(|factory|factory.operation_wire_source(mutation)){
+        let mut cursor=identity.encode(|control|{control.charge(size_of::<operation_identity::OperationIdentityCursor>())?;Ok::<_,ValueError>(Box::new(operation_identity::OperationIdentityCursor::new()))})?;
+        let committed=match Self::resolve_operation_wire(self.one_item_preparation_factory.as_ref(),self.operation_wire,mutation){
             Some(source)=>identity.encode(|control|cursor.commit(source,stamp,control)),
-            None=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"authoring requires the installed original operation wire source")),
+            None=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"authoring requires an installed canonical operation wire or an original domain codec")),
         };
         self.displaced_retirements.push_reserved(cursor);
         committed.map_err(VcsError::from)
@@ -26134,7 +26205,7 @@ where
     Mutation: self::Mutation<P>,
 {
     projection: Option<P>,
-    technology: std::marker::PhantomData<fn() -> Mutation>,
+    technology: PhantomData<fn() -> Mutation>,
 }
 
 impl<P, Mutation> ReplayProjection<P, Mutation>
@@ -26143,7 +26214,7 @@ where
 {
     /// 🌱️ Takes ownership of a fold's base projection.
     fn new(projection: P) -> Self {
-        Self { projection: Some(projection), technology: std::marker::PhantomData }
+        Self { projection: Some(projection), technology: PhantomData }
     }
 
     /// ▶️ Installs the next projection and retires the one it displaces.
@@ -27104,7 +27175,7 @@ where
     finished: bool,
 }
 
-impl<P, M: self::Mutation<P>> ReplayOwnedState<P, M> {
+impl<P, M: Mutation<P>> ReplayOwnedState<P, M> {
     fn terminal() -> Self {
         Self {
             mode: ReplayMode::Report, order: crate::os_vcs::HistoryPageStack::empty(), from: 0, prefix_until: 0,
@@ -27297,7 +27368,7 @@ where
                 let body = retirement.next_copy_byte_demand().map_err(VcsError::InverseRefused)?;
                 let capacity = retirement.next_capacity_byte_demand(body).map_err(VcsError::InverseRefused)?;
                 if body.saturating_add(capacity) > 4096 { return Err(VcsError::ValidationFailed("replay cleanup native frame exceeds one body/capacity grant".into())); }
-                let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: capacity, maximum_release_bytes: retirement.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: retirement.next_depth_demand().map_err(VcsError::InverseRefused)? };
+                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: capacity, maximum_release_bytes: retirement.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: retirement.next_depth_demand().map_err(VcsError::InverseRefused)? };
                 let step = retirement.close_step(grant).map_err(VcsError::InverseRefused)?;
                 if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("replay cleanup exceeded its admitted grant".into())); }
                 if retirement.terminal_is_empty() {
@@ -27308,7 +27379,7 @@ where
             }
             if let Some(owner) = self.prefix_message_retirement.as_mut() {
                 let body = owner.next_copy_byte_demand();
-                let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: 0, maximum_release_bytes: owner.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: owner.next_depth_demand().map_err(VcsError::InverseRefused)? };
+                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: 0, maximum_release_bytes: owner.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: owner.next_depth_demand().map_err(VcsError::InverseRefused)? };
                 let step = owner.close_step(grant).map_err(VcsError::InverseRefused)?;
                 if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("prefix diagnostic cleanup exceeded its actual grant".into())); }
                 if owner.terminal_is_empty() { self.prefix_message_retirement = None; }
@@ -27465,7 +27536,7 @@ where
         self.report_worst = self.report_worst.max(worst);
         let mut drain = crate::os_spr::command::OperationMessageDrain::new(protocol::MutationReplayOutcome { mutation_id: effective.mutation_id.clone(), edit_id: edit.id.clone(), op_index: index as u32, worst, messages, superseded: effective.superseded(), withdrawn: effective.withdrawn() });
         while !drain.is_finished() {
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: drain.next_copy_byte_demand(&self.edit_messages), maximum_capacity_bytes: drain.next_capacity_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_release_bytes: drain.next_release_byte_demand(), maximum_depth: 1 };
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: drain.next_copy_byte_demand(&self.edit_messages), maximum_capacity_bytes: drain.next_capacity_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_release_bytes: drain.next_release_byte_demand(), maximum_depth: 1 };
             drain.step(&mut self.edit_messages, grant).map_err(VcsError::InverseRefused)?;
         }
         self.outcomes.push(drain.take().expect("cold original operation messages transferred"));
@@ -27479,7 +27550,7 @@ where
             return Ok(false);
         };
         if !settlement.is_finished() {
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: settlement.next_copy_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_capacity_bytes: settlement.next_capacity_byte_demand().map_err(VcsError::InverseRefused)?, maximum_release_bytes: settlement.next_release_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_depth: 64 };
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: settlement.next_copy_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_capacity_bytes: settlement.next_capacity_byte_demand().map_err(VcsError::InverseRefused)?, maximum_release_bytes: settlement.next_release_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_depth: 64 };
             if grant.maximum_copy_bytes.saturating_add(grant.maximum_capacity_bytes) > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES { return Err(VcsError::ValidationFailed("edit message settlement exceeds its body/capacity grant".into())); }
             settlement.step(&mut self.edit_messages, &mut self.outcomes, grant).map_err(VcsError::InverseRefused)?;
             return Ok(false);
@@ -27740,7 +27811,7 @@ impl OpText for BackboneMessage {
                 return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
             }
         }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+        Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),TextSpan::at(1,1)))
     }
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
@@ -28304,7 +28375,7 @@ pub trait SpaceMember {
     fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError>;
     /// ↩️ Returns a private candidate lease before its exact staged snapshot may be aborted.
     fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)>;
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>;
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
     fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String>;
     async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String>;
@@ -28520,7 +28591,7 @@ where
         if request.wire.schema.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES || request.wire.bytes.len() > ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES {
             return Err(ArtifactStoreBatchAdmissionRejected { reason: "member wire exceeds its fixed schema or byte admission".into(), mutations: vec![request.wire] });
         }
-        let source = ArtifactStoreBatchSourceOf::new(Arc::clone(factory), vec![request.wire], None);
+        let source = ArtifactStoreBatchSourceOf::new(Arc::clone(factory), vec![request.wire], None, self.operation_wire);
         let publication = self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor, HistoryLane::Document, request.group_id, source, false, None)?;
         Ok(Box::new(MemberStoreOneItemPublication { member: Some(SnapshotReadRegistryAliasRetirement::new(self.snapshot_read_leases.clone())), publication, group_history: None, group_displaced: None }))
     }
@@ -28533,9 +28604,9 @@ where
             return Err("member batch metadata exceeds its fixed identity capacity".into());
         }
         let authority = std::alloc::Layout::new::<[std::sync::atomic::AtomicUsize; 2]>().extend(std::alloc::Layout::new::<ArtifactStoreOneItemLiveAuthority>()).map_err(|_| "member authority layout is unrepresentable".to_string())?.0.pad_to_align().size();
-        let source = std::mem::size_of::<ArtifactStoreBatchSourceOf<P, Mutation, ArtifactTypedBatchItemAuthority<P, Mutation>>>();
-        let publication = std::mem::size_of::<MemberStoreOneItemPublication<P, Mutation>>();
-        let metadata = [request.actor.len(), request.group_id.as_ref().map_or(0, String::len), self.envelope.active_alternative_id.as_ref().map_or(0, String::len), request.transaction.as_ref().map_or(0, |transaction| transaction.id.len()), request.transaction.as_ref().map_or(0, |transaction| transaction.tool.len()), factory.stamped_mutation_id().map_or(0, |identity| identity.0.len())];
+        let source = size_of::<ArtifactStoreBatchSourceOf<P, Mutation, ArtifactTypedBatchItemAuthority<P, Mutation>>>();
+        let publication = size_of::<MemberStoreOneItemPublication<P, Mutation>>();
+        let metadata = [request.group_id.as_ref().map_or(0, String::len), self.envelope.active_alternative_id.as_ref().map_or(0, String::len), request.transaction.as_ref().map_or(0, |transaction| transaction.id.len()), request.transaction.as_ref().map_or(0, |transaction| transaction.tool.len()), factory.stamped_mutation_id().map_or(0, |identity| identity.0.len())];
         metadata.into_iter().try_fold(authority.checked_add(source).and_then(|bytes| bytes.checked_add(publication)).ok_or_else(|| "member publication frame size overflows".to_string())?, |total, bytes| total.checked_add(bytes).ok_or_else(|| "member publication metadata size overflows".to_string()))
     }
 
@@ -28543,6 +28614,8 @@ where
         if grant.maximum_items == 0 { return Ok(None); }
         let birth_bytes = self.owned_publication_birth_bytes(request)?;
         if grant.maximum_capacity_bytes < birth_bytes { return Ok(None); }
+        let metadata_copy_bytes = request.actor.len() + request.group_id.as_ref().map_or(0, String::len) + request.transaction.as_ref().map_or(0, |transaction| transaction.id.len() + transaction.tool.len());
+        if grant.maximum_copy_bytes < metadata_copy_bytes { return Ok(None); }
         if request.mutations.mutations::<Mutation>().is_none() { return Err("member batch mutation type does not match its exact store".into()); }
         let factory = self.one_item_preparation_factory.as_ref().filter(|_| self.snapshot_retirement_factory.is_some() && self.mutation_retirement_factory.is_some() && self.backbone.is_none() && !self.owned_disposer_terminal)
             .ok_or_else(|| "member requires its exact retained typed preparation and retirement authority".to_string())?;
@@ -28551,7 +28624,7 @@ where
         }
         let issuer = request.mutations.source_retirement_issuer::<Mutation>().ok_or_else(|| "member batch lost its exact admitted retirement issuer".to_string())?;
         let inputs = request.mutations.take_mutations::<Mutation>().ok_or_else(|| "member batch source is already transferred or closing".to_string())?;
-        let source = ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority { preparation: Arc::clone(factory), retirement: Arc::clone(self.mutation_retirement_factory.as_ref().expect("admitted original mutation retirement authority")) }, inputs, Some(issuer));
+        let source = ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority { preparation: Arc::clone(factory), retirement: Arc::clone(self.mutation_retirement_factory.as_ref().expect("admitted original mutation retirement authority")) }, inputs, Some(issuer), self.operation_wire);
         match self.begin_apply_batch_owned(request.operation, request.expected_generation, request.expected_revision, request.actor.clone(), HistoryLane::Document, request.group_id.clone(), source, false, request.transaction.clone()) {
             Ok(publication) => Ok(Some(Box::new(MemberStoreOneItemPublication { member: Some(SnapshotReadRegistryAliasRetirement::new(self.snapshot_read_leases.clone())), publication, group_history: None, group_displaced: None }))),
             Err(rejected) => {
@@ -28615,7 +28688,7 @@ where
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.snapshot_read_leases)) { return Err("member group stage belongs to a different exact store authority".into()); }
         if !grant.permits_one() { return Ok(ArtifactStoreOneItemPreparationStep::Blocked); }
         if publication.publication.group_preparation.is_none() {
-            let copy=std::mem::size_of::<member_group::MemberGroupPreparation>();
+            let copy=size_of::<member_group::MemberGroupPreparation>();
             if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
             publication.publication.group_preparation=Some(member_group::MemberGroupPreparation::new(visibility,publication.group_history.take(),publication.group_displaced.take()));
             return Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
@@ -28629,39 +28702,39 @@ where
         self.adopt_apply_batch_group(&mut publication.publication, visibility, grant)
     }
 
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let publication = publication
             .as_any_mut()
             .downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>()
-            .ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort concrete owner type does not match"))?;
+            .ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort concrete owner type does not match"))?;
         if publication.terminal_is_empty() {
-            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default()));
+            return Ok(RetainedCloneStep::Complete(Default::default()));
         }
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.snapshot_read_leases)) {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort belongs to a different exact store authority"));
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort belongs to a different exact store authority"));
         }
         if publication.publication.group_preparation.is_some() {
-            return self.abort_apply_batch_group(&mut publication.publication, grant).map(|step| semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress()));
+            return self.abort_apply_batch_group(&mut publication.publication, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         publication.publication.begin_close();
         if grant.maximum_items == 0 {
-            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()));
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "member abort requires admitted depth")); }
         if let Some(reservation) = publication.group_history.take() {
             let ArtifactStoreHistoryCommitReservation { history, rejected_owner } = reservation;
             if let Err(history) = self.envelope.vcs.edits.cancel_reservation(history) {
                 publication.group_history = Some(ArtifactStoreHistoryCommitReservation { history, rejected_owner });
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort lost its exact history reservation"));
+                return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "member group abort lost its exact history reservation"));
             }
-            self.displaced_retirements.release_owner_slots(rejected_owner).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
-            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            self.displaced_retirements.release_owner_slots(rejected_owner).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(reservation) = publication.group_displaced.take() {
-            self.displaced_retirements.release_owner_slots(reservation).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
-            return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            self.displaced_retirements.release_owner_slots(reservation).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, error.to_string()))?;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        publication.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant })
+        publication.close_step(RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant })
     }
 
     fn snapshot_read_erased_for_publication(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError> {
@@ -28685,7 +28758,7 @@ where
         let Some(root) = self.durable_group_root.as_ref() else { return reject(snapshot, "prepared read return requires its retained staged root"); };
         if visibility.committed() || !Arc::ptr_eq(&root.visibility, visibility) { return reject(snapshot, "prepared read return requires its exact undecided or aborted visibility"); }
         if !root.current.as_ref().is_some_and(|candidate| snapshot.get::<P>().is_some_and(|borrowed| std::ptr::eq(candidate.as_ref(), borrowed))) { return reject(snapshot, "prepared read return does not retain this exact private candidate"); }
-        if !grant.permits_one() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"prepared read return requires its supplied item"),snapshot)); }
+        if grant.maximum_items==0 { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"prepared read return requires its supplied item"),snapshot)); }
         let demand = ErasedSnapshotRead::prepared_return_demands();
         if grant.maximum_depth < demand.depth { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"prepared read return requires its supplied depth"),snapshot)); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"prepared read return requires its original full physical authority"),snapshot)); }
@@ -28960,7 +29033,7 @@ pub trait MemberFactory: MemberVisit + Sized {
     type Open: MemberOpenOperation<Member = Self> + Send;
     fn open_birth_demand(request: &MemberOpenRequest) -> Result<RetainedCloneBirthDemand, MemberOpenDiagnostic>;
     fn member_frame_bytes(&self) -> usize;
-    fn begin_open(request: &mut Option<MemberOpenRequest>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self::Open>, MemberOpenDiagnostic>;
+    fn begin_open(request: &mut Option<MemberOpenRequest>, grant: RetainedCloneGrant) -> Result<Option<Self::Open>, MemberOpenDiagnostic>;
     async fn create(id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId) -> Result<Self, VcsError>;
     async fn open(expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId) -> Result<Self, VcsError>;
 }
@@ -28973,7 +29046,7 @@ pub trait MemberStoreVisitor {
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
         P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: Clone + ToValue + FromValue + self::Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
+        Mu: Clone + ToValue + FromValue + Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 
 /// ✍️ [`MemberStoreVisitor`]'s mutating twin: a history edit's preview, replay and finalize on one member store.
@@ -28982,7 +29055,7 @@ pub trait MemberStoreVisitorMut {
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
     where
         P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: Clone + ToValue + FromValue + self::Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
+        Mu: Clone + ToValue + FromValue + Mutation<P> + crate::os_spr::SemanticMutation<P> + OpBinary + OpText + Send + 'static;
 }
 
 /// 🧭️ Routes a visitor to the typed store a member enum variant holds — generated by `space_members!` next to its
@@ -29049,7 +29122,7 @@ impl SpaceMember for NoMembers {
     fn snapshot_read_erased_for_publication(&self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, _grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError> { match *self {} }
     fn return_prepared_snapshot_read_erased(&self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _visibility: &Arc<crate::os_vcs::ArtifactGroupVisibility>, _snapshot: ErasedSnapshotRead, _grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> { match *self {} }
 
-    fn abort_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn abort_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         match *self {}
     }
 
@@ -29104,7 +29177,7 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn commit_checkpoint(&mut self, _message: String, _authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    async fn commit_checkpoint(&mut self, _message: String, _authors: Vec<Author>, _identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         match *self {}
     }
 
@@ -29116,11 +29189,11 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn checkout(&mut self, _checkpoint_id: &str, _alternative_id: &str, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn checkout(&mut self, _checkpoint_id: &str, _alternative_id: &str, _identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         match *self {}
     }
 
-    async fn create_alternative(&mut self, _name: String, identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
+    async fn create_alternative(&mut self, _name: String, _identity: &mut EntityIdentityAuthority<'_>) -> Result<String, VcsError> {
         match *self {}
     }
 
@@ -29132,11 +29205,11 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn undo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn undo(&mut self, _identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         match *self {}
     }
 
-    async fn redo(&mut self, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn redo(&mut self, _identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
         match *self {}
     }
 
@@ -29148,11 +29221,11 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn dispatch_wire(&mut self, _cmd_bytes: &[u8], identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire(&mut self, _cmd_bytes: &[u8], _identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
         match *self {}
     }
 
-    async fn dispatch_wire_with_policy(&mut self, _cmd_bytes: &[u8], _policy: crate::os_spr::MergePolicy, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
+    async fn dispatch_wire_with_policy(&mut self, _cmd_bytes: &[u8], _policy: crate::os_spr::MergePolicy, _identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError> {
         match *self {}
     }
 
@@ -29211,7 +29284,7 @@ impl MemberFactory for NoMembers {
     fn open_birth_demand(request: &MemberOpenRequest) -> Result<RetainedCloneBirthDemand, MemberOpenDiagnostic> { request.admitted_expected().map(|_| RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }) }
     fn member_frame_bytes(&self) -> usize { match *self {} }
 
-    fn begin_open(request: &mut Option<MemberOpenRequest>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self::Open>, MemberOpenDiagnostic> {
+    fn begin_open(request: &mut Option<MemberOpenRequest>, grant: RetainedCloneGrant) -> Result<Option<Self::Open>, MemberOpenDiagnostic> {
         UnsupportedMemberFactoryOpen::begin(request, grant)
     }
 
@@ -29547,7 +29620,8 @@ macro_rules! space_members {
 /// 🔮️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive transitively (`CommitSpaceCheckpoint` → `SpaceCheckpoint` → this type). Production never
 /// serializes through serde, so this never reaches a shipped plugin component.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -29562,7 +29636,8 @@ pub struct SpaceMemberPin {
 
 /// 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SpaceCheckpoint {
     pub id: String,
@@ -29575,7 +29650,8 @@ pub struct SpaceCheckpoint {
 }
 
 /// 🔮️ serde stays TEST-ONLY — see `SpaceMemberPin`'s docstring above.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -29785,12 +29861,12 @@ impl OpText for SpaceHistoryMutation {
 }
 impl OpBinary for SpaceHistoryMutation {
     fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        let value = semio_framework_value::ToValue::to_value(self);
+        let value = ToValue::to_value(self);
         Ok(pack_rt::encode_pack_value(&value))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
         let value = pack_rt::decode_pack_value(bytes).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
-        semio_framework_value::FromValue::from_value(renormalize_whole_number_floats(value)).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })
+        FromValue::from_value(renormalize_whole_number_floats(value)).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })
     }
 }
 impl ArtifactDsl for SpaceHistorySnapshot {
@@ -29807,12 +29883,12 @@ impl ArtifactPack for SpaceHistorySnapshot {
         Some(<Self as ArtifactSqliteSnapshot>::sqlite_codec())
     }
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let value = semio_framework_value::ToValue::to_value(self);
+        let value = ToValue::to_value(self);
         Ok(pack_rt::encode_pack_value(&value))
     }
     fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
         let value = pack_rt::decode_pack_value(bytes)?;
-        semio_framework_value::FromValue::from_value(renormalize_whole_number_floats(value)).map_err(PackError::from)
+        FromValue::from_value(renormalize_whole_number_floats(value)).map_err(PackError::from)
     }
 }
 //#endregion SpaceHistoryDocument
@@ -29825,7 +29901,7 @@ impl ArtifactPack for SpaceHistorySnapshot {
 /// `edit history insertion requires its exact mutation retirement factory` and the meta store could
 /// never reach `ArtifactStore::drop`'s terminal-empty witness either.
 pub fn space_history_store_owners() -> Result<DocumentStoreOwners<SpaceHistorySnapshot, SpaceHistoryMutation>, ValueError> {
-    funded_canonical_authoring_store_owners::<SpaceHistorySnapshot, SpaceHistoryMutation>()
+    funded_bounded_artifact_store_owners::<SpaceHistorySnapshot, SpaceHistoryMutation>()
 }
 
 /// 🏛️ Composes many `SpaceMember` documents under one space-wide checkpoint/alternative
@@ -30894,7 +30970,7 @@ pub mod test_support {
         let expected = decode_snapshot(after_json)?;
         let mutation: M = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         let (applied, forward) = apply_outcome(&base, mutation.diff(&base));
-        let inverse = mutation.inverse(&base).map_err(semio_framework_value::ValueError::into_message)?;
+        let inverse = mutation.inverse(&base).map_err(ValueError::into_message)?;
         let mut undone = applied.clone();
         let mut inverse_messages = Vec::new();
         for step in &inverse {
@@ -31028,7 +31104,7 @@ pub mod test_support {
     pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
         P: Clone + ToValue + FromValue + ArtifactPack + PartialEq + std::fmt::Debug + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
         let mut store = plain_test_store(envelope).await;
@@ -31271,7 +31347,7 @@ pub mod test_support {
     /// `assert_op_text_binary_equivalence`.
     pub async fn assert_command_text_binary_equivalence<P, Op>(command: &ArtifactCommand<Op>)
     where
-        Op: OpText + OpBinary + self::Mutation<P> + PartialEq + std::fmt::Debug,
+        Op: OpText + OpBinary + Mutation<P> + PartialEq + std::fmt::Debug,
     {
         let printed = print_command(command).await.unwrap_or_else(|error| panic!("command print failed: {error}"));
         let parsed: ArtifactCommand<Op> = parse_command::<P, Op>(&printed).await.unwrap_or_else(|error| panic!("command parse failed: {error}"));
@@ -31330,12 +31406,12 @@ pub mod test_support {
     pub fn plain_document_store_owners<P, Mutation>() -> DocumentStoreOwners<P, Mutation>
     where
         P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
     {
         let preparation = RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<PlainAuthoringFactory<P, Mutation>>(), depth: 1 };
         let birth = DocumentStoreOwners::<P, Mutation>::source_birth_bytes::<RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer<P, Mutation>>().expect("plain test catalog source layout") + preparation.capacity_bytes;
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth, maximum_depth: 1, ..Default::default() };
-        complete_unscheduled_catalog(DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer::<P, Mutation>::new(), Arc::new(PlainAuthoringFactory::<P, Mutation>(std::marker::PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>))).expect("plain test catalog completes its funded constructor tickets")
+        complete_unscheduled_catalog(DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, RoundTripValueRetirementFactory, ArtifactStoreCursorDisposer::<P, Mutation>::new(), Arc::new(PlainAuthoringFactory::<P, Mutation>(PhantomData)) as Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>>))).expect("plain test catalog completes its funded constructor tickets")
     }
 
     /// 🧾️ A plain test mutation viewed as its `OpBinary` image, one scalar leaf. The image is re-encoded per bounded copy turn
@@ -31360,7 +31436,7 @@ pub mod test_support {
     /// 🏭️ Authoring-only semantic authority of a plain test catalog: it names each mutation's `OpBinary` image as its
     /// wire, borrowed from the original mutation, and prepares no retained gesture.
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
-    struct PlainAuthoringFactory<P: 'static, M: 'static>(std::marker::PhantomData<fn() -> (P, M)>);
+    struct PlainAuthoringFactory<P: 'static, M: 'static>(PhantomData<fn() -> (P, M)>);
 
     impl<P: Send + Sync + 'static, M: OpBinary + Sync + 'static> ArtifactStoreOneItemPreparationFactory<P, M> for PlainAuthoringFactory<P, M> {
         fn begin_batch_digest(&self, _edit: &mut Option<Box<Edit<M>>>, _grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ArtifactStoreBatchDigest<M>>, RetainedCloneProgress)>, ValueError> {
@@ -31389,7 +31465,7 @@ pub mod test_support {
     pub async fn plain_test_store<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>) -> ArtifactStore<P, Mutation>
     where
         P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
     {
         let mut store = ArtifactStore::new(envelope, ActorId(crate::os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid");
         install_unscheduled_catalog(&mut store, Ok(plain_document_store_owners())).expect("test store installs its funded plain catalog");
@@ -31408,7 +31484,7 @@ pub mod test_support {
     }
 
     impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRetirementFactory {
-        fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { std::mem::size_of::<RoundTripValueRetirement<Arc<P>>>() }
+        fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<RoundTripValueRetirement<Arc<P>>>() }
 
         fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
             admit_artifact_retirement(snapshot, grant, |snapshot| RoundTripValueRetirement(Some(snapshot)))
@@ -31439,7 +31515,7 @@ pub mod test_support {
     struct RoundTripValueRetirementFactory;
 
     impl<T: Send + 'static> ArtifactOwnedValueRetirementFactory<T> for RoundTripValueRetirementFactory {
-        fn retirement_birth_bytes(&self, _value: &T) -> usize { std::mem::size_of::<RoundTripValueRetirement<T>>() }
+        fn retirement_birth_bytes(&self, _value: &T) -> usize { size_of::<RoundTripValueRetirement<T>>() }
 
         fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
             admit_artifact_retirement(value, grant, |value| RoundTripValueRetirement(Some(value)))
@@ -31574,7 +31650,7 @@ pub mod test_support {
     /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
     pub trait SubsetRoundtripSpec {
         type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + ToValue + FromValue;
-        type Mutation: Clone + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Sync;
+        type Mutation: Clone + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + 'static;
         type Inference: Clone + PartialEq + std::fmt::Debug + Default;
         async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect;
         async fn fidelity() -> IoFidelityClass;

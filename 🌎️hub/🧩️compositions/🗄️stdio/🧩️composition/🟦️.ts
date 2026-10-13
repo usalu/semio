@@ -7,7 +7,7 @@ import { dirname, relative, resolve, sep } from "node:path";
 import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1 } from "../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
 
 type OwnerV1 = { id: string; root: string; enum: string; label: string; main: boolean };
-type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; observed: Map<string, string>; nativeReceipts: CompositionNativeReceiptV1[] };
+type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; appAssembly: boolean; observed: Map<string, string>; nativeReceipts: CompositionNativeReceiptV1[] };
 const boundary = 4 * 1024 * 1024;
 
 function physical(root: string, path: string, file = true): string {
@@ -44,7 +44,7 @@ function rustSource(owner: OwnerV1, rows: CompositionContributionV1[]): string {
   const registrations = apps.map((app) => `    builder = builder.${app.role}::<${app.type}>(${app.factory}());${app.mutationRoster ? `\n    builder = builder.${app.role}_mutation_roster::<${app.type}>();` : ""}`).join("\n");
   const activations = hosted.map((row) => `    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: ${crate(row)}::artifact_kind().id });`).join("\n");
   const assembly = owner.main ? `    let registry = crate::catalog::selected_registry()?;\n    let plan = semio_s_plugin_stdio::AssemblyPlan::new(&registry, semio_s_plugin_stdio::AssemblyOwner { plugin_id: ${JSON.stringify(owner.id)}, package_id: crate::catalog::component_package_id()?, package_version: env!("CARGO_PKG_VERSION") })?;\n    let catalog = crate::catalog::artifact_catalog_contribution(plan.assemblies())?;\n    builder = plan.apply(builder);` : hosted.map((row) => `    builder = builder.host_artifact(${crate(row)}::declaration(${crate(row)}::definition()?).map_err(PluginAssemblyError::definition)?);`).join("\n");
-  const source = `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\n#![allow(async_fn_in_trait)]\n#![allow(long_running_const_eval)]\n\nuse semio_framework_plugin::__semio_dispatch_PluginApp;\nuse semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_framework_plugin::plugin_app_close_prelude::*;\nuse semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n/// 🔌️ Builds the exact present artifact and app contributions.\npub fn plugin() -> Result<Plugin<${owner.enum}>, PluginAssemblyError> {\n    let mut builder = Plugin::<${owner.enum}>::builder(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "crate::catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", crate::catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n${owner.main ? "" : `\n#[cfg(feature = "plugin-root")]\nsemio_framework_plugin::plugin_exports!(plugin, ${owner.enum});\n`}`;
+  const source = `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\n#![allow(async_fn_in_trait)]\n#![allow(long_running_const_eval)]\n\nuse semio_framework_plugin::__semio_dispatch_PluginApp;\nuse semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_framework_plugin::plugin_app_close_prelude::*;\nuse semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n/// 🔌️ Builds the exact present artifact and app contributions.\npub fn plugin() -> Result<Plugin<${owner.enum}>, PluginAssemblyError> {\n    let mut builder = Plugin::<${owner.enum}>::builder(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "crate::catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", crate::catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n${owner.main ? "" : `\n#[cfg(feature = "plugin-root")]\nsemio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, ${owner.enum});\n`}`;
   return source;
 }
 
@@ -101,7 +101,7 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
         capture(absolute);
         return observed.get(absolute)!;
       });
-      inputs.push({ directory: artifactRoot, manifest: packagePath, contribution, observed, nativeReceipts });
+      inputs.push({ directory: artifactRoot, manifest: packagePath, contribution, appAssembly: Object.hasOwn(packageManifest.features ?? {}, "component-app-assembly"), observed, nativeReceipts });
     }
   }
   selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full");
@@ -114,6 +114,7 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
   const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full").map(row => ({ ...row, nativeReceipts: inputs.find(input => input.contribution.package === row.package)!.nativeReceipts }));
   const ownerSource = read(hubRoot, "🧩️composition/🔣️.json"), config = owners(JSON.parse(ownerSource)), ids = new Set(config.map((owner) => owner.id));
   if (rows.some((row) => row.apps.some((app) => !ids.has(app.owner)) || row.playgrounds.some((entry) => !ids.has(entry.owner)))) throw new Error("Artifact app contribution targets an undeclared composition owner");
+  const appAssembly = new Set(inputs.filter((input) => input.appAssembly).map((input) => input.contribution.package));
   const outputs = new Map<string, { previous: string | undefined; next: string }>();
   const publish = (path: string, next: string) => {
     const absolute = resolve(hubRoot, path), local = relative(hubRoot, absolute);
@@ -126,12 +127,12 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
     publish(owner.root, rustSource(owner, rows));
     const path = owner.main ? "📦️packages/🦀️rust/Cargo.toml" : relative(hubRoot, resolve(hubRoot, dirname(owner.root), "📦️packages/🦀️rust/Cargo.toml"));
     const hosted = rows.filter((row) => row.apps.some((app) => app.owner === owner.id));
-    const dependencies = (owner.main ? rows : hosted).map((row) => `${row.package} = { workspace = true, ${owner.main ? "optional = true" : 'features = ["component-app-assembly"]'} }`).join("\n");
+    const dependencies = (owner.main ? rows : hosted).map((row) => `${row.package} = { workspace = true${owner.main ? ", optional = true" : appAssembly.has(row.package) ? ', features = ["component-app-assembly"]' : ""} }`).join("\n");
     let manifest = region(read(hubRoot, path), "Composition Dependencies", dependencies);
     if (owner.main) {
       const full = rows.map((row) => `dep:${row.package}`), home = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "home").map((row) => `dep:${row.package}`);
       for (const row of rows) for (const feature of row.catalogFeatures) full.push(`${row.package}/${feature}`);
-      manifest = region(manifest, "Composition Features", `component-app-assembly = ${JSON.stringify(["full-artifact-catalog", ...hosted.map((row) => `${row.package}/component-app-assembly`)])}\nfull-artifact-catalog = ${JSON.stringify(full)}\nhome-io = ${JSON.stringify(home)}`);
+      manifest = region(manifest, "Composition Features", `component-app-assembly = ${JSON.stringify(["full-artifact-catalog", ...hosted.filter((row) => appAssembly.has(row.package)).map((row) => `${row.package}/component-app-assembly`)])}\nfull-artifact-catalog = ${JSON.stringify(full)}\nhome-io = ${JSON.stringify(home)}`);
     }
     const playgrounds = rows.flatMap((row) => row.playgrounds.filter((entry) => entry.owner === owner.id));
     const playgroundSource = playgrounds.map((entry) => `[[package.metadata.semio.playground]]\nvariant = ${JSON.stringify(entry.variant)}\napp = ${JSON.stringify(entry.app)}\naliases = ${JSON.stringify(entry.aliases)}\nports = { react = ${entry.ports.react}, wgpu = ${entry.ports.wgpu} }`).join("\n\n");

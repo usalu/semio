@@ -30,7 +30,6 @@ impl store::ArtifactPack for PptxSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 
 #[path="🧩️native/🦀️.rs"]

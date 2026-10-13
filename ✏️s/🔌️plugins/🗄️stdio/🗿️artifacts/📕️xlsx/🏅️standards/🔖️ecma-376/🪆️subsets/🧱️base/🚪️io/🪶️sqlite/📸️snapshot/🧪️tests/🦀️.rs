@@ -9,8 +9,8 @@ fn fixture() -> XlsxSnapshot {
 fn sqlite_snapshot_xlsx_all_owned_fields_and_literal_package_domains() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-    let restored = XlsxSnapshot::from_sqlite_database(&db, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
+    let restored = XlsxSnapshot::from_sqlite_database(&db,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     assert_eq!(snapshot, restored);
     assert_eq!(db.tables.len(), 21);
 }
@@ -18,18 +18,18 @@ fn sqlite_snapshot_xlsx_all_owned_fields_and_literal_package_domains() {
 fn sqlite_snapshot_xlsx_exact_aggregate_row_budget() {
     let snapshot = fixture();
     let defaults = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, defaults)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,defaults)).unwrap();
     let count = db.tables.iter().map(|table| table.rows.len()).sum::<usize>();
     let exact = SqliteDatabaseLimits { max_rows: count, ..defaults };
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, exact)).is_ok());
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_rows: count - 1, ..defaults })).is_err());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,exact)).is_ok());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits { max_rows: count - 1, ..defaults })).is_err());
 }
 
 #[test]
 fn sqlite_snapshot_xlsx_components_advance_one_owned_projection_ledger() {
     let snapshot = fixture();
     let defaults = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, defaults)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,defaults)).unwrap();
     let rows = database.tables.iter().map(|table| table.rows.len()).sum::<usize>();
     let mut owned_progress = Vec::new();
     snapshot
@@ -61,7 +61,7 @@ fn sqlite_snapshot_xlsx_components_advance_one_owned_projection_ledger() {
 fn sqlite_snapshot_xlsx_rejects_dangling_and_shared_package_owners() {
     let snapshot = fixture();
     let limits = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for (table, row, column, value) in [
         ("xlsx_document", 0, 2, SqliteValue::Integer(2)),
         ("xlsx_xml_part", 1, 4, SqliteValue::Integer(1)),
@@ -71,7 +71,7 @@ fn sqlite_snapshot_xlsx_rejects_dangling_and_shared_package_owners() {
     ] {
         let mut invalid = db.clone();
         invalid.table_mut(table).unwrap().rows[row].values[column] = value;
-        assert!(XlsxSnapshot::from_sqlite_database(&invalid, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err(), "{table}");
+        assert!(XlsxSnapshot::from_sqlite_database(&invalid,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err(), "{table}");
     }
 }
 #[test]
@@ -79,7 +79,7 @@ fn sqlite_snapshot_xlsx_literal_large_part_bytes_have_interior_controls() {
     let mut snapshot = fixture();
     snapshot.opc.parts[0].bytes = vec![0x97; 100000];
     let limits = SqliteDatabaseLimits::default();
-    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot] {
         let mut observed = false;
         let mut callback = |event: SqliteSnapshotProgress| {
@@ -118,25 +118,20 @@ fn sqlite_snapshot_xlsx_partial_part_reconstruction_retires_deep_completed_docum
             snapshot.xml_parts[1].content_type = "z".repeat(100000);
             let snapshot = Owned(Some(snapshot));
             let limits = SqliteDatabaseLimits::default();
-            let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+            let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
             let mut observed = false;
             assert!(XlsxSnapshot::from_sqlite_database(
-                &db,
-                &mut SqliteSnapshotControl::new(
-                    &mut |event| {
+                &db,&mut SqliteSnapshotControl::new(&mut |event| {
                         if event.phase == SqliteSnapshotPhase::ReconstructSnapshot && event.total == 100000 && event.completed >= 65536 && event.completed < event.total {
                             observed = true;
                             false
                         } else {
                             true
                         }
-                    },
-                    limits
-                )
-            )
+                    },limits))
             .is_err());
             assert!(observed);
-            let restored = XlsxSnapshot::from_sqlite_database(&db, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+            let restored = XlsxSnapshot::from_sqlite_database(&db,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
             restored.retire_sqlite_snapshot();
         })
         .unwrap()
@@ -163,10 +158,10 @@ fn sqlite_snapshot_xlsx_actual_erased_native_boundaries_retain_all_owned_fields(
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
     let codec = <XlsxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-        let payload = (codec.import)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-        let projected = (codec.export)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-        let restored = XlsxSnapshot::from_sqlite_database(&projected, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        let db = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+        let projected = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+        let restored = XlsxSnapshot::from_sqlite_database(&projected,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
     }
@@ -198,10 +193,10 @@ fn sqlite_snapshot_xlsx_deep_erased_native_input_output_are_interior_cancellable
             let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xlsx".into(), standard: "ecma-376".into(), subset: "*".into() };
             let codec = <XlsxSnapshot as ArtifactSqliteSnapshot>::sqlite_codec();
             for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-                let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+                let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
                 let expected_database = db.clone();
-                let payload = (codec.import)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
-                let projected = (codec.export)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap().value;
+                let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
+                let projected = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
                 assert!(projected == expected_database, "complete deep native graph differs");
                 assert_eq!(projected.table("xlsx_xml_element").unwrap().rows.iter().filter(|row| row.text(1).unwrap() == "node").count(), plan["depth"].as_u64().unwrap() as usize);
                 assert_eq!(projected.table("xlsx_xml_text").unwrap().rows.iter().filter(|row| row.text(1).unwrap() == "leaf").count(), 1);
@@ -216,10 +211,10 @@ fn sqlite_snapshot_xlsx_deep_erased_native_input_output_are_interior_cancellable
                         }
                     };
                     let failed = if phase == SqliteSnapshotPhase::EncodeNative {
-                        let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-                        (codec.import)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut callback, limits)).is_err()
+                        let db = snapshot.0.as_ref().unwrap().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
+                        semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut callback, limits), native_owner)).is_err()
                     } else {
-                        (codec.export)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut callback, limits)).is_err()
+                        semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(crate::STDIO_XLSX_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut callback, limits), native_owner)).is_err()
                     };
                     assert!(failed);
                     assert!(reached, "actual interior native phase {phase:?}");
@@ -271,22 +266,22 @@ fn sqlite_snapshot_xlsx_opc_native_component_has_exact_literal_fields() {
 fn sqlite_snapshot_xlsx_owned_native_actual_file_and_entity_ceilings() {
     let snapshot = fixture();
     let defaults = SqliteDatabaseLimits::default();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, defaults)).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,defaults)).unwrap();
     let rows = database.tables.iter().map(|table| table.rows.len()).sum::<usize>();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, defaults)).unwrap();
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, defaults), native_owner)).unwrap();
         let length = match &payload {
             store::io_schema::IoPayload::Binary(bytes) => bytes.len(),
             store::io_schema::IoPayload::Text(text) => text.len(),
         };
         let exact = SqliteDatabaseLimits { max_file_bytes: length, max_rows: rows, ..defaults };
-        assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, exact)).unwrap(), payload);
-        let restored = XlsxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, exact)).unwrap();
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, exact), native_owner)).unwrap(), payload);
+        let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XlsxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, exact), native_owner)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
         for refused in [SqliteDatabaseLimits { max_file_bytes: length - 1, ..exact }, SqliteDatabaseLimits { max_rows: rows - 1, ..exact }] {
-            assert!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, refused)).is_err());
-            assert!(XlsxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, refused)).is_err());
+            assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, refused), native_owner)).is_err());
+            assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XlsxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, refused), native_owner)).is_err());
         }
     }
     snapshot.retire_sqlite_snapshot();
@@ -295,14 +290,14 @@ fn sqlite_snapshot_xlsx_owned_native_actual_file_and_entity_ceilings() {
 #[test]
 fn sqlite_snapshot_xlsx_public_snapshot_pack_and_text_match_controlled_literal_owners() {
     let snapshot = fixture();
-    let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
     let packed = <XlsxSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap();
-    assert!(packed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap() == expected);
+    assert!(packed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() == expected);
     packed.retire_sqlite_snapshot();
     let text = <XlsxSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
     let parsed = <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap();
-    assert!(parsed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap() == expected);
+    assert!(parsed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() == expected);
     parsed.retire_sqlite_snapshot();
     snapshot.retire_sqlite_snapshot();
 }
@@ -347,8 +342,8 @@ fn sqlite_snapshot_xlsx_complete_literal_native_file_matches_independent_fixture
             store::io_schema::IoPayload::Text(text) => text.len(),
         };
         let limits = SqliteDatabaseLimits { max_file_bytes: length, max_rows: rows, ..defaults };
-        assert_eq!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), expected);
-        let restored = XlsxSnapshot::decode_sqlite_snapshot_native(&expected, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap(), expected);
+        let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XlsxSnapshot::decode_sqlite_snapshot_native(&expected, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
     }
@@ -485,10 +480,10 @@ fn sqlite_snapshot_xlsx_borrowed_preflight_pays_frontiers_without_materializing_
         let error = snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut callback, limits)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::Canceled);
         assert!(reached);
-        let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-        let error = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits })).unwrap_err();
+        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
+        let error = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
-        let error = <XlsxSnapshot as ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits })).unwrap_err();
+        let error = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <XlsxSnapshot as ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
     }
     snapshot.retire_sqlite_snapshot();

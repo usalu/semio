@@ -19,7 +19,8 @@
 //! svg, not importable from here across the artifact boundary, so this file declares its own copies
 //! for `📰️xml`'s own crate-visibility scope).
 
-use crate::schema::snapshot::{validate_xml_document_boundaries, XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote};
+use crate::schema::snapshot::{validate_xml_document_boundaries, XmlAttr, XmlDeclaration, XmlDoctype, XmlNode};
+#[cfg(test)] use crate::schema::snapshot::{XmlQuote};
 use crate::XmlSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

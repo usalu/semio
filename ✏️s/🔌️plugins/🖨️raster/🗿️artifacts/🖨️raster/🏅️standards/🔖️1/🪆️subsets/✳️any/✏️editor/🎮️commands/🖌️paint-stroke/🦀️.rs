@@ -378,7 +378,7 @@ pub fn handle_in_window(payload: &PaintStroke, doc: &ArtifactView<'_, RasterSnap
     };
     let tick = PaintToolRequest { stroke, points: payload.xs.iter().zip(&payload.ys).map(|(x, y)| RasterStrokePoint { x: *x, y: *y }).collect() };
     let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
-    let drive = drive_gesture::<RasterPaintTool>(open, press, phase, Some(tick), seed, "").map_err(|refusal| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the stroke"))?;
+    let drive = drive_gesture::<RasterPaintTool>(open, press, phase, Some(tick), seed, "").map_err(|refusal| Fault::new(semio_framework_plugin::FaultOrigin::App, refusal.code(), "the paint tool refused the stroke"))?;
     let stroke = drive.next.map_or_else(|| window.stroke.clone(), |next| next.map(Box::new));
     Ok(match drive.committed {
         Some((transaction, mutations)) if !seed.is_empty() => (Emit::commit_transaction(transaction, mutations), RasterCompositeWindowTransient { stroke: None, closed: closing(gesture) }),
@@ -421,8 +421,8 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PaintStrokeWork {
 
     fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<RasterPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let RasterCommand::PaintStroke(payload) = input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "raster paint command required")) };
-        let samples = payload.xs.len().saturating_add(payload.ys.len()).saturating_mul(std::mem::size_of::<f64>());
-        let copy_bytes = std::mem::size_of::<(Emit<RasterMutation, RasterConfigMutation>, RasterCompositeWindowTransient)>().saturating_add(samples);
+        let samples = payload.xs.len().saturating_add(payload.ys.len()).saturating_mul(size_of::<f64>());
+        let copy_bytes = size_of::<(Emit<RasterMutation, RasterConfigMutation>, RasterCompositeWindowTransient)>().saturating_add(samples);
         Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: samples, depth: 1, ..Default::default() })
     }
 

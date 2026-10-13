@@ -1,6 +1,6 @@
 /** 📦️ Portable locked-install and owner-requested lock refresh command laws. */
 import { expect, test } from "bun:test";
-import { readFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { openSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
@@ -10,7 +10,7 @@ import { prepareJavascriptDependencies, SyncScript, RefreshLockScript } from "..
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/📜️script.ts";
 import { zipSync, unzipSync } from "fflate";
-import { activateWhenNxWatcherReady, waitForNxTargetStart, nxChildEnvironment, nxWatcherEnvironment } from "../../📜️script.ts";
+import { activateWhenNxWatcherReady, waitForNxTargetStart, nxChildEnvironment, nxWatcherEnvironment, NxOutputSpoolV1 } from "../../📜️script.ts";
 import { EventEmitter } from "node:events";
 import { ChildProcess } from "node:child_process";
 
@@ -201,4 +201,30 @@ test("explicit languages and terminology isolate watcher graphs and sockets", ()
     graphs.add(actual.NX_WORKSPACE_DATA_DIRECTORY);sockets.add(actual.NX_SOCKET_DIR);
   }
   expect(graphs.size).toBe(selections.length);expect(sockets.size).toBe(selections.length);
+});
+
+test("a nested Nx run spools every line to its log and forwards only a bounded summary", () => {
+  const rows = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).spool as { forwarded: string[]; suppressed: string[]; forwardBytes: number; heartbeatMs: number };
+  const directory = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "nx-spool-")), path = join(directory, "o.log");
+  const forwarded: string[] = [], clock = { now: 0 };
+  const spool = new NxOutputSpoolV1(openSync(path, "a"), path, (line) => forwarded.push(line), () => clock.now, rows.forwardBytes, rows.heartbeatMs);
+  const input = [...rows.forwarded, ...rows.suppressed];
+  for (const line of input) spool.line(line);
+  expect(forwarded).toEqual(rows.forwarded);
+  expect(spool.lines).toBe(input.length);
+  clock.now = rows.heartbeatMs;
+  spool.line(rows.suppressed[0]!);
+  expect(forwarded.at(-1)).toBe(`[nx-output] ${input.length + 1} line(s), ${spool.bytes} byte(s) in ${path}`);
+  spool.line(rows.suppressed[0]!);
+  expect(forwarded.filter((line) => line.startsWith("[nx-output]")).length).toBe(1);
+  const budgeted: string[] = [], bounded = new NxOutputSpoolV1(openSync(join(directory, "b.log"), "a"), path, (line) => budgeted.push(line), () => 0, rows.forwardBytes, rows.heartbeatMs);
+  for (let index = 0; index < 100; index++) bounded.line(rows.forwarded[0]!);
+  expect(budgeted.join("\n").length).toBeLessThanOrEqual(rows.forwardBytes);
+  expect(bounded.lines).toBe(100);
+  spool.close(); bounded.close();
+  expect(readFileSync(path, "utf8").split("\n").slice(0, input.length)).toEqual(input);
+  if (process.platform !== "win32") {
+    const oracle = Bun.spawnSync(["grep", "-E", "-c", "^(> nx run |[[:space:]]*NX[[:space:]]|[[:space:]]*Successfully ran|[[:space:]]*Failed tasks|[[:space:]]*Tasks not run|[[:space:]]*Tasks stopped|[[:space:]]*Run duration|\\[budget\\])"], { stdin: new TextEncoder().encode(rows.forwarded.map((line) => line.replace(/\u001b\[[0-9;]*m/gu, "")).concat(rows.suppressed).join("\n") + "\n") });
+    expect(Number(new TextDecoder().decode(oracle.stdout).trim())).toBe(rows.forwarded.length);
+  }
 });

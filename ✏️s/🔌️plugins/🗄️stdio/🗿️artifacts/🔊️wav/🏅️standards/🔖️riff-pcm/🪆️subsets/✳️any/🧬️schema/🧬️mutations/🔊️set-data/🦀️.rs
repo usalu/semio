@@ -21,7 +21,7 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetData {
         }
     }
     fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
-        Ok((base.data != self.data).then(|| WavMutation::SetData(set_data::SetData { data: base.data.clone() })).into_iter().collect())
+        Ok((base.data != self.data).then(|| WavMutation::SetData(SetData { data: base.data.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set data", "Daten setzen")

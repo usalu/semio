@@ -20,7 +20,7 @@ impl TimeTravelCommandCustody {
     pub fn discard_admission_demand(&self,destination:&RetirementQueue)->Result<RetirementDemand,ValueError>{
         if !matches!(self.original,Some(TimeTravelEvent::Discard{..})){return Err(refusal("pending command has no Discard semantic authority"))}
         if !destination.has_reserved_slot(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"pending semantic frame requires an original reserved retirement slot"))}
-        Ok(RetirementDemand{copy_bytes:TimeTravelDiscardCursor::admission_copy_bytes(),capacity_bytes:std::mem::size_of::<TimeTravelDiscardCursor>(),depth:2,..Default::default()})
+        Ok(RetirementDemand{copy_bytes:TimeTravelDiscardCursor::admission_copy_bytes(),capacity_bytes:size_of::<TimeTravelDiscardCursor>(),depth:2,..Default::default()})
     }
     /// 📦️ Transfers the same scalar event only after actual semantic-frame allocation is admitted.
     pub fn admit_discard(&mut self,destination:&RetirementQueue,grant:RetainedCloneGrant)->Result<Option<(Box<TimeTravelDiscardCursor>,RetainedCloneProgress)>,ValueError>{

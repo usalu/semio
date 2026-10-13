@@ -79,13 +79,13 @@ pub fn docx_run_formatting(snapshot: &DocxSnapshot, address: &DocxXmlAddress) ->
     let mut formatting = DocxRunFormatting::default();
     let XmlNode::Element { children, .. } = &resolved.node else { unreachable!() };
     for child in children {
-        let mut bindings = scoped_bindings(child, &resolved.bindings);
+        let bindings = scoped_bindings(child, &resolved.bindings);
         if !is_word_name(child, "rPr", &bindings) {
             continue;
         }
         let XmlNode::Element { children, .. } = child else { unreachable!() };
         for property in children {
-            let mut bindings = scoped_bindings(property, &bindings);
+            let bindings = scoped_bindings(property, &bindings);
             let enabled = !matches!(word_attr(property, "val", &bindings), Some("0" | "false" | "off" | "none"));
             if is_word_name(property, "b", &bindings) {
                 formatting.bold = Some(enabled);
@@ -386,7 +386,7 @@ fn word_text(node: &XmlNode, bindings: &[(String, String)]) -> String {
         match node {
             XmlNode::Text { text } | XmlNode::CData { text } if inside_text => output.push_str(text),
             XmlNode::Element { children, .. } => {
-                let mut bindings = scoped_bindings(node, &bindings);
+                let bindings = scoped_bindings(node, &bindings);
                 let inside_text = inside_text || is_word_name(node, "t", &bindings);
                 for child in children {
                     append(child, &bindings, inside_text, output);
@@ -413,7 +413,7 @@ pub fn docx_top_level_run_at(snapshot: &DocxSnapshot, block_index: usize, run_in
 }
 
 fn contains_word_run(node: &XmlNode, parent_bindings: &[(String, String)]) -> bool {
-    let mut bindings = scoped_bindings(node, &parent_bindings);
+    let bindings = scoped_bindings(node, &parent_bindings);
     is_word_name(node, "r", &bindings) || matches!(node, XmlNode::Element { children, .. } if children.iter().any(|child| contains_word_run(child, &bindings)))
 }
 
@@ -573,7 +573,7 @@ fn word_name_like(node: &XmlNode, local: &str) -> Result<String, ValueError> {
 fn direct_word_child_index(node: &XmlNode, parent_bindings: &[(String, String)], local: &str) -> Option<usize> {
     let XmlNode::Element { children, .. } = node else { return None };
     children.iter().enumerate().find_map(|(index, child)| {
-        let mut bindings = scoped_bindings(child, &parent_bindings);
+        let bindings = scoped_bindings(child, &parent_bindings);
         is_word_name(child, local, &bindings).then_some(index)
     })
 }
@@ -584,7 +584,7 @@ fn direct_word_child_indices(node: &XmlNode, parent_bindings: &[(String, String)
         .iter()
         .enumerate()
         .filter_map(|(index, child)| {
-            let mut bindings = scoped_bindings(child, &parent_bindings);
+            let bindings = scoped_bindings(child, &parent_bindings);
             is_word_name(child, local, &bindings).then_some(index)
         })
         .collect()
@@ -682,7 +682,7 @@ fn paragraph_style_exists(snapshot: &DocxSnapshot, style_id: &str) -> Result<boo
     }
     let XmlNode::Element { children, .. } = root else { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX styles root is not an element")) };
     for child in children {
-        let mut bindings = scoped_bindings(child, &root_bindings);
+        let bindings = scoped_bindings(child, &root_bindings);
         if !is_word_name(child, "style", &bindings) {
             continue;
         }
@@ -788,7 +788,7 @@ pub(super) fn table_row_removal(resolved: &ResolvedDocxXmlAddress, index: usize)
 }
 
 pub(super) fn child_identity(resolved: &ResolvedDocxXmlAddress, node: &XmlNode) -> Result<String, ValueError> {
-    let mut bindings = scoped_bindings(node, &resolved.bindings);
+    let bindings = scoped_bindings(node, &resolved.bindings);
     node_identity(node, &bindings)
 }
 

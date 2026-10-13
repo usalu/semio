@@ -16,4 +16,3 @@ impl protocol::OpBinary for Generation3dViewPresenceMutation {
     }
 }
 }
-pub use mutations_codec::*;

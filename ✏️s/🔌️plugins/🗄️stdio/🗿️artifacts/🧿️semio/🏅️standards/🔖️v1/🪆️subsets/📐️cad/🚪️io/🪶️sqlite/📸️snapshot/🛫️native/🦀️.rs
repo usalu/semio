@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2};
 use crate::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot,CadEntity,CadEntityRecord,CadLayer,CadBlock};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(snapshot:&SemioCadSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.cad.dsl v1\n","stdio.semio.cad.pack v1",control,|control|crate::standards::v1::subsets::cad::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn point(value:&SemioPoint2,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.number(value.x,encoding)?;writer.delimiter(b",",encoding)?;writer.number(value.y,encoding)?;writer.delimiter(b"]",encoding)}

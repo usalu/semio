@@ -221,5 +221,17 @@
       "paths",
       "producer"
     ]
+  },
+  "deliverables": {
+    "extension": ".wasm",
+    "component": "fixture.wasm",
+    "wasmHex": "0061736d0d000100",
+    "library": "libfixture.rlib",
+    "libraryText": "rlib"
+  },
+  "diagnostics": {
+    "lines": 1000,
+    "live": 50,
+    "newest": 20
   }
 }

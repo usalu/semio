@@ -42,7 +42,7 @@ fn drive_pixel_region(command: &PngEditCommand, snapshot: &PngSnapshot) -> Vec<P
     assert!(work.extent(command, snapshot, &interaction, None).is_some());
     for _ in 0..patch_pixel_region::CAPACITY.invertible_items() + 3 {
         let mut sequence = 0;
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
         match work.step(&ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx).unwrap() {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).unwrap().contains("de")),
             ArtifactCommandWorkStep::Complete(emit) => return emit.artifact_mutations,
@@ -142,7 +142,7 @@ fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     let mut work = paint_native_region::PaintNativeRegionWork::new(paint_native_region::GRAYSCALE_ACTION_ID);
     let mut sequence = 0; let mut mutations = None;
     for _ in 0..10_000 {
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
         match work.step(&input, &mut cx).unwrap() {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).unwrap().contains("de")),
             ArtifactCommandWorkStep::Complete(emit) => { mutations = Some(emit.artifact_mutations); break; }
@@ -154,7 +154,7 @@ fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     let PngMutation::PaintNativeSamples(mutation) = &mutations[0] else { panic!("native PNG mutation") };
     assert_eq!(mutation.revision, crate::standards::v1_2::subsets::any::schema::operations::png_revision(&snapshot));
     use protocol::{Mutation, MutationDiff};
-    let edited = protocol::apply_diff(&mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
+    let edited = protocol::apply_diff(mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
     assert_eq!(crate::standards::v1_2::subsets::any::schema::operations::png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
     work.begin_close();
     let probe = work.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 });
@@ -174,7 +174,7 @@ fn retained_pixel_region_publishes_one_revision_guarded_edit_and_native_png() {
     assert_eq!(mutations.len(), 1);
     let PngMutation::PatchPixels(patch) = &mutations[0] else { panic!("typed region mutation") };
     assert_eq!(patch.revision, crate::standards::v1_2::subsets::any::schema::operations::png_revision(&base));
-    let edited = protocol::apply_diff(&mutations[0].diff(&base).diff(), &base).unwrap();
+    let edited = protocol::apply_diff(mutations[0].diff(&base).diff(), &base).unwrap();
     let pixels = crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().pixels;
     assert_eq!(&pixels[20..28], &[10, 20, 30, 128, 10, 20, 30, 128]);
     assert_eq!(crate::standards::v1_2::subsets::any::io::decode_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap(), edited);
@@ -223,7 +223,7 @@ fn pixel_region_rejects_invalid_bounds_and_cancellation_publishes_nothing() {
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut work = patch_pixel_region::PatchPixelRegionWork::default();
-    let mut sequence = 0; let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let mut sequence = 0; let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { .. }));
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { .. }));
     work.begin_close();
@@ -278,7 +278,7 @@ fn registered_pixel_region_factory_cancellation_retires_without_publication() {
     let mut dispatched = bus.dispatch_wire_retained_with_spec(&admission, input, None, spec).map_err(|rejected| rejected.error).unwrap();
     let mut sequence = 0; let mut patched = false;
     for _ in 0..32 {
-        let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
         let outcome = dispatched.job.step(&mut cx).expect("registered pixel-region job step"); drop(outcome);
         patched = cx.stage() == "png-pixel-region-patch"; if patched { break; }
     }
@@ -292,18 +292,18 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
     use protocol::OpText;
     use semio_framework_plugin::{artifact_app_laws, PluginApp};
     let mut expected = rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]);
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<PngEditor>, _>(async { semio_framework_plugin::App { definition: create_png_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<PngEditor>, _>(async { semio_framework_plugin::App { definition: create_png_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&expected, STDIO_PNG_DOCUMENT_SCHEMA) else { panic!("PNG fixture load") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let revision = app.test_document_revision(); let number = |value| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value));
     let arguments = semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1_024)), ("height".into(), number(512)), ("red".into(), number(9)), ("green".into(), number(8)), ("blue".into(), number(7)), ("alpha".into(), number(6))]);
-    let meta = artifact_app_laws::meta("local"); app.handle_action(patch_pixel_region::ACTION_ID, Some(&arguments), &meta).await.unwrap(); assert_eq!(app.test_document_revision(), revision);
+    let meta = artifact_app_laws::meta("local"); semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action(patch_pixel_region::ACTION_ID, Some(&arguments), &meta, &mut identity).await).unwrap(); assert_eq!(app.test_document_revision(), revision);
     let concurrent = crate::standards::v1_2::subsets::any::schema::operations::paint_rgba8_region_controlled(&expected, &crate::standards::v1_2::subsets::any::schema::operations::png_revision(&expected), crate::standards::v1_2::subsets::any::schema::snapshot::PngRegion { x: 0, y: 0, width: 1, height: 1 }, [31, 32, 33, 34], &mut |_, _| true).unwrap();
     let mutation = PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image: concurrent.image.clone() });
-    app.ingest_operations_text(&mutation.print_op()).await.unwrap(); expected = concurrent;
-    let fault = match artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
+    semio_framework_plugin::with_authoring_identity!(|identity| app.ingest_operations_text(&mutation.print_op(), &mut identity).await).unwrap(); expected = concurrent;
+    let fault = match semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await) { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
     assert!(fault.message.contains("stale immutable document root")); assert_eq!(app.snapshot().unwrap(), expected);
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 #[test]
@@ -313,8 +313,8 @@ fn metadata_edit_and_inverse_preserve_exact_source_authority() {
     let mutation = PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { revision: crate::standards::v1_2::subsets::any::schema::operations::png_revision(&base), gama: Some(50_000) });
     assert_eq!(PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-    let edited = protocol::apply_diff(&mutation.diff(&base).diff(), &base).unwrap(); assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().gama, Some(50_000));
-    let restored = protocol::apply_diff(&mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff(), &edited).unwrap(); assert_eq!(restored, base);
+    let edited = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap(); assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().gama, Some(50_000));
+    let restored = protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff(), &edited).unwrap(); assert_eq!(restored, base);
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", super::PngEditor, || semio_framework_plugin::App { definition: super::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");

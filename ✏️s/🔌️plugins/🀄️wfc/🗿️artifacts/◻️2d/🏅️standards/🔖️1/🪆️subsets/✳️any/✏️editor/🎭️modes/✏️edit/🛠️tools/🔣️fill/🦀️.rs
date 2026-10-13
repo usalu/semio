@@ -15,7 +15,7 @@ use semio_framework_plugin::ToolRunJobPurpose;
 use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy,
-    ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,
+    ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunState, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter, ToolRunTraceKind, ToolRunVerdict,
     TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_START_ACTION_ID,
 };
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -23,7 +23,7 @@ use semio_s_plugin_wfc_engine::ids::{NodeId, PatternId};
 use semio_s_plugin_wfc_engine::job::{close_job, WfcJob, WfcJobConfig, WfcStage};
 use semio_s_plugin_wfc_engine::model::ModelBuilder;
 use semio_s_plugin_wfc_engine::topology::GraphTopologyBuild;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::sync::Arc;
 
 //#region 🔖️Constants
@@ -643,7 +643,7 @@ impl Wfc2dFillRunJob {
     }
 
     fn drain_child(&mut self, cx: &mut StepContext<'_>, snapshot: Wfc2dSnapshot, tile_ids: Vec<String>, mut child: Box<WfcJob<semio_s_plugin_wfc_engine::topology::GraphTopology>>) -> FillRun {
-        let cells = snapshot.slots.len();
+        let _cells = snapshot.slots.len();
         let mut flips = Vec::new();
         let mut fresh = 0usize;
         let mut solved = false;

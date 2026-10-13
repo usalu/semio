@@ -698,7 +698,7 @@ pub fn world_attractions_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String 
     let mut vortices = std::collections::HashMap::with_capacity(scene_snapshot.objects.iter().map(|object| object.vortices.len()).sum());
     for object in &scene_snapshot.objects {
         for vortex in &object.vortices {
-            vortices.entry(crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id)).or_insert((object, vortex));
+            vortices.entry(puzzle3d_vortex_full_id(&object.id, &vortex.id)).or_insert((object, vortex));
         }
     }
     let position = |full_id: &str| vortices.get(full_id).map(|(object, vortex)| crate::editor::puzzle3d::world_vortex_position(object, vortex));

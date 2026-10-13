@@ -25,7 +25,7 @@ pub(crate) mod context {
     /// command addressed to any other instance is refused as not belonging to the mounted app.
     pub async fn new_app() -> SpaceIndexApp {
         use semio_framework_plugin::PluginApp;
-        let mut app = new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(1).await;
         app
     }
@@ -48,7 +48,7 @@ pub(crate) mod context {
             updated_at_ms: 1,
             updated_by: "user:1".into(),
         });
-        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load test artifact");
+        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load test artifact");
         (app, id)
     }
     
@@ -64,7 +64,7 @@ pub(crate) mod context {
         let mut app = new_app().await;
         let id = "artifact-0123456789abcdef0123456789abcdef".to_string();
         let snapshot = empty_space_index_snapshot("space-1");
-        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }).await.expect("load empty Space index");
+        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load empty Space index");
         let descriptor = DocumentDescriptor {
             space_id: "space-1".into(),
             document_id: id.clone(),
@@ -99,7 +99,7 @@ pub(crate) mod context {
                 },
             ),
         ];
-        app.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local")).await.expect("fold indexed artifact");
+        app.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fold indexed artifact");
         let files = app.config_pack().await.expect("indexed config pack");
         let config = store::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr).await.expect("indexed config projection").snapshot;
         assert_eq!(config.indexed_artifacts.len(), 1);
@@ -108,7 +108,7 @@ pub(crate) mod context {
     
     #[allow(dead_code)]
     pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch")
     }
 }
 
@@ -226,7 +226,7 @@ async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in
     };
     assert_eq!(command.kind_choice, kind_choice);
     let mut app = context::new_app().await;
-    let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(command), &semio_framework_plugin::artifact_app_laws::meta("dialog")).await.expect("dialog submission");
+    let result = app.dispatch_typed(SpaceIndexCommand::CreateArtifact(command), &semio_framework_plugin::artifact_app_laws::meta("dialog"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dialog submission");
     assert!(app.snapshot().expect("projection").artifacts.is_empty());
     let [Effect::ReplayShellCommand { action_id, args }] = result.requested_effects.as_slice() else {
         panic!("dialog submission must emit one ReplayShellCommand");

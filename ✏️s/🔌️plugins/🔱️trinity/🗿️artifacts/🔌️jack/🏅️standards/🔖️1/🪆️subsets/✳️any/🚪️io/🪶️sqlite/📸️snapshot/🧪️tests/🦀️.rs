@@ -1,4 +1,6 @@
 //! 🔌️ Authentic Jack parent Native baselines, before semantic provider opt-in.
+#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue, ValueType};
 use store::{ArtifactDsl, ArtifactPack};
@@ -197,10 +199,10 @@ fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
             SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
             SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
         };
-        let db = (codec.export)(crate::TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+        let db = original_owners::with_decoding(|native_owner|(codec.export)(crate::TRINITY_GRAPH_SCHEMA, &dialect, &native, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         assert_eq!(db.tables.len(), 13);
         assert_eq!(db.table("jack_document").unwrap().single_row().unwrap().text(2).unwrap(), expected.name);
-        let native = (codec.import)(crate::TRINITY_GRAPH_SCHEMA, &dialect, db, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+        let native = original_owners::with_encoding(|native_owner|(codec.import)(crate::TRINITY_GRAPH_SCHEMA, &dialect, &mut Some(db), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
         let actual = Owned::new(match native {
             store::io_schema::IoPayload::Text(v) => JackSnapshot::parse_dsl(&v).unwrap(),
             store::io_schema::IoPayload::Binary(v) => JackSnapshot::decode_pack(&v).unwrap(),
@@ -267,14 +269,14 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
     let mut cb = |_| true;
     let exact = SqliteDatabaseLimits { max_rows: 153, ..Default::default() };
     let short = SqliteDatabaseLimits { max_rows: 152, ..Default::default() };
-    assert!(value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut cb, exact)).is_ok());
-    assert!(value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
+    assert!(original_owners::with_sqlite_recipient(exact,&mut cb,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_ok());
+    assert!(original_owners::with_sqlite_recipient(short,&mut cb,|sqlite_control|value.to_sqlite_database(sqlite_control)).is_err());
     let payload = store::io_schema::IoPayload::Binary(value.encode_pack());
-    assert!(JackSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
-    assert!(value.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut cb, short)).is_err());
+    assert!(original_owners::with_decoding(|native_owner|JackSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut cb, short), native_owner)).is_err());
+    assert!(original_owners::with_encoding(|native_owner|value.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut SqliteSnapshotControl::new(&mut cb, short), native_owner)).is_err());
     let mut large = Owned::new(full(0, 0));
     large.0.as_mut().unwrap().manifest.node_kinds[0].properties[0].expr = Some("引用😀".repeat(20000));
-    let db = large.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut cb, Default::default())).unwrap();
+    let db = original_owners::with_sqlite_recipient(Default::default(),&mut cb,|sqlite_control|large.to_sqlite_database(sqlite_control)).unwrap();
     let payload = store::io_schema::IoPayload::Binary(large.encode_pack());
     for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot, SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
         let mut hit = false;
@@ -290,8 +292,8 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
         let refused = match phase {
             SqliteSnapshotPhase::ProjectSnapshot => large.to_sqlite_database(&mut c).is_err(),
             SqliteSnapshotPhase::ReconstructSnapshot => JackSnapshot::from_sqlite_database(&db, &mut c).is_err(),
-            SqliteSnapshotPhase::DecodeNative => JackSnapshot::decode_sqlite_snapshot_native(&payload, &mut c).is_err(),
-            SqliteSnapshotPhase::EncodeNative => large.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut c).is_err(),
+            SqliteSnapshotPhase::DecodeNative => original_owners::with_decoding(|native_owner|JackSnapshot::decode_sqlite_snapshot_native(&payload, &mut c, native_owner)).is_err(),
+            SqliteSnapshotPhase::EncodeNative => original_owners::with_encoding(|native_owner|large.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, &mut c, native_owner)).is_err(),
             _ => unreachable!(),
         };
         assert!(refused);
@@ -299,7 +301,6 @@ fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phas
     }
 }
 
-#[cfg(feature="component-app-assembly")]
 mod populated_public_owner {
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {

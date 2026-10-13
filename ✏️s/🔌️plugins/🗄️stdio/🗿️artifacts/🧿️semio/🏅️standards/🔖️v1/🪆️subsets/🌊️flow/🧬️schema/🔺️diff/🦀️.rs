@@ -319,7 +319,7 @@ fn absorb_edge_diff(mut a: FlowEdgeDiff, b: FlowEdgeDiff) -> FlowEdgeDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
-    fn apply(&self, base: &SemioFlowSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
+    fn apply(&self, base: &SemioFlowSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.nodes {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |added| added.item.id.clone(), ["nodes"])?;

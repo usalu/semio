@@ -1513,7 +1513,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec JpgBuilderFacets {
         construction: JpgBuilderConstruction,
         analysis: JpgAnalyzerAnalysis,
-        composition: crate::standards::v_jfif_1_01::subsets::document::io::derived_composition::JpgComposerComposition,
+        composition: JpgComposerComposition,
     }
     builder: JpgBuilder,
     analyzer: JpgAnalyzer,
@@ -1523,8 +1523,8 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🆕️ Constructs the canonical decoded white image at native admission.
 pub fn blank_jpg_snapshot() -> JpgSnapshot {
     use crate::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
-    let seed = JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: 1,height: 1,pixels: vec![255, 255, 255, 255],..crate::schema::snapshot::JpgImage::default() } };
-    encode_jpg(&seed, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).and_then(|bytes| decode_jpg(&bytes)).expect("blank_jpg_snapshot: the 1×1 seed round-trips through the real codec")
+    let seed = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: 1,height: 1,pixels: vec![255, 255, 255, 255],..crate::schema::snapshot::JpgImage::default() } };
+    encode_jpg(&seed, &JpgEncodeOptions::default()).and_then(|bytes| decode_jpg(&bytes)).expect("blank_jpg_snapshot: the 1×1 seed round-trips through the real codec")
 }
 
 /// 🧾️ Inspects exact native header observations even when raster decoding refuses that profile.

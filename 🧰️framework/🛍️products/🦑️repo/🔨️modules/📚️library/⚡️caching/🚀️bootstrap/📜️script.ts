@@ -3,10 +3,11 @@ import {nativeNxChildEnvironmentV1,createNativeNxCallerCapabilitiesV1,issueSelec
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
 import { lstat, readFile, readdir, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
+import { createInterface } from "node:readline";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve, win32, posix } from "node:path";
 import { Script, ScriptRouter, readScriptPolicy, scriptInvocationBudget, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
@@ -178,6 +179,46 @@ export function waitForNxTargetStart(child: ReturnType<typeof spawnNxProcess>, t
 }
 
 //#region 🔖️NxScript
+/** 🌿️ Names the file a nested Nx run streams its complete output to; the caller's own stream then carries only a bounded summary. */
+export const NX_OUTPUT_LOG_ENV = "SEMIO_NX_OUTPUT_LOG";
+
+/** 🪵️ Streams every line of a nested Nx run to a log file and forwards a bounded summary: task starts, Nx banners and
+ * the run summary, at most `forwardBytes` of them, then one heartbeat per `heartbeatMs`. An outer Nx task buffers all
+ * output of its child in one string and dies at V8's 512 MiB string limit, so a release build that logs 950 MB (build #9)
+ * must never reach it. @see ./📦️dependencies/🧫️fixtures/🔣️.json `spool` */
+export class NxOutputSpoolV1 {
+  static readonly FORWARDED = /^(?:> nx run |\s*NX\s|\s*Successfully ran|\s*Failed tasks|\s*Tasks not run|\s*Tasks stopped|\s*Run duration|\[budget\])/u;
+  static readonly FORWARD_BYTES = 4 * 1024 * 1024;
+  static readonly HEARTBEAT_MS = 60_000;
+  lines = 0;
+  bytes = 0;
+  forwarded = 0;
+  private forwardedBytes = 0;
+  private nextHeartbeat: number;
+  constructor(private readonly fd: number, private readonly path: string, private readonly forward: (line: string) => void, private readonly now: () => number = Date.now, private readonly forwardBytes = NxOutputSpoolV1.FORWARD_BYTES, private readonly heartbeatMs = NxOutputSpoolV1.HEARTBEAT_MS) {
+    this.nextHeartbeat = now() + heartbeatMs;
+  }
+  line(text: string): void {
+    this.lines++;
+    this.bytes += writeSync(this.fd, `${text}\n`);
+    const at = this.now();
+    if (NxOutputSpoolV1.FORWARDED.test(text.replace(/\u001b\[[0-9;]*m/gu, "")) && this.forwardedBytes + text.length < this.forwardBytes) {
+      this.forwardedBytes += text.length + 1;
+      this.forwarded++;
+      this.forward(text);
+    } else if (at >= this.nextHeartbeat) {
+      this.nextHeartbeat = at + this.heartbeatMs;
+      this.forward(`[nx-output] ${this.lines} line(s), ${this.bytes} byte(s) in ${this.path}`);
+    }
+  }
+  summary(): string { return `[nx-output] complete log: ${this.path} (${this.lines} line(s), ${this.bytes} byte(s)); ${this.forwarded} line(s) forwarded`; }
+  static open(path: string, forward: (line: string) => void): NxOutputSpoolV1 {
+    mkdirSync(dirname(path), { recursive: true });
+    return new NxOutputSpoolV1(openSync(path, "a"), path, forward);
+  }
+  close(): void { closeSync(this.fd); }
+}
+
 export class NxScript extends Script {
   /** 📦️ The locked JavaScript environment every workspace script task imports from. On a fresh clone (no
    * `node_modules/nx`) it runs to completion before the requested graph: Nx schedules sibling setup tasks in parallel,
@@ -208,6 +249,8 @@ export class NxScript extends Script {
     return owned.sort((a, b) => a - b);
   }
   async run(segments: string[]): Promise<void> {
+    const outputLog = process.env[NX_OUTPUT_LOG_ENV];
+    delete process.env[NX_OUTPUT_LOG_ENV];
     let tooling: { cli: string; modulePath: string; bun: string };
     {
       const originalSignal = this.invocation.control.signal;
@@ -225,7 +268,7 @@ export class NxScript extends Script {
       finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
     }
     const nxCli = tooling.cli;
-    const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [];
+    const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [], spooling: Promise<void>[] = [];
     const env = pinnedNxRuntimeEnvironment(devToolingEnv({ ...invocation.env, NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY || join(this.root, ".nx", "workspace-data"), NX_SOCKET_DIR: undefined, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined }), tooling.bun);
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
@@ -263,8 +306,14 @@ export class NxScript extends Script {
     };
     const launch = (args: string[], capture = false, environment = env): ReturnType<typeof spawnNxProcess> => {
       const original=readScriptProcessEnvelope(JSON.parse(environment[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),ownedEnvironment=nativeNxChildEnvironmentV1(this.root,issueSelectedNxCallerEnvelopeV1(this.root,original,args),args,environment);
-      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)), stdio: capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+      const spooled = Boolean(outputLog) && !capture && !invocation.watch;
+      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)), stdio: spooled ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
       children.push(child);
+      if (spooled) {
+        const spool = NxOutputSpoolV1.open(outputLog!, (line) => process.stdout.write(`${line}\n`));
+        const drained = [child.stdout!, child.stderr!].map((input) => new Promise<void>((accept) => { createInterface({ input, crlfDelay: Infinity }).on("line", (line) => spool.line(line)).once("close", accept); }));
+        spooling.push(new Promise<void>((accept) => { child.once("close", () => { void Promise.all(drained).then(() => { process.stdout.write(`${spool.summary()}\n`); spool.close(); accept(); }); }); }));
+      }
       return child;
     };
     const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM"), abort = (): void => stop("SIGTERM");
@@ -303,6 +352,7 @@ export class NxScript extends Script {
           },error=>{console.error(error.message);watchFailure=1;stop("SIGTERM");});
         }
         const code=await status;
+        await Promise.all(spooling);
         process.exitCode=watchFailure||(cancelled?cancelled==="SIGINT"?130:143:code);
       } else process.exitCode=cancelled==="SIGINT"?130:143;
     } catch (error) {
@@ -426,8 +476,13 @@ export async function runOwnedNxInvocationV1(root:string,args:readonly string[],
  const remaining=parent.control.remainingMilliseconds(),now=Date.now(),inherited=process.env[SCRIPT_PROCESS_INVOCATION_ENV];
  const envelope=readScriptProcessEnvelope({version:1,policy:parent.policy,deadlineEpochMilliseconds:remaining===null?null:now+remaining,capabilities:createNxBootstrapCapabilitiesV1(root,["nx",...args],process.env)},now);
  process.env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(envelope,process.env)[SCRIPT_PROCESS_INVOCATION_ENV];
+ const priorExitCode=process.exitCode;
+ process.exitCode=undefined;
  try{await withScriptProcessEnvelope(envelope,original=>new ScriptRouter(root).register("nx",NxScript).run(["nx",...args],original));}
  finally{if(inherited===undefined)delete process.env[SCRIPT_PROCESS_INVOCATION_ENV];else process.env[SCRIPT_PROCESS_INVOCATION_ENV]=inherited;}
+ const status=process.exitCode;
+ process.exitCode=priorExitCode;
+ if(status!==undefined&&status!==0)throw new Error(`Owned Nx invocation failed (${status}): nx ${args.join(" ")}`);
 }
 
 if (import.meta.main) {

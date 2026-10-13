@@ -204,7 +204,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Wfc3dBuilderFacets {
         construction: Wfc3dBuilderConstruction,
         analysis: Wfc3dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Wfc3dComposerComposition,
+        composition: Wfc3dComposerComposition,
     }
     builder: Wfc3dBuilder,
     analyzer: Wfc3dAnalyzer,

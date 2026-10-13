@@ -4,6 +4,7 @@ use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{try_value_content_id, FormsTryValues, FormsTryWindowLease, FormsTryWindowTransient, MAX_TRY_VALUE_ENTRIES};
 use crate::{op::FormMutation, FormsSnapshot};
 use semio_framework_pack_json::{Object, Value};
+use semio_framework_value::SharedUtf8;
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, RequestId};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -25,7 +26,7 @@ const MAX_LIVE_TRY_VALUE_SESSIONS: usize = 64;
 static NEXT_TRY_VALUE_REQUEST: AtomicU64 = AtomicU64::new(20_000);
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, semio_framework_value::RetireOwned)]
-pub struct ChunkAddressableJson(semio_framework_value::SharedUtf8);
+pub struct ChunkAddressableJson(SharedUtf8);
 
 impl ChunkAddressableJson {
     pub(crate) fn owner(&self) -> Arc<str> { Arc::from(self.0.as_str()) }
@@ -385,7 +386,7 @@ pub(crate) fn start_bulk_window(
 }
 
 fn materialize(values: &FormsTryValues, key: &str) -> Option<String> {
-    values.iter_chunks().into_iter().find(|(candidate, _)| candidate == key).map(|(_, chunks)| chunks.iter().map(|chunk| chunk.as_ref()).collect())
+    values.iter_chunks().into_iter().find(|(candidate, _)| candidate == key).map(|(_, chunks)| chunks.iter().map(|chunk| chunk.as_str()).collect())
 }
 
 fn apply_single(values: &FormsTryValues, payload: &SetTryValue, source: &str) -> Result<FormsTryValues, Fault> {
@@ -418,17 +419,17 @@ fn with_raw(values: &FormsTryValues, key: &str, raw: &str) -> FormsTryValues {
     values.with_chunks(key, content_id, Arc::new(chunks))
 }
 
-fn split_chunks(raw: &str) -> Vec<Arc<str>> {
+fn split_chunks(raw: &str) -> Vec<SharedUtf8> {
     let mut chunks = Vec::new();
     let mut start = 0;
     while start < raw.len() {
         let mut end = start.saturating_add(MAX_TRY_VALUE_BYTES_PER_STEP).min(raw.len());
         while end > start && !raw.is_char_boundary(end) { end -= 1; }
         if end == start { end += raw[start..].chars().next().map(char::len_utf8).unwrap_or(1); }
-        chunks.push(Arc::from(&raw[start..end]));
+        chunks.push(SharedUtf8::from(&raw[start..end]));
         start = end;
     }
-    if chunks.is_empty() { chunks.push(Arc::from("")); }
+    if chunks.is_empty() { chunks.push(SharedUtf8::from("")); }
     chunks
 }
 

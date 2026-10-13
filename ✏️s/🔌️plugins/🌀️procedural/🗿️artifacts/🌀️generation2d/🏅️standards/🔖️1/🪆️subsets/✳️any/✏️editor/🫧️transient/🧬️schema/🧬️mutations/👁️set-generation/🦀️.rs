@@ -15,7 +15,7 @@ pub struct SetGenerationPreview {
 
 impl protocol::MutationKind<Generation2dTransient, Generation2dTransientMutation> for SetGenerationPreview {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "generation-preview", kind: "set-generation-preview", record: "SetGenerationPreview" };
-    fn diff(&self, base: &Generation2dTransient) -> protocol::MutationOutcome<Generation2dTransientPatch> {
+    fn diff(&self, _base: &Generation2dTransient) -> protocol::MutationOutcome<Generation2dTransientPatch> {
         protocol::MutationOutcome::new(Generation2dTransientPatch { generation_preview_text: Some(Generation2dPreviewTextChange { text: self.preview_text.clone() }), ..Default::default() })
     }
     fn inverse(&self, base: &Generation2dTransient) -> Result<Vec<Generation2dTransientMutation>, semio_framework_value::ValueError> {

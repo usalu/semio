@@ -646,7 +646,8 @@ pub mod editor {
                 mod component;
                 pub(crate) use component::*;
             }
-            pub(crate) use set_active_example_leaf::{set_active_example, set_active_example_document};
+            pub(crate) use set_active_example_leaf::{set_active_example};
+            #[cfg(test)] pub(crate) use set_active_example_leaf::{set_active_example_document};
 
             #[path = "."]
             mod patch_nodes_leaf {
@@ -812,7 +813,7 @@ pub mod viewer {
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn rewriting_child_restore_projection(snapshot: &crate::RewritingSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+pub fn rewriting_child_restore_projection(snapshot: &RewritingSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("trinity.rewriting.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection

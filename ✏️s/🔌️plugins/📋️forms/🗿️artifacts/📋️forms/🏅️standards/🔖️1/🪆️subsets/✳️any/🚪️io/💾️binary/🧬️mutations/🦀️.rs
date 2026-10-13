@@ -35,14 +35,14 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 pub use crate::mutations::FormMutation;
 use crate::mutations::{
     change_form_title::mutation::ChangeFormTitle, change_step_description::mutation::ChangeStepDescription, create_block::mutation::CreateBlock, create_step::mutation::CreateStep, delete_block::mutation::DeleteBlock,
     delete_step::mutation::DeleteStep, move_block_to_step::mutation::MoveBlockToStep, rename_step::mutation::RenameStep, reorder_step::mutation::ReorderStep, replace_block::mutation::ReplaceBlock,
     change_block_field::mutation::{BlockField, ChangeBlockField},
 };
-use crate::{FormQuestion, FormStep};
+#[cfg(test)] use crate::{FormQuestion, FormStep};
 use crate::mutations::{commit_response::mutation::CommitResponse, discard_response::mutation::DiscardResponse};
 use crate::standards::v1::subsets::any::io::text::mutations::{enc_step,dec_step,enc_block,dec_block};
 fn write_str_bin(out: &mut Vec<u8>, s: &str) {

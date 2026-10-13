@@ -34,7 +34,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetBasicAttribute
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
         let Self { path, name, .. } = self;
         let (value, index) = prior_attribute(base, path, name);
-        Ok(vec![SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: path.clone(), name: name.clone(), value, index })])
+        Ok(vec![SvgBasicMutation::SetBasicAttribute(SetBasicAttribute { path: path.clone(), name: name.clone(), value, index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set basic attribute", "Basic-Attribut setzen")

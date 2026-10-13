@@ -37,7 +37,7 @@ impl RetainedCloneEditCursor<PngSnapshot,PngMutation> for PngPublicationCursor{
         let progress=match self.phase{
             0=>{let cursor=self.copy.as_mut().ok_or("png: missing inverse image clone")?;let step=cursor.advance(base.project(1,|value|&value.image),grant).map_err(ValueError::into_message)?;if matches!(step,RetainedCloneStep::Complete(_)){self.inverse_image=Some(cursor.take().ok_or("png: inverse image clone lost its owner")?);cursor.begin_close();self.phase=1;}step.progress()},
             1|3=>self.close_copy(grant)?,
-            8=>{let bytes=std::mem::size_of::<PngMutation>();if grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneEditStep::Progress(Default::default()));}let mut inverse=Vec::with_capacity(1);inverse.push(PngMutation::ReplaceImage(ReplaceImage{image:self.inverse_image.take().ok_or("png: inverse image owner is absent")?}));self.inverse=Some(inverse);self.phase=2;RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}},
+            8=>{let bytes=size_of::<PngMutation>();if grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneEditStep::Progress(Default::default()));}let mut inverse=Vec::with_capacity(1);inverse.push(PngMutation::ReplaceImage(ReplaceImage{image:self.inverse_image.take().ok_or("png: inverse image owner is absent")?}));self.inverse=Some(inverse);self.phase=2;RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}},
             2=>{if let PngMutation::ReplaceImage(_)=mutation.get(){let source=mutation.project(1,|value|match value{PngMutation::ReplaceImage(value)=>&value.image,_=>unreachable!()});let cursor=self.copy.get_or_insert_with(PngImage::retained_clone_cursor);let step=cursor.advance(source,grant).map_err(ValueError::into_message)?;if matches!(step,RetainedCloneStep::Complete(_)){let next=cursor.take().ok_or("png: incoming image clone lost its owner")?;self.displaced_image=Some(std::mem::replace(&mut post.image,next));cursor.begin_close();self.phase=3;}step.progress()}else{self.phase=5;unit()}},
             4=>{
                 if let Some(step)=self.retirement.begin_granted(&mut self.displaced_image,grant).map_err(ValueError::into_message)?{step.progress()}
@@ -56,20 +56,20 @@ impl RetainedCloneEditCursor<PngSnapshot,PngMutation> for PngPublicationCursor{
             6=>{
                 let gamma=match mutation.get(){PngMutation::ChangeGamma(value)=>Some(value.gama),PngMutation::SetGamma(value)=>Some(value.gama),_=>None};
                 if let Some(gama)=gamma{
-                    let bytes=std::mem::size_of::<PngMutation>();
-                    if grant.maximum_copy_bytes<std::mem::size_of::<Option<u32>>()||grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
+                    let bytes=size_of::<PngMutation>();
+                    if grant.maximum_copy_bytes<size_of::<Option<u32>>()||grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
                     let before=base.get().image.gamma;post.image.gamma=gama;
                     self.inverse=Some(if before!=gama{vec![PngMutation::SetGamma(SetGamma{gama:before})]}else{Vec::new()});self.phase=7;
-                    return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<u32>>(),retained_capacity_bytes:bytes,..Default::default()}));
+                    return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<u32>>(),retained_capacity_bytes:bytes,..Default::default()}));
                 }
                 let(region,paint)=match mutation.get(){PngMutation::PatchPixels(value)=>(PngRegion{x:value.x,y:value.y,width:value.width,height:value.height},Some(crate::schema::snapshot::PngNativePaint::rgba(value.red.into(),value.green.into(),value.blue.into(),value.alpha.into()))),PngMutation::PaintNativeSamples(value)=>(value.region,Some(value.paint)),PngMutation::ReplaceSamples(value)=>(value.region,None),_=>return Err("png: paint lost its typed intent".into())};
-                let spp=post.image.color_type.samples_per_pixel();let width=spp*std::mem::size_of::<u16>();
+                let spp=post.image.color_type.samples_per_pixel();let width=spp*size_of::<u16>();
                 let total=region.width as usize*region.height as usize;
                 if !self.reserved{
                     let planned=total.checked_mul(width).ok_or("png: inverse sample capacity overflow")?;
                     if grant.maximum_capacity_bytes<planned{return Ok(RetainedCloneEditStep::Progress(Default::default()));}
                     self.old_samples.try_reserve_exact(total*spp).map_err(|_|"png: inverse sample capacity allocation failed")?;
-                    let actual=self.old_samples.capacity()*std::mem::size_of::<u16>();
+                    let actual=self.old_samples.capacity()*size_of::<u16>();
                     if actual>grant.maximum_capacity_bytes{return Err("png: inverse sample allocator exceeded its admitted capacity".into());}
                     self.reserved=true;
                     return Ok(RetainedCloneEditStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:actual,..Default::default()}));

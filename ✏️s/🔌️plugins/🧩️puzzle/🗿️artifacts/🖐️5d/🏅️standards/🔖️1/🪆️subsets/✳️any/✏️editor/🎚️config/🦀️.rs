@@ -149,7 +149,7 @@ impl Default for Puzzle5dSelectableKinds {
 //#endregion 🔖️Selection
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Puzzle5dRuntime {
     /// 📷️ Camera pose — session-only view state (`ActionKind::View`), never a VCS document field:
@@ -316,7 +316,7 @@ impl store::ArtifactPack for Puzzle5dConfig {
 impl store::ConfigRecord for Puzzle5dConfig {}
 
 /// 🔺️ Sparse typed delta of the shared Puzzle 5D configuration: names only the fields a mutation changes.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Puzzle5dConfigDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]

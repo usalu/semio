@@ -1,7 +1,7 @@
 //! 🏠️ Inference admission, publication and retained job lifecycle.
 use semio_framework_job::InteractiveJob;
 use crate::schema::snapshot::Wfc2dSnapshot;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::schema::inferences::*;
 
 pub const WFC_2D_INFERENCE_JOB_KIND: &str = "semio.infer";
@@ -603,7 +603,7 @@ impl Wfc2dInferenceJob {
     }
 }
 
-impl semio_framework_job::InteractiveJob for Wfc2dInferenceJob {
+impl InteractiveJob for Wfc2dInferenceJob {
     fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         use semio_framework_job::JobOutcomeBorrow;
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {

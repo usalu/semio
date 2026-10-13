@@ -250,15 +250,15 @@ pub(super) struct RasterExportSnapshotDisposer {
     retirement:Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
-impl semio_framework_plugin::ArtifactSnapshotDisposer<crate::RasterSnapshot> for RasterExportSnapshotDisposer {
-    fn retirement_demands(&self,snapshot:&Option<Arc<crate::RasterSnapshot>>,body:usize)->Result<RetirementDemand,ValueError> {
+impl semio_framework_plugin::ArtifactSnapshotDisposer<RasterSnapshot> for RasterExportSnapshotDisposer {
+    fn retirement_demands(&self,snapshot:&Option<Arc<RasterSnapshot>>,body:usize)->Result<RetirementDemand,ValueError> {
         if let Some(owner)=self.retirement.as_ref(){return store::artifact_retirement_box_demands(owner,body);}
         let Some(owner)=snapshot.as_ref() else{return Ok(Default::default())};
         if Arc::strong_count(owner)!=1{return Ok(RetirementDemand {depth:1,..Default::default()});}
-        Ok(RetirementDemand {capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<crate::RasterSnapshot>(),depth:2,..Default::default()})
+        Ok(RetirementDemand {capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<RasterSnapshot>(),depth:2,..Default::default()})
     }
 
-    fn close_step(&mut self,snapshot:&mut Option<Arc<crate::RasterSnapshot>>,grant:RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault> {
+    fn close_step(&mut self,snapshot:&mut Option<Arc<RasterSnapshot>>,grant:RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault> {
         use semio_framework_plugin::PluginLifecycleStep;
         let fault=|error:ValueError|Fault::from(error.into_message());
         let demand=self.retirement_demands(snapshot,grant.maximum_copy_bytes).map_err(fault)?;
@@ -273,5 +273,5 @@ impl semio_framework_plugin::ArtifactSnapshotDisposer<crate::RasterSnapshot> for
         step.map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(fault)
     }
 
-    fn terminal_is_empty(&self,snapshot:&Option<Arc<crate::RasterSnapshot>>)->bool {snapshot.is_none()&&self.retirement.is_none()}
+    fn terminal_is_empty(&self,snapshot:&Option<Arc<RasterSnapshot>>)->bool {snapshot.is_none()&&self.retirement.is_none()}
 }

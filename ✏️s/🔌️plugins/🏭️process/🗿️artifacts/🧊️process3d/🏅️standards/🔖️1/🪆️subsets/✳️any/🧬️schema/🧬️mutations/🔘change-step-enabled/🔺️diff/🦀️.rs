@@ -1,7 +1,7 @@
 //! 🔺️ `change-step-enabled` sparse diff construction — sets an id-keyed [`ProcessStep`]'s `enabled` flag in the durable
 //! `step_payloads` timeline. Error `target-missing` when the step is absent, Warning `no-op` when the flag is unchanged.
 
-use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
+use crate::diff::{Process3dStepPatch, Process3dStepsDelta};
 use crate::diff::Process3dDiff;
 use crate::Process3dSnapshot;
 

@@ -183,7 +183,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": null
     },
     {
@@ -193,7 +193,7 @@
       "entries": 7,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "capacity"
     },
     {
@@ -213,7 +213,7 @@
       "entries": 7,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "capacity"
     },
     {
@@ -223,7 +223,7 @@
       "entries": 7,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "malformed"
     },
     {
@@ -241,7 +241,7 @@
       "entries": 0,
       "pages": 1,
       "inputBytes": 308,
-      "retiredBytes": 1432,
+      "retiredBytes": 408,
       "error": "malformed"
     },
     {
@@ -250,7 +250,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "malformed"
     },
     {
@@ -259,7 +259,7 @@
       "entries": 7,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "malformed"
     },
     {
@@ -277,7 +277,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 319,
-      "retiredBytes": 1443,
+      "retiredBytes": 419,
       "error": "malformed"
     },
     {
@@ -286,7 +286,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "malformed"
     },
     {
@@ -295,7 +295,7 @@
       "entries": 7,
       "pages": 1,
       "inputBytes": 323,
-      "retiredBytes": 1447,
+      "retiredBytes": 423,
       "error": "malformed"
     },
     {
@@ -304,7 +304,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -313,7 +313,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -322,7 +322,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 282,
-      "retiredBytes": 1406,
+      "retiredBytes": 382,
       "error": "identity"
     },
     {
@@ -331,7 +331,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 332,
-      "retiredBytes": 1456,
+      "retiredBytes": 432,
       "error": null
     },
     {
@@ -340,7 +340,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 320,
-      "retiredBytes": 1444,
+      "retiredBytes": 420,
       "error": "malformed"
     },
     {
@@ -350,7 +350,7 @@
       "entries": 75,
       "pages": 2,
       "inputBytes": 897,
-      "retiredBytes": 3045,
+      "retiredBytes": 997,
       "error": null
     },
     {
@@ -359,7 +359,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 333,
-      "retiredBytes": 1457,
+      "retiredBytes": 433,
       "error": null
     },
     {
@@ -380,7 +380,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -391,7 +391,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -402,7 +402,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -413,7 +413,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -424,7 +424,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -435,7 +435,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -446,7 +446,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -457,7 +457,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -468,7 +468,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -479,7 +479,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "identity"
     },
     {
@@ -488,7 +488,7 @@
       "entries": 11,
       "pages": 1,
       "inputBytes": 322,
-      "retiredBytes": 1446,
+      "retiredBytes": 422,
       "error": null
     },
     {
@@ -497,7 +497,7 @@
       "entries": 7,
       "pages": 1,
       "inputBytes": 296,
-      "retiredBytes": 1420,
+      "retiredBytes": 396,
       "error": "identity"
     },
     {
@@ -506,7 +506,7 @@
       "entries": 10,
       "pages": 1,
       "inputBytes": 310,
-      "retiredBytes": 1434,
+      "retiredBytes": 410,
       "error": "identity"
     }
   ],
@@ -544,7 +544,7 @@
       "pages": 1,
       "scratchBytes": 4,
       "inputBytes": 295,
-      "retiredBytes": 1423,
+      "retiredBytes": 399,
       "error": "malformed"
     },
     {
@@ -556,7 +556,7 @@
       "pages": 1,
       "scratchBytes": 1,
       "inputBytes": 295,
-      "retiredBytes": 1420,
+      "retiredBytes": 396,
       "error": "cancelled"
     },
     {
@@ -568,7 +568,7 @@
       "pages": 1,
       "scratchBytes": 2,
       "inputBytes": 295,
-      "retiredBytes": 1421,
+      "retiredBytes": 397,
       "error": "cancelled"
     },
     {
@@ -580,7 +580,7 @@
       "pages": 1,
       "scratchBytes": 3,
       "inputBytes": 295,
-      "retiredBytes": 1422,
+      "retiredBytes": 398,
       "error": "cancelled"
     },
     {
@@ -642,7 +642,7 @@
       "lookupBytes": 1,
       "idBytes": 0,
       "inputBytes": 307,
-      "retiredBytes": 1432,
+      "retiredBytes": 408,
       "error": "cancelled"
     },
     {
@@ -658,7 +658,7 @@
       "lookupBytes": 0,
       "idBytes": 3,
       "inputBytes": 307,
-      "retiredBytes": 1434,
+      "retiredBytes": 410,
       "error": "cancelled"
     },
     {
@@ -674,7 +674,7 @@
       "lookupBytes": 1,
       "idBytes": 3,
       "inputBytes": 307,
-      "retiredBytes": 1435,
+      "retiredBytes": 411,
       "error": "cancelled"
     },
     {
@@ -690,7 +690,7 @@
       "lookupBytes": 0,
       "idBytes": 11,
       "inputBytes": 307,
-      "retiredBytes": 1442,
+      "retiredBytes": 418,
       "error": "cancelled"
     },
     {
@@ -706,7 +706,7 @@
       "lookupBytes": 0,
       "idBytes": 10,
       "inputBytes": 307,
-      "retiredBytes": 1441,
+      "retiredBytes": 417,
       "error": "cancelled"
     },
     {
@@ -722,7 +722,7 @@
       "lookupBytes": 0,
       "idBytes": 3,
       "inputBytes": 318,
-      "retiredBytes": 1445,
+      "retiredBytes": 421,
       "error": "cancelled"
     },
     {
@@ -738,7 +738,7 @@
       "lookupBytes": 0,
       "idBytes": 2,
       "inputBytes": 311,
-      "retiredBytes": 1437,
+      "retiredBytes": 413,
       "error": "cancelled"
     }
   ],
@@ -762,7 +762,7 @@
       "pages": 1,
       "handoffs": 0,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "cancelled"
     },
     {
@@ -773,7 +773,7 @@
       "pages": 1,
       "handoffs": 0,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "cancelled"
     },
     {
@@ -784,7 +784,7 @@
       "pages": 1,
       "handoffs": 0,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "stale"
     },
     {
@@ -795,7 +795,7 @@
       "pages": 1,
       "handoffs": 0,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "stale"
     },
     {
@@ -806,7 +806,7 @@
       "pages": 1,
       "handoffs": 0,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "cancelled"
     },
     {
@@ -817,7 +817,7 @@
       "pages": 1,
       "handoffs": 0,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "expired"
     },
     {
@@ -828,7 +828,7 @@
       "pages": 1,
       "handoffs": 0,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "expired"
     },
     {
@@ -839,7 +839,7 @@
       "pages": 1,
       "handoffs": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": null
     },
     {
@@ -850,7 +850,7 @@
       "pages": 1,
       "handoffs": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "cancelled"
     },
     {
@@ -861,7 +861,7 @@
       "pages": 1,
       "handoffs": 1,
       "inputBytes": 307,
-      "retiredBytes": 1431,
+      "retiredBytes": 407,
       "error": "stale"
     }
   ],

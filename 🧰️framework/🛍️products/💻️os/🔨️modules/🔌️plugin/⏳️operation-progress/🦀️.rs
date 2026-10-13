@@ -59,19 +59,19 @@ pub fn operation_cancellation_target_admitted(present: bool, terminal: bool, can
 
 /// 📶️ A localized, keyboard-accessible control group observing the operation's current lease.
 pub fn operation_progress_controls(status: &[ArtifactOperationProgress], controller: &str, locale: Locale) -> UiAssemblyResult<BuiltNode> {
-    use semio_framework_ui_contract::{self as ui, Label as UiLabel};
+    use semio_framework_ui_contract::Label as UiLabel;
     let mut groups = BuiltChildren::default();
     for operation in status {
         let key = format!("framework.operation.{:016x}", operation.operation_id);
         let label = operation.label.resolve(Terminology::Native, locale).to_string();
         let caption = operation_progress_text(locale, operation.completed_units, operation.cancelling);
-        let text = ui::text(UiLabel::try_from(caption.as_str()).map_err(|_| ui_assembly_error("operation-progress.caption"))?)
+        let text = text(UiLabel::try_from(caption.as_str()).map_err(|_| ui_assembly_error("operation-progress.caption"))?)
             .live(Liveness::Polite)
             .try_id(format!("{key}.status"))
             .map_err(|_| ui_assembly_error("operation-progress.status-id"))?
             .try_build()
             .map_err(|_| ui_assembly_error("operation-progress.status"))?;
-        let progress = ui::progress(operation.completed_units as f64, UiLabel::try_from(caption.as_str()).map_err(|_| ui_assembly_error("operation-progress.value"))?)
+        let progress = progress(operation.completed_units as f64, UiLabel::try_from(caption.as_str()).map_err(|_| ui_assembly_error("operation-progress.value"))?)
             .try_id(format!("{key}.progress"))
             .map_err(|_| ui_assembly_error("operation-progress.progress-id"))?
             .try_build()
@@ -80,7 +80,7 @@ pub fn operation_progress_controls(status: &[ArtifactOperationProgress], control
         for (name, value) in [("operationId", operation.operation_id), ("generation", operation.generation)] {
             args.push(name.to_owned(), UiValue::Text(UiText::try_from_str(&format!("{value:016x}")).ok_or_else(|| ui_assembly_error("operation-progress.identity"))?)).map_err(|_| ui_assembly_error("operation-progress.args"))?;
         }
-        let cancel = ui::button(
+        let cancel = button(
             UiLabel::try_from(match locale {
                 Locale::En => "Cancel",
                 Locale::De => "Abbrechen",
@@ -94,7 +94,7 @@ pub fn operation_progress_controls(status: &[ArtifactOperationProgress], control
         .map_err(|_| ui_assembly_error("operation-progress.binding"))?
         .try_build()
         .map_err(|_| ui_assembly_error("operation-progress.cancel"))?;
-        let group = ui::column()
+        let group = column()
             .try_id(key)
             .map_err(|_| ui_assembly_error("operation-progress.group-id"))?
             .try_label(label)
@@ -105,7 +105,7 @@ pub fn operation_progress_controls(status: &[ArtifactOperationProgress], control
             .map_err(|_| ui_assembly_error("operation-progress.group"))?;
         groups.try_push(group).map_err(|_| ui_assembly_error("operation-progress.groups"))?;
     }
-    ui::column()
+    column()
         .try_id("framework.operations")
         .map_err(|_| ui_assembly_error("operation-progress.id"))?
         .try_children(groups)

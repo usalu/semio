@@ -480,8 +480,8 @@ impl Wfc3dInferenceJob {
 
 impl Wfc3dInferenceJob {
     /// 🎞️ Decided slot assignments from the child job's in-process domains (not the truncated grid).
-    pub fn fill_decided_assignments(&self) -> std::collections::BTreeMap<String, Option<String>> {
-        let mut assignments = std::collections::BTreeMap::new();
+    pub fn fill_decided_assignments(&self) -> BTreeMap<String, Option<String>> {
+        let mut assignments = BTreeMap::new();
         for slot in &self.snapshot.slots {
             assignments.insert(slot.id.clone(), None);
         }
@@ -688,7 +688,7 @@ impl Wfc3dInferenceJob {
     }
 }
 
-impl semio_framework_job::InteractiveJob for Wfc3dInferenceJob {
+impl InteractiveJob for Wfc3dInferenceJob {
     fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         use semio_framework_job::JobOutcomeBorrow;
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {

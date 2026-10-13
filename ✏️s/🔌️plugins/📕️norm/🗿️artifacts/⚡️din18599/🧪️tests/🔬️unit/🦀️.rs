@@ -1,3 +1,5 @@
+#[path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use super::*;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
@@ -70,12 +72,12 @@ fn a_reloaded_document_evaluates_with_its_own_climate() {
     let report = serde_json::to_value(evaluate_document(&edited)).expect("report");
     assert_ne!(report, serde_json::to_value(evaluate_document(&Din18599Snapshot::default())).expect("potsdam report"), "the cold climate must change the evaluation");
     let limits = SqliteDatabaseLimits::default();
-    let sqlite = export_sqlite_database(&edited.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).expect("sqlite projection"), limits, &mut |_| true).expect("sqlite bytes");
+    let sqlite = export_sqlite_database(&original_owners::with_sqlite_recipient(limits,&mut |_| true,|sqlite_control|edited.to_sqlite_database(sqlite_control)).expect("sqlite projection"), limits, &mut |_| true).expect("sqlite bytes");
     let reloaded = [
         ("dsl", decode_din18599_dsl(&encode_din18599_dsl(&edited)).expect("dsl")),
         ("pack", decode_din18599_pack(&encode_din18599_pack(&edited)).expect("pack")),
         ("json", decode_din18599_snapshot_json(&encode_din18599_snapshot_json(&edited)).expect("json")),
-        ("sqlite", Din18599Snapshot::from_sqlite_database(&import_sqlite_database(&sqlite, limits, &mut |_| true).expect("sqlite import"), &mut SqliteSnapshotControl::new(&mut |_| true, limits)).expect("sqlite")),
+        ("sqlite", original_owners::with_sqlite_recipient(limits,&mut |_| true,|sqlite_control|Din18599Snapshot::from_sqlite_database(&import_sqlite_database(&sqlite, limits, &mut |_| true).expect("sqlite import"), sqlite_control)).expect("sqlite")),
     ];
     for (carrier, document) in reloaded {
         assert_eq!(document, edited, "{carrier}: reload changed the document");

@@ -13,7 +13,7 @@ pub use crate::standards::v_ecma_376::subsets::base::schema::*;
 /// 🏛️ Authors the Strict presentation, master, layout, theme and their complete OPC relationships.
 pub fn blank_strict_pptx_snapshot() -> crate::PptxSnapshot {
     use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr,XmlNode};
-    let mut snapshot = crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(Default::default());
+    let mut snapshot = construction::minimal::build_minimal_pptx(Default::default());
     for part in &mut snapshot.xml_parts {
         let mut nodes = part.document.root.iter_mut().collect::<Vec<_>>();
         while let Some(node) = nodes.pop() {

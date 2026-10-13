@@ -8,7 +8,6 @@ use crate::editor::grid2d::modes::edit::windows::preview;
 use crate::schema::inferences::{Grid2dInferenceCommit};
 
 
-use crate::host::inferences::{solve_with_job};
 use crate::schema::snapshot::{Grid2dSnapshot, WfcDirection2d};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, RetainedCloneGrant, RetainedCloneProgress, StepContext};
 use semio_framework_ui_locale::LocalizedLabel;

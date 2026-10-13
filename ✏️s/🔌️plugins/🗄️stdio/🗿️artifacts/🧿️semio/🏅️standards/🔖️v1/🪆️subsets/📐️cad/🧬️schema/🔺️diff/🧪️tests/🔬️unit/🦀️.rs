@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1::subsets::base::schema::triples::NamedAdded;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 //#region Fixtures
@@ -60,14 +61,14 @@ async fn absorb_law() {
 
     // Insert+Remove-before: add a layer, then remove an unrelated layer — independent, net
     // effect must match sequential application.
-    let d1 = SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true }] }), blocks: None, entities: None };
+    let d1 = SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.layers.len(), item: CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true } }] }), blocks: None, entities: None };
     let d2 = SemioCadDiff { layers: Some(CadLayersDiff { removed: vec!["layer-remove".into()], modified: Vec::new(), added: Vec::new() }), blocks: None, entities: None };
     assert_absorb_matches_sequential(&base, d1, d2);
 
     // Add+SetField: insert an entity, then immediately edit that SAME entity's layer -- must
     // patch into the carried `added` payload, not become a dangling `modified` entry.
     let new_entity = CadEntityRecord { handle: "e-fresh".into(), layer: "keep".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 0.0, y: 0.0 }, radius: 1.0 } };
-    let d1 = SemioCadDiff { layers: None, blocks: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![new_entity] }) };
+    let d1 = SemioCadDiff { layers: None, blocks: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.entities.len(), item: new_entity }] }) };
     let d2 = wrap_entity_diff("e-fresh", CadEntityRecordDiff { layer: Some("layer-remove".into()), entity: None });
     let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
     let entities_diff = absorbed.entities.as_ref().expect("entities diff");
@@ -87,7 +88,7 @@ async fn absorb_law() {
     // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
     let d1 = wrap_layer_diff("keep", CadLayerDiff { color_index: Some(42), line_type: None, visible: None });
     let mid1 = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
-    let d2 = SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CadLayer { name: "assoc".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }] }), blocks: None, entities: None };
+    let d2 = SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.layers.len(), item: CadLayer { name: "assoc".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true } }] }), blocks: None, entities: None };
     let _mid2 = protocol::apply_diff(&d2, &mid1).expect("apply must succeed for a well-formed fixture");
     let d3 = wrap_layer_diff("assoc", CadLayerDiff { color_index: None, line_type: Some("DASHED".into()), visible: None });
 

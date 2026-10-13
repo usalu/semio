@@ -16,7 +16,7 @@ pub struct SetVlrData {
 impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVlrData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vlr-data", kind: "set-vlr-data", record: "SetVlrData" };
 
-    fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
+    fn diff(&self, _base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
         let Self { index, data } = self;
         protocol::MutationOutcome::new(diff::diff_set_vlr_data(*index, data.clone()))
     }
@@ -24,7 +24,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVlrData {
         let Self { index, .. } = self;
         Ok({
             match base.vlrs.get(*index) {
-                Some(v) => vec![LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: *index, data: v.data.clone() })],
+                Some(v) => vec![LasMutation::SetVlrData(SetVlrData { index: *index, data: v.data.clone() })],
                 None => Vec::new(),
             }
         })

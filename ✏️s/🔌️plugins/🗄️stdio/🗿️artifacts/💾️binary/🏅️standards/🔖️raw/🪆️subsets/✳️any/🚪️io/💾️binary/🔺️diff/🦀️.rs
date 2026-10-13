@@ -16,4 +16,3 @@ use protocol::os_spr::command::DiffAlgebra;
 
 semio_framework_os_kernel::diff_binary!(crate::standards::v_raw::subsets::any::schema::diff::BinaryDiff);
 }
-pub use diff_codec::*;

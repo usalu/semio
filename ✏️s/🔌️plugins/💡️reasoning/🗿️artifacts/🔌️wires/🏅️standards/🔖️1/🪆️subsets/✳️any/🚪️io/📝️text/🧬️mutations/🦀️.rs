@@ -17,4 +17,3 @@ impl protocol::OpText for WiresMutation {
     }
 }
 }
-pub use mutations_codec::*;

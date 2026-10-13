@@ -1,5 +1,6 @@
 //! 📡️ Neutral graph scene records and retained explicit-framing materialization.
-use protocol::{DomainHover,DomainSelection,SelectionMethod};
+use protocol::{SelectionMethod};
+#[cfg(test)] use protocol::{DomainHover, DomainSelection};
 use semio_framework_ui_viewport::Viewport2d;
 use serde::{Deserialize,Serialize};
 #[cfg(test)]

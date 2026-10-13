@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::Puzzle2dSnapshot;
+#[cfg(test)] use crate::Puzzle2dSnapshot;
 use protocol::OpBinary;
 
 
@@ -114,15 +114,16 @@ impl store::ArtifactPack for Puzzle2dPlaySnapshot {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation,Puzzle2dMutation};
-use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
-pub use mutations_codec::*;
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle2dMutation};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation};
+#[cfg(test)] use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
+#[cfg(test)] pub use mutations_codec::*;
 
-impl protocol::OpBinary for Puzzle2dMutation {
+impl OpBinary for Puzzle2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
     }

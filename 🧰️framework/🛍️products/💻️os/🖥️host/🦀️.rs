@@ -1,7 +1,6 @@
 //! 🖥️ Plugin-based OS kernel: hot-swappable WASM plugins, workflow, document VCS.
-use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
+#[cfg(test)] use semio_framework_artifact_reference::{ArtifactDialect,Dialect,StandardId,SubsetId};
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod host {
     // #region host
     //! 🔌️ Plugin host, studio document VCS store, backbone, and catalog.
@@ -394,7 +393,7 @@ use semio_framework_value::ValueError;
             if let Some(backbone) = &self.backbone {
                 fields.push(("backbone".to_string(), backbone.to_value()));
             }
-            semio_framework_value::DslValue::Object(fields)
+            DslValue::Object(fields)
         }
     }
 
@@ -404,8 +403,8 @@ use semio_framework_value::ValueError;
     /// actually optional on the wire in practice, but this preserves exact prior leniency).
     impl<P: FromValue + protocol::os_vcs::io::binary::genesis::ArtifactGenesisCodec, Op: FromValue> FromValue for BackboneDocument<P, Op> {
         fn from_value(value: DslValue) -> Result<Self, ValueError> {
-            let semio_framework_value::DslValue::Object(fields) = value else {
-                return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for BackboneDocument, found {value:?}")));
+            let DslValue::Object(fields) = value else {
+                return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for BackboneDocument, found {value:?}")));
             };
             let mut schema = None;
             let mut id = None;
@@ -429,10 +428,10 @@ use semio_framework_value::ValueError;
                 }
             }
             Ok(BackboneDocument {
-                schema: schema.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing schema"))?,
-                id: id.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing id"))?,
-                name: name.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing name"))?,
-                vcs: vcs.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing vcs"))?,
+                schema: schema.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing schema"))?,
+                id: id.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing id"))?,
+                name: name.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing name"))?,
+                vcs: vcs.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "BackboneDocument missing vcs"))?,
                 transitions: transitions.unwrap_or_default(),
                 edit_messages: edit_messages.unwrap_or_default(),
                 conflicts: conflicts.unwrap_or_default(),
@@ -536,13 +535,13 @@ use semio_framework_value::ValueError;
     fn close_backbone_envelope<P, Op>(envelope: ArtifactEnvelope<P, Op>) -> Result<(), VcsError>
     where
         P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         use store::ErasedSnapshotRetirement as _;
         fn grant_of(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
             semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
         }
-        let fault = |error: semio_framework_value::ValueError| VcsError::ValidationFailed(error.to_string());
+        let fault = |error: ValueError| VcsError::ValidationFailed(error.to_string());
         let owners = store::funded_bounded_artifact_store_owners::<P, Op>().map_err(fault)?;
         let birth = grant_of(owners.uninstalled_envelope_retirement_demands(&envelope));
         let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, birth).map_err(|(error, _, _)| fault(error))?;
@@ -562,7 +561,7 @@ use semio_framework_value::ValueError;
     fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> Result<R, VcsError>) -> Result<R, VcsError>
     where
         P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let envelope = backbone_envelope_of(document);
         let result = read(&envelope);
@@ -573,7 +572,7 @@ use semio_framework_value::ValueError;
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
         P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
     }
@@ -582,7 +581,7 @@ use semio_framework_value::ValueError;
     pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactPackFiles, VcsError>
     where
         P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))
     }
@@ -591,7 +590,7 @@ use semio_framework_value::ValueError;
     pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactTextFiles, VcsError>
     where
         P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + store::ArtifactDsl,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_text(envelope)))
     }
@@ -603,7 +602,7 @@ use semio_framework_value::ValueError;
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
         P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))?;
         let inner = resolve_kernel_future(store::encode_document_pack_bytes(&files.pack, &files.spr));
@@ -1034,7 +1033,7 @@ use semio_framework_value::ValueError;
     fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError>
     where
         P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
+        Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let mut synced = document.clone();
         synced.backbone = Some(resolve_kernel_future(document_backbone_ref(backbone_uri)));
@@ -1365,7 +1364,6 @@ use semio_framework_value::ValueError;
     // #endregion host
 }
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod backbone {
     // #region backbone
     //! 🗄️ Trusted host-side backbone ports for local studio storage — reads/writes the raw persisted
@@ -1535,7 +1533,6 @@ pub mod backbone {
 }
 
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod instance {
     // #region instance
     //! 📦️ App instance schemas, parameters, and studio bindings.
@@ -1996,65 +1993,16 @@ pub mod media_export_raster {
     // #region media_export_raster
     //! 🖼️ SVG rendering and planar geometry extraction for artifact I/O.
 
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    use std::sync::{LazyLock, Mutex};
-
-    //#region 🔖️MediaRegistryRegistryStubs
-    // 🧬️ Default-feature builds have no `workflow` module, so keep a local registry. With
-    // `os-host-full`, re-export the workflow registry so `register_*` and `export_os_app_instance_media`
-    // share one OnceLock (stubs previously shadowed the real handlers at crate root). Keyed on string
-    // format kind ids, not the legacy format enum (retired — ticket 26/08/11/
-    // SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
+    //#region 🔖️MediaRegistry
+    // 🧬️ The workflow registry owns `register_*` and `export_os_app_instance_media_kind`, so both share one OnceLock. Keyed on
+    // string format kind ids (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
     pub use crate::workflow::{export_os_app_instance_media_kind, import_os_app_instance_media_kind, register_os_media_export_handler_kind, register_os_media_import_handler_kind, OsMediaExportResult};
-
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    /// 🖼️ Host-local media export result (workflow module gated behind os-host-full).
-    #[derive(Clone, Debug, PartialEq)]
-    pub struct OsMediaExportResult {
-        pub data: String,
-        pub mime_type: String,
-        pub file_name: String,
-        pub encoding: Option<String>,
-    }
-
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    impl OsMediaExportResult {
-        /// 📤️ Build an export result from raw bytes + stdio format kind id.
-        pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
-            let entry = semio_framework_os_kernel::io::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
-            let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
-            let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
-            let data = if entry.is_binary { base64_codec::base64_standard_encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
-            Ok(Self { data, mime_type, file_name: format!("{file_stem}{extension}"), encoding: if entry.is_binary { Some("base64".into()) } else { None } })
-        }
-    }
 
     /// 🗂️ Build a file-picker `accept` filter from stdio format kind ids (`dwg` / `stdio.dwg`).
     pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> Result<String, semio_framework_os_kernel::io::FormatRegistryError> {
         semio_framework_os_kernel::io::format_accept_filter(format_artifact_kinds)
     }
-
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
-
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    static OS_MEDIA_EXPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaExportHandler>>> = LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    static OS_MEDIA_IMPORT_HANDLERS: LazyLock<Mutex<std::collections::HashMap<(String, String), OsMediaImportHandler>>> = LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
-
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    pub fn register_os_media_export_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
-        OS_MEDIA_EXPORT_HANDLERS.lock().expect("media export registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
-    }
-
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    pub fn register_os_media_import_handler_kind(artifact_kind: &str, format_artifact_kind: &str, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
-        OS_MEDIA_IMPORT_HANDLERS.lock().expect("media import registry").insert((artifact_kind.to_string(), format_artifact_kind.to_string()), Box::new(handler));
-    }
-    //#endregion 🔖️MediaRegistryRegistryStubs
+    //#endregion 🔖️MediaRegistry
     use serde_json::Value;
 
     /// 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
@@ -2347,7 +2295,6 @@ pub mod media_export_simple {
     // #endregion media_export_simple
 }
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod workflow {
     // #region workflow
     //! 🎬️ Workflow, VFS snapshot types, and media export registry.
@@ -2366,7 +2313,6 @@ pub mod workflow {
     // inversion` in the plan) — re-exported here too so every `crate::workflow::X` call site (and every
     // downstream crate importing via `semio_framework_os::workflow::X`/`semio_framework_os::X`) keeps a
     // single source of truth for the workflow document vocabulary.
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     pub use crate::workflow_kernel::{
         apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
         validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
@@ -2376,34 +2322,8 @@ pub mod workflow {
         S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
     };
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     use crate::instance::create_os_id;
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    fn create_os_id(prefix: &str) -> String {
-        format!("{prefix}-stub")
-    }
-    //#region 🔖️RegistryStubs
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     use crate::registry::{os_app_registration, os_artifact_descriptor, OsArtifactDescriptor};
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    #[derive(Clone, Debug, Default)]
-    pub struct OsArtifactDescriptor {
-        pub kind: String,
-        pub label: semio_framework_ui_locale::LocalizedLabel,
-        pub source_format: String,
-        pub component_kind: String,
-        pub dimension: String,
-        pub schema: String,
-    }
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    fn os_app_registration(_id: &str) -> Option<()> {
-        None
-    }
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    fn os_artifact_descriptor(_kind: &str) -> Option<OsArtifactDescriptor> {
-        None
-    }
-    //#endregion 🔖️RegistryStubs
     use {semio_framework::media_types_compatible,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaCompat,semio_framework::MediaWireFormat};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -2843,12 +2763,7 @@ pub mod workflow {
     }
     //#endregion 🔖️IoDialectBridge
     //#region 🔖️MediaCapability
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     pub use crate::registry::os_resource_media_capability;
-    #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
-    fn os_resource_media_capability(_kind: &str) -> semio_framework::OsMediaCapability {
-        semio_framework::OsMediaCapability::MeshOnly
-    }
     /// 🗂️ Defined in `semio_framework` alongside `ArtifactKindSpec`; re-exported here
     /// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
     /// app's declared `ArtifactKindSpec.media_capability` instead of a hardcoded per-app match.
@@ -3195,7 +3110,6 @@ pub mod workflow {
     // #endregion workflow
 }
 
-#[cfg(any(test, feature = "os-host-full", feature = "space-guest"))]
 pub mod codec_abi {
     //#region 🧬️Schema
     use semio_framework::{AbiBytes, AbiControl, AbiCursorStep, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessageBytes, AbiOperation, AbiPage, AbiPageReader, AbiRejectedPage, AbiReply, AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget, ABI_MAX_BODY_BYTES, ABI_MAX_MESSAGE_BYTES, ABI_MAX_PAGES_PER_TRANSFER, ABI_MAX_PAGE_BYTES};
@@ -3279,11 +3193,9 @@ pub mod codec_abi {
         fn resolve_format(&mut self, kind: &str) -> Result<Option<OsHostCodecFormat>, OsHostCodecFailure>;
     }
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     #[derive(Default)]
     struct RegisteredOsHostFormatResolver;
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     impl OsHostFormatResolver for RegisteredOsHostFormatResolver {
         fn resolve_format(&mut self, kind: &str) -> Result<Option<OsHostCodecFormat>, OsHostCodecFailure> {
             semio_framework_os_kernel::io::format_descriptor(kind)
@@ -4149,20 +4061,17 @@ pub mod codec_abi {
         }
     }
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     /// 🌉️ Owned retained OS-host codec service; UI callers can submit only A1 requests and pages.
     pub struct OsHostCodecService {
         retained: RetainedOsHostCodecService<RegisteredOsHostFormatResolver>,
     }
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     impl Default for OsHostCodecService {
         fn default() -> Self {
             Self::new()
         }
     }
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     impl OsHostCodecService {
         pub fn new() -> Self {
             Self { retained: RetainedOsHostCodecService::new(RegisteredOsHostFormatResolver) }
@@ -4216,7 +4125,6 @@ pub mod codec_abi {
     //#endregion 🧪️Tests
 }
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub mod registry {
     // #region registry
     //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
@@ -4722,9 +4630,7 @@ pub mod registry {
     // #endregion registry
 }
 
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use crate::space::*;
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use crate::workflow::{
     apply_flow_host_snapshot_to_os_workflow, apply_workflow_operation, build_os_workflow_operator_infos, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, export_os_app_instance_media_kind, import_os_app_instance_media_kind,
     negotiate_media_contract, os_media_export_extension_for_format_kind, os_media_neuron_kind_for_node, os_resource_media_capability, os_workflow_to_flow_host_snapshot_json, os_workflow_to_node_graph_payload, patch_workflow_parameter,
@@ -4734,15 +4640,12 @@ pub use crate::workflow::{
     WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, OS_MEDIA_FLOW_MODULE_ID, OS_SPACE_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
 };
 #[cfg(not(target_arch = "wasm32"))]
-#[cfg(feature = "os-host-full")]
 pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use host::{
     create_backbone_document, create_os_space, decode_backbone_payload, delete_os_space, encode_backbone_payload, export_backbone_dsl, export_backbone_pack, export_os_space_dsl, export_os_space_pack, import_os_space_from_dsl,
     import_os_space_from_pack, list_os_space_catalog_entries, load_os_space_document, materialize_backbone_snapshot, seed_os_space_catalog_if_empty, BackboneDocument, LoadedProgram, OsBackbonePort, OsBackbonePorts, OsCollectionDocument,
     OsSpaceCatalogEntry, OsSpaceDocument, OsSpaceStore, OsWorkflowArtifactDocument, OsWorkflowStore, PluginHost, ProgramHotSwapEvent, OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use instance::{
     apply_parameter_values_to_snapshot, create_default_os_parameter, create_os_artifact_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter, resolve_parameter_values_for_instance, set_json_pointer_value, OsArtifactRef, OsInstanceState,
@@ -4753,7 +4656,6 @@ pub use media_export_raster::{
     OsMediaExportResult,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
-#[cfg(any(feature = "os-host-full", feature = "space-guest"))]
 pub use registry::{
     list_os_artifact_descriptors, os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, os_artifact_dialect, register_app_io, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition,
     try_os_artifact_descriptor, workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,

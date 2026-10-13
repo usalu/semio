@@ -8,6 +8,12 @@ use std::sync::Arc;
 #[global_allocator]
 static SHOOTING_PREPARATION_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
+/// ⏱️ One-item turns a small shooting edit may spend reaching `Prepared`; measured 1069 (document) and 813 (config), 2.9k before the publication-performance work.
+const PREPARATION_TURN_BOUND: usize = 2_048;
+
+/// ⏲️ One-item turns the same edit may spend closing its preparation; measured 126 (document) and 111 (config).
+const CLOSE_TURN_BOUND: usize = 256;
+
 fn grant() -> store::ArtifactStoreOneItemGrant {
     store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 }
 }
@@ -19,6 +25,7 @@ fn document_lane_create_shot_reaches_prepared_and_closes_under_quoted_grants() {
     let shot = ShootingShot { id: "shot-1".into(), label: "Hero".into(), width: 1280, height: 720, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None };
     let mutation = ShootingMutation::CreateShot(CreateShot { shot: shot.clone(), index: None });
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, ShootingSnapshot::default(), mutation, grant());
+    assert!(law.turns <= PREPARATION_TURN_BOUND && law.close_turns <= CLOSE_TURN_BOUND, "document lane create shot prepared in {} turns and closed in {} turns", law.turns, law.close_turns);
     assert_eq!(law.post.shots, vec![shot]);
     assert_eq!(law.inverse.len(), 1, "creating one shot is undone by exactly one row");
 }
@@ -31,6 +38,7 @@ fn config_lane_set_camera_reaches_prepared_and_closes_under_quoted_grants() {
     let mut camera = base.camera.clone();
     camera.position = [4.0, 5.0, 6.0];
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), ShootingConfigMutation::SetCamera(SetCamera { camera: camera.clone() }), grant());
+    assert!(law.turns <= PREPARATION_TURN_BOUND && law.close_turns <= CLOSE_TURN_BOUND, "config lane set camera prepared in {} turns and closed in {} turns", law.turns, law.close_turns);
     assert_eq!(law.post.camera, camera);
     assert_eq!(law.inverse, vec![ShootingConfigMutation::SetCamera(SetCamera { camera: base.camera })]);
 }

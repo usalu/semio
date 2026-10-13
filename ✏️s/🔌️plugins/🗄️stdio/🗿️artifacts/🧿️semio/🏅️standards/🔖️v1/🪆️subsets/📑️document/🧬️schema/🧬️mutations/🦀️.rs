@@ -45,7 +45,7 @@ use protocol::Mutation;
 //#region 🔖️PathAddressing
 /// 🧭️ One step down into a nested block container: `Quote` (own `blocks`), a `List` item's own
 /// `blocks`, or a `Table` cell's own `blocks`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum DocPathSegment {
@@ -190,7 +190,7 @@ pub mod set_style_name;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioDocumentSnapshot, diff = SemioDocumentDiff, schema = "SemioDocumentMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -257,7 +257,7 @@ pub const KINDS: &[&str] = &[
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_document_mutation(mutation: &SemioDocumentMutation, base: &SemioDocumentSnapshot) -> protocol::MutationOutcome<SemioDocumentDiff> {
-    <SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::diff(mutation, base)
+    <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::diff(mutation, base)
 }
 
 

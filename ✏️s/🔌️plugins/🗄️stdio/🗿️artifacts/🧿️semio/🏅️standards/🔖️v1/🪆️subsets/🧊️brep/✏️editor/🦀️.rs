@@ -121,7 +121,7 @@ pub fn set_vertex_action() -> ActionDefinition {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn move_vertex_mutation(snapshot: &SemioBrepSnapshot, vertex_id: &str, point: [f64; 3]) -> Result<Option<SemioBrepMutation>, Fault> {
     let mut matched = None;
-    for (index, vertex) in snapshot.vertices.iter().enumerate().filter(|(_, vertex)| vertex.id == vertex_id) {
+    for (index, _vertex) in snapshot.vertices.iter().enumerate().filter(|(_, vertex)| vertex.id == vertex_id) {
         if matched.replace(index).is_some() {
             return Err(Fault::from(format!("vertex id '{vertex_id}' is ambiguous")));
         }
@@ -161,7 +161,7 @@ impl ArtifactCommandWork<EditorApp<SemioBrepEditor>> for SemioBrepSetVertexWork 
         let editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(args)) = input.command else {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.semio.brep.set-vertex.command-mismatch"));
         };
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: args.vertex_id.len(), capacity_bytes: args.vertex_id.len().saturating_add(std::mem::size_of::<SemioBrepMutation>()), release_bytes: 0, depth: 1 })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: args.vertex_id.len(), capacity_bytes: args.vertex_id.len().saturating_add(size_of::<SemioBrepMutation>()), release_bytes: 0, depth: 1 })
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<SemioBrepEditor>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SemioBrepEditor>>, Fault> {

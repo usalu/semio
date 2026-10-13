@@ -1,7 +1,7 @@
 //! 🔧️ Procedure command `remove-step-at`: step `id` of the addressed scope and its nested bodies leave the program.
 
 use crate::editor::procedure::config::{ImperativeConfig, ImperativeConfigMutation};
-use crate::schema::operations::{move_step, path_ref_in, remove_step};
+use crate::schema::operations::{path_ref_in, remove_step};
 use crate::mutations::ProcedureMutation;
 use crate::ProcedureSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

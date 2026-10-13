@@ -444,11 +444,11 @@ mod args_bridge {
     /// integers only, so whole finite floats get their integer variant back.
     fn integral(value: DslValue) -> DslValue {
         match value {
-            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
-                if float >= 0.0 { semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
+            DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
+                if float >= 0.0 { DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
             }
-            semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.into_iter().map(integral).collect()),
-            semio_framework_value::DslValue::Object(entries) => semio_framework_value::DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
+            DslValue::Array(items) => DslValue::Array(items.into_iter().map(integral).collect()),
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(key, value)| (key, integral(value))).collect()),
             other => other,
         }
     }
@@ -457,7 +457,7 @@ mod args_bridge {
     /// destination) and seeds `defaults` for keys still absent.
     fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: &[(&str, DslValue)]) -> Vec<(String, DslValue)> {
         let mut entries: Vec<(String, DslValue)> = Vec::new();
-        if let Some(semio_framework_value::DslValue::Object(object)) = args {
+        if let Some(DslValue::Object(object)) = args {
             for (key, value) in object {
                 put(&mut entries, &snake(key), integral(value.clone()));
             }
@@ -484,7 +484,7 @@ mod args_bridge {
             // 🎛️ A window toggle measure dispatches its new state as `pressed` (`WindowMeasureToggle`),
             // a slider/number as `value`; both are the param's value.
             if let Some((_, value)) = entries.iter().find(|(key, _)| key == "value" || key == "pressed").cloned() {
-                put(&mut entries, "value_json", semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&value)));
+                put(&mut entries, "value_json", DslValue::String(semio_framework_pack_json::to_json_string(&value)));
             }
         }
         entries.retain(|(key, _)| key != "value" && key != "pressed");
@@ -495,9 +495,9 @@ mod args_bridge {
     fn text_value(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
         if let Some(slot) = entries.iter_mut().find(|(key, _)| key == "value") {
             slot.1 = match slot.1.clone() {
-                semio_framework_value::DslValue::String(text) => semio_framework_value::DslValue::String(text),
-                semio_framework_value::DslValue::Null => semio_framework_value::DslValue::String(String::new()),
-                other => semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&other)),
+                DslValue::String(text) => DslValue::String(text),
+                DslValue::Null => DslValue::String(String::new()),
+                other => DslValue::String(semio_framework_pack_json::to_json_string(&other)),
             };
         }
         entries
@@ -505,7 +505,7 @@ mod args_bridge {
 
     /// 📷️ Accepts `{position, target, fov}` or the World3d host's `{windowId, camera: {position, target, zoom, up}}`.
     fn camera(mut entries: Vec<(String, DslValue)>) -> Vec<(String, DslValue)> {
-        if let Some((_, semio_framework_value::DslValue::Object(pose))) = entries.iter().find(|(key, _)| key == "camera").cloned() {
+        if let Some((_, DslValue::Object(pose))) = entries.iter().find(|(key, _)| key == "camera").cloned() {
             for (key, value) in pose {
                 if matches!(key.as_str(), "position" | "target" | "fov") && !entries.iter().any(|(existing, _)| existing == &key) {
                     entries.push((key, value));
@@ -514,22 +514,22 @@ mod args_bridge {
         }
         entries.retain(|(key, _)| matches!(key.as_str(), "position" | "target" | "fov"));
         let float = |value: &DslValue| match value {
-            semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(v)) => semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(*v)),
-            semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(v)) => semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(*v as f64)),
-            semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(v)) => semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(*v as f64)),
+            DslValue::Number(semio_framework_value::Number::Float(v)) => DslValue::Number(semio_framework_value::Number::Float(*v)),
+            DslValue::Number(semio_framework_value::Number::UInt(v)) => DslValue::Number(semio_framework_value::Number::Float(*v as f64)),
+            DslValue::Number(semio_framework_value::Number::Int(v)) => DslValue::Number(semio_framework_value::Number::Float(*v as f64)),
             other => other.clone(),
         };
         for key in ["position", "target"] {
             if let Some(slot) = entries.iter_mut().find(|(existing, _)| existing == key) {
-                if let semio_framework_value::DslValue::Array(items) = &slot.1 {
-                    slot.1 = semio_framework_value::DslValue::Array(items.iter().map(float).collect());
+                if let DslValue::Array(items) = &slot.1 {
+                    slot.1 = DslValue::Array(items.iter().map(float).collect());
                 }
             }
         }
         if let Some(slot) = entries.iter_mut().find(|(existing, _)| existing == "fov") {
             slot.1 = float(&slot.1);
         } else {
-            entries.push(("fov".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(50.0))));
+            entries.push(("fov".into(), DslValue::Number(semio_framework_value::Number::Float(50.0))));
         }
         entries
     }
@@ -542,14 +542,14 @@ mod args_bridge {
     }
 
     fn decode<T: semio_framework_value::FromValue>(action: &str, entries: Vec<(String, DslValue)>) -> Result<T, Fault> {
-        T::from_value(semio_framework_value::DslValue::Object(entries)).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("lowpoly action '{action}' arguments do not decode: {error}")))
+        T::from_value(DslValue::Object(entries)).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("lowpoly action '{action}' arguments do not decode: {error}")))
     }
 
     pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<LowpolyCommand, Fault> {
         const OBJECT: &[(&str, &str)] = &[("id", "object_id"), ("value", "object_id")];
         let plain = || fold(args, &[], &[]);
         let none = || Vec::new();
-        let zero = || semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(0.0));
+        let zero = || DslValue::Number(semio_framework_value::Number::Float(0.0));
         Ok(match action {
             "addPrimitive" => LowpolyCommand::AddPrimitive(decode(action, fold(args, &[("value", "kind")], &[]))?),
             "patchObject" => LowpolyCommand::PatchObject(decode(action, value_json(fold(args, &[("id", "object_id")], &[])))?),
@@ -561,7 +561,7 @@ mod args_bridge {
             "triangulate" => LowpolyCommand::Triangulate(decode(action, none())?),
             "mirror" => LowpolyCommand::Mirror(decode(action, fold(args, &[("value", "axis")], &[]))?),
             "decimate" => LowpolyCommand::Decimate(decode(action, fold(args, &[("value", "decimate_ratio"), ("ratio", "decimate_ratio")], &[]))?),
-            "flipFaces" => LowpolyCommand::FlipFaces(decode(action, fold(args, &[("ids", "face_ids")], &[("face_ids", semio_framework_value::DslValue::Array(Vec::new()))]))?),
+            "flipFaces" => LowpolyCommand::FlipFaces(decode(action, fold(args, &[("ids", "face_ids")], &[("face_ids", DslValue::Array(Vec::new()))]))?),
             "merge" => LowpolyCommand::Merge(decode(action, none())?),
             "dissolve" => LowpolyCommand::Dissolve(decode(action, none())?),
             "snap" => LowpolyCommand::Snap(decode(action, none())?),
@@ -570,14 +570,14 @@ mod args_bridge {
             "markUvSeam" => LowpolyCommand::MarkUvSeam(decode(action, fold(args, &[("value", "seam"), ("ids", "edge_ids")], &[]))?),
             "clearSeam" => LowpolyCommand::ClearSeam(decode(action, none())?),
             "translateSelection" => LowpolyCommand::TranslateSelection(decode(action, gumball(fold(args, &[("x", "dx"), ("y", "dy"), ("z", "dz")], &[("dx", zero()), ("dy", zero()), ("dz", zero())])))?),
-            "rotateSelection" => LowpolyCommand::RotateSelection(decode(action, gumball(fold(args, &[], &[("ax", zero()), ("ay", semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(1.0))), ("az", zero()), ("angle", zero())])))?),
-            "scaleSelection" => LowpolyCommand::ScaleSelection(decode(action, gumball(fold(args, &[("x", "sx"), ("y", "sy"), ("z", "sz")], &[("sx", semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(1.0))), ("sy", semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(1.0))), ("sz", semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(1.0)))])))?),
+            "rotateSelection" => LowpolyCommand::RotateSelection(decode(action, gumball(fold(args, &[], &[("ax", zero()), ("ay", DslValue::Number(semio_framework_value::Number::Float(1.0))), ("az", zero()), ("angle", zero())])))?),
+            "scaleSelection" => LowpolyCommand::ScaleSelection(decode(action, gumball(fold(args, &[("x", "sx"), ("y", "sy"), ("z", "sz")], &[("sx", DslValue::Number(semio_framework_value::Number::Float(1.0))), ("sy", DslValue::Number(semio_framework_value::Number::Float(1.0))), ("sz", DslValue::Number(semio_framework_value::Number::Float(1.0)))])))?),
             "addPaintLayer" => LowpolyCommand::AddPaintLayer(decode(action, plain())?),
             "paintFill" => LowpolyCommand::PaintFill(decode(action, plain())?),
             "fillBucket" => LowpolyCommand::FillBucket(decode(action, plain())?),
             "importSnapshotJson" => LowpolyCommand::ImportSnapshotJson(decode(action, fold(args, &[("value", "json")], &[]))?),
             "replaceSnapshotJson" => LowpolyCommand::ReplaceSnapshotJson(decode(action, fold(args, &[("value", "json")], &[]))?),
-            "exportMesh" => LowpolyCommand::ExportMesh(decode(action, fold(args, &[("value", "format")], &[("format", semio_framework_value::DslValue::String("obj".into()))]))?),
+            "exportMesh" => LowpolyCommand::ExportMesh(decode(action, fold(args, &[("value", "format")], &[("format", DslValue::String("obj".into()))]))?),
             "loadMeshRequest" => LowpolyCommand::LoadMeshRequest(decode(action, none())?),
             "importMeshFile" => LowpolyCommand::ImportMeshFile(decode(action, fold(args, &[("filename", "name"), ("contents", "payload")], &[]))?),
             "deleteSelection" => LowpolyCommand::DeleteSelection(decode(action, none())?),
@@ -586,7 +586,7 @@ mod args_bridge {
             "setActiveObject" => LowpolyCommand::SetActiveObject(decode(action, fold(args, OBJECT, &[]))?),
             "setActivePaintLayer" => LowpolyCommand::SetActivePaintLayer(decode(action, fold(args, &[("index", "layer_index"), ("value", "layer_index")], &[]))?),
             "setUtilityParam" => LowpolyCommand::SetUtilityParam(decode(action, value_json(plain()))?),
-            "engagementInput" => LowpolyCommand::EngagementInput(decode(action, text_value(fold(args, &[("text", "value"), ("input", "value")], &[("value", semio_framework_value::DslValue::String(String::new()))])))?),
+            "engagementInput" => LowpolyCommand::EngagementInput(decode(action, text_value(fold(args, &[("text", "value"), ("input", "value")], &[("value", DslValue::String(String::new()))])))?),
             "toggleShowEdges" => LowpolyCommand::ToggleShowEdges(decode(action, none())?),
             "toggleSun" => LowpolyCommand::ToggleSun(decode(action, none())?),
             "setSunAzimuth" => LowpolyCommand::SetSunAzimuth(decode(action, fold(args, &[], &[("value", zero())]))?),
@@ -954,7 +954,7 @@ impl LowpolyRetainedCommandWork {
 
 impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWork {
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LowpolyPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn tool_id(&self) -> &'static str {
         self.tool_id
@@ -1304,7 +1304,7 @@ fn prepare_lowpoly_config(base: &LowpolyConfig, mutation: &LowpolyConfigMutation
         return Err(lowpoly_refusal("Lowpoly config base exceeds its fixed retained preparation envelope"));
     }
     let inverse = mutation.inverse(base)?;
-    let post = protocol::apply_diff(&<LowpolyConfigMutation as protocol::Mutation<LowpolyConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| lowpoly_refusal(error.to_string()))?;
+    let post = protocol::apply_diff(&<LowpolyConfigMutation as Mutation<LowpolyConfig>>::diff(mutation, base).into_parts().0, base).map_err(|error| lowpoly_refusal(error.to_string()))?;
     if lowpoly_config_retained_bytes(&post) > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES {
         return Err(lowpoly_refusal("Lowpoly config result exceeds its fixed retained preparation envelope"));
     }
@@ -1333,7 +1333,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<LowpolySnapshot, LowpolyMutat
     }
 
     fn begin_demand(&self, _mutation: &LowpolyMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<LowpolyArtifactStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<LowpolyArtifactStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<LowpolySnapshot, LowpolyMutation, LowpolyMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<LowpolySnapshot, LowpolyMutation, LowpolyMutation>)> {
@@ -1406,7 +1406,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<LowpolyConfig, LowpolyConfigM
     }
 
     fn begin_demand(&self, _mutation: &LowpolyConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<LowpolyConfigStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<LowpolyConfigStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<LowpolyConfig, LowpolyConfigMutation, LowpolyConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<LowpolyConfig, LowpolyConfigMutation, LowpolyConfigMutation>)> {

@@ -22,11 +22,12 @@
 /// 🧩 Ordered removed keys, modified values, and inserted items.
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>);
 
-use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow, PlyScalarType};
+use crate::schema::snapshot::{PlyElement, PlyFormat, PlyProperty, PlyRow};
+#[cfg(test)] use crate::schema::snapshot::{PlyScalarType};
 use crate::PlySnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec};
+#[cfg(test)] use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
@@ -83,7 +84,7 @@ pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_it
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
-    let mut removed = std::collections::HashSet::new();
+    let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
@@ -92,7 +93,7 @@ fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: i
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
         }
     }
-    let mut modified = std::collections::HashSet::new();
+    let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() {
             return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
@@ -106,7 +107,7 @@ fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: i
         validate_item(&base[entry.index], &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
     let final_len = base.len() - removed.len() + diff.added.len();
-    let mut added = std::collections::HashSet::new();
+    let mut added = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len {
             return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
@@ -150,7 +151,7 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
     added2_index_sorted.sort_unstable();
 
     let mut merged_added: Vec<IndexedAdded<T>> = std::mem::take(&mut d1.added);
-    let mut annihilated: std::collections::HashSet<usize> = Default::default();
+    let mut annihilated: HashSet<usize> = Default::default();
 
     let mut merged_removed_base: Vec<usize> = removed1_sorted.clone();
     for &r2 in &removed2_sorted {
@@ -166,7 +167,7 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
     merged_removed_base.sort_unstable();
     merged_removed_base.dedup();
 
-    let mut modified_map: std::collections::BTreeMap<usize, D> = std::mem::take(&mut d1.modified).into_iter().map(|m| (m.index, m.diff)).collect();
+    let mut modified_map: BTreeMap<usize, D> = std::mem::take(&mut d1.modified).into_iter().map(|m| (m.index, m.diff)).collect();
     for base_index in &merged_removed_base {
         modified_map.remove(base_index);
     }

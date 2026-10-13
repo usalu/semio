@@ -42,7 +42,7 @@ impl store::ArtifactPack for Generation3dPreviewWindowTransient {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum Generation3dPreviewWindowTransientMutation {
     #[dsl(key = "set-preview-eval")]
     SetPreviewEval { eval_text: Option<String> },
@@ -143,13 +143,6 @@ impl protocol::DiffAlgebra<Generation3dPreviewWindowTransient> for Generation3dP
 }
 
 semio_framework_value::artifact_retire_struct!(Generation3dPreviewWindowTransient { preview_eval_text });
-
-impl semio_framework_value::retirement::RetireOwned for Generation3dPreviewWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let Self::SetPreviewEval { eval_text } = self;
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(eval_text)])
-    }
-}
 
 fn preflight(mutation: &Generation3dPreviewWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text } = mutation;

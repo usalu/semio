@@ -16,7 +16,7 @@ mod controlled;
 
 //#region 🔖️Value
 /// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Decimal {
@@ -91,7 +91,7 @@ impl fmt::Display for Part21Decimal {
 }
 
 /// 🔤️ A single typed value in Part-21 argument-list syntax.
-#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned)]
 pub enum Part21Value {
     Ref(u64),
     Str(String),
@@ -167,7 +167,7 @@ impl Part21Value {
 //#region 🔖️Instance
 /// 🧩️ One `#N = TYPE(args...)` line, or `#N = (TYPE1(...) TYPE2(...))` for a complex instance —
 /// every `(type_name, args)` pair is kept, nothing about a multi-type instance is dropped.
-#[derive(Clone, Debug, PartialEq, Default)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetainedClone)]
 pub struct Part21Instance {
     pub id: u64,
     pub entities: Vec<(String, Vec<Part21Value>)>,
@@ -192,7 +192,7 @@ impl Part21Instance {
 //#region 🔖️Header
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`),
 /// each a parenthesized tuple of typed values — kept verbatim, not schema-interpreted.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Header {
@@ -259,7 +259,7 @@ impl Default for Part21Header {
 
 //#region 🔖️Document
 /// 📦️ The full, lossless generic Part-21 graph: header + every `DATA;` instance.
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(deny_unknown_fields )]
 pub struct Part21Document {
@@ -341,7 +341,7 @@ impl fmt::Display for Part21Error {
 }
 impl std::error::Error for Part21Error {}
 /// 🧷️ Unsupported escapes are unsupported grammar; every other lexical refusal is invalid input.
-impl From<Part21Error> for semio_framework_value::ValueError {
+impl From<Part21Error> for ValueError {
     fn from(error: Part21Error) -> Self {
         let kind = match &error { Part21Error::UnsupportedEscape { .. } => semio_framework_value::ValueRefusalKind::UnsupportedOwner, _ => semio_framework_value::ValueRefusalKind::InvalidValue };
         Self::new(kind, error.to_string())

@@ -17,7 +17,6 @@
 //! pushed. An empty rule set is therefore unsatisfiable the moment two slots are adjacent.
 
 use crate::schema::snapshot::Wfc3dSnapshot;
-use semio_s_plugin_wfc_engine as engine;
 use std::collections::BTreeMap;
 
 //#region 📦️RetainedPayload

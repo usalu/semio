@@ -13,7 +13,7 @@ pub struct RemoveStyle {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "style", kind: "remove-style", record: "RemoveStyle" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_style(name))
     }

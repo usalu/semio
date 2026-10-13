@@ -15,7 +15,7 @@ use crate::standards::v1_7::subsets::base::modules::content::{content_references
 use crate::standards::v1_7::subsets::base::modules::encryption::open_standard_security;
 use crate::standards::v1_7::subsets::base::modules::fonts::{standard_font, FontCodec};
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::modules::lift::{lift_document, lift_document_with, Category};
+use crate::standards::v1_7::subsets::base::modules::lift::{lift_document_with, Category};
 use crate::standards::v1_7::subsets::base::modules::lower::{lower_acro_form_standalone, lower_catalog_standalone, lower_document, lower_document_headless, lower_info, lower_page_standalone, LowerOptions, LoweredDocument};
 use crate::standards::v1_7::subsets::base::modules::writer::{serialize_document, DocumentTrailer, PdfWriter, WriteOptions, WRITER_TRAILER_KEYS};
 use crate::standards::v1_7::subsets::base::modules::xref::{build_xref, startxref_offset, Resolver};
@@ -1518,7 +1518,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PdfBuilderFacets {
         construction: PdfBuilderConstruction,
         analysis: PdfAnalyzerAnalysis,
-        composition: crate::standards::v1_7::subsets::base::io::derived_composition::PdfComposerComposition,
+        composition: PdfComposerComposition,
     }
     builder: PdfBuilder,
     analyzer: PdfAnalyzer,

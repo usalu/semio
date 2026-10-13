@@ -4,7 +4,7 @@ use crate::{DrawingSnapshot,DrawingLayerNode,FillStyle,StrokeStyle,PathSegment,F
 use crate::schema::{layer_base,shape_path_segment,drawing_transform_to_matrix,DrawingSceneGroup};
 use crate::schema::scene_raster::{RasterSceneAsset,RasterSceneNode,RasterSceneContent,RasterSceneInput};
 use crate::schema::scene_retirement::ScenePlanCloseJob;
-use semio_framework_2d::retirement::{WorkRetirementCounter,WorkRetirementProgress};
+use semio_framework_2d::retirement::WorkRetirementProgress;
 pub type DocumentSceneRetirementProgress=WorkRetirementProgress;
 pub type DocumentVectorRetirementProgress=WorkRetirementProgress;
 use std::{collections::VecDeque,sync::Arc};

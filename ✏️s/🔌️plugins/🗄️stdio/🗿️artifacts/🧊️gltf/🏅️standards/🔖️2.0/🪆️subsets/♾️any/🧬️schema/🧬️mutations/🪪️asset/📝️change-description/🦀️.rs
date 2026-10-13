@@ -36,7 +36,7 @@ pub fn inverse(p: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapsho
     if asset.generator == p.generator && asset.copyright == p.copyright && asset.min_version == p.min_version {
         return Vec::new();
     }
-    vec![super::change_asset_descriptive_metadata::mutation(super::change_asset_descriptive_metadata::GltfChangeAssetDescriptiveMetadataPayload { generator: asset.generator.clone(), copyright: asset.copyright.clone(), min_version: asset.min_version.clone() })]
+    vec![mutation(GltfChangeAssetDescriptiveMetadataPayload { generator: asset.generator.clone(), copyright: asset.copyright.clone(), min_version: asset.min_version.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -56,7 +56,7 @@ pub fn mutation(payload: GltfChangeAssetDescriptiveMetadataPayload) -> super::Gl
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDescriptiveMetadataMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "asset-descriptive-metadata", kind: "change-asset-descriptive-metadata", record: "ChangedAssetDescriptiveMetadata" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

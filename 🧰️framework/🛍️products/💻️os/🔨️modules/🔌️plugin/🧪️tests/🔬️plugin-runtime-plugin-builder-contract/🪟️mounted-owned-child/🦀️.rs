@@ -26,7 +26,7 @@ fn mounted_owned_child_original_preparation_preserves_actual_operation_schema() 
     assert_eq!(emit.owned_child_emits[0].mutations::<TestMutation>().unwrap().as_ptr(), original_pointer);
     let schema = emit.owned_child_emits[0].metadata().unwrap().op_schema.0.clone();
     while !emit.owned_child_emits.is_empty() || emit.owned_child_emits.capacity() != 0 {
-        let demand=emit.close_child_demands(262144).expect("original child retirement quote");
+        let demand=emit.child_close_demands(262144).expect("original child retirement quote").expect("pending original child close");
         let turn=crate::app::plugin_demand_grant(demand);let step=emit.close_child_one(turn).unwrap();if let Some(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=step{assert!(progress.fits(turn));}
     }
     assert_eq!(schema, "count.set-count", "owned typed source carries its first original operation's authored schema before mounted publication");
@@ -45,7 +45,7 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         for index in 0..count {
             emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, TestMutation>("slot", format!("child-{}", index + 1), vec![TestMutation::SetCount(SetCount { value: row["childCounts"][index].as_i64().unwrap() as i32 }), TestMutation::SetLabel(SetLabel { value: row["childLabel"].as_str().unwrap().into() })]));
         }
-        for _ in 0..100000 { if matches!(emit.prepare_child_one(1, 262144).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
+        for _ in 0..100000 { if matches!(prepare_original_fixture_child(&mut emit, 1, 262144).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
         assert_eq!(emit.owned_child_emits.len(), count);
         assert!(emit.child_emits.is_empty());
         let (mutations, inverse_group, operation) = crate::app::test_mounted_original_owned_publication(&mut app, emit, meta(), row["parentTouched"].as_bool().unwrap(), |app| (0..count).map(|index| {

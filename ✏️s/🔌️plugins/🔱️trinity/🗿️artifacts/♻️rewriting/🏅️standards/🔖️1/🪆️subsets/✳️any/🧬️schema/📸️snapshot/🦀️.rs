@@ -1,8 +1,6 @@
 //! 🧬️ Rewriting snapshot schema — artifact-lane fields only.
 
-use crate::LayoutPoint;
 use ::semio_framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted rewrite-rule document snapshot (persistent fields of the artifact).

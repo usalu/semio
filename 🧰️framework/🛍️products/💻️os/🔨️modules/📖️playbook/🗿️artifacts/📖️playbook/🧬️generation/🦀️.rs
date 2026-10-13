@@ -3,7 +3,8 @@
 use super::GenerationPlayState;
 use crate::os_store as store;
 use store::ErasedSnapshotRetirement as _;
-use semio_framework_value::{DslValue, FromValue, RetirementDemand, ToValue, ValueError, ValueRefusalKind, retained_clone::RetainedCloneProgress};
+use semio_framework_value::{DslValue, FromValue, ToValue};
+#[cfg(test)] use semio_framework_value::{ValueRefusalKind};
 use std::mem::ManuallyDrop;
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,shared::SharedControlledRetirement}};
 use std::sync::Arc;
@@ -78,7 +79,7 @@ impl RetireOwned for GenerationPlayRoot {
         semio_framework_value::retirement::erased_cursor(Box::new(self.into_retirement()))
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
-        Some(semio_framework_value::retirement::erased_cursor_birth_bytes() + std::mem::size_of::<GenerationRootRetirement>())
+        Some(semio_framework_value::retirement::erased_cursor_birth_bytes() + size_of::<GenerationRootRetirement>())
     }
     fn controlled_retirement_supported() -> bool {
         true

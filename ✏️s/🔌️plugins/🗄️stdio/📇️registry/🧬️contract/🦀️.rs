@@ -36,6 +36,13 @@ pub mod media_export;
 /// 📐️ The canonical ISO 10303-21 codec every STEP-family artifact shares.
 #[path = "📐️part21/🦀️.rs"]
 pub mod part21;
+/// 🖨️ Original-caller authority for complete native text printing of a snapshot.
+#[path = "🖨️native-print/🦀️.rs"]
+pub mod native_print;
+/// 🧰️ Original caller authorities (native snapshot owners, mounted policy, routed IO) for stdio artifact tests.
+#[cfg(any(test, feature = "testing"))]
+#[path = "🧰️testing/🦀️.rs"]
+pub mod testing;
 
 //#region 🧾️PayloadWire
 /// 🧾️ Builds the operation of semantic kind `kind` from its leaf wire payload — JSON text in the exact `payload_value()`
@@ -217,7 +224,7 @@ pub fn ordered_by_key<T: Clone, K: Ord>(rows: &[T], key: impl Fn(&T) -> K) -> Ve
 /// ↩️ [`kernel::Mutation::inverse`] against `base`, reachable from a crate that cannot name the kernel trait — the
 /// production inverse itself, never a copy of its rules.
 pub fn mutation_inverse<P, M: kernel::Mutation<P>>(operation: &M, base: &P) -> Result<Vec<M>, semio_framework_value::ValueError> {
-    Ok({ operation.inverse(base)? })
+    Ok(operation.inverse(base)?)
 }
 //#endregion 🧾️PayloadWire
 
@@ -1452,13 +1459,13 @@ pub fn window_kit_render_publication_revision<S: semio_framework_value::ToValue>
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiPublicationRevision> {
     render_operation
         .map(semio_framework_plugin::app::render_operation_publication_revision)
-        .ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("stdio.render.publication-revision", "editable rendering requires a render-pinned document revision"))
+        .ok_or_else(|| PluginAssemblyError::new("stdio.render.publication-revision", "editable rendering requires a render-pinned document revision"))
 }
 
 /// 🎟️ A refusal of the process-wide `UiValue` arena is the framework's capacity refusal: the row window building this
 /// address ends there with a shorter run instead of refusing the editor render (`tree_window_indexed_rows`).
-fn table_arena(stage: &'static str) -> semio_framework_plugin::PluginAssemblyError {
-    semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", format!("stdio table {stage} admission failed: the UiValue arena has no free credit"))
+fn table_arena(stage: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new("ui.fixed-capacity", format!("stdio table {stage} admission failed: the UiValue arena has no free credit"))
 }
 
 /// 📍️ Builds one complete revision-guarded ordinal cell address without materializing its table.

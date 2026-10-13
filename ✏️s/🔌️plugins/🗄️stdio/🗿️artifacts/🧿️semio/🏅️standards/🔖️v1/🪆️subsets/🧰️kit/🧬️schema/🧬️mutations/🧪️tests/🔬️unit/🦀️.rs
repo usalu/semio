@@ -220,8 +220,8 @@ async fn kinds_match_the_enum_and_the_catalog() {
 async fn child_creates_preserve_distinct_local_alias_and_target_identity() {
  let base=SemioKitSnapshot::default();
  for mutation in [
-  SemioKitMutation::CreateObject(create_object::CreateObject{child_id:"local-object".into(),target:ref_of("object","remote-object")}),
-  SemioKitMutation::CreateModel(create_model::CreateModel{child_id:"local-model".into(),target:ref_of("model","remote-model")}),
+  SemioKitMutation::CreateObject(create_object::CreateObject{child_id:"local-object".into(),target:ref_of("object","remote-object"),at:None}),
+  SemioKitMutation::CreateModel(create_model::CreateModel{child_id:"local-model".into(),target:ref_of("model","remote-model"),at:None}),
   SemioKitMutation::CreateProperties(create_properties::CreateProperties{child_id:"local-value".into(),target:ref_of("value","remote-value")}),
  ] { let after=round_trip(&base,&mutation);let child=match mutation{SemioKitMutation::CreateObject(_)=>(&after.objects[0].child_id,&after.objects[0].target.artifact_id),SemioKitMutation::CreateModel(_)=>(&after.models[0].child_id,&after.models[0].target.artifact_id),SemioKitMutation::CreateProperties(_)=>{let value=after.properties.as_ref().unwrap();(&value.child_id,&value.target.artifact_id)},_=>unreachable!()};assert_ne!(child.0,child.1); }
 }

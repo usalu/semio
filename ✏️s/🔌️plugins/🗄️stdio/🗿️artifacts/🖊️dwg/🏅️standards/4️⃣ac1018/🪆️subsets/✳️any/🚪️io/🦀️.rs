@@ -77,7 +77,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec DwgBuilderFacets {
         construction: crate::standards::v_ac1024::subsets::any::io::DwgBuilderConstruction,
         analysis: crate::standards::v_ac1024::subsets::any::io::DwgAnalyzerAnalysis,
-        composition: derived_composition::DwgComposerComposition,
+        composition: DwgComposerComposition,
     }
     builder: DwgBuilder,
     analyzer: DwgAnalyzer,

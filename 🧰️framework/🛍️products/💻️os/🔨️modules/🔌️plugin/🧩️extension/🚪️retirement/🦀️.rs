@@ -163,7 +163,7 @@ impl ExtensionBundle {
         self.begin_close();
         if let Some(owner) = &mut *self.resource_owner {
             if owner.terminal_is_empty() {
-                let released_bytes = std::mem::size_of_val(owner.as_ref());
+                let released_bytes = size_of_val(owner.as_ref());
                 self.resource_owner.take();
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..idle }));
             }
@@ -214,7 +214,7 @@ impl ExtensionBundle {
     /// 📏️ Exact per-axis admission required by the next retained allocation move, birth or release.
     pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.resource_owner.as_ref() {
-            return if owner.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { nested(owner.retirement_demands(maximum_body_bytes)?) };
+            return if owner.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) } else { nested(owner.retirement_demands(maximum_body_bytes)?) };
         }
         if let Some(gateway)=self.inference_gateway.lock().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original inference gateway owner is poisoned"))?.as_ref(){
             return if gateway.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{nested(gateway.retirement_demands(maximum_body_bytes)?)};
@@ -223,13 +223,13 @@ impl ExtensionBundle {
             return nested(self.metadata_retirement.retirement_demands());
         }
         if !self.handlers.is_empty() {
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<(String, ExtensionRequestHandler)>(), capacity_bytes: push_bytes::<String>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<(String, ExtensionRequestHandler)>(), capacity_bytes: push_bytes::<String>(), depth: 1, ..Default::default() });
         }
         if self.handlers.capacity() != 0 {
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of_val(&*self.handlers), capacity_bytes: push_bytes_of(&*self.handlers), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of_val(&*self.handlers), capacity_bytes: push_bytes_of(&*self.handlers), depth: 1, ..Default::default() });
         }
         if !self.manifest_retired || !self.manifest.payload_is_empty() {
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<ExtensionManifest>(), capacity_bytes: push_bytes::<ExtensionManifest>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<ExtensionManifest>(), capacity_bytes: push_bytes::<ExtensionManifest>(), depth: 1, ..Default::default() });
         }
         Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
@@ -445,7 +445,7 @@ impl ExtensionBundleRegistry {
 }
 
 fn push_bytes<T>() -> usize {
-    std::mem::size_of::<PendingMetadata>().saturating_add(std::mem::size_of::<T>())
+    size_of::<PendingMetadata>().saturating_add(size_of::<T>())
 }
 
 fn push_bytes_of<T>(_: &T) -> usize {
@@ -454,7 +454,7 @@ fn push_bytes_of<T>(_: &T) -> usize {
 
 pub(super) trait MetadataOwner: Send + 'static {
     fn release_bytes(&self) -> usize {
-        std::mem::size_of_val(self)
+        size_of_val(self)
     }
     /// 🧮️ Exact capacity of the pending nodes that expanding this owner births.
     fn expansion_bytes(&self) -> usize {
@@ -483,7 +483,7 @@ impl MetadataRetirement {
     pub(super) fn retirement_demands(&self) -> RetirementDemand {
         self.pending.as_ref().map_or_else(Default::default, |pending| RetirementDemand {
             capacity_bytes: pending.owner.expansion_bytes(),
-            release_bytes: std::mem::size_of::<PendingMetadata>().saturating_add(pending.owner.release_bytes()),
+            release_bytes: size_of::<PendingMetadata>().saturating_add(pending.owner.release_bytes()),
             depth: 1,
             ..Default::default()
         })
@@ -527,7 +527,7 @@ impl Drop for MetadataRetirement {
 
 impl MetadataOwner for String {
     fn release_bytes(&self) -> usize {
-        std::mem::size_of::<Self>().saturating_add(self.capacity())
+        size_of::<Self>().saturating_add(self.capacity())
     }
     fn expand(self: Box<Self>, _close: &mut MetadataRetirement) -> Result<(), String> {
         Ok(())
@@ -554,7 +554,7 @@ impl MetadataOwner for super::DslValue {
 }
 impl<T: MetadataOwner> MetadataOwner for Vec<T> {
     fn release_bytes(&self) -> usize {
-        std::mem::size_of::<Self>().saturating_add(if self.is_empty() { self.capacity().saturating_mul(std::mem::size_of::<T>()) } else { 0 })
+        size_of::<Self>().saturating_add(if self.is_empty() { self.capacity().saturating_mul(size_of::<T>()) } else { 0 })
     }
     fn expansion_bytes(&self) -> usize {
         if self.is_empty() { 0 } else { push_bytes::<Self>().saturating_add(push_bytes::<T>()) }

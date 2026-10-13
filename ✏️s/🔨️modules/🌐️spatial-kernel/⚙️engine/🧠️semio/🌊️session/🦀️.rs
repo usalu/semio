@@ -1143,7 +1143,7 @@ fn cancel_step_retained(&self,grant:RetainedCloneGrant,receipt:&mut RetainedClon
     let demand=Self::cancellation_registry_demands(registry,grant.maximum_copy_bytes)?;
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(ownership_progress());}
     let Some(cancellation)=&mut registry.cancellation else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-    if cancellation.slot>=registry.jobs.slot_count(){registry.cancellation=None;return Ok(RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()}));}
+    if cancellation.slot>=registry.jobs.slot_count(){registry.cancellation=None;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}));}
     let slot=cancellation.slot;cancellation.slot+=1;
     if let Some((_,retained))=registry.jobs.slot_entry_mut(slot){retained.job.cancel();retained.retired=true;}
     if let Some(original)=registry.jobs.extract_slot_if(slot,|_,_|false){registry.closing=Some(controlled(original));}

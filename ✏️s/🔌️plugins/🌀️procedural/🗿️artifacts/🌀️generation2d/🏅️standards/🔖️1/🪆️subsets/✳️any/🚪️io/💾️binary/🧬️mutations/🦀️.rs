@@ -17,7 +17,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
     WidgetLayoutDsl,
 };
-use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
 use protocol::OpBinary;
 
 //#region 🔖️OpTextMirror
@@ -331,6 +331,6 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
 
 
 use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};
-use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
+#[cfg(test)] use crate::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
 #[cfg(test)]
 use crate::central_apply::{generation2d_apply_retained_mutations_for_test, generation2d_retire_mutations_cold};

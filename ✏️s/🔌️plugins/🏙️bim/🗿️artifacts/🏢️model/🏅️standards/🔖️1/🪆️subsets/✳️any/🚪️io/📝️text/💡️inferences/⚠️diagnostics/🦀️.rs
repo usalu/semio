@@ -1,6 +1,5 @@
 //! 📊️ Native JSON inference table projection.
 use std::collections::BTreeMap;
-use crate::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, ADJUDICATED, measure_of};
 
 /// ⚖️ The canonical JSON table `"<slug>|<element>+<element>" → { "measure": x }` of the adjudicated findings.

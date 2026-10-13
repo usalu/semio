@@ -194,7 +194,7 @@ pub fn tree_item_with_icon(
 /// `import_stdio_kinds` remain the live source of truth for this artifact's real format list.
 pub fn shooting_io() -> AppIo {
     AppIo {
-        artifact_schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(),
+        artifact_schema: SHOOTING_DOCUMENT_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         ports: vec![shooting_photos_out_port()],
         export_formats: vec![],
@@ -940,7 +940,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             // — identical-shape duplicates are harmless (registry dedupes by id).
             .artifact_kind(semio_framework_plugin::ArtifactKindSpec {
                 id: "2d.image".into(),
-                label: semio_framework_ui_locale::LocalizedLabel::native("2D Image", "2D-Bild"),
+                label: LocalizedLabel::native("2D Image", "2D-Bild"),
                 source_format: "2d.image".into(),
                 component_kind: "image".into(),
                 dimension: "2d".into(),

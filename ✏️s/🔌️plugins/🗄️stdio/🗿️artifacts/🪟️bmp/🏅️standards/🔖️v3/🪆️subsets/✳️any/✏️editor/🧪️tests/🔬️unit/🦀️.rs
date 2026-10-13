@@ -49,11 +49,11 @@ fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str
     assert_eq!(work.extent(command, snapshot, &interaction, None), paint_region::CAPACITY.rows_for_items(1));
     let mut sequence = 0;
     for _ in 0..paint_region::MAXIMUM_INTERACTIVE_ROWS as usize + 2 {
-        let mut cx =
-            semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx =
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
         match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx).expect("BMP paint work step") {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).expect("localized progress").contains("de")),
-            ArtifactCommandWorkStep::Complete(emit) => {work.begin_close();for _ in 0..10000{if work.close_step(1,4096)==semio_framework_job::InteractiveJobCloseStep::Complete{assert!(work.terminal_is_empty());return emit.artifact_mutations;}}panic!("BMP paint retained result did not close");},
+            ArtifactCommandWorkStep::Complete(emit) => {work.begin_close();for _ in 0..10000{if matches!(work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}){assert!(work.terminal_is_empty());return emit.artifact_mutations;}}panic!("BMP paint retained result did not close");},
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } | ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("unexpected BMP paint work step"),
         }
     }
@@ -107,7 +107,7 @@ fn retained_direct_paint_captures_revision_and_preserves_unaddressed_bytes() {
     assert_eq!(mutations.len(), 1);
     let BmpMutation::PaintDirectRegion(payload) = &mutations[0] else { panic!("typed direct paint intent publication") };
     assert_eq!(payload.revision,crate::schema::operations::bmp_revision(&before));
-    let after = protocol::apply_diff(&mutations[0].diff(&before).diff(), &before).expect("apply direct paint");
+    let after = protocol::apply_diff(mutations[0].diff(&before).diff(), &before).expect("apply direct paint");
     assert_eq!(after.image.opaque_gap,before.image.opaque_gap);assert_eq!(after.image.opaque_trailer,before.image.opaque_trailer);
     let layout = crate::standards::v_v3::subsets::any::io::bmp_layout(&before).unwrap();
     for row in 0..2 {
@@ -127,7 +127,7 @@ fn retained_indexed_paint_keeps_duplicate_color_indices_distinct() {
             .unwrap();
     let preview = crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&before).unwrap();
     let mutations = drive(&command, &before, paint_region::INDEXED_ACTION_ID);
-    let after = protocol::apply_diff(&mutations[0].diff(&before).diff(), &before).unwrap();
+    let after = protocol::apply_diff(mutations[0].diff(&before).diff(), &before).unwrap();
     assert_eq!(crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&after).unwrap(), preview);
     assert_ne!(crate::standards::v_v3::subsets::any::io::encode_bmp(&after).unwrap(), crate::standards::v_v3::subsets::any::io::encode_bmp(&before).unwrap(), "the equal-color palette entry remains a distinct authored index");
 }
@@ -145,9 +145,9 @@ fn cancelled_retained_paint_discards_revision_without_publication() {
     let mut work = paint_region::PaintRegionWork::new(paint_region::DIRECT_ACTION_ID);
     let input = ArtifactCommandInputs { command: &command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
     let mut sequence = 0;
-    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "bmp-paint-region-copy", .. }));
-    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "bmp-paint-region-copy", .. }));
     work.begin_close();
     assert!(matches!(work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}));

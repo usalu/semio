@@ -13,7 +13,7 @@ pub struct RemoveElement {
 impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemoveElement" };
 
-    fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
+    fn diff(&self, _base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_element(name))
     }

@@ -55,8 +55,8 @@ pub struct En1993Artifact {
 //#region 🔖️Conversions
 impl En1993Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::En1993Snapshot {
-        crate::En1993Snapshot {
+    pub fn to_snapshot(&self) -> En1993Snapshot {
+        En1993Snapshot {
             annex: self.annex,
             materials: self.materials.clone(),
             sections: self.sections.clone(),
@@ -78,7 +78,7 @@ impl En1993Artifact {
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
-    pub fn from_snapshot(snapshot: crate::En1993Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: En1993Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
             materials: snapshot.materials,
@@ -301,7 +301,7 @@ pub mod part_1_1 {
         let lambda_p = (c / section.tf) / (28.0 * epsilon);
         let rho = plate_rho(lambda_p, 1.0);
         let a_flange = 2.0 * section.b * section.tf;
-        let a_web = section.h.max(section.tw) * section.tw; // approx
+        let _a_web = section.h.max(section.tw) * section.tw; // approx
         section.area - a_flange * (1.0 - rho).max(0.0) * 0.5
     }
 
@@ -568,7 +568,7 @@ pub mod part_1_1 {
 }
 
 pub mod part_1_2 {
-    use super::*;
+    #[cfg(test)] use super::*;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -1064,7 +1064,7 @@ fn next_section_options(current: &SteelSection, need_area: f64, need_wpl: f64) -
     opts
 }
 
-fn find_material<'a>(doc: &'a En1993Snapshot, id: &str) -> Option<&'a crate::SteelMaterial> {
+fn find_material<'a>(doc: &'a En1993Snapshot, id: &str) -> Option<&'a SteelMaterial> {
     doc.materials.iter().find(|m| m.id == id)
 }
 
@@ -1132,7 +1132,7 @@ fn kind_allows_member_interaction(kind: &str) -> bool {
 
 fn combine_scalar_forces(document: &En1993Snapshot, forces: &[(String, f64)]) -> Vec<CombinedScalar> {
     let mut g = 0.0;
-    let mut variables: Vec<(&crate::LoadCase, f64)> = Vec::new();
+    let mut variables: Vec<(&LoadCase, f64)> = Vec::new();
     for (lc_id, force) in forces {
         let Some(lc) = document.load_cases.iter().find(|l| l.id == *lc_id) else { continue };
         match lc.kind.as_str() {
@@ -1186,7 +1186,7 @@ struct CombinedEffects {
 
 fn combine_member_actions(document: &En1993Snapshot, member_id: &str) -> Vec<CombinedEffects> {
     let mut g = crate::DesignAction { n: 0.0, vy: 0.0, vz: 0.0, my: 0.0, mz: 0.0, t: 0.0 };
-    let mut variables: Vec<(&crate::LoadCase, crate::DesignAction)> = Vec::new();
+    let mut variables: Vec<(&LoadCase, crate::DesignAction)> = Vec::new();
     for row in document.member_actions.iter().filter(|a| a.member_id == member_id) {
         let Some(lc) = document.load_cases.iter().find(|l| l.id == row.load_case_id) else { continue };
         match lc.kind.as_str() {

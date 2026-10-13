@@ -209,8 +209,8 @@ pub fn dag_child_emit<C, D>(snapshot: &DagSnapshot, leaves: Vec<SemioGraphMutati
 /// inference and the foreign serializers — read this until the framework hands them child head packs (design D2).
 pub fn dag_derivable_scene(snapshot: &DagSnapshot) -> Option<DagScene> {
     let child_id = snapshot.content.child_id.as_str();
-    if child_id == crate::examples::demo::CONTENT_CHILD_ID {
-        return Some(crate::examples::demo::scene());
+    if child_id == examples::demo::CONTENT_CHILD_ID {
+        return Some(examples::demo::scene());
     }
     (child_id == dag_content_child_handle(&DagScene::default()).child_id).then(DagScene::default)
 }
@@ -686,7 +686,7 @@ pub mod viewer {
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn dag_child_restore_projection(snapshot: &crate::DagSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+pub fn dag_child_restore_projection(snapshot: &DagSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection

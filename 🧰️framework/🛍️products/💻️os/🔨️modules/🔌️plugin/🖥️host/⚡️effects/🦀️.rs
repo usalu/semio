@@ -40,7 +40,8 @@ use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLa
 use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
 #[cfg(test)]
 use semio_framework_job::CommitCandidate;
-use semio_framework_job::{JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedPayloadBuilder, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
+use semio_framework_job::{JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedPayloadBuilder, InteractiveJob, InteractiveJobCloseStep, JobPayloadStream, RetainedJobPayload, StepContext};
+#[cfg(test)] use semio_framework_job::{JobFault, RetainedJobPayloadWriter, StepOutcome};
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
@@ -421,14 +422,14 @@ struct DynRouterEffectJob(Option<Box<dyn InteractiveJob + Send>>);
 impl DynRouterEffectJob {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let Some(original) = self.0.as_ref() else { return Ok(Default::default()); };
-        if original.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: std::mem::size_of_val(&**original), depth: 1, ..Default::default() }); }
+        if original.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: size_of_val(&**original), depth: 1, ..Default::default() }); }
         Ok(semio_framework_value::RetirementDemand { copy_bytes: original.next_close_copy_byte_demand()?, capacity_bytes: original.next_close_capacity_byte_demand(body)?, release_bytes: original.next_close_release_byte_demand()?, depth: original.next_close_depth_demand()?.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "router job wrapper depth overflow"))? })
     }
 }
 
 impl InteractiveJob for DynRouterEffectJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> { self.0.as_mut().expect("original router job remains live").step(cx) }
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError> { self.0.as_ref().expect("original router job remains checked out").borrow_outcome(descriptor) }
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> { self.0.as_mut().expect("original router job remains live").step(cx) }
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>,semio_framework_value::ValueError> { self.0.as_ref().expect("original router job remains checked out").borrow_outcome(descriptor) }
     fn begin_close(&mut self) { if let Some(original) = self.0.as_mut() { original.begin_close(); } }
     fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep {
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementTurnError};
@@ -688,10 +689,10 @@ pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, r
             match compute
                 .run_job(runtime, scope, &ctx, retained, &mut job, &mut params, &mut control, &mut wallet, &mut completion, |outcome| {
                     result = Some(match outcome {
-                        semio_framework_job::JobOutcomeView::Complete { output: Some(output), .. } => copy_router_effect_payload(output).map_or_else(RouterEffectJobOutcome::Fault, RouterEffectJobOutcome::Complete),
-                        semio_framework_job::JobOutcomeView::Complete { output: None, .. } => RouterEffectJobOutcome::Complete(Vec::new()),
-                        semio_framework_job::JobOutcomeView::Cancelled { .. } => RouterEffectJobOutcome::Cancelled,
-                        semio_framework_job::JobOutcomeView::Fault { detail, .. } => match copy_router_effect_payload(detail) {
+                        JobOutcomeView::Complete { output: Some(output), .. } => copy_router_effect_payload(output).map_or_else(RouterEffectJobOutcome::Fault, RouterEffectJobOutcome::Complete),
+                        JobOutcomeView::Complete { output: None, .. } => RouterEffectJobOutcome::Complete(Vec::new()),
+                        JobOutcomeView::Cancelled { .. } => RouterEffectJobOutcome::Cancelled,
+                        JobOutcomeView::Fault { detail, .. } => match copy_router_effect_payload(detail) {
                             Ok(detail) => RouterEffectJobOutcome::Fault(String::from_utf8_lossy(&detail).into_owned()),
                             Err(error) => RouterEffectJobOutcome::Fault(error),
                         },

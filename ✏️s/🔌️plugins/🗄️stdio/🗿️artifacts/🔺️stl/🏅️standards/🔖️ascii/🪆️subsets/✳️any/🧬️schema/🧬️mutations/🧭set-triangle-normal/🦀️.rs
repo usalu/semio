@@ -15,7 +15,7 @@ pub struct SetTriangleNormal {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "triangle-normal", kind: "set-triangle-normal", record: "SetTriangleNormal" };
 
-    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
+    fn diff(&self, _base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
         let Self { index, normal } = self;
         protocol::MutationOutcome::new(diff::diff_set_triangle_normal(*index, *normal))
     }
@@ -23,7 +23,7 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
         let Self { index, .. } = self;
         Ok({
             match base.triangles.get(*index) {
-                Some(t) => vec![StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: *index, normal: t.normal })],
+                Some(t) => vec![StlMutation::SetTriangleNormal(SetTriangleNormal { index: *index, normal: t.normal })],
                 None => Vec::new(),
             }
         })

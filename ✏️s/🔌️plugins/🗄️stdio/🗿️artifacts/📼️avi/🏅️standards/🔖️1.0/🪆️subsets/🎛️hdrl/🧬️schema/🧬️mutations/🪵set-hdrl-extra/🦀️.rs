@@ -18,7 +18,7 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetHdrlExtra {
         protocol::MutationOutcome::new(AviDiff { hdrl_extra: (base.hdrl_extra != self.chunks).then(|| self.chunks.clone()), ..AviDiff::default() })
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-        Ok((base.hdrl_extra != self.chunks).then(|| AviMutation::SetHdrlExtra(set_hdrl_extra::SetHdrlExtra { chunks: base.hdrl_extra.clone() })).into_iter().collect())
+        Ok((base.hdrl_extra != self.chunks).then(|| AviMutation::SetHdrlExtra(SetHdrlExtra { chunks: base.hdrl_extra.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set hdrl extra chunks", "Zusätzliche hdrl-Chunks setzen")

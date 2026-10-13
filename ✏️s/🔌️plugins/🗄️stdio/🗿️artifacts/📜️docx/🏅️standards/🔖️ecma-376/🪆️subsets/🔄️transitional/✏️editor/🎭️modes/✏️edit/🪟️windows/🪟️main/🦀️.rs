@@ -3,7 +3,8 @@
 use crate::editor::docx::standards::v_ecma_376::subsets::base::modes::edit::windows::main as canonical;
 use crate::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, WindowKit};
-use semio_framework_plugin::{BuiltNode, TreeWindows, UiValue, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, TreeWindows, WindowKindDefinition};
+#[cfg(test)] use semio_framework_plugin::{UiValue};
 use semio_framework_ui_locale::Locale;
 
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;

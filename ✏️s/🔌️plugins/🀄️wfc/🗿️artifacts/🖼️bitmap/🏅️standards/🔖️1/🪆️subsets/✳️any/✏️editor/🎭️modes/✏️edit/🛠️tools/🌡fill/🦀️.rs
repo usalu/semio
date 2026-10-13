@@ -427,7 +427,7 @@ impl BitmapFillRunJob {
         self.committed_solve.as_ref()
     }
 
-    fn publish_tick(&mut self, context: &mut StepContext<'_>, payload: BitmapFillPayload, stage: FillStage, reason: FillReason, state: ToolRunState) -> FillRun {
+    fn publish_tick(&mut self, _context: &mut StepContext<'_>, payload: BitmapFillPayload, stage: FillStage, reason: FillReason, state: ToolRunState) -> FillRun {
         let decided = payload.decided_count() as u64;
         let observations = self.child.as_ref().map(|job| job.preview(0).observations).unwrap_or(0);
         let backtracks = self.child.as_ref().map(|job| job.preview(0).backtracks).unwrap_or(0);

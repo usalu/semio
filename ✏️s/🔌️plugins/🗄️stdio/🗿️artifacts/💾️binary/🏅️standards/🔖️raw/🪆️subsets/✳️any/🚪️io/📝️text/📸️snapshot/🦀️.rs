@@ -47,4 +47,3 @@ impl store::ArtifactDsl for BinarySnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

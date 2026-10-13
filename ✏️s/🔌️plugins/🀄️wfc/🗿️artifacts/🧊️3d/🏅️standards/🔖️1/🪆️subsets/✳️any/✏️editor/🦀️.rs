@@ -17,15 +17,12 @@ use crate::editor::wfc3d::config::{wfc3d_active_tile_id, Wfc3dConfig, Wfc3dConfi
 use crate::editor::wfc3d::modes::edit;
 use crate::editor::wfc3d::modes::edit::tools::{drag, fill};
 use crate::editor::wfc3d::modes::edit::windows::{graph, preview};
-use crate::editor::wfc3d::transient::{SetSolve, Wfc3dTransient, Wfc3dTransientMutation};
+use crate::editor::wfc3d::transient::{Wfc3dTransient, Wfc3dTransientMutation};
 use crate::mutations::{change_seed, change_tile_media, change_tile_weight, connect_slots, create_rule, create_slot, create_tile, delete_rule, delete_slot, delete_tile, disconnect_slots, move_slot, pin_slot, resize_slot, unpin_slot};
 use crate::schema::snapshot::{canonical_edge_index, canonical_insertion_index, canonical_rule_index, canonical_slot_index, canonical_tile_index, GraphRule, Slot3d, SlotEdge, Tile, TileMedia3d};
 use crate::{Wfc3dMutation, Wfc3dSnapshot, WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::Effect;
-use semio_framework_plugin::RequestId;
 use semio_framework_plugin::ToolRef;
 use semio_framework_plugin::ToolRunJob;
-use semio_framework_plugin::ToolRunJobPurpose;
 use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_plugin::ToolRunView;
 use semio_framework_plugin::ActionArgDef;
@@ -292,7 +289,7 @@ impl Wfc3dCommandWork {
     }
 }
 
-impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Wfc3dEditor>> for Wfc3dCommandWork {
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Wfc3dEditor>> for Wfc3dCommandWork {
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -302,16 +299,16 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         command: &Wfc3dEditorCommand,
         snapshot: &Wfc3dSnapshot,
         _interaction: &protocol::InteractionState,
-        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<Wfc3dEditor>>>,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Wfc3dEditor>>>,
     ) -> Option<usize> {
         (!self.completed && wfc3d_command_id(command) == self.tool_id).then(|| wfc3d_retained_extent(command, snapshot)).flatten()
     }
 
     fn step(
         &mut self,
-        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<Wfc3dEditor>>,
+        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Wfc3dEditor>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<Wfc3dEditor>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Wfc3dEditor>>, Fault> {
         if self.completed || wfc3d_command_id(input.command) != self.tool_id {
             return Err(Fault::new(
                 semio_framework_plugin::FaultOrigin::App,
@@ -349,8 +346,8 @@ impl Wfc3dRetainedCommandJobFactory {
 }
 
 impl semio_framework::ToolJobFactory for Wfc3dRetainedCommandJobFactory {
-    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<Wfc3dEditor>>;
-    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<Wfc3dEditor>>;
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<EditorApp<Wfc3dEditor>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<EditorApp<Wfc3dEditor>>;
 
     fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
         &self.keys
@@ -387,7 +384,7 @@ impl semio_framework::ToolJobFactory for Wfc3dRetainedCommandJobFactory {
 }
 
 impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Wfc3dRetainedCommandJobFactory {
-    type Owner = semio_framework_plugin::EditorApp<Wfc3dEditor>;
+    type Owner = EditorApp<Wfc3dEditor>;
     const TOOL_IDS: &'static [&'static str] = WFC_3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = WFC3D_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = WFC_3D_PUBLICATION_CONTRACTS;
@@ -428,7 +425,7 @@ pub struct Wfc3dEditor;
 
 impl ArtifactEditor for Wfc3dEditor {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         use semio_framework_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 4]> = std::sync::LazyLock::new(|| {
             [
@@ -535,12 +532,12 @@ impl ArtifactEditor for Wfc3dEditor {
 })())
 }
 
-    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(Wfc3dRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
         if !WFC_3D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
@@ -560,7 +557,7 @@ impl ArtifactEditor for Wfc3dEditor {
             retained: request.retained,
             authoring_seed: request.authoring_seed.clone(),
         };
-        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = Box::new(Wfc3dCommandWork::new(tool_id));
+        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Self>>> = Box::new(Wfc3dCommandWork::new(tool_id));
         let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::new(
             semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
                 command: *request.command,
@@ -582,7 +579,7 @@ impl ArtifactEditor for Wfc3dEditor {
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<Wfc3dEditor>,
+        owner: EditorApp<Wfc3dEditor>,
         owner_file: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.wfc.wfc3d@1/*#editor",
         artifact_schema: "s.wfc.wfc3d",

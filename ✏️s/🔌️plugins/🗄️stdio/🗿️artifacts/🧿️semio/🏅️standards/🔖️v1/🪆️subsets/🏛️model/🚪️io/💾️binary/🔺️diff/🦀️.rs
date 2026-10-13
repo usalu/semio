@@ -217,4 +217,3 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 
 use crate::standards::v1::subsets::model::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, enc_list, dec_list, enc_point3, dec_point3, enc_quat, dec_quat, enc_transform, dec_transform, enc_spatial_kind, dec_spatial_kind, enc_element_class, dec_element_class, enc_geometry_ref, dec_geometry_ref, enc_pset_value, dec_pset_value, enc_property, dec_property, enc_property_set, dec_property_set, enc_spatial_node, dec_spatial_node, enc_element, dec_element, enc_relation_kind, dec_relation_kind, enc_relation, dec_relation, enc_spatial_node_diff, dec_spatial_node_diff, enc_element_diff, dec_element_diff, enc_relation_diff, dec_relation_diff, enc_spatial_diff, dec_spatial_diff, enc_elements_diff, dec_elements_diff, enc_relations_diff, dec_relations_diff};
 }
-pub use diff_codec::*;

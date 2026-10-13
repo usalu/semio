@@ -64,10 +64,10 @@ impl ToValue for EnergyModelArtifact {
         DslValue::object([
             ("schema".to_string(), self.schema.to_value()),
             ("model".to_string(), self.model.to_value()),
-            ("structure".to_string(), semio_framework_value::ToValue::to_value(&self.structure)),
-            ("zones".to_string(), semio_framework_value::ToValue::to_value(&self.zones)),
-            ("referencedModel".to_string(), semio_framework_value::ToValue::to_value(&self.referenced_model)),
-            ("weatherLink".to_string(), semio_framework_value::ToValue::to_value(&self.weather_link)),
+            ("structure".to_string(), ToValue::to_value(&self.structure)),
+            ("zones".to_string(), ToValue::to_value(&self.zones)),
+            ("referencedModel".to_string(), ToValue::to_value(&self.referenced_model)),
+            ("weatherLink".to_string(), ToValue::to_value(&self.weather_link)),
             ("resultsJson".to_string(), self.results_json.to_value()),
         ])
     }
@@ -79,10 +79,10 @@ impl FromValue for EnergyModelArtifact {
         Ok(Self {
             schema: String::from_value(field("schema"))?,
             model: crate::model::Model::from_value(field("model"))?,
-            structure: semio_framework_value::FromValue::from_value(field("structure"))?,
-            zones: semio_framework_value::FromValue::from_value(field("zones"))?,
-            referenced_model: semio_framework_value::FromValue::from_value(field("referencedModel"))?,
-            weather_link: semio_framework_value::FromValue::from_value(field("weatherLink"))?,
+            structure: FromValue::from_value(field("structure"))?,
+            zones: FromValue::from_value(field("zones"))?,
+            referenced_model: FromValue::from_value(field("referencedModel"))?,
+            weather_link: FromValue::from_value(field("weatherLink"))?,
             results_json: String::from_value(field("resultsJson"))?,
         })
     }

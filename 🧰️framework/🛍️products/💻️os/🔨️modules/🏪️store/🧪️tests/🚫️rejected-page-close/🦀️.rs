@@ -11,6 +11,7 @@ use std::sync::{Arc, Mutex};
 struct Fixture {
     version: u8,
     page_bytes: usize,
+    directory_slot_bytes: usize,
     input_state: String,
     field_owner: FieldVector,
     cases: Vec<Case>,
@@ -32,7 +33,7 @@ impl Grant {
     }
 
     fn generous(maximum_items: usize) -> Self {
-        Self { maximum_items, maximum_copy_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_capacity_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_release_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_depth: 16 }
+        Self { maximum_items, maximum_copy_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_capacity_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES, maximum_release_bytes: 1 << 20, maximum_depth: 16 }
     }
 }
 
@@ -95,8 +96,9 @@ struct Expected {
 
 fn fixture() -> Fixture {
     let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🚫️rejected-page-close/🔣️.json")).expect("canonical rejected-page vectors");
-    assert_eq!(fixture.version, 2);
+    assert_eq!(fixture.version, 3);
     assert_eq!(fixture.page_bytes, OWNED_SCHEMA_DECODE_PAGE_BYTES);
+    assert_eq!(fixture.directory_slot_bytes, std::mem::size_of::<OwnedSchemaDecodePage>());
     assert_eq!(fixture.input_state, "unstarted-record");
     fixture
 }
@@ -254,6 +256,7 @@ const LEASE_RETURN_PHASES: usize = 1;
 const REGISTRY_DETACH_PHASES: usize = 1;
 const RECORD_COMPLETION_PHASES: usize = 1;
 const AUTHORITY_COMPLETION_PHASES: usize = 1;
+const DIRECTORY_BACKING_CLOSE_PHASES: usize = 1;
 
 /// 🧮️ Adds actual remaining pages and explicit finite ownership phases without overflow.
 fn checked_close_bound(maximum_pages: usize, phases: &[usize]) -> usize {
@@ -267,12 +270,12 @@ fn returned_owner_close_bound() -> usize {
 
 /// 📦️ Unadmitted rejection closes the token, field shell, pages, and final record shell.
 fn unadmitted_close_bound(maximum_pages: usize) -> usize {
-    checked_close_bound(maximum_pages, &[COUNTED_TOKEN_CLOSE_PHASES, FIELD_SHELL_CLOSE_PHASES, RECORD_COMPLETION_PHASES])
+    checked_close_bound(maximum_pages, &[COUNTED_TOKEN_CLOSE_PHASES, FIELD_SHELL_CLOSE_PHASES, DIRECTORY_BACKING_CLOSE_PHASES, RECORD_COMPLETION_PHASES])
 }
 
 /// 🪪️ Registered rejection additionally returns and detaches its lease before the returned field shell closes.
 fn registered_close_bound(maximum_pages: usize) -> usize {
-    checked_close_bound(maximum_pages, &[COUNTED_TOKEN_CLOSE_PHASES, LEASE_RETURN_PHASES, REGISTRY_DETACH_PHASES, FIELD_SHELL_CLOSE_PHASES, RECORD_COMPLETION_PHASES])
+    checked_close_bound(maximum_pages, &[COUNTED_TOKEN_CLOSE_PHASES, LEASE_RETURN_PHASES, REGISTRY_DETACH_PHASES, FIELD_SHELL_CLOSE_PHASES, DIRECTORY_BACKING_CLOSE_PHASES, RECORD_COMPLETION_PHASES])
 }
 
 /// 🏁️ The untransferred authority needs one terminal-state turn after its record shell closes.
@@ -486,7 +489,7 @@ fn check_case(registered: bool, row: &Case, vector: &FieldVector, failures: &mut
         note(failures, &format!("{} close {index}", row.id), observed == close.expected, (&observed, &close.expected));
         if let Some(current) = witness(subject.record()) {
             let expected_contents = original_pages.iter().take(close.expected.remaining_pages).flatten().copied().map(Some).collect::<Vec<_>>();
-            note(failures, &format!("{} original retained page prefix {index}", row.id), current.storage == original.storage && current.capacity == original.capacity && current.sealed && current.contents == expected_contents, current);
+            note(failures, &format!("{} original retained page prefix {index}", row.id), (if close.expected.released_bytes != 0 { current.capacity == 0 } else { current.storage == original.storage && current.capacity == original.capacity }) && current.sealed && current.contents == expected_contents, current);
         } else {
             note(failures, &format!("{} record removal {index}", row.id), !close.expected.record_present, close.expected.record_present);
         }

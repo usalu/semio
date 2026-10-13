@@ -31,7 +31,7 @@
 use crate::standards::v2x3::mvd;
 use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 #[cfg(test)]

@@ -17,7 +17,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemovePart {
         part_outcome(remove_part_diff(base, &self.path))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
         set_part_inverse(base, &self.path)
     }
 

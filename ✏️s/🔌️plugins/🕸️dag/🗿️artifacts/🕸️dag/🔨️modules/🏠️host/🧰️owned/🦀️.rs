@@ -1,7 +1,5 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use store::PackError;
-use crate::DagSnapshot;
 pub type DagStore = store::ArtifactStore<crate::DagSnapshot, crate::schema::mutations::DagMutation>;
 
 /// 🔐️ Opens a Dag store WITH its exact owner catalog installed. `ArtifactStore::new` installs no

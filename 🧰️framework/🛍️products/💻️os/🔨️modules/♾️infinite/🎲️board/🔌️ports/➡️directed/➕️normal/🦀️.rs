@@ -12,7 +12,7 @@ pub mod board_host {
     use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
-        board_locked_option, board_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, board_edge_handle_ids,
+        board_locked_option, board_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier,
         handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
         normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_value, rectangle_handle_angle_toward, region_bounds, region_grip_at, region_grip_drag, rotate_point_about, selection_drag_enclosing, selection_drag_shape,
         snap_region_scalar, snap_transform_angle, transform_pivot_of,
@@ -513,7 +513,7 @@ pub mod board_host {
 
         fn retire_descriptor(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Option<semio_framework_job::InteractiveJobCloseStep> {
             if self.len!=0||self.page_count!=0||self.pages.is_empty(){return None;}
-            let released_bytes=std::mem::size_of_val(self.pages.as_ref());
+            let released_bytes=size_of_val(self.pages.as_ref());
             if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<released_bytes{return Some(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
             self.pages=Box::new([]);
             Some(semio_framework_job::InteractiveJobCloseStep::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}})
@@ -526,7 +526,7 @@ pub mod board_host {
 
         fn next_release_bytes(&self)->usize {
             if self.len!=0{return 0;}
-            self.retained_page_bytes().unwrap_or_else(||std::mem::size_of_val(self.pages.as_ref()))
+            self.retained_page_bytes().unwrap_or_else(||size_of_val(self.pages.as_ref()))
         }
     }
 
@@ -1081,7 +1081,7 @@ pub mod board_host {
         }
 
         pub fn into_closing_job(mut self) -> BoardFillJob {
-            BoardFillJob { operation: self.operation, state: self.state.take(), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: std::cell::Cell::new(None), admitted: std::cell::Cell::new(false), fault: None, closing: true }
+            BoardFillJob { operation: self.operation, state: self.state.take(), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: Cell::new(None), admitted: Cell::new(false), fault: None, closing: true }
         }
     }
 
@@ -1535,8 +1535,8 @@ pub mod board_host {
         commit_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
         lent: Option<semio_framework_job::RetainedJobPayload>,
         commit_output: Option<semio_framework_job::RetainedJobPayload>,
-        offer: std::cell::Cell<Option<BoardFillOffer>>,
-        admitted: std::cell::Cell<bool>,
+        offer: Cell<Option<BoardFillOffer>>,
+        admitted: Cell<bool>,
         fault: Option<&'static str>,
         closing: bool,
     }
@@ -4563,7 +4563,7 @@ pub mod board_host {
                         None=>None,
                         Some(value)=>Some(match value.as_str().map(str::trim){Some("arrow")=>EdgeTipGeometry::Arrow,Some("fine-arrow")=>EdgeTipGeometry::FineArrow,Some("diamond")=>EdgeTipGeometry::Diamond,Some("circle")=>EdgeTipGeometry::Circle,Some("bar")=>EdgeTipGeometry::Bar,_=>return Err(NormalPortError::EdgeTipRowInvalid(id.to_string()))})
                     };
-                    let entry=crate::infinite::board::ports::directed::EdgeTipCatalogEntry{id:id.to_string(),geometry,filled:eo.get("filled").and_then(|v|v.as_bool()),scale:eo.get("scale").and_then(|v|v.as_f64())};
+                    let entry=infinite::board::ports::directed::EdgeTipCatalogEntry{id:id.to_string(),geometry,filled:eo.get("filled").and_then(|v|v.as_bool()),scale:eo.get("scale").and_then(|v|v.as_f64())};
                     let def = EdgeTipDef::from_catalog_entry(&entry).ok_or_else(|| NormalPortError::EdgeTipRowInvalid(id.to_string()))?;
                     tips.insert(id.to_string(), def);
                 }
@@ -6586,8 +6586,8 @@ pub mod board_host {
                 commit_writer: None,
                 lent: None,
                 commit_output: None,
-                offer: std::cell::Cell::new(None),
-                admitted: std::cell::Cell::new(false),
+                offer: Cell::new(None),
+                admitted: Cell::new(false),
                 fault: None,
                 closing: false,
             }
@@ -6602,7 +6602,7 @@ pub mod board_host {
                 return Err(checkpoint);
             }
             let Some(state) = checkpoint.state.take() else { return Err(checkpoint) };
-            Ok(Self { operation, state: Some(state), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: std::cell::Cell::new(None), admitted: std::cell::Cell::new(false), fault: None, closing: false })
+            Ok(Self { operation, state: Some(state), checkpoint: None, preview: None, commit_encoder: None, commit_writer: None, lent: None, commit_output: None, offer: Cell::new(None), admitted: Cell::new(false), fault: None, closing: false })
         }
 
         pub fn operation(&self) -> semio_framework_job::Operation {
@@ -8127,7 +8127,7 @@ pub mod board_host {
             self.selection_screen_preview = points;
         }
 
-        pub fn set_canvas_palette(&mut self, overlay: &crate::infinite::board::BoardPaletteOverlay) {
+        pub fn set_canvas_palette(&mut self, overlay: &infinite::board::BoardPaletteOverlay) {
             self.canvas_theme.apply_overlay(overlay);
             self.icon_paint_cache.clear();
         }
@@ -10467,7 +10467,7 @@ pub mod board_host {
                 let visible=board_visible_option(&node.visibility());let locked=board_locked_option(&node.visibility());
                 if has_ports {for h in node.handles? {let angle=h.angle?;if !angle.is_finite(){return None;}let hv=board_visible_option(&h.visibility());let hl=board_locked_option(&h.visibility());desc.handles.push(HandleDescriptor{id:h.id,node_id:node.id.clone(),angle,radius:positive(h.radius),scale:positive(h.scale),selected:None,style:None,handle_kind:Some(text(h.handle_kind).unwrap_or_else(||"port".into())),color:text(h.color),icon_kind:text(h.icon_kind),user_data:None,visible:hv,locked:hl});}}
                 else if node.handles.is_some(){return None;}
-                let (shape,radius,width,height)=if node.shape==Some(crate::infinite::board::ports::directed::schema::snapshot::BoardNodeShape::Rectangle){("rectangle",None,Some(positive(node.width)?),Some(positive(node.height)?))}else{("circle",Some(positive(node.radius)?),None,None)};
+                let (shape,radius,width,height)=if node.shape==Some(infinite::board::ports::directed::schema::snapshot::BoardNodeShape::Rectangle){("rectangle",None,Some(positive(node.width)?),Some(positive(node.height)?))}else{("circle",Some(positive(node.radius)?),None,None)};
                 desc.nodes.push(NodeDescriptor{id:node.id,x,y,draggable:None,selected:None,style:None,text:text(node.text),icon_kind:text(node.icon_kind),node_kind:text(node.node_kind),user_data:None,visible,locked,root:node.root,shape:Some(shape.into()),radius,width,height,scale:positive(node.scale)});
             }
             for edge in f.edges {let visible=board_visible_option(&edge.visibility());let locked=board_locked_option(&edge.visibility());let(source,target)=(edge.source?,edge.target?);if !has_ports{let ids:BTreeSet<&str>=desc.nodes.iter().map(|n|n.id.as_str()).collect();if !ids.contains(source.as_str())||!ids.contains(target.as_str()){return None;}}

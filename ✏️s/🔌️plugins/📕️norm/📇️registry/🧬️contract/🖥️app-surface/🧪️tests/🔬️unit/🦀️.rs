@@ -381,7 +381,7 @@ async fn locale_switch_en_to_de_changes_chrome_and_check_copy() {
 fn evaluate_job_progress_and_cancellation() {
     let mut state = NormEvaluateWorkState::new();
     let mut buf = [0u8; 4];
-    assert_eq!(state.checkpoint(&mut buf).expect("cp"), 1);
+    assert_eq!(state.checkpoint(&mut buf, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("cp"), 1);
     assert_eq!(buf[0], 0);
     assert_eq!(state.emit_progress_stage(), Some("norm-evaluate-prepare"));
     assert_eq!(state.emit_progress_stage(), Some("norm-evaluate-run"));

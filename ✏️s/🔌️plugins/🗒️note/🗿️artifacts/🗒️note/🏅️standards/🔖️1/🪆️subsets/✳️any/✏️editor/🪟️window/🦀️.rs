@@ -40,7 +40,7 @@ pub enum NoteCompositeWindowConfigMutation {
     SetCamera(NoteCamera),
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum NoteCompositeWindowTransientMutation {
     Snapshot { transient: NoteCompositeWindowTransient },
 }
@@ -155,14 +155,6 @@ mutation_wire!(NoteCompositeWindowConfigMutation);
 mutation_wire!(NoteCompositeWindowTransientMutation);
 
 semio_framework_value::artifact_retire_struct!(NoteCompositeWindowTransient { engagement_input, ink_tool });
-
-impl semio_framework_value::retirement::RetireOwned for NoteCompositeWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
-        }
-    }
-}
 
 fn note_composite_window_transient_preflight(mutation: &NoteCompositeWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let NoteCompositeWindowTransientMutation::Snapshot { transient } = mutation;

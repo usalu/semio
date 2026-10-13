@@ -35,7 +35,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
 impl protocol::OpBinary for ShootingMutation {

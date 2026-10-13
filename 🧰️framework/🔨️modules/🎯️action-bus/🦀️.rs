@@ -8,7 +8,7 @@
 //! merely by being inserted into the bus.
 
 use crate::manifest::InteractiveJobClassification;
-use semio_framework_job::{InteractiveJob, Operation, StepContext, StepOutcome};
+use semio_framework_job::{InteractiveJob, Operation, StepContext};
 use std::any::{Any, TypeId};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
@@ -177,7 +177,7 @@ impl RetainedToolWireInput {
 
     pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     pub fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
-    pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.pages.capacity().checked_mul(std::mem::size_of::<ToolWirePage>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"wire page backing extent overflow"))}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.pages.capacity().checked_mul(size_of::<ToolWirePage>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"wire page backing extent overflow"))}
     pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.pages.capacity()!=0))}
     pub fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
         use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};

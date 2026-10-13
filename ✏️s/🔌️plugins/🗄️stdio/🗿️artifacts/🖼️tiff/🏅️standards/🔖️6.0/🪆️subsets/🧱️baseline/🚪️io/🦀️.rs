@@ -152,10 +152,10 @@ pub mod derived_analysis {
     use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffSnapshot};
     use crate::standards::v6_0::subsets::document::io::{TiffAnalyzer as TiffAnyAnalyzer, TiffParts};
     use semio_framework_diagnostic::Diagnostic;
-use semio_framework_diagnostic::FaultCode;
-use semio_framework_diagnostic::FaultScope;
-use semio_framework_diagnostic::Severity;
-use semio_framework_diagnostic::TextSpan;
+#[cfg(test)] use semio_framework_diagnostic::FaultCode;
+#[cfg(test)] use semio_framework_diagnostic::FaultScope;
+#[cfg(test)] use semio_framework_diagnostic::Severity;
+#[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -199,7 +199,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec TiffBaselineBuilderFacets {
         construction: TiffBaselineBuilderConstruction,
         analysis: TiffBaselineAnalyzerAnalysis,
-        composition: super::io::derived_composition::TiffBaselineComposerComposition,
+        composition: TiffBaselineComposerComposition,
     }
     builder: TiffBaselineBuilder,
     analyzer: TiffBaselineAnalyzer,

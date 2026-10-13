@@ -11,7 +11,7 @@ fn fixture_demo_owners()->DocumentStoreOwners<DemoSnapshot,DemoMutation> {
     let grant=fixture_hydration_grant();
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||DemoSnapshot::member_store_owners(grant));
     let(owners,receipt)=match result{Ok(admitted)=>admitted,Err(refusal)=>panic!("declared original fixture catalog refused: {:?}",refusal.error)};
-    assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));owners
+    assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));complete_test_catalog(Ok::<_,DocumentStoreOwnersAdmissionError<DemoSnapshot,DemoMutation>>((owners,receipt)))
 }
 
 pub(super) async fn fixture_author<P, M>(store: &mut ArtifactStore<P, M>, command: ArtifactCommand<M>) -> Result<CommandReceipt, VcsError>
@@ -649,7 +649,7 @@ async fn a_member_document_with_supersessions_hydrates_to_its_superseded_state()
         }
     }
     eprintln!("[DEBUG] superseded history hydration retains original caller receipt {hydration_receipts:?}");
-    let member = ArtifactStore(member.expect("hydration converges"), Some(close_test_store::<DemoSnapshot, DemoMutation>));
+    let member = ArtifactStore(member.unwrap_or_else(|| panic!("hydration converges; it still retains {:?}", hydration.remaining_owner())), Some(close_test_store::<DemoSnapshot, DemoMutation>));
     assert_eq!(member.snapshot_ref().n, Some(16), "the hydrated member folds the effective forwards");
     assert_eq!(member.supersessions(), reference.supersessions());
     assert_eq!(inverses(&member), inverses(&reference));
@@ -710,7 +710,7 @@ async fn retained_hydration_preserves_the_original_opened_actor_across_stored_au
                 }
             }
             eprintln!("[DEBUG] opened-actor hydration retains original caller receipt {hydration_receipts:?}");
-            assert!(hydration.terminal_is_empty());
+            assert!(hydration.terminal_is_empty(), "hydration still retains {:?}", hydration.remaining_owner());
         }
         let hydrated = ArtifactStore(hydrated.expect("original actor hydration converges"), Some(close_test_store::<DemoSnapshot, DemoMutation>));
         assert_eq!(hydrated.snapshot_ref().n, source.snapshot_ref().n);
@@ -1313,7 +1313,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let close_items = law["closeGrant"]["maximumItems"].as_u64().unwrap() as usize;
     let release_bytes = law["closeGrant"]["maximumReleaseBytes"].as_u64().unwrap() as usize;
     assert_eq!(close_items, 1);
-    assert_eq!(release_bytes, 4096);
+    assert_eq!(release_bytes, 16384);
     let mut store = demo_store("bounded-history-read", Some(law["initial"]["n"].as_i64().unwrap() as i32)).await;
     for edit in law["edits"].as_array().unwrap() {
         apply(&mut store, edit.as_array().unwrap().iter().map(|op| DemoMutation::from_value(op.clone().into()).unwrap()).collect()).await;
@@ -1383,7 +1383,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         physical_demands.insert(physical_demand);
         if physical_demand == law["physicalInversePageBytes"].as_u64().unwrap() as usize { physical_page_seen = true; }
         let grant = fixture_retirement_policy(close_items, release_bytes);
-        assert!(physical_demand <= grant.maximum_release_bytes, "explicit physical release grant admits the exact original owner extent");
+        assert!(physical_demand <= grant.maximum_release_bytes, "explicit physical release grant admits the exact original owner extent: demand {physical_demand} against {grant:?}");
         if let Some(head) = held_head.as_ref() { assert_eq!(Arc::as_ptr(head.snapshot_owner()), head_identity); assert_eq!(head.snapshot().n, head_value); }
         match retirement.close_step(grant).unwrap() {
             semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); break; }
@@ -1415,7 +1415,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             let grant = fixture_retirement_policy(close_items, release_bytes);
             match retirement.close_step(grant).unwrap() {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); break; }
-                semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => panic!("unpublished preview owns no outstanding reads"),
+                semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => panic!("unpublished preview owns no outstanding reads; stalled at turn {turns} under {grant:?} quoting copy {:?} capacity {:?} release {:?} depth {:?}", retirement.next_copy_byte_demand(), retirement.next_capacity_byte_demand(0), retirement.next_release_byte_demand(), retirement.next_depth_demand()),
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
             }
             assert_eq!(store.snapshot_ref().n, Some(99));

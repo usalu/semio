@@ -157,6 +157,7 @@ fn sqlite_snapshot_codec_original_input_and_retained_result_have_exact_custody()
 #[derive(semio_framework_value::RetireOwned)]
 struct OriginalRelocation{original:Vec<RetainedSnapshot>,replacement:Vec<RetainedSnapshot>}
 
+#[derive(semio_framework_value::RetireOwned)]
 struct DefaultReceivingSnapshot;
 impl ArtifactSqliteSnapshot for DefaultReceivingSnapshot{
  const SQLITE_SCHEMA:&'static str="";
@@ -170,11 +171,70 @@ fn sqlite_snapshot_codec_default_refusals_preserve_zero_original_authority(){
  for case in fixture["defaultRefusalCases"].as_array().unwrap(){
   let live=!case["nativeCancelled"].as_bool().unwrap();let mut decode_observer=|_|live;let mut encode_observer=|_|live;let mut sql_observer=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(case["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut decode_observer);let mut encode=semio_framework_value::NativeEncodeControl::new(case["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut encode_observer);let mut decoding=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);let mut encoding=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);let mut control=SqliteSnapshotControl::new(&mut sql_observer,Default::default());
   let(result,born,released)=crate::test_allocation::observe_backing(||match case["operation"].as_str().unwrap(){
-   "projection"=>snapshot.to_sqlite_database_receiving(&mut control,&mut decoding).map(|_|()),"reconstruction"=>DefaultReceivingSnapshot::from_sqlite_database_receiving(&database,&mut control,&mut encoding).map(|_|()),"decode"=>DefaultReceivingSnapshot::decode_sqlite_snapshot_native(&payload,&mut control,&mut decoding).map(|_|()),"encode"=>snapshot.encode_sqlite_snapshot_native(SnapshotEncoding::Binary,&mut control,&mut encoding).map(|_|()),"preflight"=>snapshot.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Binary,&mut control),"validate-decode"=>snapshot.validate_sqlite_snapshot_subset_decoding(&dialect,&database,&mut control,&mut decoding).map(|_|()).map_err(|error|error.cause),"validate-encode"=>snapshot.validate_sqlite_snapshot_subset_encoding(&dialect,&database,&mut control,&mut encoding).map(|_|()).map_err(|error|error.cause),_=>unreachable!()
+   "projection"=>snapshot.to_sqlite_database_receiving(&mut control,&mut decoding).map(|_|()),"reconstruction"=>DefaultReceivingSnapshot::from_sqlite_database_receiving(&database,&mut control,&mut encoding).map(|_|()),"decode"=>DefaultReceivingSnapshot::decode_sqlite_snapshot_native(&payload,&mut control,&mut decoding).map(|_|()),"encode"=>snapshot.encode_sqlite_snapshot_native(SnapshotEncoding::Binary,&mut control,&mut encoding).map(|_|()),"preflight"=>snapshot.preflight_sqlite_snapshot_encoding(SnapshotEncoding::Binary,&mut control),_=>unreachable!()
   });
   let error=result.unwrap_err();assert_eq!(born,case["allocatedBytes"].as_u64().unwrap()as usize,"{}",case["operation"]);assert_eq!(released,case["releasedBytes"].as_u64().unwrap()as usize);assert_eq!(format!("{:?}",error.kind),case["kind"].as_str().unwrap());assert_eq!(error.message,case["cause"].as_str().unwrap());assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));assert_eq!(decoding.progress(),Default::default());assert_eq!(encoding.progress(),Default::default());drop(decoding);drop(encoding);assert_eq!(decode.owned_bytes(),case["ownedBytes"].as_u64().unwrap()as usize);assert_eq!(encode.owned_bytes(),case["ownedBytes"].as_u64().unwrap()as usize);
  }
- eprintln!("[DEBUG] Original SQLite codec default receiving refusals preserve nine declared exact literal/canceled outcomes with zero actual allocation/release and unchanged original native/body authority");
+ eprintln!("[DEBUG] Original SQLite codec default receiving refusals preserve seven declared exact literal/canceled outcomes with zero actual allocation/release and unchanged original native/body authority");
+}
+
+#[derive(Debug, PartialEq, semio_framework_value::RetireOwned)]
+struct AuthoredSnapshot{value:i64}
+impl ArtifactSqliteSnapshot for AuthoredSnapshot{
+ const SQLITE_SCHEMA:&'static str=RetainedSnapshot::SQLITE_SCHEMA;
+ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
+  crate::sqlite_snapshot::artifact::project_owned(control,crate::sqlite_snapshot::artifact::ProjectionStorage::empty,|_,control|{control.admit_allocation_bytes(64)?;control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,1,1)},|_|value_database(self.value))
+ }
+ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+  crate::sqlite_snapshot::artifact::owned_workspace(control,SqliteSnapshotPhase::ReconstructSnapshot,crate::sqlite_snapshot::artifact::ProjectionStorage::empty,|_,control|{control.admit_allocation_bytes(64)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)},|_|())?;
+  Ok(Self{value:database.table("retained_value")?.single_row()?.integer(1)?})
+ }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
+struct AuthoredValidator;
+impl ArtifactSqliteSnapshot for AuthoredValidator{
+ const SQLITE_SCHEMA:&'static str=RetainedSnapshot::SQLITE_SCHEMA;
+ fn to_sqlite_database(&self,_:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no projection"))}
+ fn from_sqlite_database(_:&SqliteDatabase,_:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"validator fixture has no reconstruction"))}
+ fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->crate::io_schema::IoResult<()>{validate_retained_subset(dialect,control)}
+}
+
+#[test]
+fn sqlite_snapshot_codec_default_receiving_runs_authored_models_into_the_operation_workspace(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
+ let mut bare_callback=|_|true;let mut bare=SqliteSnapshotControl::new(&mut bare_callback,Default::default());
+ assert_eq!(AuthoredSnapshot{value:7}.to_sqlite_database(&mut bare).unwrap_err().message,"SQLite snapshot has no explicit retirement recipient","the authored model itself needs a recipient the codec's operation workspace must supply");
+ for stop in[usize::MAX,0,1,2]{
+  let events=std::cell::Cell::new(0);let mut sql_callback=|_|{let event=events.get();events.set(event+1);event!=stop};let mut decode_callback=|_|true;let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut decode_callback);decode.install_retirement_recipient(&mut recipient).unwrap();
+  let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let mut workspace=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let result=control.with_workspace_recipient(&mut workspace,|control|{let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);AuthoredSnapshot{value:7}.to_sqlite_database_receiving(control,&mut owner)});while !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&workspace){semio_framework_value::ErasedSnapshotRetirement::close_step(&mut workspace,grant).unwrap();}
+  if stop==usize::MAX{assert_eq!(result.unwrap(),value_database(7));}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled,"stop={stop}");}
+  while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).unwrap();}
+ }
+ let database=value_database(7);
+ for stop in[usize::MAX,0,1,2]{
+  let events=std::cell::Cell::new(0);let mut sql_callback=|_|{let event=events.get();events.set(event+1);event!=stop};let mut encode_callback=|_|true;let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut encode_callback);encode.install_retirement_recipient(&mut recipient).unwrap();
+  let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let mut workspace=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let result=control.with_workspace_recipient(&mut workspace,|control|{let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);AuthoredSnapshot::from_sqlite_database_receiving(&database,control,&mut owner)});while !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&workspace){semio_framework_value::ErasedSnapshotRetirement::close_step(&mut workspace,grant).unwrap();}
+  if stop==usize::MAX{assert_eq!(result.unwrap(),AuthoredSnapshot{value:7});}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled,"stop={stop}");}
+  while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
+ }
+ eprintln!("[DEBUG] Default receiving runs the authored projection and reconstruction into the operation workspace: success and every cancellation point leave only closable owners");
+}
+
+#[test]
+fn sqlite_snapshot_codec_default_receiving_validators_apply_the_authored_subset_policy_after_native_cancellation(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let grant:semio_framework_value::RetainedCloneGrant=serde_json::from_value(fixture["original"]["grant"].clone()).unwrap();let maximum=fixture["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize;
+ let database=value_database(7);
+ for (subset,live,accepted) in[("*",true,true),("reject",true,false),("*",false,false)]{
+  let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"default.receiving".into(),standard:"1".into(),subset:subset.into()};
+  let mut sql_callback=|_|true;let mut decode_callback=|_|live;let mut encode_callback=|_|live;let mut decode=semio_framework_value::NativeDecodeControl::new(maximum,&mut decode_callback);let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut encode_callback);
+  let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();decode.install_retirement_recipient(&mut recipient).unwrap();let mut encode_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();encode.install_retirement_recipient(&mut encode_recipient).unwrap();
+  let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());
+  {let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);assert_eq!(AuthoredValidator.validate_sqlite_snapshot_subset_decoding(&dialect,&database,&mut control,&mut owner).is_ok(),accepted,"decode {subset} live={live}");}
+  {let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);assert_eq!(AuthoredValidator.validate_sqlite_snapshot_subset_encoding(&dialect,&database,&mut control,&mut owner).is_ok(),accepted,"encode {subset} live={live}");}
+  while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
+ }
+ eprintln!("[DEBUG] Default receiving validators delegate to the authored subset policy and observe native cancellation first");
 }
 
 #[test]

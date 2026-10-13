@@ -39,6 +39,7 @@ function initialRows(): RuntimeRows {
 function browserRequest(scopeCase: ScopedPresenceBrowserCaseV1, hubOrigin: string): BackboneWorkerRequest {
   return {
     kind: "open",
+    actorIdentityGrant: { maximumItems: 1024, maximumCopyBytes: 65536, maximumCapacityBytes: 65536, maximumReleaseBytes: 65536, maximumDepth: 64 },
     documentId: scopeCase.scope.documentId,
     schema: scopeCase.schema,
     actor: `browser-shell-${scopeCase.id}`,

@@ -1,7 +1,7 @@
 //! 🧰️ Emits every explicitly authored catalog, placed design, child and representation field.
 use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot,SemioKitType,SemioKitDesign,SemioKitPiece,SemioKitConnection};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(snapshot:&SemioKitSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.kit.dsl v1\n","stdio.semio.kit.pack v1",control,|control|crate::standards::v1::subsets::kit::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn kind(value:&SemioKitType,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.string(&value.id,encoding)?;writer.delimiter(b",",encoding)?;writer.string(&value.name,encoding)?;writer.delimiter(b",",encoding)?;writer.string(&value.category,encoding)?;writer.delimiter(b"]",encoding)}

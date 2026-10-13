@@ -336,7 +336,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3CobieBuilderFacets {
         construction: Ifc2x3CobieBuilderConstruction,
         analysis: Ifc2x3CobieAnalyzerAnalysis,
-        composition: super::io::derived_composition::Ifc2x3CobieComposerComposition,
+        composition: Ifc2x3CobieComposerComposition,
     }
     builder: Ifc2x3CobieBuilder,
     analyzer: Ifc2x3CobieAnalyzer,

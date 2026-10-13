@@ -7,7 +7,7 @@ use protocol::{DiffText,DiffBinary};
 use io::sqlite::snapshot::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
 use serde::{Deserialize, Serialize};
 
-impl DiffText for crate::CollectionDiff {
+impl DiffText for CollectionDiff {
     fn print_diff(&self) -> String {
         semio_framework_pack_json::to_json_string(self)
     }
@@ -16,4 +16,3 @@ impl DiffText for crate::CollectionDiff {
     }
 }
 }
-pub use diff_codec::*;

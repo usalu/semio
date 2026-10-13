@@ -34,7 +34,7 @@ pub struct WriterDiff {
 use crate::document_child_handle_with_text;
 use crate::WriterSnapshot;
 use protocol::MutationDiff;
-use super::*;
+#[cfg(test)] use super::*;
 
 impl MutationDiff<WriterSnapshot> for WriterDiff {
     fn apply(&self, snapshot: &WriterSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WriterSnapshot> {

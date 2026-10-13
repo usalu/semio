@@ -46,8 +46,8 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
     };
     let left = view.for_window_instance(fixture["leftWindowId"].as_str().unwrap()).unwrap();
     let right = view.for_window_instance(fixture["rightWindowId"].as_str().unwrap()).unwrap();
-    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
-    let mut reopened = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut reopened = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     reopened.bind_instance_id(2).await;
     let outcome: Result<(), String> = async {
@@ -65,7 +65,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
                 "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: mutation["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };
-            app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }).await.map_err(|error| format!("{error:?}"))?;
+            app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         }
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut receipts = 0;
@@ -74,7 +74,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
                 return Err("window config operations did not finish".into());
             }
             app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-            app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.map_err(|error| format!("{error:?}"))?;
             if let Some(page) = app.take_typed_operation_result_page(1) {
                 let lane = page.lane;
                 let bytes = page.bytes().to_vec();

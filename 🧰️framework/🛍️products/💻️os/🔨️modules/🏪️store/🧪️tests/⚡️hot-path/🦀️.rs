@@ -76,8 +76,10 @@ async fn local_steps_cost_o_change_however_long_the_history() {
     assert_eq!(corpus.schema, "semio.store.hot-path/v1");
     for vector in &corpus.vectors {
         let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", &vector.id, DemoSnapshot { n: Some(0) }, None)).await;
+        let started = std::time::Instant::now();
         for n in 0..vector.warmup {
             apply(&mut store, n as i32, &mut identity).await;
+            if n % 250 == 249 { eprintln!("[DEBUG] hot-path {} warmup {} edits in {:?}", vector.id, n + 1, started.elapsed()); }
         }
         let mut next = vector.warmup as i32;
         let transaction = protocol::TransactionRef { id: TRANSACTION.into(), tool: "demo#drag".into() };

@@ -3,7 +3,7 @@
 //! mutation's diff shape), built directly from `base` + payload, never a snapshot clone. Fatal
 //! `duplicate-id` on an existing machine id.
 
-use crate::diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
+use crate::diff::{Process3dDiff, Process3dMachinesDelta};
 use crate::Process3dSnapshot;
 
 //#region 🔖️Diff

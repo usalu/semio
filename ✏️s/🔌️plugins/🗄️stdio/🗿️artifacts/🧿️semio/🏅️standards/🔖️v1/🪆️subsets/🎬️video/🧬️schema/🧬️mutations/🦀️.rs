@@ -56,7 +56,7 @@ pub mod set_sample_flags;
 pub mod set_stream_meta;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioVideoSnapshot, diff = SemioVideoDiff, schema = "SemioVideoMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -88,7 +88,7 @@ pub const KINDS: &[&str] = &["insert-stream", "remove-stream", "set-stream-meta"
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_video_mutation(mutation: &SemioVideoMutation, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<SemioVideoDiff> {
-    <SemioVideoMutation as protocol::Mutation<SemioVideoSnapshot>>::diff(mutation, base)
+    <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::diff(mutation, base)
 }
 
 

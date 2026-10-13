@@ -15,11 +15,11 @@ use semio_framework_plugin::PanelTabKind;
 use semio_framework_plugin::PanelTreeBuilder;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use semio_framework_ui_locale::LocalizedLabel;
 use std::collections::BTreeMap;
 
 //#region 🔖️Constants
+/// 🪪️ The unique id of this panel tab, a child of the framework inspection tab.
+pub const PANEL_TAB_ID: &str = "bim.panel.diagnostics";
 pub const BODY_KEY: &str = "bim.edit.diagnostics";
 pub const ROOT: &str = "bim-diagnostics";
 /// ✂️ The longest message or description a row shows, in characters (a fixed UI text holds 512 bytes).
@@ -34,7 +34,7 @@ pub const SEVERITIES: [Severity; 3] = [Severity::Error, Severity::Warning, Sever
 /// 🧱️ Stitched into the app manifest by `crate::editor::bim::create_bim_app`.
 pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
-        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
+        kind: PanelTabKind::App(PANEL_TAB_ID.into()),
         label: BimLabels::localized(|labels| labels.panel_diagnostics),
         group: PanelGroup::Details,
         body_key: Some(BODY_KEY.into()),

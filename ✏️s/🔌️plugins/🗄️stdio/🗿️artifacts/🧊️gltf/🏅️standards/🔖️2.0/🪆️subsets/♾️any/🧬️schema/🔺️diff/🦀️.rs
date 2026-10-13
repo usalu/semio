@@ -18,11 +18,8 @@
 pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>, Vec<(usize, D)>);
 
 use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
-use crate::schema::snapshot::{
-    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation,
-    GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot,
-    GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
-};
+use crate::schema::snapshot::{GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage, GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot, GltfSourceForm, GltfSparseAccessor, GltfTexture, GltfTextureInfo};
+#[cfg(test)] use crate::schema::snapshot::{GltfPerspective, GltfSparseIndices, GltfSparseValues};
 //#region 🔖️JsonPresence
 /// 🈳️ Wire form for a diff slot holding `Option<Option<GltfJson>>`. Three states must stay
 /// DISTINCT on the wire: "unchanged" (outer `None` — the key is absent, `skip_serializing_if`),

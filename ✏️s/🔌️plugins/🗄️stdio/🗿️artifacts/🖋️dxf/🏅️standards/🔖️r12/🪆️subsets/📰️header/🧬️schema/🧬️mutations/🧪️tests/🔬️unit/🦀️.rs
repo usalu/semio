@@ -139,7 +139,7 @@ async fn inverse_law() {
 
         let d = m.diff(&base);
         let mid = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
-        let back = protocol::apply_diff(d.diff().inverse(&base), &mid).expect("valid inverse diff");
+        let back = protocol::apply_diff(&d.diff().inverse(&base), &mid).expect("valid inverse diff");
         assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
     }
 }

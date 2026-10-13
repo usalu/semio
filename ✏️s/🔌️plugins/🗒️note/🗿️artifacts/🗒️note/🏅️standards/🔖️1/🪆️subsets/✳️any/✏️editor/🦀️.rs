@@ -111,7 +111,7 @@ pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel
 //#region 🔖️Utilities
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`☑️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn note_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+pub fn note_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: NOTE_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
@@ -447,7 +447,7 @@ pub struct NotePlayApp;
 
 impl ArtifactEditor for NotePlayApp {
     /// 📢️ The localized notices of the ink tool and retained route refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         note_fault_notices()
     }
 
@@ -470,7 +470,7 @@ impl ArtifactEditor for NotePlayApp {
     /// `ArtifactEditor::ROLE` is NOT restated per-impl) via `surface_app_id`.
     const DIALECT: Dialect = crate::NOTE_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::note_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::note_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
@@ -552,11 +552,11 @@ impl ArtifactEditor for NotePlayApp {
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<crate::editor::note::presence::NotePresence>::default()))
+        Some(std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<NotePresence>::default()))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<crate::editor::note::presence::NotePresence>::default()))
+        Some(std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<NotePresence>::default()))
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
@@ -1000,14 +1000,14 @@ mod example;
 //#endregion 🪢️TaxonomyMounts
 
 /// 📣️ The en/de notices of every `note.ink-*` / `note.retained.transaction` refusal code (design §20.12).
-pub fn note_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    static NOTICES: std::sync::LazyLock<[(&str, semio_framework_ui_locale::LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
+pub fn note_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 5]> = std::sync::LazyLock::new(|| {
         [
-            ("note.ink-tool.provisional", semio_framework_ui_locale::LocalizedLabel::native("The ink stroke could not be previewed.", "Der Tintenstrich konnte nicht in der Vorschau angezeigt werden.")),
-            ("note.ink-gesture.invalid", semio_framework_ui_locale::LocalizedLabel::native("The ink gesture is not valid.", "Die Tintengeste ist ungültig.")),
-            ("note.ink-events.invalid", semio_framework_ui_locale::LocalizedLabel::native("The ink input could not be read.", "Die Tinteneingabe konnte nicht gelesen werden.")),
-            ("note.ink-phase.invalid", semio_framework_ui_locale::LocalizedLabel::native("The ink gesture step is not known.", "Der Schritt der Tintengeste ist unbekannt.")),
-            ("note.retained.transaction", semio_framework_ui_locale::LocalizedLabel::native("This change must be made as one step.", "Diese Änderung muss in einem Schritt erfolgen.")),
+            ("note.ink-tool.provisional", LocalizedLabel::native("The ink stroke could not be previewed.", "Der Tintenstrich konnte nicht in der Vorschau angezeigt werden.")),
+            ("note.ink-gesture.invalid", LocalizedLabel::native("The ink gesture is not valid.", "Die Tintengeste ist ungültig.")),
+            ("note.ink-events.invalid", LocalizedLabel::native("The ink input could not be read.", "Die Tinteneingabe konnte nicht gelesen werden.")),
+            ("note.ink-phase.invalid", LocalizedLabel::native("The ink gesture step is not known.", "Der Schritt der Tintengeste ist unbekannt.")),
+            ("note.retained.transaction", LocalizedLabel::native("This change must be made as one step.", "Diese Änderung muss in einem Schritt erfolgen.")),
         ]
     });
     &*NOTICES

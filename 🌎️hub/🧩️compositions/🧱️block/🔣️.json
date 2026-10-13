@@ -1638,12 +1638,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 },
                 "reuse": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 }
               },
               "useWhen": [
@@ -1721,12 +1721,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 },
                 "reuse": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 }
               },
               "useWhen": [
@@ -1777,12 +1777,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 },
                 "reuse": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 }
               },
               "useWhen": [
@@ -2014,7 +2014,52 @@
                 "schema": {
                   "kind": "any"
                 },
-                "required": true
+                "required": false
+              },
+              {
+                "id": "edit",
+                "label": {
+                  "native": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  },
+                  "reuse": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "insert",
+                      "label": {
+                        "native": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        },
+                        "reuse": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "remove",
+                      "label": {
+                        "native": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        },
+                        "reuse": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
               },
               {
                 "id": "generation",
@@ -2066,17 +2111,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 },
                 "reuse": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 }
               },
               "useWhen": [
                 "change this value in the edited step",
-                "set the input of the mutation"
+                "set the input of the mutation",
+                "add or remove an item of a list input"
               ]
             }
           },
@@ -2201,6 +2247,46 @@
             "iconId": "eye-off",
             "args": [
               {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
                 "id": "generation",
                 "label": {
                   "native": {
@@ -2250,17 +2336,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 },
                 "reuse": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 }
               },
               "useWhen": [
                 "drop this step",
-                "skip this operation"
+                "skip this operation",
+                "withdraw a mutation from the history"
               ]
             }
           },
@@ -2418,6 +2505,126 @@
               },
               "useWhen": [
                 "discard this draft"
+              ]
+            }
+          },
+          {
+            "id": "historyEditRestore",
+            "label": {
+              "native": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              },
+              "reuse": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              }
+            },
+            "kind": "history",
+            "iconId": "undo-2",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": true
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                },
+                "reuse": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                }
+              },
+              "useWhen": [
+                "take this draft back",
+                "bring the withdrawn step back",
+                "undo one change of the history edit"
               ]
             }
           },
@@ -3303,28 +3510,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -3364,12 +3571,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -3887,7 +4094,8 @@
             "dimension": "2d",
             "componentKind": "block2d"
           }
-        }
+        },
+        "faultNotices": []
       },
       {
         "id": "s.block.block2d@1/*#viewer",
@@ -4375,28 +4583,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -4436,12 +4644,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -4642,7 +4850,8 @@
             "dimension": "",
             "componentKind": ""
           }
-        }
+        },
+        "faultNotices": []
       },
       {
         "id": "s.block.block3d@1/*#editor",
@@ -6955,12 +7164,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 },
                 "reuse": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 }
               },
               "useWhen": [
@@ -7038,12 +7247,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 },
                 "reuse": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 }
               },
               "useWhen": [
@@ -7094,12 +7303,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 },
                 "reuse": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 }
               },
               "useWhen": [
@@ -7331,7 +7540,52 @@
                 "schema": {
                   "kind": "any"
                 },
-                "required": true
+                "required": false
+              },
+              {
+                "id": "edit",
+                "label": {
+                  "native": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  },
+                  "reuse": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "insert",
+                      "label": {
+                        "native": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        },
+                        "reuse": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "remove",
+                      "label": {
+                        "native": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        },
+                        "reuse": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
               },
               {
                 "id": "generation",
@@ -7383,17 +7637,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 },
                 "reuse": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 }
               },
               "useWhen": [
                 "change this value in the edited step",
-                "set the input of the mutation"
+                "set the input of the mutation",
+                "add or remove an item of a list input"
               ]
             }
           },
@@ -7518,6 +7773,46 @@
             "iconId": "eye-off",
             "args": [
               {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
                 "id": "generation",
                 "label": {
                   "native": {
@@ -7567,17 +7862,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 },
                 "reuse": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 }
               },
               "useWhen": [
                 "drop this step",
-                "skip this operation"
+                "skip this operation",
+                "withdraw a mutation from the history"
               ]
             }
           },
@@ -7735,6 +8031,126 @@
               },
               "useWhen": [
                 "discard this draft"
+              ]
+            }
+          },
+          {
+            "id": "historyEditRestore",
+            "label": {
+              "native": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              },
+              "reuse": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              }
+            },
+            "kind": "history",
+            "iconId": "undo-2",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": true
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                },
+                "reuse": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                }
+              },
+              "useWhen": [
+                "take this draft back",
+                "bring the withdrawn step back",
+                "undo one change of the history edit"
               ]
             }
           },
@@ -8700,28 +9116,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -8761,12 +9177,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -9315,7 +9731,8 @@
             "dimension": "3d",
             "componentKind": "block3d"
           }
-        }
+        },
+        "faultNotices": []
       },
       {
         "id": "s.block.block3d@1/*#viewer",
@@ -9803,28 +10220,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -9864,12 +10281,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -10064,7 +10481,8 @@
             "dimension": "",
             "componentKind": ""
           }
-        }
+        },
+        "faultNotices": []
       },
       {
         "id": "s.block.block5d@1/*#editor",
@@ -12478,12 +12896,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 },
                 "reuse": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 }
               },
               "useWhen": [
@@ -12561,12 +12979,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 },
                 "reuse": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 }
               },
               "useWhen": [
@@ -12617,12 +13035,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 },
                 "reuse": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 }
               },
               "useWhen": [
@@ -12854,7 +13272,52 @@
                 "schema": {
                   "kind": "any"
                 },
-                "required": true
+                "required": false
+              },
+              {
+                "id": "edit",
+                "label": {
+                  "native": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  },
+                  "reuse": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "insert",
+                      "label": {
+                        "native": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        },
+                        "reuse": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "remove",
+                      "label": {
+                        "native": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        },
+                        "reuse": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
               },
               {
                 "id": "generation",
@@ -12906,17 +13369,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 },
                 "reuse": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 }
               },
               "useWhen": [
                 "change this value in the edited step",
-                "set the input of the mutation"
+                "set the input of the mutation",
+                "add or remove an item of a list input"
               ]
             }
           },
@@ -13041,6 +13505,46 @@
             "iconId": "eye-off",
             "args": [
               {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
                 "id": "generation",
                 "label": {
                   "native": {
@@ -13090,17 +13594,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 },
                 "reuse": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 }
               },
               "useWhen": [
                 "drop this step",
-                "skip this operation"
+                "skip this operation",
+                "withdraw a mutation from the history"
               ]
             }
           },
@@ -13258,6 +13763,126 @@
               },
               "useWhen": [
                 "discard this draft"
+              ]
+            }
+          },
+          {
+            "id": "historyEditRestore",
+            "label": {
+              "native": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              },
+              "reuse": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              }
+            },
+            "kind": "history",
+            "iconId": "undo-2",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": true
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                },
+                "reuse": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                }
+              },
+              "useWhen": [
+                "take this draft back",
+                "bring the withdrawn step back",
+                "undo one change of the history edit"
               ]
             }
           },
@@ -14143,28 +14768,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -14204,12 +14829,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -14738,7 +15363,8 @@
             "dimension": "5d",
             "componentKind": "block5d"
           }
-        }
+        },
+        "faultNotices": []
       },
       {
         "id": "s.block.block5d@1/*#viewer",
@@ -15226,28 +15852,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -15287,12 +15913,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -15487,7 +16113,8 @@
             "dimension": "",
             "componentKind": ""
           }
-        }
+        },
+        "faultNotices": []
       }
     ],
     "examples": [
@@ -15655,7 +16282,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -15888,11 +16515,247 @@
         "bodyKey": "framework.body.history",
         "children": []
       }
+    ],
+    "ioEntries": [
+      {
+        "owner": {
+          "artifactKind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block2d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block3d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.block.block5d",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "import"
+      }
     ]
   },
   "hashes": {
-    "wasmSha256": "8ca498a53d4839e9a469d2273a48a0d7bc50e997f55f97eb00a2d761388eb4c2",
-    "coreWasmSha256": "0d5f02c3de481924a140f7945bbd8545db9d26d0aa99f4b8bed8beda4fc06463",
-    "descriptorSha256": "e56fee456eea7862262333bb2f7b06e5ea6dfd323c737ff6cccfb0cf172a72fc"
+    "wasmSha256": "e53ab4c9d9ea230fd9c7ea0c9b8bebb0f2be2f18cc784f9aa6a048ec46608a41",
+    "coreWasmSha256": "71c4d50560e15a2ee1e45dc2e98d590a68d11a81c553b391ab6d9791da4cc189",
+    "descriptorSha256": "0c3a718a815925dae8eaefaaaa73de4d98e3934b5d172a9a4e53093da294f52b"
   }
 }

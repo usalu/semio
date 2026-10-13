@@ -15,4 +15,3 @@ impl protocol::OpBinary for RewritingWindowConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

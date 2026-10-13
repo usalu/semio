@@ -1316,7 +1316,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec ZipBuilderFacets {
         construction: ZipBuilderConstruction,
         analysis: ZipAnalyzerAnalysis,
-        composition: crate::standards::v2_0::subsets::base::io::derived_composition::ZipComposerComposition,
+        composition: ZipComposerComposition,
     }
     builder: ZipBuilder,
     analyzer: ZipAnalyzer,

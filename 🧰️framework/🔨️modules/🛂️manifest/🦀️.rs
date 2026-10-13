@@ -407,14 +407,14 @@ impl ReferenceIdType {
             return None;
         }
         match self {
-            Self::String => Some(semio_framework_value::DslValue::String(id.to_string())),
+            Self::String => Some(DslValue::String(id.to_string())),
             Self::Integer => {
                 let digits = id.strip_prefix('-').unwrap_or(id);
                 if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
                     return None;
                 }
                 let value = id.parse::<i64>().ok().filter(|value| value.unsigned_abs() <= REFERENCE_ID_INTEGER_MAX)?;
-                Some(if value < 0 { semio_framework_value::DslValue::int(value) } else { semio_framework_value::DslValue::uint(value as u64) })
+                Some(if value < 0 { DslValue::int(value) } else { DslValue::uint(value as u64) })
             }
         }
     }
@@ -427,8 +427,8 @@ pub const REFERENCE_ID_INTEGER_MAX: u64 = (1 << 53) - 1;
 /// selection carries); `None` for anything else. TS twin: `referenceIdText`.
 pub fn reference_id_text(value: &DslValue) -> Option<String> {
     match value {
-        semio_framework_value::DslValue::String(id) if !id.is_empty() => Some(id.clone()),
-        semio_framework_value::DslValue::Number(number) => match (number.as_i64(), number.as_u64()) {
+        DslValue::String(id) if !id.is_empty() => Some(id.clone()),
+        DslValue::Number(number) => match (number.as_i64(), number.as_u64()) {
             (Some(value), _) if value.unsigned_abs() <= REFERENCE_ID_INTEGER_MAX => Some(value.to_string()),
             (None, Some(value)) if value <= REFERENCE_ID_INTEGER_MAX => Some(value.to_string()),
             _ => None,
@@ -922,17 +922,17 @@ impl ActionArgDef {
     /// `default` and the `description` resolved to one locale × terminology.
     pub fn json_schema(&self, terminology: Terminology, locale: Locale) -> DslValue {
         let value = arg_schema_json_schema(&self.schema, terminology, locale);
-        let value = if self.nullable { semio_framework_value::DslValue::object([("anyOf".to_string(), semio_framework_value::DslValue::Array(vec![value, DslValue::object([("type".to_string(), DslValue::String("null".to_string()))])]))]) } else { value };
-        let semio_framework_value::DslValue::Object(mut entries) = value else {
+        let value = if self.nullable { DslValue::object([("anyOf".to_string(), DslValue::Array(vec![value, DslValue::object([("type".to_string(), DslValue::String("null".to_string()))])]))]) } else { value };
+        let DslValue::Object(mut entries) = value else {
             unreachable!("arg_schema_json_schema always returns an object");
         };
         if let Some(description) = &self.description {
-            entries.push(("description".to_string(), semio_framework_value::DslValue::String(description.resolve(terminology, locale).to_string())));
+            entries.push(("description".to_string(), DslValue::String(description.resolve(terminology, locale).to_string())));
         }
         if let Some(default) = &self.default {
             entries.push(("default".to_string(), default.clone()));
         }
-        semio_framework_value::DslValue::Object(entries)
+        DslValue::Object(entries)
     }
 }
 
@@ -945,13 +945,13 @@ fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
         ArgFormat::ArtifactRef => "artifactRef",
         ArgFormat::WindowId => "windowId",
         ArgFormat::EntityId { entity_kind } => {
-            entries.push(("x-semio-entity-kind".to_string(), semio_framework_value::DslValue::String(entity_kind.clone())));
+            entries.push(("x-semio-entity-kind".to_string(), DslValue::String(entity_kind.clone())));
             "entityId"
         }
         ArgFormat::IconId => "iconId",
         ArgFormat::Color => "color",
         ArgFormat::Uri => {
-            entries.push(("format".to_string(), semio_framework_value::DslValue::String("uri".to_string())));
+            entries.push(("format".to_string(), DslValue::String("uri".to_string())));
             "uri"
         }
         ArgFormat::Json => "json",
@@ -960,16 +960,16 @@ fn apply_arg_format(entries: &mut Vec<(String, DslValue)>, format: &ArgFormat) {
         ArgFormat::DocumentRevision => "documentRevision",
         ArgFormat::TargetRevision => "targetRevision",
         ArgFormat::ArtifactKind { roles } => {
-            entries.push(("x-semio-roles".to_string(), semio_framework_value::DslValue::Array(roles.iter().map(semio_framework_value::ToValue::to_value).collect())));
+            entries.push(("x-semio-roles".to_string(), DslValue::Array(roles.iter().map(ToValue::to_value).collect())));
             "artifactKind"
         }
         ArgFormat::SurfaceApp { roles, dialect_arg } => {
-            entries.push(("x-semio-roles".to_string(), semio_framework_value::DslValue::Array(roles.iter().map(semio_framework_value::ToValue::to_value).collect())));
-            entries.push(("x-semio-dialect-arg".to_string(), semio_framework_value::DslValue::String(dialect_arg.clone())));
+            entries.push(("x-semio-roles".to_string(), DslValue::Array(roles.iter().map(ToValue::to_value).collect())));
+            entries.push(("x-semio-dialect-arg".to_string(), DslValue::String(dialect_arg.clone())));
             "surfaceApp"
         }
     };
-    entries.push(("x-semio-format".to_string(), semio_framework_value::DslValue::String(tag.to_string())));
+    entries.push(("x-semio-format".to_string(), DslValue::String(tag.to_string())));
 }
 
 /// 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
@@ -982,7 +982,7 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
         ArgSchema::String { options, option_source, min_len, max_len, pattern, format } => {
             let mut entries = vec![("type".to_string(), DslValue::String("string".to_string()))];
             if !options.is_empty() && option_source.is_none() {
-                entries.push(("enum".to_string(), semio_framework_value::DslValue::Array(options.iter().map(|option| semio_framework_value::DslValue::String(option.value.clone())).collect())));
+                entries.push(("enum".to_string(), DslValue::Array(options.iter().map(|option| DslValue::String(option.value.clone())).collect())));
             }
             if let Some(min_len) = min_len {
                 entries.push(("minLength".to_string(), min_len.to_value()));
@@ -991,12 +991,12 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 entries.push(("maxLength".to_string(), max_len.to_value()));
             }
             if let Some(pattern) = pattern {
-                entries.push(("pattern".to_string(), semio_framework_value::DslValue::String(pattern.clone())));
+                entries.push(("pattern".to_string(), DslValue::String(pattern.clone())));
             }
             if let Some(format) = format {
                 apply_arg_format(&mut entries, format);
             }
-            semio_framework_value::DslValue::Object(entries)
+            DslValue::Object(entries)
         }
         ArgSchema::Number { min, min_exclusive, max, max_exclusive, integer, unit, .. } => {
             let mut entries = vec![("type".to_string(), DslValue::String(if *integer { "integer" } else { "number" }.to_string()))];
@@ -1007,15 +1007,15 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 entries.push((if *max_exclusive { "exclusiveMaximum" } else { "maximum" }.to_string(), max.to_value()));
             }
             if let Some(unit) = unit {
-                entries.push(("x-semio-unit".to_string(), semio_framework_value::DslValue::String(unit.clone())));
+                entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
             }
-            semio_framework_value::DslValue::Object(entries)
+            DslValue::Object(entries)
         }
-        ArgSchema::Boolean => semio_framework_value::DslValue::object([("type".to_string(), semio_framework_value::DslValue::String("boolean".to_string()))]),
+        ArgSchema::Boolean => DslValue::object([("type".to_string(), DslValue::String("boolean".to_string()))]),
         ArgSchema::Vector { dims, min, max, unit, .. } => {
             let mut component = vec![("type".to_string(), DslValue::String("number".to_string()))];
-            component.extend(min.iter().map(|min| ("minimum".to_string(), semio_framework_value::DslValue::json_number(*min))));
-            component.extend(max.iter().map(|max| ("maximum".to_string(), semio_framework_value::DslValue::json_number(*max))));
+            component.extend(min.iter().map(|min| ("minimum".to_string(), DslValue::json_number(*min))));
+            component.extend(max.iter().map(|max| ("maximum".to_string(), DslValue::json_number(*max))));
             let mut entries = vec![
                 ("type".to_string(), DslValue::String("array".to_string())),
                 ("items".to_string(), DslValue::Object(component)),
@@ -1023,18 +1023,18 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 ("maxItems".to_string(), DslValue::uint(u64::from(*dims))),
             ];
             if let Some(unit) = unit {
-                entries.push(("x-semio-unit".to_string(), semio_framework_value::DslValue::String(unit.clone())));
+                entries.push(("x-semio-unit".to_string(), DslValue::String(unit.clone())));
             }
-            semio_framework_value::DslValue::Object(entries)
+            DslValue::Object(entries)
         }
         ArgSchema::Reference { kinds, domain, granularity, many, min_items, max_items, id_type } => {
             let mut reference = vec![("kind".to_string(), DslValue::Array(kinds.iter().map(|kind| DslValue::String(kind.clone())).collect()))];
-            reference.extend(domain.iter().map(|domain| ("domain".to_string(), semio_framework_value::DslValue::String(domain.clone()))));
-            reference.extend(granularity.iter().map(|granularity| ("granularity".to_string(), semio_framework_value::DslValue::String(granularity.clone()))));
-            let id = semio_framework_value::DslValue::object([
-                ("type".to_string(), semio_framework_value::DslValue::String(if id_type.is_string() { "string" } else { "integer" }.to_string())),
-                ("x-semio-format".to_string(), semio_framework_value::DslValue::String("reference".to_string())),
-                ("x-semio-ref".to_string(), semio_framework_value::DslValue::Object(reference)),
+            reference.extend(domain.iter().map(|domain| ("domain".to_string(), DslValue::String(domain.clone()))));
+            reference.extend(granularity.iter().map(|granularity| ("granularity".to_string(), DslValue::String(granularity.clone()))));
+            let id = DslValue::object([
+                ("type".to_string(), DslValue::String(if id_type.is_string() { "string" } else { "integer" }.to_string())),
+                ("x-semio-format".to_string(), DslValue::String("reference".to_string())),
+                ("x-semio-ref".to_string(), DslValue::Object(reference)),
             ]);
             if !*many {
                 return id;
@@ -1042,7 +1042,7 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
             let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), id)];
             entries.extend(min_items.iter().map(|min_items| ("minItems".to_string(), min_items.to_value())));
             entries.extend(max_items.iter().map(|max_items| ("maxItems".to_string(), max_items.to_value())));
-            semio_framework_value::DslValue::Object(entries)
+            DslValue::Object(entries)
         }
         ArgSchema::Array { items, min_items, max_items } => {
             let mut entries = vec![("type".to_string(), DslValue::String("array".to_string())), ("items".to_string(), arg_schema_json_schema(items, terminology, locale))];
@@ -1052,7 +1052,7 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
             if let Some(max_items) = max_items {
                 entries.push(("maxItems".to_string(), max_items.to_value()));
             }
-            semio_framework_value::DslValue::Object(entries)
+            DslValue::Object(entries)
         }
         ArgSchema::Object { fields } => {
             let mut properties = Vec::new();
@@ -1060,7 +1060,7 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
             for field in fields {
                 properties.push((field.key(), field.json_schema(terminology, locale)));
                 if field.required {
-                    required.push(semio_framework_value::DslValue::String(field.key()));
+                    required.push(DslValue::String(field.key()));
                 }
             }
             let mut entries = vec![
@@ -1069,11 +1069,11 @@ fn arg_schema_json_schema(schema: &ArgSchema, terminology: Terminology, locale: 
                 ("additionalProperties".to_string(), DslValue::Bool(false)),
             ];
             if !required.is_empty() {
-                entries.push(("required".to_string(), semio_framework_value::DslValue::Array(required)));
+                entries.push(("required".to_string(), DslValue::Array(required)));
             }
-            semio_framework_value::DslValue::Object(entries)
+            DslValue::Object(entries)
         }
-        ArgSchema::Any => semio_framework_value::DslValue::Object(vec![]),
+        ArgSchema::Any => DslValue::Object(vec![]),
     }
 }
 //#endregion 🔖️ActionArgs
@@ -1241,7 +1241,7 @@ pub fn input_label_glossary() -> &'static BTreeMap<String, LocalizedLabel> {
     static GLOSSARY: std::sync::OnceLock<BTreeMap<String, LocalizedLabel>> = std::sync::OnceLock::new();
     GLOSSARY.get_or_init(|| {
         let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(INPUT_LABEL_GLOSSARY_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the input label glossary is JSON"));
-        let labels = document.get("labels").and_then(semio_framework_value::DslValue::as_object).expect("the input label glossary carries labels");
+        let labels = document.get("labels").and_then(DslValue::as_object).expect("the input label glossary carries labels");
         labels.iter().map(|(name, label)| (name.clone(), input_localized_text(label).expect("every glossary label names every locale"))).collect()
     })
 }
@@ -1307,7 +1307,7 @@ pub fn registered_input_schema_document(id: &str) -> Option<DslValue> {
     texts.extend(FRAMEWORK_INPUT_SCHEMA_DOCUMENTS.into_iter().filter(|text| text.contains(id)));
     texts.into_iter().find_map(|text| {
         let document = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?);
-        (document.get("$id").and_then(semio_framework_value::DslValue::as_str) == Some(id)).then_some(document)
+        (document.get("$id").and_then(DslValue::as_str) == Some(id)).then_some(document)
     })
 }
 
@@ -1321,13 +1321,13 @@ pub fn mutation_input_instance(schema_json: &str, resolver: &dyn InputSchemaReso
     let mut entries = payload.as_object().map(<[(String, DslValue)]>::to_vec).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", "a mutation payload is an object"))?;
     if root.node.get("properties").is_none() && root.node.get("allOf").is_none() && input_union(&root.node).is_some() {
         let (key, variants) = reader.variants(&root, "")?;
-        let chosen = payload.get(&key).and_then(semio_framework_value::DslValue::as_str).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("a union payload names its variant in {key}")))?;
+        let chosen = payload.get(&key).and_then(DslValue::as_str).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("a union payload names its variant in {key}")))?;
         root = variants.into_iter().find(|variant| variant.value == chosen).map(|variant| variant.member).ok_or_else(|| input_error(InputSchemaErrorCode::Malformed, "", format!("{chosen} is no variant of this payload union")))?;
     }
     let mut members = Vec::new();
     reader.members(&root, "", 0, &mut members)?;
     for (document, node) in &members {
-        for (key, property) in node.get("properties").and_then(semio_framework_value::DslValue::as_object).unwrap_or_default() {
+        for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
             if entries.iter().any(|(name, _)| name == key) {
                 continue;
             }
@@ -1336,12 +1336,12 @@ pub fn mutation_input_instance(schema_json: &str, resolver: &dyn InputSchemaReso
             }
         }
     }
-    Ok(semio_framework_value::DslValue::Object(entries))
+    Ok(DslValue::Object(entries))
 }
 
 /// 🔀️ The `oneOf`/`anyOf` branches of a schema node, if it is a union.
 fn input_union(node: &DslValue) -> Option<&[DslValue]> {
-    node.get("oneOf").or_else(|| node.get("anyOf")).and_then(semio_framework_value::DslValue::as_array)
+    node.get("oneOf").or_else(|| node.get("anyOf")).and_then(DslValue::as_array)
 }
 
 /// 🔢️ The framework value schema, whose `$defs/Binary64` (the exact binary64 word) and `$defs/Binary64Transport` (that word or a
@@ -1360,23 +1360,23 @@ const INPUT_SHAPE_ANNOTATIONS: [&str; 6] = ["title", "description", "$comment", 
 /// validate the same instances.
 fn input_shape(node: &DslValue) -> DslValue {
     match node {
-        semio_framework_value::DslValue::Object(entries) => {
+        DslValue::Object(entries) => {
             let mut kept: Vec<(String, DslValue)> = entries
                 .iter()
                 .filter(|(key, _)| !key.starts_with("x-") && !INPUT_SHAPE_ANNOTATIONS.contains(&key.as_str()))
                 .map(|(key, value)| match (key.as_str(), value) {
-                    ("required", semio_framework_value::DslValue::Array(names)) => {
+                    ("required", DslValue::Array(names)) => {
                         let mut names = names.clone();
                         names.sort_by(|left, right| left.as_str().cmp(&right.as_str()));
-                        (key.clone(), semio_framework_value::DslValue::Array(names))
+                        (key.clone(), DslValue::Array(names))
                     }
                     _ => (key.clone(), input_shape(value)),
                 })
                 .collect();
             kept.sort_by(|left, right| left.0.cmp(&right.0));
-            semio_framework_value::DslValue::Object(kept)
+            DslValue::Object(kept)
         }
-        semio_framework_value::DslValue::Array(items) => semio_framework_value::DslValue::Array(items.iter().map(input_shape).collect()),
+        DslValue::Array(items) => DslValue::Array(items.iter().map(input_shape).collect()),
         other => other.clone(),
     }
 }
@@ -1418,7 +1418,7 @@ fn input_pointer(parent: &str, key: &str) -> String {
 /// 🌐️ A `{<locale>: text}` map naming every locale, or a `{<terminology>: {<locale>: text}}` matrix naming every cell.
 fn input_localized_text(value: &DslValue) -> Result<LocalizedLabel, InputSchemaErrorCode> {
     let entries = value.as_object().ok_or(InputSchemaErrorCode::UiInvalid)?;
-    let cell = |map: &DslValue, locale: Locale| map.get(locale.as_str()).and_then(semio_framework_value::DslValue::as_str).filter(|text| !text.is_empty()).map(str::to_string);
+    let cell = |map: &DslValue, locale: Locale| map.get(locale.as_str()).and_then(DslValue::as_str).filter(|text| !text.is_empty()).map(str::to_string);
     if entries.iter().all(|(key, _)| Locale::parse(key).is_some()) {
         if Locale::ALL.iter().any(|locale| cell(value, *locale).is_none()) {
             return Err(InputSchemaErrorCode::LocaleMissing);
@@ -1440,11 +1440,11 @@ fn input_localized_text(value: &DslValue) -> Result<LocalizedLabel, InputSchemaE
 fn input_type(node: &DslValue) -> Option<&'static str> {
     const TYPES: [&str; 6] = ["string", "integer", "number", "boolean", "object", "array"];
     let named: Vec<&str> = match node.get("type") {
-        Some(semio_framework_value::DslValue::String(name)) => vec![name.as_str()],
-        Some(semio_framework_value::DslValue::Array(names)) => names.iter().filter_map(semio_framework_value::DslValue::as_str).filter(|name| *name != "null").collect(),
+        Some(DslValue::String(name)) => vec![name.as_str()],
+        Some(DslValue::Array(names)) => names.iter().filter_map(DslValue::as_str).filter(|name| *name != "null").collect(),
         _ if node.get("properties").is_some() => vec!["object"],
         _ if node.get("items").is_some() => vec!["array"],
-        _ if node.get("enum").and_then(semio_framework_value::DslValue::as_array).is_some_and(|values| !values.is_empty() && values.iter().all(|value| value.as_str().is_some())) => vec!["string"],
+        _ if node.get("enum").and_then(DslValue::as_array).is_some_and(|values| !values.is_empty() && values.iter().all(|value| value.as_str().is_some())) => vec!["string"],
         _ => Vec::new(),
     };
     match named.as_slice() {
@@ -1486,7 +1486,7 @@ impl ResolvedInput {
     }
 
     fn ui_str(&self, key: &str) -> Option<&str> {
-        self.ui(key).and_then(semio_framework_value::DslValue::as_str)
+        self.ui(key).and_then(DslValue::as_str)
     }
 }
 
@@ -1558,8 +1558,8 @@ impl<'r> InputSchemaReader<'r> {
             let mut current = start;
             for segment in &fragment_path {
                 current = match current {
-                    semio_framework_value::DslValue::Object(_) => current.get(segment)?,
-                    semio_framework_value::DslValue::Array(items) => items.get(segment.parse::<usize>().ok()?)?,
+                    DslValue::Object(_) => current.get(segment)?,
+                    DslValue::Array(items) => items.get(segment.parse::<usize>().ok()?)?,
                     _ => return None,
                 };
             }
@@ -1593,16 +1593,16 @@ impl<'r> InputSchemaReader<'r> {
                     }
                 }
             }
-            if let Some(reference) = resolved.node.get("$ref").and_then(semio_framework_value::DslValue::as_str).map(str::to_string) {
+            if let Some(reference) = resolved.node.get("$ref").and_then(DslValue::as_str).map(str::to_string) {
                 let (document, node) = self.target(&resolved.document, &reference, pointer)?;
                 resolved.refs.push(format!("{}#{}", document.as_deref().unwrap_or_default(), reference.split_once('#').map_or("", |(_, fragment)| fragment)));
                 resolved.document = document;
                 resolved.node = node;
                 continue;
             }
-            let union = resolved.node.get("oneOf").or_else(|| resolved.node.get("anyOf")).and_then(semio_framework_value::DslValue::as_array).map(<[DslValue]>::to_vec);
+            let union = resolved.node.get("oneOf").or_else(|| resolved.node.get("anyOf")).and_then(DslValue::as_array).map(<[DslValue]>::to_vec);
             if let Some(branches) = union {
-                let null = |branch: &DslValue| branch.get("type").and_then(semio_framework_value::DslValue::as_str) == Some("null") && branch.as_object().is_some_and(|entries| entries.len() == 1);
+                let null = |branch: &DslValue| branch.get("type").and_then(DslValue::as_str) == Some("null") && branch.as_object().is_some_and(|entries| entries.len() == 1);
                 let concrete: Vec<&DslValue> = branches.iter().filter(|branch| !null(branch)).collect();
                 if concrete.len() == 1 && concrete.len() < branches.len() {
                     resolved.node = concrete[0].clone();
@@ -1610,12 +1610,12 @@ impl<'r> InputSchemaReader<'r> {
                     continue;
                 }
             }
-            resolved.nullable |= resolved.node.get("type").and_then(semio_framework_value::DslValue::as_array).is_some_and(|types| types.iter().any(|name| name.as_str() == Some("null")));
+            resolved.nullable |= resolved.node.get("type").and_then(DslValue::as_array).is_some_and(|types| types.iter().any(|name| name.as_str() == Some("null")));
             if self.numeric_transport(&resolved.document, &resolved.node, pointer) {
                 if input_shape(&resolved.node) == input_numeric_transport().0 {
                     self.recover(Err(input_error(InputSchemaErrorCode::WordOnlyFloat, pointer, "a number input accepts only the exact binary64 word, never the plain number its payload and every draft carry; reference framework/value/schema.json#/$defs/Binary64Transport")), || ())?;
                 }
-                resolved.node = semio_framework_value::DslValue::Object(vec![("type".to_string(), DslValue::String("number".to_string()))]);
+                resolved.node = DslValue::Object(vec![("type".to_string(), DslValue::String("number".to_string()))]);
             }
             return Ok(resolved);
         }
@@ -1640,8 +1640,8 @@ impl<'r> InputSchemaReader<'r> {
             .map(|branch| {
                 let (mut owner, mut current) = (document.clone(), branch.clone());
                 for _ in 0..INPUT_REF_DEPTH {
-                    let Some(reference) = current.get("$ref").and_then(semio_framework_value::DslValue::as_str).map(str::to_string) else { break };
-                    let Ok(target) = self.target(&owner, &reference, pointer) else { return semio_framework_value::DslValue::Null };
+                    let Some(reference) = current.get("$ref").and_then(DslValue::as_str).map(str::to_string) else { break };
+                    let Ok(target) = self.target(&owner, &reference, pointer) else { return DslValue::Null };
                     (owner, current) = target;
                 }
                 input_shape(&current)
@@ -1656,7 +1656,7 @@ impl<'r> InputSchemaReader<'r> {
             return Err(input_error(InputSchemaErrorCode::Malformed, pointer, "an allOf composition exceeds 32 levels"));
         }
         members.push((object.document.clone(), object.node.clone()));
-        for member in object.node.get("allOf").and_then(semio_framework_value::DslValue::as_array).unwrap_or_default() {
+        for member in object.node.get("allOf").and_then(DslValue::as_array).unwrap_or_default() {
             let resolved = self.resolve(object.document.clone(), member.clone(), pointer)?;
             self.members(&resolved, pointer, depth + 1, members)?;
         }
@@ -1673,12 +1673,12 @@ impl<'r> InputSchemaReader<'r> {
             self.members(&member, pointer, 0, &mut composed)?;
             let mut pins: Vec<(String, Option<String>, ResolvedInput)> = Vec::new();
             for (document, node) in &composed {
-                for (key, property) in node.get("properties").and_then(semio_framework_value::DslValue::as_object).unwrap_or_default() {
+                for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
                     if pins.iter().any(|(name, _, _)| name == key) {
                         continue;
                     }
                     let resolved = self.resolve(document.clone(), property.clone(), &input_pointer(pointer, key))?;
-                    let value = resolved.node.get("const").and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
+                    let value = resolved.node.get("const").and_then(DslValue::as_str).map(str::to_string);
                     pins.push((key.clone(), value, resolved));
                 }
             }
@@ -1734,11 +1734,11 @@ impl<'r> InputSchemaReader<'r> {
     fn fields(&self, object: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgDef>, InputSchemaError> {
         let mut members = Vec::new();
         self.members(object, pointer, 0, &mut members)?;
-        let required: Vec<&str> = members.iter().flat_map(|(_, node)| node.get("required").and_then(semio_framework_value::DslValue::as_array).unwrap_or_default().iter().filter_map(semio_framework_value::DslValue::as_str)).collect();
+        let required: Vec<&str> = members.iter().flat_map(|(_, node)| node.get("required").and_then(DslValue::as_array).unwrap_or_default().iter().filter_map(DslValue::as_str)).collect();
         let mut fields = Vec::new();
         let mut seen = Vec::new();
         for (document, node) in &members {
-            for (key, property) in node.get("properties").and_then(semio_framework_value::DslValue::as_object).unwrap_or_default() {
+            for (key, property) in node.get("properties").and_then(DslValue::as_object).unwrap_or_default() {
                 if seen.contains(&key.as_str()) {
                     continue;
                 }
@@ -1756,7 +1756,7 @@ impl<'r> InputSchemaReader<'r> {
     fn input(&self, key: &str, input: &ResolvedInput, required: bool, pointer: &str) -> Result<Option<ActionArgDef>, InputSchemaError> {
         let role = match input.ui("role") {
             None => None,
-            Some(semio_framework_value::DslValue::String(role)) if ["value", "target", "discriminator"].contains(&role.as_str()) => Some(role.as_str()),
+            Some(DslValue::String(role)) if ["value", "target", "discriminator"].contains(&role.as_str()) => Some(role.as_str()),
             Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "role is value, target or discriminator")), || None)?,
         };
         if role == Some("discriminator") || input.node.get("const").is_some() {
@@ -1764,7 +1764,7 @@ impl<'r> InputSchemaReader<'r> {
         }
         let widget = match input.ui("widget") {
             None => None,
-            Some(semio_framework_value::DslValue::String(widget)) if ["slider", "stepper", "dial", "toggle", "select", "segmented", "text", "multiline", "vector", "color", "reference", "hidden"].contains(&widget.as_str()) => Some(widget.as_str()),
+            Some(DslValue::String(widget)) if ["slider", "stepper", "dial", "toggle", "select", "segmented", "text", "multiline", "vector", "color", "reference", "hidden"].contains(&widget.as_str()) => Some(widget.as_str()),
             Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "widget is not a declared widget")), || None)?,
         };
         let label = match input.ui("label") {
@@ -1776,7 +1776,7 @@ impl<'r> InputSchemaReader<'r> {
         let description = self.recover(description, || None)?;
         let group = match input.ui("group") {
             None => None,
-            Some(semio_framework_value::DslValue::String(group)) if !group.is_empty() => Some(group.clone()),
+            Some(DslValue::String(group)) if !group.is_empty() => Some(group.clone()),
             Some(_) => self.recover(Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "group is a non-empty string")), || None)?,
         };
         let order = match input.ui("order") {
@@ -1853,16 +1853,16 @@ impl<'r> InputSchemaReader<'r> {
             Some("string") => Ok(ArgSchema::String {
                 options: input_options(input, pointer)?,
                 option_source: input_option_source(input, pointer)?,
-                min_len: input.node.get("minLength").and_then(semio_framework_value::DslValue::as_u64).map(|length| length as u32),
-                max_len: input.node.get("maxLength").and_then(semio_framework_value::DslValue::as_u64).map(|length| length as u32),
-                pattern: input.node.get("pattern").and_then(semio_framework_value::DslValue::as_str).map(str::to_string),
-                format: (input.node.get("format").and_then(semio_framework_value::DslValue::as_str) == Some("uri")).then_some(ArgFormat::Uri),
+                min_len: input.node.get("minLength").and_then(DslValue::as_u64).map(|length| length as u32),
+                max_len: input.node.get("maxLength").and_then(DslValue::as_u64).map(|length| length as u32),
+                pattern: input.node.get("pattern").and_then(DslValue::as_str).map(str::to_string),
+                format: (input.node.get("format").and_then(DslValue::as_str) == Some("uri")).then_some(ArgFormat::Uri),
             }),
             Some(number @ ("integer" | "number")) => input_number(input, number == "integer", pointer),
             Some("boolean") => Ok(ArgSchema::Boolean),
             Some("object") if input.node.get("properties").is_some() || input.node.get("allOf").is_some() => Ok(ArgSchema::Object { fields: self.fields(input, pointer)? }),
             Some("array") => {
-                let bound = |name: &str| input.node.get(name).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as u32);
+                let bound = |name: &str| input.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
                 let (min_items, max_items) = (bound("minItems"), bound("maxItems"));
                 let numeric = matches!(item_kind, Some("integer" | "number"));
                 let fixed = min_items.filter(|count| Some(*count) == max_items && (2..=4).contains(count));
@@ -1923,7 +1923,7 @@ impl<'r> InputSchemaReader<'r> {
                     Some(inner) => self.item_schema(&self.resolve(items.document.clone(), inner.clone(), &format!("{pointer}/-"))?, &format!("{pointer}/-"))?,
                     None => ArgSchema::Any,
                 };
-                let bound = |name: &str| items.node.get(name).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as u32);
+                let bound = |name: &str| items.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
                 Ok(ArgSchema::Array { items: Box::new(inner), min_items: bound("minItems"), max_items: bound("maxItems") })
             }
             _ => Ok(ArgSchema::Any),
@@ -1937,19 +1937,19 @@ impl<'r> InputSchemaReader<'r> {
             return Err(invalid("ref is {kind, domain?, granularity?}"));
         }
         let kinds = match reference.and_then(|reference| reference.get("kind")) {
-            Some(semio_framework_value::DslValue::String(kind)) if !kind.is_empty() => vec![kind.clone()],
-            Some(semio_framework_value::DslValue::Array(kinds)) if !kinds.is_empty() && kinds.iter().all(|kind| kind.as_str().is_some_and(|kind| !kind.is_empty())) => kinds.iter().filter_map(semio_framework_value::DslValue::as_str).map(str::to_string).collect(),
+            Some(DslValue::String(kind)) if !kind.is_empty() => vec![kind.clone()],
+            Some(DslValue::Array(kinds)) if !kinds.is_empty() && kinds.iter().all(|kind| kind.as_str().is_some_and(|kind| !kind.is_empty())) => kinds.iter().filter_map(DslValue::as_str).map(str::to_string).collect(),
             Some(_) => return Err(invalid("ref.kind is a non-empty string or a non-empty array of them")),
             None => vec![inferred_kind.or_else(|| input_inferred_reference_kind(key, many)).ok_or_else(|| invalid("a target names its ref.kind"))?],
         };
         let text = |name: &str| -> Result<Option<String>, InputSchemaError> {
             match reference.and_then(|reference| reference.get(name)) {
                 None => Ok(None),
-                Some(semio_framework_value::DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
+                Some(DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
                 Some(_) => Err(invalid("ref.domain and ref.granularity are non-empty strings")),
             }
         };
-        let bound = |name: &str| input.node.get(name).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as u32);
+        let bound = |name: &str| input.node.get(name).and_then(DslValue::as_u64).map(|count| count as u32);
         Ok(ArgSchema::Reference { kinds, domain: text("domain")?, granularity: text("granularity")?, many, min_items: many.then(|| bound("minItems")).flatten(), max_items: many.then(|| bound("maxItems")).flatten(), id_type })
     }
 }
@@ -1957,7 +1957,7 @@ impl<'r> InputSchemaReader<'r> {
 fn input_string(input: &ResolvedInput, key: &str, pointer: &str) -> Result<Option<String>, InputSchemaError> {
     match input.ui(key) {
         None => Ok(None),
-        Some(semio_framework_value::DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
+        Some(DslValue::String(value)) if !value.is_empty() => Ok(Some(value.clone())),
         Some(_) => Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, format!("{key} is a non-empty string"))),
     }
 }
@@ -1977,7 +1977,7 @@ fn input_positive(input: &ResolvedInput, key: &str, pointer: &str) -> Result<Opt
 }
 
 fn input_options(input: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgOption>, InputSchemaError> {
-    let Some(values) = input.node.get("enum").and_then(semio_framework_value::DslValue::as_array) else { return Ok(Vec::new()) };
+    let Some(values) = input.node.get("enum").and_then(DslValue::as_array) else { return Ok(Vec::new()) };
     let labels = input.ui("options");
     if labels.is_some_and(|labels| labels.as_object().is_none_or(|entries| entries.iter().any(|(value, _)| !values.iter().any(|candidate| candidate.as_str() == Some(value.as_str()))))) {
         return Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "options labels only declared enum values"));
@@ -1998,16 +1998,16 @@ fn input_options(input: &ResolvedInput, pointer: &str) -> Result<Vec<ActionArgOp
 /// 🗝️ A string input's `x-semio-ui.optionSource`: `{snapshot: "<pointer template>"}`, an RFC 6901 template (`/…`) whose
 /// `{field}` segments name members of the edited payload.
 fn input_option_source(input: &ResolvedInput, pointer: &str) -> Result<Option<OptionSource>, InputSchemaError> {
-    match input.ui("optionSource").map(semio_framework_value::DslValue::as_object) {
+    match input.ui("optionSource").map(DslValue::as_object) {
         None => Ok(None),
-        Some(Some([(name, semio_framework_value::DslValue::String(template))])) if name == "snapshot" && template.starts_with('/') => Ok(Some(OptionSource::Snapshot { pointer: template.clone() })),
+        Some(Some([(name, DslValue::String(template))])) if name == "snapshot" && template.starts_with('/') => Ok(Some(OptionSource::Snapshot { pointer: template.clone() })),
         Some(_) => Err(input_error(InputSchemaErrorCode::UiInvalid, pointer, "optionSource is {snapshot: pointer template}")),
     }
 }
 
 fn input_number(input: &ResolvedInput, integer: bool, pointer: &str) -> Result<ArgSchema, InputSchemaError> {
     let invalid = |detail: String| input_error(InputSchemaErrorCode::UiInvalid, pointer, detail);
-    let keyword = |name: &str| input.node.get(name).and_then(semio_framework_value::DslValue::as_f64);
+    let keyword = |name: &str| input.node.get(name).and_then(DslValue::as_f64);
     let bound = |inclusive: Option<f64>, exclusive: Option<f64>, lower: bool| -> (Option<f64>, bool) {
         match (inclusive, exclusive) {
             (inclusive, None) => (inclusive, false),
@@ -2021,7 +2021,7 @@ fn input_number(input: &ResolvedInput, integer: bool, pointer: &str) -> Result<A
     let inside = |value: f64| min.is_none_or(|min| if min_exclusive { value > min } else { value >= min }) && max.is_none_or(|max| if max_exclusive { value < max } else { value <= max });
     let snaps = match input.ui("snaps") {
         None => Vec::new(),
-        Some(semio_framework_value::DslValue::Array(values)) => values.iter().map(|value| value.as_f64().filter(|value| value.is_finite())).collect::<Option<Vec<f64>>>().ok_or_else(|| invalid("snaps are finite numbers".to_string()))?,
+        Some(DslValue::Array(values)) => values.iter().map(|value| value.as_f64().filter(|value| value.is_finite())).collect::<Option<Vec<f64>>>().ok_or_else(|| invalid("snaps are finite numbers".to_string()))?,
         Some(_) => return Err(invalid("snaps is an array of numbers".to_string())),
     };
     if let Some(snap) = snaps.iter().find(|snap| !inside(**snap)) {
@@ -2030,9 +2030,9 @@ fn input_number(input: &ResolvedInput, integer: bool, pointer: &str) -> Result<A
     let snap_source = match input.ui("snapSource") {
         None => None,
         Some(source) => Some(match source.as_object() {
-            Some([(name, semio_framework_value::DslValue::Bool(true))]) if name == "step" => SnapSource::Step,
-            Some([(name, semio_framework_value::DslValue::String(key))]) if name == "config" && !key.is_empty() => SnapSource::Config { key: key.clone() },
-            Some([(name, semio_framework_value::DslValue::String(target))]) if name == "snapshot" && (target.is_empty() || target.starts_with('/')) => SnapSource::Snapshot { pointer: target.clone() },
+            Some([(name, DslValue::Bool(true))]) if name == "step" => SnapSource::Step,
+            Some([(name, DslValue::String(key))]) if name == "config" && !key.is_empty() => SnapSource::Config { key: key.clone() },
+            Some([(name, DslValue::String(target))]) if name == "snapshot" && (target.is_empty() || target.starts_with('/')) => SnapSource::Snapshot { pointer: target.clone() },
             _ => return Err(invalid("snapSource is {step: true}, {config: key} or {snapshot: pointer}".to_string())),
         }),
     };
@@ -5148,8 +5148,8 @@ impl DialogChoice {
     pub fn dispatch_args(&self, defs: &[ActionArgDef], effective: &DslValue) -> DslValue {
         let mut entries = effective.as_object().map(<[_]>::to_vec).unwrap_or_default();
         entries.retain(|(key, _)| key != DIALOG_CHOICE_ARG && (self.requires.contains(key) || !defs.iter().any(|def| def.id == *key)));
-        entries.push((DIALOG_CHOICE_ARG.to_string(), semio_framework_value::DslValue::String(self.id.clone())));
-        semio_framework_value::DslValue::Object(entries)
+        entries.push((DIALOG_CHOICE_ARG.to_string(), DslValue::String(self.id.clone())));
+        DslValue::Object(entries)
     }
 
     /// 📝️ The consequence a reader hears with the button and a sighted user reads beside it.
@@ -5368,16 +5368,16 @@ impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
 /// array exactly like `Vec<T>` (see `ToValue`/`FromValue for Vec<T>` in `🌱️value/🔁️codec/🦀️.rs`).
 impl<T: ToValue> ToValue for NonEmptyVec<T> {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::Array(self.iter().map(semio_framework_value::ToValue::to_value).collect())
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
     }
 }
 impl<T: FromValue> FromValue for NonEmptyVec<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let semio_framework_value::DslValue::Array(items) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array, found {value:?}")));
+        let DslValue::Array(items) = value else {
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an array, found {value:?}")));
         };
         let values = items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect::<Result<Vec<T>, ValueError>>()?;
-        NonEmptyVec::try_from(values).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))
+        NonEmptyVec::try_from(values).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))
     }
 }
 
@@ -5594,14 +5594,14 @@ impl std::str::FromStr for AppRole {
 /// so the wire spelling never drifts from the serde/TS/JSON-schema one.
 impl ToValue for AppRole {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::String(self.as_str().to_string())
+        DslValue::String(self.as_str().to_string())
     }
 }
 impl FromValue for AppRole {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            semio_framework_value::DslValue::String(s) => s.parse::<AppRole>().map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error)),
-            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+            DslValue::String(s) => s.parse::<AppRole>().map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error)),
+            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -5930,7 +5930,7 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
 /// wholesale — TS twin: {@link effectiveActionArgs} (`🧩️action-argument-resolution/🟦️.ts`).
 pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Option<&DslValue>) -> DslValue {
-    let seed_pairs: Vec<(String, DslValue)> = seed.and_then(semio_framework_value::DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
+    let seed_pairs: Vec<(String, DslValue)> = seed.and_then(DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
     if defs.is_empty() {
         let mut effective = seed_pairs;
         if let Some(staged_pairs) = staged.as_object() {
@@ -5942,7 +5942,7 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
                 }
             }
         }
-        return semio_framework_value::DslValue::Object(effective);
+        return DslValue::Object(effective);
     }
     let mut effective = seed_pairs;
     for def in defs {
@@ -5958,7 +5958,7 @@ pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Opt
             effective.push((def.id.clone(), default.clone()));
         }
     }
-    semio_framework_value::DslValue::Object(effective)
+    DslValue::Object(effective)
 }
 
 /// ❗️ Returns the ids of required args that are still unset in `effective`. "Unset" means absent,
@@ -5972,8 +5972,8 @@ pub fn missing_required_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec
         .filter(|def| def.required)
         .filter(|def| match effective.get(&def.id) {
             None => true,
-            Some(semio_framework_value::DslValue::Null) => !matches!(def.schema, ArgSchema::Any),
-            Some(semio_framework_value::DslValue::String(text)) => text.is_empty() && !matches!(def.schema, ArgSchema::Any | ArgSchema::String { min_len: Some(0), .. }),
+            Some(DslValue::Null) => !matches!(def.schema, ArgSchema::Any),
+            Some(DslValue::String(text)) => text.is_empty() && !matches!(def.schema, ArgSchema::Any | ArgSchema::String { min_len: Some(0), .. }),
             Some(_) => false,
         })
         .map(|def| def.id.clone())
@@ -6187,13 +6187,13 @@ impl TopicContribution {
 /// `topic`/`payload` mirror the `#[serde(rename_all = "camelCase")]` wire shape exactly.
 impl ToValue for TopicContribution {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::object([("topic".to_string(), semio_framework_value::ToValue::to_value(&self.topic)), ("payload".to_string(), self.payload.clone())])
+        DslValue::object([("topic".to_string(), ToValue::to_value(&self.topic)), ("payload".to_string(), self.payload.clone())])
     }
 }
 impl FromValue for TopicContribution {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let semio_framework_value::DslValue::Object(fields) = value else {
-            return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for TopicContribution, found {value:?}")));
+        let DslValue::Object(fields) = value else {
+            return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected an object for TopicContribution, found {value:?}")));
         };
         let mut topic = None;
         let mut payload = None;
@@ -6205,8 +6205,8 @@ impl FromValue for TopicContribution {
             }
         }
         Ok(TopicContribution {
-            topic: topic.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TopicContribution missing topic"))?,
-            payload: payload.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TopicContribution missing payload"))?,
+            topic: topic.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TopicContribution missing topic"))?,
+            payload: payload.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "TopicContribution missing payload"))?,
         })
     }
 }
@@ -6253,14 +6253,14 @@ pub struct Version {
 /// `Display`/`FromStr` impls below.
 impl ToValue for Version {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::String(self.to_string())
+        DslValue::String(self.to_string())
     }
 }
 impl FromValue for Version {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            semio_framework_value::DslValue::String(s) => Version::parse(&s).map_err(|e| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string())),
-            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+            DslValue::String(s) => Version::parse(&s).map_err(|e| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string())),
+            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -6430,14 +6430,14 @@ impl From<VersionParseError> for VersionPinParseError {
 
 impl ToValue for VersionPin {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::String(self.to_string())
+        DslValue::String(self.to_string())
     }
 }
 impl FromValue for VersionPin {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            semio_framework_value::DslValue::String(s) => VersionPin::parse(&s).map_err(|e| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string())),
-            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+            DslValue::String(s) => VersionPin::parse(&s).map_err(|e| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e.to_string())),
+            other => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }
 }
@@ -6982,7 +6982,7 @@ pub struct ViewModel {
     /// inside that window's scene `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2).
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, semio_framework_tool_run::ToolRunTraceCursor>,
+    pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, ToolRunTraceCursor>,
     /// 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
     /// document order over containers the host has not yet seen. Absent means "the host has not
     /// measured a viewport yet" — the guest falls back to its own default, never to unbounded.
@@ -7606,22 +7606,22 @@ pub struct PackageDescriptor {
 /// 🔤️ Descriptor value with every object ordered by UTF-8 key bytes at every depth.
 /// Shared by guest descriptions, emitted packs and exact freshness projections.
 #[derive(Clone, Debug, PartialEq)]
-pub struct CanonicalDescriptorValue(semio_framework_value::DslValue);
+pub struct CanonicalDescriptorValue(DslValue);
 
 impl CanonicalDescriptorValue {
     /// 🔃️ Orders the members of every object by key bytes; members of equal keys keep their authored order.
-    pub fn new(value: semio_framework_value::DslValue) -> Self {
+    pub fn new(value: DslValue) -> Self {
         Self(canonical_members(value))
     }
 
     /// 👁️ The canonical value itself.
-    pub fn value(&self) -> &semio_framework_value::DslValue {
+    pub fn value(&self) -> &DslValue {
         &self.0
     }
 }
 
 /// 🪜️ [`CanonicalDescriptorValue::new`] through every array and object of `value`.
-fn canonical_members(value: semio_framework_value::DslValue) -> semio_framework_value::DslValue {
+fn canonical_members(value: DslValue) -> DslValue {
     use semio_framework_value::DslValue;
     match value {
         DslValue::Array(items) => DslValue::Array(items.into_iter().map(canonical_members).collect()),

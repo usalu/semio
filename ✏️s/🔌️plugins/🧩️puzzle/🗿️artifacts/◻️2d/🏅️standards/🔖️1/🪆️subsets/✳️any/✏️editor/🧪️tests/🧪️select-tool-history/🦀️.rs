@@ -57,7 +57,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args))), &meta)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -72,7 +72,7 @@ fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(Option<HistoryTimeTrave
         if done(session(app).map(|status| status.stage)) {
             return;
         }
-        block_on(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+        block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("{what} never settled: {:?}", session(app));
@@ -443,7 +443,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
         let id = scenario["id"].as_str().expect("scenario id");
         let mut store = puzzle2d_store(store::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for logged in scenario["log"].as_array().expect("log") {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }).await.expect("a logged leaf applies");
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a logged leaf applies");
         }
         let mutation_ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = scenario["drafts"]
@@ -497,7 +497,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
             }
         }
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "{id}: the replay equals the fresh fold of the edited log");
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "{id}: the overwritten history folds to the edited state");
         close_puzzle2d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
     }

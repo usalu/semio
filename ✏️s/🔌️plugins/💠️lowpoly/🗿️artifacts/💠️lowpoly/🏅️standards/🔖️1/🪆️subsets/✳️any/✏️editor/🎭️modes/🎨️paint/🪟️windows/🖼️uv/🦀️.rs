@@ -3,10 +3,9 @@
 
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::modes::edit::windows::model::LOWPOLY_TRANSFORM_UTILITY_DEFAULT;
 use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::LowpolyView;
-use crate::editor::lowpoly::{lowpoly_window_engagement, lowpoly_window_measures};
+use crate::editor::lowpoly::lowpoly_window_measures;
 use crate::LOWPOLY_PAINT_TEXTURE_SIZE;
 use semio_framework_plugin::{scene_surface, Canvas2dScene, PluginAssemblyError, SurfaceKind, UtilityRef, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions};
 use std::collections::HashMap;

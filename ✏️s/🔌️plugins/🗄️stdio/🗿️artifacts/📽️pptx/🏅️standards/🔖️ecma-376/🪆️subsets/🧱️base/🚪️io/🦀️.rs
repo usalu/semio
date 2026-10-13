@@ -7,7 +7,6 @@
 //! below (used by both `📥️import/🧩️deserializers` and `📤️export/🧵️serializers`); `io_registry`
 //! moved here from `⚙️engine`, live (`pptx::declaration()`'s `.composers(...)` and this artifact's
 //! own root `io_registry` both reach it).
-use crate::standards::v_ecma_376::subsets::base::schema::{vocabulary::*,refusal::*};
 
 
 /// 📐️ Minimal-but-schema-shaped `slideMaster1.xml` — synthesized once when a package has no
@@ -292,7 +291,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PptxBuilderFacets {
         construction: PptxBuilderConstruction,
         analysis: PptxAnalyzerAnalysis,
-        composition: crate::standards::v_ecma_376::subsets::base::io::derived_composition::PptxComposerComposition,
+        composition: PptxComposerComposition,
     }
     builder: PptxBuilder,
     analyzer: PptxAnalyzer,

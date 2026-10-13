@@ -72,7 +72,7 @@ fn refuses_ranges_that_leave_the_text_overlap_or_leave_the_native_shape() {
 /// contract's own scalar splice application, and its inverse restores the base.
 #[test]
 fn the_corpus_rows_mean_the_corpus_text() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✂️splice-text/🔣️.json")).expect("splice corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/✂️splice-text/🔣️.json")).expect("splice corpus");
     for row in corpus["cases"].as_array().expect("cases") {
         let id = row["id"].as_str().unwrap();
         let before = row["before"].as_str().unwrap();

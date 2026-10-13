@@ -421,7 +421,7 @@ struct HomeTransientRootRetirement {
 
 impl HomeTransientRootRetirement {
     fn admit(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
-        semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Self>(), depth: 1 }.admit(grant)
+        semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Self>(), depth: 1 }.admit(grant)
     }
 
     fn born(root: Arc<HomeTransient>) -> Box<dyn store::ErasedSnapshotRetirement> {
@@ -464,7 +464,7 @@ impl Drop for HomeTransientRootRetirement {
 }
 
 impl store::SnapshotRetirementFactory<HomeTransient> for HomeTransientRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &Arc<HomeTransient>) -> usize { std::mem::size_of::<HomeTransientRootRetirement>() }
+    fn retirement_birth_bytes(&self, _snapshot: &Arc<HomeTransient>) -> usize { size_of::<HomeTransientRootRetirement>() }
 
     fn retire(&self, snapshot: Arc<HomeTransient>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, Arc<HomeTransient>)> {
         match HomeTransientRootRetirement::admit(grant) {
@@ -475,7 +475,7 @@ impl store::SnapshotRetirementFactory<HomeTransient> for HomeTransientRetirement
 }
 
 impl store::ArtifactOwnedValueRetirementFactory<HomeTransient> for HomeTransientRetirementFactory {
-    fn retirement_birth_bytes(&self, _value: &HomeTransient) -> usize { std::mem::size_of::<HomeTransientRootRetirement>() }
+    fn retirement_birth_bytes(&self, _value: &HomeTransient) -> usize { size_of::<HomeTransientRootRetirement>() }
 
     fn retire_owned(&self, value: HomeTransient, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, HomeTransient)> {
         match HomeTransientRootRetirement::admit(grant) {

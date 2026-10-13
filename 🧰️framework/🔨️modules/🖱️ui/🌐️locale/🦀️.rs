@@ -1,7 +1,7 @@
 //! 🌐️ Canonical UI language axes and label ownership below product hosts.
 
 pub use serde::{Deserialize, Serialize};
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
+#[cfg(test)] use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
 #[path = "../🎚️axes/🤖️generated/🦀️.rs"]
 mod axes;

@@ -65,6 +65,7 @@ mod plugin_builder_contract_tests {
         let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
         let grant = crate::app::plugin_demand_grant(demand);
         let step = app.close_step(grant)?;
+        let _ = app.take_constructor_receipt();
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "close receipt {step:?} exceeds its exact grant {grant:?}");
         Ok(step)
     }
@@ -377,6 +378,127 @@ mod plugin_builder_contract_tests {
     }
 
     include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🦀️.rs"));
+
+    //#region 📋️ContractClipboardFixture
+    /// 📋️ The exact reserved clipboard producer of the contract app: `copy` and `cut` author the clipboard write, `paste` the placed label, each through its one completion cell, and every original request owner retires under paid turns.
+    struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
+        tool: String,
+        label: String,
+        args: Option<DslValue>,
+        read: Option<store::SnapshotRead<TestSnapshot>>,
+        completion: Option<ArtifactToolCompletion<TestApp<RETAINED, TOOLS>>>,
+        rejected: Option<crate::app::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
+        retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+        outcomes: crate::reserved_job_outcomes::ReservedJobOutcomes,
+        completed: bool,
+        closing: bool,
+    }
+
+    impl<const RETAINED: bool, const TOOLS: u8> TestClipboardJob<RETAINED, TOOLS> {
+        fn new(request: crate::app::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Self, Fault> {
+            let crate::app::ArtifactReservedToolInput::Action { args, .. } = request.input else { return Err(Fault::from("the contract clipboard requires an action input")) };
+            Ok(Self { tool: request.tool_id, label: request.snapshot.label.clone(), args, read: Some(request.snapshot_read), completion: Some(request.completion), rejected: None, retirement: None, outcomes: crate::reserved_job_outcomes::ReservedJobOutcomes::new(), completed: false, closing: false })
+        }
+
+        fn emit(&self) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
+            let media_type = MediaType { class: MediaClass::Data, form: MediaForm::Value };
+            if self.tool != "paste" {
+                if self.label.is_empty() {
+                    return Ok(Emit::default());
+                }
+                let fragment = ClipboardFragment { schema: TestApp::<false>::DOCUMENT_SCHEMA.to_string(), media_type, dsl_text: self.label.clone(), pack_bytes: None, source_app: TestApp::<false>::APP_ID.to_string(), label: self.label.clone() };
+                let mut emit = Emit::effect(Effect::ClipboardWrite { fragment });
+                if self.tool == "cut" {
+                    emit.artifact_mutations = vec![TestMutation::SetLabel(SetLabel { value: String::new() })];
+                }
+                return Ok(emit);
+            }
+            let Some(fragment) = self.args.as_ref().and_then(|args| args.get("fragment")) else { return Ok(Emit::default()) };
+            let text = fragment.get("dslText").and_then(DslValue::as_str).ok_or_else(|| Fault::from("the contract paste fragment carries no text"))?;
+            let anchor = match self.args.as_ref().and_then(|args| args.get("anchor")).and_then(DslValue::as_str) {
+                None | Some("original") => PasteAnchor::Original,
+                Some("middle") => PasteAnchor::Middle,
+                Some("centroid") => PasteAnchor::Centroid,
+                Some("bottomLeft") => PasteAnchor::BottomLeft,
+                Some("bottomRight") => PasteAnchor::BottomRight,
+                Some("topLeft") => PasteAnchor::TopLeft,
+                Some("topRight") => PasteAnchor::TopRight,
+                Some(other) => return Err(Fault::from(format!("the contract paste anchor '{other}' is undeclared"))),
+            };
+            let value = if anchor == PasteAnchor::Original { text.to_string() } else { format!("{text}-{anchor:?}") };
+            Ok(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value })]))
+        }
+
+        fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+            if !self.outcomes.terminal_is_empty() { return self.outcomes.close_demands(); }
+            if let Some(active) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(active, body); }
+            if self.rejected.is_some() { return store::artifact_retirement_owned_birth_demands(&self.rejected); }
+            if self.read.is_some() { return store::artifact_retirement_owned_birth_demands(&self.read); }
+            if self.completion.is_some() { return store::artifact_retirement_owned_birth_demands(&self.completion); }
+            Ok(Default::default())
+        }
+    }
+
+    impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob for TestClipboardJob<RETAINED, TOOLS> {
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+            if cx.is_cancelled() { return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx); }
+            if self.outcomes.is_delivered() {
+                self.outcomes.retire(cx)?;
+                return Ok(None);
+            }
+            if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "the contract clipboard completion remains rejected")); }
+            if cx.should_yield() { return semio_framework_job::JobOutcomeBorrow::admit_yield(cx); }
+            if !self.completed {
+                let emit = self.emit().map_err(|fault| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, fault.message))?;
+                let completion = self.completion.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "the contract clipboard lost its completion authority"))?;
+                if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                    self.rejected = Some(rejected);
+                    return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "the contract clipboard completion was rejected"));
+                }
+                self.completed = true;
+            }
+            semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+        }
+
+        fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+            self.outcomes.borrow_outcome(descriptor)
+        }
+
+        fn begin_close(&mut self) { self.closing = true; }
+
+        fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+            use semio_framework_job::InteractiveJobCloseStep;
+            use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+            if !self.closing { return InteractiveJobCloseStep::Blocked; }
+            if !self.outcomes.terminal_is_empty() { return crate::reserved_job_outcomes::close_result(self.outcomes.close_step(grant)); }
+            if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+            let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: Default::default() } };
+            if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: Default::default() }; }
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
+            let step = if self.retirement.is_some() { store::artifact_retirement_box_close_step(&mut self.retirement, grant) }
+                else if self.rejected.is_some() { store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.retirement, grant) }
+                else if self.read.is_some() { store::artifact_retirement_admit_owned(&mut self.read, &mut self.retirement, grant) }
+                else if self.completion.is_some() { store::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
+                else { Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
+            match step {
+                Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
+                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: Default::default() },
+            }
+        }
+
+        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
+        fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
+        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.closing && self.read.is_none() && self.completion.is_none() && self.rejected.is_none() && self.retirement.is_none() && self.outcomes.terminal_is_empty()
+        }
+    }
+
+    impl<const RETAINED: bool, const TOOLS: u8> crate::app::ArtifactReservedJob for TestClipboardJob<RETAINED, TOOLS> {}
+    //#endregion 📋️ContractClipboardFixture
 
     //#region 🧵️RetainedCommandReplayFixture
     const TEST_RETAINED_COMMAND_CONTROLLER: &str = "s.test.synthetic@1/*#editor";
@@ -714,8 +836,6 @@ mod plugin_builder_contract_tests {
     }
 
     impl<const RETAINED: bool, const TOOLS: u8> ArtifactApp for TestApp<RETAINED, TOOLS> {
-        fn completion_retirement_birth_bytes(value: &ArtifactToolCompletionValue<Self>) -> Option<usize> { test_completion_birth(value) }
-        fn admit_completion_retirement(value: &mut Option<ArtifactToolCompletionValue<Self>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { test_completion_admit(value, grant) }
         fn owned_mutation_batch_birth_bytes() -> Option<usize> { Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<TestMutation>()) }
         fn admit_owned_mutation_batch(values: &mut Option<Vec<TestMutation>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::MemberStoreOwnedBatch::admit(values, grant) }
         const DIALECT: Dialect = TEST_APP_DIALECT;
@@ -907,6 +1027,13 @@ mod plugin_builder_contract_tests {
         /// 🛠️ One group for the active tool — the reserved `tools` section surface's own payload.
         async fn tool_measures(_doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> std::collections::HashMap<String, Vec<ui_wgpu::wgpu::WindowMeasure>> {
             view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
+        }
+
+        fn build_reserved_tool_job(request: crate::app::ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+            if !matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") {
+                return Ok(None);
+            }
+            Ok(Some(ArtifactReservedToolJob::new(TestClipboardJob::<RETAINED, TOOLS>::new(request)?)))
         }
 
         async fn clipboard_media_type() -> Option<MediaType> {
@@ -1102,19 +1229,41 @@ mod plugin_builder_contract_tests {
     }
 
     struct KeyedTestJobSources {
-        raw_wire: crate::app::ArtifactToolRawInput,
-        read: store::SnapshotRead<TestSnapshot>,
-        snapshot: std::sync::Arc<TestSnapshot>,
-        config: std::sync::Arc<TestConfig>,
-        history: std::sync::Arc<HistoryView>,
+        raw_wire: Option<crate::app::ArtifactToolRawInput>,
+        read: Option<store::SnapshotRead<TestSnapshot>>,
+        snapshot: Option<std::sync::Arc<TestSnapshot>>,
+        config: Option<std::sync::Arc<TestConfig>>,
+        history: Option<std::sync::Arc<HistoryView>>,
         window_config: Option<crate::app::WindowConfigSnapshot>,
-        interaction: std::sync::Arc<InteractionState>,
-        hover: std::sync::Arc<InteractionHoverState>,
-        context: ArtifactOwnedContextHandle<KeyedTestApp>,
-        instance_owner: crate::app::ArtifactInstanceOperationOwnerHandle,
-        output: ArtifactOutputChunks,
-        parent_document_id: String,
-        authoring_seed: String,
+        interaction: Option<std::sync::Arc<InteractionState>>,
+        hover: Option<std::sync::Arc<InteractionHoverState>>,
+        context: Option<ArtifactOwnedContextHandle<KeyedTestApp>>,
+        instance_owner: Option<crate::app::ArtifactInstanceOperationOwnerHandle>,
+        output: Option<ArtifactOutputChunks>,
+        parent_document_id: Option<String>,
+        authoring_seed: Option<String>,
+    }
+
+    impl KeyedTestJobSources {
+        /// 🧹️ The next original request input to retire, quoted as the typed retirement lane that owns it: `None` once every input is physically returned.
+        fn demands(&self) -> Result<Option<semio_framework_value::RetirementDemand>, semio_framework_value::ValueError> {
+            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_owned_birth_demands(&self.$field).map(Some); } }; }
+            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.$field).map(Some); } }; }
+            if self.raw_wire.is_some() { return Ok(Some(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })); }
+            if self.window_config.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "keyed fixture has no retirement lane for a window config snapshot")); }
+            owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
+            lease!(snapshot); lease!(config); lease!(history); lease!(interaction); lease!(hover);
+            Ok(None)
+        }
+
+        fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
+            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_admit_owned(&mut self.$field, active, grant).map(Some); } }; }
+            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_admit_shared_lease(&mut self.$field, active, grant).map(Some); } }; }
+            if self.raw_wire.take().is_some() { return Ok(Some(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
+            owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
+            lease!(snapshot); lease!(config); lease!(history); lease!(interaction); lease!(hover);
+            Ok(None)
+        }
     }
 
     struct KeyedTestJob {
@@ -1136,7 +1285,8 @@ mod plugin_builder_contract_tests {
             if let Some(active) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(active, body); }
             if self.command.is_some() { return store::artifact_retirement_owned_birth_demands(&self.command); }
             if self.completion.is_some() { return store::artifact_retirement_owned_birth_demands(&self.completion); }
-            if self.sources.is_some() || self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "keyed fixture retains original context and rejected owners until their exact issuer is installed")); }
+            if let Some(sources) = self.sources.as_ref() { return Ok(sources.demands()?.unwrap_or(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })); }
+            if self.rejected.is_some() { return store::artifact_retirement_owned_birth_demands(&self.rejected); }
             Ok(Default::default())
         }
     }
@@ -1200,6 +1350,14 @@ mod plugin_builder_contract_tests {
             let step = if self.retirement.is_some() { store::artifact_retirement_box_close_step(&mut self.retirement, grant) }
                 else if self.command.is_some() { store::artifact_retirement_admit_owned(&mut self.command, &mut self.retirement, grant) }
                 else if self.completion.is_some() { store::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
+                else if let Some(sources) = self.sources.as_mut() {
+                    match sources.step(&mut self.retirement, grant) {
+                        Ok(Some(step)) => Ok(step),
+                        Ok(None) => { self.sources = None; Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })) }
+                        Err(error) => Err(error),
+                    }
+                }
+                else if self.rejected.is_some() { store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.retirement, grant) }
                 else { Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
             match step {
                 Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
@@ -1298,7 +1456,7 @@ mod plugin_builder_contract_tests {
         async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
             assert!(request.snapshot.label.is_empty());
             let base_count = request.snapshot.count;
-            let sources = KeyedTestJobSources { raw_wire: request.raw_wire, read: request.snapshot_read, snapshot: request.snapshot, config: request.config, history: request.history, window_config: request.window_config, interaction: request.interaction_state, hover: request.interaction_hover, context: request.context, instance_owner: request.instance_operation_owner, output: request.output_chunks, parent_document_id: request.parent_document_id, authoring_seed: request.authoring_seed };
+            let sources = KeyedTestJobSources { raw_wire: Some(request.raw_wire), read: Some(request.snapshot_read), snapshot: Some(request.snapshot), config: Some(request.config), history: Some(request.history), window_config: request.window_config, interaction: Some(request.interaction_state), hover: Some(request.interaction_hover), context: Some(request.context), instance_owner: Some(request.instance_operation_owner), output: Some(request.output_chunks), parent_document_id: Some(request.parent_document_id), authoring_seed: Some(request.authoring_seed) };
             let job = KeyedTestJob { command: Some(request.command), completion: Some(request.completion), raw: None, page: 0, base_count, closing: false, sources: Some(sources), rejected: None, admitted: false, retirement: None };
             Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
         }
@@ -1635,6 +1793,7 @@ mod plugin_builder_contract_tests {
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         for index in 0..OPERATIONS {
@@ -1707,6 +1866,7 @@ mod plugin_builder_contract_tests {
         const ROWS: i32 = 4_400;
         let id = 4_103;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         app.dispatch_typed(TestCommand::BulkEdit { rows: ROWS }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.unwrap();
         let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
@@ -1762,6 +1922,7 @@ mod plugin_builder_contract_tests {
 
         let id = 4_101;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
@@ -1824,6 +1985,7 @@ mod plugin_builder_contract_tests {
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let value = fixture["command"]["value"].as_i64().unwrap() as i32;
         let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
@@ -1913,6 +2075,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         let id = 41;
         let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         apply_test_mutations(app.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
@@ -2136,7 +2299,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>, mounted_policy: crate::MountedOwnerPolicyV1) {
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
-                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),maximum_copy_bytes:4096.min(mounted_policy.maintenance.maximum_copy_bytes),..mounted_policy.maintenance};
+                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let _ = PluginApp::maintenance_step(app, grant);
             }
         }
@@ -2147,7 +2310,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     fn drain_and_close_composed_fixture(app: &mut VcsArtifactApp<TestApp, TestMembers>, mounted_policy: crate::MountedOwnerPolicyV1) {
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
-                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),maximum_copy_bytes:4096.min(mounted_policy.maintenance.maximum_copy_bytes),..mounted_policy.maintenance};
+                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let _ = PluginApp::maintenance_step(app, grant);
             }
         }
@@ -2155,14 +2318,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     fn close_reserved_app(app: &mut VcsArtifactApp<TestApp>, mounted_policy: crate::MountedOwnerPolicyV1) {
-        for _ in 0..100_000 {
-            match app.close_step(crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.close.maximum_items),maximum_copy_bytes:4096.min(mounted_policy.close.maximum_copy_bytes),..mounted_policy.close}).expect("reserved fixture closes") {
-                crate::app::PluginLifecycleStep::Complete(progress) => {assert!(progress.fits(mounted_policy.close));return},
-                crate::app::PluginLifecycleStep::Progress(progress) => {assert!(progress.fits(mounted_policy.close));}
-                other => panic!("reserved fixture close stalled: {other:?}"),
-            }
-        }
-        panic!("reserved fixture close did not complete");
+        artifact_app_laws::close_registered_fixture_app(app, mounted_policy);
     }
 
     async fn synthetic_play_app() -> App {
@@ -2417,6 +2573,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// fixtures declare their own manifests but need the same mounted, self-closing shape.
     async fn contract_app_with(registry: AppActionRegistry, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         ContractApp(app, mounted_policy)
     }
@@ -2434,6 +2591,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// themselves, exactly as they did before.
     async fn contract_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -2441,6 +2599,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 🧩️ [`contract_app_raw`] over the composed member roster.
     async fn contract_composed_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp, TestMembers> {
         let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -2554,6 +2713,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     async fn contract_composed_app(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractComposedApp {
         let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         ContractComposedApp(app, mounted_policy)
     }
@@ -2590,6 +2750,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let declared = registry.test_migrated_tool_ids();
         let controller_id = registry.test_controller_id().to_string();
         let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         let registered: std::collections::BTreeSet<String> = app
             .test_registered_tool_keys()
             .into_iter()
@@ -2621,7 +2782,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             "the only reason the history-edit verbs may carry no factory is their host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta)).await;}"),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta,identity)).await;}"),
             "the only reason `hostEvent` may carry no factory is its host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
@@ -3212,7 +3373,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
             let demand = app.close_retirement_demands(ARTIFACT_OUTPUT_CHUNK_BYTES).expect("quoted pre-segment close demand");
             let sub_chunk = store::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes.min(ARTIFACT_OUTPUT_CHUNK_BYTES - 1), ..crate::app::plugin_demand_grant(demand) };
-            match app.close_step(sub_chunk).expect("bounded pre-segment close slice") {
+            match { let step = app.close_step(sub_chunk).expect("bounded pre-segment close slice"); let _ = app.take_constructor_receipt(); step } {
                 crate::app::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => {
                     assert_eq!(demand.release_bytes, ARTIFACT_OUTPUT_CHUNK_BYTES, "the ladder parked before its segmented-download rung");
                     parked = true;
@@ -3605,6 +3766,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// laws that move the app into a `PluginRuntime` cell.
     async fn interaction_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
         let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -4115,6 +4277,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut app = bundle.create_app(TestApp::<false>::APP_ID, actor.clone(), mounted_policy, &mut identity).expect("registered app");
         assert_eq!(app.app_id().await, TestApp::<false>::APP_ID);
         let TestRuntimeApps::Test(owner) = &mut app;
+        crate::app::artifact_app_laws::settle_store_constructor(owner, mounted_policy);
         assert_eq!(owner.store.local_actor_id(), &actor);
         assert_eq!(owner.config_store.local_actor_id(), &actor);
         assert_eq!(owner.draft_store.local_actor_id(), &actor);
@@ -4317,6 +4480,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(decoded.domains[0].selected, vec!["item-1".to_string()]);
     }
 
+    /// 📏️ The unoptimized-build thread stack the bounded-route law runs under. The plugin guest's real shadow stack is
+    /// 8 MiB (`.cargo/config.toml` `-zstack-size`) and only optimized frames run there; the law measures DEBUG frames, whose
+    /// async state machines are several times larger. Measured on this build: constructing the interaction fixture needs
+    /// between 4 and 8 MiB, the select dispatch on top between 8 and 16 MiB, so 16 MiB is the smallest power-of-two bound
+    /// that still fails on a runaway recursion or a re-inlined generator.
+    const BOUNDED_THREAD_STACK_BYTES: usize = 16 * 1024 * 1024;
+
     /// 🧵️ Every world/graph pick is one framework-reserved `interactionSelect` dispatch, and it must fit
     /// a bounded thread stack. `dispatch_framework_reserved_action` used to spell all nineteen reserved
     /// routes as separate `run_framework_reserved_job` awaits inside ONE generator; an unoptimized build
@@ -4332,7 +4502,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         std::thread::Builder::new()
-            .stack_size(2 * 1024 * 1024)
+            .stack_size(BOUNDED_THREAD_STACK_BYTES)
             .spawn(move || {
                 let identity_started = std::time::Instant::now();
                 let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4349,7 +4519,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             })
             .expect("bounded-stack worker")
             .join()
-            .expect("one interactionSelect must fit a default 2 MiB thread stack");
+            .expect("one interactionSelect must fit the bounded thread stack");
     }
     //#endregion 🔖️EphemeralLaneTests
 
@@ -5862,7 +6032,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity).await.expect("setLabel");
-        let result = app.handle_action("copy", None, &meta(), &mut identity).await.expect("copy");
+        let result = reserved_action(&mut app, "copy", None, &mut identity).await;
         assert!(result.mutations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
         let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
@@ -5882,7 +6052,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let result = app.handle_action("copy", None, &meta(), &mut identity).await.expect("copy");
+        let result = reserved_action(&mut app, "copy", None, &mut identity).await;
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
     }
@@ -5901,7 +6071,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity).await.expect("setLabel");
-        let result = app.handle_action("cut", None, &meta(), &mut identity).await.expect("cut");
+        let result = reserved_action(&mut app, "cut", None, &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "");
         assert_eq!(result.requested_effects.len(), 1);
         assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
@@ -5930,7 +6100,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             label: "pasted".into(),
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "original" }));
-        app.handle_action("paste", Some(&args), &meta(), &mut identity).await.expect("paste");
+        reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, "pasted");
     }
 
@@ -5955,7 +6125,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             label: "pasted".into(),
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "centroid" }));
-        app.handle_action("paste", Some(&args), &meta(), &mut identity).await.expect("paste");
+        reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
         assert_eq!(app.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
     }
 
@@ -5971,7 +6141,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let result = app.handle_action("paste", None, &meta(), &mut identity).await.expect("paste");
+        let result = reserved_action(&mut app, "paste", None, &mut identity).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.test_snapshot().await.label, "");
     }
@@ -6301,7 +6471,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             "first turn must admit Isolated framework.reserved.tool"
         );
         let (settled, steps) = crate::app::drive_framework_reserved_spawn_like_host(&mut app, admitted).await.expect("host-like Isolated drive");
-        assert_eq!(steps, 2, "dummy reserved job must Done in 2 steps, same as noteShellCommand");
+        assert!(steps > 1, "the reserved dummy job is a multi-turn bounded job; every turn is one funded step ({steps})");
         assert_eq!(
             settled.requested_effects,
             vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
@@ -6386,6 +6556,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let runtime = super::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         super::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("host-wire bundle"));
         super::test_push_instance(&runtime, super::AppInstance { id: 1, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
+        super::test_admit_instance_actor(&runtime, 1, "local");
         let action_json = format!(
             r#"{{"address":{{"pluginId":"test","appId":"{}","modeId":"edit","windowKindId":"puzzle3d-main","windowInstanceId":"puzzle3d-main-perspective","actionId":"undo"}},"arguments":{{"windowId":"puzzle3d-main-perspective"}}}}"#,
             TestApp::<false>::APP_ID,
@@ -8181,6 +8352,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let mut action_registry = contract_registry().await;
             action_registry.test_set_action_classification("badView", classification);
             let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+            crate::app::artifact_app_laws::settle_store_constructor(&mut action_app, mounted_policy);
             assert!(!action_app.test_registered_tool_keys().iter().any(|key| key.1 == "badView"));
             let action_error = action_app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("non-migrated action must be rejected before its handler runs");
             assert_eq!(action_error.code.0, "interactive-job.not-ui-safe");
@@ -8189,6 +8361,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let mut command_registry = contract_registry().await;
             command_registry.test_set_app_command_classification("incrementViaCommand", classification);
             let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+            crate::app::artifact_app_laws::settle_store_constructor(&mut command_app, mounted_policy);
             assert!(!command_app.test_registered_tool_keys().iter().any(|key| key.1 == "incrementViaCommand"));
             let invocation =
                 CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
@@ -9120,6 +9293,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let id = 47u32;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         let outcome: Result<(), String> = async {
@@ -9427,6 +9601,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
+        crate::plugin_runtime::test_admit_instance_actor(&runtime, resumed_instance, "local");
         let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes), &mut crate::app::artifact_app_laws::fixture_identity()).await;
         assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
         let frame = protocol::decode_app_frame(&output.frames[0]).await.expect("must decode back to an AppFrame");
@@ -9539,6 +9714,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let other_meta = ActionMeta { actor: "local".into(), instance_id: other_instance, view_state: None };
         let task = test_task("elsewhere", |_ctx| async move { Ok(TaskResolution::Done) });
         crate::reactor::spawn_task(other_instance, &other_meta, task).expect("a different instance must not be affected by 502's quota exhaustion");
+        crate::reactor::reactor_driver::run_until_idle(8).await;
+        assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 0, "the admitted tasks retire their owners before the thread ends");
     }
 
     /// 🔑️ Spawning a second task under the SAME `(instance, key)` cancels the first — its
@@ -9642,6 +9819,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let instance = 507;
+        crate::plugin_runtime::test_admit_instance_actor(&runtime, instance, "local");
         let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
         let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
         let observed_completion = std::sync::Arc::new(std::sync::Mutex::new(None));

@@ -137,7 +137,7 @@ impl store::ArtifactDsl for NoteSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
@@ -156,8 +156,8 @@ use crate::NoteImageAsset;
 /// 📄️ The `semio` example, parsed once from {@link SEMIO_NOTE_EXAMPLE_TEXT} — the source of truth for
 /// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
 /// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
-pub fn semio_example_snapshot() -> crate::NoteSnapshot {
-    <crate::NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
+pub fn semio_example_snapshot() -> NoteSnapshot {
+    <NoteSnapshot as store::ArtifactDsl>::parse_dsl(SEMIO_NOTE_EXAMPLE_TEXT).unwrap_or_else(|_| empty_note_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link semio_example_snapshot}, for the framework-generic call sites that
@@ -167,8 +167,8 @@ pub fn semio_example_json() -> String {
     semio_framework_pack_json::to_json_string(&semio_example_snapshot())
 }
 
-pub fn empty_note_snapshot() -> crate::NoteSnapshot {
-    crate::NoteSnapshot {
+pub fn empty_note_snapshot() -> NoteSnapshot {
+    NoteSnapshot {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "empty".into(),
         title: None,

@@ -1,7 +1,8 @@
 use super::{DemoSnapshot, LossyDiff, LossyMutation};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetN {
     pub n: i32,

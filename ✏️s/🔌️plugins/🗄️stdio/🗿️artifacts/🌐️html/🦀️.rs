@@ -73,7 +73,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.html", standard: semio_framework_artifact_reference::StandardId("5"), subset: semio_framework_artifact_reference::SubsetId("*") }).try_build()
+    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }).try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -185,7 +185,6 @@ pub mod examples {
     pub mod demo;
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -226,7 +225,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

@@ -1,6 +1,6 @@
 //! 🧬️ Transparent JsonMutation aggregate.
 use crate::schema::diff::JsonDiff;
-use crate::schema::snapshot::JsonValue;
+#[cfg(test)] use crate::schema::snapshot::JsonValue;
 use crate::JsonSnapshot;
 
 

@@ -78,8 +78,8 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
             ) -> Result<usize, String> {
                 let command_id = command.command_id();
                 let meta = ActionMeta { instance_id: 86, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
-                app.dispatch_typed(command, &meta).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
             }
 
@@ -218,7 +218,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                     .ok_or_else(|| "GIS Map reopened right config is absent".to_string())?;
                 let reopened_left = render(&mut *reopened, &left).await?;
                 let reopened_right = render(&mut *reopened, &right).await?;
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 if reopened_payloads != persisted_payloads
                     || reopened_left_config != persisted_left
                     || reopened_right_config != persisted_right
@@ -234,7 +234,7 @@ fn gis_map_window_ownership_runtime_isolates_renders_and_reopens_two_map_windows
                 Ok(())
             }.await;
             if let Err(error) = &outcome { eprintln!("[TRACE] GIS Map exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app);
+            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             outcome.expect("GIS Map exact-window runtime law");
         }))
         .expect("spawn GIS Map window ownership law")

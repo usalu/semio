@@ -3,9 +3,9 @@ use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneContent,Do
 use crate::standards::v1::subsets::any::schema::component::from_kernel_segment;
 use crate::PathSegment as DrawingSegment;
 use semio_framework_2d::{PathSegment,trace::{BitmapTraceInput,BitmapTraceJob,BitmapTraceProgress,BitmapTraceRetirement}};
-use semio_framework_pixels::RasterImage;
-use crate::schema::scene_retirement::ScenePlanCloseJob;
-use semio_framework_2d::retirement::{WorkRetirementCounter,WorkRetirementProgress};
+#[cfg(test)] use semio_framework_pixels::RasterImage;
+#[cfg(test)] use crate::schema::scene_retirement::ScenePlanCloseJob;
+use semio_framework_2d::retirement::WorkRetirementProgress;
 pub type DocumentTraceRetirementProgress=WorkRetirementProgress;
 use std::sync::Arc;
 use crate::schema::scene_preparation::{OwnedTable,OwnedSet};

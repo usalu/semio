@@ -3,8 +3,8 @@ import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modu
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ✨️ `@semio-tech/dsl-derive-rs` router: `bun ./📜️script.ts test`. */
 import Ajv from "ajv";
-import { readFileSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
+import { join, relative, sep } from "node:path";
 import { runCargo, runRepositoryCargoTests } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -41,6 +41,116 @@ function mutationAuthorityProjection(repoRoot: string): string {
   ajv.addSchema(document);
   const validate = ajv.getSchema(`${document.$id}#/$defs/MutationSourceAuthorityProjectionV1`)!;
   if (!validate(projection)) throw new Error(`mutation authority projection is outside its schema: ${JSON.stringify(validate.errors)}`);
+  return `${JSON.stringify(projection, null, 2)}\n`;
+}
+
+const SCHEMA_INDEX_SCHEMA = "semio.dsl.mutation-schema-document-index/v1";
+const SCHEMA_INDEX_PATH = join(import.meta.dir, "../../🗂️schema-document-index.json");
+const SCHEMA_INDEX_EXCLUDED = new Set(["target", "node_modules", "dist", "🗑️generated", "📦️packages"]);
+const SCHEMA_INDEX_COLLECTIONS = new Set(["🧫️fixtures", "🧪️fixtures", "🧪️tests"]);
+
+/** 🧫️ An example collection keeps its name when that directory is itself a module. */
+function schemaIndexExampleCollection(segments: readonly string[]): boolean {
+  return segments.some((part, index) => SCHEMA_INDEX_COLLECTIONS.has(part) && segments[index - 1] !== "🔨️modules");
+}
+
+/** 🗂️ Directory entries in UTF-8 order, the order that makes a duplicate `$id` pick one path on every platform. */
+function schemaIndexEntries(directory: string): Dirent[] {
+  try {
+    return readdirSync(directory, { withFileTypes: true }).sort((left, right) => Buffer.compare(Buffer.from(left.name), Buffer.from(right.name)));
+  } catch {
+    return [];
+  }
+}
+
+/** 🧭️ Workspace-relative path with forward slashes. */
+function schemaIndexRelative(repoRoot: string, path: string): string {
+  const relativePath = relative(repoRoot, path);
+  if (relativePath.startsWith("..") || relativePath === "") throw new Error(`schema index path escapes the workspace: ${path}`);
+  return relativePath.split(sep).join("/").normalize("NFC");
+}
+
+/** 🗂️ `$id` to absolute path for the production schema documents under `root`, excluding example collections before they are read. */
+export function schemaDocumentIndex(root: string): Map<string, string> {
+  const segments = root.split(sep).filter((part) => part.length > 0);
+  const index = new Map<string, string>();
+  if (schemaIndexExampleCollection(segments)) return index;
+  const walk = (directory: string, directorySegments: readonly string[], schema: boolean): void => {
+    for (const entry of schemaIndexEntries(directory)) {
+      if (entry.isSymbolicLink()) continue;
+      const name = entry.name.normalize("NFC");
+      const next = [...directorySegments, name];
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (name.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(name) || schemaIndexExampleCollection(next)) continue;
+        walk(path, next, schema || name === "🧬️schema");
+      } else if (schema && entry.isFile() && name.endsWith(".json")) {
+        let id: unknown;
+        try { id = JSON.parse(readFileSync(path, "utf8")).$id; } catch { id = undefined; }
+        if (typeof id !== "string" || id.length === 0) continue;
+        if (!index.has(id)) index.set(id, path);
+      }
+    }
+  };
+  walk(root, segments, segments.includes("🧬️schema"));
+  return index;
+}
+
+/** 🧭️ The search root the derive selects for a schema directory: its plugin, else its module, else the directory that owns the schema. */
+function schemaSearchRoot(schemaDirectory: string): string | undefined {
+  const segments = schemaDirectory.split("/");
+  const under = (parent: string): string | undefined => {
+    const index = segments.findLastIndex((segment, position) => position > 0 && segments[position - 1] === parent && segment.length > 0);
+    return index >= 0 ? segments.slice(0, index + 1).join("/") : undefined;
+  };
+  const owner = segments.slice(0, -1).join("/");
+  return under("🔌️plugins") ?? under("🔨️modules") ?? (owner.length > 0 ? owner : undefined);
+}
+
+/** 🧭️ Every plugin and module directory a leaf can select as its search root. */
+function schemaIndexRoots(repoRoot: string): string[] {
+  const roots: string[] = [];
+  const walk = (directory: string, segments: readonly string[]): void => {
+    for (const entry of schemaIndexEntries(directory)) {
+      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+      const name = entry.name.normalize("NFC");
+      const next = [...segments, name];
+      if (name.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(name) || schemaIndexExampleCollection(next)) continue;
+      const path = join(directory, entry.name);
+      if (name === "🔌️plugins" || name === "🔨️modules") {
+        for (const child of schemaIndexEntries(path)) {
+          if (!child.isDirectory() || child.isSymbolicLink()) continue;
+          const childName = child.name.normalize("NFC");
+          const childSegments = [...next, childName];
+          if (childName.startsWith(".") || SCHEMA_INDEX_EXCLUDED.has(childName) || schemaIndexExampleCollection(childSegments)) continue;
+          roots.push(childSegments.join("/"));
+        }
+      }
+      if (name === "🧬️schema" && schemaIndexEntries(path).some((child) => child.isDirectory() && !child.isSymbolicLink() && child.name.normalize("NFC") === "🧬️mutations")) {
+        const owner = schemaSearchRoot(next.join("/"));
+        if (owner !== undefined && !schemaIndexExampleCollection(owner.split("/"))) roots.push(owner);
+      }
+      walk(path, next);
+    }
+  };
+  walk(repoRoot, []);
+  return [...new Set(roots)].sort();
+}
+
+/** 🧬️ The schema-document index the mutation derive reads, validated against `MutationSchemaDocumentIndexV1`. */
+export function mutationSchemaDocumentIndexProjection(repoRoot: string): string {
+  const roots: Record<string, Record<string, string>> = {};
+  for (const root of schemaIndexRoots(repoRoot)) {
+    const documents: Record<string, string> = {};
+    for (const [id, path] of [...schemaDocumentIndex(join(repoRoot, root))].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)) documents[id] = schemaIndexRelative(repoRoot, path);
+    if (Object.keys(documents).length > 0) roots[root] = documents;
+  }
+  const projection = { schema: SCHEMA_INDEX_SCHEMA, roots };
+  const document = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+  const ajv = new Ajv({ strict: true, allErrors: true });
+  ajv.addSchema(document);
+  const validate = ajv.getSchema(`${document.$id}#/$defs/MutationSchemaDocumentIndexV1`)!;
+  if (!validate(projection)) throw new Error(`schema document index is outside its schema: ${JSON.stringify(validate.errors)}`);
   return `${JSON.stringify(projection, null, 2)}\n`;
 }
 
@@ -94,6 +204,40 @@ class SourceAuthorityTestScript extends BundleScript {
   async run(): Promise<void> { await import("../../🧪️tests/🛂️mutation-source-authority/🟦️.ts"); }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript);
+/** 🔁️ Writes the schema document index only when its bytes change, so an unrelated edit leaves every deriving crate fresh. */
+class GenerateSchemaIndexScript extends BundleScript {
+  async run(): Promise<void> {
+    const projected = mutationSchemaDocumentIndexProjection(this.repoRoot);
+    let committed: string | undefined;
+    try { committed = readFileSync(SCHEMA_INDEX_PATH, "utf8"); } catch { committed = undefined; }
+    if (committed === projected) return console.log("schema-document-index: unchanged");
+    writeFileSync(SCHEMA_INDEX_PATH, projected);
+    console.log("schema-document-index: written");
+  }
+}
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));
+/** 👁️ Prints the generator-contract preview of the schema document index. */
+class PreviewSchemaIndexScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments[0] !== "preview") throw new Error("unknown schema-index subcommand");
+    const path = relative(this.repoRoot, SCHEMA_INDEX_PATH).split(sep).join("/").normalize("NFC");
+    const nodes = [{ bytesBase64: Buffer.from(mutationSchemaDocumentIndexProjection(this.repoRoot)).toString("base64"), mode: 0o644, nodeKind: "file", path }];
+    process.stdout.write(`${JSON.stringify({ contractId: "mutation-schema-document-index", nodes, schemaVersion: 1, staleRemovals: [] })}\n`);
+  }
+}
+
+/** ✅️ Fails when the committed schema document index is not the index of the current schemas. */
+class CheckSchemaIndexScript extends BundleScript {
+  async run(): Promise<void> {
+    if (readFileSync(SCHEMA_INDEX_PATH, "utf8") !== mutationSchemaDocumentIndexProjection(this.repoRoot)) throw new Error("schema document index is stale; run bun nx run @semio-tech/dsl-derive-rs:generate-schema-index");
+    console.log("schema-document-index: fresh");
+  }
+}
+
+class SchemaIndexSourceTestScript extends BundleScript {
+  async run(): Promise<void> { await import("../../🧪️tests/🗂️schema-document-index/🟦️.ts"); }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("generate-schema-index", GenerateSchemaIndexScript).register("schema-index", PreviewSchemaIndexScript).register("check-schema-index", CheckSchemaIndexScript).register("test-schema-index-source", SchemaIndexSourceTestScript).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript);
+
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

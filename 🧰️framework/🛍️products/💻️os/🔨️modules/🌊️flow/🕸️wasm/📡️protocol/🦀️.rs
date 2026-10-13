@@ -51,7 +51,7 @@ pub enum FlowFailureCause {
 pub struct FlowFailure {
     pub code: AbiErrorCode,
     pub cause: FlowFailureCause,
-    pub retained_progress:semio_framework_value::retained_clone::RetainedCloneProgress,
+    pub retained_progress:RetainedCloneProgress,
 }
 
 impl FlowFailure {
@@ -63,7 +63,7 @@ impl FlowFailure {
     /// 🔤️ Borrows the original cause when preparing its external reply.
     pub fn message(&self)->&str{match &self.cause{FlowFailureCause::Message(message)=>message,FlowFailureCause::Value(error)=>&error.message}}
     /// 🧾️ Preserves actual retained effects when a native refusal crosses the original Flow boundary.
-    pub fn with_retained_progress(mut self,progress:semio_framework_value::retained_clone::RetainedCloneProgress)->Self{self.retained_progress=progress;self}
+    pub fn with_retained_progress(mut self,progress:RetainedCloneProgress)->Self{self.retained_progress=progress;self}
 
 }
 
@@ -769,7 +769,7 @@ pub(super) fn validate_budget(budget: AbiWorkBudget) -> Result<(), AbiErrorCode>
 }
 
 fn bridge_control_budget() -> AbiWorkBudget {
-    AbiWorkBudget { byte_credit: 1, retained:semio_framework::abi::AbiWorkBudget::credits(0).retained, now_ms: 0, deadline_ms: Some(FLOW_DEADLINE_MILLISECONDS), cancelled: false, interrupted: false }
+    AbiWorkBudget { byte_credit: 1, retained:AbiWorkBudget::credits(0).retained, now_ms: 0, deadline_ms: Some(FLOW_DEADLINE_MILLISECONDS), cancelled: false, interrupted: false }
 }
 
 //#endregion 🔖️Runtime

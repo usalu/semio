@@ -35,7 +35,7 @@ impl crate::os_store::ArtifactOwnedValueRetirementFactory<bool> for BoolFactory{
 struct RootFactory;
 impl crate::os_store::SnapshotRetirementFactory<u64> for RootFactory{
  fn retirement_birth_bytes(&self,_:&Arc<u64>)->usize{semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<u64>()}
- fn retire(&self,original:Arc<u64>,g:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<u64>)>{semio_framework_value::retirement::shared::admit_shared_retirement(original,g,false)}
+ fn retire(&self,original:Arc<u64>,g:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<u64>)>{semio_framework_value::retirement::shared::admit_shared_retirement(original,g,true)}
 }
 
 #[test]

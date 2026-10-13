@@ -14,12 +14,12 @@ pub struct SetDataPeriods {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetDataPeriods {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "data-periods", kind: "set-data-periods", record: "SetDataPeriods" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         let Self { data_periods } = self;
         protocol::MutationOutcome::new(EpwDiff { data_periods: Some(data_periods.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: base.data_periods.clone() })])
+        Ok(vec![EpwMutation::SetDataPeriods(SetDataPeriods { data_periods: base.data_periods.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set data periods", "Datenperioden setzen")

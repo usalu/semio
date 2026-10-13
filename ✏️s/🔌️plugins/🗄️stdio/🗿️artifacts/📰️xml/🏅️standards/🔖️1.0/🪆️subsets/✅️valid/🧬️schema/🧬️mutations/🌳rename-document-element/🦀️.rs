@@ -27,7 +27,7 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentEle
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
         Ok(match document_element_name(base) {
-            Some(name) => vec![XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: name.to_string() })],
+            Some(name) => vec![XmlValidMutation::RenameDocumentElement(RenameDocumentElement { name: name.to_string() })],
             None => Vec::new(),
         })
     }

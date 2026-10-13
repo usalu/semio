@@ -238,8 +238,8 @@ pub fn procedure_scene(doc: &semio_framework_plugin::ArtifactView<'_, ProcedureS
 /// 🌱️ The scene a document's children derive without member stores: a bundled example's or the empty program's. Readers
 /// without a child view (inference, foreign serializers) read this until the framework hands them child head packs.
 pub fn procedure_derivable_scene(snapshot: &ProcedureSnapshot) -> Option<ProcedureScene> {
-    if (snapshot.flow.child_id.as_str(), snapshot.text.child_id.as_str()) == (crate::examples::demo::FLOW_CHILD_ID, crate::examples::demo::TEXT_CHILD_ID) {
-        return Some(crate::examples::demo::scene());
+    if (snapshot.flow.child_id.as_str(), snapshot.text.child_id.as_str()) == (examples::demo::FLOW_CHILD_ID, examples::demo::TEXT_CHILD_ID) {
+        return Some(examples::demo::scene());
     }
     let empty = ProcedureScene::default();
     (procedure_flow_child_handle(&empty.path).child_id == snapshot.flow.child_id && procedure_text_child_handle(&empty.seed).child_id == snapshot.text.child_id).then_some(empty)
@@ -731,7 +731,7 @@ pub mod viewer {
 /// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
 /// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
 /// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
-pub fn procedure_child_restore_projection(snapshot: &crate::ProcedureSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+pub fn procedure_child_restore_projection(snapshot: &ProcedureSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
     store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("procedure.child-projection"), error.to_string()))
 }
 //#endregion 🧬️ChildRestoreProjection

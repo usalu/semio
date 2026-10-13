@@ -32,7 +32,7 @@ pub fn inverse(p: &GltfBindNodeSkinPayload, base: &GltfSnapshot) -> Vec<super::G
     }
     match base.document.nodes[p.node].skin {
         Some(current) if current == p.skin => Vec::new(),
-        Some(current) => vec![super::bind_node_skin::mutation(super::bind_node_skin::GltfBindNodeSkinPayload { node: p.node, skin: current })],
+        Some(current) => vec![mutation(GltfBindNodeSkinPayload { node: p.node, skin: current })],
         None => vec![super::unbind_node_skin::mutation(super::unbind_node_skin::GltfUnbindNodeSkinPayload { node: p.node })],
     }
 }
@@ -54,7 +54,7 @@ pub fn mutation(payload: GltfBindNodeSkinPayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeSkinMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "node-skin", kind: "bind-node-skin", record: "BoundNodeSkin" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

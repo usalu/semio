@@ -32,7 +32,7 @@ impl PngOwnedValidationWork {
                 },
                 1=>{
                     if self.cursor==image.samples.len() {hash_image_metadata(self.hash.as_mut().ok_or("png: missing revision accumulator")?,image);self.hash.as_mut().ok_or("png: missing revision accumulator")?.number(image.text_chunks.len()as u64);self.stage=2;self.cursor=0;continue;}
-                    let run=(image.samples.len()-self.cursor).min(bulk_run_elements(budget,std::mem::size_of::<u16>()));
+                    let run=(image.samples.len()-self.cursor).min(bulk_run_elements(budget,size_of::<u16>()));
                     if run==0 {return Ok((false,used));}
                     let maximum=if image.bit_depth==16 {u16::MAX}else{(1u16<<image.bit_depth)-1};
                     let spp=image.color_type.samples_per_pixel();
@@ -48,7 +48,7 @@ impl PngOwnedValidationWork {
                         }
                         hash.number(u64::from(sample));
                     }
-                    self.cursor+=run;page=run*std::mem::size_of::<u16>();
+                    self.cursor+=run;page=run*size_of::<u16>();
                 },
                 2=>{
                     if self.cursor==image.text_chunks.len() {self.hash.as_mut().ok_or("png: missing revision accumulator")?.number(image.ancillary_chunks.len()as u64);self.stage=3;self.cursor=0;continue;}

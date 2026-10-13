@@ -15,6 +15,11 @@ struct TransferSnapshot(String);
 struct TransferDiff { literal:Option<String> }
 #[derive(Clone,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]
 struct TransferMutation { literal:String }
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for TransferMutation {
+ fn canonical_tree_node(&self)->Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>,ValueError>{self.literal.canonical_tree_node()}
+ fn canonical_tree_child(&self,ordinal:usize)->Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree,ValueError>{self.literal.canonical_tree_child(ordinal)}
+ fn canonical_tree_key(&self,ordinal:usize)->Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>,ValueError>{self.literal.canonical_tree_key(ordinal)}
+}
 impl store::DiffAlgebra<TransferSnapshot> for TransferDiff {
  fn inverse(&self,base:&TransferSnapshot)->Self{Self{literal:self.literal.as_ref().map(|_|base.0.clone())}}
  fn is_empty(&self)->bool{self.literal.is_none()}

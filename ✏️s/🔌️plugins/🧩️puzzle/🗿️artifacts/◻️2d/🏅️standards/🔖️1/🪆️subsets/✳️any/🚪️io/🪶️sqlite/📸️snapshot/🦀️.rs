@@ -97,7 +97,7 @@ fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl
  let documents=&database.table("puzzle2d_document")?.rows;let cameras=&database.table("puzzle2d_camera")?.rows;let metas=&database.table("puzzle2d_meta")?.rows;let catalog_rows=&database.table("puzzle2d_kind_catalogs")?.rows;
  if documents.len()!=1||documents[0].rowid!=1||documents[0].values.len()!=2||documents[0].integer(0)?!=1||cameras.len()!=1||metas.len()!=1||catalog_rows.len()>1{return Err(invalid("Puzzle 2D requires one complete board, camera and metadata with at most one catalog"))}identity(&cameras[0],11)?;identity(&metas[0],3)?;if cameras[0].integer(1)?!=1||metas[0].integer(1)?!=1{return Err(invalid("Puzzle 2D singleton has another board owner"))}for row in catalog_rows{identity(row,2)?;if row.integer(1)?!=metas[0].rowid{return Err(invalid("Puzzle 2D catalog has another metadata owner"))}}
  let maximum=control.limits().max_value_bytes;let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,event.completed,event.total).is_ok();let mut native=semio_framework_value::NativeDecodeControl::new(maximum,&mut progress);
- native.charge(std::mem::size_of::<Puzzle2dSnapshot>().checked_add(additional).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Puzzle authority allocation overflow"))?)?;
+ native.charge(size_of::<Puzzle2dSnapshot>().checked_add(additional).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Puzzle authority allocation overflow"))?)?;
  let mut nodes=Members::new(&database.table("puzzle2d_node")?.rows,30,&mut native)?;let mut handles=Members::new(&database.table("puzzle2d_handle")?.rows,18,&mut native)?;let mut edges=Members::new(&database.table("puzzle2d_edge")?.rows,35,&mut native)?;let mut regions=Members::new(&database.table("puzzle2d_target_region")?.rows,19,&mut native)?;let mut compatibility=Members::new(&database.table("puzzle2d_kind_compatibility")?.rows,8,&mut native)?;
  let mut kinds=Members::new(&database.table("puzzle2d_catalog_node_kind")?.rows,11,&mut native)?;let mut bases=Members::new(&database.table("puzzle2d_base_kind")?.rows,4,&mut native)?;let mut representations=Members::new(&database.table("puzzle2d_representation")?.rows,9,&mut native)?;let mut tags=Members::new(&database.table("puzzle2d_representation_tag")?.rows,4,&mut native)?;let mut templates=Members::new(&database.table("puzzle2d_handle_template")?.rows,19,&mut native)?;let mut attributes=Members::new(&database.table("puzzle2d_attribute")?.rows,7,&mut native)?;let mut authors=Members::new(&database.table("puzzle2d_author")?.rows,8,&mut native)?;
  let mut handle_kinds=Members::new(&database.table("puzzle2d_catalog_handle_kind")?.rows,11,&mut native)?;let mut compatible_kinds=Members::new(&database.table("puzzle2d_compatible_kind")?.rows,4,&mut native)?;let mut edge_kinds=Members::new(&database.table("puzzle2d_catalog_edge_kind")?.rows,9,&mut native)?;let mut wire_kinds=Members::new(&database.table("puzzle2d_catalog_wire_kind")?.rows,10,&mut native)?;
@@ -117,7 +117,7 @@ fn restore_authority(database:&SqliteDatabase,control:&mut SqliteSnapshotControl
  let manifest_id=restore_optional_text(meta_row,2,&mut native)?;
 
  let kind_catalogs=if let Some(catalog)=catalog_rows.first(){
-  native.charge(std::mem::size_of::<Puzzle2dKindCatalogs>())?;let kind_rows=kinds.take(catalog.rowid,&mut native)?;let mut restored_kinds=allocate_collection::<Puzzle2dCatalogNodeKind>(kind_rows.len(),&mut native)?;
+  native.charge(size_of::<Puzzle2dKindCatalogs>())?;let kind_rows=kinds.take(catalog.rowid,&mut native)?;let mut restored_kinds=allocate_collection::<Puzzle2dCatalogNodeKind>(kind_rows.len(),&mut native)?;
   for row in kind_rows{
    let base_rows=bases.take(row.rowid,&mut native)?;let mut base_kinds=allocate_collection::<PagedUtf8<{usize::MAX}>>(base_rows.len(),&mut native)?;native.begin_stage(base_rows.len())?;for member in base_rows{native.step()?;base_kinds.push(PagedUtf8::try_from_str_controlled(member.text(3)?,&mut native)?);}native.checkpoint()?;
    let representation_rows=representations.take(row.rowid,&mut native)?;let mut restored_representations=allocate_collection::<Puzzle2dRepresentation>(representation_rows.len(),&mut native)?;
@@ -159,7 +159,7 @@ impl ArtifactSqliteSnapshot for Puzzle2dSnapshot{
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{restore(database,control)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  let limits=control.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  let limits=control.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   admit_typed(self,SqliteSnapshotPhase::EncodeNative,control)
@@ -171,14 +171,14 @@ impl ArtifactSqliteSnapshot for crate::Puzzle2dPlaySnapshot{
  const SQLITE_SCHEMA:&'static str=<Puzzle2dSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA;
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.typed().to_sqlite_database(control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
-  let bytes=std::mem::size_of::<Puzzle2dSnapshot>().checked_add(2*std::mem::size_of::<usize>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Play authority allocation overflow"))?;
+  let bytes=size_of::<Puzzle2dSnapshot>().checked_add(2*size_of::<usize>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Play authority allocation overflow"))?;
   restore_authority(database,control,bytes).map(Self::from_typed)
  }
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let limits=control.limits();semantic_cells::extent(limits)?;
-  store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as store::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+  store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as store::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    semantic_cells::admit_record(record,limits,native)?;
-   native.charge(std::mem::size_of::<Puzzle2dSnapshot>()+2*std::mem::size_of::<usize>())?;
+   native.charge(size_of::<Puzzle2dSnapshot>()+2*size_of::<usize>())?;
    Puzzle2dSnapshot::__dsl_from_record_controlled(record,native).map(Self::from_typed)
   })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }

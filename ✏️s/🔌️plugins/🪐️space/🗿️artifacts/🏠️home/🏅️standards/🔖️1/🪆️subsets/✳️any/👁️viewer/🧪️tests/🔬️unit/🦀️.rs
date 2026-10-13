@@ -197,8 +197,8 @@ async fn a_viewer_page_publishes_only_its_transient_item() {
     let meta = semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1, view_state: Some(home_view()) };
     for page in pages {
         let args = DslValue::Object(vec![("pageJson".into(), DslValue::String(semio_framework_pack_json::to_json_string(&feed_page(&fixture, page))))]);
-        app.handle_action("applyDirectoryEventPage", Some(&args), &meta).await.expect("the viewer admits a sealed page");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.expect("the page settles");
+        app.handle_action("applyDirectoryEventPage", Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the viewer admits a sealed page");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the page settles");
         assert!(settled.lanes.iter().all(|lane| !matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Draft | TypedOperationResultLane::Config)), "a viewer page never writes the document, draft or config: {:?}", settled.lanes);
         assert!(settled.lanes.contains(&TypedOperationResultLane::Transient));
         assert!(settled.events.iter().any(|event| event.kind == crate::editor::home::transient::DirectoryProjectionReceiptV1::SCHEMA));
@@ -209,6 +209,6 @@ async fn a_viewer_page_publishes_only_its_transient_item() {
         let name = space["name"].as_str().expect("space name");
         assert!(json.contains(name), "the viewer lists every folded space ({name}): {json}");
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 //#endregion 📬️DirectoryFeed

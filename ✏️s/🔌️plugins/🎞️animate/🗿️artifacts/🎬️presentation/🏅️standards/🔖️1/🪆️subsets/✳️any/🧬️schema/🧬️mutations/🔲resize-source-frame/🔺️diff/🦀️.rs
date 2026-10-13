@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `resize-source-frame`.
 use super::ResizeSourceFrame;
-use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationSourcePatch};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff

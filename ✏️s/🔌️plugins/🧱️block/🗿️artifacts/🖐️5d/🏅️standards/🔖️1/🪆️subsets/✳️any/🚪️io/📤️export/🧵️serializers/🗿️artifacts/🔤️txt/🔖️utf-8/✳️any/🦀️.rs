@@ -1,6 +1,5 @@
 //! txt export via framework `io_mechanism::serialize_dsl_txt` (UTF-8 DSL carrier).
 
-use store::ArtifactDsl;
 use crate::Block5dSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{serialize_dsl_txt, ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
@@ -18,7 +17,7 @@ pub fn dsl_text(from: &Block5dSnapshot) -> String {
 impl Serializer<Block5dSnapshot> for Block5dIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    async fn serialize(from: &Block5dSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         serialize_dsl_txt(from)
     }
 }

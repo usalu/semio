@@ -26,9 +26,9 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for AddEntry {
             diff::diff_add_entry(base, entry.clone(), before.as_deref())
         })
     }
-    fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &ZipSnapshot) -> Result<Vec<ZipMutation>, semio_framework_value::ValueError> {
         let Self { entry, .. } = self;
-        Ok({ vec![ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })] })
+        Ok(vec![ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Add entry", "Eintrag hinzufügen")

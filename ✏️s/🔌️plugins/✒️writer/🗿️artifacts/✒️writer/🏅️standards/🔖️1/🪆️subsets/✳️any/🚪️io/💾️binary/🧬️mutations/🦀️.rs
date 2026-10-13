@@ -8,10 +8,9 @@
 //! modules by `semio_framework_plugin::app_commands!`.
 
 use crate::op::WriterMutation;
-use crate::schema;
-use crate::WriterSnapshot;
-use protocol::{Mutation, OpBinary};
-use store::ArtifactEnvelopeMutationFieldTarget;
+#[cfg(test)] use crate::schema;
+#[cfg(test)] use crate::WriterSnapshot;
+use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
@@ -144,7 +143,7 @@ mod semio_protocol_conformance;
 
 
 pub const BINARY_TAG_REGISTRY: &[(&str, u8)] =
-    &[("rename-writer", crate::standards::v1::subsets::any::io::binary::mutations::rename_writer::BINARY_TAG), ("change-uri", crate::standards::v1::subsets::any::io::binary::mutations::change_uri::BINARY_TAG), ("change-language", crate::standards::v1::subsets::any::io::binary::mutations::change_language::BINARY_TAG), ("edit-text", crate::standards::v1::subsets::any::io::binary::mutations::edit_text::BINARY_TAG), ("splice-text", crate::standards::v1::subsets::any::io::binary::mutations::splice_text::BINARY_TAG)];
+    &[("rename-writer", rename_writer::BINARY_TAG), ("change-uri", change_uri::BINARY_TAG), ("change-language", change_language::BINARY_TAG), ("edit-text", edit_text::BINARY_TAG), ("splice-text", splice_text::BINARY_TAG)];
 
 #[path = "🌐change-language/🦀️.rs"]
 pub mod change_language;
@@ -162,9 +161,10 @@ pub mod change_uri;
 pub mod rename_writer;
 
 mod native_codec {
-use super::*;
-use crate::schema::mutations::{change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, splice_text, ChangeLanguage, ChangeUri, EditText, RenameWriter, SpliceText, WriterMutation};
-use crate::central_apply::{apply_writer_mutation};
+#[cfg(test)] use super::*;
+use crate::schema::mutations::{WriterMutation};
+#[cfg(test)] use crate::schema::mutations::{change_language, change_uri, edit_text, inverse_writer_mutation, rename_writer, splice_text, ChangeLanguage, ChangeUri, EditText, RenameWriter, SpliceText};
+#[cfg(test)] use crate::central_apply::{apply_writer_mutation};
 
 impl protocol::OpBinary for WriterMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

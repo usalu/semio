@@ -1,31 +1,58 @@
 {
-  "version": 1,
-  "cases": [
+  "version": 2,
+  "limits": [
     {
       "id": "ready",
       "maximumRawBytes": 4096,
       "maximumWorkItems": 1,
-      "expectedRefusal": null,
-      "expectedRawCapacity": 4096
+      "expectedRefusal": null
     },
     {
       "id": "zero-raw",
       "maximumRawBytes": 0,
       "maximumWorkItems": 1,
-      "expectedRefusal": "capacity-is-zero",
-      "expectedRawCapacity": 0
+      "expectedRefusal": "capacity-is-zero"
     },
     {
       "id": "zero-work",
       "maximumRawBytes": 4096,
       "maximumWorkItems": 0,
-      "expectedRefusal": "capacity-is-zero",
+      "expectedRefusal": "capacity-is-zero"
+    }
+  ],
+  "raw": [
+    {
+      "id": "exact-declared-bytes",
+      "declaredBytes": 80,
+      "maximumRawBytes": 16777216,
+      "expectedRefusal": null,
+      "expectedRawCapacity": 80
+    },
+    {
+      "id": "empty-wire",
+      "declaredBytes": 0,
+      "maximumRawBytes": 4096,
+      "expectedRefusal": null,
+      "expectedRawCapacity": 0
+    },
+    {
+      "id": "at-ceiling",
+      "declaredBytes": 4096,
+      "maximumRawBytes": 4096,
+      "expectedRefusal": null,
+      "expectedRawCapacity": 4096
+    },
+    {
+      "id": "above-ceiling",
+      "declaredBytes": 4097,
+      "maximumRawBytes": 4096,
+      "expectedRefusal": "raw-capacity-rejected",
       "expectedRawCapacity": 0
     },
     {
       "id": "impossible-allocation",
+      "declaredBytes": "usize-max",
       "maximumRawBytes": "usize-max",
-      "maximumWorkItems": 1,
       "expectedRefusal": "raw-capacity-rejected",
       "expectedRawCapacity": 0
     }

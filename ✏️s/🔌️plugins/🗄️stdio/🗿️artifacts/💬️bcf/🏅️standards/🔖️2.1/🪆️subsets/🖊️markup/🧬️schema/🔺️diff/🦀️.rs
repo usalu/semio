@@ -6,7 +6,8 @@
 //! ORIGINAL position and `absorb` stays base-free. The guid-addressed leaves resolve a guid to its
 //! base index when they build the diff.
 
-use crate::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
+use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfRawPart, BcfTopic, BcfViewpoint};
+#[cfg(test)] use crate::schema::snapshot::{BcfColoring, BcfPoint3, BcfVisibility};
 use crate::BcfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

@@ -207,7 +207,7 @@ fn native_add(total: &mut usize, count: usize, maximum: usize) -> Result<(), Val
     }
     Ok(())
 }
-fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: usize, native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(),semio_framework_value::ValueError> {
+fn admit_native_rows(record: &semio_framework_dsl_record::RecordValue, maximum: usize, native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(),ValueError> {
     native
         .scoped_stage(|native| -> Result<(), ValueError> {
             let mut count = 2;
@@ -416,7 +416,7 @@ impl ArtifactSqliteSnapshot for Puzzle3dSnapshot {
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admit_native_rows(record, maximum, native)?;
                 Self::__dsl_from_record_controlled(record, native)
             })(); *snapshot_output = Some(constructed?); Ok(()) },
@@ -880,7 +880,7 @@ fn reconstruct(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<
     rows.finish(c)?;
     Ok(Puzzle3dSnapshot { schema, domain, meta: Puzzle3dMeta { kind_catalogs, kind_compatibility }, objects, attractions, target_volumes, references })
 }
-impl ArtifactSqliteSnapshot for crate::Puzzle3dPlaySnapshot {
+impl ArtifactSqliteSnapshot for Puzzle3dPlaySnapshot {
     const SQLITE_SCHEMA: &'static str = Puzzle3dSnapshot::SQLITE_SCHEMA;
     fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         self.typed().to_sqlite_database(c)

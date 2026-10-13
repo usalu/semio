@@ -264,7 +264,7 @@ fn opening(x: &mut Export<'_>, id: &str, row: &Opening, hosts: &BTreeMap<String,
         OpeningKind::Void { .. } => {
             x.links.elements.insert(id.to_string(), void);
             if host.lifted {
-                x.links.authoring.push((void, vec![("Sill", data::number(size.sill))]));
+                x.links.authoring.push((void, vec![("Sill", number(size.sill))]));
             }
             return;
         }
@@ -282,10 +282,10 @@ fn opening(x: &mut Export<'_>, id: &str, row: &Opening, hosts: &BTreeMap<String,
         x.links.typed.entry(object).or_default().push(fill);
     }
     if row.flip_hand {
-        x.links.authoring.push((fill, vec![("FlipHand", data::label("true"))]));
+        x.links.authoring.push((fill, vec![("FlipHand", label("true"))]));
     }
     if host.lifted {
-        x.links.authoring.push((fill, vec![("Sill", data::number(size.sill))]));
+        x.links.authoring.push((fill, vec![("Sill", number(size.sill))]));
     }
     let name = if entity == "IFCWINDOW" { "Qto_WindowBaseQuantities" } else { "Qto_DoorBaseQuantities" };
     x.quantify(fill, name, id, |row| vec![Quantity::Length("Height", row.height), Quantity::Length("Width", row.width), Quantity::Area("Area", row.gross_area)]);

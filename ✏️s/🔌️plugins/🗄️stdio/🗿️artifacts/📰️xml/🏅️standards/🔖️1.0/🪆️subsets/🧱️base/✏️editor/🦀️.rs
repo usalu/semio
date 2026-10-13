@@ -7,7 +7,7 @@
 
 use crate::editor::xml_any::modes::edit;
 use crate::editor::xml_any::modes::edit::windows::main;
-use crate::schema::mutations::{SetTextMutation, SetTextPayload, XmlNodePath};
+use crate::schema::mutations::{SetTextPayload, XmlNodePath};
 use crate::schema::snapshot::XmlNode;
 use crate::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -15,7 +15,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -486,7 +485,7 @@ impl ArtifactEditor for XmlAnyEditor {
     }
 
     fn initial_snapshot() -> XmlSnapshot {
-        XmlSnapshot::default()
+        XmlSnapshot::with_empty_root()
     }
 
     /// ✏️ Only a `Text` node found at `node_id` accepts `set-node` — anything else (unparseable

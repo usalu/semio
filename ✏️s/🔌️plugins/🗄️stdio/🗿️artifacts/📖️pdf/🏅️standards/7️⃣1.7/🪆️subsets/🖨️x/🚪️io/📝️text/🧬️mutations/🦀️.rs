@@ -5,20 +5,20 @@ use protocol::OpText;
 
 //#region 🧾️DerivedRegistry
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("InsertEncryptionDictionary", self::insert_encryption_dictionary::TEXT_OPCODE),
-    ("RemoveEncryptionDictionary", self::remove_encryption_dictionary::TEXT_OPCODE),
-    ("SetOutputIntent", self::set_output_intent::TEXT_OPCODE),
-    ("RemoveOutputIntent", self::remove_output_intent::TEXT_OPCODE),
-    ("SetTrimBox", self::set_trim_box::TEXT_OPCODE),
-    ("RemoveTrimBox", self::remove_trim_box::TEXT_OPCODE),
-    ("EmbedFontFile", self::embed_font_file::TEXT_OPCODE),
-    ("RemoveFontFile", self::remove_font_file::TEXT_OPCODE),
-    ("InsertJavascriptAction", self::insert_javascript_action::TEXT_OPCODE),
-    ("RemoveJavascriptAction", self::remove_javascript_action::TEXT_OPCODE),
-    ("InsertLaunchAction", self::insert_launch_action::TEXT_OPCODE),
-    ("RemoveLaunchAction", self::remove_launch_action::TEXT_OPCODE),
-    ("InsertMediaAnnotation", self::insert_media_annotation::TEXT_OPCODE),
-    ("RemoveMediaAnnotation", self::remove_media_annotation::TEXT_OPCODE),
+    ("InsertEncryptionDictionary", insert_encryption_dictionary::TEXT_OPCODE),
+    ("RemoveEncryptionDictionary", remove_encryption_dictionary::TEXT_OPCODE),
+    ("SetOutputIntent", set_output_intent::TEXT_OPCODE),
+    ("RemoveOutputIntent", remove_output_intent::TEXT_OPCODE),
+    ("SetTrimBox", set_trim_box::TEXT_OPCODE),
+    ("RemoveTrimBox", remove_trim_box::TEXT_OPCODE),
+    ("EmbedFontFile", embed_font_file::TEXT_OPCODE),
+    ("RemoveFontFile", remove_font_file::TEXT_OPCODE),
+    ("InsertJavascriptAction", insert_javascript_action::TEXT_OPCODE),
+    ("RemoveJavascriptAction", remove_javascript_action::TEXT_OPCODE),
+    ("InsertLaunchAction", insert_launch_action::TEXT_OPCODE),
+    ("RemoveLaunchAction", remove_launch_action::TEXT_OPCODE),
+    ("InsertMediaAnnotation", insert_media_annotation::TEXT_OPCODE),
+    ("RemoveMediaAnnotation", remove_media_annotation::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

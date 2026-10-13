@@ -18,7 +18,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetParagraphStyle {
         addressed_outcome(&DocxMutation::SetParagraphStyle(self.clone()), base)
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
     Ok({
         addressed_inverse(&DocxMutation::SetParagraphStyle(self.clone()), base)?
     

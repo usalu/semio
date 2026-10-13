@@ -15,4 +15,3 @@ impl protocol::OpBinary for FemResultsWindowTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

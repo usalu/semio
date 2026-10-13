@@ -64,8 +64,8 @@ pub(crate) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
     let schema = reconstruct_text(control, root.text(1)?)?;
     let package = reconstruct_opc_package(database, OPC, control)?;
     let opc = control.allocation_stage(PHASE, |remaining, progress,allocation|{
-        let mut callback = |event: semio_framework_value::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+        let mut callback = |event: NativeDecodeProgress| progress(event.completed, event.total);
+        let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
         let result = RetainedOpcPackage::try_from_package_controlled(package, &mut native);
         (result, native.owned_bytes())
     })??;

@@ -18,4 +18,3 @@ impl protocol::OpBinary for Wfc2dConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

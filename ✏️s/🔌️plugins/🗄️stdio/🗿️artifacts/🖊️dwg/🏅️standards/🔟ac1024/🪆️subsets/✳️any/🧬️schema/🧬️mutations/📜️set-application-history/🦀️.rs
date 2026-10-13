@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetApplicationHistory 
         protocol::MutationOutcome::new(DwgDiff { application_history: (base.application_history != self.application_history).then(|| self.application_history.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.application_history != self.application_history).then(|| DwgMutation::SetApplicationHistory(set_application_history::SetApplicationHistory { application_history: base.application_history.clone() })).into_iter().collect())
+        Ok((base.application_history != self.application_history).then(|| DwgMutation::SetApplicationHistory(SetApplicationHistory { application_history: base.application_history.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set application history", "Anwendungsverlauf setzen")

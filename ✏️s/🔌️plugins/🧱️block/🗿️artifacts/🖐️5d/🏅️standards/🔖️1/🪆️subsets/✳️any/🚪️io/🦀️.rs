@@ -231,7 +231,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Block5dBuilderFacets {
         construction: Block5dBuilderConstruction,
         analysis: Block5dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Block5dComposerComposition,
+        composition: Block5dComposerComposition,
     }
     builder: Block5dBuilder,
     analyzer: Block5dAnalyzer,

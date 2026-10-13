@@ -38,7 +38,7 @@ use crate::schema::diff::StepDiff;
 use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
 use crate::standards::v_ap214::engine::ladder;
 use crate::StepSnapshot;
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 
 #[cfg(test)]
 pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation};

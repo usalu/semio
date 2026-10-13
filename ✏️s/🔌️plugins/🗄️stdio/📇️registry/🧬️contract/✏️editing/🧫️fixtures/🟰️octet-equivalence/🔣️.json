@@ -1,0 +1,10 @@
+{
+  "cases": [
+    { "name": "identical octets", "octets": [0, 255, 92], "json": [0, 255, 92], "equivalent": true },
+    { "name": "empty", "octets": [], "json": [], "equivalent": true },
+    { "name": "extra item", "octets": [1, 2], "json": [1, 2, 3], "equivalent": false },
+    { "name": "different octet", "octets": [1, 2], "json": [1, 3], "equivalent": false },
+    { "name": "item beyond one octet", "octets": [1], "json": [257], "equivalent": false },
+    { "name": "fractional item", "octets": [1], "json": [1.5], "equivalent": false }
+  ]
+}

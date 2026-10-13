@@ -16,14 +16,14 @@ pub struct InsertBasicElement {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertBasicElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "basic-element", kind: "insert-basic-element", record: "InsertBasicElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { parent, index, node } = self;
         match subtree_profile_violation(node) {
             Some(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
             None => protocol::MutationOutcome::new(insert_child_diff(parent, *index, node)),
         }
     }
-    fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
         let Self { parent, index, .. } = self;
         Ok(vec![SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: parent.clone(), index: *index })])
     }

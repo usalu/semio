@@ -183,7 +183,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_metabolism_example
 
 fn tool_run_action(app: &mut WiresApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &meta("local"))).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &WiresApp) -> Option<&'static str> {
@@ -197,7 +197,7 @@ fn pump_until(app: &mut WiresApp, what: &str, done: impl Fn(&WiresApp) -> bool) 
             return;
         }
         PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
@@ -241,7 +241,7 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
     assert_eq!(after.len(), before.len());
     assert!(after.iter().all(|(id, position)| before.get(id) != Some(position)), "every metabolism node moved: {before:?} → {after:?}");
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id));
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     assert_eq!(node_positions(&app), before, "one undo restores every committed position");
     close(app);
 }
@@ -278,7 +278,7 @@ fn debug_reorganize_undo_settles() {
             break;
         }
         PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
-        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("[DEBUG] advance");
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("[DEBUG] advance");
         if let Some(page) = app.take_typed_operation_result_page(1) {
             eprintln!("[DEBUG] finalize page {:?}", page.lane);
             app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");
@@ -289,7 +289,7 @@ fn debug_reorganize_undo_settles() {
         let _ = ::semio_framework_async::poll::resolve_ready(app.take_typed_operation_completion()).expect("[DEBUG] completion");
     }
     eprintln!("[DEBUG] before undo pending={} presence={:?}", app.has_pending_typed_operations(), app.tool_run_presence().map(|presence| presence.state.wire_name()));
-    let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action("undo", None, &meta("local")));
+    let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action("undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     eprintln!("[DEBUG] undo admitted {:?}", admitted.as_ref().map(|result| result.output.clone()));
     for turn in 0..4000 {
         if !app.has_pending_typed_operations() {
@@ -297,7 +297,7 @@ fn debug_reorganize_undo_settles() {
             break;
         }
         PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
-        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("[DEBUG] advance");
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("[DEBUG] advance");
         while let Some(page) = app.take_typed_operation_result_page(1) {
             eprintln!("[DEBUG] undo page {:?} {}", page.lane, String::from_utf8_lossy(page.bytes()).chars().take(300).collect::<String>());
             app.acknowledge_typed_operation_result(page.token).expect("[DEBUG] ack");

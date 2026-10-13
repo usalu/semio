@@ -7,7 +7,7 @@ use protocol::{DiffText,DiffBinary};
 use io::sqlite::snapshot::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
 use serde::{Deserialize, Serialize};
 
-impl DiffBinary for crate::SpaceDiff {
+impl DiffBinary for SpaceDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, semio_framework_os_kernel::ProtocolError> {
         Ok(semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
     }
@@ -17,4 +17,3 @@ impl DiffBinary for crate::SpaceDiff {
     }
 }
 }
-pub use diff_codec::*;

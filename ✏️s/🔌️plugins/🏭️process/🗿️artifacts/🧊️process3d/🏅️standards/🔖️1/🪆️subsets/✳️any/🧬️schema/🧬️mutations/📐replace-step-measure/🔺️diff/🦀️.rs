@@ -2,7 +2,7 @@
 //! `step_payloads` timeline; `apply` re-derives the `steps`/`tool_solids` handles (`Cut`/`Attach` mint a tool solid, `Drill` none).
 //! Error `target-missing` when the step is absent, Warning `no-op` when the measure is unchanged.
 
-use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
+use crate::diff::{Process3dStepPatch, Process3dStepsDelta};
 use crate::diff::Process3dDiff;
 use crate::Process3dSnapshot;
 

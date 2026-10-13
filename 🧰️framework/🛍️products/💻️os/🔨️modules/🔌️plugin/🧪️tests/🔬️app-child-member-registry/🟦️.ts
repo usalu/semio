@@ -21,7 +21,7 @@ test("prepared child identity release uses the neutral physical admission corpus
 });
 
 test("editor and viewer adapters retain the selected original mutation batch admission", () => {
-  const group = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🔣️.json"), "utf8"));
+  const group = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/📚️history-cases/🔣️.json"), "utf8"));
   const lengths = [];
   for (const row of group.cases) {
     const original = Array.from({ length: row.historyEntries }, (_, value) => ({ value }));

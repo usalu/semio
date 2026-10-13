@@ -77,7 +77,7 @@ fn op_binary_round_trips_via_wrapper_fns() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
     let mut store = crate::store_fixture::document_store(Generation2dSnapshot::default()).await;
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![create_widget(3, Widget::InputNote { id: "note-9".into(), text: String::new() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
     crate::store_fixture::close(store);

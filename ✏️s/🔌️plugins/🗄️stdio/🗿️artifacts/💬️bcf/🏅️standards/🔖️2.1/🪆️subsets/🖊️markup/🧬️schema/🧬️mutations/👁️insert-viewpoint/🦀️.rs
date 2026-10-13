@@ -22,7 +22,7 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertViewpoint {
         let at = index.unwrap_or_else(|| find_topic(base, topic_guid).map_or(0, |topic| topic.viewpoints.len()));
         protocol::MutationOutcome::new(wrap_topic_diff(base, topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexedAdded { index: at, item: viewpoint.clone() }] }), ..Default::default() }))
     }
-    fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
         let Self { topic_guid, viewpoint, .. } = self;
         Ok({
             {

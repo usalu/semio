@@ -1,7 +1,6 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
 use crate::FormsSnapshot;
-use store::PackError;
 pub type FormsStore = store::ArtifactStore<FormsSnapshot, crate::op::FormMutation>;
 
 /// 🔐️ Opens a Forms store WITH its exact owner catalog installed. `ArtifactStore::new` installs no

@@ -8,7 +8,7 @@ pub struct FactoryBoxedValue<T:Send+'static>{pub original:Box<T>,pub factory:Arc
 #[derive(crate::RetireOwned)]
 pub struct FactoryBoxedPublication<T:Send+'static>{payload:OriginalBoxSlot<T>,carrier:OriginalBoxSlot<FactoryBoxedValue<T>>,issuer:CapturedIssuer<T>}
 struct CapturedIssuer<T:Send+'static>{factory:Arc<dyn ArtifactOwnedValueRetirementFactory<T>>}
-impl<T:Send+'static> RetireOwned for CapturedIssuer<T>{fn retirement(self)->Box<dyn RetirementCursor>{let factory:Arc<dyn FactoryRetirement>=self.factory;FactoryAuthority::new(factory).retirement()}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<FactoryAuthority>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:Send+'static> RetireOwned for CapturedIssuer<T>{fn retirement(self)->Box<dyn RetirementCursor>{let factory:Arc<dyn FactoryRetirement>=self.factory;FactoryAuthority::new(factory).retirement()}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<FactoryAuthority>())}fn controlled_retirement_supported()->bool{true}}
 struct OriginalBoxSlot<T:Send+'static>{allocation:ManuallyDrop<Option<Box<std::mem::MaybeUninit<T>>>>}
 impl<T:Send+'static> FactoryBoxedValue<T>{
  pub fn take_for_publication(self:Box<Self>)->(T,FactoryBoxedPublication<T>){
@@ -20,22 +20,22 @@ impl<T:Send+'static> FactoryBoxedPublication<T>{
  /// 🔁️ Rejected publication restores the same original carrier, payload slot and issuer without allocation.
  pub fn restore(mut self,value:T)->Box<FactoryBoxedValue<T>>{let payload=Box::into_raw(self.payload.allocation.take().unwrap()).cast::<T>();let carrier=Box::into_raw(self.carrier.allocation.take().unwrap()).cast::<FactoryBoxedValue<T>>();unsafe{payload.write(value);carrier.write(FactoryBoxedValue{original:Box::from_raw(payload),factory:self.issuer.factory});Box::from_raw(carrier)}}
 }
-impl<T:Send+'static> RetireOwned for OriginalBoxSlot<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
+impl<T:Send+'static> RetireOwned for OriginalBoxSlot<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+'static> RetirementCursor for OriginalBoxSlot<T>{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}let bytes=std::mem::size_of::<T>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.allocation.take());RetirementStep::Bytes(bytes)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}let bytes=size_of::<T>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.allocation.take());RetirementStep::Bytes(bytes)}
  fn terminal_is_empty(&self)->bool{self.allocation.is_none()}
- fn next_close_byte_demand(&self)->Option<usize>{Some(if self.terminal_is_empty(){0}else{std::mem::size_of::<T>()})}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(if self.terminal_is_empty(){0}else{size_of::<T>()})}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl<T:Send+'static> Drop for OriginalBoxSlot<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original boxed allocation abandoned before funded release");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.allocation);}}}}
 struct Cursor<T:Send+'static>{boxed:ManuallyDrop<Option<Box<T>>>,vacant:ManuallyDrop<Option<OriginalBoxSlot<T>>>,original:ManuallyDrop<Option<T>>,factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,unique:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,closing:ManuallyDrop<Option<FactoryAuthority>>}
 impl<T:Send+'static> Cursor<T>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.boxed.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<T>(),depth:1,..Default::default()});}
-  if self.vacant.is_some(){return Ok(RetirementDemand{release_bytes:std::mem::size_of::<T>(),depth:1,..Default::default()});}
+  if self.boxed.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()});}
+  if self.vacant.is_some(){return Ok(RetirementDemand{release_bytes:size_of::<T>(),depth:1,..Default::default()});}
   if let Some(original)=self.original.as_ref(){return Ok(RetirementDemand{capacity_bytes:self.factory.as_ref().unwrap().retirement_birth_bytes(original),depth:2,..Default::default()});}
-  let mut demand=if let Some(unique)=self.unique.as_ref(){crate::factory_ticket_demands(unique,body)?}else if self.factory.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Arc<dyn FactoryRetirement>>(),depth:1,..Default::default()});}else if let Some(closing)=self.closing.as_ref(){closing.demands(body)?}else{return Ok(Default::default());};
+  let mut demand=if let Some(unique)=self.unique.as_ref(){crate::factory_ticket_demands(unique,body)?}else if self.factory.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<dyn FactoryRetirement>>(),depth:1,..Default::default()});}else if let Some(closing)=self.closing.as_ref(){closing.demands(body)?}else{return Ok(Default::default());};
   demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"boxed mutation retirement depth overflow"))?;Ok(demand)
  }
  fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
@@ -51,7 +51,7 @@ impl<T:Send+'static> Cursor<T>{
 }
 impl<T:Send+'static> RetireOwned for FactoryBoxedValue<T>{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{boxed:ManuallyDrop::new(Some(self.original)),vacant:ManuallyDrop::new(None),original:ManuallyDrop::new(None),factory:ManuallyDrop::new(Some(self.factory)),unique:ManuallyDrop::new(None),closing:ManuallyDrop::new(None)})}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Cursor<T>>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl<T:Send+'static> RetirementCursor for Cursor<T>{
@@ -61,7 +61,7 @@ impl<T:Send+'static> RetirementCursor for Cursor<T>{
  fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|demand|demand.release_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demands(body).ok().map(|demand|demand.capacity_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl<T:Send+'static> Drop for Cursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"boxed mutation abandoned original payload or issuer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.boxed);ManuallyDrop::drop(&mut self.vacant);ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.unique);ManuallyDrop::drop(&mut self.closing);}}}}
 #[cfg(test)]

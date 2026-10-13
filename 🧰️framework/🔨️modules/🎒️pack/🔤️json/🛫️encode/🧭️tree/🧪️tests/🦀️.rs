@@ -796,3 +796,14 @@ fn bulk_canonical_walk_matches_the_one_event_walk_for_floats_wide_integers_and_d
  let text=NativeValue::Text("native \"paged\" text\n".into());
  assert_eq!(encode_with_window(text,4096).0,b"\"native \\\"paged\\\" text\\n\"");
 }
+
+#[derive(semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=crate)]
+enum DerivedUninhabited {}
+
+#[test]
+fn an_uninhabited_vocabulary_derives_a_canonical_tree_that_is_never_walked() {
+ let absent:Option<DerivedUninhabited>=None;
+ assert!(matches!(absent.canonical_tree_node(),Ok(Node::Null)));
+ assert!(absent.canonical_tree_child(0).is_err());
+}

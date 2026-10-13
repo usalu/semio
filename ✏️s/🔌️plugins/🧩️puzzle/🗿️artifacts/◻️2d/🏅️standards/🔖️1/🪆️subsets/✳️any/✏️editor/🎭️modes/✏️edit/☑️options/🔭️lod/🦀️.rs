@@ -5,7 +5,7 @@
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{puzzle2d_action, PUZZLE2D_LOD_MODE_AUTOMATIC};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
-use semio_framework_pack_json::{json,Value,Object};
+use semio_framework_pack_json::Value;
 
 fn puzzle2d_lod_tier_ids() -> Vec<String> {
     semio_framework_pack_json::from_json_str::<Vec<Value>>(&crate::editor::puzzle2d::engine::puzzle_2d_lod_scale_json(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default().into_iter().filter_map(|row| row.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()

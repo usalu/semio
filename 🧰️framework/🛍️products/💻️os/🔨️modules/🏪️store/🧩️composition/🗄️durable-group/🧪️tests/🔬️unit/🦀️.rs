@@ -419,7 +419,7 @@ fn map_assembly(
 
 fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
-    for _ in 0..512 {
+    for _ in 0..65_536 {
         match assembly.advance(grant).expect("fixed-three assembly turn") {
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted => return,
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(_) | DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked => {}
@@ -431,7 +431,7 @@ fn drive_assembly_to_mounted(assembly: &mut DemoMapAssembly) {
 
 fn drain_assembly_rejection(assembly: &mut DemoMapAssembly) -> DurableOwnedThreeStoreMapAssemblyOwnersV1<DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation, DemoSnapshot, DemoMutation> {
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
-    for _ in 0..512 {
+    for _ in 0..65_536 {
         match assembly.advance(grant).expect("rejected fixed-three assembly cleanup turn") {
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal => return assembly.take_terminal_owners().expect("terminal assembly returns every owner"),
             DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(_) | DurableOwnedThreeStoreMapAssemblyAdvanceV1::Blocked => {}

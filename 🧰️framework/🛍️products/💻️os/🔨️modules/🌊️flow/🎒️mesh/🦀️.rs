@@ -25,10 +25,8 @@ pub const MESH_PACK_FIELD_METADATA: u16 = 13;
 /// the mesh payload through — container-less, no chunk table, no manifest.
 pub fn mesh_pack_spec() -> semio_framework_dsl_record::RecordSpec {
     use semio_framework_dsl_record::FieldSpec;
-use semio_framework_dsl_record::RecordLayout;
-use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::Shape;
-    let bytes = |id: u16, key: &str| semio_framework_dsl_record::FieldSpec::new(id, key, semio_framework_dsl_record::Shape::Bytes64).optional();
+    let bytes = |id: u16, key: &str| FieldSpec::new(id, key, Shape::Bytes64).optional();
     semio_framework_dsl_record::RecordSpec::new(
         Some("mesh"),
         semio_framework_dsl_record::RecordLayout::Lines,
@@ -87,8 +85,7 @@ fn u32_from_blob(bytes: &[u8]) -> Result<Vec<u32>, String> {
 /// 🎒️ Encodes `mesh` as one `pack` record body — the compact binary form the preview mesh crosses
 /// the host↔extension boundary in, replacing the JSON number-array string.
 pub fn encode_mesh_pack(mesh: &semio_framework::MeshData) -> Result<Vec<u8>, String> {
-    use semio_framework_dsl_record::FieldValue;
-use semio_framework_dsl_record::RecordValue;
+    
     if mesh.paint_texture_base64.is_none() {let mut job=MeshPackEncodingJob::new(mesh.clone(),usize::MAX)?;loop {if let Some(bytes)=job.step(4096)? {return Ok(bytes);}}}
     let mut record = semio_framework_dsl_record::RecordValue::default();
     let mut put = |id: u16, bytes: Vec<u8>| {
@@ -200,7 +197,7 @@ impl MeshPackEncodingJob {
 
 /// 🎒️ Decodes an [`encode_mesh_pack`] body back into `MeshData` — the exact inverse, byte-for-byte.
 pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, String> {
-    use semio_framework_dsl_record::FieldValue;
+    
     let record = crate::os_pack::decode_record_body_exact(bytes, &mesh_pack_spec(), &crate::os_pack::DecodeOptions::default()).map_err(|error| error.to_string())?;
     let blob = |id: u16| match record.get(id) {
         Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => bytes.as_slice(),
@@ -307,6 +304,4 @@ pub fn encode_base64(data: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(data)
 }
 
-impl semio_framework_value::retirement::RetireOwned for MeshPackEncodingJob {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::artifact_retirement_sequence![self.mesh,self.bytes,self.metadata_cursor,self.metadata_text]}
-}
+semio_framework_value::artifact_retire_struct!(MeshPackEncodingJob { mesh, field, cursor, bytes, cancelled, metadata_cursor, metadata_text, metadata_ready, maximum_bytes });

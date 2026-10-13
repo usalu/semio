@@ -1027,7 +1027,7 @@ fn evaluate_wall(
             // Mid-height station always reported (§6.1.2 Φ_m with e_mk incl. creep e_k from φ∞).
             {
                 let n_rd_mid = phi_mid * f_d * a;
-                let mut bm = CheckResult::assess(
+                let bm = CheckResult::assess(
                     format!("en1996.6.1.2.compression.mid.{}.{}", wall.id, lc.id),
                     "EN 1996-1-1",
                     clause("EN 1996-1-1", "§6.1.2", "6.1.2"),
@@ -1068,7 +1068,7 @@ fn evaluate_wall(
                 let e_top_decl = wall.eccentricity_top_m.abs();
                 let e_slab = eccentricity_from_slab_bearing_m(wall);
                 let e_gov = e_bot_abs.max(e_top_decl);
-                let mut be = CheckResult::assess(
+                let be = CheckResult::assess(
                     format!("en1996.6.1.2.eccentricity.{}.{}", wall.id, lc.id),
                     "EN 1996-1-1",
                     clause("EN 1996-1-1", "§6.1.2.2", "6.1.2.2"),

@@ -320,7 +320,7 @@ impl DurableOwnedGroupJournalRecordV1 {
         let decision = DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&canonical_pack)?;
         let parent = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&decision.parent.recovery_pack)?;
         let edit: DslValue = parse_canonical_json_value(&parent.edit_canonical_json)?;
-        let parent_edit_id = edit.get("id").and_then(semio_framework_value::DslValue::as_str).filter(|identity| !identity.is_empty() && identity.len() <= DURABLE_OWNED_GROUP_ID_MAX_BYTES).ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?.to_string();
+        let parent_edit_id = edit.get("id").and_then(DslValue::as_str).filter(|identity| !identity.is_empty() && identity.len() <= DURABLE_OWNED_GROUP_ID_MAX_BYTES).ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?.to_string();
         if decision.parent.post_revision == [0; 32] {
             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
         }
@@ -784,7 +784,7 @@ where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 's
       Mu: StoreMutation<P> + Clone + ValueToValue + ValueFromValue + Send + 'static,
 {
     if store.durable_group_root.is_some() || store.envelope.cursor.as_ref().is_none_or(|cursor| cursor.group_visibility().is_some()) { return Err("batch group final root transfer lost its exclusive cursor frontier".into()); }
-    let capacity=size_of::<StagedRootRetirement<P,Mu>>();let release=size_of::<crate::os_spr::Edit<Mu>>();
+    let capacity=size_of::<StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();
     if !grant.permits_one() || grant.maximum_capacity_bytes < capacity || grant.maximum_release_bytes < release { return Err("batch staged original retirement and edit frames are not funded".into()); }
     store.generation.checked_add(1).ok_or_else(|| "batch group generation is exhausted".to_string())?;
     let authority = Arc::clone(publication.authority.as_ref().ok_or_else(|| "batch group final transfer lost its authority".to_string())?);
@@ -794,7 +794,7 @@ where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 's
     store.envelope.vcs.edits.bind_group_reservation(&history.history, &visibility).map_err(|()| "batch group history reservation is stale".to_string())?;
     let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().ok_or("batch group lacks original snapshot factory")?)));
     let history = group.history.take().ok_or_else(|| "batch group final transfer lost its history reservation".to_string())?;
-    let mut displaced = group.displaced.take().expect("copied group admits its displaced owner catalog");
+    let displaced = group.displaced.take().expect("copied group admits its displaced owner catalog");
     let cursor = super::ArtifactCursorOwners { applied_edit_ids: std::mem::replace(&mut group.cursor, crate::os_vcs::HistoryPageStack::empty()), redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(), checkpoint_id: group.checkpoint.take() };
     let applied = std::mem::replace(&mut group.applied, crate::os_vcs::HistoryPageStack::empty());
     let mut revision = group.revision.take().expect("copied group retains its complete revision and indexes");

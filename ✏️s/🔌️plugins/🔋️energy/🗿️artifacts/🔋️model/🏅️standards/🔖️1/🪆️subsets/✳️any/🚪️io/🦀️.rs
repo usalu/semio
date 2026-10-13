@@ -264,7 +264,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec ModelBuilderFacets {
         construction: ModelBuilderConstruction,
         analysis: EnergyModelAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::EnergyModelComposerComposition,
+        composition: EnergyModelComposerComposition,
     }
     builder: ModelBuilder,
     analyzer: EnergyModelAnalyzer,

@@ -471,12 +471,12 @@ impl EvaluationInputPreparation {
             },
             7=>{
                 if self.writer.is_none(){
-                    let bytes=4*std::mem::size_of::<DslValue>();
+                    let bytes=4*size_of::<DslValue>();
                     if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes{return Ok((None,empty));}
                     if grant.maximum_depth==0{return Err("evaluation identity birth exceeds admitted depth".into());}
                     let mut values=Vec::new();values.try_reserve_exact(4).map_err(|_|EvaluationFailure::Native(ValueError::literal(ValueRefusalKind::AllocationFailed,"evaluation identity allocation failed")))?;
                     values.extend([self.operator.take().unwrap(),self.canonical_input.take().unwrap(),self.canonical_dependency.take().unwrap(),self.version.take().unwrap()].map(DslValue::String));
-                    let retained_capacity_bytes=values.capacity()*std::mem::size_of::<DslValue>();self.writer=Some(semio_framework_pack_json::JsonWriteCursor::new(DslValue::Array(values)));
+                    let retained_capacity_bytes=values.capacity()*size_of::<DslValue>();self.writer=Some(semio_framework_pack_json::JsonWriteCursor::new(DslValue::Array(values)));
                     return Ok((None,RetainedCloneProgress {copied_items:1,retained_capacity_bytes,..empty}));
                 }
                 let (text,progress)=self.write_step(grant)?;if let Some(text)=text{self.identity=Some(text);self.closing_fields=4|32;self.stage=8;}self.units=self.units.saturating_add(progress.copied_items);return Ok((None,progress));
@@ -549,11 +549,11 @@ impl semio_framework_value::retirement::RetirementCursor for EvaluationInputReti
     fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.retirement_demands(copy).ok().map(|demand|demand.capacity_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.retirement_demands(0).ok().map(|demand|demand.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands(0)?.depth)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for EvaluationInputPreparation {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {Box::new(EvaluationInputRetirement(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<EvaluationInputRetirement>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EvaluationInputRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 
@@ -723,7 +723,7 @@ impl RetainedEvaluation {
         if let Some(admission)=&self.admission{return admission.retirement_demands(copy);}
         if !preserve_candidate {if let Some(replacement)=&self.replacement{return replacement.retirement_demands(copy);}}
         if let Some(job)=&self.job{
-            if job.terminal_is_empty(){return Ok(RetirementDemand {release_bytes:std::mem::size_of_val(job.as_ref()),depth:1,..Default::default()});}
+            if job.terminal_is_empty(){return Ok(RetirementDemand {release_bytes:size_of_val(job.as_ref()),depth:1,..Default::default()});}
             return Ok(RetirementDemand {copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(copy)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?});
         }
         if let Some(output)=&self.output{return output.retirement_demands(copy);}
@@ -763,7 +763,7 @@ impl RetainedEvaluation {
             if replacement.terminal_is_empty(){self.replacement=None;}step
         }else if let Some(job)=&mut self.job{
             if job.terminal_is_empty(){
-                let bytes=std::mem::size_of_val(job.as_ref());
+                let bytes=size_of_val(job.as_ref());
                 if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(empty));}
                 drop(self.job.take());RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty})
             }else{let step=job.close_step(grant)?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"evaluation operator job")?}
@@ -810,7 +810,7 @@ impl RetainedEvaluation {
         if grant.maximum_items==0{return Ok(empty);}
         if job.terminal_is_empty(){
             if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"terminal evaluation job shell requires admitted depth"));}
-            let bytes=std::mem::size_of_val(job.as_ref());if grant.maximum_release_bytes<bytes{return Ok(empty);}drop(self.job.take());return Ok(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty});
+            let bytes=size_of_val(job.as_ref());if grant.maximum_release_bytes<bytes{return Ok(empty);}drop(self.job.take());return Ok(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty});
         }
         let step=job.close_step(grant)?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"finished original operator job").map(|step|step.progress())
     }
@@ -923,11 +923,11 @@ impl semio_framework_value::retirement::RetirementCursor for EvaluationRetiremen
     fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.retirement_demands(copy,false,false).ok().map(|demand|demand.capacity_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.retirement_demands(0,false,false).ok().map(|demand|demand.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands(0,false,false)?.depth)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for RetainedEvaluation {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(EvaluationRetirement(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<EvaluationRetirement>())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EvaluationRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 

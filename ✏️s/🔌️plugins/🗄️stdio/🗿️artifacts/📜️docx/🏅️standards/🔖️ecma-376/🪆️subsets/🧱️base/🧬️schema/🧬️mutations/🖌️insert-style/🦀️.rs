@@ -17,7 +17,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertStyle {
         plan_outcome(insert_style_plan(base, &self.style))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
         Ok(plan_inverse(insert_style_plan(base, &self.style)))
     }
 

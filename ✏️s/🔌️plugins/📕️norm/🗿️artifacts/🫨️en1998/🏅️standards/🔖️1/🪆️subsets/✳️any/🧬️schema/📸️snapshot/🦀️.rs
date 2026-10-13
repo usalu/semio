@@ -168,7 +168,7 @@ impl En1998Snapshot {
     /// 🏗️ Compliant DE subject with populated EN 1998 parts 2–6 (for scope-aware leaf tests).
     pub fn compliant_de_multipart() -> Self {
         let mut s = Self::compliant_de_office();
-        s.bridges = vec![crate::En1998Bridge {
+        s.bridges = vec![En1998Bridge {
             id: "br-1".into(),
             period_ratio: 2.0,
             fundamental_period_s: 1.2,
@@ -176,9 +176,9 @@ impl En1998Snapshot {
             bearing_d_rd_m: 0.40,
             permanent_gk_n: 8.0e6,
             correlated_occupancy: true,
-            variables: vec![crate::En1998VariableAction { id: "br-q1".into(), category: "F".into(), qk_n: 1.5e6 }],
+            variables: vec![En1998VariableAction { id: "br-q1".into(), category: "F".into(), qk_n: 1.5e6 }],
         }];
-        s.assessments = vec![crate::En1998Assessment {
+        s.assessments = vec![En1998Assessment {
             id: "as-1".into(),
             knowledge_level: "kl2".into(),
             limit_state: "sd".into(),
@@ -186,7 +186,7 @@ impl En1998Snapshot {
             r_k_n: 5.0e5,
             gamma_el: 1.0,
         }];
-        s.silos = vec![crate::En1998Silo {
+        s.silos = vec![En1998Silo {
             id: "si-1".into(),
             height_m: 12.0,
             radius_m: 4.0,
@@ -198,7 +198,7 @@ impl En1998Snapshot {
             v_rd_n: 1.5e6,
             q_nominal: 1.2,
         }];
-        s.tanks = vec![crate::En1998Tank {
+        s.tanks = vec![En1998Tank {
             id: "tk-1".into(),
             height_m: 10.0,
             radius_m: 5.0,
@@ -208,7 +208,7 @@ impl En1998Snapshot {
             filling_ratio: 0.90,
             v_rd_n: 3.0e6,
         }];
-        s.foundations = vec![crate::En1998Foundation {
+        s.foundations = vec![En1998Foundation {
             id: "fd-1".into(),
             supported_building_id: "bldg-office".into(),
             area_m2: 200.0,
@@ -217,7 +217,7 @@ impl En1998Snapshot {
             k_foundation: 8.0e5,
             k_soil: 3.0e5,
         }];
-        s.retaining_walls = vec![crate::En1998RetainingWall {
+        s.retaining_walls = vec![En1998RetainingWall {
             id: "rw-1".into(),
             height_m: 4.5,
             phi_deg: 32.0,
@@ -225,7 +225,7 @@ impl En1998Snapshot {
             r: 1.5,
             h_rd_n_per_m: 2.5e5,
         }];
-        s.towers = vec![crate::En1998Tower {
+        s.towers = vec![En1998Tower {
             id: "tw-1".into(),
             height_m: 45.0,
             m_rd_nm: 8.0e6,
@@ -233,7 +233,7 @@ impl En1998Snapshot {
             q_nominal: 2.5,
             permanent_gk_n: 1.0e6,
             correlated_occupancy: true,
-            variables: vec![crate::En1998VariableAction { id: "tw-q1".into(), category: "E".into(), qk_n: 5.0e4 }],
+            variables: vec![En1998VariableAction { id: "tw-q1".into(), category: "E".into(), qk_n: 5.0e4 }],
         }];
         s
     }
@@ -241,7 +241,7 @@ impl En1998Snapshot {
     /// ⚠️ Non-compliant multi-part DE subject (weak capacities across parts 2–6).
     pub fn noncompliant_de_multipart() -> Self {
         let mut s = Self::noncompliant_de_office();
-        s.bridges = vec![crate::En1998Bridge {
+        s.bridges = vec![En1998Bridge {
             id: "br-weak".into(),
             period_ratio: 1.2,
             fundamental_period_s: 1.5,
@@ -249,9 +249,9 @@ impl En1998Snapshot {
             bearing_d_rd_m: 0.02,
             permanent_gk_n: 8.0e6,
             correlated_occupancy: true,
-            variables: vec![crate::En1998VariableAction { id: "br-q1".into(), category: "F".into(), qk_n: 1.5e6 }],
+            variables: vec![En1998VariableAction { id: "br-q1".into(), category: "F".into(), qk_n: 1.5e6 }],
         }];
-        s.assessments = vec![crate::En1998Assessment {
+        s.assessments = vec![En1998Assessment {
             id: "as-weak".into(),
             knowledge_level: "kl1".into(),
             limit_state: "nc".into(),
@@ -259,7 +259,7 @@ impl En1998Snapshot {
             r_k_n: 2.0e4,
             gamma_el: 1.2,
         }];
-        s.silos = vec![crate::En1998Silo {
+        s.silos = vec![En1998Silo {
             id: "si-weak".into(),
             height_m: 14.0,
             radius_m: 3.5,
@@ -271,7 +271,7 @@ impl En1998Snapshot {
             v_rd_n: 4.0e4,
             q_nominal: 1.5,
         }];
-        s.tanks = vec![crate::En1998Tank {
+        s.tanks = vec![En1998Tank {
             id: "tk-weak".into(),
             height_m: 12.0,
             radius_m: 4.0,
@@ -281,7 +281,7 @@ impl En1998Snapshot {
             filling_ratio: 1.0,
             v_rd_n: 5.0e4,
         }];
-        s.foundations = vec![crate::En1998Foundation {
+        s.foundations = vec![En1998Foundation {
             id: "fd-weak".into(),
             supported_building_id: "bldg-weak".into(),
             area_m2: 40.0,
@@ -290,7 +290,7 @@ impl En1998Snapshot {
             k_foundation: 2.0e5,
             k_soil: 1.0e5,
         }];
-        s.retaining_walls = vec![crate::En1998RetainingWall {
+        s.retaining_walls = vec![En1998RetainingWall {
             id: "rw-weak".into(),
             height_m: 6.0,
             phi_deg: 25.0,
@@ -298,7 +298,7 @@ impl En1998Snapshot {
             r: 1.0,
             h_rd_n_per_m: 2.0e4,
         }];
-        s.towers = vec![crate::En1998Tower {
+        s.towers = vec![En1998Tower {
             id: "tw-weak".into(),
             height_m: 55.0,
             m_rd_nm: 1.0e5,

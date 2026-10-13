@@ -2,7 +2,7 @@
 //!
 //! Wire codecs live in `📡️spr` (DSL mirror); this facet keeps grammar + re-exports.
 
-use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation2d, inverse_generation2d_mutation, replace_widget, Generation2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 
 
 //#region 📖️SemioGrammar
@@ -20,7 +20,6 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{
     camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
     WidgetLayoutDsl,
 };
-use crate::central_apply::{apply_generation2d_mutation};
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub(crate) enum Generation2dOperationDsl {
     CreateWidget {

@@ -147,7 +147,7 @@ pub const KINDS: &[&str] = &["apply-brep", "apply-mesh", "apply-model", "apply-v
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) -> protocol::MutationOutcome<SemioDiff> {
-    <SemioMutation as protocol::Mutation<SemioSnapshot>>::diff(mutation, base)
+    <SemioMutation as Mutation<SemioSnapshot>>::diff(mutation, base)
 }
 
 
@@ -243,10 +243,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing {
             mutation: SemioDrawingMutation::DragNodes(crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: crate::standards::v1::subsets::base::schema::geometry::SemioPoint2::default() }),
         }),
-        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation {
-        }),
-        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation {
-        }),
+        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::RemoveTimeline(crate::standards::v1::subsets::animation::schema::mutations::remove_timeline::RemoveTimeline { index: 99 }) }),
+        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::RemoveSlide(crate::standards::v1::subsets::presentation::schema::mutations::remove_slide::RemoveSlide { index: 99 }) }),
         SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::RemoveRun(crate::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 99 }) }),
         SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(crate::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
         SemioMutation::ApplyGraph(apply_graph::ApplyGraph {

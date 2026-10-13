@@ -10,9 +10,8 @@
 //! fuel-bounded and watchdog-wrapped, no ambient randomness enters — so `DepHash` caching over
 //! `Grid3dSolve`/`Grid3dContradiction`/`Grid3dEntropy` is sound.
 
-use crate::schema::snapshot::{cell_key, Grid3dSnapshot};
+use crate::schema::snapshot::Grid3dSnapshot;
 use semio_s_plugin_wfc_engine as engine;
-use std::collections::BTreeMap;
 
 //#region 📦️RetainedPayload
 

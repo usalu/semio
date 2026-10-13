@@ -84,7 +84,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, DesignSituation, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+#[cfg(test)] use crate::document::{DesignSituation};
 use crate::standards::v1::subsets::any::schema::{
     check_reliability_index_for, combination_6_11, combination_6_12b, combination_equ_for, combination_geo_a24c, combination_sls_char, combination_sls_frequent,
     combination_sls_quasi_permanent, combination_str_geo_610a_for, combination_str_geo_610b_for, k_fi, resolve_psi_category, ActionSet, NaDe, NaEn, NationalAnnex, NationalAnnexes,

@@ -319,7 +319,7 @@ impl EditorHostRetirement {
             return false;
         }
         if !self.extra_carets.is_empty() {
-            let keep = self.extra_carets.len().saturating_sub(EDITOR_RETIREMENT_PAGE_BYTES / std::mem::size_of::<usize>());
+            let keep = self.extra_carets.len().saturating_sub(EDITOR_RETIREMENT_PAGE_BYTES / size_of::<usize>());
             self.extra_carets.truncate(keep);
             return false;
         }

@@ -1,6 +1,5 @@
 //! 📝️ Text representation codec surface for `stdio.step` (snapshot).
 use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::native;
-use crate::standards::v_ap214::subsets::base::io::text::diff::{enc_str,dec_str,enc_file_description,dec_file_description,enc_file_name,dec_file_name,enc_file_schema,dec_file_schema,enc_entity,dec_entity,split_top_level,strip_brackets};
 
 /// 📖️ Grammar include.
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -29,7 +28,6 @@ impl store::ArtifactDsl for StepSnapshot {
     fn print_dsl(&self) -> String { native::print_text(self) }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod diff_codec {
@@ -49,4 +47,3 @@ use crate::schema::snapshot::StepFileSchema;
 use crate::schema::snapshot::StepValue;
 
 }
-pub use diff_codec::*;

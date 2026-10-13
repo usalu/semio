@@ -75,14 +75,6 @@ pub use mutations::*;
 semio_framework_value::artifact_retire_struct!(WiresCanvasTransient { drag_node_id, drag_start_x, drag_start_y, drag_last_x, drag_last_y, drag_zoom });
 semio_framework_value::artifact_retire_struct!(SetDrag { node_id, start_x, start_y, last_x, last_y, zoom });
 
-impl semio_framework_value::retirement::RetireOwned for WiresCanvasTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::SetDrag(value) => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(value)]),
-        }
-    }
-}
-
 const WIRES_CANVAS_TRANSIENT_FIXED_BYTES: usize = 5 * size_of::<f64>() + 32;
 
 fn wires_canvas_transient_footprint(mutation: &WiresCanvasTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {

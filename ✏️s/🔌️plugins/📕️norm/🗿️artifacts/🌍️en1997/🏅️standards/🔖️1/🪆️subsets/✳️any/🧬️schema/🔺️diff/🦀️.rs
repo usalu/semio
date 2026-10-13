@@ -17,7 +17,7 @@ pub struct En1997LayersPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::SoilLayer> for En1997LayersPatch {
-    fn commit_into(&self, row: &mut crate::SoilLayer, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::SoilLayer, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.oedometric_modulus {
             row.oedometric_modulus = value.clone();
         }
@@ -66,7 +66,7 @@ pub struct En1997FootingsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::SpreadFoundation> for En1997FootingsPatch {
-    fn commit_into(&self, row: &mut crate::SpreadFoundation, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::SpreadFoundation, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.width {
             row.width = value.clone();
         }
@@ -115,7 +115,7 @@ pub struct En1997PilesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::Pile> for En1997PilesPatch {
-    fn commit_into(&self, row: &mut crate::Pile, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::Pile, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.length {
             row.length = value.clone();
         }
@@ -163,7 +163,7 @@ pub struct En1997RetainingWallsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::RetainingWall> for En1997RetainingWallsPatch {
-    fn commit_into(&self, row: &mut crate::RetainingWall, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::RetainingWall, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.base_width {
             row.base_width = value.clone();
         }
@@ -204,7 +204,7 @@ pub struct En1997SlopesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::Slope> for En1997SlopesPatch {
-    fn commit_into(&self, row: &mut crate::Slope, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::Slope, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.angle_deg {
             row.angle_deg = value.clone();
         }
@@ -249,7 +249,7 @@ pub struct En1997UpliftCasesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::UpliftCase> for En1997UpliftCasesPatch {
-    fn commit_into(&self, row: &mut crate::UpliftCase, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::UpliftCase, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.permanent_stabilizing {
             row.permanent_stabilizing = value.clone();
         }

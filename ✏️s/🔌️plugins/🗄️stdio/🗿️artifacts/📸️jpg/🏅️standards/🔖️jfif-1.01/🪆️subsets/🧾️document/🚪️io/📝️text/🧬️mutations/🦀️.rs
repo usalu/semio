@@ -10,11 +10,11 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<JpgMutation, semio_framework_diagnostic::TextError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::change_jfif_header::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::insert_other_segment::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::remove_other_segment::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::replace_pixels::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::replace_image::CODEC,
+    change_jfif_header::CODEC,
+    insert_other_segment::CODEC,
+    remove_other_segment::CODEC,
+    replace_pixels::CODEC,
+    replace_image::CODEC,
 ];
 //#endregion Registry
 

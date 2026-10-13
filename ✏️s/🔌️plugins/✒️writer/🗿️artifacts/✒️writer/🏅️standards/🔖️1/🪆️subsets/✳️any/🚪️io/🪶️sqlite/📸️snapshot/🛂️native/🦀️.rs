@@ -19,7 +19,7 @@ fn admit_values(snapshot:&WriterSnapshot,control:&mut SqliteSnapshotControl<'_>,
 pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<WriterSnapshot,ValueError>{
  control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,2)?;
  admit(control)?;
- let value=store::decode_sqlite_snapshot_record_native(payload,<WriterSnapshot as store::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {WriterSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_values(&value,control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
+ let value=store::decode_sqlite_snapshot_record_native(payload,<WriterSnapshot as store::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {WriterSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_values(&value,control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
 }
 pub(super) fn encode(snapshot:&WriterSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{
  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,2)?;

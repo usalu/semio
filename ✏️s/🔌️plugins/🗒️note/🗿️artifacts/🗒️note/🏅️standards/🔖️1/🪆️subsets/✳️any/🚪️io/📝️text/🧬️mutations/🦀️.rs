@@ -1,5 +1,5 @@
 //! 🔧 note — OpText/OpBinary for `NoteMutation`.
-use crate::schema::mutations::{apply_note_mutation, NoteMutation};
+use crate::schema::mutations::NoteMutation;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

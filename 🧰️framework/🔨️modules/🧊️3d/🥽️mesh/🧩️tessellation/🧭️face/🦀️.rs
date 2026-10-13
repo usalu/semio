@@ -14,7 +14,7 @@ impl MeshTessellationJob{
     pub(super) fn next_face_copy_byte_demand(&self)->Result<usize,ValueError>{
         if self.face_preparation_complete(){return Ok(0);}
         if !self.buffer_reservation_complete(){return Err(refusal("original face preparation requires admitted buffers"));}
-        Ok(match self.phase{0=>0,1=>std::mem::size_of::<u32>(),2=>std::mem::size_of::<Vec3>(),3=>std::mem::size_of::<[f64;3]>()+if self.cursor+1==self.hes.len(){std::mem::size_of::<Vec3>()+std::mem::size_of::<(Vec3f64,Vec3f64)>()}else{0},4=>3*std::mem::size_of::<f64>()+2*std::mem::size_of::<usize>(),5=>if self.scale==0.0{0}else{2*std::mem::size_of::<f64>()},6=>std::mem::size_of::<f64>()+if self.cursor+1==self.hes.len(){std::mem::size_of::<u32>()}else{0},_=>return Err(refusal("original face preparation phase is invalid"))})
+        Ok(match self.phase{0=>0,1=>size_of::<u32>(),2=>size_of::<Vec3>(),3=>size_of::<[f64;3]>()+if self.cursor+1==self.hes.len(){size_of::<Vec3>()+size_of::<(Vec3f64,Vec3f64)>()}else{0},4=>3*size_of::<f64>()+2*size_of::<usize>(),5=>if self.scale==0.0{0}else{2*size_of::<f64>()},6=>size_of::<f64>()+if self.cursor+1==self.hes.len(){size_of::<u32>()}else{0},_=>return Err(refusal("original face preparation phase is invalid"))})
     }
     pub(super) fn next_face_capacity_byte_demand(&self,_copy:usize)->Result<usize,ValueError>{
         self.next_face_copy_byte_demand()?;if self.face_preparation_complete(){return Ok(0);}

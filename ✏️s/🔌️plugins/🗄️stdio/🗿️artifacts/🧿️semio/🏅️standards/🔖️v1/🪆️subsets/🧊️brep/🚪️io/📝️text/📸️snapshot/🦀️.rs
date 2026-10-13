@@ -563,4 +563,3 @@ use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 
 
 }
-pub use snapshot_wire_codec::*;

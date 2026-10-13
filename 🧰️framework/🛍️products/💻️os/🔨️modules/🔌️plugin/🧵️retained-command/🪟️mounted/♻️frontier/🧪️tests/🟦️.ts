@@ -52,10 +52,14 @@ test("publication rejection survives body and frame retirement and emits one ori
   const fault=outcome.fault===null?null:row.existingFault?row.existingFault:(JSON.parse(outcome.fault) as {code:string;message:string}).code;expect(fault).toBe(row.reportCode);expect(Number(outcome.fault!==null)).toBe(row.faultTerminals);if(outcome.fault!==null&&row.existingFault===null)expect((JSON.parse(outcome.fault) as {message:string}).message).toBe(row.reason);expect(cursor.deliver(row.existingFault,1,488,1).ready).toBe(false);
  }
 });
-test("mounted publication source captures before close and delivers only after original frame release",()=>{
+test("mounted publication rejection queues its one original fault page, then retires the original publication only after the ACK",()=>{
  const root=join(import.meta.dir,"../../../.."),host=readFileSync(join(root,"🦀️.rs"),"utf8"),frontier=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8");
- const capture=frontier.indexOf("PendingPublicationDisposition::Rejected"),close=frontier.indexOf("owner.close_step(grant)");expect(capture).toBeLessThan(close);
- expect(frontier).toContain("self.terminal_fault.get_or_insert(report)");expect(frontier).toContain("self.pending_publication_outcome.phase=PendingPublicationOutcomePhase::Released");expect(frontier).toContain("owner.lane().0==TypedOperationResultLane::WindowTransient");
- const publisher=host.slice(host.indexOf("async fn publish_mounted_typed_operation_unit"),host.indexOf("let live_revision",host.indexOf("async fn publish_mounted_typed_operation_unit")));
- expect(publisher.indexOf("mounted.pending_publication_outcome.pending()")).toBeLessThan(publisher.indexOf("mounted.reject_cancelled_publication()"));expect(host).toContain("&& !self.pending_publication_outcome.pending()");
+ const unit=host.indexOf("fn publish_mounted_typed_operation_unit"),publisher=host.slice(unit,host.indexOf("let live_revision",unit));expect(unit).toBeGreaterThan(0);
+ expect(publisher).toContain("if mounted.reject_cancelled_publication()? {");expect(publisher.indexOf("mounted.reject_cancelled_publication()")).toBeLessThan(publisher.indexOf("try_claim_publication"));
+ const start=host.indexOf("fn reject_cancelled_publication"),reject=host.slice(start,host.indexOf("fn ",start+40));expect(start).toBeGreaterThan(0);
+ expect(reject).toContain("match self.terminal_fault.as_ref()");expect(reject).toContain("pending.begin_close();");expect(reject.indexOf("pending.begin_close();")).toBeLessThan(reject.indexOf("self.queue_page(page)?"));
+ expect(reject).toContain("TypedOperationResultLane::Fault");expect(reject).not.toContain("terminal_fault.take()");expect(reject).not.toContain("terminal_fault=");
+ expect(frontier).toContain("fn granted_retirement_ready(&self)->bool{self.result_page.is_none()&&");
+ expect(frontier).toContain("self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)");
+ expect(host).toContain("&& self.pending_artifact_publication.is_none()");
 });

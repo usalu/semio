@@ -31,7 +31,7 @@ pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_f
 }
 
 /// 🎨️ Encodes retained prepared surfaces through the existing geometry and glTF owners.
-pub fn serialize_prepared_meshes(meshes: &[semio_framework_plugin::MeshData]) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
+pub fn serialize_prepared_meshes(meshes: &[MeshData]) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
     serialize_prepared_meshes_controlled(meshes, &mut NativeEncodeControl::new(64_000_000, &mut |_| true))
 }
 

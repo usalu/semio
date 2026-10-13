@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteIdealLoadsSystem` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, IdealLoadsSystemPatch, ModelPatch, Rows};
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff

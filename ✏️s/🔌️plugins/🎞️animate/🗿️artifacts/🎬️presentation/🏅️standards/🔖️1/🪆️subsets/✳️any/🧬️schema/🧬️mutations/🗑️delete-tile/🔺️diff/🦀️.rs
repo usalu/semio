@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `delete-tile`.
 use super::DeleteTile;
-use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff

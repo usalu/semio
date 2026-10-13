@@ -59,13 +59,13 @@ impl PartialEq for Puzzle5dPlaySnapshot {
 /// split has no field-wise derive shape, so both bridge through the `Value` projection `value()`/`new()`
 /// maintain.
 impl semio_framework_value::ToValue for Puzzle5dPlaySnapshot {
-    fn to_value(&self) -> semio_framework_value::DslValue {
+    fn to_value(&self) -> DslValue {
         semio_framework_value::ToValue::to_value(self.typed())
     }
 }
 
 impl semio_framework_value::FromValue for Puzzle5dPlaySnapshot {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value(value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <Puzzle5dSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_typed)
     }
 }
@@ -113,11 +113,11 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
         Mutation::<Puzzle5dSnapshot>::input_schema(self)
     }
 
-    fn payload_value(&self) -> semio_framework_value::DslValue {
+    fn payload_value(&self) -> DslValue {
         Mutation::<Puzzle5dSnapshot>::payload_value(self)
     }
 
-    fn with_payload_value(&self, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+    fn with_payload_value(&self, value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         Mutation::<Puzzle5dSnapshot>::with_payload_value(self, value)
     }
 
@@ -142,7 +142,7 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle5dSnapshot>::may_emit_foreign_steps(self)
     }
-    fn from_payload_value(kind: &str, value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_payload_value(kind: &str, value: DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <Self as Mutation<Puzzle5dSnapshot>>::from_payload_value(kind, value)
     }
     fn conflict_target(&self) -> Vec<String> {

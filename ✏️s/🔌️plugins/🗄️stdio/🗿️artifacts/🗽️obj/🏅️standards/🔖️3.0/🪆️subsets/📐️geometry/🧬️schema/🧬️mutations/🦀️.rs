@@ -37,7 +37,8 @@ use crate::schema::snapshot::{ObjFace, ObjNormal, ObjSmoothingRange, ObjTexCoord
 #[cfg(test)]
 use crate::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject};
 use crate::ObjSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{Mutation};
+#[cfg(test)] use protocol::{MutationDiff};
 
 
 //#region 🔖️Mutations

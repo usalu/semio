@@ -17,4 +17,3 @@ impl protocol::OpBinary for WriterMainWindowConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

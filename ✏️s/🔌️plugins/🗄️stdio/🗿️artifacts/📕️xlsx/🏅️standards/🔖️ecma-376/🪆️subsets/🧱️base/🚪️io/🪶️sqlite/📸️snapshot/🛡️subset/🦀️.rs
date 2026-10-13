@@ -98,7 +98,7 @@ fn segment<'a>(text: &'a str, parts: &mut Vec<&'a str>, control: &mut NativeEnco
         }
         _ => {
             if parts.len() == parts.capacity() {
-                control.charge(64 * std::mem::size_of::<&str>())?;
+                control.charge(64 * size_of::<&str>())?;
                 parts.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "XLSX relationship path frontier allocation"))?;
             }
             parts.push(text);
@@ -169,7 +169,7 @@ fn message(arguments: Arguments<'_>, control: &mut NativeEncodeControl<'_>) -> R
     })
 }
 fn diagnostic(output: &mut Vec<Diagnostic>, subset: &str, suffix: &str, severity: Severity, arguments: Arguments<'_>, control: &mut NativeEncodeControl<'_>) -> Result<(), ValueError> {
-    control.charge(std::mem::size_of::<Diagnostic>())?;
+    control.charge(size_of::<Diagnostic>())?;
     output.try_reserve_exact(1).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "XLSX diagnostic frontier allocation"))?;
     let code = message(format_args!("stdio.xlsx.{subset}.{suffix}"), control)?;
     let message = message(arguments, control)?;

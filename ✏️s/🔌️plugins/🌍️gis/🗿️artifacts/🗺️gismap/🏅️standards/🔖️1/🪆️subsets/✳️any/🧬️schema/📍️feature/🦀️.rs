@@ -1,7 +1,7 @@
 //! 📍️ Identified GIS features and their domain payload patch.
 
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
+#[cfg(test)] use semio_framework_value::FromValue;
+#[cfg(test)] use semio_framework_value::ToValue;
 use protocol::{Identified, Patchable};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

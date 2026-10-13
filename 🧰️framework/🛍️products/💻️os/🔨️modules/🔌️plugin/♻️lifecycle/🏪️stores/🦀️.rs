@@ -3,7 +3,7 @@
 const ORIGINAL_STORE_LANES:[&str;8]=["document","config","draft","presence","transient","interaction","windowConfig","windowTransient"];
 fn original_disposal_demands<T>(slot:&ArtifactDisposal<T>,owner:&T,body:usize)->Result<RetirementDemand,ValueError>{
  let disposer=slot.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"store close has no original disposal authority"))?;
- if disposer.terminal_is_empty(owner){return Ok(RetirementDemand{release_bytes:{let bytes=disposer.terminal_frame_release_bytes().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"terminal disposer has no original physical frame authority"))?;if bytes!=std::mem::size_of_val(&**disposer){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"terminal disposer changed its declared original Box extent"));}bytes},depth:1,..Default::default()});}
+ if disposer.terminal_is_empty(owner){return Ok(RetirementDemand{release_bytes:{let bytes=disposer.terminal_frame_release_bytes().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"terminal disposer has no original physical frame authority"))?;if bytes!=size_of_val(&**disposer){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"terminal disposer changed its declared original Box extent"));}bytes},depth:1,..Default::default()});}
  disposer.retirement_demands(owner,body)
 }
 fn original_disposal_step<T>(slot:&mut ArtifactDisposal<T>,owner:&mut T,grant:RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),Fault>{

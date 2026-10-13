@@ -6,7 +6,8 @@
 // of this crate. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{HashMap};
+#[cfg(test)] use std::collections::{BTreeMap};
 #[cfg(test)]
 use std::collections::HashSet;
 
@@ -662,7 +663,7 @@ impl HalfedgeMesh {
         if let Some(matrix)=normal_matrix {
             for (name,attribute) in &self.attributes {
                 if attribute.semantic!=MeshAttributeSemantic::Normal {continue;}
-                let mut values=Vec::new();let mut indices=Vec::new();let mut samples=std::collections::HashMap::new();
+                let mut values=Vec::new();let mut indices=Vec::new();let mut samples=HashMap::new();
                 for domain in 0..attribute.domain_len() {
                     let vertex=if attribute.domain==MeshAttributeDomain::Corner {self.halfedges[domain].vertex as usize}else {domain};
                     let affected=ids.binary_search(&vertex).is_ok();let source=attribute.indices.as_ref().map_or(domain as u32,|indices|indices[domain]);

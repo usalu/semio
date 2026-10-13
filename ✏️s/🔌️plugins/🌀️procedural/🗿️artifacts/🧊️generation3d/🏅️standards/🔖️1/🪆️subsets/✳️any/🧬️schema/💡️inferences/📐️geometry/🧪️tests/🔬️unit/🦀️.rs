@@ -83,13 +83,13 @@ fn box_chain(size: f64) -> Generation3dSnapshotRead {
 
 fn solid_volume(shape: &semio_framework_3d::brep::engine::ShapeValue) -> (f64, f64) {
     let mesh = shape.tessellate(0.05).expect("a box tessellates");
-    let corner = |index: u32| -> [f64; 3] { let at = index as usize * 3; [f64::from(mesh.positions[at]), f64::from(mesh.positions[at + 1]), f64::from(mesh.positions[at + 2])] };
-    let signed: f64 = mesh.indices.chunks(3).map(|triangle| {
+    let corner = |index: u32| -> [f64; 3] { let at = index as usize * 3; [f64::from(mesh.position[at]), f64::from(mesh.position[at + 1]), f64::from(mesh.position[at + 2])] };
+    let signed: f64 = mesh.index.chunks(3).map(|triangle| {
         let (a, b, c) = (corner(triangle[0]), corner(triangle[1]), corner(triangle[2]));
         (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
     }).sum();
-    let points: Vec<parry3d::math::Point<parry3d::math::Real>> = mesh.positions.chunks(3).map(|at| parry3d::math::Point::new(at[0], at[1], at[2])).collect();
-    let triangles: Vec<[u32; 3]> = mesh.indices.chunks(3).map(|triangle| [triangle[0], triangle[1], triangle[2]]).collect();
+    let points: Vec<parry3d::math::Point<parry3d::math::Real>> = mesh.position.chunks(3).map(|at| parry3d::math::Point::new(at[0], at[1], at[2])).collect();
+    let triangles: Vec<[u32; 3]> = mesh.index.chunks(3).map(|triangle| [triangle[0], triangle[1], triangle[2]]).collect();
     (signed, f64::from(parry3d::mass_properties::MassProperties::from_trimesh(1.0, &points, &triangles).mass()))
 }
 //#endregion 🧸️Fixtures
@@ -447,7 +447,7 @@ fn inference_reads_the_explicit_admitted_catalogue() {
     assert_eq!(custom["box"].quality.to_value().as_str(), fixture["quality"].as_str());
     assert_eq!(builtin["box"].quality.to_value().as_str(), fixture["builtinQuality"].as_str());
     let mut engine = GeometryEngine::new(admitted, crate::standards::v1::subsets::any::io::geometry::context(), 1 << 20);
-    engine.start("custom-catalogue".into(), snapshot, CacheMode::Incremental, "custom-catalogue");
+    engine.start("custom-catalogue".into(), snapshot.into_inner(), CacheMode::Incremental, "custom-catalogue");
     while !engine.step(1).expect("typed catalogue engine").done {}
     assert_eq!(engine.evaluations(), &custom);
     println!("[DEBUG] Inference and one-unit engine read the explicit admitted catalogue independently of the bundled JSON owner");

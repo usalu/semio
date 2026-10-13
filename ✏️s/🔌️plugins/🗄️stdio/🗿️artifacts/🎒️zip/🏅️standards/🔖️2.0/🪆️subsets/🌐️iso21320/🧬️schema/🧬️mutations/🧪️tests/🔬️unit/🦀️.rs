@@ -75,10 +75,10 @@ fn deleting_the_first_iso_member_restores_its_original_position() {
     use protocol::MutationDiff;
     let snapshot = base_snapshot();
     let mutation = ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: snapshot.entries[0].name.clone() });
-    let next = protocol::apply_diff(&mutation.diff(&snapshot).diff(), &snapshot).unwrap();
+    let next = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
     let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
-    assert_eq!(protocol::apply_diff(&inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
+    assert_eq!(protocol::apply_diff(inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
 }
 
 /// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.

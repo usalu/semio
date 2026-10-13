@@ -86,7 +86,7 @@ async fn add_feature_appends_a_position_and_undo_redo_round_trips() {
         Gis2dCommand::AddFeature(add_feature::AddFeature { collection: "positions".into(), label: "Depot".into(), lon: 7.5, lat: 51.0, span: 0.01 }),
         |app| collection_witness(&app.snapshot().expect("projection"), "positions"),
         before,
-        after,
+        after,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
     let document = app.snapshot().expect("projection");
@@ -186,7 +186,7 @@ async fn delete_feature_undo_redo_round_trips() {
         Gis2dCommand::DeleteFeature(delete_feature::DeleteFeature { collection: "positions".into(), feature_id: target }),
         |app| app.snapshot().expect("projection").positions.len(),
         before,
-        before - 1,
+        before - 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
     close(&mut app);

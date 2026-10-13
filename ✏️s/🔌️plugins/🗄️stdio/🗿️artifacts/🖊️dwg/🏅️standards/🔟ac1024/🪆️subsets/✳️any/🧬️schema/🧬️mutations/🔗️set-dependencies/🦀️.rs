@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetDependencies {
         protocol::MutationOutcome::new(DwgDiff { dependencies: (base.dependencies != self.dependencies).then(|| self.dependencies.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.dependencies != self.dependencies).then(|| DwgMutation::SetDependencies(set_dependencies::SetDependencies { dependencies: base.dependencies.clone() })).into_iter().collect())
+        Ok((base.dependencies != self.dependencies).then(|| DwgMutation::SetDependencies(SetDependencies { dependencies: base.dependencies.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set dependencies", "Abhängigkeiten setzen")

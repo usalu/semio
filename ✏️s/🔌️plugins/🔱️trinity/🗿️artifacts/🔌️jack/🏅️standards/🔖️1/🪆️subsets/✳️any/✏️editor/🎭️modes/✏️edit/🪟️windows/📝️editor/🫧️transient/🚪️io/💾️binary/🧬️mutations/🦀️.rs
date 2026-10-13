@@ -16,4 +16,3 @@ impl protocol::OpBinary for JackEditorWindowTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

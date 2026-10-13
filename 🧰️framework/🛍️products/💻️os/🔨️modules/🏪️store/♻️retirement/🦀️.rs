@@ -44,7 +44,7 @@ impl<T: RetireOwned> RetirementCursor for HistoryPageRetirement<T> {
     fn next_birth_bytes(&self, copy: usize) -> Option<usize> { self.active.as_ref().map_or(Some(0), |active| active.next_capacity_byte_demand(copy).ok()) }
     fn next_close_byte_demand(&self) -> Option<usize> { self.active.as_ref().map_or_else(|| if self.original.is_empty() { self.original.next_empty_page_release_byte_demand() } else { Some(0) }, |active| active.next_release_byte_demand().ok()) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { self.active.as_ref().map_or(Ok(usize::from(!self.terminal_is_empty())), |active| active.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "history entry depth overflow"))) }
-    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(std::mem::size_of::<Self>()) }
+    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
 }
 
 impl<T: RetireOwned> Drop for HistoryPageRetirement<T> {
@@ -56,7 +56,7 @@ impl<T: RetireOwned> Drop for HistoryPageRetirement<T> {
 
 impl<T: RetireOwned> RetireOwned for crate::os_vcs::HistoryPageStack<T> {
     fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(HistoryPageRetirement { original: ManuallyDrop::new(self), active: ManuallyDrop::new(None) }) }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<HistoryPageRetirement<T>>()) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<HistoryPageRetirement<T>>()) }
     fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
 }
 
@@ -88,21 +88,21 @@ impl RetirementCursor for GroupVisibilityRetirement {
     fn next_work_byte_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(self.remaining != 0)) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
-    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(std::mem::size_of::<Self>()) }
+    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
 }
 
 impl RetireOwned for crate::os_vcs::ArtifactGroupVisibility {
-    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(GroupVisibilityRetirement { original: Some(self), remaining: std::mem::size_of::<Self>() }) }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<GroupVisibilityRetirement>()) }
+    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(GroupVisibilityRetirement { original: Some(self), remaining: size_of::<Self>() }) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<GroupVisibilityRetirement>()) }
     fn controlled_retirement_supported() -> bool { true }
-    fn retirement_element_copy_bytes() -> usize { std::mem::size_of::<Self>() }
+    fn retirement_element_copy_bytes() -> usize { size_of::<Self>() }
 }
 impl RetireOwned for super::ArtifactCursor {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         let mut original = ManuallyDrop::new(self);
         let owners = unsafe { ManuallyDrop::take(&mut original.owners) };
         let group = unsafe { ManuallyDrop::take(&mut original.group) };
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(owners), semio_framework_value::retirement::deferred(group)])
+        sequence(vec![semio_framework_value::retirement::deferred(owners), semio_framework_value::retirement::deferred(group)])
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&*self.owners), semio_framework_value::retirement::deferred_birth_bytes_for(&*self.group)]) }
     fn controlled_retirement_supported() -> bool { true }
@@ -112,7 +112,7 @@ artifact_retire_struct!(super::ArtifactLink { target, pin, role });
 artifact_retire_struct!(super::OwnerRef { parent, slot, child_id });
 impl<S: Send + 'static> RetireOwned for super::ArtifactChild<S> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(self.child_id), semio_framework_value::retirement::deferred(self.target)])
+        sequence(vec![semio_framework_value::retirement::deferred(self.child_id), semio_framework_value::retirement::deferred(self.target)])
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.child_id), semio_framework_value::retirement::deferred_birth_bytes_for(&self.target)])

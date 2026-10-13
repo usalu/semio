@@ -2267,8 +2267,7 @@ export function mutationSchemaSearchRoots(repoRoot: string, schemaPath: string):
   return [...new Set([mutationSchemaSearchRoot(repoRoot, schemaPath), ...plugins])];
 }
 
-/** 🗂️ `$id` → path of every JSON document inside a `🧬️schema` directory of `root` (fixtures, tests and build output skipped) — the twin
- * of the derive's `mutation_schema_document_index`. */
+/** 🗂️ `$id` → path of every JSON document inside a `🧬️schema` directory of `root` (fixtures, tests and build output skipped). The derive reads the generated schema index instead of walking. */
 export function mutationSchemaDocumentIndex(repoRoot: string, root: string): Map<string, string> {
   const index = new Map<string, string>();
   const walk = (directory: string, schema: boolean): void => {

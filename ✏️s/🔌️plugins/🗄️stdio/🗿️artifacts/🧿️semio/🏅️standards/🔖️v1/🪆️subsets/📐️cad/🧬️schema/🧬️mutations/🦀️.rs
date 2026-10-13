@@ -64,7 +64,7 @@ pub mod set_layer;
 //#region 🔖️Leaves
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioCadSnapshot, diff = SemioCadDiff, schema = "SemioCadMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -111,7 +111,7 @@ pub const KINDS: &[&str] = &[
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_cad_mutation(mutation: &SemioCadMutation, base: &SemioCadSnapshot) -> protocol::MutationOutcome<SemioCadDiff> {
-    <SemioCadMutation as protocol::Mutation<SemioCadSnapshot>>::diff(mutation, base)
+    <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, base)
 }
 
 

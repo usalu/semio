@@ -7,10 +7,10 @@ use crate::schema::snapshot::{pin_index, pin_key, BitmapPinnedPixel, BitmapSnaps
 
 pub fn diff(payload: &super::PinPixel, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
     if payload.x >= base.output.width || payload.y >= base.output.height {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("({}, {}) falls outside the {}×{} output.", payload.x, payload.y, base.output.width, base.output.height), [crate::schema::snapshot::pin_key(payload.x, payload.y)]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("({}, {}) falls outside the {}×{} output.", payload.x, payload.y, base.output.width, base.output.height), [pin_key(payload.x, payload.y)]);
     }
     if payload.color as usize >= base.input.palette.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Palette index {} is not in this document's palette.", payload.color), [crate::schema::snapshot::pin_key(payload.x, payload.y)]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Palette index {} is not in this document's palette.", payload.color), [pin_key(payload.x, payload.y)]);
     }
     let pin = BitmapPinnedPixel { x: payload.x, y: payload.y, color: payload.color };
     match pin_index(base, payload.x, payload.y) {

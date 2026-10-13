@@ -340,7 +340,7 @@ pub(crate) mod context {
     pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mut Puzzle3dSettled) {
         settled.turns += 1;
         app.measure_maintenance_step(maximum_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
-        app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance one typed operation publication unit");
         let instance_id = app.instance_id;
         if let Some(page) = app.take_typed_operation_result_page(instance_id) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
@@ -541,7 +541,7 @@ pub(crate) mod context {
         let window_id = main::WINDOW_KIND_ID;
         app.ensure_window(window_id);
         let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
-        let answered = app.handle_action(action, Some(args), &action_meta).await;
+        let answered = app.handle_action(action, Some(args), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         settle_into_reporting_with_items(app, answered, 1).await
     }
 
@@ -593,14 +593,14 @@ pub(crate) mod context {
                 | "setInteractionGranularity"
         ) {
             let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
-            let admitted = app.handle_action(action, dsl_args.as_ref(), &action_meta).await;
+            let admitted = app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
             let reserved = match admitted {
                 Ok(admitted) => settle_reserved(app, admitted).await,
                 Err(fault) => Err(fault),
             };
             return settle_into_reporting_with_items(app, reserved, maximum_items).await;
         }
-        let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &action_meta).await;
+        let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         settle_into_reporting_with_items(app, typed, maximum_items).await
     }
     
@@ -614,7 +614,7 @@ pub(crate) mod context {
         app.ensure_window(window_id);
         let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
         let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
-        app.dispatch_typed(command, &action_meta).await
+        app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await
     }
     
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -642,7 +642,7 @@ pub(crate) mod context {
         app.ensure_window(window_id);
         let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
         let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
-        app.handle_action(action, dsl_args.as_ref(), &action_meta).await
+        app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await
     }
     
     pub async fn hover_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
@@ -986,7 +986,7 @@ pub(crate) mod context {
     pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -> Value {
         app.ensure_window(main::WINDOW_KIND_ID);
         let action_meta = ActionMeta { view_state: Some(app.window_view(main::WINDOW_KIND_ID)), ..app.meta("local") };
-        let result = app.handle_action(action, Some(&semio_framework_pack_json::to_dsl_value(&args)), &action_meta).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+        let result = app.handle_action(action, Some(&semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
         semio_framework_pack_json::from_dsl_value(&result.output)
     }
 
@@ -1220,7 +1220,7 @@ async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_i
             drop(render_composite(app).await);
         }
         app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup clock keeps ticking during a read");
-        app.advance_typed_operation_publication().await.expect("advance one local interaction publication unit");
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance one local interaction publication unit");
         let mut frames = Vec::new();
         app.publish_local_interaction_query_reply(&mut frames, LOCAL_INTERACTION_READ_FRAMES);
         for frame in &frames {
@@ -1339,7 +1339,7 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
         let mut app = app().await;
         let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": example })), None).expect("setActiveExample is a declared puzzle3d command");
         let action_meta = app.meta("local");
-        app.dispatch_typed(command, &action_meta).await.expect("setActiveExample mints its retained whole-document operation");
+        app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("setActiveExample mints its retained whole-document operation");
         for _ in 0..MAINTENANCE_BUDGET_TURNS {
             if !app.has_pending_typed_operations() {
                 break;
@@ -1359,7 +1359,7 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
 /// runtime drives, minus any assertion on the operation's own outcome lane.
 async fn measured_host_turn(app: &mut Puzzle3dApp) {
     app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("a live-cleanup maintenance unit never faults");
-    app.advance_typed_operation_publication().await.expect("advance one typed operation publication unit");
+    app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
     if let Some(page) = app.take_typed_operation_result_page(instance_id) {
         assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
@@ -2315,7 +2315,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_object(object, None)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
@@ -2986,7 +2986,7 @@ async fn nakagin_app() -> Puzzle3dApp {
     let mut app = app().await;
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample is a declared puzzle3d command");
     let action_meta = app.meta("local");
-    app.dispatch_typed(command, &action_meta).await.expect("setActiveExample mints its retained whole-document operation");
+    app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("setActiveExample mints its retained whole-document operation");
     settle(&mut app).await;
     app
 }

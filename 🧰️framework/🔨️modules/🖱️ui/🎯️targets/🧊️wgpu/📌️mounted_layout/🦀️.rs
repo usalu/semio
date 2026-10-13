@@ -1416,7 +1416,7 @@ impl MountedLayoutJob {
     fn next_close_release_bytes(&self)->Result<usize,semio_framework_value::ValueError>{
         if self.rejected_result.is_some()||self.rejected_line.is_some()||self.rejected_glyph.is_some()||self.rejected_preview.is_some()||self.rejected_run.is_some()||self.rejected_walk.is_some()||self.rejected_node.is_some(){return Ok(0)}
         if self.results.as_deref().is_some_and(|owner|!owner.is_empty())||self.lines.as_deref().is_some_and(|owner|!owner.is_empty())||self.glyph_previews.as_deref().is_some_and(|owner|!owner.is_empty())||self.glyphs.as_deref().is_some_and(|owner|!owner.is_empty())||self.runs.as_deref().is_some_and(|owner|!owner.is_empty())||self.walk.as_deref().is_some_and(|owner|!owner.is_empty())||self.nodes.as_deref().is_some_and(|owner|!owner.is_empty()){return Ok(0)}
-        fn list<T,const N:usize>(owner:&ui_contract::UiFixedList<T,N>)->Result<usize,semio_framework_value::ValueError>{if !owner.is_empty(){Ok(0)}else if !owner.terminal_is_empty(){owner.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)}else{Ok(std::mem::size_of::<ui_contract::UiFixedList<T,N>>())}}
+        fn list<T,const N:usize>(owner:&ui_contract::UiFixedList<T,N>)->Result<usize,semio_framework_value::ValueError>{if !owner.is_empty(){Ok(0)}else if !owner.terminal_is_empty(){owner.next_release_allocation_bytes().map_err(semio_framework_value::ValueError::from)}else{Ok(size_of::<ui_contract::UiFixedList<T,N>>())}}
         if let Some(owner)=self.results.as_deref(){return list(owner)}
         if let Some(owner)=self.lines.as_deref(){return list(owner)}
         if let Some(owner)=self.glyph_previews.as_deref(){return list(owner)}
@@ -1424,7 +1424,7 @@ impl MountedLayoutJob {
         if let Some(owner)=self.runs.as_deref(){return list(owner)}
         if let Some(owner)=self.walk.as_deref(){return list(owner)}
         if let Some(owner)=self.nodes.as_deref(){return list(owner)}
-        if self.child_scratch.capacity()!=0{return self.child_scratch.capacity().checked_mul(std::mem::size_of::<usize>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"layout scratch backing overflow"))}
+        if self.child_scratch.capacity()!=0{return self.child_scratch.capacity().checked_mul(size_of::<usize>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"layout scratch backing overflow"))}
         if !self.flex.close_is_empty(){return self.flex.next_close_release_byte_demand()}
         if self.atlas_candidate.pages.iter().any(Option::is_some){return Ok(LAYOUT_ATLAS_PAGE_BYTES)}
         self.text_worker.next_close_release_bytes()

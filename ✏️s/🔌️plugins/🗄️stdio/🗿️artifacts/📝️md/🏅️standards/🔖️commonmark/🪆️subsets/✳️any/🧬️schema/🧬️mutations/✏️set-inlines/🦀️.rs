@@ -32,7 +32,7 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for SetInlines {
                 _ => None,
             };
             match original {
-                Some(inlines) => vec![MdMutation::SetInlines(set_inlines::SetInlines { path: path.clone(), index: *index, inlines })],
+                Some(inlines) => vec![MdMutation::SetInlines(SetInlines { path: path.clone(), index: *index, inlines })],
                 None => Vec::new(),
             }
         })

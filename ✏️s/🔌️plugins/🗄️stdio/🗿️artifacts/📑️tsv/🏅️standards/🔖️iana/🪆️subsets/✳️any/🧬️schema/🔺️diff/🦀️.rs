@@ -8,7 +8,6 @@
 use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
 

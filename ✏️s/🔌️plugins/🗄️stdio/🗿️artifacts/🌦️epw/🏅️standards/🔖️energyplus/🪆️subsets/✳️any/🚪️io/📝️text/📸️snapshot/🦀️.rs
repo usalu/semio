@@ -38,4 +38,3 @@ impl store::ArtifactDsl for EpwSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

@@ -30,7 +30,7 @@ async fn real_text_round_trip_through_svg_codec() {
     let svg = ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
     let text = <SvgSnapshot as store::ArtifactDsl>::print_dsl(&svg);
     let reparsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("reparse real svg text");
-    let root = semio_s_artifact_stdio_svg::schema::snapshot::svg_element_from_xml_node(reparsed.doc.root.as_ref().unwrap()).expect("typed view");
+    let root = semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::svg_element_from_xml_node(&semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(reparsed.doc.root.as_ref().unwrap())).expect("typed view");
     match &root {
         SvgElement::Svg { view_box, .. } => assert_eq!(*view_box, Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 100.0, height: 50.0 })),
         other => panic!("expected <svg>, got {other:?}"),
@@ -41,7 +41,7 @@ async fn real_text_round_trip_through_svg_codec() {
 async fn image_node_round_trips_through_data_uri_convention() {
     let drawing = sample_drawing();
     let svg = ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
-    let root = semio_s_artifact_stdio_svg::schema::snapshot::svg_element_from_xml_node(svg.doc.root.as_ref().unwrap()).expect("typed view");
+    let root = semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::svg_element_from_xml_node(&semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(svg.doc.root.as_ref().unwrap())).expect("typed view");
     let layer_group = match &root {
         SvgElement::Svg { children, .. } => &children[0],
         _ => panic!("expected svg root"),

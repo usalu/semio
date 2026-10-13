@@ -1,6 +1,6 @@
 use super::*;
 use semio_s_artifact_stdio_svg::schema::snapshot::{CommonAttrs, PresentationAttrs, TransformOp};
-use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;
+use semio_s_artifact_stdio_svg::schema::snapshot::SvgDocument;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_svg() -> SvgSnapshot {
@@ -19,7 +19,7 @@ fn sample_svg() -> SvgSnapshot {
             SvgElement::Text { common: CommonAttrs::default(), x: Some(1.0), y: Some(2.0), children: vec![SvgElement::TextNode("hi".into())] },
         ],
     };
-    SvgSnapshot { doc: XmlDocument { root: Some(semio_s_artifact_stdio_svg::schema::snapshot::svg_element_to_xml_node(&svg_el)), doctype: None, declaration: None, prolog: Vec::new(), epilog: Vec::new() }, ..SvgSnapshot::default() }
+    SvgSnapshot { doc: SvgDocument { root: Some(semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_node(semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::svg_element_to_xml_node(&svg_el)).expect("typed SVG node")), ..SvgDocument::default() }, ..SvgSnapshot::default() }
 }
 
 #[semio_framework_async_macros::async_test]

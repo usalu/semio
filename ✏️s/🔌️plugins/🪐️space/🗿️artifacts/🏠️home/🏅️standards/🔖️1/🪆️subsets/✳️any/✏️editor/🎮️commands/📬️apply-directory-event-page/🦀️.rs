@@ -65,7 +65,7 @@ impl<A: ArtifactApp> HomeDirectoryPageWork<A> {
 
 /// 🧮️ The transient bytes one Home work step may materialize: the work's own frame plus the one emit it can stage.
 pub(crate) fn home_work_step_demands<A: ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(std::mem::size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
 }
 
 impl<A> ArtifactCommandWork<A> for HomeDirectoryPageWork<A>
@@ -81,11 +81,11 @@ where
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        home_work_step_demands::<A>(std::mem::size_of::<Self>())
+        home_work_step_demands::<A>(size_of::<Self>())
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {

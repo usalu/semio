@@ -1,7 +1,6 @@
 //! 📝️ Mesh JSON and OBJ representation owners.
 use crate::*;
 use semio_framework_pack_json as json;
-use std::collections::BTreeMap;
 
 /// 🎒️ Encodes canonical polygon values at the native JSON boundary.
 pub fn encode_polygon_mesh_source(source:&PolygonMeshSource)->String {json::from_dsl_value(&pack::value::ToValue::to_value(source)).to_string()}
@@ -200,13 +199,13 @@ pub struct MeshMetadataCursor {
 }
 impl MeshMetadataCursor {
     /// 🧵️ Appends one bounded metadata transition using borrowed canonical values.
-    pub fn step(&mut self, attributes:&HistoryFoldIndex<String,MeshAttribute>,materials:&HistoryFoldIndex<String,pack::value::DslValue>,textures:&HistoryFoldIndex<String,MeshTexture>,references:Option<&crate::ComponentReferenceTable>,corners:Option<&[u32]>,edges:Option<&[u32]>,output:&mut String)->Result<bool,String> {
+    pub fn step(&mut self, attributes:&HistoryFoldIndex<String,MeshAttribute>,materials:&HistoryFoldIndex<String,pack::value::DslValue>,textures:&HistoryFoldIndex<String,MeshTexture>,references:Option<&ComponentReferenceTable>,corners:Option<&[u32]>,edges:Option<&[u32]>,output:&mut String)->Result<bool,String> {
         use std::ops::Bound::{Excluded,Unbounded};
         if attributes.len()>64 || materials.len()>10_000 || textures.len()>256 {return Err("mesh metadata declaration limit exceeded".into());}
         if references.is_some_and(|values|values.len()>3) {return Err("mesh component reference domain limit exceeded".into());}
         if self.metadata_section==4 {return Ok(true); }
         if self.metadata_stage==0 {
-            let (field,empty)=match self.metadata_section {0=>("attributes",attributes.is_empty()),1=>("materials",materials.is_empty()),2=>("textures",textures.is_empty()),_=>("componentReferences",references.is_none_or(crate::ComponentReferenceTable::is_empty))};
+            let (field,empty)=match self.metadata_section {0=>("attributes",attributes.is_empty()),1=>("materials",materials.is_empty()),2=>("textures",textures.is_empty()),_=>("componentReferences",references.is_none_or(ComponentReferenceTable::is_empty))};
             if empty {self.metadata_section+=1;return Ok(false);}
             output.push_str(&format!("{}\"{field}\":{{",if output.ends_with('{') {""}else {","}));self.metadata_stage=1;self.metadata_name=None;self.metadata_records=0;
             return Ok(false);

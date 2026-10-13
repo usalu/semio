@@ -28,7 +28,6 @@ impl store::ArtifactDsl for SSpaceSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {

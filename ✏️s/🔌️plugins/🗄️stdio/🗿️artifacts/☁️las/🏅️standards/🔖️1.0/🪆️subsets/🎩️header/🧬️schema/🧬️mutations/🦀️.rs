@@ -14,7 +14,8 @@
 //! not an `APPROVED_VERBS` entry the derive's own const assertion would accept.
 
 use crate::schema::diff::{self, LasDiff};
-use crate::schema::snapshot::{LasHeader, LasPoint, LasVlr};
+use crate::schema::snapshot::{LasPoint, LasVlr};
+#[cfg(test)] use crate::schema::snapshot::{LasHeader};
 use crate::LasSnapshot;
 use protocol::Mutation;
 

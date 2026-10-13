@@ -140,7 +140,7 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<PngMutation>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<PngMutation>(), depth: 1, ..Default::default() })
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<PngEditor>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<PngEditor>>, Fault> {

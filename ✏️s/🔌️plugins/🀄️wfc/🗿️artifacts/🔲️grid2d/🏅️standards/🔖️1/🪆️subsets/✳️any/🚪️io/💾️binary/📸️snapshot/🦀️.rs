@@ -106,8 +106,7 @@ pub fn decode_palette_indices(pixels: &str) -> Vec<u8> {
 pub use native_snapshot_codec::*;
 
 mod native_codec {
-use super::*;
-use crate::schema::snapshot::{Grid2dSnapshot, WfcAdjacencyRule2d, WfcCell2d, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d, WFC_GRID2D_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::Grid2dSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::{Grid2dSnapshotDsl,grid2d_document_to_dsl,grid2d_document_from_dsl};
 
 impl store::ArtifactPack for Grid2dSnapshotDsl {
@@ -150,7 +149,7 @@ impl store::ArtifactPack for Grid2dSnapshot {
 }
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
-impl store::ArtifactNativeSnapshot for crate::Grid2dSnapshot {
+impl store::ArtifactNativeSnapshot for Grid2dSnapshot {
  fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::Grid2dSnapshotDsl::__dsl_spec_producer(),|record,native|{let maximum=native.maximum_bytes();crate::standards::v1::subsets::any::io::text::snapshot::controlled_native::construct(record,native,maximum)},control)}
  fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::Grid2dSnapshotDsl::__dsl_spec_producer(),|native|crate::standards::v1::subsets::any::io::text::snapshot::controlled_native::project(self,native),control)}
 }

@@ -17,7 +17,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveStyle {
         plan_outcome(remove_style_plan(base, &self.id))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
         Ok(plan_inverse(remove_style_plan(base, &self.id)))
     }
 

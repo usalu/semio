@@ -30,4 +30,3 @@ impl store::ArtifactPack for SHomeSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

@@ -25,18 +25,18 @@ impl Forecast<'_,'_>{
   let mut pending=Vec::new();self.frontier(&mut pending,1)?;pending.push(root);
   while let Some(value)=pending.pop(){self.add(2,16)?;self.count(|c|&mut c.values,1)?;
    match value{
-    semio_framework_value::DslValue::Null=>self.text("null")?,semio_framework_value::DslValue::Bool(_)=>{self.text("boolean")?;self.add(0,8)?;}
-    semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(_))=>{self.text("unsigned")?;self.add(0,16)?;}
-    semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(_))=>{self.text("signed")?;self.add(0,8)?;}
-    semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(value))=>{self.text("float")?;self.add(0,if value.is_nan(){11}else if value.is_infinite(){32}else{22})?;}
-    semio_framework_value::DslValue::String(value)=>{self.text("text")?;self.text(value)?;}
-    semio_framework_value::DslValue::Bytes(value)=>{self.text("bytes")?;self.repeated(value.len(),32)?;self.count(|c|&mut c.octets,value.len())?;}
-    semio_framework_value::DslValue::Array(values)=>{self.text("array")?;self.repeated(values.len(),32)?;self.count(|c|&mut c.array_elements,values.len())?;self.control.check_rows(self.counts.rows.checked_add(values.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?)?;self.frontier(&mut pending,values.len())?;for value in values.iter().rev(){pending.push(value);self.step()?;}}
-    semio_framework_value::DslValue::Object(values)=>{self.text("object")?;self.repeated(values.len(),32)?;self.count(|c|&mut c.object_members,values.len())?;self.control.check_rows(self.counts.rows.checked_add(values.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?)?;self.frontier(&mut pending,values.len())?;for(name,value)in values.iter().rev(){self.text(name)?;pending.push(value);self.step()?;}}
+    DslValue::Null=>self.text("null")?,DslValue::Bool(_)=>{self.text("boolean")?;self.add(0,8)?;}
+    DslValue::Number(semio_framework_value::Number::UInt(_))=>{self.text("unsigned")?;self.add(0,16)?;}
+    DslValue::Number(semio_framework_value::Number::Int(_))=>{self.text("signed")?;self.add(0,8)?;}
+    DslValue::Number(semio_framework_value::Number::Float(value))=>{self.text("float")?;self.add(0,if value.is_nan(){11}else if value.is_infinite(){32}else{22})?;}
+    DslValue::String(value)=>{self.text("text")?;self.text(value)?;}
+    DslValue::Bytes(value)=>{self.text("bytes")?;self.repeated(value.len(),32)?;self.count(|c|&mut c.octets,value.len())?;}
+    DslValue::Array(values)=>{self.text("array")?;self.repeated(values.len(),32)?;self.count(|c|&mut c.array_elements,values.len())?;self.control.check_rows(self.counts.rows.checked_add(values.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?)?;self.frontier(&mut pending,values.len())?;for value in values.iter().rev(){pending.push(value);self.step()?;}}
+    DslValue::Object(values)=>{self.text("object")?;self.repeated(values.len(),32)?;self.count(|c|&mut c.object_members,values.len())?;self.control.check_rows(self.counts.rows.checked_add(values.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms child row count overflow"))?)?;self.frontier(&mut pending,values.len())?;for(name,value)in values.iter().rev(){self.text(name)?;pending.push(value);self.step()?;}}
    }
   }Ok(())
  }
- fn frontier<T>(&mut self,values:&mut Vec<T>,count:usize)->Result<(),ValueError>{let required=values.len().checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms frontier count overflow"))?;let bytes=required.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Forms frontier byte count overflow"))?;self.control.check_value_bytes(self.counts.bytes.checked_add(bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Forms frontier byte count overflow"))?)?;if required>values.capacity(){let mut next=store::sqlite_snapshot::transfer::reserve(required,self.control)?;next.append(values);*values=next;}Ok(())}
+ fn frontier<T>(&mut self,values:&mut Vec<T>,count:usize)->Result<(),ValueError>{let required=values.len().checked_add(count).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Forms frontier count overflow"))?;let bytes=required.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Forms frontier byte count overflow"))?;self.control.check_value_bytes(self.counts.bytes.checked_add(bytes).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Forms frontier byte count overflow"))?)?;if required>values.capacity(){let mut next=store::sqlite_snapshot::transfer::reserve(required,self.control)?;next.append(values);*values=next;}Ok(())}
  fn condition(&mut self,root:&FormExpr)->Result<(),ValueError>{
   let mut pending=Vec::new();self.frontier(&mut pending,1)?;pending.push(root);
   while let Some(value)=pending.pop(){self.add(2,16)?;self.count(|c|&mut c.conditions,1)?;

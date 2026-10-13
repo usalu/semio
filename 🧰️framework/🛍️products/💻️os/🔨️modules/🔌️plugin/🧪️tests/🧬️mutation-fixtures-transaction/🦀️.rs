@@ -410,21 +410,7 @@ impl ArtifactApp for TxnApp {
 }
 
 fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
-    for _ in 0..100_000 {
-        if app.close_terminal_is_empty() {
-            return;
-        }
-        let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original fixture close demand");
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
-            match app.close_step(grant).expect("fixture app close") {
-            crate::app::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
-            crate::app::PluginLifecycleStep::AwaitingInput { reason } => panic!("fixture close awaited input: {reason}"),
-            crate::app::PluginLifecycleStep::Blocked { reason } => panic!("fixture close blocked: {reason}"),
-            crate::app::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
-        }
-    }
-    assert!(app.close_terminal_is_empty(), "transaction fixture must retire every exact store owner");
+    crate::app::artifact_app_laws::close_registered_fixture_app(app, crate::app::artifact_app_laws::fixture_mounted_policy());
 }
 
 #[semio_framework_async_macros::async_test]

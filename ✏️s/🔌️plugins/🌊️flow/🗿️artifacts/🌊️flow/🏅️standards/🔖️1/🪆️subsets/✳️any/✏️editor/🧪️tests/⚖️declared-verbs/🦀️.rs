@@ -14,7 +14,7 @@ use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_the
 #[semio_framework_async_macros::async_test]
 async fn every_declared_flow_verb_honours_its_declaration() {
     crate::editor::flow::unit_tests::context::install_first_party_light_flow_extensions_for_tests();
-    let probes = assert_declared_verbs_honour_their_declarations::<semio_framework_plugin::EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_flow_app, Some(include_str!("../../🧫️fixtures/⚖️declared-verb-examples.json"))).await;
+    let probes = assert_declared_verbs_honour_their_declarations::<semio_framework_plugin::EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_flow_app, Some(include_str!("../../🧫️fixtures/⚖️declared-verb-examples.json")), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(probes.len(), 28, "declared verbs");
     assert_eq!(declared_verb_agent_divergences(&probes), ["evaluate", "focusSelection"], "agent-lane divergences");
     let evaluate = probes.iter().find(|probe| probe.verb == "evaluate").expect("evaluate is a declared verb");

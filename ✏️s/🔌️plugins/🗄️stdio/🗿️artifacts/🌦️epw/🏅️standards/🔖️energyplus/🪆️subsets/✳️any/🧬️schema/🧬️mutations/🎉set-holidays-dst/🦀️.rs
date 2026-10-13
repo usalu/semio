@@ -14,12 +14,12 @@ pub struct SetHolidaysDst {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetHolidaysDst {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "holidays-dst", kind: "set-holidays-dst", record: "SetHolidaysDst" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         let Self { value } = self;
         protocol::MutationOutcome::new(EpwDiff { holidays_dst: Some(value.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value: base.holidays_dst.clone() })])
+        Ok(vec![EpwMutation::SetHolidaysDst(SetHolidaysDst { value: base.holidays_dst.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set holidays DST", "Feiertage und Sommerzeit setzen")

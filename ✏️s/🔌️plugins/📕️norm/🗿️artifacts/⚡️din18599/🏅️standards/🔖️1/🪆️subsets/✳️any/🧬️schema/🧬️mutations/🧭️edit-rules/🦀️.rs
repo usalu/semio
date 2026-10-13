@@ -1,6 +1,6 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the Din18599 editor: which value-tree path raises which concrete kind.
 
-use crate::app_surface::{InsertItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+use crate::app_surface::{NormEdit, NormEditRules, SelectorKey, SetFieldRule};
 use super::Din18599Mutation;
 use crate::Din18599Snapshot;
 

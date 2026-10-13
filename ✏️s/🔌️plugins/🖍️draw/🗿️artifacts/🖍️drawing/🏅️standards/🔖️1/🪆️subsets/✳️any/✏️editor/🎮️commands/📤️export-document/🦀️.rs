@@ -2,8 +2,6 @@
 
 use crate::op::DrawingMutation;
 use crate::DrawingSnapshot;
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
 
 /// 📄️ The default when the palette dispatches the verb without arguments.

@@ -68,8 +68,8 @@ impl HistoryFoldControl {
     fn page_bytes(&self) -> usize { self.0.page_bytes.load(Ordering::Relaxed).clamp(1, 4096) }
     fn retire<T: RetireOwned>(&self, value: T) {
         let bytes=owned_retirement_birth_bytes::<T>();
-        self.0.retirement_capacity.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(bytes)).expect("fold transfer requires admitted retirement capacity");
-        self.0.retirement_items.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(1)).expect("fold transfer requires admitted retirement item");
+        self.0.retirement_capacity.try_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(bytes)).expect("fold transfer requires admitted retirement capacity");
+        self.0.retirement_items.try_update(Ordering::Relaxed,Ordering::Relaxed,|remaining|remaining.checked_sub(1)).expect("fold transfer requires admitted retirement item");
         let (owner,progress)=admit_owned_retirement(value,RetainedCloneGrant::one_capacity_turn(bytes,1)).unwrap_or_else(|(error,_)|panic!("admitted fold owner refused retirement: {error}"));
         let mut queue=self.0.retirements.lock();assert!(queue.len()<queue.capacity(),"fold retirement queue requires a reserved slot");queue.push_back(owner);
         self.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes,Ordering::Relaxed);
@@ -96,8 +96,8 @@ impl Future for SharedActorAdmission {
         let grant=self.control.original_grant();let copy=Self::COPY_BYTES;
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<self.capacity{return Poll::Pending;}
         let original=self.original.take().expect("original actor admission retains paid String owner").take();
-        let(owner,progress)=semio_framework_value::SharedUtf8::admit(original,grant).unwrap_or_else(|_|unreachable!("original actor admission was preflighted"));
-        self.control.accept_original_progress(progress);Poll::Ready(owner)
+        let(owner,mut progress)=semio_framework_value::SharedUtf8::admit(original,grant).unwrap_or_else(|_|unreachable!("original actor admission was preflighted"));
+        progress.copied_bytes+=copy;self.control.accept_original_progress(progress);Poll::Ready(owner)
     }
 }
 impl Drop for SharedActorAdmission {fn drop(&mut self){self.control.0.pending_retirement_birth.fetch_sub(self.capacity,Ordering::Relaxed);self.control.0.pending_retirement_items.fetch_sub(1,Ordering::Relaxed);self.control.0.pending_original_copy.fetch_sub(Self::COPY_BYTES,Ordering::Relaxed);}}
@@ -105,7 +105,7 @@ impl Drop for SharedActorAdmission {fn drop(&mut self){self.control.0.pending_re
 /// 🧾️ One original actor alias waits for the caller's independent copy and item authority.
 pub struct SharedActorLease<'a>{original:&'a semio_framework_value::SharedUtf8,control:HistoryFoldControl}
 impl SharedActorLease<'_>{const COPY_BYTES:usize=size_of::<semio_framework_value::SharedUtf8>();}
-impl Future for SharedActorLease<'_>{type Output=semio_framework_value::SharedUtf8;fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{let grant=self.control.original_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::COPY_BYTES{return Poll::Pending;}let(owner,progress)=self.original.admit_clone(grant).unwrap_or_else(|_|unreachable!("original shared actor lease preflighted"));self.control.accept_original_progress(progress);Poll::Ready(owner)}}
+impl Future for SharedActorLease<'_>{type Output=semio_framework_value::SharedUtf8;fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{let grant=self.control.original_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<Self::COPY_BYTES{return Poll::Pending;}let(owner,mut progress)=self.original.admit_clone(grant).unwrap_or_else(|_|unreachable!("original shared actor lease preflighted"));progress.copied_bytes+=Self::COPY_BYTES;self.control.accept_original_progress(progress);Poll::Ready(owner)}}
 impl Drop for SharedActorLease<'_>{fn drop(&mut self){self.control.0.pending_retirement_items.fetch_sub(1,Ordering::Relaxed);self.control.0.pending_original_copy.fetch_sub(Self::COPY_BYTES,Ordering::Relaxed);}}
 
 /// 🧳️ Coroutine-local owned values enqueue their registered retirement instead of deep-dropping on cancellation.
@@ -440,7 +440,7 @@ pub async fn fold_history_for_controlled(document_id: &ArtifactId, edits: &[Fold
     let mut serial = 0;
     for (index, edit) in edits.iter().enumerate() { edit_lookup.insert(copy_history_text(&edit.id, control).await?, index); }
     while let Some((key, (structural, index))) = events.pop_first() {
-        let key = control.track(key).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
+        let _key = control.track(key).unwrap_or_else(|_| unreachable!("fold schema declares tracked ownership")).await;
         control.pulse().await?;
         if !structural {
             let edit = &edits[index];

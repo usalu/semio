@@ -115,7 +115,7 @@ impl Default for ArtifactCanonicalEditEncoder {
 impl ArtifactCanonicalEditEncoder {
     /// 📏️ Measures the current concrete frontier backing before canonical ownership is admitted.
     pub(super) const fn constructor_capacity_bytes() -> usize {
-        ARTIFACT_CANONICAL_JSON_DEPTH * std::mem::size_of::<Option<BorrowedFrame<'static>>>()
+        ARTIFACT_CANONICAL_JSON_DEPTH * size_of::<Option<BorrowedFrame<'static>>>()
     }
 
     /// 🪪️ Extends only references obtained from the exact privately owned immutable root.
@@ -256,19 +256,26 @@ impl ArtifactCanonicalEditEncoder {
                 return Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.is_complete() { RetainedCloneStep::Complete(step.ownership.progress()) } else { RetainedCloneStep::Progress(step.ownership.progress()) }, written_bytes: step.written_bytes });
             }
         }
-        let byte = self.next_byte().map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason })?;
-        if let Some(byte) = byte { output[0] = byte; }
-        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: usize::from(byte.is_some()), ..Default::default() };
-        Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.is_complete() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }, written_bytes: usize::from(byte.is_some()) })
+        let limit = output.len().min(grant.maximum_copy_bytes);
+        let mut written = 0;
+        while written < limit {
+            match self.next_byte() {
+                Ok(Some(byte)) => { output[written] = byte; written += 1; }
+                Ok(None) => break,
+                Err(reason) => return Err(ArtifactCanonicalJsonEncodeError { written_bytes: written, reason }),
+            }
+        }
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: written, ..Default::default() };
+        Ok(ArtifactCanonicalJsonTreeStep { ownership: if self.is_complete() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }, written_bytes: written })
     }
 
     pub(super) fn is_complete(&self) -> bool {
         self.started && self.depth == 0
     }
 
-    pub(super) fn reset(&mut self) -> Result<(), semio_framework_value::ValueError> {
+    pub(super) fn reset(&mut self) -> Result<(), ValueError> {
         if self.depth != 0 {
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.borrowed-reset-before-retirement"));
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.borrowed-reset-before-retirement"));
         }
         self.root_address = 0;
         self.started = false;
@@ -279,13 +286,40 @@ impl ArtifactCanonicalEditEncoder {
         self.depth == 0 && self.root_address == 0 && !self.started
     }
 
-    pub(super) fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    /// 📏️ Physical bytes the boxed iterator or cursor behind one borrowed value occupies; scalars and sources own none.
+    fn value_release_bytes(value: &ArtifactCanonicalJsonValue<'_>) -> usize {
+        match value {
+            ArtifactCanonicalJsonValue::Scalar(_) | ArtifactCanonicalJsonValue::Source(_) => 0,
+            ArtifactCanonicalJsonValue::Array(array) => size_of_val(&*array.values),
+            ArtifactCanonicalJsonValue::Object(object) => size_of_val(&*object.values),
+        }
+    }
+
+    /// 📏️ Physical bytes dropping one frame releases: its boxed iterator, indexed cursor and the pending value it still holds.
+    fn frame_release_bytes(frame: &BorrowedFrame<'_>) -> usize {
+        match frame {
+            BorrowedFrame::Pending(value) => Self::value_release_bytes(value),
+            BorrowedFrame::String(_) | BorrowedFrame::Scalar { .. } => 0,
+            BorrowedFrame::Array { values, .. } => size_of_val(&*values.values),
+            BorrowedFrame::Object { values, current, .. } => size_of_val(&*values.values) + current.as_ref().map_or(0, Self::value_release_bytes),
+            BorrowedFrame::Indexed { .. } => size_of::<ArtifactCanonicalJsonCursor>(),
+        }
+    }
+
+    /// 🎟️ Quotes the release the next retirement turn reports: the top frame's physical bytes.
+    pub(super) fn next_close_release_byte_demand(&self) -> usize {
+        if self.depth == 0 { return 0; }
+        self.frames[self.depth - 1].as_ref().map_or(0, Self::frame_release_bytes)
+    }
+
+    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if grant.maximum_depth == 0 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical encoder retirement requires admitted depth")); }
-        if self.depth != 0 { self.depth -= 1; self.frames[self.depth] = None; } else { self.reset()?; }
-        let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical encoder retirement requires admitted depth")); }
+        let mut released_bytes = 0;
+        if self.depth != 0 { self.depth -= 1; let frame = self.frames[self.depth].take(); released_bytes = frame.as_ref().map_or(0, Self::frame_release_bytes); drop(frame); } else { self.reset()?; }
+        let progress = RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() };
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
 }

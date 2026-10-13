@@ -1,7 +1,4 @@
 //! 💾️ Direct-color region binary codec.
-use crate::standards::v_v3::subsets::any::schema::mutations::*;
-use crate::standards::v_v3::subsets::any::schema::snapshot::*;
-use crate::standards::v_v3::subsets::any::io::binary::diff::*;
 use crate::schema::mutations::{BmpMutation, PaintDirectRegion};
 use crate::standards::v_v3::subsets::any::io::binary::mutations::Entry;
 pub const BINARY_TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "paint-direct-region");

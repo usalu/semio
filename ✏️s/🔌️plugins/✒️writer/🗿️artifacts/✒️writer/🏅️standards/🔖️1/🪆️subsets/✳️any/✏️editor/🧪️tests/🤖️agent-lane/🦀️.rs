@@ -13,7 +13,7 @@ const BATTERY_VERBS: &[&str] = &["formatDocument", "commitRename", "setText"];
 /// the pinned verbs.
 #[semio_framework_async_macros::async_test]
 async fn the_agent_lane_runs_the_writer_editors_own_tool_command_job() {
-    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<WriterPlayApp>, <WriterPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_writer_app, None, BATTERY_VERBS).await;
+    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<WriterPlayApp>, <WriterPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_writer_app, None, BATTERY_VERBS, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     for probe in &probes {
         assert!(!matches!(&probe.agent, Some(DeclaredVerbOutcome::Unreachable { .. })), "{} is unreachable on the agent lane: {:?}", probe.verb, probe.agent);
     }

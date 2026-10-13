@@ -19,9 +19,9 @@ async fn host_event(app: &mut RasterAppFixture, kind: &str) {
     let under = semio_framework_plugin::ActionMeta { view_state: Some(raster_view_state()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     let window = raster_view_state().window_id.expect("the composite test window");
     let args = semio_framework_value::DslValue::from(&serde_json::json!({ "windowId": window, "kind": kind }));
-    let admitted = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&args), &under).await.unwrap_or_else(|fault| panic!("hostEvent {kind}: {fault:?}"));
+    let admitted = app.handle_action(semio_framework::HOST_EVENT_ACTION_ID, Some(&args), &under, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("hostEvent {kind}: {fault:?}"));
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut **app, admitted).await.unwrap_or_else(|fault| panic!("hostEvent {kind} settles: {fault:?}"));
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.unwrap_or_else(|fault| panic!("hostEvent {kind} answer settles: {fault:?}"));
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("hostEvent {kind} answer settles: {fault:?}"));
 }
 
 #[semio_framework_async_macros::async_test]

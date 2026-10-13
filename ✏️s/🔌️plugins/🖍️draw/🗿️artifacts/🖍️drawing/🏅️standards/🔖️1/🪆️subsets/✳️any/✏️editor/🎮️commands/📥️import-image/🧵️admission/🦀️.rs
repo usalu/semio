@@ -21,9 +21,9 @@ impl ArtifactCommandWork<App> for Work {
  fn work_demands(&self,input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
   use semio_framework_value::{RetirementDemand,ValueRefusalKind};
   let DrawingCommand::ImportImage(payload)=input.command else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"drawing image command required"));};
-  let Some(workspace)=self.workspace.as_ref().and_then(ControlledRetirement::original)else{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Workspace>()+std::mem::size_of::<DrawingImageAdmissionJob>(),depth:1,..Default::default()});};
-  if let Some(publication)=&workspace.publication{let mut demand=publication.work_demands(payload,input.operation,_maximum_copy_bytes)?;if publication.ready(){demand.copy_bytes+=std::mem::size_of::<Emit<DrawingMutation,NoConfigMutation>>();}return Ok(demand);}
-  let job=workspace.job.as_ref().unwrap();if job.progress().done{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<DrawingImageAsset>()+std::mem::size_of::<DrawingImagePublicationJob>(),depth:1,..Default::default()});}
+  let Some(workspace)=self.workspace.as_ref().and_then(ControlledRetirement::original)else{return Ok(RetirementDemand{copy_bytes:size_of::<Workspace>()+size_of::<DrawingImageAdmissionJob>(),depth:1,..Default::default()});};
+  if let Some(publication)=&workspace.publication{let mut demand=publication.work_demands(payload,input.operation,_maximum_copy_bytes)?;if publication.ready(){demand.copy_bytes+=size_of::<Emit<DrawingMutation,NoConfigMutation>>();}return Ok(demand);}
+  let job=workspace.job.as_ref().unwrap();if job.progress().done{return Ok(RetirementDemand{copy_bytes:size_of::<DrawingImageAsset>()+size_of::<DrawingImagePublicationJob>(),depth:1,..Default::default()});}
   Ok(RetirementDemand{copy_bytes:job.next_copy_byte_demand().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing image copy quote refused"))?,capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing image capacity quote refused"))?,depth:1,..Default::default()})
  }
  fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>,Fault> {
@@ -43,10 +43,10 @@ impl ArtifactCommandWork<App> for Work {
    let workspace=self.workspace.as_mut().unwrap().original_mut().ok_or_else(||Fault::from("drawing-image-retirement-started"))?;
    let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};
    if let Some(publication)=&mut workspace.publication{
-    if publication.ready(){let extra=std::mem::size_of::<Emit<DrawingMutation,NoConfigMutation>>();let Some((output,mut receipt))=publication.take_result(payload,input.operation,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-extra,..grant}).map_err(|error|Fault::from(error.into_message()))?else{break;};let mut emit=Emit::default();emit.artifact_mutations=output.mutations;emit.interaction_writes=output.selection;receipt.copied_bytes+=extra;cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.consume_fuel(1);self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(emit));}
+    if publication.ready(){let extra=size_of::<Emit<DrawingMutation,NoConfigMutation>>();let Some((output,mut receipt))=publication.take_result(payload,input.operation,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-extra,..grant}).map_err(|error|Fault::from(error.into_message()))?else{break;};let mut emit=Emit::default();emit.artifact_mutations=output.mutations;emit.interaction_writes=output.selection;receipt.copied_bytes+=extra;cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.consume_fuel(1);self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(emit));}
     let receipt=publication.advance(input.snapshot,payload,input.operation,grant).map_err(|error|Fault::from(error.into_message()))?;cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.set_stage("image-publication");cx.consume_fuel(1);if receipt.copied_items==0{break;}continue;
    }
-   if workspace.job.as_ref().unwrap().progress().done{let Some((asset,mut receipt))=workspace.job.as_mut().unwrap().take_result(grant).map_err(|_|Fault::from("Image asset handoff refused"))?else{break;};workspace.publication=Some(DrawingImagePublicationJob::new(asset,input.operation));receipt.copied_bytes+=std::mem::size_of::<DrawingImagePublicationJob>();cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.consume_fuel(1);continue;}
+   if workspace.job.as_ref().unwrap().progress().done{let Some((asset,mut receipt))=workspace.job.as_mut().unwrap().take_result(grant).map_err(|_|Fault::from("Image asset handoff refused"))?else{break;};workspace.publication=Some(DrawingImagePublicationJob::new(asset,input.operation));receipt.copied_bytes+=size_of::<DrawingImagePublicationJob>();cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.consume_fuel(1);continue;}
    let(progress,receipt)=workspace.job.as_mut().unwrap().advance(payload.payload.as_str(),grant).map_err(|_|Fault::from("Image decoder work refused"))?;
    cx.consume_retained(receipt).map_err(|error|Fault::from(error.into_message()))?;cx.set_stage(if progress.samples>0{"image-samples"}else{progress.decoding.map_or("image-decode",|progress|progress.phase)});cx.consume_fuel(1);
    if receipt.copied_items==0{break;}
@@ -59,7 +59,7 @@ impl ArtifactCommandWork<App> for Work {
  fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),|workspace|workspace.next_capacity_byte_demand(copy))}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand)}
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.workspace.as_ref().map_or(Ok(0),ControlledRetirement::next_depth_demand)}
- fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
  fn terminal_is_empty(&self)->bool {self.closing&&self.workspace.as_ref().is_none_or(ControlledRetirement::terminal_is_empty)}
 }
 pub(super) struct DrawingImageCommandJobFactory {keys:Vec<semio_framework::ToolFactoryKey>}

@@ -8,7 +8,8 @@
 //! 🔖 `IoFidelity::Lossy`: parametric constraints and derived inferences have no IFC slot; geometry, identity, types, templates and classification chains are exact.
 //! 📎 https://standards.buildingsmart.org/IFC/DEV/IFC4_3/RC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use super::{codec, export_ifc4, Export};
+use super::{export_ifc4, Export};
+#[cfg(test)] use super::{codec};
 use super::data::property_value;
 use super::projection::{json_cell, plain, quote};
 use super::writer::{en, list, opt_text, refs, rf, text, unset, Ifc, Schema};

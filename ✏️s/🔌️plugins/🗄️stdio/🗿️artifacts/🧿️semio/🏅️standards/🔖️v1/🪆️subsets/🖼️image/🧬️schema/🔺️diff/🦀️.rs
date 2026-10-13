@@ -393,7 +393,7 @@ impl SemioImageDiff {
 }
 
 impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
-    fn apply(&self, base: &SemioImageSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioImageSnapshot> {
+    fn apply(&self, base: &SemioImageSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioImageSnapshot> {
         let mut next = base.clone();
         if let Some(v) = self.width {
             next.width = v;

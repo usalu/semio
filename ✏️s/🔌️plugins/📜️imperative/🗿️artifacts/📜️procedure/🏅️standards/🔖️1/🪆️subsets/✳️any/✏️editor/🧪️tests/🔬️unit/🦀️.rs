@@ -46,7 +46,7 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
     pub async fn imperative_app_with_registry() -> OwnedImperativeApp {
-        let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(imperative_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(imperative_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         OwnedImperativeApp(app)
     }
@@ -62,7 +62,7 @@ pub(crate) mod context {
     impl OwnedImperativeApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
         }
     }
 
@@ -89,16 +89,16 @@ pub(crate) mod context {
 
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does.
     pub async fn settle(app: &mut ImperativeApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
     }
 
     /// 🧹️ Closes every store the wrapper opened — a live `ArtifactStore` asserts in `Drop` otherwise.
     pub fn close(app: &mut ImperativeApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     }
     
     pub async fn dispatch(app: &mut ImperativeApp, command: ImperativeCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -320,11 +320,11 @@ async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations(
     let mut app = imperative_app_with_registry().await;
     // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
     // materialized by the registry's action-arg default resolution.
-    app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).await.expect("add step");
+    app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("add step");
     context::settle(&mut app).await;
     assert_eq!(live_scene(&app).await.path.steps.last().expect("the added step").kind, "log.print");
     // `run` is a View-kind command: under registry enforcement it must not emit document operations.
-    let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).await.expect("run");
+    let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("run");
     assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
     context::close(&mut app);
 }
@@ -399,18 +399,18 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
-    instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a")).await.expect("a applies its edit");
+    instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
     context::settle(&mut instance_a).await;
-    instance_b.dispatch_typed(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b")).await.expect("b applies its edit");
+    instance_b.dispatch_typed(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b applies its edit");
     context::settle(&mut instance_b).await;
-    instance_a.tick_backbone().await.expect("a folds b's events");
-    instance_b.tick_backbone().await.expect("b folds a's events");
+    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "both instances must converge on the same program");
     assert_eq!(probe(&instance_a).await, (genesis.0 + 1, true), "each instance holds both disjoint edits");
-    let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a commits a checkpoint");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
     context::settle(&mut instance_a).await;
-    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
@@ -433,10 +433,10 @@ async fn ingest_operations_is_idempotent_for_imperative() {
     assert!(!envelopes.is_empty(), "the add reached the backbone");
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = imperative_app().await;
-    receiver.ingest_operations(&operations).await.expect("ingest once");
+    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest once");
     let once = live_scene(&receiver).await;
     assert_eq!(once.path.steps.len(), genesis + 1, "the replayed add applies");
-    receiver.ingest_operations(&operations).await.expect("ingest twice");
+    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
     assert_eq!(live_scene(&receiver).await, once, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
 }

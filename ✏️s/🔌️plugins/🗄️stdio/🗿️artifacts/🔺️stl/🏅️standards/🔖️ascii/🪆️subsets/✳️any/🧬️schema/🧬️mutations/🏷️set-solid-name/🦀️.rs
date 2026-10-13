@@ -14,12 +14,12 @@ pub struct SetSolidName {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for SetSolidName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solid-name", kind: "set-solid-name", record: "SetSolidName" };
 
-    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
+    fn diff(&self, _base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff::diff_set_solid_name(name))
     }
     fn inverse(&self, base: &StlSnapshot) -> Result<Vec<StlMutation>, semio_framework_value::ValueError> {
-        Ok(vec![StlMutation::SetSolidName(set_solid_name::SetSolidName { name: base.solid_name.clone() })])
+        Ok(vec![StlMutation::SetSolidName(SetSolidName { name: base.solid_name.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set solid name", "Körpername setzen")

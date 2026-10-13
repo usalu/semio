@@ -1,5 +1,5 @@
 //! 🔊️ Writes exact binary32 sample words, channel order, provenance and ordered tags directly.
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
 use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot,SemioAudioChannel,SemioAudioTag};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};

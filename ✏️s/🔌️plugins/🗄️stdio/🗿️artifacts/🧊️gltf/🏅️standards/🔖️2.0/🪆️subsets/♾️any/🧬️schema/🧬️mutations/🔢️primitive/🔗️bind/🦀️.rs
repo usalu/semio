@@ -37,7 +37,7 @@ pub fn inverse(p: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Vec<
     }
     match base.document.meshes[p.mesh].primitives[p.primitive].indices {
         Some(current) if current == p.accessor => Vec::new(),
-        Some(current) => vec![super::bind_primitive_indices::mutation(super::bind_primitive_indices::GltfBindPrimitiveIndicesPayload { mesh: p.mesh, primitive: p.primitive, accessor: current })],
+        Some(current) => vec![mutation(GltfBindPrimitiveIndicesPayload { mesh: p.mesh, primitive: p.primitive, accessor: current })],
         None => vec![super::unbind_primitive_indices::mutation(super::unbind_primitive_indices::GltfUnbindPrimitiveIndicesPayload { mesh: p.mesh, primitive: p.primitive })],
     }
 }
@@ -59,7 +59,7 @@ pub fn mutation(payload: GltfBindPrimitiveIndicesPayload) -> super::GltfMutation
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitiveIndicesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "bind", entity: "primitive-indices", kind: "bind-primitive-indices", record: "BoundPrimitiveIndices" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

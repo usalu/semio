@@ -571,8 +571,9 @@ trim-paths = "object"
 #   gets the "z"-class shrink without paying that runtime cost in every plugin.
 # - lto "thin" (not "fat"): fat LTO re-links ~25 plugin cdylibs individually — 2-4x slower per plugin
 #   for a low single-digit percent size gain over thin. Thin still gets full cross-crate inlining.
-# - codegen-units = 1: maximizes cross-crate dedup/inlining and also sidesteps the LLVM-22
-#   ElemSection::writeBody crash noted above (a stable low CGU count, same fix as `store`'s override).
+# - codegen-units = 16: measured on the raster hub (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT,
+#   2026-10-13): 317 s / 8.2 GB peak vs 612 s / 10.6 GB at 1, for +11% raw but only +2.4% brotli bytes on the wire
+#   (5.13 vs 5.01 MB); the ElemSection::writeBody crash no longer reproduces with the current toolchain.
 # - strip = "symbols": drops the wasm `name` custom section, which is pure debug/dev-tooling weight
 #   (measured ~14MB on the largest single plugin, ~87MB across the built fleet) never used at runtime.
 # - incremental = false: deterministic output; release units are rebuilt whole anyway, so incremental
@@ -585,15 +586,11 @@ trim-paths = "object"
 inherits = "release"
 opt-level = "s"
 lto = "thin"
-codegen-units = 1
+codegen-units = 16
 strip = "symbols"
 incremental = false
 trim-paths = "object"
 
-# Explicit: profile inheritance does NOT inherit package-specific overrides from the parent
-# profile, so without this `store` would fall back to workspace defaults under `wasm-release`.
-[profile.wasm-release.package.semio-framework-os-kernel]
-codegen-units = 1
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced

@@ -16,10 +16,10 @@ impl ComponentReferenceTable {
     pub fn is_empty(&self) -> bool { self.entries.is_empty() }
     pub fn get(&self, key: &str) -> Option<&Vec<String>> { self.entries.binary_search_by(|entry|entry.0.as_str().cmp(key)).ok().map(|index|&self.entries[index].1) }
     pub fn original_capacity_bytes(&self) -> Option<usize> {
-        self.entries.iter().try_fold(self.entries.capacity().checked_mul(std::mem::size_of::<(String,Vec<String>)>())?,|sum,(key,labels)|labels.iter().try_fold(sum.checked_add(key.capacity())?.checked_add(labels.capacity().checked_mul(std::mem::size_of::<String>())?)?,|sum,label|sum.checked_add(label.capacity())))
+        self.entries.iter().try_fold(self.entries.capacity().checked_mul(size_of::<(String,Vec<String>)>())?,|sum,(key,labels)|labels.iter().try_fold(sum.checked_add(key.capacity())?.checked_add(labels.capacity().checked_mul(size_of::<String>())?)?,|sum,label|sum.checked_add(label.capacity())))
     }
     pub fn directory_capacity_bytes(&self)->Option<usize> {
-        self.entries.iter().try_fold(self.entries.capacity().checked_mul(std::mem::size_of::<(String,Vec<String>)>())?,|sum,(key,labels)|sum.checked_add(key.capacity())?.checked_add(labels.capacity().checked_mul(std::mem::size_of::<String>())?))
+        self.entries.iter().try_fold(self.entries.capacity().checked_mul(size_of::<(String,Vec<String>)>())?,|sum,(key,labels)|sum.checked_add(key.capacity())?.checked_add(labels.capacity().checked_mul(size_of::<String>())?))
     }
 }
 

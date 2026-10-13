@@ -1,4 +1,6 @@
 //! 🔬️ Actual Forms SQL ownership settles full requests while comparing every literal variant.
+#[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use super::*;
 use semio_framework_value::ToValue;
 use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits}};
@@ -25,7 +27,7 @@ fn verify_literals(actual:&FormsSnapshot,expected:&FormsSnapshot){
 fn sqlite_snapshot_forms_relational_owned_requests_match_actual_allocator(){
  let contract:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/💰️backing/🔬️requests/🔣️.json")).unwrap();
  assert_eq!(contract["phases"],serde_json::json!(["projectSnapshot","reconstructSnapshot"]));
- let snapshot=specimen();let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+ let snapshot=specimen();let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap();
  assert_eq!(database.tables.len(),usize::try_from(contract["tableCount"].as_u64().unwrap()).unwrap());
  observed::verify_snapshot_backing_by::<FormsSnapshot>(&snapshot,&database,verify_literals);
  snapshot.retire_sqlite_snapshot();

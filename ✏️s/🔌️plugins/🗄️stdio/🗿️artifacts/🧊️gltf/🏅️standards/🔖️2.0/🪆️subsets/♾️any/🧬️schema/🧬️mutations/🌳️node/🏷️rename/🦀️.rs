@@ -59,7 +59,7 @@ pub fn inverse(p: &GltfChangeNodeNamePayload, base: &GltfSnapshot) -> Vec<super:
     let Ok(node) = node_index(p.node, base) else {
         return Vec::new();
     };
-    vec![super::change_node_name::mutation(super::change_node_name::GltfChangeNodeNamePayload { node: p.node, value: base.document.nodes[node].name.clone() })]
+    vec![mutation(GltfChangeNodeNamePayload { node: p.node, value: base.document.nodes[node].name.clone() })]
 }
 //#endregion ⚙️Validation
 
@@ -80,7 +80,7 @@ pub fn mutation(payload: GltfChangeNodeNamePayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNameMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-name", kind: "change-node-name", record: "ChangedNodeName" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

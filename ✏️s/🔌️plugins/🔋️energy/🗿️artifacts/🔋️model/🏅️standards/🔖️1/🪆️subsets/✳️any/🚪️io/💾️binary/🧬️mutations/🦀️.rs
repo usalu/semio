@@ -28,7 +28,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 pub use crate::mutations::EnergyModelMutation;
 
 impl protocol::OpBinary for EnergyModelMutation {

@@ -59,8 +59,8 @@ pub struct Din18599Artifact {
 //#region 🔖️Conversions
 impl Din18599Artifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::Din18599Snapshot {
-        crate::Din18599Snapshot {
+    pub fn to_snapshot(&self) -> Din18599Snapshot {
+        Din18599Snapshot {
             building_category: self.building_category,
             attachment: self.attachment,
             use_class: self.use_class,
@@ -84,7 +84,7 @@ impl Din18599Artifact {
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
-    pub fn from_snapshot(snapshot: crate::Din18599Snapshot) -> Self {
+    pub fn from_snapshot(snapshot: Din18599Snapshot) -> Self {
         Self {
             building_category: snapshot.building_category,
             attachment: snapshot.attachment,

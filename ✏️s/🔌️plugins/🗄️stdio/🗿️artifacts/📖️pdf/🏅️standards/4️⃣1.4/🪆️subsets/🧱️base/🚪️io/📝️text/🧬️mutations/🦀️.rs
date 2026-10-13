@@ -12,11 +12,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 type Printer = fn(&PdfMutation) -> Option<String>;
 type Parser = fn(&str) -> Result<PdfMutation, semio_framework_diagnostic::TextError>;
 pub const REGISTRY: &[(&str, Printer, Parser)] = &[
-    (crate::standards::v1_4::subsets::base::io::text::mutations::insert_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::insert_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::insert_page::parse),
-    (crate::standards::v1_4::subsets::base::io::text::mutations::remove_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::remove_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::remove_page::parse),
-    (crate::standards::v1_4::subsets::base::io::text::mutations::move_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::move_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::move_page::parse),
-    (crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::parse),
-    (crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::print, crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::parse),
+    (insert_page::OPCODE, insert_page::print, insert_page::parse),
+    (remove_page::OPCODE, remove_page::print, remove_page::parse),
+    (move_page::OPCODE, move_page::print, move_page::parse),
+    (resize_page::OPCODE, resize_page::print, resize_page::parse),
+    (replace_page_text::OPCODE, replace_page_text::print, replace_page_text::parse),
 ];
 //#endregion 🔖️Registry
 

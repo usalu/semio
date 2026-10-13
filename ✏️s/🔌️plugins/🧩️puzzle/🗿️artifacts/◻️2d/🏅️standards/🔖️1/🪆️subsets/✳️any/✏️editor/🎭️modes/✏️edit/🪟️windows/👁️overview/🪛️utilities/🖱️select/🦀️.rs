@@ -23,7 +23,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolMachineRunner, ToolStep, ToolYield};
-use semio_framework_pack_json::{json,Value,Object};
+use semio_framework_pack_json::{json,Value};
 use std::sync::Arc;
 
 pub const UTILITY_ID: &str = "select";

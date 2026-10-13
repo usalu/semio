@@ -52,20 +52,20 @@ pub struct Path {
 /// (`step.params = …`) or `std::mem::take` them instead.
 impl Drop for Step {
     fn drop(&mut self) {
-        neural_engine::ColdRetire::retire_cold(std::mem::take(&mut self.params));
+        ColdRetire::retire_cold(std::mem::take(&mut self.params));
     }
 }
 
 /// 🧊️ Kept so `Path`/`Vec<Step>`/`BTreeMap<_, Step>` still satisfy `ColdRetire`; the work itself is
 /// [`Step`]'s own `Drop` boundary above, so consuming the step IS the retirement.
-impl neural_engine::ColdRetire for Step {
+impl ColdRetire for Step {
     fn retire_cold(self) {
         drop(self);
     }
 }
 
 /// 🧊️ Retires every step of the path.
-impl neural_engine::ColdRetire for Path {
+impl ColdRetire for Path {
     fn retire_cold(self) {
         self.steps.retire_cold();
     }

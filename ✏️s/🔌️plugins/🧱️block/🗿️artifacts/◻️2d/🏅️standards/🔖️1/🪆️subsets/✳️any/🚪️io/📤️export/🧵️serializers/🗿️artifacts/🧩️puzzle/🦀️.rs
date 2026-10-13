@@ -1,6 +1,6 @@
 //! 🧩️ Puzzle catalog physical projection.
 use crate::Block2dSnapshot;
-use semio_framework_pack_json::{array,Value};
+use semio_framework_pack_json::Value;
 /// 🌉️ Maps this `NodeKind` definition into the `s/plugin/puzzle` 2d manifest shape (`portKinds`/
 /// `wireKinds`/`edgeKinds`/`nodeKinds`/`kindCompatibility` — see
 /// `s/plugin/puzzle/app/2d/manifest/🔣️.json`), the seam puzzle imports through

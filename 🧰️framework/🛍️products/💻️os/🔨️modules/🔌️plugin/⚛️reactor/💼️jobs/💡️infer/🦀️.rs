@@ -595,7 +595,7 @@ impl InteractiveInferenceJob {
 }
 
 impl InteractiveInferenceJob {
-    fn step_cold(&mut self, budget: JobBudget, _original: &mut super::IoRunControl<'_, '_>, _snapshot: &mut super::SqliteSnapshotControl<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> JobStep {
+    fn step_cold(&mut self, budget: JobBudget, _original: &mut super::IoRunControl<'_, '_>, _snapshot: &mut super::SqliteSnapshotControl<'_>, _cx:&mut semio_framework_job::StepContext<'_>) -> JobStep {
         let price = self.price();
         if budget.fuel < price {
             return self.fail(super::fault("job.infer.budget-exhausted", format!("interactive inference needs {price} work units for its next state action and was granted {}", budget.fuel)));

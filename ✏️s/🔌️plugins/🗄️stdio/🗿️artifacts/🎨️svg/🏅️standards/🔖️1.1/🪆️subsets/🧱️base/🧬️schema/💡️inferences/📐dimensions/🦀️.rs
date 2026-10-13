@@ -5,7 +5,7 @@
 //! raster stdio formats this intentionally has no `bitDepth`/`hasAlpha`/`pixelCount` — those
 //! concepts don't apply here.
 
-use crate::SvgSnapshot;
+#[cfg(test)] use crate::SvgSnapshot;
 
 //#region 🔖️Dimensions
 /// 📐️ Root `<svg>` intrinsic size. `width`/`height` prefer the element's own `width`/`height`

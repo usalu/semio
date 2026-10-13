@@ -10,10 +10,8 @@ use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dPro
 // (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
 // itself `#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]`-gated instead.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{
-    aabb_intersects_frustum, directional_shadow_frustum_planes, directional_shadow_view_projection, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb, LineDraw3d, SceneLighting3d, SceneMaterial3d,
-    Mat4Math, ProceduralGrid3d, SceneAuthoredMaterial3d, SceneInstanceMaterial3d, SceneMaterialAlpha3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneSectionRole3d, SceneShadow3d, SceneShadowRole3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, WORLD_SHADOW_MAP_SIZE,
-};
+use ui_wgpu::wgpu::{aabb_intersects_frustum, directional_shadow_frustum_planes, directional_shadow_view_projection, frustum_planes, paint_selection_marquee, transform_aabb, LineDraw3d, SceneLighting3d, SceneMaterial3d, Mat4Math, ProceduralGrid3d, SceneAuthoredMaterial3d, SceneInstanceMaterial3d, SceneMaterialAlpha3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneSectionRole3d, SceneShadow3d, SceneShadowRole3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, WORLD_SHADOW_MAP_SIZE};
+#[cfg(test)] use ui_wgpu::wgpu::{grid_placement_anchor};
 use ui_wgpu::wgpu::axis_rotate_angle;
 use ui_wgpu::wgpu::camera_grid_fade_distance;
 use ui_wgpu::wgpu::gumball_extent;
@@ -70,7 +68,7 @@ use ui_wgpu::wgpu::SceneRasterBegin;
 use ui_wgpu::wgpu::SceneRasterDescriptor;
 use ui_wgpu::wgpu::SceneRasterIdentity;
 use ui_wgpu::wgpu::SceneRasterLease;
-use ui_wgpu::wgpu::SceneRasterMeshSeal;
+#[cfg(test)] use ui_wgpu::wgpu::SceneRasterMeshSeal;
 use ui_wgpu::wgpu::SceneRasterPool;
 use ui_wgpu::wgpu::SceneRasterProfile;
 use ui_wgpu::wgpu::SceneRasterWriteMode;
@@ -1571,7 +1569,7 @@ impl WorldDrawRebuildCursor {
         if draft.admitted == draft.slots.len() {
             return Err(WorldDynamicFault::InstanceCapacity);
         }
-        let instance = Instance3d { component_source, id: id.to_owned(), model, color, selected, hovered, material: ui_wgpu::wgpu::SceneInstanceMaterial3d { color_source, ..Default::default() } };
+        let instance = Instance3d { component_source, id: id.to_owned(), model, color, selected, hovered, material: SceneInstanceMaterial3d { color_source, ..Default::default() } };
         draft.push(instance).map_err(|_| WorldDynamicFault::InstanceCapacity)?;
         self.admitted_instances += 1;
         self.admitted_bytes = next as u32;
@@ -8530,7 +8528,7 @@ pub const CELEBRATE_CONIC_SPIN_SECONDS: f32 = 1.2;
 /// 🎨️ React's `color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))` — the
 /// 55 % is the muted side, so the mix runs FROM the muted tone TOWARDS the panel by 0.45.
 pub fn mesh_style_paint(theme: &ui_wgpu::wgpu::Theme, kind: MeshStyleKind) -> MeshStylePaint {
-    let rgba = |color: ui_wgpu::wgpu::Rgba| [color.r, color.g, color.b, color.a];
+    let rgba = |color: Rgba| [color.r, color.g, color.b, color.a];
     let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
     match kind {
         MeshStyleKind::Neutral => MeshStylePaint { fill: rgba(theme.panel), line: rgba(theme.border_normal), emissive_intensity: 0.0, opacity: 1.0, conic: None },
@@ -9686,7 +9684,7 @@ struct WorldPlaceholderMeshCursor {
     texture_hash:semio_framework_hash::Sha256,
     texture_submission:Option<semio_framework_async::Job>,
     texture_cancelled:std::sync::Arc<std::sync::atomic::AtomicBool>,
-    texture_worker:Option<std::sync::Arc<std::sync::Mutex<Option<Option<semio_framework_pixels::RasterImage>>>>>,
+    texture_worker:Option<std::sync::Arc<Mutex<Option<Option<semio_framework_pixels::RasterImage>>>>>,
     primitives:Vec<World3dPrimitiveMaterial>,
     textures:Vec<(String,SceneRasterLease)>,
     appearance:Option<World3dMeshAppearance>,
@@ -9809,7 +9807,7 @@ impl WorldPlaceholderMeshCursor {
                 let digest=std::mem::take(&mut self.texture_hash).finalize();self.texture_digest=[u64::from_be_bytes(digest[..8].try_into().unwrap()),u64::from_be_bytes(digest[8..16].try_into().unwrap())];
                 if texture.mime=="image/png" {match semio_framework_pixels::png_decoding::PngDecodeJob::new(semio_framework_pixels::png_decoding::PngDecodeInput{data:std::mem::take(&mut self.texture_bytes),max_pixels:WORLD_REFERENCE_SOURCE_PIXELS as usize,max_bytes:16_000_000,max_chunks:65536}){Ok(job)=>self.texture_job=Some(job),Err((_,input))=>{self.texture_bytes=input.data;return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)}}}
                 else if texture.mime=="image/jpeg" {
-                    let worker=std::sync::Arc::new(std::sync::Mutex::new(None));let output=worker.clone();let canceled=self.texture_cancelled.clone();let bytes=std::mem::take(&mut self.texture_bytes);
+                    let worker=std::sync::Arc::new(Mutex::new(None));let output=worker.clone();let canceled=self.texture_cancelled.clone();let bytes=std::mem::take(&mut self.texture_bytes);
                     self.texture_submission=Some(Box::new(move ||{let image=if canceled.load(std::sync::atomic::Ordering::Acquire){None}else{decode_mesh_surface_image_bytes(&bytes)};*output.lock().unwrap_or_else(|poisoned|poisoned.into_inner())=Some(image);}));self.texture_worker=Some(worker);return Ok(false)
                 }else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)}
             }
@@ -9818,7 +9816,7 @@ impl WorldPlaceholderMeshCursor {
             let (progress,receipt)=job.advance(grant).map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Schema)?;
             if !receipt.fits(grant){return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)}
             if progress.done {
-                let grant=world_mesh_ownership_grant(std::mem::size_of::<semio_framework_pixels::RasterImage>(),0,0,1);
+                let grant=world_mesh_ownership_grant(size_of::<semio_framework_pixels::RasterImage>(),0,0,1);
                 let(image,receipt)=job.take_result(grant).map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Schema)?.ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;
                 if !receipt.fits(grant){return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)}
                 self.texture_image=Some(image);
@@ -10626,7 +10624,7 @@ fn append_world_reference_outline(lines: &mut Vec<LineVertex3d>, origin: [f64; 3
 /// `--hover-*` grays → the one hover fill this theme carries. An unknown token falls back rather
 /// than painting black.
 fn world_pick_style_color(theme: &ui_wgpu::wgpu::Theme, reference: Option<&str>, fallback: [f32; 4]) -> [f32; 4] {
-    let rgba = |color: ui_wgpu::wgpu::Rgba| [color.r, color.g, color.b, color.a];
+    let rgba = |color: Rgba| [color.r, color.g, color.b, color.a];
     let Some(reference) = reference.filter(|value| !value.is_empty()) else { return fallback };
     if reference.starts_with('#') {
         return parse_color(reference);
@@ -13159,7 +13157,7 @@ fn step_world3d_scene_bridge_close(state: &mut World3dState,context:&mut semio_f
     }
     if state.scene_bridge.is_some(){
         let grant=context.retained_grant();
-        let bytes=std::mem::size_of::<World3dSceneBridgeCursor>();
+        let bytes=size_of::<World3dSceneBridgeCursor>();
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return true;}
         let original=state.scene_bridge.take().unwrap();
         match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){
@@ -13839,7 +13837,7 @@ pub fn world3d_tool_run_trace_cursor(state: &World3dState) -> Option<semio_frame
 
 /// 🧭️ Every `(window instance, cursor)` echo the given world surfaces owe their view state — surfaces without
 /// a bound window or without an applied trace lane echo nothing.
-pub fn world3d_tool_run_trace_cursors<'a>(states: impl IntoIterator<Item = &'a World3dState>) -> std::collections::HashMap<String, semio_framework_tool_run::ToolRunTraceCursor> {
+pub fn world3d_tool_run_trace_cursors<'a>(states: impl IntoIterator<Item = &'a World3dState>) -> HashMap<String, semio_framework_tool_run::ToolRunTraceCursor> {
     states.into_iter().filter_map(|state| Some((state.tool_run_trace_window_id.clone()?, state.tool_run_trace.cursor()?))).collect()
 }
 

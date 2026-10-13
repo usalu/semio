@@ -28,7 +28,7 @@ impl PagedUtf8AppendCursor {
         if !destination.chunks.has_reserved_slot(){demand.capacity_bytes=destination.chunks.next_allocation_bytes()?;return Ok(demand);}
         if self.pending.is_none(){let mut end=(self.position+PAGED_UTF8_CHUNK_BYTES).min(source.len());while !source.is_char_boundary(end){end-=1;}demand.capacity_bytes=end-self.position;}
         else if self.position<self.end{demand.copy_bytes=source[self.position..self.end].chars().next().ok_or_else(||refusal("native UTF-8 append scalar is absent"))?.len_utf8();}
-        else{demand.copy_bytes=std::mem::size_of::<String>();}
+        else{demand.copy_bytes=size_of::<String>();}
         Ok(demand)
     }
     pub fn advance<const N: usize>(&mut self, source: &str, destination: &mut PagedUtf8<N>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -77,7 +77,7 @@ impl PagedUtf8AppendCursor {
             self.position = end;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, retained_capacity_bytes: 0, released_bytes: 0 }));
         }
-        let bytes = std::mem::size_of::<String>();
+        let bytes = size_of::<String>();
         if bytes > grant.maximum_copy_bytes { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
         let pending = self.pending.take().expect("native append published chunk");
         let length = pending.len();
@@ -95,7 +95,7 @@ impl PagedUtf8AppendCursor {
     /// 📐️ Reads the next native retirement birth while retaining the pending chunk.
     pub fn next_close_capacity_byte_demand(&self, maximum_release_bytes: usize) -> Result<usize, ValueError> {
         if !self.controlled_close.is_empty() { return self.controlled_close.next_capacity_byte_demand(maximum_release_bytes); }
-        Ok(if self.pending.is_some() { std::mem::size_of::<crate::retirement::controlled::ControlledRetirement<String>>() } else { 0 })
+        Ok(if self.pending.is_some() { size_of::<crate::retirement::controlled::ControlledRetirement<String>>() } else { 0 })
     }
     /// 📐️ Reads the next physical chunk or scaffold release without closing it.
     pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {

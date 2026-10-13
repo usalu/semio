@@ -181,7 +181,7 @@ pub struct ChangeWidgetInput {
 }
 
 /// 🧵️ Canonical tree of the flattened wire record: `id` and `channel` followed by the input's own `type` and `value` fields.
-impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ChangeWidgetInput {
+impl ArtifactCanonicalJsonTree for ChangeWidgetInput {
     fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
         match self.input.canonical_tree_node()? {
             semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(length) => Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(length + 2)),
@@ -189,7 +189,7 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ChangeWidgetInput 
         }
     }
 
-    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
         match ordinal {
             0 => Ok(&self.id),
             1 => Ok(&self.channel),

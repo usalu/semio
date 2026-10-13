@@ -163,7 +163,7 @@ fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> 
 pub struct ArtifactStoreReplayInitializer<P, M>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
 {
     operation: OperationId,
     generation: Generation,
@@ -194,7 +194,7 @@ where
 impl<P, M> ArtifactStoreReplayInitializer<P, M>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
 {
     /// 🌱️ Captures the completed `envelope` of a document of `schema` for the replay `operation` of `generation`, owned by `actor`.
     pub fn new(envelope: ArtifactEnvelope<P, M>, schema: &'static str, operation: OperationId, generation: Generation, actor: ActorId) -> Self {
@@ -819,7 +819,7 @@ where
 impl<P, M> ArtifactStoreInitializationAuthority<P, M> for ArtifactStoreReplayInitializer<P, M>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
 {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         match self.turn(cx) {
@@ -889,7 +889,7 @@ where
 impl<P, M> Drop for ArtifactStoreReplayInitializer<P, M>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + RetireOwned + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static,
+    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.terminal_handoff && self.close_is_terminal()), "replay initializer reached Drop before exact candidate handoff or retained rejection close");

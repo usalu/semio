@@ -5,8 +5,6 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::op::DrawingMutation;
 use crate::schema::find_drawing_layer_location;
 use crate::DrawingSnapshot;
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 //#region 🔖️DocumentHelpers

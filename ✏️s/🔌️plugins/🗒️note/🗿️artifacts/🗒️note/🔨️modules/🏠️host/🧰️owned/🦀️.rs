@@ -1,7 +1,5 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use crate::NoteSnapshot;
-use store::PackError;
 pub type NoteStore = store::ArtifactStore<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>;
 
 /// 🔐️ Opens a Note store WITH its exact owner catalog installed. `ArtifactStore::new` installs no

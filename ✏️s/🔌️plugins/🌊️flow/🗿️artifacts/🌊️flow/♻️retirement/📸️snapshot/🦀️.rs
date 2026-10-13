@@ -29,11 +29,11 @@ impl RetirementCursor for FlowSnapshotRetirement{
  fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|d|d.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
  fn allows_admitted_narrow_work(&self)->bool{true}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for FlowSnapshot{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(FlowSnapshotRetirement::new(self))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<FlowSnapshotRetirement>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<FlowSnapshotRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
 impl Drop for FlowSnapshotRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Flow snapshot abandoned local root custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.owners);}}}}

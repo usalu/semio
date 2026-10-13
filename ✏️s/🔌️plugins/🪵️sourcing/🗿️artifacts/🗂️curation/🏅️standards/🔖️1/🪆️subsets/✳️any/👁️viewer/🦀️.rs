@@ -65,7 +65,7 @@ impl ArtifactViewer for SourcingViewer {
         crate::standards::v1::subsets::any::io::text::snapshot::default_document()
     }
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::curation_child_restore_projection(snapshot)
     }
 

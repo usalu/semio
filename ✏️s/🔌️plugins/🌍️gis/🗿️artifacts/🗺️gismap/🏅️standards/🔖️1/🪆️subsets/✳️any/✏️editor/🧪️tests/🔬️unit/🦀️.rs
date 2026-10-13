@@ -31,7 +31,7 @@ pub(crate) mod context {
             if std::thread::panicking() || self.0.close_terminal_is_empty() {
                 return;
             }
-            close_registered_fixture_app(&mut self.0);
+            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             assert!(self.0.close_terminal_is_empty(), "GIS map test app must reach terminal-empty close");
         }
     }
@@ -57,7 +57,7 @@ pub(crate) mod context {
 
     /// 🧹️ Drives a GIS Map fixture to its exact terminal-empty ownership witness.
     pub fn close(app: &mut Gis2dApp) {
-        close_registered_fixture_app(app);
+        close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     }
 
     /// 📬️ Host-visible publication collected after one GIS Map command reaches quiescence.
@@ -77,8 +77,8 @@ pub(crate) mod context {
     pub async fn dispatch(app: &mut Gis2dApp, command: Gis2dCommand) -> Gis2dDispatchReceipt {
         let mut action_meta = meta("local");
         action_meta.view_state = Some(main_window_view());
-        app.dispatch_typed(command, &action_meta).await.expect("dispatch admission");
-        Gis2dDispatchReceipt(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, action_meta.instance_id).await.expect("dispatch publication"))
+        app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch admission");
+        Gis2dDispatchReceipt(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch publication"))
     }
 
     /// 🖼️ Renders and retires one GIS Map fixture component tree.
@@ -116,10 +116,10 @@ pub(crate) mod context {
         dispatch(&mut instance_a, command_a).await;
         dispatch(&mut instance_b, command_b).await;
         for _ in 0..8 {
-            instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
-            instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
-            instance_a.tick_backbone().await.expect("tick backbone a");
-            instance_b.tick_backbone().await.expect("tick backbone b");
+            instance_a.handle_action("commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("pump a");
+            instance_b.handle_action("commitCheckpoint", None, &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("pump b");
+            instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("tick backbone a");
+            instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("tick backbone b");
         }
         assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
         instance_a.detach_backbone().await.expect("detach backbone a");

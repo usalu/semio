@@ -105,7 +105,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .formats(formats)
         .inferences([standards::isobmff::subsets::any::schema::inferences::mp4_artifact_inference_descriptor()])
         .composers(standards::isobmff::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.mp4", standard: semio_framework_artifact_reference::StandardId("isobmff"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<Mp4Snapshot, Mp4Mutation>(STDIO_MP4_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") })
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -191,7 +191,6 @@ pub mod examples {
     pub mod demo;
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -232,7 +231,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

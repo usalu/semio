@@ -105,7 +105,7 @@ use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️.rs's identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_job::{InteractiveJob, Operation, StepContext};
-use semio_framework_plugin::app::{ArtifactToolCompletionRejection, InteractionView};
+use semio_framework_plugin::app::InteractionView;
 use semio_framework_value::{FromValue, ToValue};
 use semio_framework_pack_json::{parse, Value};
 use std::collections::{HashMap, HashSet};
@@ -557,7 +557,7 @@ fn value_from_document(document: &Puzzle5dDocument) -> Value {
 pub fn puzzle5d_paste_mutations(parts: Vec<Puzzle5dPart>, fasteners: Vec<Puzzle5dFastener>) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
     let mut mutations = Vec::with_capacity(parts.len() + fasteners.len());
     for part in parts {
-        let typed = <crate::Puzzle5dPart as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&part))?;
+        let typed = <crate::Puzzle5dPart as FromValue>::from_value(ToValue::to_value(&part))?;
         mutations.push(crate::standards::v1::subsets::any::schema::mutations::create_part(typed, None));
     }
     for fastener in fasteners {
@@ -740,7 +740,7 @@ pub fn find_part_by_grip_full_id<'a>(document: &'a Puzzle5dDocument, full_id: &s
 }
 
 pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
-    args.and_then(|value| value.get("ids")).and_then(|value| <Vec<String> as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
+    args.and_then(|value| value.get("ids")).and_then(|value| <Vec<String> as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
 
 pub fn part_scale_json(part: &Puzzle5dPart) -> [f64; 3] {
@@ -940,7 +940,7 @@ pub fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime, activ
 /// 🧾️ The interaction-aware twin: the render paths that are handed an `InteractionView` build the
 /// scene through this one so both panes project the SAME live selection and hover.
 pub fn scene_from_projection_with_interaction(projection: &Value, runtime: Puzzle5dRuntime, active_utility: &str, interaction: Puzzle5dInteractionSnapshot) -> Puzzle5dScene {
-    let document = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(projection)).unwrap_or_else(|_| empty_document());
+    let document = <Puzzle5dDocument as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(projection)).unwrap_or_else(|_| empty_document());
     Puzzle5dScene { document, runtime, active_utility: active_utility.to_string(), interaction }
 }
 
@@ -2040,7 +2040,7 @@ impl Puzzle5dPasteJob {
                     next.part_2d.y += self.delta.1;
                     next.part_3d.origin[0] += self.delta.0;
                     next.part_3d.origin[1] += self.delta.1;
-                    let typed = match <crate::Puzzle5dPart as semio_framework_value::FromValue>::from_value(next.to_value()) {
+                    let typed = match <crate::Puzzle5dPart as FromValue>::from_value(next.to_value()) {
                         Ok(typed) => typed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
                     };
@@ -2505,7 +2505,7 @@ impl Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogParts => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "parts").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogPartKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogPartKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
                     };
@@ -2518,7 +2518,7 @@ impl Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogGrips => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "grips").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogGripKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogGripKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
                     };
@@ -2531,7 +2531,7 @@ impl Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogFasteners => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "fasteners").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogFastenerKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogFastenerKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
                     };
@@ -2544,7 +2544,7 @@ impl Puzzle5dImportJob {
             }
             Puzzle5dImportStage::LoadCatalogRopes => {
                 if let Some(row) = self.snapshot_rows("kindCatalogs", "ropes").get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dCatalogRopeKind as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dCatalogRopeKind as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
                     };
@@ -2558,7 +2558,7 @@ impl Puzzle5dImportJob {
             Puzzle5dImportStage::LoadCompatibility => {
                 let rows = self.snapshot_kind_compatibility_rows();
                 if let Some(row) = rows.get(self.cursor) {
-                    let parsed = match <crate::Puzzle5dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
                     };
@@ -2728,7 +2728,7 @@ impl Puzzle5dImportJob {
                     if !puzzle5d_import_keys_are(row, &["source", "target", "bidirectional", "important", "specificity"]) {
                         return puzzle5d_job_fault("puzzle5d kit:in compatibility contains an unknown field");
                     }
-                    let parsed = match <crate::Puzzle5dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
+                    let parsed = match <crate::Puzzle5dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(row)) {
                         Ok(parsed) => parsed,
                         Err(error) => return puzzle5d_job_fault(error.to_string()),
                     };
@@ -3413,7 +3413,7 @@ pub fn puzzle5d_copy_fragment(snapshot: &Puzzle5dPlaySnapshot, part_ids: &[Strin
 /// ✂️ The document removal of the selected parts and fasteners.
 pub fn puzzle5d_cut_operations(snapshot: &Puzzle5dPlaySnapshot, part_ids: &[String], fastener_ids: &[String]) -> Vec<Puzzle5dMutation> {
     let before = puzzle5d_editor_projection(snapshot);
-    let Ok(document) = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&before)) else {
+    let Ok(document) = <Puzzle5dDocument as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&before)) else {
         return Vec::new();
     };
     let (parts, fasteners) = copy_selection_local(&document, part_ids, fastener_ids);
@@ -3848,10 +3848,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     fn tool_id(&self) -> &'static str { self.tool_id }
     fn extent(&self, _command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle5dPlayApp>>>) -> Option<usize> { Some(1) }
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -3899,7 +3899,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -3924,10 +3924,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         if self.consumed {
@@ -3945,7 +3945,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4065,10 +4065,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         match self.stage {
             Puzzle5dTransformStage::Read => {
@@ -4124,7 +4124,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4247,10 +4247,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
@@ -4403,7 +4403,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4489,10 +4489,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -4592,7 +4592,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4691,10 +4691,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let projection = puzzle5d_editor_projection(snapshot);
@@ -4765,7 +4765,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4849,10 +4849,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
@@ -4917,7 +4917,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4999,10 +4999,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
@@ -5074,7 +5074,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5183,10 +5183,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
@@ -5336,7 +5336,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5455,10 +5455,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
@@ -5606,7 +5606,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5709,10 +5709,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
@@ -5744,7 +5744,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 self.processed_grips += 1;
                 self.grip_cursor += 1;
                 let part_id = part.get("id").and_then(Value::as_str).ok_or_else(|| Fault::from("puzzle5d-patch-grip-part-id-malformed"))?;
-                let mut grip: crate::Puzzle5dGrip = <crate::Puzzle5dGrip as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&grip_value)).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
+                let mut grip: crate::Puzzle5dGrip = <crate::Puzzle5dGrip as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&grip_value)).map_err(|_| Fault::from("puzzle5d-patch-grip-malformed"))?;
                 let full_id = puzzle5d_grip_full_id(part_id, &grip.id);
                 if self.selected.contains(&full_id) && Self::patch(command, &mut grip) {
                     let grip_id = grip.id.clone();
@@ -5787,7 +5787,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5821,10 +5821,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         let target = command.args().and_then(|args| args.get("id").or_else(|| args.get("fastenerId"))).and_then(Value::as_str).filter(|id| !id.is_empty());
@@ -5870,7 +5870,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5938,10 +5938,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         let catalogs = Self::catalogs(snapshot);
@@ -5968,11 +5968,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                     }
                     let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
                     let grip_2d: crate::Puzzle5dGrip2d = match template.get("2d") {
-                        Some(value) => <crate::Puzzle5dGrip2d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip2d-malformed"))?,
+                        Some(value) => <crate::Puzzle5dGrip2d as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip2d-malformed"))?,
                         None => Default::default(),
                     };
                     let grip_3d: crate::Puzzle5dGrip3d = match template.get("3d") {
-                        Some(value) => <crate::Puzzle5dGrip3d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip3d-malformed"))?,
+                        Some(value) => <crate::Puzzle5dGrip3d as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value)).map_err(|_| Fault::from("puzzle5d-add-node-grip3d-malformed"))?,
                         None => Default::default(),
                     };
                     self.grips.push(crate::Puzzle5dGrip { id: format!("v{}", self.grip_cursor), grip_kind: Some(grip_kind), grip_2d, grip_3d });
@@ -6046,7 +6046,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -6195,10 +6195,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
@@ -6228,8 +6228,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                         return Err(Fault::from("puzzle5d-add-brush-part-grip-capacity"));
                     }
                     let grip_kind = template.get("gripKind").and_then(Value::as_str).unwrap_or("grip").to_string();
-                    let grip_2d = template.get("2d").map(|value| <crate::Puzzle5dGrip2d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip2d-malformed"))?.unwrap_or_default();
-                    let grip_3d = template.get("3d").map(|value| <crate::Puzzle5dGrip3d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip3d-malformed"))?.unwrap_or_default();
+                    let grip_2d = template.get("2d").map(|value| <crate::Puzzle5dGrip2d as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip2d-malformed"))?.unwrap_or_default();
+                    let grip_3d = template.get("3d").map(|value| <crate::Puzzle5dGrip3d as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(value))).transpose().map_err(|_| Fault::from("puzzle5d-add-brush-part-grip3d-malformed"))?.unwrap_or_default();
                     let id = format!("v{}", self.grip_cursor);
                     if self.created_grip_id.is_none() {
                         self.created_grip_id = Some(id.clone());
@@ -6339,7 +6339,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -6564,11 +6564,11 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: hover, context, .. } = *input;
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _, interaction: _, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
         let projection = puzzle5d_editor_projection(snapshot);
@@ -6589,7 +6589,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 let payload = self.take_payload();
                 match name.as_deref() {
                     Some("camera") => {
-                        self.camera2d = Some(<Puzzle5dCamera2d as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
+                        self.camera2d = Some(<Puzzle5dCamera2d as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&payload)).map_err(|_| Fault::from("puzzle5d-board-events-camera-malformed"))?);
                         self.next_event();
                     }
                     // 🎬️ A board drag is ONE `drag` gesture record: its targets (each once) move by its offset as a
@@ -6865,7 +6865,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -6972,10 +6972,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         if self.processed_units >= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS {
@@ -7098,7 +7098,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -7245,10 +7245,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         if self.before.is_none() {
@@ -7337,7 +7337,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 let range = Self::take_chunk(&mut self.cursor, rows.len());
                 if !range.is_empty() {
                     for row in &rows[range] {
-                        let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as semio_framework_value::FromValue>::from_value(row.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
+                        let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as FromValue>::from_value(row.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity, None))?;
                     }
                     return Ok(crate::puzzle_progress_step!("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
@@ -7347,7 +7347,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 Ok(crate::puzzle_progress_step!("puzzle5d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
             }
             Puzzle5dSetActiveExampleStage::Catalogs => {
-                let catalogs = target.kind_catalogs.as_ref().map(|catalogs| <crate::Puzzle5dKindCatalogs as semio_framework_value::FromValue>::from_value(catalogs.to_value())).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
+                let catalogs = target.kind_catalogs.as_ref().map(|catalogs| <crate::Puzzle5dKindCatalogs as FromValue>::from_value(catalogs.to_value())).transpose().map_err(|_| Fault::from("puzzle5d-set-active-example-catalogs-malformed"))?;
                 self.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(catalogs))?;
                 self.stage = Puzzle5dSetActiveExampleStage::AddParts;
                 Ok(crate::puzzle_progress_step!("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"))
@@ -7357,7 +7357,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 if !range.is_empty() {
                     for part in &target.parts[range] {
                         let value = part.to_value();
-                        let part = <crate::Puzzle5dPart as semio_framework_value::FromValue>::from_value(value.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
+                        let part = <crate::Puzzle5dPart as FromValue>::from_value(value.to_value()).map_err(|_| Fault::from("puzzle5d-set-active-example-part-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_part(part, None))?;
                     }
                     return Ok(crate::puzzle_progress_step!("puzzle5d-example-add-part", "Adding example part", "Beispielteil wird hinzugefügt"));
@@ -7438,7 +7438,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -7511,10 +7511,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle5dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle5dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         match self.stage {
@@ -7583,7 +7583,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -7621,13 +7621,13 @@ impl ToolJobFactory for Puzzle5dRetainedCommandJobFactory {
         self.contract
     }
 
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+    fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
     }
 
     fn create_job_from_wire_pages_with_payload(
         &mut self,
-        _operation: semio_framework_job::Operation,
+        _operation: Operation,
         payload: Self::Payload,
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
@@ -8391,7 +8391,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let fragment_parts: Vec<Puzzle5dPart> = puzzle5d_record_from_projection(fragment_value.get("parts").cloned().unwrap_or_else(|| semio_framework_pack_json::json!([]))).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let fragment_fasteners: Vec<Puzzle5dFastener> = puzzle5d_record_from_projection(fragment_value.get("fasteners").cloned().unwrap_or_else(|| semio_framework_pack_json::json!([]))).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let before = puzzle5d_editor_projection(&doc.snapshot);
-        let document: Puzzle5dDocument = <Puzzle5dDocument as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&before)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let document: Puzzle5dDocument = <Puzzle5dDocument as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&before)).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
         let delta = paste_delta_2d(&fragment_parts, &document.parts, placement);
         let (fresh_parts, fresh_fasteners) = paste_selection_local(&document, &fragment_parts, &fragment_fasteners, delta);
         puzzle5d_paste_mutations(fresh_parts, fresh_fasteners).map_err(|error| ClipboardError::ParseFailed(error.to_string()))
@@ -8575,7 +8575,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         cfg: &ConfigView<'_, Puzzle5dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let Some(labels) = puzzle5d_labels(view_state) else { return HashMap::new() };

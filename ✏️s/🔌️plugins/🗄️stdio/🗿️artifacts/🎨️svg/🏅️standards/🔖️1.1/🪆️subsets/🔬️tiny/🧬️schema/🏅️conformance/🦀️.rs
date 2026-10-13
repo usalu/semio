@@ -1,8 +1,7 @@
 //! 🛡️ Owned SVG profile validation with caller supplied progress.
-use crate::schema::snapshot::{SvgSnapshot,SvgAttr,SvgNode,SvgAttributeValue};
+use crate::schema::snapshot::{SvgSnapshot,SvgAttr,SvgNode};
 use semio_framework_diagnostic::{Diagnostic,FaultCode,Severity,TextSpan};
 use semio_framework_value::ValueError;
-use std::collections::HashMap;
     const BLOCKED_ELEMENTS: &[&str] = &["style", "script", "symbol", "marker", "clipPath", "mask", "pattern", "linearGradient", "radialGradient", "stop", "filter", "cursor", "textPath", "tspan", "tref", "view"];
 
     const BLOCKED_ATTRS: &[&str] = &["style", "opacity", "fill-opacity", "stroke-opacity", "clip-path", "mask", "filter"];

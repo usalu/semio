@@ -1,6 +1,6 @@
 //! 🧬️ Presentation artifact schema — every field of the artifact with its state class.
 
-use crate::{AnimationChild, PresentationChild, PRESENTATION_DOCUMENT_SCHEMA};
+use crate::{AnimationChild, PresentationChild};
 use schema::ArtifactSchema;
 
 //#region 🔖️Artifact

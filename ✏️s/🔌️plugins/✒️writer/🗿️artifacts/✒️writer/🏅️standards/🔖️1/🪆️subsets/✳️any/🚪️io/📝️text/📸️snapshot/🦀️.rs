@@ -2,7 +2,8 @@
 //! REAL `store::ArtifactDsl` impl for `WriterSnapshot` (design.md §1 CORRECTION: the native codec
 //! is one bidirectional thing, unsplit, so it lives here rather than mirrored under import/export).
 
-use crate::{schema, WriterDocumentChild, WriterSnapshot};
+use crate::{WriterSnapshot};
+#[cfg(test)] use crate::{schema, WriterDocumentChild};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

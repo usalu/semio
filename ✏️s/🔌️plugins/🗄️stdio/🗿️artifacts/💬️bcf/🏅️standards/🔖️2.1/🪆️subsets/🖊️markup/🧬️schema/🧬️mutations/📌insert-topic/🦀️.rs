@@ -20,9 +20,9 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for InsertTopic {
         let at = index.unwrap_or(base.topics.len());
         protocol::MutationOutcome::new(BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexedAdded { index: at, item: topic.clone() }] }), parts: None })
     }
-    fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
         let Self { topic, .. } = self;
-        Ok({ vec![BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: topic.guid.clone() })] })
+        Ok(vec![BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: topic.guid.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert topic", "Thema einfügen")

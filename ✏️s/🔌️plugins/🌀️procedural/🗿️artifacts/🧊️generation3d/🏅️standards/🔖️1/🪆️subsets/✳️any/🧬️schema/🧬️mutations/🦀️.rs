@@ -217,7 +217,7 @@ pub mod delete_generation {
     #[path = "🗑️delete-generation/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
     mod tests_removes_a_middle_row;
     #[cfg(test)]
-    #[path = "❌delete-widget/🧪️tests/🔓️removes-an-unselected-middle-row/🦀️.rs"]
+    #[path = "🗑️delete-generation/🧪️tests/🔓️removes-an-unselected-middle-row/🦀️.rs"]
     mod tests_removes_an_unselected_middle_row;
 }
 
@@ -560,7 +560,7 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
         return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "the gesture is the identity transform").at(targets.to_vec())]));
     }
     let patched = composed.into_iter().map(|(index, widget)| crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetModification { id: widget_id(&base.host_snapshot.widgets[index]).to_string(), patch: crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetPatch::Replace { widget } }).collect();
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::Generation3dDiff { widgets: Some(crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetsDelta { modified: patched, ..Default::default() }), ..Default::default() }).absorb_messages(messages)
+    protocol::MutationOutcome::new(Generation3dDiff { widgets: Some(crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetsDelta { modified: patched, ..Default::default() }), ..Default::default() }).absorb_messages(messages)
 }
 
 /// 🔙️ The exact inverse of one relative gumball leaf: every operator it would compose restored to its BASE widget —

@@ -132,7 +132,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         Ok(false)
     }
     fn terminal_is_empty(&self) -> bool { self.input.terminal_is_empty() && self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.open.is_none() && self.member.is_none() && self.raw.is_none() && self.lane.is_none() && self.identity.is_none() && self.entry.is_none() && self.slot.is_none() && self.admission.is_none() }
-    fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let release = |release_bytes| RetirementDemand { release_bytes, depth: 1, ..Default::default() };
         let mut demand = if !self.input.terminal_is_empty() { self.input.retirement_demands(body)? }
@@ -241,8 +241,8 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     pub(crate) fn parent_touched(&self) -> bool { self.parent_touched }
 
 
-    pub(crate) fn frame_birth_bytes() -> usize { std::mem::size_of::<Self>() }
-    pub(crate) fn row_birth_bytes() -> usize { std::mem::size_of::<PrivateChildGroupRow<M>>() }
+    pub(crate) fn frame_birth_bytes() -> usize { size_of::<Self>() }
+    pub(crate) fn row_birth_bytes() -> usize { size_of::<PrivateChildGroupRow<M>>() }
     /// 📦️ Moves exact source backing and original transaction owners into one inline private group.
     pub(crate) fn try_new(source: PrivateChildGroupSource) -> Result<Self, PrivateChildGroupSource> {
         if source.children.is_empty() || source.children.len() > PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN { return Err(source); }
@@ -329,13 +329,13 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     pub(crate) fn projection_ready(&self) -> bool { self.projection_ready }
     pub(crate) fn committed(&self) -> bool { self.committed }
     /// 🧮️ Queries only the next full metadata or separately allocated row frame.
-    pub(crate) fn next_input_capacity_byte_demand(&self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &str) -> Result<usize, ValueError> {
+    pub(crate) fn next_input_capacity_byte_demand(&self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8) -> Result<usize, ValueError> {
         if self.parent_metadata.is_none() { return Ok(self.parent_issuer.next_capacity_byte_demand(PrivatePublicationMetadataSource { actor, transaction: self.transaction(), group_id: Some(self.group_id()) }).unwrap_or(0)); }
         if self.input_cursor == self.count { return Ok(0); }
-        self.rows[self.input_cursor].as_ref().map_or(Ok(Self::row_birth_bytes()), |row| row.input_capacity(registry, parent_id, dialect, actor, self.transaction(), self.group_id()))
+        self.rows[self.input_cursor].as_ref().map_or(Ok(Self::row_birth_bytes()), |row| row.input_capacity(registry, parent_id, dialect, actor.as_str(), self.transaction(), self.group_id()))
     }
     /// 🧵️ Advances one funded parent field, row frame, or original child input phase.
-    pub(crate) fn advance_inputs(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &str, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(crate) fn advance_inputs(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let grant = group_grant(grant);
         if self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.parent_metadata.is_none() {
@@ -355,7 +355,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         let transaction = self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.transaction.as_ref());
         let group_id = self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.group_id.as_deref()).unwrap();
         let row = self.rows[self.input_cursor].as_mut().unwrap();
-        let step = row.advance_input(registry, parent_id, dialect, actor, transaction, group_id, operation, generation, expires_at_us, now_us, grant)?;
+        let step = row.advance_input(registry, parent_id, dialect, actor.as_str(), transaction, group_id, operation, generation, expires_at_us, now_us, grant)?;
         if row.input_ready { self.input_cursor += 1; }
         Ok(step)
     }
@@ -382,18 +382,18 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if row.advance_open(cx, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant }, begin)? { self.open_cursor += 1; return Ok(group_structural()); }
         Ok(group_structural())
     }
-    pub(crate) fn next_open_retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn next_open_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some(row) = self.rows.get(self.open_cursor).and_then(Option::as_ref).filter(|row| row.member.is_some()) else { return Ok(Default::default()) };
         let Some(open) = row.open.as_ref() else { return Ok(Default::default()) };
         let mut demand = if open.terminal_is_empty() {
-            semio_framework_value::RetirementDemand { release_bytes: open.terminal_drop_byte_demand().ok_or_else(|| input_owner_error("terminal original open frame is undeclared"))?, depth: 1, ..Default::default() }
+            RetirementDemand { release_bytes: open.terminal_drop_byte_demand().ok_or_else(|| input_owner_error("terminal original open frame is undeclared"))?, depth: 1, ..Default::default() }
         } else {
-            semio_framework_value::RetirementDemand { copy_bytes: open.next_copy_byte_demand()?, capacity_bytes: open.next_capacity_byte_demand(body)?, release_bytes: open.next_release_byte_demand()?, depth: open.next_depth_demand()? }
+            RetirementDemand { copy_bytes: open.next_copy_byte_demand()?, capacity_bytes: open.next_capacity_byte_demand(body)?, release_bytes: open.next_release_byte_demand()?, depth: open.next_depth_demand()? }
         };
         demand.depth = demand.depth.checked_add(2).ok_or_else(|| input_owner_error("original open row/group depth overflow"))?;
         Ok(demand)
     }
-    pub(crate) fn visibility_birth_bytes() -> usize { 2 * std::mem::size_of::<usize>() + std::mem::size_of::<vcs::ArtifactGroupVisibility>().next_multiple_of(std::mem::align_of::<usize>()) }
+    pub(crate) fn visibility_birth_bytes() -> usize { 2 * size_of::<usize>() + size_of::<vcs::ArtifactGroupVisibility>().next_multiple_of(align_of::<usize>()) }
     pub(crate) fn next_publication_capacity_byte_demand(&self, parent: &impl SpaceMember, registry: &ChildMemberRegistry<M>) -> Result<usize, Fault> {
         if self.visibility.is_none() { return Ok(Self::visibility_birth_bytes()); }
         if let Some(lane) = self.parent_lane.as_ref().filter(|lane| !lane.staged()) { return lane.next_capacity_byte_demand(parent).map_err(plugin_sdk_fault); }
@@ -521,8 +521,8 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         let target = if let Some(genesis) = row.raw.as_ref().and_then(|raw| raw.genesis.as_ref()) { &genesis.reference } else { &registry.member(parts.key.borrowed()).ok_or_else(|| plugin_sdk_fault("private graph lost its original existing target"))?.reference };
         Ok((&parts.registry_owner.parent.artifact_id, &parts.registry_owner.slot, &target.artifact_id))
     }
-    pub(crate) fn next_graph_demands(&self, graph: &store::CompositionGraph, registry: &ChildMemberRegistry<M>) -> Result<semio_framework_value::RetirementDemand, Fault> {
-        let Some(preparation) = self.graph.as_ref() else { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<store::GroupOwnsPreparation>(), capacity_bytes: 0, release_bytes: 0, depth: 1 }); };
+    pub(crate) fn next_graph_demands(&self, graph: &store::CompositionGraph, registry: &ChildMemberRegistry<M>) -> Result<RetirementDemand, Fault> {
+        let Some(preparation) = self.graph.as_ref() else { return Ok(RetirementDemand { copy_bytes: size_of::<store::GroupOwnsPreparation>(), capacity_bytes: 0, release_bytes: 0, depth: 1 }); };
         if self.graph_cursor < self.count { let (parent, slot, child) = self.graph_edge(self.graph_cursor, registry)?; return preparation.next_edge_demands(graph, parent, slot, child).map_err(|_| plugin_sdk_fault("private graph rejected its exact edge authority")); }
         Ok(preparation.next_preparation_demands(graph))
     }
@@ -572,7 +572,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         Ok(self.future.take())
     }
     /// 📏️ Exposes the entire next close allocation, preserving each original owner on undergrant.
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let release = |release_bytes| RetirementDemand { release_bytes, depth: 1, ..Default::default() };
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private group owner depth overflow"))?; Ok(demand) };

@@ -61,7 +61,7 @@ impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
                 let step = retirement.step(child)?;
                 return semio_framework_value::retained_clone::admit_retained_clone_close(child, step, retirement.terminal_is_empty(), "owned batch child").map(|step| RetainedCloneStep::Progress(step.progress()));
             }
-            let bytes = std::mem::size_of_val(retirement.as_ref());
+            let bytes = size_of_val(retirement.as_ref());
             if bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.retirement.take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }));
@@ -74,7 +74,7 @@ impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
         use semio_framework_value::RetirementDemand;
         if self.values.is_some() { return Ok(RetirementDemand { capacity_bytes: self.birth_bytes, depth: 2, ..Default::default() }); }
         match self.retirement.as_ref() {
-            Some(retirement) if retirement.terminal_is_empty() => Ok(RetirementDemand { release_bytes: std::mem::size_of_val(retirement.as_ref()), depth: 1, ..Default::default() }),
+            Some(retirement) if retirement.terminal_is_empty() => Ok(RetirementDemand { release_bytes: size_of_val(retirement.as_ref()), depth: 1, ..Default::default() }),
             Some(retirement) => { let mut demand = retirement.demands(maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "owned batch depth overflow"))?; Ok(demand) },
             None => Ok(RetirementDemand::default()),
         }
@@ -103,12 +103,12 @@ impl MemberStoreOwnedBatch {
     }
     /// 🎟️ Admits only the complete typed scaffold allocation and returns the original vector on refusal.
     pub fn try_new<M: RetireOwned>(values: Vec<M>, grant: RetainedCloneGrant) -> Result<(Self, RetainedCloneProgress), (ValueError, Vec<M>)> {
-        if !Vec::<M>::controlled_retirement_supported() { return Err((ValueError::new(ValueRefusalKind::UnsupportedOwner, "member batch has no controlled typed retirement authority"), values)); }
+        if !Vec::<M>::controlled_retirement_supported() { return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner, "member batch has no controlled typed retirement authority"), values)); }
         if grant.maximum_items == 0 { return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "member batch constructor requires an admitted item"), values)); }
         if grant.maximum_depth == 0 { return Err((ValueError::literal(ValueRefusalKind::DepthLimit, "member batch constructor requires admitted depth"), values)); }
         let owner_bytes = size_of::<TypedBatch<M>>();
         let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: owner_bytes, ..Default::default() };
-        if !progress.fits(grant) { return Err((ValueError::new(ValueRefusalKind::AllocationFailed, "member batch scaffold exceeds its admitted allocation grant"), values)); }
+        if !progress.fits(grant) { return Err((ValueError::literal(ValueRefusalKind::AllocationFailed, "member batch scaffold exceeds its admitted allocation grant"), values)); }
         let owner = TypedBatch { values: ManuallyDrop::new(Some(values)), retirement: ManuallyDrop::new(None), birth_bytes: size_of::<ControlledRetirement<Vec<M>>>(), retire: admit_batch_retirement::<Vec<M>>, retire_source: admit_batch_retirement::<std::collections::VecDeque<M>>, source_birth_bytes: size_of::<ControlledRetirement<std::collections::VecDeque<M>>>(), closing: false };
         Ok((Self { owner: Some(Box::new(owner)), owner_bytes }, progress))
     }

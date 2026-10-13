@@ -1,5 +1,4 @@
 //! 🛬️ DWG's borrowed literal domain occurrences precede every typed field allocation.
-use crate::dsl;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
 use semio_framework_dsl_record::{FieldValue as V,RecordValue};

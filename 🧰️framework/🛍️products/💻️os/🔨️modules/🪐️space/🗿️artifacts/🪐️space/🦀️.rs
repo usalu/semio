@@ -13,8 +13,6 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-#[path = "♻️retirement/🦀️.rs"]
-mod retirement;
 
 #[path = "🌲️canonical/🦀️.rs"]
 mod canonical;
@@ -150,7 +148,7 @@ pub fn empty_space_snapshot(name: &str, kind: SpaceKind, visibility: SpaceVisibi
 //#region 🔖️SpaceMutation
 /// ⚡️ One settled space-manifest mutation. Every variant's op keyword is the auto-derived kebab-case
 /// of its own name (`UpsertUser` -> `upsert-user`, ...) — see [`protocol::OpText`].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum SpaceMutation {
     SetName {
         name: String,

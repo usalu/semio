@@ -320,4 +320,4 @@ pub const KINDS: &[&str] = &[
 mod tests;
 //#endregion 🧪️Tests
 
-use crate::schema::PixelRun;
+#[cfg(test)] use crate::schema::PixelRun;

@@ -29,7 +29,7 @@ pub(crate) mod context {
     impl Drop for VcsApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -60,7 +60,7 @@ pub(crate) mod context {
     /// its bound live runtime instance (`interactive-job.live-instance`), and `meta("local")` stamps
     /// `1` — so the id is bound here, before the demo history is seeded through that same surface.
     pub async fn app_with_registry() -> VcsApp {
-        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         instance.bind_instance_id(meta("local").instance_id).await;
         let mut instance = VcsApp(instance);
         seed_vcs_demo_history(&mut instance).await;
@@ -71,7 +71,7 @@ pub(crate) mod context {
     /// mounted app `dispatch_typed` only QUEUES the operation, so a reader that skips this step
     /// observes the pre-dispatch document.
     pub async fn settle(instance: &mut VcsApp) -> Vec<semio_framework_plugin::app::TypedOperationResultLane> {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance.0, meta("local").instance_id).await.expect("settle the typed operation").lanes
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation").lanes
     }
 
     /// 🎬️ Admits one framework-reserved action (`commitCheckpoint`, `checkoutCheckpoint`, …) and runs
@@ -121,7 +121,7 @@ pub(crate) mod context {
     }
 
     pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> Dispatched {
-        let result = instance.0.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let result = instance.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         let lanes = settle(instance).await;
         Dispatched { result, lanes }
     }
@@ -188,14 +188,14 @@ pub(crate) mod context {
         let mut next = app.snapshot().expect("materialize snapshot");
         mutate(&mut next);
         let text = serde_json::to_string(&next).expect("serialize snapshot");
-        app.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), local).await.expect("seeded edit is admitted");
+        app.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("seeded edit is admitted");
         settle(app).await;
     }
 
     /// 🎬️ One seeding action, admitted AND settled — every one of these verbs publishes through the
     /// retained operation lane on a mounted app, so dropping the receipt left the demo history empty.
     async fn seed_action(app: &mut VcsApp, local: &ActionMeta, action_id: &str, args: semio_framework_value::DslValue) {
-        let admitted = app.handle_action(action_id, Some(&args), local).await.unwrap_or_else(|fault| panic!("seeded action {action_id} is admitted: {fault:?}"));
+        let admitted = app.handle_action(action_id, Some(&args), local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("seeded action {action_id} is admitted: {fault:?}"));
         settle_action(app, admitted).await;
     }
 
@@ -643,7 +643,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
         now += 40;
         instance.set_tool_clock_ms(Some(now));
         let args = semio_framework_value::DslValue::Object(vec![("text".into(), semio_framework_value::DslValue::String(serde_json::to_string(&next).expect("snapshot json"))), buffer.clone()]);
-        let admitted = instance.handle_action("textEdit", Some(&args), &typing_meta).await.unwrap_or_else(|fault| panic!("keystroke {index} was refused: {fault:?}"));
+        let admitted = instance.handle_action("textEdit", Some(&args), &typing_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("keystroke {index} was refused: {fault:?}"));
         settle_action(&mut instance, admitted).await;
         semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance);
     }
@@ -651,14 +651,14 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     assert_eq!((instance.snapshot().expect("snapshot").notes, instance.edit_transactions().len()), (run.initial.clone(), edits), "no key lands while the run is open");
     instance.set_tool_clock_ms(Some(now + 750));
     let commit = semio_framework_value::DslValue::Object(vec![buffer.clone(), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String("idle".into()))]);
-    let admitted = instance.handle_action("textEdit", Some(&commit), &typing_meta).await.expect("the idle commit");
+    let admitted = instance.handle_action("textEdit", Some(&commit), &typing_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the idle commit");
     settle_action(&mut instance, admitted).await;
     assert_eq!(instance.snapshot().expect("snapshot").notes, run.expected);
     let transactions = instance.edit_transactions();
     assert_eq!(transactions.len(), edits + 1, "the run lands as ONE edit");
     assert!(transactions.last().cloned().flatten().is_some_and(|transaction| transaction.tool.ends_with("#textEdit")), "the edit carries the run's TransactionRef: {transactions:?}");
     for (verb, expected) in [("undo", &run.initial), ("redo", &run.expected)] {
-        let admitted = instance.handle_action(verb, None, &meta("local")).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
+        let admitted = instance.handle_action(verb, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
         settle_reserved(&mut instance, admitted).await;
         assert_eq!(&instance.snapshot().expect("snapshot").notes, expected, "one {verb} moves the whole run");
     }
@@ -740,12 +740,12 @@ async fn checkout_then_commit_forks_across_actions() {
     // 🎬️ `checkoutCheckpoint`/`commitCheckpoint` are framework-RESERVED verbs: on a mounted app
     // `handle_action` only ADMITS them, and the checkout/commit itself lands in the spawned reserved
     // job plus the publication it queues — dropping either receipt left the fork uncommitted.
-    let checkout = instance.handle_action("checkoutCheckpoint", Some(&action_args([("checkpointId", root_checkpoint_id.clone())])), &meta("local")).await.expect("checkout");
+    let checkout = instance.handle_action("checkoutCheckpoint", Some(&action_args([("checkpointId", root_checkpoint_id.clone())])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("checkout");
     assert!(checkout.mutations.is_empty(), "history actions never emit KernelMutations");
     settle_action(&mut instance, checkout).await;
 
     dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
-    let commit = instance.handle_action("commitCheckpoint", Some(&action_args([("message", "forked from root".to_string())])), &meta("local")).await.expect("commit");
+    let commit = instance.handle_action("commitCheckpoint", Some(&action_args([("message", "forked from root".to_string())])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("commit");
     settle_action(&mut instance, commit).await;
 
     let envelope_after = seeded_envelope(&instance).await;
@@ -761,12 +761,12 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
     // ↩️ `undo`/`redo` are framework-reserved jobs: `handle_action` admits, the SETTLED admission
     // carries the `history-changed` event and the store only moves once that job has run.
-    let undo = instance.handle_action("undo", None, &meta("local")).await.expect("undo");
+    let undo = instance.handle_action("undo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
     assert!(undo.mutations.is_empty());
     let undone = settle_reserved(&mut instance, undo).await;
     assert!(undone.events.iter().any(|event| event.kind == "history-changed"));
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before);
-    let redo = instance.handle_action("redo", None, &meta("local")).await.expect("redo");
+    let redo = instance.handle_action("redo", None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("redo");
     settle_action(&mut instance, redo).await;
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
 }
@@ -774,7 +774,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
     let mut instance = app().await;
-    let create = instance.handle_action("createAlternative", Some(&action_args([("name", "trying-something".to_string())])), &meta("local")).await.expect("create alternative");
+    let create = instance.handle_action("createAlternative", Some(&action_args([("name", "trying-something".to_string())])), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("create alternative");
     assert!(create.mutations.is_empty());
     settle_action(&mut instance, create).await;
     let envelope = seeded_envelope(&instance).await;

@@ -14,7 +14,7 @@ async fn puzzle3d_document_vcs_replays_granular_operations() {
             None,
         )],
         transaction: None,
-    })).await
+    }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await
     .expect("apply");
     let projection = store.snapshot().expect("projection");
     assert_eq!(projection.objects.len(), 1);

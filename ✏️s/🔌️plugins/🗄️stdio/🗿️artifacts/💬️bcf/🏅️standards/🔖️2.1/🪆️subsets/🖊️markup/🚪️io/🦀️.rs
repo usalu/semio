@@ -681,7 +681,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec BcfBuilderFacets {
         construction: BcfBuilderConstruction,
         analysis: BcfAnalyzerAnalysis,
-        composition: crate::standards::v2_1::subsets::any::io::derived_composition::BcfComposerComposition,
+        composition: BcfComposerComposition,
     }
     builder: BcfBuilder,
     analyzer: BcfAnalyzer,

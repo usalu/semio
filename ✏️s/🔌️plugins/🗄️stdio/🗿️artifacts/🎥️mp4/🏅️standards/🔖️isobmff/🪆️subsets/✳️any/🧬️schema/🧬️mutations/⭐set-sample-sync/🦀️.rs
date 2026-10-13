@@ -16,7 +16,7 @@ pub struct SetSampleSync {
 
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetSampleSync {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-sync", kind: "set-sample-sync", record: "SetSampleSync" };
-    fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
+    fn diff(&self, _base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
         let Self { track_index, index, sync } = self;
         protocol::MutationOutcome::new({
             sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] }, None)
@@ -26,7 +26,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetSampleSync {
         let Self { track_index, index, .. } = self;
         Ok({
             match base.tracks.get(*track_index).and_then(|t| t.samples.get(*index)) {
-                Some(sample) => vec![Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync })],
+                Some(sample) => vec![Mp4Mutation::SetSampleSync(SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync })],
                 None => Vec::new(),
             }
         })

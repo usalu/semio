@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 mod set_n;
 pub use set_n::SetN;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
 #[mutations(snapshot = DemoSnapshot, diff = LossyDiff, schema = "lossy.doc")]

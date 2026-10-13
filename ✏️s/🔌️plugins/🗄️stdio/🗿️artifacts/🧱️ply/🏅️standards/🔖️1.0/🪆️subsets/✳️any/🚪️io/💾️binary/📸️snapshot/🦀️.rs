@@ -25,7 +25,6 @@ use crate::schema::snapshot::PlyValue;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 }
-pub use diff_codec::*;
 
 #[allow(unused_imports)]
 mod residual_diff_helper {
@@ -45,4 +44,3 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use crate::schema::snapshot::PlyValue;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 }
-pub(crate) use residual_diff_helper::*;

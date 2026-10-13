@@ -2205,7 +2205,7 @@ impl FillBuilder {
     /// preparation preflight's refusal publishes one `danger` step through the run's tick writer and then
     /// faults the run (nothing was changed). Without a writer the refusal faults at once. A page that fills
     /// mid-plan is [`FillBuilder::stall_on_capacity`] instead.
-    pub(crate) fn capacity_refusal<C: FillStepContext>(&mut self, context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<JobTurn> {
+    pub(crate) fn capacity_refusal<C: FillStepContext>(&mut self, _context: &mut C, writer: Option<&mut ToolRunTickWriter>) -> Option<JobTurn> {
         if let Some(refusal) = self.preparation_capacity_refusal.as_mut() {
             if let Some(writer) = writer.filter(|_| !refusal.published) {
                 refusal.published = true;
@@ -2880,7 +2880,7 @@ impl FillRunJob {
         Ok(())
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>) -> Option<JobTurn> {
+    fn flush(&mut self, _context: &mut StepContext<'_>) -> Option<JobTurn> {
         if self.writer.is_empty() {
             return None;
         }
@@ -2905,7 +2905,7 @@ impl FillRunJob {
         }
     }
 
-    fn settle_owed(&mut self, context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
+    fn settle_owed(&mut self, _context: &mut StepContext<'_>, owed: FillRunOwed) -> JobTurn {
         match owed {
             FillRunOwed::Complete => self.builder.complete(),
             FillRunOwed::Checkpoint => JobTurn::Checkpoint { applied_progress: self.placement_keys.len() as u64, state: self.checkpoint().encode().to_vec() },
@@ -3229,7 +3229,7 @@ impl FillRevalidateJob {
         }
     }
 
-    fn flush(&mut self, context: &mut StepContext<'_>, final_ops: Option<(u32, Vec<Vec<u8>>, Vec<u64>)>) -> JobTurn {
+    fn flush(&mut self, _context: &mut StepContext<'_>, final_ops: Option<(u32, Vec<Vec<u8>>, Vec<u64>)>) -> JobTurn {
         let (retract_to, append_ops, append_entities) = match final_ops {
             Some((retract_to, ops, entities)) => (Some(retract_to), ops, entities),
             None => (None, Vec::new(), Vec::new()),

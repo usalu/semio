@@ -32,4 +32,3 @@ impl store::ArtifactPack for PlaygroundSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

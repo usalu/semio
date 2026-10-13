@@ -1,6 +1,7 @@
 //! 🧵️ Fixed-capacity retained command session shared by Puzzle 2d, 3d, and 5d.
 
-use semio_framework_job::{InteractiveJobCloseStep, StepContext};
+use semio_framework_job::{StepContext};
+#[cfg(test)] use semio_framework_job::{InteractiveJobCloseStep};
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactApp, Emit, Fault, ViewModel};
@@ -63,7 +64,7 @@ macro_rules! puzzle_progress_step {
 
 /// 🧮️ The transient bytes one puzzle work step may materialize: the work's own frame plus the one emit it can stage.
 pub fn step_demands<A: ArtifactApp>(work_bytes: usize) -> Result<RetirementDemand, ValueError> {
-    Ok(RetirementDemand { copy_bytes: work_bytes.saturating_add(std::mem::size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+    Ok(RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
 }
 
 pub struct BoundedFirstStepCommandWork<A: ArtifactApp> {
@@ -89,7 +90,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedFirstStepCommandWork<A> {
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
-        step_demands::<A>(std::mem::size_of::<Self>())
+        step_demands::<A>(size_of::<Self>())
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
@@ -102,7 +103,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for BoundedFirstStepCommandWork<A> {
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -128,7 +129,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
-        step_demands::<A>(std::mem::size_of::<Self>())
+        step_demands::<A>(size_of::<Self>())
     }
 
     fn step(&mut self, _input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, Fault> {
@@ -140,7 +141,7 @@ impl<A: ArtifactApp> ArtifactCommandWork<A> for NoopPuzzleCommandWork<A> {
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 //#endregion 🧵️Work

@@ -9,19 +9,19 @@ impl From<ValueError> for LayoutIoError{fn from(e:ValueError)->Self{Self::Admiss
 impl From<LayoutError> for LayoutIoError{fn from(e:LayoutError)->Self{Self::Layout(e)}}
 /// 📸️ Both physical inputs are admitted before the pure redraw pipeline executes.
 pub fn redraw_snapshot_json(source:&str,options:&str,decode:&mut NativeDecodeControl<'_>,work:&mut LayoutControl<'_>,encode:&mut NativeEncodeControl<'_>)->Result<String,LayoutIoError>{
- let mut snapshot=crate::infinite::board::io::text::snapshot::decode_board_snapshot_json(source,decode)?;
+ let mut snapshot=infinite::board::io::text::snapshot::decode_board_snapshot_json(source,decode)?;
  let opts=decode_redraw_options_json(options,decode)?;
  redraw::redraw_layout(&mut snapshot,&opts,work)?;Ok(semio_framework_pack_json::to_json_string_controlled(&snapshot,encode)?)
 }
 /// ⚛️ Explicit physical force-only entry, with optional empty option text admitted as declared defaults.
 pub fn force_snapshot_json(source:&str,options:&str,decode:&mut NativeDecodeControl<'_>,work:&mut LayoutControl<'_>,encode:&mut NativeEncodeControl<'_>)->Result<String,LayoutIoError>{
- let mut snapshot=crate::infinite::board::io::text::snapshot::decode_board_snapshot_json(source,decode)?;
+ let mut snapshot=infinite::board::io::text::snapshot::decode_board_snapshot_json(source,decode)?;
  let opts:ForceGraphLayoutOptions=if options.trim().is_empty(){ForceGraphLayoutOptions::default()}else{{let admission:ForceAdmission=semio_framework_pack_json::from_json_str_controlled(options,semio_framework_pack_json::JsonMemberPolicy::Reject,decode)?;admission.admit(decode)?}};
  if snapshot.schema.as_str()=="board.ports.directed.v1"{force::apply_ported_force_layout(&mut snapshot,&opts,work)?;}else{force::apply_force_layout(&mut snapshot,&opts,work)?;}
  Ok(semio_framework_pack_json::to_json_string_controlled(&snapshot,encode)?)
 }
 /// 🔗️ Physical snap entry shares the exclusive snapshot admission contract.
-pub fn snap_snapshot_json(source:&str,decode:&mut NativeDecodeControl<'_>,work:&mut LayoutControl<'_>,encode:&mut NativeEncodeControl<'_>)->Result<String,LayoutIoError>{let mut snapshot=crate::infinite::board::io::text::snapshot::decode_board_snapshot_json(source,decode)?;redraw::snap_edge_handles(&mut snapshot,work)?;Ok(semio_framework_pack_json::to_json_string_controlled(&snapshot,encode)?)}
+pub fn snap_snapshot_json(source:&str,decode:&mut NativeDecodeControl<'_>,work:&mut LayoutControl<'_>,encode:&mut NativeEncodeControl<'_>)->Result<String,LayoutIoError>{let mut snapshot=infinite::board::io::text::snapshot::decode_board_snapshot_json(source,decode)?;redraw::snap_edge_handles(&mut snapshot,work)?;Ok(semio_framework_pack_json::to_json_string_controlled(&snapshot,encode)?)}
 
 use semio_framework_value_derive::FromValue;
 struct Defaulted<T>(Option<T>);

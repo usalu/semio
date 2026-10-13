@@ -16,7 +16,7 @@ pub(crate) mod context {
     }
     
     pub async fn app_with_registry() -> Generation2dApp {
-        let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<Generation2dPlayApp>>(generation2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(1).await;
         app
     }
@@ -32,15 +32,15 @@ pub(crate) mod context {
     /// `dispatch_typed` only ENQUEUES a retained job — the document, config and transient lanes are
     /// published when the host drives the ladder. `settle_registered_typed_operation` is that host loop.
     pub async fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1).await.expect("Generation2d dispatched operation settles");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("Generation2d dispatched operation settles");
         result
     }
     
     /// 🧹️ Walks the fixture app to its terminal-empty ownership witness — a registered app owns an
     /// `ArtifactStore` and a fixed owner registry, both of which reject a bare drop.
     pub fn close(mut app: Generation2dApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     }
     
 
@@ -51,7 +51,7 @@ pub(crate) mod context {
         let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
         let targets_json = serde_json::to_string(&targets).expect("selection targets");
         let args: semio_framework_value::DslValue = serde_json::json!({ "domainId": crate::editor::generation2d::GENERATION2D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
-        let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interaction selection admitted");
+        let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interaction selection admitted");
         semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interaction selection settles its reserved tool job")
     }
 
@@ -136,7 +136,7 @@ pub(crate) mod context {
         for _ in 0..100_000 {
             effects.extend(Box::pin(app.pending_effects(shell_view)).await);
             if app.has_pending_typed_operations() {
-                effects.extend(Box::pin(settle_registered_typed_operation(app, action_meta.instance_id)).await.expect("the run's driver turns settle").effects);
+                effects.extend(Box::pin(settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.expect("the run's driver turns settle").effects);
             }
             let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut effects).into_iter().filter_map(|effect| match effect {
                 semio_framework_plugin::Effect::DispatchAction { action, args, .. } => Some((action, args)),
@@ -149,7 +149,7 @@ pub(crate) mod context {
             for (action, args) in dispatches {
                 if semio_framework_plugin::is_tool_run_action_id(&action) {
                     receipt.run_actions.push(action.clone());
-                    Box::pin(app.handle_action(&action, args.as_ref(), action_meta)).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
+                    Box::pin(app.handle_action(&action, args.as_ref(), action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
                     continue;
                 }
                 if action == "flowEvalTick" {
@@ -163,7 +163,7 @@ pub(crate) mod context {
                 let app_id = app.app_id().await.to_string();
                 let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: action.clone() }, arguments };
                 Box::pin(app.handle_command(&invocation, None, action_meta)).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
-                let hop = Box::pin(settle_registered_typed_operation(app, action_meta.instance_id)).await.expect("retained publication");
+                let hop = Box::pin(settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.expect("retained publication");
                 assert!(!hop.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted: args={args:?}");
                 effects.extend(hop.effects);
             }
@@ -445,7 +445,7 @@ fn contributions_route_declares_a_reachable_wire_ceiling() {
 
 async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>) -> Result<(u64, u64, u64), String> {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("{error:?}"))?;
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
     let count = |wanted: TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count() as u64;
     Ok((count(TypedOperationResultLane::Artifact), count(TypedOperationResultLane::Config), count(TypedOperationResultLane::Transient)))
 }
@@ -462,13 +462,13 @@ async fn a_generation_command_carries_the_run_start_and_the_run_publishes_the_sh
         let before_generations = snapshot_read(&app).generation.as_state().generations.len();
         let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("preview-owner") };
         for widget_id in ["rect", "outline"] {
-            app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: widget_id.into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
-            semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+            app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: widget_id.into() }), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+            semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         }
         let settled = context::drive_preview_run(&mut app, &action_meta, &[]).await;
         let before_transient = app.ephemeral_snapshot().await.transient_generation;
-        app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &action_meta).await.map_err(|error| format!("{error:?}"))?;
-        let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(Generation2dCommand::AddGeneration(add_generation::AddGeneration {}), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         let count = |wanted: semio_framework_plugin::app::TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
         let lanes = (count(semio_framework_plugin::app::TypedOperationResultLane::Artifact), count(semio_framework_plugin::app::TypedOperationResultLane::Config), count(semio_framework_plugin::app::TypedOperationResultLane::Transient));
         if lanes != (1, 1, 0) {
@@ -527,8 +527,8 @@ async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document
         let (flow_view, _) = context::edit_shell_views();
         let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
         for widget_id in ["rect", "outline"] {
-            app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: widget_id.into() }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
-            semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+            app.dispatch_typed(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: widget_id.into() }), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+            semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         }
         let document = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -541,12 +541,12 @@ async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document
         if (after.0.pack.as_slice(), after.1.pack.as_slice(), after.2) != (document.pack.as_slice(), config.pack.as_slice(), history) {
             return Err("a finalized read-only run must author no document, config or history entry".into());
         }
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
-        let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
         let edited = (app.document_pack().await.map_err(|error| format!("{error:?}"))?, app.artifact_generation_now());
         for effect in &receipt.effects {
             if let Effect::DispatchAction { action, args, .. } = effect {
-                app.handle_action(action, args.as_ref(), &action_meta).await.map_err(|error| format!("{action}: {error:?}"))?;
+                app.handle_action(action, args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{action}: {error:?}"))?;
             }
         }
         let view = app.tool_run_ledger().view().ok_or("the gesture's run start must open a run")?;
@@ -855,7 +855,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
     let result: Result<(usize, usize), String> = async {
         let before = snapshot_read(&app).host_snapshot.widgets.len();
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"))
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
             .await
             .map_err(|error| format!("{error:?}"))?;
         let (artifact, _, _) = drive_preview_operation(&mut app).await?;
@@ -874,7 +874,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
 async fn add_widget_undo_redo_round_trip() {
     let mut app = app().await;
     let before = snapshot_read(&app).host_snapshot.widgets.len();
-    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1).await;
+    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     close(app);
 }
 
@@ -896,7 +896,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
         move |app| {
             let projection = snapshot_read(app);
             (projection.host_snapshot.layout.get(&w0).map(|entry| entry.x), projection.host_snapshot.layout.get(&w1).map(|entry| entry.x))
-        },
+        },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -1185,7 +1185,7 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
     PluginApp::begin_document_archive_load(&mut target, 91, archive).expect("archive admission");
     let mut status = None;
     for _ in 0..200_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut target, 91).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut target, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(&mut target, 91).expect("archive acknowledgement");
             status = Some(polled);

@@ -2,7 +2,7 @@
 
 use crate::editor::sourcing::modes::edit::windows::curated::curated_rows;
 use crate::editor::sourcing::modes::edit::windows::grid::config::{
-    GridWindowConfig, GRID_INSTANCE_DISPLAY_LINE_BEHIND, GRID_INSTANCE_DISPLAY_REPRESENTATIVE, GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT,
+    GridWindowConfig, GRID_INSTANCE_DISPLAY_REPRESENTATIVE, GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT,
 };
 use crate::editor::sourcing::terminology::SourcingLabels;
 use crate::schema::{append_grid_count_glyph_instances, append_kind_scene_meshes, box_parts, grid_placement, grid_scale, kind_instances_json, unit_box_mesh_json};

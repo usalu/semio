@@ -484,7 +484,7 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
             self.pending = Some(mutation);
             item
         } else if self.mutations.capacity() != 0 {
-            let released_bytes = std::mem::take(&mut self.mutations).capacity() * std::mem::size_of::<WavMutation>();
+            let released_bytes = std::mem::take(&mut self.mutations).capacity() * size_of::<WavMutation>();
             RetainedCloneProgress { released_bytes, ..item }
         } else if !self.format_ext_copy.terminal_is_empty() {
             match self.format_ext_copy.close_step(child) { InteractiveJobCloseStep::Pending { progress } | InteractiveJobCloseStep::Complete { progress } => progress, InteractiveJobCloseStep::Blocked => RetainedCloneProgress::default(), InteractiveJobCloseStep::Refused { kind, progress } => return InteractiveJobCloseStep::Refused { kind, progress } }
@@ -517,7 +517,7 @@ impl EditAudioWork {
         if let Some(owner) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(owner, body); }
         if self.pending.is_some() { return store::artifact_retirement_owned_birth_demands(&self.pending); }
         if !self.mutations.is_empty() { return Ok(item); }
-        if self.mutations.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.mutations.capacity() * std::mem::size_of::<WavMutation>(), depth: 1, ..Default::default() }); }
+        if self.mutations.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.mutations.capacity() * size_of::<WavMutation>(), depth: 1, ..Default::default() }); }
         if !self.format_ext_copy.terminal_is_empty() { return Ok(self.format_ext_copy.close_demands()); }
         if self.format_ext.is_some() { return Ok(item); }
         if self.ext_pending.is_some() { return store::artifact_retirement_owned_birth_demands(&self.ext_pending); }
@@ -596,24 +596,24 @@ mod tests {
         let interaction = protocol::InteractionState::default();
         let hover = semio_framework_plugin::app::InteractionHoverState::default();
         let operation =
-            semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into() };
+            semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "wav-audio-retained".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "authoring-seed-test".into(), retained: semio_s_artifact_stdio_contract::testing::unbounded_grant() };
         let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
         let command = WavEditCommand::EditAudio(EditAudio::InsertChannel { channel: 1, revision });
         let input = ArtifactCommandInputs { snapshot_owner: None, command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
         let mut work = EditAudioWork::new(INSERT_CHANNEL_ACTION_ID);
         assert!(work.extent(&command, &snapshot, &interaction, None).is_some_and(|extent| extent > 2));
         for expected_stage in ["wav-audio-prepare", "wav-audio-format", "wav-audio-edit"] {
-            let ArtifactCommandWorkStep::Progress { stage, preview } = work
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let ArtifactCommandWorkStep::Progress { stage, preview } = work
                 .step(
                     &input,
                     &mut semio_framework_job::StepContext::new(
                         semio_framework_job::allocate_operation_id(),
                         semio_framework_job::Generation(1),
-                        semio_framework_job::StepBudget::new(256, u64::MAX),
+                        semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()),
                         semio_framework_job::root_cancel_token(),
                         || Some(0),
                         &mut 0,
-                    ),
+                    &mut step_progress),
                 )
                 .expect("retained audio step")
             else {
@@ -633,17 +633,17 @@ mod tests {
 
         let stale = WavEditCommand::EditAudio(EditAudio::InsertChannel { channel: 1, revision: "stale".into() });
         let stale_input = ArtifactCommandInputs { snapshot_owner: None, command: &stale, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
-        assert!(EditAudioWork::new(INSERT_CHANNEL_ACTION_ID)
+        let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); assert!(EditAudioWork::new(INSERT_CHANNEL_ACTION_ID)
             .step(
                 &stale_input,
                 &mut semio_framework_job::StepContext::new(
                     semio_framework_job::allocate_operation_id(),
                     semio_framework_job::Generation(1),
-                    semio_framework_job::StepBudget::new(256, u64::MAX),
+                    semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()),
                     semio_framework_job::root_cancel_token(),
                     || Some(0),
                     &mut 0,
-                ),
+                &mut step_progress),
             )
             .is_err());
     }
@@ -721,17 +721,17 @@ mod tests {
         let mut completed = EditAudioWork::new(SET_SAMPLE_RATE_ACTION_ID);
         let mut format_steps = 0;
         let emitted = loop {
-            match completed
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); match completed
                 .step(
                     &input,
                     &mut semio_framework_job::StepContext::new(
                         semio_framework_job::allocate_operation_id(),
                         semio_framework_job::Generation(1),
-                        semio_framework_job::StepBudget::new(256, u64::MAX),
+                        semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()),
                         semio_framework_job::root_cancel_token(),
                         || Some(0),
                         &mut 0,
-                    ),
+                    &mut step_progress),
                 )
                 .expect("format edit advances")
             {
@@ -748,18 +748,18 @@ mod tests {
 
         let mut cancelled = EditAudioWork::new(SET_SAMPLE_RATE_ACTION_ID);
         for _ in 0..3 {
-            assert!(matches!(
+            let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); assert!(matches!(
                 cancelled
                     .step(
                         &input,
                         &mut semio_framework_job::StepContext::new(
                             semio_framework_job::allocate_operation_id(),
                             semio_framework_job::Generation(1),
-                            semio_framework_job::StepBudget::new(256, u64::MAX),
+                            semio_framework_job::StepBudget::new(256, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()),
                             semio_framework_job::root_cancel_token(),
                             || Some(0),
                             &mut 0
-                        )
+                        , &mut step_progress)
                     )
                     .expect("partial format copy advances"),
                 ArtifactCommandWorkStep::Progress { .. }

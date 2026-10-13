@@ -5,7 +5,6 @@ use protocol::io::text::canonical::ArtifactCanonicalEditSealCursor;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,paged::PagedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement,shared::SharedControlledRetirement},retained_clone::{RetainedCloneBinding,RetainedCloneSource,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::size_of,sync::Arc};
-thread_local!{static DEBUG_TURNS:std::cell::RefCell<std::collections::BTreeMap<String,usize>>=Default::default();}
 type Text=PagedUtf8<{usize::MAX}>;
 type Identities=[Text;3];
 type Live=ArtifactStoreOneItemLiveAuthority;
@@ -61,7 +60,6 @@ impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalSource<
  pub(super) fn source_constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<Box<Edit<M>>>(),capacity_bytes:size_of::<Self>()+size_of::<Edit<M>>(),depth:1,release_bytes:0}}
  fn projections(&self,g:RetainedCloneGrant)->Result<(RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,RetainedOwnedProjection<Edit<M>>,RetainedCloneProgress),ValueError>{let authority=self.authority_source.as_ref().ok_or_else(||refusal("canonical original authority source is absent"))?;let edit=self.edit_source.as_ref().ok_or_else(||refusal("canonical original edit source is absent"))?;let(authority,bound_authority)=authority.project_owned(0,|value|value as&dyn ArtifactCanonicalEditAuthority,g)?;let(edit,bound_edit)=edit.project_owned(0,|value|value.as_ref(),g)?;Ok((authority,edit,bound_authority.checked_add(bound_edit)?))}
  fn advance_original(&mut self,g:RetainedCloneGrant,d:RetirementDemand)->Result<RetainedCloneProgress,ValueError>{
-  { let key=format!("phase{} {}",self.phase,match self.traversal.as_ref(){None=>"none",Some(Traversal::Semantic(_))=>"semantic",Some(Traversal::Identity(_))=>"identity",Some(Traversal::Hash(_))=>"hash"});DEBUG_TURNS.with(|m|*m.borrow_mut().entry(key).or_insert(0)+=1); }
   let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   if let Some(Traversal::Semantic(o))=self.traversal.as_mut(){if o.terminal_is_empty(){if o.decision()!=Some(true){return Err(refusal("canonical original semantic edit disagrees with Store authority"));}self.traversal=None;self.phase=3;}else{p=o.advance(child(g))?.progress();}}
   else if let Some(Traversal::Identity(o))=self.traversal.as_mut(){if o.is_ready(){let(output,receipt)=o.take(child(g))?.ok_or_else(||refusal("canonical preadmitted identity return refused"))?;self.identities=Some(output);p=receipt;}else if o.terminal_is_empty(){self.traversal=None;self.phase=4;}else{p=o.advance(child(g))?.progress();}}
@@ -125,7 +123,7 @@ impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalOwner<M
  fn ready(&self)->bool{!self.closing&&self.phase==6&&self.edit.is_some()&&self.identities.is_some()&&self.digest.is_some()}
  fn take(&mut self,g:RetainedCloneGrant)->Result<Option<Returned<M>>,ValueError>{if !self.ready(){return Ok(None);}let d=self.next_demand()?;if !permits(d,g){return Ok(None);}Ok(Some((self.edit.take().unwrap(),self.identities.take().unwrap(),self.digest.take().unwrap(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
 }
-impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> Drop for ArtifactStoreCanonicalSource<M>{fn drop(&mut self){DEBUG_TURNS.with(|m|{let mut m=m.borrow_mut();if !m.is_empty(){eprintln!("[DEBUG] sealer turns {:?}",m);m.clear();}});assert!(self.terminal_is_empty()||std::thread::panicking(),"canonical original source abandoned its native custody");}}
+impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> Drop for ArtifactStoreCanonicalSource<M>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"canonical original source abandoned its native custody");}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

@@ -154,7 +154,6 @@ use framework_schema::ArtifactSchema;
 
 
 }
-pub use snapshot_wire_codec::*;
 
 #[allow(unused_imports)]
 mod diff_codec {
@@ -181,4 +180,3 @@ use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
 }
-pub use diff_codec::*;

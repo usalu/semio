@@ -90,7 +90,6 @@ impl OpBinary for SemioCadMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioCadMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

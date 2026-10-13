@@ -19,7 +19,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetOtherTables {
         protocol::MutationOutcome::new(DxfDiff { other_tables: (base.other_tables != self.other_tables).then(|| self.other_tables.clone()), ..DxfDiff::default() })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-        Ok((base.other_tables != self.other_tables).then(|| DxfMutation::SetOtherTables(set_other_tables::SetOtherTables { other_tables: base.other_tables.clone() })).into_iter().collect())
+        Ok((base.other_tables != self.other_tables).then(|| DxfMutation::SetOtherTables(SetOtherTables { other_tables: base.other_tables.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set other tables", "Weitere Tabellen setzen")

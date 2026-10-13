@@ -102,7 +102,7 @@ fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_i
     let decoded = |bytes: Vec<u8>| -> crate::app::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
 
     let resumable = decoded(encode_result(request.clone(), vec![1, 2, 3], Some(vec![4, 5]),RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536}).expect("encodes"));
-    assert_eq!((resumable.canonical_payload, resumable.previous_state, resumable.complete), (vec![1, 2, 3], Some(vec![4, 5]), true));
+    assert_eq!((resumable.canonical_payload, resumable.previous_state, resumable.complete), (Some(vec![1, 2, 3]), Some(vec![4, 5]), true));
     assert_eq!((resumable.validity.as_str(), resumable.quality.as_str()), ("valid", "unreported"));
     assert!(resumable.diagnostics.is_empty());
     assert_eq!(resumable.retirement_progress,RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536});

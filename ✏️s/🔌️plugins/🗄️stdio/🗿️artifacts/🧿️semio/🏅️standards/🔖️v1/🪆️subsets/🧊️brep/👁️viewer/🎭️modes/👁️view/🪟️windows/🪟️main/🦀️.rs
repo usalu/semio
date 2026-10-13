@@ -14,7 +14,7 @@
 //! mesh (zero triangles), not a fabricated stand-in shape.
 
 use crate::standards::v1::subsets::brep::schema::inferences::{tessellate_document, BREP_INFERENCE_DEFAULT_DEFLECTION};
-use semio_framework_3d::brep::representation::topology::Body;
+#[cfg(test)] use semio_framework_3d::brep::representation::topology::Body;
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_plugin::{mesh_from_indexed_with_face_groups, world3d_camera_json, world3d_selection_json, BuiltNode, MeshData, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 

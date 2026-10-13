@@ -15,7 +15,6 @@ use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
-use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "bim-edit-section";

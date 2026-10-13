@@ -13,6 +13,14 @@ use semio_s_artifact_stdio_zip::opc::OpcRelationship;
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditError, SnapshotEditEvent};
 use semio_s_artifact_stdio_zip::opc::OpcPart;
 
+/// 📇️ One `/opc/contentTypes/defaults|overrides` row exactly as the snapshot spells it: an object naming the extension or part and its content type.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+struct ContentTypeRow {
+    name: String,
+    content_type: String,
+}
+
 /// 📚 No document field has a kind of its own: parts and nodes are resolved by [`special`].
 pub const EDIT_RULES: EditRules = EditRules { entities: &[], inserts: &[], removes: &[] };
 
@@ -220,7 +228,7 @@ fn content_type_edit(event: &SnapshotEditEvent, pointer: &str, snapshot: &DocxSn
     match (below, event) {
         ([], SnapshotEditEvent::InsertValue { value, .. }) => {
             let at = opc_position(position, list.len(), pointer, true)?;
-            let (name, content_type) = <(String, String)>::from_value(value.clone()).map_err(|error| refusal(pointer, error.to_string()))?;
+            let ContentTypeRow { name, content_type } = ContentTypeRow::from_value(value.clone()).map_err(|error| refusal(pointer, error.to_string()))?;
             Ok(Some(vec![DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name, content_type, index: Some(at) })]))
         }
         ([], SnapshotEditEvent::RemoveValue { .. }) => {
@@ -230,21 +238,21 @@ fn content_type_edit(event: &SnapshotEditEvent, pointer: &str, snapshot: &DocxSn
         (_, SnapshotEditEvent::MoveValue { .. } | SnapshotEditEvent::RenameKey { .. } | SnapshotEditEvent::ReplaceSource { .. }) => Ok(None),
         _ => {
             let at = opc_position(position, list.len(), pointer, false)?;
-            let current = &list[at];
+            let current = ContentTypeRow { name: list[at].0.clone(), content_type: list[at].1.clone() };
             let prefix = format!("/opc/contentTypes/{kind}/{at}");
-            let next = <(String, String)>::from_value(edited_subtree(&current.to_value(), &prefix, event)?).map_err(|error| refusal(pointer, error.to_string()))?;
-            if next == *current {
+            let next = ContentTypeRow::from_value(edited_subtree(&current.to_value(), &prefix, event)?).map_err(|error| refusal(pointer, error.to_string()))?;
+            if next == current {
                 return Ok(Some(Vec::new()));
             }
-            if next.0 == current.0 {
-                return Ok(Some(vec![DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name: next.0, content_type: next.1, index: None })]));
+            if next.name == current.name {
+                return Ok(Some(vec![DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name: next.name, content_type: next.content_type, index: None })]));
             }
-            if list.iter().any(|(existing, _)| *existing == next.0) {
-                return Err(refusal(pointer, format!("content type entry {:?} already exists", next.0)));
+            if list.iter().any(|(existing, _)| *existing == next.name) {
+                return Err(refusal(pointer, format!("content type entry {:?} already exists", next.name)));
             }
             Ok(Some(vec![
-                DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name: current.0.clone() }),
-                DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name: next.0, content_type: next.1, index: Some(at) }),
+                DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override, name: current.name }),
+                DocxMutation::SetContentType(set_content_type::SetContentType { is_override, name: next.name, content_type: next.content_type, index: Some(at) }),
             ]))
         }
     }

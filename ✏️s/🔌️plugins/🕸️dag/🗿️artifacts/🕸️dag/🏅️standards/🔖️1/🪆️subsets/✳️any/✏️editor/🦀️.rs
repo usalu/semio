@@ -490,7 +490,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<DagConfig, DagConfigMutation>
     }
 
     fn begin_demand(&self, _mutation: &DagConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<DagConfigPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<DagConfigPreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation, DagConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<DagConfig, DagConfigMutation, DagConfigMutation>)> {
@@ -590,7 +590,7 @@ impl ArtifactEditor for DagPlayApp {
 
     const DIALECT: Dialect = crate::DAG_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::dag_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::dag_child_restore_projection(snapshot)
     }
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
@@ -671,7 +671,7 @@ impl ArtifactEditor for DagPlayApp {
     }
 
     /// 📢️ The localized notices of the editor's own refusal codes (design §20.12): the reorganize run's `dag.layout-run.*`.
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         reorganize::layout_run_fault_notices()
     }
 

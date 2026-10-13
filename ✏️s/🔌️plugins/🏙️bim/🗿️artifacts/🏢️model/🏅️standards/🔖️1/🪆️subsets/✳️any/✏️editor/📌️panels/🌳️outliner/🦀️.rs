@@ -22,7 +22,6 @@ use semio_framework_plugin::UiText;
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 use semio_framework_ui_locale::Label;
-use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "bim.edit.outliner";

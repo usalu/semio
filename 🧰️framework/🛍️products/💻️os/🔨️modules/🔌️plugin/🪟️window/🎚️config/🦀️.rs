@@ -47,13 +47,13 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
 
     fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default())}
     fn build_snapshot_retirement_factory()->Arc<dyn store::SnapshotRetirementFactory<Self::State>>{Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<Self::State>::default())}
-    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError>;
+    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, ValueError>;
     fn build_one_item_preparation_factory() -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>>;
     fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>>;
 }
 
 pub fn bounded_window_config_store_owners<O: WindowConfigOwner>() -> Result<store::DocumentStoreOwners<O::State, O::Mutation>, ValueError> {
-    store::funded_bounded_artifact_store_owners::<O::State, O::Mutation>()
+    store::funded_bounded_artifact_store_owners_with_one_item_preparation::<O::State, O::Mutation>(O::build_one_item_preparation_factory())
 }
 
 /// 🧬️ Uses the original domain edit issuer and Store's admitted clone, metadata and canonical-seal owners.
@@ -195,10 +195,10 @@ pub(crate) trait ErasedWindowConfigPublication: Send {
     fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>;
-    fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
-    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
-    fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+    fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -217,17 +217,17 @@ struct TypedWindowConfigPublication<O: WindowConfigOwner> {
 }
 
 impl<O: WindowConfigOwner> TypedWindowConfigPublication<O> {
-    fn pending_bytes(&self)->usize{self.pending.capacity().checked_mul(std::mem::size_of::<O::Mutation>()).expect("admitted original window backing remains bounded")}
+    fn pending_bytes(&self)->usize{self.pending.capacity().checked_mul(size_of::<O::Mutation>()).expect("admitted original window backing remains bounded")}
     fn controlled_demand<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{
         Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})
     }
     fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if !self.pending.is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<O::Mutation>()+std::mem::size_of::<FactoryBoxedValue<O::Mutation>>()+std::mem::size_of::<Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>>(),depth:1,..Default::default()});}
-        if self.pending_bytes()!=0{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Vec<O::Mutation>>(),release_bytes:self.pending_bytes(),depth:1,..Default::default()});}
-        if let Some(actor)=self.actor.as_ref(){return if actor.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ControlledRetirement<semio_framework_value::SharedUtf8>>>(),depth:1,..Default::default()})}else{Self::controlled_demand(actor,body)};}
+        if !self.pending.is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<O::Mutation>()+size_of::<FactoryBoxedValue<O::Mutation>>()+size_of::<Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>>(),depth:1,..Default::default()});}
+        if self.pending_bytes()!=0{return Ok(RetirementDemand{copy_bytes:size_of::<Vec<O::Mutation>>(),release_bytes:self.pending_bytes(),depth:1,..Default::default()});}
+        if let Some(actor)=self.actor.as_ref(){return if actor.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<semio_framework_value::SharedUtf8>>>(),depth:1,..Default::default()})}else{Self::controlled_demand(actor,body)};}
         if !self.ingress.terminal_is_empty(){return Self::controlled_demand(&self.ingress,body);}
-        if let Some(cancelled)=self.cancelled.as_ref(){return if cancelled.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>>(),depth:1,..Default::default()})}else{Self::controlled_demand(cancelled,body)};}
-        if let Some(publication)=self.publication.as_ref(){return if publication.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<store::ArtifactStoreBatchPublication<O::State,O::Mutation>>>(),depth:1,..Default::default()})}else{publication.retirement_demands(body)};}
+        if let Some(cancelled)=self.cancelled.as_ref(){return if cancelled.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>>(),depth:1,..Default::default()})}else{Self::controlled_demand(cancelled,body)};}
+        if let Some(publication)=self.publication.as_ref(){return if publication.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::ArtifactStoreBatchPublication<O::State,O::Mutation>>>(),depth:1,..Default::default()})}else{publication.retirement_demands(body)};}
         Self::controlled_demand(&self.window_id,body)
     }
 }
@@ -268,7 +268,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
         if let Some(publication)=self.publication.as_mut(){publication.begin_close();}
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window publication requires its close decision"));}
         let demand=self.close_demand(grant.maximum_copy_bytes)?;
@@ -287,9 +287,9 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
     }
 
-    fn ingress_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
-    fn close_ingress(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.ingress.step(grant)}
-    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.close_demand(body)}
+    fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:self.ingress.next_copy_byte_demand()?,capacity_bytes:self.ingress.next_capacity_byte_demand(body)?,release_bytes:self.ingress.next_release_byte_demand()?,depth:self.ingress.next_depth_demand()?})}
+    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.ingress.step(grant)}
+    fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
     fn terminal_is_empty(&self) -> bool {
         self.closing&&self.pending.is_empty()&&self.pending_bytes()==0&&self.transaction.is_none()&&self.actor.is_none()&&self.publication.is_none()&&self.ingress.terminal_is_empty()&&self.cancelled.is_none()&&self.window_id.terminal_is_empty()
     }
@@ -323,11 +323,11 @@ impl<O:WindowConfigOwner> WindowConfigPartition<O>{
     fn preview_retirement_demand(&self)->Result<RetirementDemand,ValueError>{
         if self.pending_preview_projection.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(owner)=self.preview_retirement.as_ref(){
-            if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<ControlledRetirement<WindowPreviewOwners>>>(),depth:1,..Default::default()});}
+            if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<WindowPreviewOwners>>>(),depth:1,..Default::default()});}
             let copy=owner.next_copy_byte_demand()?;let release=owner.next_release_byte_demand()?;
             return Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{release})?,release_bytes:release,depth:owner.next_depth_demand()?});
         }
-        Ok(RetirementDemand{copy_bytes:std::mem::size_of::<WindowPreviewOwners>(),depth:1,..Default::default()})
+        Ok(RetirementDemand{copy_bytes:size_of::<WindowPreviewOwners>(),depth:1,..Default::default()})
     }
     fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if !self.preview_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
@@ -397,7 +397,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
         if !self.partitions.contains_key(window_id) {
             let id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
             let envelope = store::create_config_envelope::<O::State, O::Mutation>(O::SCHEMA, &id, O::State::default(), None).await;
-            let mut config = store::ConfigStore::new(envelope, self.actor.as_ref().expect("live window owner retains its opened actor").clone()).await.map_err(|error| error.into_fault())?;
+            let config = store::ConfigStore::new(envelope, self.actor.as_ref().expect("live window owner retains its opened actor").clone()).await.map_err(|error| error.into_fault())?;
             self.partitions.insert(window_id.to_string(), WindowConfigPartition { store: config, disposer: Some(O::build_store_disposer()), pending_preview:None,pending_preview_reads:None,pending_preview_projection:None,pending_preview_projection_read:None,preview_retirement:None,returned_read_retirement:None });
         }
         let partition = self.partitions.get_mut(window_id).expect("initialized window config partition remains owned");
@@ -449,9 +449,9 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         if self.actor.as_ref().is_none_or(|opened|opened.0.as_str()!=captured.as_str()){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window actor differs from its opened session"));}
         let partition=self.partitions.get(&original.window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original captured window partition is absent"))?;
         if partition.store.generation()!=authority.generation||partition.store.content_revision_now()!=authority.revision{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original window authority is stale"));}
-        let frame=std::mem::size_of::<TypedWindowConfigPublication<O>>();
-        let copied_bytes=[frame,std::mem::size_of::<WindowConfigMutation>(),std::mem::size_of::<FactoryBoxedValue<O::Mutation>>(),std::mem::size_of::<O::Mutation>()].into_iter().try_fold(0usize,usize::checked_add).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor copy overflow"))?;
-        let retained_capacity_bytes=frame.checked_add(std::mem::size_of::<O::Mutation>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor capacity overflow"))?;
+        let frame=size_of::<TypedWindowConfigPublication<O>>();
+        let copied_bytes=[frame,size_of::<WindowConfigMutation>(),size_of::<FactoryBoxedValue<O::Mutation>>(),size_of::<O::Mutation>()].into_iter().try_fold(0usize,usize::checked_add).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor copy overflow"))?;
+        let retained_capacity_bytes=frame.checked_add(size_of::<O::Mutation>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original window constructor capacity overflow"))?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_capacity_bytes<retained_capacity_bytes||grant.maximum_depth==0{return Ok(None);}
         let mut pending=Vec::new();pending.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original window typed input backing allocation failed"))?;
         let WindowConfigMutation{window_id,window_kind_id:_,mutation}=mutations.pop().expect("quoted original window input remains");
@@ -566,8 +566,8 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         if let Some(partition) = self.partitions.get_index(self.partition_close_cursor) {
             if partition.preview_retirement_pending() { return partition.preview_retirement_demand(); }
             if partition.returned_read_pending() { return partition.returned_read_demands(body); }
-            return partition.disposer.as_ref().map_or(Ok(RetirementDemand { copy_bytes: std::mem::size_of::<usize>(), depth: 1, ..Default::default() }), |disposer| {
-                if disposer.terminal_is_empty(&partition.store) { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(disposer.as_ref()), depth: 1, ..Default::default() }) }
+            return partition.disposer.as_ref().map_or(Ok(RetirementDemand { copy_bytes: size_of::<usize>(), depth: 1, ..Default::default() }), |disposer| {
+                if disposer.terminal_is_empty(&partition.store) { Ok(RetirementDemand { release_bytes: size_of_val(disposer.as_ref()), depth: 1, ..Default::default() }) }
                 else { disposer.retirement_demands(&partition.store, body) }
             });
         }
@@ -657,7 +657,7 @@ fn controlled_owner_demands<T: semio_framework_value::retirement::RetireOwned>(o
     Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? })
 }
 fn window_actor_demands(actor: &Option<protocol::ActorId>, retirement: &Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, body: usize) -> Result<RetirementDemand, ValueError> {
-    retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: if actor.is_some() { std::mem::size_of::<protocol::ActorId>() } else { 0 }, depth: usize::from(actor.is_some()), ..Default::default() }), |owner| controlled_owner_demands(owner, body))
+    retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: if actor.is_some() { size_of::<protocol::ActorId>() } else { 0 }, depth: usize::from(actor.is_some()), ..Default::default() }), |owner| controlled_owner_demands(owner, body))
 }
 fn close_window_actor(actor: &mut Option<protocol::ActorId>, retirement: &mut Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
     if actor.is_none() && retirement.is_none() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
@@ -885,18 +885,18 @@ impl WindowConfigOwnerRegistry {
     pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(load) = self.retiring.last() {
             if !load.terminal_is_empty() { return load.retirement_demands(body); }
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<WindowConfigPackLoad>(), depth: self.retiring.next_pop_depth_demand().map_err(|error| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason))?, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<WindowConfigPackLoad>(), depth: self.retiring.next_pop_depth_demand().map_err(|error| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason))?, ..Default::default() });
         }
         if !self.retiring.terminal_is_empty() {
             return Ok(RetirementDemand { release_bytes: self.retiring.next_release_allocation_bytes().map_err(|error| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason))?, depth: self.retiring.next_release_depth_demand().map_err(|error| ValueError::literal(ValueRefusalKind::DepthLimit, error.reason))?, ..Default::default() });
         }
         if let Some(owner) = self.owners.get_index(self.owner_close_cursor) {
-            if owner.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<usize>(), depth: 1, ..Default::default() }); }
+            if owner.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<usize>(), depth: 1, ..Default::default() }); }
             return owner.retirement_demands(body);
         }
         if let Some((_, owner)) = self.owners.last() {
             let mut demand = self.owners.pop_demand()?;
-            demand.release_bytes = std::mem::size_of_val(owner.as_ref());
+            demand.release_bytes = size_of_val(owner.as_ref());
             return Ok(demand);
         }
         if !self.owners.terminal_is_empty() { return self.owners.backing_demand(); }

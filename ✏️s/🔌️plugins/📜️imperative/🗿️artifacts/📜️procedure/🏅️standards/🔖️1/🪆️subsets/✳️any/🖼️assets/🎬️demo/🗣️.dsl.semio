@@ -1,2 +1,2 @@
 semio imperative.imperative.dsl v1
-schema=procedure.document flow=child_id=demo-flow target="demo-flow!s.stdio.semio@v1/flow" text=child_id=demo-text target="demo-text!s.stdio.semio@v1/text"
+schema=procedure.document flow=child_id=demo-flow target=artifact-id=demo-flow artifact-kind=s.stdio.semio standard=v1 subset=flow text=child_id=demo-text target=artifact-id=demo-text artifact-kind=s.stdio.semio standard=v1 subset=text

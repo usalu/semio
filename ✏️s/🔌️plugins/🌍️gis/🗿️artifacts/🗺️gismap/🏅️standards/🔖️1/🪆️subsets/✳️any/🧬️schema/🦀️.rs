@@ -10,7 +10,7 @@ mod document_contract_tests;
 
 use crate::{gis_map_snapshot_with_derived_children, GisMapDrawingChild, GisMapImageChild, GisMapSnapshot, GisMapValueChild, MapFeature};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value::ToValue;
+#[cfg(test)] use semio_framework_value::ToValue;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 
@@ -138,7 +138,7 @@ const GIS_LINE_STYLE: &str = "gis-line";
 
 /// 📍️ Reads `{ lon, lat }` off a position feature's opaque payload (the shape both
 /// `gis_map_document_from_descriptor_json` and the reuse-map DSL fixture use).
-fn feature_lon_lat(data: &semio_framework_value::DslValue) -> Option<(f64, f64)> {
+fn feature_lon_lat(data: &DslValue) -> Option<(f64, f64)> {
     let value = data;
     let lon = value.get("lon").and_then(DslValue::as_f64)?;
     let lat = value.get("lat").and_then(DslValue::as_f64)?;
@@ -146,7 +146,7 @@ fn feature_lon_lat(data: &semio_framework_value::DslValue) -> Option<(f64, f64)>
 }
 
 /// 〰️ Reads a `{ points: [[lon, lat], …] }` route or `{ ring: [[lon, lat], …] }` region chain.
-fn feature_line(data: &semio_framework_value::DslValue) -> Option<Vec<SemioPoint2>> {
+fn feature_line(data: &DslValue) -> Option<Vec<SemioPoint2>> {
     let value = data;
     let points = value.get("points").or_else(|| value.get("ring")).and_then(DslValue::as_array)?;
     let vertices: Vec<SemioPoint2> = points

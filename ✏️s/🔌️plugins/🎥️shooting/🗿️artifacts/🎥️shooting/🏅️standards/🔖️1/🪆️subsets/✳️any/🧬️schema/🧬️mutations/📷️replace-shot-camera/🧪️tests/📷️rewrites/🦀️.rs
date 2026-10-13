@@ -80,7 +80,7 @@ async fn declared_outcome_holds_and_an_unbound_shot_is_a_no_op() {
     let skipped = unbound.diff(&before());
     assert_eq!(skipped.worst_level(), Some(semio_framework_diagnostic::Severity::Warning), "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot is a Warning, not an Error");
     assert_eq!(skipped.messages()[0].code.0, "mutation.no-op", "replace-shot-camera/rewrites-cam-wide-through-shot-wide: the dereference guard's frozen code");
-    let unchanged = skipped.into_parts().protocol::apply_diff(&0, &before()).expect("a no-op outcome still applies");
+    let unchanged = protocol::apply_diff(&skipped.into_parts().0, &before()).expect("a no-op outcome still applies");
     assert_eq!(unchanged.saved_cameras, before().saved_cameras, "replace-shot-camera/rewrites-cam-wide-through-shot-wide: an unbound shot must not mint a saved camera");
 }
 

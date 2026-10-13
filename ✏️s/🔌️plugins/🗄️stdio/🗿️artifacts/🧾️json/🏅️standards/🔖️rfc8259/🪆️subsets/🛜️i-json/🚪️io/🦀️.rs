@@ -99,7 +99,7 @@ pub mod derived_construction {
     use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
     use crate::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot;
     use crate::standards::v_rfc8259::subsets::i_json::io::check_i_json_conformance;
-    use crate::apply_mutation;
+    #[cfg(test)] use crate::apply_mutation;
     use crate::standards::v_rfc8259::subsets::i_json::schema::mutations::JsonIJsonMutation;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -309,7 +309,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec JsonIJsonBuilderFacets {
         construction: JsonIJsonBuilderConstruction,
         analysis: JsonIJsonAnalyzerAnalysis,
-        composition: crate::standards::v_rfc8259::subsets::i_json::io::derived_composition::JsonIJsonComposerComposition,
+        composition: JsonIJsonComposerComposition,
     }
     builder: JsonIJsonBuilder,
     analyzer: JsonIJsonAnalyzer,

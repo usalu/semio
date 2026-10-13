@@ -17,7 +17,7 @@ const SQL:&str=include_str!("../🗄️.sql");
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn ordinal(value:usize)->Result<i64>{i64::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"tabular ordinal overflow"))}
-fn owner<T:FromValue>(value:T)->DecodedFieldOwner<T>{semio_framework_dsl_record::__rt::DecodedFieldOwner::new(value,T::retire_decoded)}
+fn owner<T:FromValue>(value:T)->DecodedFieldOwner<T>{DecodedFieldOwner::new(value,T::retire_decoded)}
 fn collection<T:FromValue>(count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<DecodedFieldOwner<Vec<T>>>{Ok(owner(reserve(count,control)?))}
 fn authored_schema(control:&SqliteSnapshotControl<'_>)->Result<()>{let limits=control.limits();if SQL.len()>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"authored tsv schema exceeds caller limit"))}if limits.max_tables<3||limits.max_columns<4{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"authored tsv table or column extent exceeds caller limit"))}Ok(())}
 fn total(snapshot:&TsvSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:SqliteSnapshotPhase)->Result<usize>{

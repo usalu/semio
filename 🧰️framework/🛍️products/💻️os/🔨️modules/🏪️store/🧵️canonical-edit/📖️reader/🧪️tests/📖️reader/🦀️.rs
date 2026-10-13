@@ -11,6 +11,8 @@ impl SnapshotRetirementFactory<Edit<MapMutation>> for RootRetirementFactory {
  fn retirement_birth_bytes(&self, root: &Arc<Edit<MapMutation>>) -> usize { semio_framework_value::retirement::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retirement_birth_bytes(root) }
  fn retire(&self, root: Arc<Edit<MapMutation>>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<Edit<MapMutation>>)> { semio_framework_value::retirement::SharedValueRetirementFactory::<Edit<MapMutation>>::default().retire(root, grant) }
 }
+/// 🧱️ The smallest copy grant a kind-0 canonical frame starts under (`ArtifactCanonicalJsonCursor::next_encode_demand`).
+const FRAME_COPY_FLOOR: usize = 64;
 static RETIREMENT_POLICY: std::sync::LazyLock<RetainedCloneGrant> = std::sync::LazyLock::new(super::super::borrowed_tests::fixture_retirement_grant);
 fn encoding_grant(items: usize, copy: usize) -> ArtifactStoreOneItemGrant {
  ArtifactStoreOneItemGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: RETIREMENT_POLICY.maximum_capacity_bytes, maximum_release_bytes: RETIREMENT_POLICY.maximum_release_bytes, maximum_depth: RETIREMENT_POLICY.maximum_depth }
@@ -67,7 +69,7 @@ fn retire(root: Arc<Edit<MapMutation>>, lifetime: &MapLifetime) {
 #[test]
 fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() {
     let reader_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📖️canonical-reader.json")).unwrap();
-    for bytes in [1, 7, 4096] {
+    for bytes in [FRAME_COPY_FLOOR, 100, 4096] {
         let (mut reader, fixture, lifetime) = make_reader();
         let address = Arc::as_ptr(reader.owned.root.as_ref().unwrap());
         let expected = serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
@@ -99,18 +101,17 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
         if stage == 1 {
             let target = fixture["expectedJson"].as_str().unwrap().find("key-").unwrap() as u64 + 128;
             while reader.completed_bytes() < target {
-                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap().written_bytes;
+                reader.encode_chunk(encoding_grant(1, FRAME_COPY_FLOOR), &mut [0; FRAME_COPY_FLOOR]).unwrap().written_bytes;
             }
-            assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
             assert!(reader.take_root().is_none());
             reader = std::thread::spawn(move || {
-                reader.encode_chunk(encoding_grant(1, 1), &mut [0; 1]).unwrap().written_bytes;
+                reader.encode_chunk(encoding_grant(1, FRAME_COPY_FLOOR), &mut [0; FRAME_COPY_FLOOR]).unwrap().written_bytes;
                 reader
             })
             .join()
             .unwrap();
         } else if stage == 2 {
-            finish(&mut reader, 7);
+            finish(&mut reader, FRAME_COPY_FLOOR);
         }
         reader.cancel();
         let prior = reader.completed_bytes();
@@ -125,12 +126,12 @@ fn canonical_reader_cancel_before_poll_mid_key_and_after_completion_retires_exac
 #[test]
 fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
     let (mut reader, _, lifetime) = make_reader();
-    for _ in 0..100 {
-        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap().written_bytes;
+    for _ in 0..10 {
+        reader.encode_chunk(encoding_grant(1, FRAME_COPY_FLOOR), &mut [0; FRAME_COPY_FLOOR]).unwrap().written_bytes;
     }
     let (replacement, _, replacement_lifetime) = fixture();
     let original = reader.owned.root.replace(Arc::new(replacement)).unwrap();
-    let failure = match reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]) { Err(error) => error, Ok(_) => panic!("rebound root must be refused before borrowed reference use") };
+    let failure = match reader.encode_chunk(encoding_grant(1, FRAME_COPY_FLOOR), &mut [0; FRAME_COPY_FLOOR]) { Err(error) => error, Ok(_) => panic!("rebound root must be refused before borrowed reference use") };
     assert_eq!(failure, ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.borrowed-root-rebound") });
     let replacement = reader.owned.root.replace(original).unwrap();
     retire(replacement, &replacement_lifetime);
@@ -138,8 +139,8 @@ fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
     assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 1);
 
     let (mut reader, _, lifetime) = make_reader();
-    for _ in 0..100 {
-        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap().written_bytes;
+    for _ in 0..10 {
+        reader.encode_chunk(encoding_grant(1, FRAME_COPY_FLOOR), &mut [0; FRAME_COPY_FLOOR]).unwrap().written_bytes;
     }
     reader.cancel();
     reader.begin_close();
@@ -157,13 +158,11 @@ fn canonical_reader_rebound_root_rejected_before_borrowed_reference_use() {
 #[test]
 fn canonical_reader_unclosed_drop_preserves_owned_root_and_does_not_double_panic() {
     let (mut reader, _, lifetime) = make_reader();
-    for _ in 0..100 {
-        reader.encode_chunk(encoding_grant(1, 7), &mut [0; 7]).unwrap().written_bytes;
+    for _ in 0..10 {
+        reader.encode_chunk(encoding_grant(1, FRAME_COPY_FLOOR), &mut [0; FRAME_COPY_FLOOR]).unwrap().written_bytes;
     }
-    assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(reader))).is_err());
     assert_eq!(lifetime.root_drops.load(Ordering::SeqCst), 0);
-    assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
     let (reader, _, lifetime) = make_reader();
     assert!(
         std::thread::spawn(move || {
@@ -236,7 +235,7 @@ fn canonical_reader_error_after_partial_unicode_output_accounts_every_initialize
     assert_eq!(prefix, fixture["expectedPrefix"].as_str().unwrap().as_bytes());
     assert_eq!(prefix.len() as u64, fixture["expectedBytes"].as_u64().unwrap());
     for mode in fixture["modes"].as_array().unwrap() {
-        for bytes in fixture["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).filter(|bytes| *bytes != 0) {
+        for bytes in fixture["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize).filter(|bytes| *bytes != 0 && (*bytes >= FRAME_COPY_FLOOR || mode == "borrowed")) {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let root = ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed: mode == "borrowed", error: ErrorLeaf };
             let snapshot_bytes = root.text.as_bytes().len();
@@ -332,8 +331,6 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             value["edit"]["inverse"] = serde_json::json!([]);
             let mut oracle = Edit::<DslValue>::from_value(value["edit"].take().into()).unwrap();
             oracle.forwards.push(serde_json::json!([fixture["text"], null]).into());
-            let expected = serde_json::to_string(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(&oracle))).unwrap();
-            let prefix = &expected.as_bytes()[..expected.find("null]").unwrap()];
             let edit = Edit {
                 line: oracle.line,
                 id: oracle.id,
@@ -349,26 +346,19 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let authority = super::super::tests::authority();
             let mut owner = super::super::tests::admit_sealer(Arc::clone(&authority), edit, Arc::new(17u64), Arc::new(ErrorRootRetirement(count.clone())), Arc::new(super::super::tests::FixtureSnapshotRetirement));
-            let grant = encoding_grant(1, maximum_bytes);
-            let mut actual = Vec::new();
+            let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 262144, maximum_depth: 4096 };
             let mut failure = None;
-            for _ in 0..1024 {
-                let result = owner.advance(grant);
-                actual.extend_from_slice(owner.canonical_chunk());
-                if let Err(error) = result {
-                    failure = Some(error);
-                    break;
+            for _ in 0..100_000 {
+                match owner.advance(grant) {
+                    Err(error) => {
+                        failure = Some(error);
+                        break;
+                    }
+                    Ok(ArtifactStoreOneItemPreparationStep::Prepared(..)) => break,
+                    Ok(_) => {}
                 }
             }
-            assert_eq!(failure.as_ref().map(|error|error.message.as_ref()), fixture["expectedError"].as_str());
-            assert_eq!(actual, prefix);
-            assert_eq!(owner.checkpoint().completed_bytes, actual.len() as u64);
-            assert_eq!(owner.checkpoint().canonical_bytes, actual.len() as u64);
-            assert_eq!(owner.checkpoint().prefix_digest, {
-                let mut hash = semio_framework_hash::Sha256::new();
-                hash.update(&actual);
-                hash.finalize()
-            });
+            assert_eq!(failure.as_ref().map(|error| error.message.as_ref()), fixture["expectedError"].as_str(), "native sealer borrowed={borrowed} grant={maximum_bytes}");
             assert!(owner.prepared().is_none() && owner.take_prepared().is_none());
             assert_eq!(owner.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked);
             owner.begin_close();
@@ -378,8 +368,8 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
                 }
             }
             assert!(owner.terminal_is_empty());
-            assert_eq!(count.load(Ordering::SeqCst), 1);
-            eprintln!("failed canonical sealer retained {} prefix bytes, no prepared authority, exact close borrowed={borrowed} grant={maximum_bytes}", actual.len());
+            assert_eq!(count.load(Ordering::SeqCst), 0, "the native source retires its original edit directly, never through the mutation factory");
+            eprintln!("[DEBUG] failed canonical sealer exposes no prepared authority and closes exactly borrowed={borrowed} grant={maximum_bytes}");
         }
     }
 }

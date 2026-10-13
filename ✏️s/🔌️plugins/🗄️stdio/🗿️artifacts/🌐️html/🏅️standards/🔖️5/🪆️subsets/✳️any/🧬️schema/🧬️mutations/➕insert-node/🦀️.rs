@@ -15,14 +15,14 @@ pub struct InsertNode {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for InsertNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "node", kind: "insert-node", record: "InsertNode" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
+    fn diff(&self, _base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         let Self { parent, index, node } = self;
         protocol::MutationOutcome::new(diff_at_path(
             parent,
             HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: None, children: Some(HtmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![HtmlChildAdded { index: *index, item: node.clone() }] }) }),
         ))
     }
-    fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
         let Self { parent, index, .. } = self;
         Ok(vec![HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: parent.clone(), index: *index })])
     }

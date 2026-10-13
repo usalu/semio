@@ -15,7 +15,6 @@ use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
-use semio_framework_ui_contract::{Buildable, HasBase};
 use std::collections::HashMap;
 
 //#region 🔖️Constants

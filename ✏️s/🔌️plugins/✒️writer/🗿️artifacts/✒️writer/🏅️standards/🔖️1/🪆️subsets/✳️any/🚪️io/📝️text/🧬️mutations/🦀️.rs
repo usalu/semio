@@ -45,7 +45,7 @@ mod semio_grammar_conformance;
 
 
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] =
-    &[("rename-writer", crate::standards::v1::subsets::any::io::text::mutations::rename_writer::TEXT_OPCODE), ("change-uri", crate::standards::v1::subsets::any::io::text::mutations::change_uri::TEXT_OPCODE), ("change-language", crate::standards::v1::subsets::any::io::text::mutations::change_language::TEXT_OPCODE), ("edit-text", crate::standards::v1::subsets::any::io::text::mutations::edit_text::TEXT_OPCODE), ("splice-text", crate::standards::v1::subsets::any::io::text::mutations::splice_text::TEXT_OPCODE)];
+    &[("rename-writer", rename_writer::TEXT_OPCODE), ("change-uri", change_uri::TEXT_OPCODE), ("change-language", change_language::TEXT_OPCODE), ("edit-text", edit_text::TEXT_OPCODE), ("splice-text", splice_text::TEXT_OPCODE)];
 
 #[path = "🌐change-language/🦀️.rs"]
 pub mod change_language;

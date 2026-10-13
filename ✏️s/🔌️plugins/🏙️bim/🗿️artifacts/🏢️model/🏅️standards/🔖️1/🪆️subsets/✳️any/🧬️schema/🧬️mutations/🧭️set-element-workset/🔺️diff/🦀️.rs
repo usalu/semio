@@ -1,7 +1,7 @@
 //! 🔺️ Sparse declarative set-element-workset diff.
 use super::SetElementWorkset;
 use crate::*;
-use super::super::{elements, option_rules};
+use super::super::option_rules;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetElementWorkset, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     if !option_rules::element_ids(base).contains(&payload.id) { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Physical element is missing.", [payload.id.clone()]); }

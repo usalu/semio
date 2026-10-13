@@ -22,13 +22,13 @@ pub struct InsertNormal {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertNormal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "normal", kind: "insert-normal", record: "InsertNormal" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { index, normal } = self;
         protocol::MutationOutcome::new(diff_insert_normal(*index, normal.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
-        Ok({ vec![ObjMutation::RemoveNormal(remove_normal::RemoveNormal { index: (*index).min(base.normals.len()) })] })
+        Ok(vec![ObjMutation::RemoveNormal(remove_normal::RemoveNormal { index: (*index).min(base.normals.len()) })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert normal", "Normale einfügen")

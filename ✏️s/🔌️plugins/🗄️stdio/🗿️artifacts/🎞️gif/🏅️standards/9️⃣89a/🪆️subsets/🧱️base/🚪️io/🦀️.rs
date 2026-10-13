@@ -435,28 +435,28 @@ pub fn register_pilot_languages() {
         id: "stdio.gif.89a",
         extension: Some("gif"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::standards::v89a::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v89a::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v89a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v89a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.89a.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::standards::v89a::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v89a::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v89a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v89a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.gif.89a.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::standards::v89a::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v89a::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.diff"),
@@ -467,8 +467,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v89a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v89a::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -477,8 +477,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v89a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v89a::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.gif.89a.spr"),
     });
 }
@@ -690,7 +690,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec GifBuilderFacets {
         construction: GifBuilderConstruction,
         analysis: GifAnalyzerAnalysis,
-        composition: crate::standards::v89a::subsets::any::io::derived_composition::GifComposerComposition,
+        composition: GifComposerComposition,
     }
     builder: GifBuilder,
     analyzer: GifAnalyzer,

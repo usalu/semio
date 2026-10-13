@@ -9,8 +9,8 @@ use crate::standards::v1::subsets::any::io::text::snapshot::{
     WidgetLayoutDsl,
 };
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
-use protocol::OpBinary;
-use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};
+#[cfg(test)] use protocol::OpBinary;
+#[cfg(test)] use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};
 use crate::central_apply::{Generation2dReplayDisplaced, GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
 #[cfg(test)]
 use crate::central_apply::{generation2d_apply_retained_mutations_for_test, generation2d_retire_mutations_cold};
@@ -407,7 +407,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
                     return Ok(None);
                 }
                 let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
-                let Some(operation) = operation else {
+                let Some(_operation) = operation else {
                     self.phase = Generation2dStoreInitializationPhase::CommitApplied { position, edit };
                     return Ok(None);
                 };
@@ -945,7 +945,7 @@ impl Generation2dStoreInitializationAuthority {
             return nested(factory.demands(body)?);
         }
         if self.snapshot_factory.is_some() {
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() });
         }
         Ok(Default::default())
     }

@@ -21,9 +21,9 @@ fn put(record: &mut EncodedRecord, id: u16, value: FieldValue, control: &mut Nat
 fn build(count: usize, control: &mut NativeEncodeControl<'_>, construct: impl FnOnce(&mut EncodedRecord, &mut NativeEncodeControl<'_>) -> Result<(), ValueError>) -> Result<FieldValue, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(count)?;
-        let mut record = semio_framework_dsl_record::native_encoding::EncodedRecord::new(count, control)?;
+        let mut record = EncodedRecord::new(count, control)?;
         construct(&mut record, control)?;
-        Ok(semio_framework_dsl_record::FieldValue::Record(record.take()))
+        Ok(FieldValue::Record(record.take()))
     })
 }
 fn list<T>(values: &[T], control: &mut NativeEncodeControl<'_>, mut project: impl FnMut(&T, &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError>) -> Result<FieldValue, ValueError> {
@@ -38,14 +38,14 @@ fn list<T>(values: &[T], control: &mut NativeEncodeControl<'_>, mut project: imp
             result.as_mut().push(control.scoped_stage(|control| project(value, control))?);
             control.step()?;
         }
-        Ok(semio_framework_dsl_record::FieldValue::List(result.take()))
+        Ok(FieldValue::List(result.take()))
     })
 }
 fn absent(control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(1)?;
         control.step()?;
-        Ok(semio_framework_dsl_record::FieldValue::Absent)
+        Ok(FieldValue::Absent)
     })
 }
 fn optional_field<T:DslField>(value:&Option<T>,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{match value{Some(value)=>emit(value,control),None=>absent(control)}}
@@ -162,7 +162,7 @@ fn json_frontier<'a>(root: &'a GltfJson, control: &mut NativeEncodeControl<'_>) 
 }
 fn json_member(name: &str, index: u64, control: &mut NativeEncodeControl<'_>) -> Result<FieldValue, ValueError> {
     build(2, control, |record, control| {
-        put(record, 0, semio_framework_dsl_record::FieldValue::Text(control.copy_text(name)?), control)?;
+        put(record, 0, FieldValue::Text(control.copy_text(name)?), control)?;
         put(record, 1, emit(&index, control)?, control)
     })
 }
@@ -176,7 +176,7 @@ fn json_node(value: &GltfJson, next: &mut u64, control: &mut NativeEncodeControl
             GltfJson::Array(_) => 4,
             GltfJson::Object(_) => 5,
         };
-        put(record, 0, semio_framework_dsl_record::FieldValue::Enum(kind), control)?;
+        put(record, 0, FieldValue::Enum(kind), control)?;
         put(
             record,
             1,
@@ -199,7 +199,7 @@ fn json_node(value: &GltfJson, next: &mut u64, control: &mut NativeEncodeControl
             record,
             3,
             match value {
-                GltfJson::String(value) => semio_framework_dsl_record::FieldValue::Text(control.copy_text(value)?),
+                GltfJson::String(value) => FieldValue::Text(control.copy_text(value)?),
                 _ => absent(control)?,
             },
             control,
@@ -210,7 +210,7 @@ fn json_node(value: &GltfJson, next: &mut u64, control: &mut NativeEncodeControl
                 *next = next.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"GLTF extras identity overflow"))?;
                 emit(&index, control)
             })?,
-            _ => semio_framework_dsl_record::FieldValue::List(control.allocate_vec(0)?),
+            _ => FieldValue::List(control.allocate_vec(0)?),
         };
         put(record, 4, items, control)?;
         let members = match value {
@@ -219,7 +219,7 @@ fn json_node(value: &GltfJson, next: &mut u64, control: &mut NativeEncodeControl
                 *next = next.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"GLTF extras identity overflow"))?;
                 json_member(name, index, control)
             })?,
-            _ => semio_framework_dsl_record::FieldValue::List(control.allocate_vec(0)?),
+            _ => FieldValue::List(control.allocate_vec(0)?),
         };
         put(record, 5, members, control)
     })
@@ -232,7 +232,7 @@ fn json_value(value: &GltfJson, control: &mut NativeEncodeControl<'_>) -> Result
 }
 /// 📸️ Projects the four actual root fields and resolved buffers without a native mirror clone.
 fn snapshot_value(value: &GltfSnapshot, control: &mut NativeEncodeControl<'_>) -> Result<RecordValue, ValueError> {
-    let semio_framework_dsl_record::FieldValue::Record(record) = build(4, control, |record, control| {
+    let FieldValue::Record(record) = build(4, control, |record, control| {
         put(record, 0, emit(&value.schema, control)?, control)?;
         put(record, 1, emit(&value.document, control)?, control)?;
         put(record, 2, list(&value.buffers, control, |bytes, control| build(1, control, |record, control| put(record, 0, emit(bytes, control)?, control)))?, control)?;

@@ -68,7 +68,7 @@ fn binary_original_receiving_explicit_subset_policy_preserves_zero_authority(){
 #[test]
 fn binary_original_receiving_required_pack_retains_every_cancelled_backing_and_raw_carrier(){
  use semio_framework_os_kernel::{ArtifactPackReceiving,NativeSnapshotDecodeOwner};
- use semio_framework_value::{native_decoding::NativeDecodeRetirementRecipient,ControlledRetirement,RetainedCloneStep,ValueRefusalKind};
+ use semio_framework_value::{native_decoding::NativeDecodeRetirementRecipient,retirement::controlled::ControlledRetirement,RetainedCloneStep,ValueRefusalKind};
  let fixture=fixture();let original=&fixture["original"];let full=grant(&original["grant"]);let close=grant(&original["closeFundedGrant"]);let zero=grant(&original["closeZeroGrant"]);let policy=&fixture["cancellation"];let pattern=policy["bytePattern"].as_array().unwrap();let bytes=(0..policy["byteCount"].as_u64().unwrap()as usize).map(|index|pattern[index%pattern.len()].as_u64().unwrap()as u8).collect::<Vec<_>>();let wire=bytes.as_ptr();let mut canceled=0;
  for cut in 0..24{
   let enabled=Cell::new(true);let turns=Cell::new(0usize);let mut callback=|_|{let turn=turns.get();turns.set(turn+1);!enabled.get()||turn<cut};let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(original["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=NativeSnapshotDecodeOwner::new(&mut native,full);

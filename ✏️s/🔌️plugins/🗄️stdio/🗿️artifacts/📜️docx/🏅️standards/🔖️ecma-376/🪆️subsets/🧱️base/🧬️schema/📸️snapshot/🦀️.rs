@@ -7,7 +7,7 @@ use crate::{
 use framework_schema::ArtifactSchema;
 use semio_framework_value::list::PagedList;
 use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument, ownership::{retire_xml_document, retire_xml_document_with_frontier}, XmlDocument, XmlNode};
-use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
+use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
 
 /// 🗝️ Borrows a logical OPC path independently of its native page capacity.
@@ -357,7 +357,7 @@ impl DocxSnapshot {
     }
 
     /// 📰️ Projects the editable semantic view without creating a second persisted authority.
-    pub fn project_document(&self) -> Result<DocxDocument, crate::standards::v_ecma_376::subsets::base::schema::refusal::DocxError> {
+    pub fn project_document(&self) -> Result<DocxDocument, DocxError> {
         crate::standards::v_ecma_376::subsets::base::schema::inferences::document::project_snapshot_document(self)
     }
 

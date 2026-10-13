@@ -8,8 +8,8 @@ const TABLES:[(&str,usize);8]=[("las_document",2),("las_header",50),("las_return
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"LAS native field differs from its authored literal role")}
 fn sum(left:usize,right:usize)->Result<usize>{left.checked_add(right).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"LAS semantic byte extent overflow"))}
 pub(super)fn extent(limits:SqliteDatabaseLimits)->Result<()>{
- let bytes=LasSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).try_fold(0usize,|sum,sql|super::semantic::sum(sum,sql.len()))?;
- let bytes=TABLES.iter().try_fold(bytes,|sum,(name,_)|super::semantic::sum(sum,name.len()))?;
+ let bytes=LasSnapshot::SQLITE_SCHEMA.split(';').map(str::trim).try_fold(0usize,|sum,sql|semantic::sum(sum,sql.len()))?;
+ let bytes=TABLES.iter().try_fold(bytes,|sum,(name,_)|semantic::sum(sum,name.len()))?;
  if bytes.max(LasSnapshot::SQLITE_SCHEMA.len())>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"LAS authored schema exceeds caller bytes"))}
  if TABLES.len()>limits.max_tables||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<7{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"LAS authored relational extent exceeds caller limits"))}Ok(())
 }
@@ -18,7 +18,7 @@ fn field(value:&R,id:u16)->Result<&F>{value.get(id).ok_or_else(invalid)}
 fn record(value:&F,count:usize)->Result<&R>{let F::Record(value)=value else{return Err(invalid())};exact(value,count)?;Ok(value)}
 fn list(value:&F)->Result<&[F]>{let F::List(value)=value else{return Err(invalid())};Ok(value)}
 fn uint(value:&F,maximum:u64)->Result<u64>{match value{F::UInt(value)if *value<=maximum=>Ok(*value),_=>Err(invalid())}}
-fn word(value:&F)->Result<usize>{Ok(super::scalar_bytes(f64::from_bits(uint(value,u64::MAX)?)))}
+fn word(value:&F)->Result<usize>{Ok(scalar_bytes(f64::from_bits(uint(value,u64::MAX)?)))}
 fn text(value:&F,native:&mut NativeDecodeControl<'_>)->Result<usize>{let F::Text(value)=value else{return Err(invalid())};native.scoped_stage(|native|{native.begin_stage(value.len())?;for part in value.as_bytes().chunks(256){native.advance(part.len())?;}Ok::<_,ValueError>(())})?;Ok(value.len())}
 struct Census{limits:SqliteDatabaseLimits,rows:usize,bytes:usize}
 impl Census{

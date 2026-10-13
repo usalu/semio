@@ -30,7 +30,7 @@ pub struct SvgAttr {pub name:String,pub value:SvgAttributeValue}
 #[derive(value_derive::FromValue)]
 #[value(rename_all="camelCase")]
 struct SvgAttributeFields{name:String,value:SvgAttributeValue}
-impl semio_framework_value::FromValue for SvgAttr{
+impl FromValue for SvgAttr{
     fn from_value(value:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError>{Self::admit(SvgAttributeFields::from_value(value)?)}
     fn from_value_controlled(value:&semio_framework_value::DslValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{Self::admit(SvgAttributeFields::from_value_controlled(value,control)?)}
     fn edit_value_at_path(&mut self,path:&[&str],edit:semio_framework_value::ValueEdit)->Result<(),semio_framework_value::ValueError>{semio_framework_value::edit_through_value(self,path,edit)}

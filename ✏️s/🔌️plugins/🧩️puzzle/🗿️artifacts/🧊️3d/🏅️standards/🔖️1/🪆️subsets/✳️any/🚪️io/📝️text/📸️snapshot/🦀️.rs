@@ -64,7 +64,7 @@ impl store::ArtifactDsl for Puzzle3dSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
@@ -102,4 +102,4 @@ impl protocol::OpText for Puzzle3dEngineCommand {
     }
 }
 }
-pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use snapshot_wire_codec::*;

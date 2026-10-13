@@ -6,10 +6,10 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 
 /// 🧾️ Direct-owner text opcodes in aggregate declaration order.
-pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("ChangeSchema", crate::standards::v1::subsets::any::io::text::mutations::change_schema::TEXT_OPCODE)];
+pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[("ChangeSchema", change_schema::TEXT_OPCODE)];
 
 #[path = "✒️change-schema/🦀️.rs"]
 pub mod change_schema;

@@ -9,7 +9,7 @@
 //! per-file `s_play_action` (returning the legacy `ActionDescriptor`) is gone — `crate::engine::space::
 //! s_play_action` already returns the contract's own `(ActionId, Option<UiValue>)` pair.
 
-use crate::engine::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id, workflow_parameter_to_os};
+use crate::engine::space::engine::{os_parameter_types_compatible_shim, parameter_entity_id};
 use crate::engine::space::terminology::SStudioLabels;
 use crate::engine::space::{ui_value_list, ui_value_map, ui_value_text, S_PLAY_INSPECTOR_TAB_ID};
 use semio_framework_os::{os_app_registration, WorkflowNode, WorkflowParameter, WorkflowSnapshot};

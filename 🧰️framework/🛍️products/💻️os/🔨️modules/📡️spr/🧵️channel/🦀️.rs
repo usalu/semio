@@ -333,7 +333,7 @@ impl PresenceCommandCursor {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return RetainedCloneStep::Complete(empty); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return RetainedCloneStep::Progress(empty); }
-        let copy = std::mem::size_of::<FixedCommandPage>();
+        let copy = size_of::<FixedCommandPage>();
         let release = if self.page.is_some() { COMMAND_PAGE_MAXIMUM_BYTES } else { 0 };
         if self.page.is_some() && grant.maximum_copy_bytes < copy || grant.maximum_release_bytes < release { return RetainedCloneStep::Progress(empty); }
         let moved = self.page.is_some();

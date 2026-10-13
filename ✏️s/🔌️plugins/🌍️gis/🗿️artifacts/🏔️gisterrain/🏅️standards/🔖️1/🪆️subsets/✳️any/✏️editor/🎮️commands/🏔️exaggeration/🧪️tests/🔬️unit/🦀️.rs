@@ -27,9 +27,9 @@ fn number(value: f64) -> semio_framework_value::DslValue {
 async fn slide(app: &mut Gis3dApp, args: Vec<(&str, semio_framework_value::DslValue)>) {
     let aborting = args.iter().any(|(key, _)| *key == "abort");
     let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    app.handle_action("setExaggeration", Some(&args), &window_meta()).await.expect("the slider dispatch is admitted");
+    app.handle_action("setExaggeration", Some(&args), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the slider dispatch is admitted");
     if !aborting {
-        settle_registered_typed_operation(app, window_meta().instance_id).await.expect("the slider dispatch settles");
+        settle_registered_typed_operation(app, window_meta().instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the slider dispatch settles");
     }
 }
 
@@ -120,7 +120,7 @@ async fn two_presses_are_two_transactions() {
 
 async fn history_edit(app: &mut Gis3dApp, verb: &str, args: Vec<(&str, semio_framework_value::DslValue)>) {
     let args = semio_framework_value::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-    let result = app.handle_action(verb, Some(&args), &window_meta()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = app.handle_action(verb, Some(&args), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -133,7 +133,7 @@ async fn pump_time_travel(app: &mut Gis3dApp, done: impl Fn(Option<semio_framewo
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.advance_typed_operation_publication().await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);

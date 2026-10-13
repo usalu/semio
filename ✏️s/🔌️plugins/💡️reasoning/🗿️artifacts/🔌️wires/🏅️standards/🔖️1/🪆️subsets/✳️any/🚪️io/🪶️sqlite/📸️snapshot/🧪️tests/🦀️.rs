@@ -1,3 +1,5 @@
+#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_value::Number;
 #[path="🧬️semantic/🦀️.rs"]
@@ -60,10 +62,10 @@ fn sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_
  let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.reasoning.wires".into(),standard:"1".into(),subset:"*".into()};let limits=SqliteDatabaseLimits::default();let mut reference=None;
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let payload=match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),SnapshotEncoding::Text=>store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))};
-  let database=(codec.export)("s.reasoning.wires",&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;
+  let database=original_owners::with_decoding(|native_owner|(codec.export)("s.reasoning.wires",&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap().value;
   if let Some(reference)=&reference{assert_eq!(&database,reference);}else{reference=Some(database.clone());}
-  let encoded=(codec.import)("s.reasoning.wires",&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;
-  assert_eq!((codec.export)("s.reasoning.wires",&dialect,&encoded,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value,database);
+  let encoded=original_owners::with_encoding(|native_owner|(codec.import)("s.reasoning.wires",&dialect, &mut Some(database.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap().value;
+  assert_eq!(original_owners::with_decoding(|native_owner|(codec.export)("s.reasoning.wires",&dialect,&encoded,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap().value,database);
  }
 }
 

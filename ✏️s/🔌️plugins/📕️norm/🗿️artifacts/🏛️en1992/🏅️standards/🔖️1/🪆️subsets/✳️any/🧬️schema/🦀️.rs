@@ -1,9 +1,9 @@
 //! 🧬️ En1992 artifact schema — hierarchical RC structure + clause engines.
 
-use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use crate::document::{AnnexChoice, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 use crate::part_1_2::FireRating;
 use crate::part_3::TightnessClass;
-use crate::{Anchor, ExposureClass, LoadCaseActions, MemberKind, RcMember, Stirrups, SupportCondition};
+use crate::{Anchor, ExposureClass, LoadCaseActions, MemberKind, RcMember, SupportCondition};
 use crate::En1992Snapshot;
 use framework_schema::ArtifactSchema;
 
@@ -122,11 +122,6 @@ pub fn en1992_artifact_schema_descriptor() -> semio_framework_schema_registry::A
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
-/// 📐️ Pure EN 1992 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// relocated verbatim from the deleted `⚙️engine`. Every `part_1_N`/`part_N` module (including the
-/// `cross-fem`-gated `Fem` region) is a pure function library; the snapshot-level composition
-/// (`evaluate`) lives in `💡️inferences`.
-use crate::document::{table_lookup_linear, TableEntry1D};
 
 // #region 🔖️NaDe
 
@@ -158,13 +153,13 @@ fn anchor_path(anchor_id: &str, field: &str) -> String {
 }
 fn member_ref(doc: &En1992Snapshot, member: &RcMember, path: &str) -> SubjectRef {
     let base = member.subject_label();
-    let label = L(
+    let label = l(
         &format!("{} — {}", doc.title, base.en),
         &format!("{} — {}", doc.title, base.de),
     );
     SubjectRef::new(member.id.clone(), path.to_string(), label)
 }
-fn L(en: &str, de: &str) -> LocalizedCopy {
+fn l(en: &str, de: &str) -> LocalizedCopy {
     LocalizedCopy::new(en, de)
 }
 fn clause_11(section: &str) -> ClauseId {
@@ -471,20 +466,20 @@ pub mod part_1_1 {
     }
 
     /// 🏗️ Structural class delta vs S4 (Table 4.3N / DE) from design life, cement, strength, kind.
-    pub fn structural_class_delta(design_life_years: f64, cement_type: &str, f_ck_pa: f64, member_kind: crate::MemberKind) -> i32 {
+    pub fn structural_class_delta(design_life_years: f64, cement_type: &str, f_ck_pa: f64, member_kind: MemberKind) -> i32 {
         let mut sc = 4;
         if design_life_years >= 100.0 { sc += 2; }
         else if design_life_years <= 25.0 { sc -= 1; }
         let ct = cement_type.to_uppercase();
         if ct.contains('R') { sc -= 1; }
-        if f_ck_pa / 1.0e6 >= 35.0 && matches!(member_kind, crate::MemberKind::Slab | crate::MemberKind::FlatSlab | crate::MemberKind::Beam) {
+        if f_ck_pa / 1.0e6 >= 35.0 && matches!(member_kind, MemberKind::Slab | MemberKind::FlatSlab | MemberKind::Beam) {
             sc -= 1;
         }
         (sc - 4).clamp(-1, 2)
     }
 
     /// 📏 c_min,dur with structural-class shift (±5 mm per class).
-    pub fn c_min_dur_adjusted_m(exposure: ExposureClass, design_life_years: f64, cement_type: &str, f_ck_pa: f64, member_kind: crate::MemberKind) -> f64 {
+    pub fn c_min_dur_adjusted_m(exposure: ExposureClass, design_life_years: f64, cement_type: &str, f_ck_pa: f64, member_kind: MemberKind) -> f64 {
         let base = c_min_dur_m(exposure);
         let delta_sc = structural_class_delta(design_life_years, cement_type, f_ck_pa, member_kind);
         (base + delta_sc as f64 * 0.005).max(0.010)
@@ -636,32 +631,32 @@ pub mod part_1_2_fire {
 
     /// 🎯 Required (min_dimension, a) for member kind + support.
     /// 🎯 Required (min_dimension, a) for member kind + fire options (Tables 5.2a–5.11).
-    pub fn required_for(kind: crate::MemberKind, support: SupportCondition, rating: FireRating, column_method: &str, slab_system: &str) -> (f64, f64) {
+    pub fn required_for(kind: MemberKind, support: SupportCondition, rating: FireRating, column_method: &str, slab_system: &str) -> (f64, f64) {
         match kind {
-            crate::MemberKind::Column => {
+            MemberKind::Column => {
                 if column_method.eq_ignore_ascii_case("B") { column_method_b(rating) } else { column_method_a(rating) }
             }
-            crate::MemberKind::Wall => wall(rating),
-            crate::MemberKind::TensionMember => tension_member(rating),
-            crate::MemberKind::FlatSlab => {
+            MemberKind::Wall => wall(rating),
+            MemberKind::TensionMember => tension_member(rating),
+            MemberKind::FlatSlab => {
                 if slab_system.eq_ignore_ascii_case("two-way") { slab_two_way(rating) }
                 else if slab_system.eq_ignore_ascii_case("ribbed") { ribbed_slab(rating) }
                 else if slab_system.eq_ignore_ascii_case("one-way") { slab_one_way(rating) }
                 else { flat_slab(rating) }
             }
-            crate::MemberKind::RibbedSlab => ribbed_slab(rating),
-            crate::MemberKind::Slab => {
+            MemberKind::RibbedSlab => ribbed_slab(rating),
+            MemberKind::Slab => {
                 if slab_system.eq_ignore_ascii_case("two-way") { slab_two_way(rating) }
                 else if slab_system.eq_ignore_ascii_case("ribbed") { ribbed_slab(rating) }
                 else if slab_system.eq_ignore_ascii_case("flat") { flat_slab(rating) }
                 else { slab_one_way(rating) }
             }
-            crate::MemberKind::Beam => match support {
+            MemberKind::Beam => match support {
                 SupportCondition::Continuous | SupportCondition::Fixed => beam_cont(rating),
                 _ => beam_ss(rating),
             },
-            crate::MemberKind::Bridge => beam_ss(rating),
-            crate::MemberKind::LiquidRetaining => wall(rating),
+            MemberKind::Bridge => beam_ss(rating),
+            MemberKind::LiquidRetaining => wall(rating),
         }
     }
 
@@ -688,7 +683,7 @@ pub mod part_1_2_fire {
 
 /// 🌉 EN 1992-2/// 🌉 EN 1992-2 bridges.
 pub mod part_2 {
-    use super::*;
+    #[cfg(test)] use super::*;
 
     pub fn concrete_stress_limit_pa(f_ck_pa: f64) -> f64 {
         0.6 * f_ck_pa
@@ -718,7 +713,7 @@ pub mod part_3_liquid {
 
 /// ⚓️ EN 1992-4 fastenings.
 pub mod part_4 {
-    use super::*;
+    #[cfg(test)] use super::*;
 
     const GAMMA_MC: f64 = 1.5;
 
@@ -958,9 +953,9 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     let annex = doc.annex;
     let Some(concrete) = doc.concrete(&member.concrete_grade_id) else {
         let options: Vec<String> = doc.concrete_grades.iter().map(|g| g.id.clone()).collect();
-        let mut missing = CheckResult::assess(format!("en1992.materials.concrete.{}", member.id), part_11(), clause_11("§3.1"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), L("Concrete grade", "Betonfestigkeitsklasse"))
+        let mut missing = CheckResult::assess(format!("en1992.materials.concrete.{}", member.id), part_11(), clause_11("§3.1"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), l("Concrete grade", "Betonfestigkeitsklasse"))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Concrete grade id '{}' is missing.", member.concrete_grade_id),
                 &format!("Betonfestigkeitsklasse-Id '{}' fehlt.", member.concrete_grade_id),
             ))
@@ -968,16 +963,16 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         missing = missing.remedy(Remedy::one_of(
             member_ref(doc, member, &member_path(&member.id, "concreteGradeId")),
             if options.is_empty() { vec!["c30".into()] } else { options },
-            L("Set concreteGradeId to a declared concrete grade.", "concreteGradeId auf eine deklarierte Betonfestigkeitsklasse setzen."),
+            l("Set concreteGradeId to a declared concrete grade.", "concreteGradeId auf eine deklarierte Betonfestigkeitsklasse setzen."),
         ));
         out.push(missing.build());
         return out;
     };
     let Some(reinf) = doc.reinforcement(&member.reinforcement_grade_id) else {
         let options: Vec<String> = doc.reinforcement_grades.iter().map(|g| g.id.clone()).collect();
-        let mut missing = CheckResult::assess(format!("en1992.materials.steel.{}", member.id), part_11(), clause_11("§3.2"), member_ref(doc, member, &member_path(&member.id, "reinforcementGradeId")), L("Reinforcement grade", "Betonstahl"))
+        let mut missing = CheckResult::assess(format!("en1992.materials.steel.{}", member.id), part_11(), clause_11("§3.2"), member_ref(doc, member, &member_path(&member.id, "reinforcementGradeId")), l("Reinforcement grade", "Betonstahl"))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Reinforcement grade id '{}' is missing.", member.reinforcement_grade_id),
                 &format!("Betonstahl-Id '{}' fehlt.", member.reinforcement_grade_id),
             ))
@@ -985,7 +980,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         missing = missing.remedy(Remedy::one_of(
             member_ref(doc, member, &member_path(&member.id, "reinforcementGradeId")),
             if options.is_empty() { vec!["b500".into()] } else { options },
-            L("Set reinforcementGradeId to a declared steel grade.", "reinforcementGradeId auf einen deklarierten Betonstahl setzen."),
+            l("Set reinforcementGradeId to a declared steel grade.", "reinforcementGradeId auf einen deklarierten Betonstahl setzen."),
         ));
         out.push(missing.build());
         return out;
@@ -1011,10 +1006,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     let c_min_dur = part_1_1::c_min_dur_adjusted_m(member.exposure, doc.design_working_life_years, &doc.cement_type, f_ck, member.kind);
     let (c_min, c_nom) = part_1_1::c_nom_m(c_min_b, c_min_dur, doc.delta_c_dev);
     let cover_path = member_path(&member.id, "cover");
-    let mut cover_check = CheckResult::assess(format!("en1992.4.4.cover.{}", member.id), part_11(), clause_11("§4.4"), member_ref(doc, member, &cover_path), L("Concrete cover for durability", "Betondeckung für Dauerhaftigkeit"))
+    let mut cover_check = CheckResult::assess(format!("en1992.4.4.cover.{}", member.id), part_11(), clause_11("§4.4"), member_ref(doc, member, &cover_path), l("Concrete cover for durability", "Betondeckung für Dauerhaftigkeit"))
         .minimum(length_m(member.cover), length_m(c_nom))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("c={:.0} mm ≥ c_nom={:.0} mm (c_min={:.0}=max(c_min,b={:.0}, c_min,dur={:.0}), life={:.0} a, cement={}, Δc_dev={:.0})", member.cover * 1000.0, c_nom * 1000.0, c_min * 1000.0, c_min_b * 1000.0, c_min_dur * 1000.0, doc.design_working_life_years, doc.cement_type, doc.delta_c_dev * 1000.0),
             &format!("c={:.0} mm ≥ c_nom={:.0} mm (c_min={:.0}=max(c_min,b={:.0}, c_min,dur={:.0}), Nutzungsdauer={:.0} a, Zement={}, Δc_dev={:.0})", member.cover * 1000.0, c_nom * 1000.0, c_min * 1000.0, c_min_b * 1000.0, c_min_dur * 1000.0, doc.design_working_life_years, doc.cement_type, doc.delta_c_dev * 1000.0),
         ));
@@ -1023,7 +1018,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             member_ref(doc, member, &cover_path),
             length_m(member.cover),
             length_m(c_nom),
-            L(
+            l(
                 &format!("Increase cover of {} from {:.0} mm to at least {:.0} mm (c_nom).", member.id, member.cover * 1000.0, c_nom * 1000.0),
                 &format!("Betondeckung von {} von {:.0} mm auf mindestens {:.0} mm (c_nom) erhöhen.", member.id, member.cover * 1000.0, c_nom * 1000.0),
             ),
@@ -1035,10 +1030,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     {
         let computed = f_ck * concrete.eps_c2() * n_parabola;
         let limit = f_ck_cube * eps_cu2 * 2.0;
-        let mut mat = CheckResult::assess(format!("en1992.3.1.constitutive.{}", member.id), part_11(), clause_11("§3.1.7"), member_ref(doc, member, &format!("concreteGrades[id={}].fCk", member.concrete_grade_id)), L("Concrete Table 3.1 constitutive", "Beton Tabelle 3.1 Stoffgesetz"))
+        let mut mat = CheckResult::assess(format!("en1992.3.1.constitutive.{}", member.id), part_11(), clause_11("§3.1.7"), member_ref(doc, member, &format!("concreteGrades[id={}].fCk", member.concrete_grade_id)), l("Concrete Table 3.1 constitutive", "Beton Tabelle 3.1 Stoffgesetz"))
             .utilization(stress_pa(computed), stress_pa(limit.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Table 3.1: f_ck={:.0} MPa / f_ck,cube={:.0} MPa; ε_c2={:.2}‰ / ε_cu2={:.2}‰; n={:.2}", f_ck / 1e6, f_ck_cube / 1e6, concrete.eps_c2() * 1e3, eps_cu2 * 1e3, n_parabola),
                 &format!("Tabelle 3.1: f_ck={:.0} MPa / f_ck,cube={:.0} MPa; ε_c2={:.2}‰ / ε_cu2={:.2}‰; n={:.2}", f_ck / 1e6, f_ck_cube / 1e6, concrete.eps_c2() * 1e3, eps_cu2 * 1e3, n_parabola),
             ));
@@ -1047,7 +1042,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &format!("concreteGrades[id={}].fCk", member.concrete_grade_id)),
                 stress_pa(f_ck),
                 stress_pa(f_ck * limit / computed.max(1.0)),
-                L("Reduce f_ck toward a Table 3.1 class so constitutive ratios stay consistent.", "f_ck auf eine Klasse nach Tabelle 3.1 absenken, damit die Stoffgesetz-Verhältnisse konsistent bleiben."),
+                l("Reduce f_ck toward a Table 3.1 class so constitutive ratios stay consistent.", "f_ck auf eine Klasse nach Tabelle 3.1 absenken, damit die Stoffgesetz-Verhältnisse konsistent bleiben."),
             ));
         }
         out.push(mat.build());
@@ -1064,10 +1059,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         // Flexure + axial
         let m_rd = part_1_1::flexural_resistance_nm(f_ck, b, d, a_s, f_yk, uls.n_ed, annex, eps_cu2, n_parabola, e_s);
         let tension_layer = member.longitudinal.iter().find(|l| l.position == "bottom" || l.position == "tension").or_else(|| member.longitudinal.first());
-        let mut flex = CheckResult::assess(format!("en1992.6.1.flexure.{}", member.id), part_11(), clause_11("§6.1"), member_ref(doc, member, &member_path(&member.id, "actions")), L("Bending with axial force", "Biegung mit Normalkraft"))
+        let mut flex = CheckResult::assess(format!("en1992.6.1.flexure.{}", member.id), part_11(), clause_11("§6.1"), member_ref(doc, member, &member_path(&member.id, "actions")), l("Bending with axial force", "Biegung mit Normalkraft"))
             .utilization(moment_nm(uls.m_ed.abs()), moment_nm(m_rd.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("|M_Ed|={:.1} kNm ≤ M_Rd={:.1} kNm (α_cc={:.2}, governing {})", uls.m_ed.abs() / 1e3, m_rd / 1e3, params.alpha_cc, uls.combination_id),
                 &format!("|M_Ed|={:.1} kNm ≤ M_Rd={:.1} kNm (α_cc={:.2}, maßgebend {})", uls.m_ed.abs() / 1e3, m_rd / 1e3, params.alpha_cc, uls.combination_id),
             ));
@@ -1080,7 +1075,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     member_ref(doc, member, &layer_path(&member.id, &layer.id, "count")),
                     Quantity::new(QuantityKind::Dimensionless, layer.count as f64),
                     Quantity::new(QuantityKind::Dimensionless, count_req),
-                    L(
+                    l(
                         &format!("Increase tension bar count of {} layer {} from {} to at least {:.0} (A_s,req≈{:.0} mm²).", member.id, layer.id, layer.count, count_req, a_req * 1e6),
                         &format!("Zugstabanzahl von {} Lage {} von {} auf mindestens {:.0} erhöhen (A_s,erf≈{:.0} mm²).", member.id, layer.id, layer.count, count_req, a_req * 1e6),
                     ),
@@ -1090,7 +1085,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                 length_m(d),
                 length_m(d * 1.15),
-                L(
+                l(
                     &format!("Increase effective depth of {} from {:.0} mm to at least {:.0} mm.", member.id, d * 1000.0, d * 1150.0),
                     &format!("Statische Nutzhöhe von {} von {:.0} mm auf mindestens {:.0} mm erhöhen.", member.id, d * 1000.0, d * 1150.0),
                 ),
@@ -1103,10 +1098,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             let f_cd_acc = params_acc.f_cd_pa(f_ck);
             let f_cd_uls = params.f_cd_pa(f_ck);
             let m_rd_acc = if f_cd_uls > 0.0 { m_rd * (f_cd_acc / f_cd_uls) } else { m_rd };
-            let mut flex_acc = CheckResult::assess(format!("en1992.6.1.flexure.acc.{}", member.id), part_11(), clause_11("§6.1"), member_ref(doc, member, &member_path(&member.id, "actions")), L("Accidental bending ACC-6.11", "Außergewöhnliche Biegung ACC-6.11"))
+            let mut flex_acc = CheckResult::assess(format!("en1992.6.1.flexure.acc.{}", member.id), part_11(), clause_11("§6.1"), member_ref(doc, member, &member_path(&member.id, "actions")), l("Accidental bending ACC-6.11", "Außergewöhnliche Biegung ACC-6.11"))
                 .utilization(moment_nm(acc_e.m_ed.abs()), moment_nm(m_rd_acc.max(1.0)))
                 .annex(annex)
-                .explanation(L(
+                .explanation(l(
                     &format!("ACC-6.11: |M_Ed|={:.1} kNm ≤ M_Rd={:.1} kNm (γ_c={:.2}, γ_s={:.2}, {})", acc_e.m_ed.abs() / 1e3, m_rd_acc / 1e3, params_acc.gamma_c, params_acc.gamma_s, acc_e.combination_id),
                     &format!("Außergewöhnlich ACC-6.11: |M_Ed|={:.1} kNm ≤ M_Rd={:.1} kNm (γ_c={:.2}, γ_s={:.2}, {})", acc_e.m_ed.abs() / 1e3, m_rd_acc / 1e3, params_acc.gamma_c, params_acc.gamma_s, acc_e.combination_id),
                 ));
@@ -1116,7 +1111,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                     length_m(d),
                     length_m(d_req),
-                    L("Increase effective depth for accidental combination.", "Statische Nutzhöhe für außergewöhnliche Kombination erhöhen."),
+                    l("Increase effective depth for accidental combination.", "Statische Nutzhöhe für außergewöhnliche Kombination erhöhen."),
                 ));
             }
             out.push(flex_acc.build());
@@ -1133,13 +1128,13 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         let f_ywd = params.f_yd_pa(f_yk);
         let v_rd_s = if asw_s > 0.0 { part_1_1::shear_v_rd_s_n(asw_s, z, f_ywd, cot) } else { 0.0 };
         let v_rd_max = part_1_1::shear_v_rd_max_n(b, z, f_ck, cot, annex);
-        let v_rd = if uls.v_ed <= v_rd_c { v_rd_c } else { v_rd_s.min(v_rd_max).max(v_rd_c) };
+        let _v_rd = if uls.v_ed <= v_rd_c { v_rd_c } else { v_rd_s.min(v_rd_max).max(v_rd_c) };
         // If V_Ed > V_Rd,c need stirrups capacity
         let v_limit = if asw_s > 0.0 { v_rd_s.min(v_rd_max) } else { v_rd_c };
-        let mut shear = CheckResult::assess(format!("en1992.6.2.shear.{}", member.id), part_11(), clause_11("§6.2"), member_ref(doc, member, &member_path(&member.id, "actions")), L("Shear resistance", "Querkrafttragfähigkeit"))
+        let mut shear = CheckResult::assess(format!("en1992.6.2.shear.{}", member.id), part_11(), clause_11("§6.2"), member_ref(doc, member, &member_path(&member.id, "actions")), l("Shear resistance", "Querkrafttragfähigkeit"))
             .utilization(force_n(uls.v_ed), force_n(v_limit.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("V_Ed={:.1} kN; V_Rd,c={:.1}, V_Rd,s={:.1}, V_Rd,max={:.1} kN; cotθ={:.2}; governing {}", uls.v_ed / 1e3, v_rd_c / 1e3, v_rd_s / 1e3, v_rd_max / 1e3, cot, uls.combination_id),
                 &format!("V_Ed={:.1} kN; V_Rd,c={:.1}, V_Rd,s={:.1}, V_Rd,max={:.1} kN; cotθ={:.2}; maßgebend {}", uls.v_ed / 1e3, v_rd_c / 1e3, v_rd_s / 1e3, v_rd_max / 1e3, cot, uls.combination_id),
             ));
@@ -1153,7 +1148,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     member_ref(doc, member, &member_path(&member.id, "stirrups.spacing")),
                     length_m(st.spacing),
                     length_m(s_req.min(st.spacing)),
-                    L(
+                    l(
                         &format!("Reduce stirrup spacing of {} from {:.0} mm to at most {:.0} mm.", member.id, st.spacing * 1000.0, s_req * 1000.0),
                         &format!("Bügelabstand von {} von {:.0} mm auf höchstens {:.0} mm verringern.", member.id, st.spacing * 1000.0, s_req * 1000.0),
                     ),
@@ -1164,7 +1159,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     member_ref(doc, member, &member_path(&member.id, "stirrups")),
                     area_m2(0.0),
                     area_m2(need),
-                    L(
+                    l(
                         &format!("Provide shear reinforcement Asw/s ≥ {:.1} mm²/m on {}.", need * 1e6, member.id),
                         &format!("Querkraftbewehrung Asw/s ≥ {:.1} mm²/m für {} anordnen.", need * 1e6, member.id),
                     ),
@@ -1176,10 +1171,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         // Torsion
         if uls.t_ed > 0.0 {
             let t_rd = part_1_1::torsion_t_rd_nm(f_ck, b, h, annex);
-            let mut tor = CheckResult::assess(format!("en1992.6.3.torsion.{}", member.id), part_11(), clause_11("§6.3"), member_ref(doc, member, &member_path(&member.id, "actions")), L("Torsion resistance", "Torsionstragfähigkeit"))
+            let mut tor = CheckResult::assess(format!("en1992.6.3.torsion.{}", member.id), part_11(), clause_11("§6.3"), member_ref(doc, member, &member_path(&member.id, "actions")), l("Torsion resistance", "Torsionstragfähigkeit"))
                 .utilization(moment_nm(uls.t_ed), moment_nm(t_rd.max(1.0)))
                 .annex(annex)
-                .explanation(L(
+                .explanation(l(
                     &format!("Torsion check: T_Ed={:.2} kNm ≤ T_Rd={:.2} kNm (gov {})", uls.t_ed / 1e3, t_rd / 1e3, uls.combination_id),
                     &format!("Torsionsnachweis: T_Ed={:.2} kNm ≤ T_Rd={:.2} kNm (maßgebend {})", uls.t_ed / 1e3, t_rd / 1e3, uls.combination_id),
                 ));
@@ -1189,7 +1184,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     member_ref(doc, member, &member_path(&member.id, "height")),
                     length_m(h),
                     length_m(h_req),
-                    L(
+                    l(
                         &format!("Increase section height of {} from {:.0} mm to at least {:.0} mm for torsion.", member.id, h * 1000.0, h_req * 1000.0),
                         &format!("Querschnittshöhe von {} von {:.0} mm auf mindestens {:.0} mm für Torsion erhöhen.", member.id, h * 1000.0, h_req * 1000.0),
                     ),
@@ -1226,10 +1221,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 } else {
                     v_rd_c_pa
                 };
-                let mut punch = CheckResult::assess(format!("en1992.6.4.punching.{}", member.id), part_11(), clause_11("§6.4"), member_ref(doc, member, &member_path(&member.id, "punching")), L("Punching shear", "Durchstanztragfähigkeit"))
+                let mut punch = CheckResult::assess(format!("en1992.6.4.punching.{}", member.id), part_11(), clause_11("§6.4"), member_ref(doc, member, &member_path(&member.id, "punching")), l("Punching shear", "Durchstanztragfähigkeit"))
                     .utilization(stress_pa(v_ed_pa), stress_pa(v_rd_cs_pa.max(1.0)))
                     .annex(annex)
-                    .explanation(L(
+                    .explanation(l(
                         &format!("Punching: v_Ed={:.2} MPa (β={:.2}, u₁={:.2} m, u₀/d={:.2}) ≤ v_Rd,c={:.2} MPa; asw={:.0} mm²/m ({})", v_ed_pa / 1e6, beta, u1, u0_over_d, v_rd_cs_pa / 1e6, p.asw * 1e6, uls.combination_id),
                         &format!("Durchstanzen: v_Ed={:.2} MPa (β={:.2}, u₁={:.2} m, u₀/d={:.2}) ≤ v_Rd,c={:.2} MPa; asw={:.0} mm²/m ({})", v_ed_pa / 1e6, beta, u1, u0_over_d, v_rd_cs_pa / 1e6, p.asw * 1e6, uls.combination_id),
                     ));
@@ -1239,7 +1234,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                         member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                         length_m(d),
                         length_m(d_req),
-                        L(
+                        l(
                             &format!("Increase effective depth of {} from {:.0} mm to at least {:.0} mm.", member.id, d * 1000.0, d_req * 1000.0),
                             &format!("Statische Nutzhöhe von {} von {:.0} mm auf mindestens {:.0} mm erhöhen.", member.id, d * 1000.0, d_req * 1000.0),
                         ),
@@ -1248,23 +1243,23 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                         member_ref(doc, member, &member_path(&member.id, "punching.asw")),
                         area_m2(p.asw),
                         area_m2((p.asw + 5.0e-4).max(5.0e-4)),
-                        L(
+                        l(
                             &format!("Provide/increase punching reinforcement asw on {}.", member.id),
                             &format!("Durchstanzbewehrung asw für {} anordnen/erhöhen.", member.id),
                         ),
                     ));
                 }
                 out.push(punch.build());
-                let mut pmax = CheckResult::assess(format!("en1992.6.4.punching-max.{}", member.id), part_11(), clause_11("§6.4.5"), member_ref(doc, member, &member_path(&member.id, "punching")), L("Punching crushing limit", "Durchstanzen Druckstrebe"))
+                let mut pmax = CheckResult::assess(format!("en1992.6.4.punching-max.{}", member.id), part_11(), clause_11("§6.4.5"), member_ref(doc, member, &member_path(&member.id, "punching")), l("Punching crushing limit", "Durchstanzen Druckstrebe"))
                     .utilization(stress_pa(v_ed_pa), stress_pa(v_rd_max_pa.max(1.0)))
                     .annex(annex)
-                    .explanation(L("Punching strut: v_Ed ≤ v_Rd,max (DE-NA 1.4·v_Rd,c)", "Durchstanz-Druckstrebe: v_Ed ≤ v_Rd,max (DE-NA 1,4·v_Rd,c)"));
+                    .explanation(l("Punching strut: v_Ed ≤ v_Rd,max (DE-NA 1.4·v_Rd,c)", "Durchstanz-Druckstrebe: v_Ed ≤ v_Rd,max (DE-NA 1,4·v_Rd,c)"));
                 if v_ed_pa > v_rd_max_pa {
                     pmax = pmax.remedy(Remedy::at_least(
                         member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                         length_m(d),
                         length_m(d * v_ed_pa / v_rd_max_pa),
-                        L("Increase slab depth to satisfy punching crushing.", "Deckendicke erhöhen, um Durchstanz-Druckstrebe zu erfüllen."),
+                        l("Increase slab depth to satisfy punching crushing.", "Deckendicke erhöhen, um Durchstanz-Druckstrebe zu erfüllen."),
                     ));
                 }
                 out.push(pmax.build());
@@ -1272,8 +1267,8 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         }
     } else {
         out.push(
-            CheckResult::assess(format!("en1992.uls.na.{}", member.id), part_11(), clause_11("§6"), member_ref(doc, member, &member_path(&member.id, "actions")), L("ULS actions", "Einwirkungen GZT"))
-                .not_applicable(L("No ULS load case on member", "Kein GZT-Lastfall am Bauteil"))
+            CheckResult::assess(format!("en1992.uls.na.{}", member.id), part_11(), clause_11("§6"), member_ref(doc, member, &member_path(&member.id, "actions")), l("ULS actions", "Einwirkungen GZT"))
+                .not_applicable(l("No ULS load case on member", "Kein GZT-Lastfall am Bauteil"))
                 .annex(annex)
                 .build(),
         );
@@ -1293,10 +1288,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         };
         let s_r = 3.4 * member.cover + 0.425 * 0.8 * 0.5 * 0.016 / rho_p.max(1e-6);
         let w_k = part_1_1::crack_width_m(sigma_s, rho_p.max(1e-4), f_ct_eff, e_s, s_r);
-        let mut crack = CheckResult::assess(format!("en1992.7.3.crack.{}", member.id), part_11(), clause_11("§7.3.4"), member_ref(doc, member, &member_path(&member.id, "actions")), L("Crack width", "Rissbreite"))
+        let mut crack = CheckResult::assess(format!("en1992.7.3.crack.{}", member.id), part_11(), clause_11("§7.3.4"), member_ref(doc, member, &member_path(&member.id, "actions")), l("Crack width", "Rissbreite"))
             .utilization(length_m(w_k), length_m(w_max))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Crack width w_k={:.3} mm ≤ w_max={:.2} mm (SLS {})", w_k * 1000.0, w_max * 1000.0, sls.combination_id),
                 &format!("Rissbreite w_k={:.3} mm ≤ w_max={:.2} mm (GZG {})", w_k * 1000.0, w_max * 1000.0, sls.combination_id),
             ));
@@ -1308,7 +1303,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
                     length_m(layer.diameter),
                     length_m(d_req),
-                    L(
+                    l(
                         &format!("Increase bar diameter of {} so A_s ≥ {:.0} mm² to limit crack width.", member.id, a_req * 1e6),
                         &format!("Stabdurchmesser von {} erhöhen, damit A_s ≥ {:.0} mm² (Rissbreite).", member.id, a_req * 1e6),
                     ),
@@ -1321,10 +1316,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     // Min reinforcement
     let a_min = part_1_1::a_s_min_m2(f_ck, f_yk, b, d);
     let a_max = part_1_1::a_s_max_m2(b, h);
-    let mut amin = CheckResult::assess(format!("en1992.9.minas.{}", member.id), part_11(), clause_11("§9.2.1"), member_ref(doc, member, &member_path(&member.id, "longitudinal")), L("Minimum reinforcement", "Mindestbewehrung"))
+    let mut amin = CheckResult::assess(format!("en1992.9.minas.{}", member.id), part_11(), clause_11("§9.2.1"), member_ref(doc, member, &member_path(&member.id, "longitudinal")), l("Minimum reinforcement", "Mindestbewehrung"))
         .minimum(area_m2(a_s), area_m2(a_min))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Minimum steel: A_s={:.0} mm² ≥ A_s,min={:.0} mm²", a_s * 1e6, a_min * 1e6),
             &format!("Mindestbewehrung: A_s={:.0} mm² ≥ A_s,min={:.0} mm²", a_s * 1e6, a_min * 1e6),
         ));
@@ -1335,7 +1330,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
                 length_m(layer.diameter),
                 length_m(d_req),
-                L(
+                l(
                     &format!("Increase bar diameter of {} so A_s ≥ {:.0} mm².", member.id, a_min * 1e6),
                     &format!("Stabdurchmesser von {} erhöhen, damit A_s ≥ {:.0} mm².", member.id, a_min * 1e6),
                 ),
@@ -1343,10 +1338,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         }
     }
     out.push(amin.build());
-    let mut amax = CheckResult::assess(format!("en1992.9.maxas.{}", member.id), part_11(), clause_11("§9.2.1"), member_ref(doc, member, &member_path(&member.id, "longitudinal")), L("Maximum reinforcement", "Höchstbewehrung"))
+    let mut amax = CheckResult::assess(format!("en1992.9.maxas.{}", member.id), part_11(), clause_11("§9.2.1"), member_ref(doc, member, &member_path(&member.id, "longitudinal")), l("Maximum reinforcement", "Höchstbewehrung"))
         .utilization(area_m2(a_s), area_m2(a_max.max(1e-9)))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Maximum steel: A_s={:.0} mm² ≤ A_s,max={:.0} mm²", a_s * 1e6, a_max * 1e6),
             &format!("Höchstbewehrung: A_s={:.0} mm² ≤ A_s,max={:.0} mm²", a_s * 1e6, a_max * 1e6),
         ));
@@ -1357,7 +1352,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
                 length_m(layer.diameter),
                 length_m(d_req),
-                L("Reduce bar diameter so reinforcement stays below 4% of Ac.", "Stabdurchmesser reduzieren, damit Bewehrung unter 4 % von Ac bleibt."),
+                l("Reduce bar diameter so reinforcement stays below 4% of Ac.", "Stabdurchmesser reduzieren, damit Bewehrung unter 4 % von Ac bleibt."),
             ));
         }
     }
@@ -1370,10 +1365,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         let lim_de = part_1_1::de_ld_caps(k, member.span, member.deflection_sensitive);
         let lim = lim_table.min(lim_de);
         let ld = member.span / d.max(1e-6);
-        let mut defl = CheckResult::assess(format!("en1992.7.4.ld.{}", member.id), part_11(), clause_11("§7.4.2"), member_ref(doc, member, &member_path(&member.id, "effectiveDepth")), L("Span-to-depth limit", "Biegeschlankheit l/d"))
+        let mut defl = CheckResult::assess(format!("en1992.7.4.ld.{}", member.id), part_11(), clause_11("§7.4.2"), member_ref(doc, member, &member_path(&member.id, "effectiveDepth")), l("Span-to-depth limit", "Biegeschlankheit l/d"))
             .utilization(Quantity::new(QuantityKind::Dimensionless, ld), Quantity::new(QuantityKind::Dimensionless, lim.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("l/d={:.1} ≤ {:.1} (Table 7.4N={:.1}; DE K·35 / K²·150/l={:.1}; K={:.2}; sensitive={})", ld, lim, lim_table, lim_de, k, member.deflection_sensitive),
                 &format!("l/d={:.1} ≤ {:.1} (Tab. 7.4N={:.1}; DE K·35 / K²·150/l={:.1}; K={:.2}; empfindlich={})", ld, lim, lim_table, lim_de, k, member.deflection_sensitive),
             ));
@@ -1383,7 +1378,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                 length_m(d),
                 length_m(d_req),
-                L(
+                l(
                     &format!("Increase effective depth of {} from {:.0} mm to at least {:.0} mm.", member.id, d * 1000.0, d_req * 1000.0),
                     &format!("Statische Nutzhöhe von {} von {:.0} mm auf mindestens {:.0} mm erhöhen.", member.id, d * 1000.0, d_req * 1000.0),
                 ),
@@ -1406,11 +1401,11 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         let m_ed1 = uls.map(|u| u.m_ed.abs()).unwrap_or(0.0);
         let m_ed_tot = m_ed1 + m2;
         let m_rd = part_1_1::flexural_resistance_nm(f_ck, b, d, a_s, f_yk, n_ed_col, annex, eps_cu2, n_parabola, e_s);
-        let ok_cap = m_ed_tot <= m_rd + 1.0;
-        let mut sl = CheckResult::assess(format!("en1992.5.8.slender.{}", member.id), part_11(), clause_11("§5.8.3"), member_ref(doc, member, &member_path(&member.id, "bucklingLength")), L("Column slenderness", "Stützenschlankheit"))
+        let _ok_cap = m_ed_tot <= m_rd + 1.0;
+        let mut sl = CheckResult::assess(format!("en1992.5.8.slender.{}", member.id), part_11(), clause_11("§5.8.3"), member_ref(doc, member, &member_path(&member.id, "bucklingLength")), l("Column slenderness", "Stützenschlankheit"))
             .utilization(moment_nm(m_ed_tot.abs()), moment_nm(m_rd.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Slenderness λ={:.1} (limit {:.1}, n={:.2}); second-order M_Ed+M₂={:.1} kNm ≤ M_Rd={:.1} kNm", lam, lim, n_ratio, m_ed_tot / 1e3, m_rd / 1e3),
                 &format!("Schlankheit λ={:.1} (Grenze {:.1}, n={:.2}); Theorie II. Ordnung M_Ed+M₂={:.1} kNm ≤ M_Rd={:.1} kNm", lam, lim, n_ratio, m_ed_tot / 1e3, m_rd / 1e3),
             ));
@@ -1420,7 +1415,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "width")),
                 length_m(b),
                 length_m(b_req),
-                L(
+                l(
                     &format!("Increase column width of {} to at least {:.0} mm to reduce slenderness.", member.id, b_req * 1000.0),
                     &format!("Stützenbreite von {} auf mindestens {:.0} mm erhöhen, um die Schlankheit zu verringern.", member.id, b_req * 1000.0),
                 ),
@@ -1429,7 +1424,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "bucklingLength")),
                 length_m(member.buckling_length),
                 length_m(member.buckling_length * lim / lam),
-                L(
+                l(
                     &format!("Reduce buckling length of {} to ≤ {:.2} m.", member.id, member.buckling_length * lim / lam),
                     &format!("Knicklänge von {} auf ≤ {:.2} m verringern.", member.id, member.buckling_length * lim / lam),
                 ),
@@ -1448,10 +1443,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 part_11(),
                 clause_11("§5.10"),
                 member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
-                L("Prestressing steel reference", "Spannstahl-Referenz"),
+                l("Prestressing steel reference", "Spannstahl-Referenz"),
             )
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Member {} references prestressSteelId='{}' which is missing; choose an existing prestressing steel id.", member.id, member.prestress_steel_id),
                 &format!("Bauteil {} verweist auf prestressSteelId='{}', das fehlt; eine vorhandene Spannstahl-Id wählen.", member.id, member.prestress_steel_id),
             ))
@@ -1459,7 +1454,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             dangling = dangling.remedy(Remedy::one_of(
                 member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
                 if options.is_empty() { vec!["yp1860".into()] } else { options },
-                L(
+                l(
                     "Set prestressSteelId to one of the declared prestressing steel ids.",
                     "prestressSteelId auf eine der deklarierten Spannstahl-Ids setzen.",
                 ),
@@ -1487,10 +1482,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         let util_loss = ps.loss_ratio / 0.30;
         let util_inf = sigma_pminf / sigma_pm0_lim.max(1.0);
         let util = util_fpk.max(util_fp01).max(util_pmax).max(util_c).max(util_loss).max(util_inf);
-        let mut pre = CheckResult::assess(format!("en1992.5.10.prestress.{}", member.id), part_11(), clause_11("§5.10.2"), member_ref(doc, member, &member_path(&member.id, "prestress")), L("Prestress stress limits", "Vorspannungs-Spannungsgrenzen"))
+        let mut pre = CheckResult::assess(format!("en1992.5.10.prestress.{}", member.id), part_11(), clause_11("§5.10.2"), member_ref(doc, member, &member_path(&member.id, "prestress")), l("Prestress stress limits", "Vorspannungs-Spannungsgrenzen"))
             .utilization(stress_pa(util * lim_c), stress_pa(lim_c.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Prestress: σ_pm0={:.0} MPa ≤ min(0.75 f_pk, 0.85 f_p0,1k)={:.0} MPa; σ_pm,∞={:.0} MPa; σ_p,max={:.0} MPa; σ_c={:.1} MPa ≤ 0.6 f_ck; P_m,∞={:.0} kN (losses {:.0}%, steel {})",
                     sigma_pm0 / 1e6, sigma_pm0_lim / 1e6, sigma_pminf / 1e6, sigma_p_max / 1e6, sigma_c / 1e6, p_minf / 1e3, ps.loss_ratio * 100.0, steel.id),
                 &format!("Vorspannung: σ_pm0={:.0} MPa ≤ min(0,75 f_pk, 0,85 f_p0,1k)={:.0} MPa; σ_pm,∞={:.0} MPa; σ_p,max={:.0} MPa; σ_c={:.1} MPa ≤ 0,6 f_ck; P_m,∞={:.0} kN (Verluste {:.0} %, Stahl {})",
@@ -1501,13 +1496,13 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "prestress.force")),
                 force_n(p_m0),
                 force_n(p_m0 / util),
-                L("Reduce prestressing force to satisfy §5.10 stress limits.", "Vorspannkraft reduzieren, damit Spannungsgrenzen nach §5.10 eingehalten werden."),
+                l("Reduce prestressing force to satisfy §5.10 stress limits.", "Vorspannkraft reduzieren, damit Spannungsgrenzen nach §5.10 eingehalten werden."),
             ));
         }
-        let mut decomp = CheckResult::assess(format!("en1992.5.10.decompression.{}", member.id), part_11(), clause_11("§5.10.9"), member_ref(doc, member, &member_path(&member.id, "prestress")), L("Decompression SLS", "Dekompression GZG"))
+        let mut decomp = CheckResult::assess(format!("en1992.5.10.decompression.{}", member.id), part_11(), clause_11("§5.10.9"), member_ref(doc, member, &member_path(&member.id, "prestress")), l("Decompression SLS", "Dekompression GZG"))
             .utilization(stress_pa((-sigma_c).max(0.0)), stress_pa(0.45 * f_ck))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Decompression SLS: concrete stress under prestress σ_c={:.2} MPa (compression positive); steel id={}", sigma_c / 1e6, member.prestress_steel_id),
                 &format!("Dekompression GZG: Betonspannung unter Vorspannung σ_c={:.2} MPa (Druck positiv); Spannstahl-Id={}", sigma_c / 1e6, member.prestress_steel_id),
             ));
@@ -1516,7 +1511,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "prestress.force")),
                 force_n(p_m0),
                 force_n(p_m0 * 1.1),
-                L("Increase prestress to maintain decompression.", "Vorspannung erhöhen, um Dekompression sicherzustellen."),
+                l("Increase prestress to maintain decompression.", "Vorspannung erhöhen, um Dekompression sicherzustellen."),
             ));
         }
         out.push(pre.build());
@@ -1529,10 +1524,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             part_11(),
             clause_11("§5.10"),
             member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
-            L("Orphan prestressing steel id", "Verwaiste Spannstahl-Id"),
+            l("Orphan prestressing steel id", "Verwaiste Spannstahl-Id"),
         )
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Member {} sets prestressSteelId='{}' without a prestress specification.", member.id, member.prestress_steel_id),
             &format!("Bauteil {} setzt prestressSteelId='{}' ohne Vorspannungsangabe.", member.id, member.prestress_steel_id),
         ))
@@ -1540,7 +1535,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         dangling = dangling.remedy(Remedy::one_of(
             member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
             if options.is_empty() { vec![String::new()] } else { options },
-            L("Clear prestressSteelId or add a prestress block linked to a declared steel.", "prestressSteelId leeren oder einen Vorspannungsblock mit deklariertem Stahl ergänzen."),
+            l("Clear prestressSteelId or add a prestress block linked to a declared steel.", "prestressSteelId leeren oder einen Vorspannungsblock mit deklariertem Stahl ergänzen."),
         ));
         out.push(dangling.build());
     }
@@ -1552,10 +1547,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         let ok_e = reinf.eps_uk >= eps_min;
         let util_d = (k_min / reinf.k.max(1e-6)).max(eps_min / reinf.eps_uk.max(1e-9));
         let eps_ud = 0.9 * reinf.eps_uk;
-        let mut duct = CheckResult::assess(format!("en1992.annexC.ductility.{}", member.id), part_11(), clause_11("§3.2.7"), member_ref(doc, member, &format!("reinforcementGrades[id={}].ductility", member.reinforcement_grade_id)), L("Reinforcement ductility class", "Duktilitätsklasse Betonstahl"))
+        let mut duct = CheckResult::assess(format!("en1992.annexC.ductility.{}", member.id), part_11(), clause_11("§3.2.7"), member_ref(doc, member, &format!("reinforcementGrades[id={}].ductility", member.reinforcement_grade_id)), l("Reinforcement ductility class", "Duktilitätsklasse Betonstahl"))
             .utilization(Quantity::new(QuantityKind::Dimensionless, util_d), Quantity::new(QuantityKind::Dimensionless, 1.0))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Ductility {:?}: k={:.2} ≥ {:.2}, ε_uk={:.1}% ≥ {:.1}%, ε_ud=0.9ε_uk={:.2}% (inclined top branch)", reinf.ductility, reinf.k, k_min, reinf.eps_uk * 100.0, eps_min * 100.0, eps_ud * 100.0),
                 &format!("Duktilität {:?}: k={:.2} ≥ {:.2}, ε_uk={:.1} % ≥ {:.1} %, ε_ud=0,9ε_uk={:.2} % (geneigter oberer Ast)", reinf.ductility, reinf.k, k_min, reinf.eps_uk * 100.0, eps_min * 100.0, eps_ud * 100.0),
             ));
@@ -1564,7 +1559,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &format!("reinforcementGrades[id={}].k", member.reinforcement_grade_id)),
                 Quantity::new(QuantityKind::Dimensionless, reinf.k),
                 Quantity::new(QuantityKind::Dimensionless, k_min),
-                L("Raise k / ε_uk to Annex C Table C.1 minima for the declared ductility class.", "k / ε_uk auf die Mindestwerte nach Anhang C Tabelle C.1 der angegebenen Duktilitätsklasse anheben."),
+                l("Raise k / ε_uk to Annex C Table C.1 minima for the declared ductility class.", "k / ε_uk auf die Mindestwerte nach Anhang C Tabelle C.1 der angegebenen Duktilitätsklasse anheben."),
             ));
         }
         out.push(duct.build());
@@ -1573,10 +1568,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
 // Fire — Tables 5.2a–5.11 by element type
     if let Some(fire) = &member.fire {
         let (b_min, a_req) = part_1_2_fire::required_for(member.kind, member.support, fire.rating, &fire.column_method, &fire.slab_system);
-        let mut fa = CheckResult::assess(format!("en1992.1-2.a.{}", member.id), part_12(), ClauseId::new("EN 1992-1-2", "§5.6", "5.6"), member_ref(doc, member, &member_path(&member.id, "fire.axisDistance")), L("Fire axis distance", "Achsabstand Brandschutz"))
+        let mut fa = CheckResult::assess(format!("en1992.1-2.a.{}", member.id), part_12(), ClauseId::new("EN 1992-1-2", "§5.6", "5.6"), member_ref(doc, member, &member_path(&member.id, "fire.axisDistance")), l("Fire axis distance", "Achsabstand Brandschutz"))
             .minimum(length_m(fire.axis_distance), length_m(a_req))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Fire axis distance a={:.0} mm ≥ a_req={:.0} mm ({:?}; method {}; slab {})", fire.axis_distance * 1000.0, a_req * 1000.0, fire.rating, fire.column_method, fire.slab_system),
                 &format!("Brandschutz-Achsabstand a={:.0} mm ≥ a_erf={:.0} mm ({:?}; Verfahren {}; Platte {})", fire.axis_distance * 1000.0, a_req * 1000.0, fire.rating, fire.column_method, fire.slab_system),
             ));
@@ -1585,17 +1580,17 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "fire.axisDistance")),
                 length_m(fire.axis_distance),
                 length_m(a_req),
-                L(
+                l(
                     &format!("Increase fire axis distance of {} from {:.0} mm to at least {:.0} mm.", member.id, fire.axis_distance * 1000.0, a_req * 1000.0),
                     &format!("Achsabstand Brandschutz von {} von {:.0} mm auf mindestens {:.0} mm erhöhen.", member.id, fire.axis_distance * 1000.0, a_req * 1000.0),
                 ),
             ));
         }
         out.push(fa.build());
-        let mut fb = CheckResult::assess(format!("en1992.1-2.bmin.{}", member.id), part_12(), ClauseId::new("EN 1992-1-2", "§5.6", "5.6"), member_ref(doc, member, &member_path(&member.id, "width")), L("Fire minimum width", "Mindestbreite Brandschutz"))
+        let mut fb = CheckResult::assess(format!("en1992.1-2.bmin.{}", member.id), part_12(), ClauseId::new("EN 1992-1-2", "§5.6", "5.6"), member_ref(doc, member, &member_path(&member.id, "width")), l("Fire minimum width", "Mindestbreite Brandschutz"))
             .minimum(length_m(b), length_m(b_min))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Fire min. dimension b/h={:.0} mm ≥ {:.0} mm", b * 1000.0, b_min * 1000.0),
                 &format!("Brandschutz Mindestdickemaß b/h={:.0} mm ≥ {:.0} mm", b * 1000.0, b_min * 1000.0),
             ));
@@ -1604,7 +1599,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "width")),
                 length_m(b),
                 length_m(b_min),
-                L(
+                l(
                     &format!("Increase width of {} from {:.0} mm to at least {:.0} mm for fire.", member.id, b * 1000.0, b_min * 1000.0),
                     &format!("Breite von {} von {:.0} mm auf mindestens {:.0} mm für Brandschutz erhöhen.", member.id, b * 1000.0, b_min * 1000.0),
                 ),
@@ -1621,10 +1616,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         let lim_s = 0.8 * f_yk;
         let harsh = matches!(member.exposure, ExposureClass::Xd1 | ExposureClass::Xd2 | ExposureClass::Xd3 | ExposureClass::Xs1 | ExposureClass::Xs2 | ExposureClass::Xs3 | ExposureClass::Xf1 | ExposureClass::Xf2 | ExposureClass::Xf3 | ExposureClass::Xf4);
         let lim_c = if harsh { 0.60 * f_ck } else { 0.60 * f_ck };
-        let mut ss = CheckResult::assess(format!("en1992.7.2.sigma-s.{}", member.id), part_11(), clause_11("§7.2"), member_ref(doc, member, &member_path(&member.id, "longitudinal")), L("SLS steel stress", "GZG Stahlspannung"))
+        let mut ss = CheckResult::assess(format!("en1992.7.2.sigma-s.{}", member.id), part_11(), clause_11("§7.2"), member_ref(doc, member, &member_path(&member.id, "longitudinal")), l("SLS steel stress", "GZG Stahlspannung"))
             .utilization(stress_pa(sig_s), stress_pa(lim_s.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("σ_s={:.0} MPa ≤ 0.8 f_yk={:.0} MPa (characteristic {})", sig_s / 1e6, lim_s / 1e6, sc.combination_id),
                 &format!("σ_s={:.0} MPa ≤ 0,8 f_yk={:.0} MPa (charakteristisch {})", sig_s / 1e6, lim_s / 1e6, sc.combination_id),
             ));
@@ -1636,19 +1631,19 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                     member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
                     length_m(layer.diameter),
                     length_m(d_req),
-                    L("Increase bar diameter to reduce SLS steel stress.", "Stabdurchmesser erhöhen, um die GZG-Stahlspannung zu senken."),
+                    l("Increase bar diameter to reduce SLS steel stress.", "Stabdurchmesser erhöhen, um die GZG-Stahlspannung zu senken."),
                 ));
             }
         }
         out.push(ss.build());
-        let mut scc = CheckResult::assess(format!("en1992.7.2.sigma-c.{}", member.id), part_11(), clause_11("§7.2"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), L("SLS concrete stress", "GZG Betondruckspannung"))
+        let mut scc = CheckResult::assess(format!("en1992.7.2.sigma-c.{}", member.id), part_11(), clause_11("§7.2"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), l("SLS concrete stress", "GZG Betondruckspannung"))
             .utilization(stress_pa(sig_c), stress_pa(lim_c.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("σ_c={:.1} MPa ≤ {:.0}% f_ck={:.1} MPa (char {})", sig_c / 1e6, if harsh {60} else {60}, lim_c / 1e6, sc.combination_id),
                 &format!("σ_c={:.1} MPa ≤ {:.0}% f_ck={:.1} MPa (char {})", sig_c / 1e6, if harsh {60} else {60}, lim_c / 1e6, sc.combination_id),
             ));
-        scc = scc.explanation(L(
+        scc = scc.explanation(l(
             &format!("Concrete stress σ_c={:.1} MPa ≤ 0.60 f_ck under characteristic SLS ({})", sig_c / 1e6, sc.combination_id),
             &format!("Betondruckspannung σ_c={:.1} MPa ≤ 0,60 f_ck unter charakteristischer GZG ({})", sig_c / 1e6, sc.combination_id),
         ));
@@ -1658,7 +1653,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                 length_m(d),
                 length_m(d_req),
-                L("Increase effective depth to reduce concrete stress.", "Statische Nutzhöhe erhöhen, um die Betonspannung zu senken."),
+                l("Increase effective depth to reduce concrete stress.", "Statische Nutzhöhe erhöhen, um die Betonspannung zu senken."),
             ));
         }
         out.push(scc.build());
@@ -1666,10 +1661,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     if let Some(qp) = sls_qp {
         let sig_c = part_1_1::cracked_sigma_c_pa(qp.m_ed, b, d, a_s, e_s, concrete.e_cm());
         let lim = 0.45 * f_ck;
-        let mut qp_c = CheckResult::assess(format!("en1992.7.2.creep.{}", member.id), part_11(), clause_11("§7.2"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), L("Quasi-permanent concrete stress", "Quasi-ständige Betondruckspannung"))
+        let mut qp_c = CheckResult::assess(format!("en1992.7.2.creep.{}", member.id), part_11(), clause_11("§7.2"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), l("Quasi-permanent concrete stress", "Quasi-ständige Betondruckspannung"))
             .utilization(stress_pa(sig_c), stress_pa(lim.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("σ_c={:.1} MPa ≤ 0.45 f_ck={:.1} MPa for linear creep ({})", sig_c / 1e6, lim / 1e6, qp.combination_id),
                 &format!("σ_c={:.1} MPa ≤ 0,45 f_ck={:.1} MPa für lineares Kriechen ({})", sig_c / 1e6, lim / 1e6, qp.combination_id),
             ));
@@ -1679,7 +1674,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &member_path(&member.id, "effectiveDepth")),
                 length_m(d),
                 length_m(d_req),
-                L("Increase depth to satisfy creep stress limit.", "Nutzhöhe erhöhen für Kriechspannungsgrenze."),
+                l("Increase depth to satisfy creep stress limit.", "Nutzhöhe erhöhen für Kriechspannungsgrenze."),
             ));
         }
         out.push(qp_c.build());
@@ -1694,10 +1689,10 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         let sigma_sd = params.f_yd_pa(f_yk);
         let lb_rqd = part_1_1::l_b_rqd_m(layer.diameter, sigma_sd, f_bd);
         let lbd = part_1_1::l_bd_m(lb_rqd, layer.diameter, 1.0);
-        let mut anc = CheckResult::assess(format!("en1992.8.4.anchorage.{}.{}", member.id, layer.id), part_11(), clause_11("§8.4"), member_ref(doc, member, &layer_path(&member.id, &layer.id, "anchorageLength")), L("Anchorage length", "Verankerungslänge"))
+        let mut anc = CheckResult::assess(format!("en1992.8.4.anchorage.{}.{}", member.id, layer.id), part_11(), clause_11("§8.4"), member_ref(doc, member, &layer_path(&member.id, &layer.id, "anchorageLength")), l("Anchorage length", "Verankerungslänge"))
             .minimum(length_m(layer.anchorage_length), length_m(lbd))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("l_bd,prov={:.0} mm ≥ l_bd={:.0} mm (f_bd={:.2} MPa, η1={:.2})", layer.anchorage_length * 1000.0, lbd * 1000.0, f_bd / 1e6, eta1),
                 &format!("l_bd,vorh={:.0} mm ≥ l_bd={:.0} mm (f_bd={:.2} MPa, η1={:.2})", layer.anchorage_length * 1000.0, lbd * 1000.0, f_bd / 1e6, eta1),
             ));
@@ -1706,7 +1701,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &layer_path(&member.id, &layer.id, "anchorageLength")),
                 length_m(layer.anchorage_length),
                 length_m(lbd),
-                L(
+                l(
                     &format!("Increase anchorage of {}/{} to ≥ {:.0} mm.", member.id, layer.id, lbd * 1000.0),
                     &format!("Verankerung von {}/{} auf ≥ {:.0} mm erhöhen.", member.id, layer.id, lbd * 1000.0),
                 ),
@@ -1715,16 +1710,16 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
                 length_m(layer.diameter),
                 length_m((layer.diameter - 0.002).max(0.008)),
-                L("Reduce bar diameter to shorten required anchorage.", "Stabdurchmesser verringern, um die erforderliche Verankerung zu verkürzen."),
+                l("Reduce bar diameter to shorten required anchorage.", "Stabdurchmesser verringern, um die erforderliche Verankerung zu verkürzen."),
             ));
         }
         out.push(anc.build());
         let alpha6 = 1.5;
         let l0 = part_1_1::l_0_m(lbd, layer.diameter, alpha6);
-        let mut lap = CheckResult::assess(format!("en1992.8.7.lap.{}.{}", member.id, layer.id), part_11(), clause_11("§8.7"), member_ref(doc, member, &layer_path(&member.id, &layer.id, "lapLength")), L("Lap length", "Übergreifungslänge"))
+        let mut lap = CheckResult::assess(format!("en1992.8.7.lap.{}.{}", member.id, layer.id), part_11(), clause_11("§8.7"), member_ref(doc, member, &layer_path(&member.id, &layer.id, "lapLength")), l("Lap length", "Übergreifungslänge"))
             .minimum(length_m(layer.lap_length), length_m(l0))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("l_0,prov={:.0} mm ≥ l_0={:.0} mm (α6={:.1})", layer.lap_length * 1000.0, l0 * 1000.0, alpha6),
                 &format!("l_0,vorh={:.0} mm ≥ l_0={:.0} mm (α6={:.1})", layer.lap_length * 1000.0, l0 * 1000.0, alpha6),
             ));
@@ -1733,7 +1728,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 member_ref(doc, member, &layer_path(&member.id, &layer.id, "lapLength")),
                 length_m(layer.lap_length),
                 length_m(l0),
-                L(
+                l(
                     &format!("Increase lap of {}/{} to ≥ {:.0} mm.", member.id, layer.id, l0 * 1000.0),
                     &format!("Übergreifung von {}/{} auf ≥ {:.0} mm erhöhen.", member.id, layer.id, l0 * 1000.0),
                 ),
@@ -1746,32 +1741,32 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     if matches!(member.kind, MemberKind::Bridge) || member.bridge_sigma_c > 0.0 || member.bridge_delta_sigma_s > 0.0 {
         if member.bridge_sigma_c > 0.0 {
             let lim = part_2::concrete_stress_limit_pa(f_ck);
-            let mut br = CheckResult::assess(format!("en1992-2.7.2.{}", member.id), part_2(), ClauseId::new("EN 1992-2", "§7.2", "7.2"), member_ref(doc, member, &member_path(&member.id, "bridgeSigmaC")), L("Bridge concrete stress (frequent)", "Brücken Betonspannung (häufig)"))
+            let mut br = CheckResult::assess(format!("en1992-2.7.2.{}", member.id), part_2(), ClauseId::new("EN 1992-2", "§7.2", "7.2"), member_ref(doc, member, &member_path(&member.id, "bridgeSigmaC")), l("Bridge concrete stress (frequent)", "Brücken Betonspannung (häufig)"))
                 .utilization(stress_pa(member.bridge_sigma_c), stress_pa(lim))
                 .annex(annex)
-                .explanation(L("Bridge frequent concrete stress σ_c ≤ 0.6 f_ck", "Brücke häufige Betondruckspannung σ_c ≤ 0,6 f_ck"));
+                .explanation(l("Bridge frequent concrete stress σ_c ≤ 0.6 f_ck", "Brücke häufige Betondruckspannung σ_c ≤ 0,6 f_ck"));
             if member.bridge_sigma_c > lim {
                 br = br.remedy(Remedy::at_most(
                     member_ref(doc, member, &member_path(&member.id, "bridgeSigmaC")),
                     stress_pa(member.bridge_sigma_c),
                     stress_pa(lim),
-                    L("Reduce frequent concrete stress to ≤ 0.6 f_ck.", "Häufige Betonspannung auf ≤ 0,6 f_ck reduzieren."),
+                    l("Reduce frequent concrete stress to ≤ 0.6 f_ck.", "Häufige Betonspannung auf ≤ 0,6 f_ck reduzieren."),
                 ));
             }
             out.push(br.build());
         }
         if member.bridge_delta_sigma_s > 0.0 {
             let lim = part_2::fatigue_limit_pa();
-            let mut bf = CheckResult::assess(format!("en1992-2.6.8.{}", member.id), part_2(), ClauseId::new("EN 1992-2", "§6.8.4", "6.8.4"), member_ref(doc, member, &member_path(&member.id, "bridgeDeltaSigmaS")), L("Bridge reinforcement fatigue", "Brücken Ermüdung Betonstahl"))
+            let mut bf = CheckResult::assess(format!("en1992-2.6.8.{}", member.id), part_2(), ClauseId::new("EN 1992-2", "§6.8.4", "6.8.4"), member_ref(doc, member, &member_path(&member.id, "bridgeDeltaSigmaS")), l("Bridge reinforcement fatigue", "Brücken Ermüdung Betonstahl"))
                 .utilization(stress_pa(member.bridge_delta_sigma_s), stress_pa(lim))
                 .annex(annex)
-                .explanation(L("Bridge reinforcement fatigue Δσ_s ≤ Δσ_Rsk/γ_S,fat", "Brücke Betonstahl-Ermüdung Δσ_s ≤ Δσ_Rsk/γ_S,fat"));
+                .explanation(l("Bridge reinforcement fatigue Δσ_s ≤ Δσ_Rsk/γ_S,fat", "Brücke Betonstahl-Ermüdung Δσ_s ≤ Δσ_Rsk/γ_S,fat"));
             if member.bridge_delta_sigma_s > lim {
                 bf = bf.remedy(Remedy::at_most(
                     member_ref(doc, member, &member_path(&member.id, "bridgeDeltaSigmaS")),
                     stress_pa(member.bridge_delta_sigma_s),
                     stress_pa(lim),
-                    L("Reduce fatigue stress range.", "Ermüdungsspannungsschwingbreite reduzieren."),
+                    l("Reduce fatigue stress range.", "Ermüdungsspannungsschwingbreite reduzieren."),
                 ));
             }
             out.push(bf.build());
@@ -1783,24 +1778,24 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         if let Some(tc) = member.tightness {
             match part_3_liquid::tightness_crack_limit_m(tc, member.hd_over_h) {
                 None => out.push(
-                    CheckResult::assess(format!("en1992-3.crack.{}", member.id), part_3(), ClauseId::new("EN 1992-3", "§7.3", "7.3"), member_ref(doc, member, &member_path(&member.id, "tightness")), L("Liquid-retaining crack width", "Rissbreite Flüssigkeitsbehälter"))
-                        .not_applicable(L("TC0: no crack-width requirement", "TC0: keine Rissbreitenanforderung"))
+                    CheckResult::assess(format!("en1992-3.crack.{}", member.id), part_3(), ClauseId::new("EN 1992-3", "§7.3", "7.3"), member_ref(doc, member, &member_path(&member.id, "tightness")), l("Liquid-retaining crack width", "Rissbreite Flüssigkeitsbehälter"))
+                        .not_applicable(l("TC0: no crack-width requirement", "TC0: keine Rissbreitenanforderung"))
                         .annex(annex)
                         .build(),
                 ),
                 Some(lim) => {
                     let w_k = part_1_1::crack_width_m(member.liquid_sigma_s, member.liquid_rho_p_eff.max(1e-4), member.liquid_f_ct_eff, e_s, member.liquid_s_r_max);
-                    let mut liq = CheckResult::assess(format!("en1992-3.crack.{}", member.id), part_3(), ClauseId::new("EN 1992-3", "§7.3", "7.3"), member_ref(doc, member, &member_path(&member.id, "liquidSigmaS")), L("Liquid-retaining crack width", "Rissbreite Flüssigkeitsbehälter"))
+                    let mut liq = CheckResult::assess(format!("en1992-3.crack.{}", member.id), part_3(), ClauseId::new("EN 1992-3", "§7.3", "7.3"), member_ref(doc, member, &member_path(&member.id, "liquidSigmaS")), l("Liquid-retaining crack width", "Rissbreite Flüssigkeitsbehälter"))
                         .utilization(length_m(w_k), length_m(lim))
                         .annex(annex)
-                        .explanation(L(&format!("w_k={:.3} mm, limit={:.3} mm", w_k * 1000.0, lim * 1000.0), &format!("w_k={:.3} mm, Grenzwert={:.3} mm", w_k * 1000.0, lim * 1000.0)));
+                        .explanation(l(&format!("w_k={:.3} mm, limit={:.3} mm", w_k * 1000.0, lim * 1000.0), &format!("w_k={:.3} mm, Grenzwert={:.3} mm", w_k * 1000.0, lim * 1000.0)));
                     if w_k > lim {
                         let sig_req = member.liquid_sigma_s * lim / w_k;
                         liq = liq.remedy(Remedy::at_most(
                             member_ref(doc, member, &member_path(&member.id, "liquidSigmaS")),
                             stress_pa(member.liquid_sigma_s),
                             stress_pa(sig_req),
-                            L("Reduce steel stress under quasi-permanent combination.", "Stahlspannung unter quasi-ständiger Einwirkungskombination reduzieren."),
+                            l("Reduce steel stress under quasi-permanent combination.", "Stahlspannung unter quasi-ständiger Einwirkungskombination reduzieren."),
                         ));
                     }
                     out.push(liq.build());
@@ -1903,7 +1898,7 @@ pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
 /// ⚓️ Evaluate anchors with EN 1990-combined characteristic actions + EN 1992-4 resistances.
 pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult> {
     let annex = doc.annex;
-    let label = L(
+    let label = l(
         &format!("{} — Anchor {}", doc.title, anchor.id),
         &format!("{} — Dübel {}", doc.title, anchor.id),
     );
@@ -1911,8 +1906,8 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
     let effects = combine_anchor_actions(anchor);
     let uls = governing(&effects, "uls").cloned().or_else(|| effects.first().cloned());
     let Some(uls) = uls else {
-        out.push(CheckResult::assess(format!("en1992-4.na.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7", "7"), SubjectRef::new(&anchor.id, format!("anchors[id={}]", anchor.id), label), L("Anchor actions", "Dübeleinwirkungen"))
-            .not_applicable(L("No characteristic actions declared for anchor.", "Keine charakteristischen Einwirkungen für den Dübel angegeben."))
+        out.push(CheckResult::assess(format!("en1992-4.na.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7", "7"), SubjectRef::new(&anchor.id, format!("anchors[id={}]", anchor.id), label), l("Anchor actions", "Dübeleinwirkungen"))
+            .not_applicable(l("No characteristic actions declared for anchor.", "Keine charakteristischen Einwirkungen für den Dübel angegeben."))
             .build());
         return out;
     };
@@ -1920,10 +1915,10 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
     let v_ed = uls.v_ed.max(0.0);
 
     let n_rd_s = part_4::steel_resistance_n(anchor.a_s, anchor.f_uk, anchor.f_yk);
-    let mut s = CheckResult::assess(format!("en1992-4.steel.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), L("Anchor steel tension", "Dübel Stahlzugtragfähigkeit"))
+    let mut s = CheckResult::assess(format!("en1992-4.steel.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), l("Anchor steel tension", "Dübel Stahlzugtragfähigkeit"))
         .utilization(force_n(n_ed), force_n(n_rd_s.max(1.0)))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Anchor steel: N_Ed={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_ed / 1e3, n_rd_s / 1e3, uls.combination_id),
             &format!("Dübel Stahlzug: N_Ed={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_ed / 1e3, n_rd_s / 1e3, uls.combination_id),
         ));
@@ -1932,7 +1927,7 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         s = s.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()),
             area_m2(anchor.a_s), area_m2(a_req),
-            L(&format!("Increase anchor steel area to ≥ {:.1} mm².", a_req * 1e6), &format!("Dübelstahlquerschnitt auf ≥ {:.1} mm² erhöhen.", a_req * 1e6)),
+            l(&format!("Increase anchor steel area to ≥ {:.1} mm².", a_req * 1e6), &format!("Dübelstahlquerschnitt auf ≥ {:.1} mm² erhöhen.", a_req * 1e6)),
         ));
     }
     out.push(s.build());
@@ -1940,10 +1935,10 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
     if let Some(sls) = governing(&effects, "sls_qp") {
         let n_sls = sls.n_ed.max(0.0);
         let n_rd_sls = anchor.a_s * anchor.f_yk / 1.15;
-        let mut ss = CheckResult::assess(format!("en1992-4.steel.sls.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].actions", anchor.id), label.clone()), L("Anchor steel SLS (ψ₂)", "Dübel Stahlzug GZG (ψ₂)"))
+        let mut ss = CheckResult::assess(format!("en1992-4.steel.sls.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].actions", anchor.id), label.clone()), l("Anchor steel SLS (ψ₂)", "Dübel Stahlzug GZG (ψ₂)"))
             .utilization(force_n(n_sls), force_n(n_rd_sls.max(1.0)))
             .annex(annex)
-            .explanation(L(
+            .explanation(l(
                 &format!("Anchor SLS: N_Ed,qp={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_sls / 1e3, n_rd_sls / 1e3, sls.combination_id),
                 &format!("Dübel GZG: N_Ed,qp={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_sls / 1e3, n_rd_sls / 1e3, sls.combination_id),
             ));
@@ -1951,17 +1946,17 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
             ss = ss.remedy(Remedy::at_least(
                 SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()),
                 area_m2(anchor.a_s), area_m2(anchor.a_s * n_sls / n_rd_sls),
-                L("Increase anchor steel area for SLS.", "Dübelstahlquerschnitt für GZG erhöhen."),
+                l("Increase anchor steel area for SLS.", "Dübelstahlquerschnitt für GZG erhöhen."),
             ));
         }
         out.push(ss.build());
     }
 
     let n_rd_c = part_4::cone_resistance_n(anchor.f_ck, anchor.h_ef, anchor.cracked);
-    let mut c = CheckResult::assess(format!("en1992-4.cone.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.5", "7.2.1.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), L("Concrete cone", "Betonausbruchkegel"))
+    let mut c = CheckResult::assess(format!("en1992-4.cone.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.5", "7.2.1.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), l("Concrete cone", "Betonausbruchkegel"))
         .utilization(force_n(n_ed), force_n(n_rd_c.max(1.0)))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Concrete cone: N_Ed={:.1} kN ≤ N_Rd,c={:.1} kN", n_ed / 1e3, n_rd_c / 1e3),
             &format!("Betonausbruchkegel: N_Ed={:.1} kN ≤ N_Rd,c={:.1} kN", n_ed / 1e3, n_rd_c / 1e3),
         ));
@@ -1970,16 +1965,16 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         c = c.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
             length_m(anchor.h_ef), length_m(h_req),
-            L(&format!("Increase effective embedment to ≥ {:.0} mm.", h_req * 1000.0), &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm erhöhen.", h_req * 1000.0)),
+            l(&format!("Increase effective embedment to ≥ {:.0} mm.", h_req * 1000.0), &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm erhöhen.", h_req * 1000.0)),
         ));
     }
     out.push(c.build());
 
     let n_rd_p = part_4::pullout_resistance_n(anchor.a_s, anchor.f_uk);
-    let mut p = CheckResult::assess(format!("en1992-4.pullout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.6", "7.2.1.6"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), L("Pull-out", "Herausziehen"))
+    let mut p = CheckResult::assess(format!("en1992-4.pullout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.6", "7.2.1.6"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), l("Pull-out", "Herausziehen"))
         .utilization(force_n(n_ed), force_n(n_rd_p.max(1.0)))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Pull-out: N_Ed={:.1} kN ≤ N_Rd,p={:.1} kN", n_ed / 1e3, n_rd_p / 1e3),
             &format!("Herausziehen: N_Ed={:.1} kN ≤ N_Rd,p={:.1} kN", n_ed / 1e3, n_rd_p / 1e3),
         ));
@@ -1987,16 +1982,16 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         p = p.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()),
             area_m2(anchor.a_s), area_m2(anchor.a_s * n_ed / n_rd_p),
-            L("Increase steel area against pull-out.", "Stahlquerschnitt gegen Herausziehen vergrößern."),
+            l("Increase steel area against pull-out.", "Stahlquerschnitt gegen Herausziehen vergrößern."),
         ));
     }
     out.push(p.build());
 
     let n_rd_sp = part_4::splitting_resistance_n(anchor.f_ck, anchor.h_ef, anchor.c1);
-    let mut sp = CheckResult::assess(format!("en1992-4.splitting.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.7", "7.2.1.7"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), L("Splitting", "Spalten"))
+    let mut sp = CheckResult::assess(format!("en1992-4.splitting.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.7", "7.2.1.7"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), l("Splitting", "Spalten"))
         .utilization(force_n(n_ed), force_n(n_rd_sp.max(1.0)))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Splitting: N_Ed={:.1} kN ≤ N_Rd,sp={:.1} kN", n_ed / 1e3, n_rd_sp / 1e3),
             &format!("Spalten: N_Ed={:.1} kN ≤ N_Rd,sp={:.1} kN", n_ed / 1e3, n_rd_sp / 1e3),
         ));
@@ -2013,7 +2008,7 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         sp = sp.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
             length_m(anchor.h_ef), length_m(h_req),
-            L(
+            l(
                 &format!("Increase effective embedment to ≥ {:.0} mm against splitting.", h_req * 1000.0),
                 &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm gegen Spalten erhöhen.", h_req * 1000.0),
             ),
@@ -2022,10 +2017,10 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
     out.push(sp.build());
 
     let n_rd_pr = part_4::pryout_resistance_n(anchor.f_ck, anchor.h_ef, anchor.cracked);
-    let mut pr = CheckResult::assess(format!("en1992-4.pryout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.4", "7.2.2.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), L("Pry-out", "Hebelausbruch"))
+    let mut pr = CheckResult::assess(format!("en1992-4.pryout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.4", "7.2.2.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), l("Pry-out", "Hebelausbruch"))
         .utilization(force_n(v_ed), force_n(n_rd_pr.max(1.0)))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Pry-out: V_Ed={:.1} kN ≤ V_Rd,cp={:.1} kN", v_ed / 1e3, n_rd_pr / 1e3),
             &format!("Hebelausbruch: V_Ed={:.1} kN ≤ V_Rd,cp={:.1} kN", v_ed / 1e3, n_rd_pr / 1e3),
         ));
@@ -2033,16 +2028,16 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         pr = pr.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
             length_m(anchor.h_ef), length_m(anchor.h_ef * 1.2),
-            L("Increase embedment against pry-out.", "Verankerungstiefe gegen Hebelausbruch erhöhen."),
+            l("Increase embedment against pry-out.", "Verankerungstiefe gegen Hebelausbruch erhöhen."),
         ));
     }
     out.push(pr.build());
 
     let v_rd = part_4::edge_resistance_n(anchor.d, anchor.h_ef, anchor.f_ck, anchor.c1);
-    let mut e = CheckResult::assess(format!("en1992-4.edge.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.5", "7.2.2.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), L("Edge breakout shear", "Randausbruch Querkraft"))
+    let mut e = CheckResult::assess(format!("en1992-4.edge.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.5", "7.2.2.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), l("Edge breakout shear", "Randausbruch Querkraft"))
         .utilization(force_n(v_ed), force_n(v_rd.max(1.0)))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Edge shear: V_Ed={:.1} kN ≤ V_Rd,c={:.1} kN", v_ed / 1e3, v_rd / 1e3),
             &format!("Randausbruch Querkraft: V_Ed={:.1} kN ≤ V_Rd,c={:.1} kN", v_ed / 1e3, v_rd / 1e3),
         ));
@@ -2051,7 +2046,7 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         e = e.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()),
             length_m(anchor.c1), length_m(c_req),
-            L(&format!("Increase edge distance c1 to ≥ {:.0} mm.", c_req * 1000.0), &format!("Randabstand c1 auf ≥ {:.0} mm erhöhen.", c_req * 1000.0)),
+            l(&format!("Increase edge distance c1 to ≥ {:.0} mm.", c_req * 1000.0), &format!("Randabstand c1 auf ≥ {:.0} mm erhöhen.", c_req * 1000.0)),
         ));
     }
     out.push(e.build());
@@ -2059,10 +2054,10 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
     let n_rd_t = n_rd_s.min(n_rd_c).min(n_rd_p).min(n_rd_sp);
     let v_rd_t = v_rd.min(n_rd_pr);
     let inter = part_4::interaction_utilization(n_ed, n_rd_t, v_ed, v_rd_t);
-    let mut ix = CheckResult::assess(format!("en1992-4.interaction.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.3", "7.2.3"), SubjectRef::new(&anchor.id, format!("anchors[id={}]", anchor.id), label.clone()), L("Tension–shear interaction", "Zug–Querkraft-Interaktion"))
+    let mut ix = CheckResult::assess(format!("en1992-4.interaction.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.3", "7.2.3"), SubjectRef::new(&anchor.id, format!("anchors[id={}]", anchor.id), label.clone()), l("Tension–shear interaction", "Zug–Querkraft-Interaktion"))
         .utilization(Quantity::new(QuantityKind::Dimensionless, inter), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .annex(annex)
-        .explanation(L(
+        .explanation(l(
             &format!("Interaction: (N/N_Rd)^1.5+(V/V_Rd)^1.5={:.3} ≤ 1 (N_Ed={:.1} kN, V_Ed={:.1} kN)", inter, n_ed / 1e3, v_ed / 1e3),
             &format!("Interaktion: (N/N_Rd)^1,5+(V/V_Rd)^1,5={:.3} ≤ 1 (N_Ed={:.1} kN, V_Ed={:.1} kN)", inter, n_ed / 1e3, v_ed / 1e3),
         ));
@@ -2074,7 +2069,7 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         ix = ix.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
             length_m(anchor.h_ef), length_m(h_req),
-            L(
+            l(
                 &format!("Increase effective embedment to ≥ {:.0} mm for tension–shear interaction.", h_req * 1000.0),
                 &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm für Zug–Querkraft-Interaktion erhöhen.", h_req * 1000.0),
             ),
@@ -2082,7 +2077,7 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         ix = ix.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()),
             length_m(anchor.c1), length_m(c_req),
-            L(
+            l(
                 &format!("Increase edge distance to ≥ {:.0} mm for tension–shear interaction.", c_req * 1000.0),
                 &format!("Randabstand auf ≥ {:.0} mm für Zug–Querkraft-Interaktion erhöhen.", c_req * 1000.0),
             ),
@@ -2090,7 +2085,7 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         ix = ix.remedy(Remedy::at_least(
             SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label),
             area_m2(anchor.a_s), area_m2(a_req),
-            L(
+            l(
                 &format!("Increase anchor steel area to ≥ {:.1} mm² for tension–shear interaction.", a_req * 1e6),
                 &format!("Dübelstahlquerschnitt auf ≥ {:.1} mm² für Zug–Querkraft-Interaktion erhöhen.", a_req * 1e6),
             ),

@@ -275,8 +275,8 @@ fn json_node(value: &DslValue, path: &str) -> FacadeResult<u32> {
 fn graphql_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>> {
     let object = exact_object(value, &["present", "absent"], path)?;
     match (object_field(object, "present"), object_field(object, "absent")) {
-        (Some(semio_framework_value::DslValue::String(value)), None) => Ok(Some(value.clone())),
-        (None, Some(semio_framework_value::DslValue::Bool(true))) => Ok(None),
+        (Some(DslValue::String(value)), None) => Ok(Some(value.clone())),
+        (None, Some(DslValue::Bool(true))) => Ok(None),
         _ => facade_error("nullable", path),
     }
 }
@@ -284,7 +284,7 @@ fn graphql_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>
 fn proto_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>> {
     let object = exact_object(value, &["present", "absent"], path)?;
     match (object_field(object, "present"), object_field(object, "absent")) {
-        (Some(semio_framework_value::DslValue::String(value)), None) => Ok(Some(value.clone())),
+        (Some(DslValue::String(value)), None) => Ok(Some(value.clone())),
         (None, Some(absent)) if exact_object(absent, &[], path)?.is_empty() => Ok(None),
         _ => facade_error("nullable", path),
     }

@@ -34,9 +34,9 @@ impl ToValue for EquationArtifact {
         DslValue::object([
             ("graph".to_string(), self.graph.to_value()),
             ("geometry".to_string(), self.geometry.to_value()),
-            ("notation".to_string(), semio_framework_value::ToValue::to_value(&self.notation)),
-            ("results".to_string(), semio_framework_value::ToValue::to_value(&self.results)),
-            ("computed".to_string(), semio_framework_value::ToValue::to_value(&self.computed)),
+            ("notation".to_string(), ToValue::to_value(&self.notation)),
+            ("results".to_string(), ToValue::to_value(&self.results)),
+            ("computed".to_string(), ToValue::to_value(&self.computed)),
             ("equation".to_string(), self.equation.to_value()),
         ])
     }
@@ -48,9 +48,9 @@ impl FromValue for EquationArtifact {
         Ok(Self {
             graph: EquationGraph::from_value(field("graph"))?,
             geometry: EquationGeometry::from_value(field("geometry"))?,
-            notation: semio_framework_value::FromValue::from_value(field("notation"))?,
-            results: semio_framework_value::FromValue::from_value(field("results"))?,
-            computed: semio_framework_value::FromValue::from_value(field("computed"))?,
+            notation: FromValue::from_value(field("notation"))?,
+            results: FromValue::from_value(field("results"))?,
+            computed: FromValue::from_value(field("computed"))?,
             equation: EquationExprSnapshot::from_value(field("equation"))?,
         })
     }

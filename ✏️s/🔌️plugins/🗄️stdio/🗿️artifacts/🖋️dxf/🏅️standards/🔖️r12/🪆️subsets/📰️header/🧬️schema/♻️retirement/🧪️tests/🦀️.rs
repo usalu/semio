@@ -1,4 +1,4 @@
-use semio_framework_value::{RetireOwned,retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+use semio_framework_value::{retirement::RetireOwned,retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
 use crate::{DxfSnapshot,DxfMutation};
 
 fn close<T:RetireOwned>(value:T,original:usize){

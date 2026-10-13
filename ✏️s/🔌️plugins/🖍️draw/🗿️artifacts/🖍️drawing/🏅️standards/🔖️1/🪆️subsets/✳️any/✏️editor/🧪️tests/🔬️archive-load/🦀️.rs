@@ -10,11 +10,11 @@ use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp};
 /// 🔁️ Drives one dispatched command to its published `LoadDocument` effect the way the host does.
 async fn published_load(app: &mut super::unit_tests::context::DrawingApp, command: DrawingCommand, instance: u32) -> (Vec<u8>, Vec<u8>) {
     let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_laws::meta("fixture") };
-    app.dispatch_typed(command, &meta).await.expect("example dispatch");
+    app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
         app.maintenance_step(1, 4_096).unwrap();
-        app.advance_typed_operation_publication().await.unwrap();
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
@@ -36,7 +36,7 @@ async fn settle_archive(app: &mut super::unit_tests::context::DrawingApp, operat
     let mut status = None;
     let mut last = String::new();
     for round in 0..20_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, operation).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
         let line = format!("{:?} {}/{}", polled.state, polled.completed, polled.total);
         if round % 1 == 0 {
             let pack = app.document_pack().await.map(|files| files.pack.len()).unwrap_or(0);

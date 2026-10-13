@@ -8,7 +8,7 @@ pub(super) fn extent(limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  let mut bytes=0usize;for statement in AviSnapshot::SQLITE_SCHEMA.split(';'){bytes=bytes.checked_add(statement.trim().len()).ok_or_else(||ownership("AVI authored schema byte count overflow"))?;}for(name,_)in TABLES{bytes=bytes.checked_add(name.len()).ok_or_else(||ownership("AVI authored schema name count overflow"))?;}
  if bytes.max(AviSnapshot::SQLITE_SCHEMA.len())>limits.max_schema_bytes{return Err(ownership("AVI authored schema exceeds caller bytes"))}if limits.max_tables<TABLES.len()||TABLES.iter().any(|(_,width)|*width>limits.max_columns)||limits.max_rows<2{return Err(work("AVI authored relational extent exceeds caller limits"))}Ok(())
 }
-pub(super) fn typed(snapshot:&AviSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{extent(control.limits())?;let mut writer=RowWriter::borrowed(control,phase)?;super::visit_rows(snapshot,&mut writer)?;writer.finish_borrowed()}
+pub(super) fn typed(snapshot:&AviSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{extent(control.limits())?;let mut writer=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut writer)?;writer.finish_borrowed()}
 fn field(record:&RecordValue,id:u16)->Result<&F,ValueError>{record.get(id).ok_or_else(||invalid("AVI native authored field is missing"))}
 fn record(value:&F,count:usize)->Result<&RecordValue,ValueError>{let F::Record(record)=value else{return Err(invalid("AVI literal Record required"))};exact(record,count)?;Ok(record)}
 fn exact(record:&RecordValue,count:usize)->Result<(),ValueError>{if record.fields.len()!=count{return Err(invalid("AVI native Record has undeclared fields"))}Ok(())}

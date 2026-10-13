@@ -29,7 +29,7 @@ impl store::ArtifactDsl for PptxSnapshot {
             .map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        match crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode_standalone(
+        match native::encode_standalone(
             self,
             semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding::Text,
             &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_| true, semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default()),
@@ -42,11 +42,10 @@ impl store::ArtifactDsl for PptxSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 
 
-impl crate::schema::snapshot::PptxSnapshot {
+impl PptxSnapshot {
     pub fn part_text(&self, path: &str) -> Option<String> {
         let key = path.trim_start_matches('/');
         if let Some(part) = self.xml_parts.iter().find(|part| part.path == key) {

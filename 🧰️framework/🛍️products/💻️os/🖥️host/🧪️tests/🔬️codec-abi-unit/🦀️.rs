@@ -402,7 +402,6 @@ mod tests {
 
 
 
-    #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     #[test]
     fn public_service_runs_filter_and_normalize_structural_cursors() {
         let mut service = OsHostCodecService::new();

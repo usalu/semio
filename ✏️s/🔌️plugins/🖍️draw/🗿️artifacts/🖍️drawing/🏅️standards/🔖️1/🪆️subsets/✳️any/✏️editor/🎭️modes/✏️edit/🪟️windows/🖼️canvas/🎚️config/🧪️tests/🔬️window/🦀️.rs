@@ -26,8 +26,8 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
 
             async fn dispatch(app: &mut VcsArtifactApp<EditorApp<DrawingPlayApp>>, command: DrawingCommand, view: &ViewModel) -> Result<(usize, usize), String> {
                 let meta = ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("drawing-window-ownership") };
-                app.dispatch_typed(command, &meta).await.map_err(|error| format!("{error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
+                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                 Ok((
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(),
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient).count(),
@@ -51,7 +51,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
             };
             let left = view.for_window_instance("drawing-left").unwrap();
             let right = view.for_window_instance("drawing-right").unwrap();
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
             app.bind_instance_id(91).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -83,18 +83,18 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Drawing window publication changed document bytes".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                 let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("Drawing Canvas transient owner missing after reload")?;
                 if cleared.get::<DrawingCanvasWindowTransientOwner>() != Some(&DrawingCanvasWindowTransient::default()) { return Err("Drawing Canvas transient survived same-byte reload".into()); }
                 for context in [&left, &right] {
                     if app.window_config_generation(context).await.map_err(|error| format!("{error:?}"))?.is_none() { return Err("Drawing Canvas config was lost during reload".into()); }
                 }
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<DrawingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(92).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_left = scene(&mut reopened, &left).await?;
                 let reopened_right = scene(&mut reopened, &right).await?;
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 if reopened_left.framing.is_some() || reopened_right.framing.is_some() { return Err("Restored navigation requested another fit".into()); }
                 if reopened_left.camera_x != left_scene.camera_x || reopened_right.camera_x != right_scene.camera_x { return Err("Drawing Canvas config changed during restore".into()); }
                 let stale = ViewModel { window_id: Some("lost-drawing".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -105,7 +105,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
             }
             .await;
             if let Err(error) = &outcome { eprintln!("[TRACE] Drawing exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app);
+            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             outcome.expect("Drawing exact-window runtime law");
         }))
         .expect("spawn Drawing window ownership law")

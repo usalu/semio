@@ -2,7 +2,8 @@
 //! entry by content-type entry and relationship by relationship; each XML part is diffed as a part (its content type, and its document through the
 //! XML artifact's own recursive `XmlDiff`). A diff names only what changed -- never a whole `opc` or `xml_parts` owner.
 
-use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
+use crate::schema::snapshot::{PptxXmlPart};
+#[cfg(test)] use crate::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform};
 use crate::PptxSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;

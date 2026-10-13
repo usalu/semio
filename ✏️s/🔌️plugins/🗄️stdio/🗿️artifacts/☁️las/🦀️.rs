@@ -1,7 +1,7 @@
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 //! 🎪 `stdio.las` artifact — stdio reference format.
-use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
+#[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
 
 extern crate semio_framework_os_kernel as dsl;
@@ -324,7 +324,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -365,7 +364,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

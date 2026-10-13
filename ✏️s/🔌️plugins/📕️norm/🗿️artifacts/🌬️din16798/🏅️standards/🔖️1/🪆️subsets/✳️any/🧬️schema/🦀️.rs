@@ -567,7 +567,7 @@ pub mod part_5_1 {
 }
 
 pub mod part_7 {
-    use super::*;
+    #[cfg(test)] use super::*;
     /// 🌬️ Infiltration volume flow [m³/h] ≈ n50 · V / 20 (shielding-corrected rule of thumb used with n50 limit).
     pub fn infiltration_m3_h(n50: f64, volume_m3: f64) -> f64 { n50 * volume_m3 / 20.0 }
     pub fn n50_max_mechanical() -> f64 { 3.0 }
@@ -709,13 +709,13 @@ fn evaluate_zone(doc: &crate::Din16798Snapshot, _zi: usize, zone: &ZoneDocument,
             zone_subject(zone, path("ventSystemId")), loc("Zone ventilation-system link", "Zonen-Lüftungsanlagen-Zuordnung"),
         ).annex(doc.annex);
         if linked.is_some() {
-            bi = bi.status(crate::document::CheckStatus::Pass).explanation(loc(
+            bi = bi.status(CheckStatus::Pass).explanation(loc(
                 format!("Zone linked to ventilation system «{linked_name}» ({})", zone.vent_system_id),
                 format!("Zone verknüpft mit Lüftungsanlage «{linked_name}» ({})", zone.vent_system_id),
             ));
         } else {
             let options: Vec<String> = doc.vent_systems.iter().map(|v| v.id.clone()).collect();
-            bi = bi.status(crate::document::CheckStatus::Fail)
+            bi = bi.status(CheckStatus::Fail)
                 .explanation(loc(
                     format!("Unresolved ventSystemId «{}» — no matching ventSystems[].id", zone.vent_system_id),
                     format!("Unaufgelöste ventSystemId «{}» — keine passende ventSystems[].id", zone.vent_system_id),
@@ -1109,7 +1109,7 @@ fn evaluate_vent(doc: &crate::Din16798Snapshot, _vi: usize, vent: &VentSystemDoc
         ).annex(doc.annex);
         // Relative ε avoids float Fail when fan_q_v_m3_s was authored as design/3600.
         if q_fan_m3_h <= q_design * (1.0 + 1e-6) {
-            bf = bf.status(crate::document::CheckStatus::Pass)
+            bf = bf.status(CheckStatus::Pass)
                 .utilization(Quantity::new(QuantityKind::VentilationRate, q_fan_m3_h.min(q_design)), Quantity::new(QuantityKind::VentilationRate, q_design.max(1e-9)))
                 .explanation(loc(
                     format!("Fan flow {q_fan_m3_h:.1} m³/h vs design {q_design:.1} m³/h"),
@@ -1173,7 +1173,7 @@ fn evaluate_vent(doc: &crate::Din16798Snapshot, _vi: usize, vent: &VentSystemDoc
     if have >= req_rank {
         // utilization(have, req) would be >1 when overspecified — force Pass after recording ranks.
         bf = bf.utilization(Quantity::new(QuantityKind::Dimensionless, have as f64), Quantity::new(QuantityKind::Dimensionless, req_rank.max(1) as f64))
-            .status(crate::document::CheckStatus::Pass)
+            .status(CheckStatus::Pass)
             .explanation(loc(format!("{} with {} OK (need ≥{})", vent.oda_class, vent.filter_sup_class, req_filter), format!("{} mit {} OK (mind. {})", vent.oda_class, vent.filter_sup_class, req_filter)));
     } else {
         let filter_remedy = Remedy {
@@ -1188,7 +1188,7 @@ fn evaluate_vent(doc: &crate::Din16798Snapshot, _vi: usize, vent: &VentSystemDoc
             ),
             applicable: true,
         };
-        bf = bf.status(crate::document::CheckStatus::Fail).utilization(Quantity::new(QuantityKind::Dimensionless, (req_rank - have) as f64 + 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0))
+        bf = bf.status(CheckStatus::Fail).utilization(Quantity::new(QuantityKind::Dimensionless, (req_rank - have) as f64 + 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0))
             .explanation(loc(format!("{} requires ≥{}; have {}", vent.oda_class, req_filter, vent.filter_sup_class), format!("{} erfordert ≥{}; vorhanden {}", vent.oda_class, req_filter, vent.filter_sup_class)))
             .remedy(filter_remedy);
     }
@@ -1222,7 +1222,7 @@ fn evaluate_vent(doc: &crate::Din16798Snapshot, _vi: usize, vent: &VentSystemDoc
             format!("din16798-3.humid.{}", vent.id), "DIN EN 16798-3", ClauseId::new("EN 16798-3", "§7.4", "humidification"),
             vent_subject(vent, path("humidificationProvidedKgH")), loc("Humidification capacity", "Befeuchtungsleistung"),
         ).annex(doc.annex)
-         .status(crate::document::CheckStatus::Pass)
+         .status(CheckStatus::Pass)
          .utilization(
             Quantity::new(QuantityKind::Mass, vent.humidification_provided_kg_h),
             Quantity::new(QuantityKind::Mass, vent.humidification_provided_kg_h.abs().max(1e-9)),

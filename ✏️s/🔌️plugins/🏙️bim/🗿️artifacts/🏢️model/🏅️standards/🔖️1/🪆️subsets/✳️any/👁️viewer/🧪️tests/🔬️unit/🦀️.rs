@@ -107,7 +107,7 @@ async fn the_world_window_is_bound_to_the_element_domain() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_viewer_never_emits_a_document_mutation() {
-    artifact_app_laws::assert_viewer_never_mutates::<BimModelViewer>().await;
+    artifact_app_laws::assert_viewer_never_mutates::<BimModelViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[test]
@@ -208,10 +208,10 @@ fn manifest() -> App {
 
 #[semio_framework_async_macros::async_test]
 async fn window_commands_persist_per_window_and_never_touch_the_document() {
-    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     app.bind_instance_id(91).await;
     let view = windows(&[("left", world::WINDOW_KIND_ID), ("right", world::WINDOW_KIND_ID), ("plan", plan::WINDOW_KIND_ID)]);
-    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     reopened.bind_instance_id(92).await;
     let outcome: Result<(), String> = async {
         let before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -224,8 +224,8 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
         for (window, command) in steps {
             let meta = ActionMeta { instance_id: 91, view_state: Some(addressed(&view, window)), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
             let label = format!("{window} {command:?}");
-            app.dispatch_typed(command, &meta).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91).await.map_err(|error| format!("settle {label}: {error:?}"))?;
+            app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("settle {label}: {error:?}"))?;
             if !receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) {
                 return Err(format!("the viewer command published no window configuration: {:?}", receipt.lanes));
             }
@@ -259,8 +259,8 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
         Ok(())
     }
     .await;
-    artifact_app_laws::close_registered_fixture_app(&mut *reopened);
-    artifact_app_laws::close_registered_fixture_app(&mut *app);
+    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     outcome.expect("BIM viewer window configuration ownership and restoration");
 }
 
@@ -279,11 +279,11 @@ async fn render_plan(app: &mut VcsArtifactApp<ViewerApp<BimModelViewer>>, view: 
 /// 🧹️ A viewer whose window instance has been rendered closes through the exact retained ladder to its terminal-empty witness: the window-config partition publishes the physical release its store owes.
 #[semio_framework_async_macros::async_test]
 async fn a_window_addressed_viewer_closes_to_its_terminal_empty_witness() {
-    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<BimModelViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     app.bind_instance_id(81).await;
     let view = windows(&[("plan", plan::WINDOW_KIND_ID)]);
     render_plan(&mut app, &addressed(&view, "plan")).await.expect("render");
-    artifact_app_laws::close_registered_fixture_app(&mut *app);
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 #[semio_framework_async_macros::async_test]

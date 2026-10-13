@@ -217,7 +217,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         })
         .collect::<Vec<_>>();
     let cursor_fields = field_rows.iter().map(|(_, ty, cursor, value)| quote!(#cursor: ::semio_framework_value::retained_clone::RetainedFieldCursor<#ty>, #value: Option<#ty>));
-    let cursor_init = field_rows.iter().map(|(_, ty, cursor, value)| quote!(#cursor: Default::default(), #value: None));
+    let cursor_init = field_rows.iter().map(|(_, _ty, cursor, value)| quote!(#cursor: Default::default(), #value: None));
     let advance_arms = field_rows.iter().map(|(index, _, cursor, value)| {
         let access = field_access(fields, *index);
         quote! {
@@ -383,7 +383,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
         })
         .collect::<Vec<_>>();
     let cursor_fields = rows.iter().map(|(_, _, ty, cursor, value)| quote!(#cursor: ::semio_framework_value::retained_clone::RetainedFieldCursor<#ty>, #value: Option<Box<#ty>>));
-    let cursor_init = rows.iter().map(|(_, _, ty, cursor, value)| quote!(#cursor: Default::default(), #value: None));
+    let cursor_init = rows.iter().map(|(_, _, _ty, cursor, value)| quote!(#cursor: Default::default(), #value: None));
     let select_arms = data
         .variants
         .iter()

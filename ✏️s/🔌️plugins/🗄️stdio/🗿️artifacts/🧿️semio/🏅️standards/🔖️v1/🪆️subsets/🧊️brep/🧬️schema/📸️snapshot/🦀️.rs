@@ -11,7 +11,6 @@ use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPo
 
 
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";

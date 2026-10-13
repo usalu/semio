@@ -7,7 +7,6 @@
 
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;
-use semio_framework_dsl_record::RecordLayout;
 use semio_framework_dsl_record::RecordSpec;
 use semio_framework_dsl_record::RecordValue;
 use semio_framework_dsl_record::Shape;
@@ -848,12 +847,12 @@ pub struct ToolRunTraceDelta {
 
 impl ToolRunTraceDelta {
     pub fn encode(&self) -> Result<Vec<u8>, ToolRunCodecError> {
-        let mut record = semio_framework_dsl_record::RecordValue::default();
-        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&self.identity)));
-        record.fields.insert(2, semio_framework_dsl_record::FieldValue::Bool(self.clear));
-        record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(self.next)));
+        let mut record = RecordValue::default();
+        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)));
+        record.fields.insert(2, FieldValue::Bool(self.clear));
+        record.fields.insert(3, FieldValue::UInt(u64::from(self.next)));
         if !self.pages.is_empty() {
-            record.fields.insert(4, semio_framework_dsl_record::FieldValue::List(self.pages.iter().map(|page| page.encode().map(semio_framework_dsl_record::FieldValue::Bytes64)).collect::<Result<_, _>>()?));
+            record.fields.insert(4, FieldValue::List(self.pages.iter().map(|page| page.encode().map(FieldValue::Bytes64)).collect::<Result<_, _>>()?));
         }
         encode_body(delta_spec(), &record)
     }
@@ -1102,29 +1101,29 @@ pub struct ToolRunTick {
 impl ToolRunTick {
     /// 🧳️ Pack record body; rejects ticks over `TOOL_RUN_TICK_BYTES_MAX`.
     pub fn encode(&self) -> Result<Vec<u8>, ToolRunCodecError> {
-        let mut record = semio_framework_dsl_record::RecordValue::default();
-        record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&self.identity)));
-        record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(self.sequence));
+        let mut record = RecordValue::default();
+        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)));
+        record.fields.insert(2, FieldValue::UInt(self.sequence));
         if let Some(progress) = &self.progress {
-            record.fields.insert(3, semio_framework_dsl_record::FieldValue::Record(progress_record(progress)?));
+            record.fields.insert(3, FieldValue::Record(progress_record(progress)?));
         }
         if !self.steps.is_empty() {
-            record.fields.insert(4, semio_framework_dsl_record::FieldValue::List(self.steps.iter().map(|step| step_record(step).map(semio_framework_dsl_record::FieldValue::Record)).collect::<Result<_, _>>()?));
+            record.fields.insert(4, FieldValue::List(self.steps.iter().map(|step| step_record(step).map(FieldValue::Record)).collect::<Result<_, _>>()?));
         }
         if !self.trace.is_empty() {
-            record.fields.insert(5, semio_framework_dsl_record::FieldValue::List(self.trace.iter().map(|page| page.encode().map(semio_framework_dsl_record::FieldValue::Bytes64)).collect::<Result<_, _>>()?));
+            record.fields.insert(5, FieldValue::List(self.trace.iter().map(|page| page.encode().map(FieldValue::Bytes64)).collect::<Result<_, _>>()?));
         }
         if !self.append_ops.is_empty() {
-            record.fields.insert(6, semio_framework_dsl_record::FieldValue::List(self.append_ops.iter().map(|op| semio_framework_dsl_record::FieldValue::Bytes64(op.clone())).collect()));
+            record.fields.insert(6, FieldValue::List(self.append_ops.iter().map(|op| FieldValue::Bytes64(op.clone())).collect()));
         }
         if !self.append_entities.is_empty() {
-            record.fields.insert(7, semio_framework_dsl_record::FieldValue::Bytes64(self.append_entities.iter().flat_map(|entity| entity.to_le_bytes()).collect()));
+            record.fields.insert(7, FieldValue::Bytes64(self.append_entities.iter().flat_map(|entity| entity.to_le_bytes()).collect()));
         }
         if let Some(retract_to) = self.retract_to {
-            record.fields.insert(8, semio_framework_dsl_record::FieldValue::UInt(u64::from(retract_to)));
+            record.fields.insert(8, FieldValue::UInt(u64::from(retract_to)));
         }
         if let Some(payload) = &self.payload {
-            record.fields.insert(9, semio_framework_dsl_record::FieldValue::Bytes64(payload.clone()));
+            record.fields.insert(9, FieldValue::Bytes64(payload.clone()));
         }
         let bytes = encode_body(tick_spec(), &record)?;
         if bytes.len() > TOOL_RUN_TICK_BYTES_MAX {
@@ -1139,8 +1138,8 @@ impl ToolRunTick {
         }
         let record = decode_body(tick_spec(), bytes)?;
         let progress = match record.get(3) {
-            None | Some(semio_framework_dsl_record::FieldValue::Absent) => None,
-            Some(semio_framework_dsl_record::FieldValue::Record(progress)) => Some(progress_from_record(progress)?),
+            None | Some(FieldValue::Absent) => None,
+            Some(FieldValue::Record(progress)) => Some(progress_from_record(progress)?),
             Some(_) => return Err(ToolRunCodecError::Malformed("progress")),
         };
         let steps = list(&record, 4)?.iter().map(|item| step_from_record(item_record(item)?)).collect::<Result<_, _>>()?;
@@ -1149,8 +1148,8 @@ impl ToolRunTick {
         let append_entities = u64_column(bytes_field(&record, 7)?, "appendEntities")?;
         let retract_to = optional_uint(&record, 8)?.map(|value| narrow(value, "retractTo")).transpose()?;
         let payload = match record.get(9) {
-            None | Some(semio_framework_dsl_record::FieldValue::Absent) => None,
-            Some(semio_framework_dsl_record::FieldValue::Bytes64(payload)) => Some(payload.clone()),
+            None | Some(FieldValue::Absent) => None,
+            Some(FieldValue::Bytes64(payload)) => Some(payload.clone()),
             Some(_) => return Err(ToolRunCodecError::Malformed("payload")),
         };
         Ok(Self { identity: identity_from_field(&record, 1)?, sequence: uint(&record, 2)?, progress, steps, trace, append_ops, append_entities, retract_to, payload })
@@ -1198,7 +1197,7 @@ pub struct ToolRunTickWriter {
 
 fn admit_original_column<T>(column:&mut Vec<T>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>{
  use semio_framework_value::{RetainedCloneProgress as P,ValueError,ValueRefusalKind};
- if column.len()<column.capacity(){return Ok(None)}let overflow=||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick column extent overflow");let capacity=column.len().checked_add(1).and_then(|n|n.checked_mul(std::mem::size_of::<T>())).ok_or_else(overflow)?;let released=column.capacity().checked_mul(std::mem::size_of::<T>()).ok_or_else(overflow)?;if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<released{return Ok(Some(P::default()))}column.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original tick column native allocation refused"))?;Ok(Some(P{copied_items:1,retained_capacity_bytes:capacity,released_bytes:released,..Default::default()}))
+ if column.len()<column.capacity(){return Ok(None)}let overflow=||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick column extent overflow");let capacity=column.len().checked_add(1).and_then(|n|n.checked_mul(size_of::<T>())).ok_or_else(overflow)?;let released=column.capacity().checked_mul(size_of::<T>()).ok_or_else(overflow)?;if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<released{return Ok(Some(P::default()))}column.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original tick column native allocation refused"))?;Ok(Some(P{copied_items:1,retained_capacity_bytes:capacity,released_bytes:released,..Default::default()}))
 }
 
 impl ToolRunTickWriter {
@@ -1299,7 +1298,7 @@ impl ToolRunTickWriter {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(S::Progress(P::default()))}
         if self.provisional_len()>=TOOL_RUN_PROVISIONAL_OPS_MAX{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick provisional column is full"))}
         let pending=self.pending_bytes.checked_add(source.len()).and_then(|bytes|bytes.checked_add(6)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick byte extent overflow"))?;
-        if self.append_ops.len()==self.append_ops.capacity(){let old=self.append_ops.capacity()*std::mem::size_of::<Vec<u8>>();let capacity=(self.append_ops.len()+1)*std::mem::size_of::<Vec<u8>>();if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<old{return Ok(S::Progress(P::default()))}self.append_ops.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick column backing refused"))?;return Ok(S::Progress(P{copied_items:1,retained_capacity_bytes:capacity,released_bytes:old,..Default::default()}))}
+        if self.append_ops.len()==self.append_ops.capacity(){let old=self.append_ops.capacity()*size_of::<Vec<u8>>();let capacity=(self.append_ops.len()+1)*size_of::<Vec<u8>>();if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<old{return Ok(S::Progress(P::default()))}self.append_ops.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tick column backing refused"))?;return Ok(S::Progress(P{copied_items:1,retained_capacity_bytes:capacity,released_bytes:old,..Default::default()}))}
         self.append_ops.push(original.take().unwrap());self.pending_bytes=pending;Ok(S::Complete(P{copied_items:1,..Default::default()}))
     }
 
@@ -1452,11 +1451,11 @@ impl std::fmt::Display for ToolRunCodecError {
 impl std::error::Error for ToolRunCodecError {}
 
 fn field(id: u16, key: &str, shape: Shape) -> FieldSpec {
-    semio_framework_dsl_record::FieldSpec::new(id, key, shape)
+    FieldSpec::new(id, key, shape)
 }
 
 fn spec(fields: Vec<FieldSpec>) -> RecordSpec {
-    semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, fields)
+    RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, fields)
 }
 
 fn identity_spec_owned() -> RecordSpec {
@@ -1482,9 +1481,9 @@ fn progress_spec_owned() -> RecordSpec {
     ])
 }
 
-fn identity_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;for(id,key,shape)in[(1,"appInstanceId",semio_framework_dsl_record::Shape::UInt),(2,"run",semio_framework_dsl_record::Shape::UInt),(3,"generation",semio_framework_dsl_record::Shape::UInt),(4,"baseRevision",semio_framework_dsl_record::Shape::Bytes64)]{fields.push(semio_framework_dsl_record::producer::field(id,key,shape,control)?);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
-fn step_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(7)?;let mut fields=control.allocate_vec(7)?;for(id,key,shape,optional)in[(1,"sequence",semio_framework_dsl_record::Shape::UInt,false),(2,"kind",semio_framework_dsl_record::Shape::UInt,false),(3,"stage",semio_framework_dsl_record::Shape::UInt,false),(4,"reason",semio_framework_dsl_record::Shape::UInt,false),(5,"subject",semio_framework_dsl_record::Shape::UInt,true),(6,"repeat",semio_framework_dsl_record::Shape::UInt,false),(7,"args",semio_framework_dsl_record::Shape::Bytes64,true)]{let mut field=semio_framework_dsl_record::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
-fn progress_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(10)?;let mut fields=control.allocate_vec(10)?;let steps=semio_framework_dsl_record::Shape::List(semio_framework_dsl_record::producer::boxed(semio_framework_dsl_record::Shape::Record(step_spec_producer()),control)?);for(id,key,shape,optional)in[(1,"identity",semio_framework_dsl_record::Shape::Record(identity_spec_producer()),false),(2,"sequence",semio_framework_dsl_record::Shape::UInt,false),(3,"state",semio_framework_dsl_record::Shape::UInt,false),(4,"stage",semio_framework_dsl_record::Shape::UInt,false),(5,"completed",semio_framework_dsl_record::Shape::UInt,false),(6,"total",semio_framework_dsl_record::Shape::UInt,true),(7,"counters",semio_framework_dsl_record::Shape::Bytes64,true),(8,"unitsPerSecond",semio_framework_dsl_record::Shape::Float,false),(9,"conflicts",semio_framework_dsl_record::Shape::UInt,false),(10,"steps",steps,true)]{let mut field=semio_framework_dsl_record::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
+fn identity_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(4)?;let mut fields=control.allocate_vec(4)?;for(id,key,shape)in[(1,"appInstanceId",Shape::UInt),(2,"run",Shape::UInt),(3,"generation",Shape::UInt),(4,"baseRevision",Shape::Bytes64)]{fields.push(semio_framework_dsl_record::producer::field(id,key,shape,control)?);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
+fn step_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(7)?;let mut fields=control.allocate_vec(7)?;for(id,key,shape,optional)in[(1,"sequence",Shape::UInt,false),(2,"kind",Shape::UInt,false),(3,"stage",Shape::UInt,false),(4,"reason",Shape::UInt,false),(5,"subject",Shape::UInt,true),(6,"repeat",Shape::UInt,false),(7,"args",Shape::Bytes64,true)]{let mut field=semio_framework_dsl_record::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
+fn progress_spec_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<RecordSpec,semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(10)?;let mut fields=control.allocate_vec(10)?;let steps=Shape::List(semio_framework_dsl_record::producer::boxed(Shape::Record(step_spec_producer()),control)?);for(id,key,shape,optional)in[(1,"identity",Shape::Record(identity_spec_producer()),false),(2,"sequence",Shape::UInt,false),(3,"state",Shape::UInt,false),(4,"stage",Shape::UInt,false),(5,"completed",Shape::UInt,false),(6,"total",Shape::UInt,true),(7,"counters",Shape::Bytes64,true),(8,"unitsPerSecond",Shape::Float,false),(9,"conflicts",Shape::UInt,false),(10,"steps",steps,true)]{let mut field=semio_framework_dsl_record::producer::field(id,key,shape,control)?;field.optional=optional;fields.push(field);control.step()?;}semio_framework_dsl_record::producer::record(None,semio_framework_dsl_record::RecordLayout::Inline,fields,control)})}
 fn identity_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:identity_spec_owned,decoding:|control|identity_spec_controlled(control),encoding:|control|identity_spec_controlled(control)}}
 fn step_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:step_spec_owned,decoding:|control|step_spec_controlled(control),encoding:|control|step_spec_controlled(control)}}
 fn progress_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_framework_dsl_record::RecordSpecProducer{ordinary:progress_spec_owned,decoding:|control|progress_spec_controlled(control),encoding:|control|progress_spec_controlled(control)}}
@@ -1494,7 +1493,7 @@ fn page_spec() -> &'static RecordSpec {
     SPEC.get_or_init(|| {
         let mut fields = vec![field(1, "identity", Shape::Record(identity_spec_producer())), field(2, "page", Shape::UInt)];
         for (id, key) in [(3, "opKinds"), (4, "keys"), (5, "verdicts"), (6, "reasons"), (7, "subjectKinds"), (8, "meshes"), (9, "shapes"), (10, "entities"), (11, "floats")] {
-            fields.push(field(id, key, semio_framework_dsl_record::Shape::Bytes64).optional());
+            fields.push(field(id, key, Shape::Bytes64).optional());
         }
         spec(fields)
     })
@@ -1531,11 +1530,11 @@ fn decode_body(spec: &RecordSpec, bytes: &[u8]) -> Result<RecordValue, ToolRunCo
 }
 
 fn identity_record(identity: &ToolRunIdentity) -> RecordValue {
-    let mut record = semio_framework_dsl_record::RecordValue::default();
-    record.fields.insert(1, semio_framework_dsl_record::FieldValue::UInt(u64::from(identity.id.app_instance_id)));
-    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(identity.id.run));
-    record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(identity.generation)));
-    record.fields.insert(4, semio_framework_dsl_record::FieldValue::Bytes64(identity.base_revision.to_vec()));
+    let mut record = RecordValue::default();
+    record.fields.insert(1, FieldValue::UInt(u64::from(identity.id.app_instance_id)));
+    record.fields.insert(2, FieldValue::UInt(identity.id.run));
+    record.fields.insert(3, FieldValue::UInt(u64::from(identity.generation)));
+    record.fields.insert(4, FieldValue::Bytes64(identity.base_revision.to_vec()));
     record
 }
 
@@ -1546,7 +1545,7 @@ fn identity_from_record(record: &RecordValue) -> Result<ToolRunIdentity, ToolRun
 
 fn identity_from_field(record: &RecordValue, id: u16) -> Result<ToolRunIdentity, ToolRunCodecError> {
     match record.get(id) {
-        Some(semio_framework_dsl_record::FieldValue::Record(identity)) => identity_from_record(identity),
+        Some(FieldValue::Record(identity)) => identity_from_record(identity),
         _ => Err(ToolRunCodecError::Malformed("identity")),
     }
 }
@@ -1558,15 +1557,15 @@ fn step_record(step: &ToolRunStep) -> Result<RecordValue, ToolRunCodecError> {
     if step.repeat == 0 {
         return Err(ToolRunCodecError::Malformed("repeat"));
     }
-    let mut record = semio_framework_dsl_record::RecordValue::default();
-    record.fields.insert(1, semio_framework_dsl_record::FieldValue::UInt(step.sequence));
-    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.kind.ordinal())));
-    record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.stage)));
-    record.fields.insert(4, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.reason)));
+    let mut record = RecordValue::default();
+    record.fields.insert(1, FieldValue::UInt(step.sequence));
+    record.fields.insert(2, FieldValue::UInt(u64::from(step.kind.ordinal())));
+    record.fields.insert(3, FieldValue::UInt(u64::from(step.stage)));
+    record.fields.insert(4, FieldValue::UInt(u64::from(step.reason)));
     if let Some(subject) = step.subject {
-        record.fields.insert(5, semio_framework_dsl_record::FieldValue::UInt(subject));
+        record.fields.insert(5, FieldValue::UInt(subject));
     }
-    record.fields.insert(6, semio_framework_dsl_record::FieldValue::UInt(u64::from(step.repeat)));
+    record.fields.insert(6, FieldValue::UInt(u64::from(step.repeat)));
     if !step.args.is_empty() {
         let mut args = Vec::with_capacity(9 * step.args.len());
         for arg in &step.args {
@@ -1581,7 +1580,7 @@ fn step_record(step: &ToolRunStep) -> Result<RecordValue, ToolRunCodecError> {
                 }
             }
         }
-        record.fields.insert(7, semio_framework_dsl_record::FieldValue::Bytes64(args));
+        record.fields.insert(7, FieldValue::Bytes64(args));
     }
     Ok(record)
 }
@@ -1619,22 +1618,22 @@ fn progress_record(progress: &ToolRunProgress) -> Result<RecordValue, ToolRunCod
     if progress.counters.len() > TOOL_RUN_COUNTERS_MAX {
         return Err(ToolRunCodecError::Limit("counters"));
     }
-    let mut record = semio_framework_dsl_record::RecordValue::default();
-    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&progress.identity)));
-    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(progress.sequence));
-    record.fields.insert(3, semio_framework_dsl_record::FieldValue::UInt(u64::from(progress.state.ordinal())));
-    record.fields.insert(4, semio_framework_dsl_record::FieldValue::UInt(u64::from(progress.stage)));
-    record.fields.insert(5, semio_framework_dsl_record::FieldValue::UInt(progress.completed));
+    let mut record = RecordValue::default();
+    record.fields.insert(1, FieldValue::Record(identity_record(&progress.identity)));
+    record.fields.insert(2, FieldValue::UInt(progress.sequence));
+    record.fields.insert(3, FieldValue::UInt(u64::from(progress.state.ordinal())));
+    record.fields.insert(4, FieldValue::UInt(u64::from(progress.stage)));
+    record.fields.insert(5, FieldValue::UInt(progress.completed));
     if let Some(total) = progress.total {
-        record.fields.insert(6, semio_framework_dsl_record::FieldValue::UInt(total));
+        record.fields.insert(6, FieldValue::UInt(total));
     }
     if !progress.counters.is_empty() {
-        record.fields.insert(7, semio_framework_dsl_record::FieldValue::Bytes64(progress.counters.iter().flat_map(|counter| counter.counter.to_le_bytes().into_iter().chain(counter.value.to_le_bytes())).collect()));
+        record.fields.insert(7, FieldValue::Bytes64(progress.counters.iter().flat_map(|counter| counter.counter.to_le_bytes().into_iter().chain(counter.value.to_le_bytes())).collect()));
     }
-    record.fields.insert(8, semio_framework_dsl_record::FieldValue::Float(f64::from(progress.units_per_second)));
-    record.fields.insert(9, semio_framework_dsl_record::FieldValue::UInt(u64::from(progress.conflicts)));
+    record.fields.insert(8, FieldValue::Float(f64::from(progress.units_per_second)));
+    record.fields.insert(9, FieldValue::UInt(u64::from(progress.conflicts)));
     if !progress.steps.is_empty() {
-        record.fields.insert(10, semio_framework_dsl_record::FieldValue::List(progress.steps.iter().map(|step| step_record(step).map(semio_framework_dsl_record::FieldValue::Record)).collect::<Result<_, _>>()?));
+        record.fields.insert(10, FieldValue::List(progress.steps.iter().map(|step| step_record(step).map(FieldValue::Record)).collect::<Result<_, _>>()?));
     }
     Ok(record)
 }
@@ -1648,7 +1647,7 @@ fn progress_from_record(record: &RecordValue) -> Result<ToolRunProgress, ToolRun
     let counters = counters.iter().map(|[c0, c1, value @ ..]| ToolRunCounter { counter: u16::from_le_bytes([*c0, *c1]), value: u64::from_le_bytes(*value) }).collect();
     let steps = list(record, 10)?.iter().map(|item| step_from_record(item_record(item)?)).collect::<Result<Vec<_>, _>>()?;
     let units_per_second = match record.get(8) {
-        Some(semio_framework_dsl_record::FieldValue::Float(value)) => *value as f32,
+        Some(FieldValue::Float(value)) => *value as f32,
         _ => return Err(ToolRunCodecError::Malformed("unitsPerSecond")),
     };
     Ok(ToolRunProgress {
@@ -1702,12 +1701,12 @@ fn page_record(page: &ToolRunTracePage) -> Result<RecordValue, ToolRunCodecError
             ToolRunTraceOp::Clear => kinds.push(2),
         }
     }
-    let mut record = semio_framework_dsl_record::RecordValue::default();
-    record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(identity_record(&page.identity)));
-    record.fields.insert(2, semio_framework_dsl_record::FieldValue::UInt(u64::from(page.page)));
+    let mut record = RecordValue::default();
+    record.fields.insert(1, FieldValue::Record(identity_record(&page.identity)));
+    record.fields.insert(2, FieldValue::UInt(u64::from(page.page)));
     for (id, column) in (3u16..).zip(columns) {
         if !column.is_empty() {
-            record.fields.insert(id, semio_framework_dsl_record::FieldValue::Bytes64(column));
+            record.fields.insert(id, FieldValue::Bytes64(column));
         }
     }
     Ok(record)
@@ -1779,45 +1778,45 @@ fn uint(record: &RecordValue, id: u16) -> Result<u64, ToolRunCodecError> {
 
 fn optional_uint(record: &RecordValue, id: u16) -> Result<Option<u64>, ToolRunCodecError> {
     match record.get(id) {
-        None | Some(semio_framework_dsl_record::FieldValue::Absent) => Ok(None),
-        Some(semio_framework_dsl_record::FieldValue::UInt(value)) => Ok(Some(*value)),
+        None | Some(FieldValue::Absent) => Ok(None),
+        Some(FieldValue::UInt(value)) => Ok(Some(*value)),
         Some(_) => Err(ToolRunCodecError::Malformed("unsigned field")),
     }
 }
 
 fn boolean(record: &RecordValue, id: u16) -> Result<bool, ToolRunCodecError> {
     match record.get(id) {
-        Some(semio_framework_dsl_record::FieldValue::Bool(value)) => Ok(*value),
+        Some(FieldValue::Bool(value)) => Ok(*value),
         _ => Err(ToolRunCodecError::Malformed("boolean field")),
     }
 }
 
 fn bytes_field(record: &RecordValue, id: u16) -> Result<&[u8], ToolRunCodecError> {
     match record.get(id) {
-        None | Some(semio_framework_dsl_record::FieldValue::Absent) => Ok(&[]),
-        Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => Ok(bytes),
+        None | Some(FieldValue::Absent) => Ok(&[]),
+        Some(FieldValue::Bytes64(bytes)) => Ok(bytes),
         Some(_) => Err(ToolRunCodecError::Malformed("bytes field")),
     }
 }
 
 fn list(record: &RecordValue, id: u16) -> Result<&[FieldValue], ToolRunCodecError> {
     match record.get(id) {
-        None | Some(semio_framework_dsl_record::FieldValue::Absent) => Ok(&[]),
-        Some(semio_framework_dsl_record::FieldValue::List(items)) => Ok(items),
+        None | Some(FieldValue::Absent) => Ok(&[]),
+        Some(FieldValue::List(items)) => Ok(items),
         Some(_) => Err(ToolRunCodecError::Malformed("list field")),
     }
 }
 
 fn item_bytes(item: &FieldValue) -> Result<&[u8], ToolRunCodecError> {
     match item {
-        semio_framework_dsl_record::FieldValue::Bytes64(bytes) => Ok(bytes),
+        FieldValue::Bytes64(bytes) => Ok(bytes),
         _ => Err(ToolRunCodecError::Malformed("bytes item")),
     }
 }
 
 fn item_record(item: &FieldValue) -> Result<&RecordValue, ToolRunCodecError> {
     match item {
-        semio_framework_dsl_record::FieldValue::Record(record) => Ok(record),
+        FieldValue::Record(record) => Ok(record),
         _ => Err(ToolRunCodecError::Malformed("record item")),
     }
 }

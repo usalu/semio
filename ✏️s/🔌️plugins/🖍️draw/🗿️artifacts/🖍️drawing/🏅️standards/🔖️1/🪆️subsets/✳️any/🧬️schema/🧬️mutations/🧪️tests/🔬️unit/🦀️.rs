@@ -250,7 +250,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     let mut store = store::ArtifactStore::new(store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(crate::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
     for mutation in log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a selection transform applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection transform applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), log.len(), "one applied operation per committed leaf");
@@ -274,7 +274,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     }
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
     if !report.blocks_finalize() {
-        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
         assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     }
     store::os_store::test_support::close_plain_test_store(&mut store);

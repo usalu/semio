@@ -1,7 +1,7 @@
 //! 🔺️ Sparse declarative create-option-group diff.
 use super::CreateOptionGroup;
 use crate::*;
-use super::super::{elements, option_rules};
+use super::super::elements;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &CreateOptionGroup, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     if payload.id.trim().is_empty() { return MutationOutcome::refuse(OutcomeCode::Invariant, "Id is empty.", [payload.id.clone()]); }

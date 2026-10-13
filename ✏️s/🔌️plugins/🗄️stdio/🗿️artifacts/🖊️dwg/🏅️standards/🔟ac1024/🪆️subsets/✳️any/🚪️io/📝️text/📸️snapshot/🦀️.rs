@@ -44,7 +44,7 @@ impl store::ArtifactDsl for DwgSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
@@ -74,4 +74,4 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 
 
 }
-pub use snapshot_wire_codec::*;
+#[cfg(test)] pub use snapshot_wire_codec::*;

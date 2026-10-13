@@ -66,8 +66,7 @@ impl Puzzle5dArtifactVcs {
     pub fn create() -> js_sys::Promise {
         semio_framework_async::future_to_promise(async {
             let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::puzzle5d::create_puzzle5d_app());
-            let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
-            let mounted_policy = semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
+            let mounted_policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
             let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
             let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(PUZZLE5D_IDENTITY_CEILING_BYTES, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).map_err(js_fault)?;
             let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;

@@ -14,7 +14,6 @@
 //! reusing the shared `enc_named_triple`/`dec_named_triple`/`split_top_level`/`strip_brackets`
 //! codec primitives from `🧰️triples` rather than re-deriving them.
 
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
 
@@ -383,7 +382,7 @@ fn absorb_solid_diff(mut a: BrepSolidDiff, b: BrepSolidDiff) -> BrepSolidDiff {
 
 //#region 🔖️Apply
 impl MutationDiff<SemioBrepSnapshot> for SemioBrepDiff {
-    fn apply(&self, base: &SemioBrepSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
+    fn apply(&self, base: &SemioBrepSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioBrepSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.vertices {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.vertices, d, |item| item.id.clone(), |added| added.item.id.clone(), ["vertices"])?;

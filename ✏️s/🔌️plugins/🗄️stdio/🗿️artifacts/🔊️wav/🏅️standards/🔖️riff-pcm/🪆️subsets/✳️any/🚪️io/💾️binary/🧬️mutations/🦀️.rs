@@ -20,7 +20,6 @@ impl OpBinary for WavMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ `WavMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.

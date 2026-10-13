@@ -1,12 +1,13 @@
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use semio_framework_value::SharedUtf8;
 use std::mem::ManuallyDrop;
 
-pub(crate) fn mounted_nested_retirement_demand(mut demand: semio_framework_value::RetirementDemand, layers: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+pub(crate) fn mounted_nested_retirement_demand(mut demand: RetirementDemand, layers: usize) -> Result<RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(layers).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "mounted receipt retirement depth overflow"))?;
     Ok(demand)
 }
 
-pub(crate) fn mounted_retirement_grant_funds(demand: semio_framework_value::RetirementDemand, grant: RetainedCloneGrant) -> bool {
+pub(crate) fn mounted_retirement_grant_funds(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool {
     grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
 }
 
@@ -73,8 +74,8 @@ impl MountedReceiptBytes {
     pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if self.closed || self.closing || self.candidate.is_some() || grant.maximum_items == 0 { return None; } self.closed = true; Some(std::mem::take(&mut *self.bytes)) }
     pub(crate) fn next_close_byte_demand(&self) -> usize { self.candidate.as_ref().map_or_else(|| self.bytes.capacity(), Vec::capacity) }
     /// 📏️ Quotes independent currencies for the original retained close frontier.
-    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
     /// ♻️ Retires each original candidate and output allocation under its own whole physical grant.
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
@@ -140,7 +141,7 @@ impl MountedPreparedOperationBytes {
     pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if !self.is_complete() { return None; } self.output.take(grant) }
     pub(crate) fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if self.cursor_closed { Ok(self.output.next_close_byte_demand()) } else { self.cursor.next_close_byte_demand() } }
     /// 📏️ Quotes independent currencies for the original retained close frontier.
-    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if !self.cursor_closed { return mounted_nested_retirement_demand(self.cursor.retirement_demands()?, 1); }
         mounted_nested_retirement_demand(self.output.retirement_demands()?, 1)
@@ -226,10 +227,10 @@ impl MountedPreparedOperationsBytes {
     pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if !self.is_complete() { return None; } self.output.take(grant) }
     pub(crate) fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if let Some(operation) = self.operation.as_ref() { operation.next_close_byte_demand() } else if let Some(encoded) = self.encoded.as_ref() { Ok(encoded.capacity()) } else { Ok(self.output.next_close_byte_demand()) } }
     /// 📏️ Quotes independent currencies for the original retained close frontier.
-    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if let Some(operation) = self.operation.as_ref() { return mounted_nested_retirement_demand(operation.retirement_demands()?, 1); }
-        if let Some(encoded) = self.encoded.as_ref() { return Ok(semio_framework_value::RetirementDemand { release_bytes: encoded.capacity(), depth: 1, ..Default::default() }); }
+        if let Some(encoded) = self.encoded.as_ref() { return Ok(RetirementDemand { release_bytes: encoded.capacity(), depth: 1, ..Default::default() }); }
         mounted_nested_retirement_demand(self.output.retirement_demands()?, 1)
     }
     /// ♻️ Retains the exact operation, candidate, and framed backing until each original extent is funded.
@@ -273,7 +274,7 @@ impl MountedKernelMutationReceiptSource<'_> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum MountedKernelReceiptPhase { Strings, Inverse, DependencyBacking, Dependencies, Complete }
+enum MountedKernelReceiptPhase { Strings, Inverse, DependencyBacking, Dependencies, Author, Complete }
 
 pub(crate) struct MountedKernelMutationReceipt {
     identity: [(usize, usize); 8],
@@ -286,6 +287,7 @@ pub(crate) struct MountedKernelMutationReceipt {
     inverse: [MountedReceiptBytes; 2],
     dependencies: [ManuallyDrop<Vec<MutationId>>; 3],
     dependency: Option<MountedReceiptBytes>,
+    author: ManuallyDrop<Option<SharedUtf8>>,
     phase: MountedKernelReceiptPhase,
     field: usize,
     segment: usize,
@@ -296,14 +298,15 @@ pub(crate) struct MountedKernelMutationReceipt {
 }
 
 impl MountedKernelMutationReceipt {
-    pub(crate) fn frame_birth_bytes() -> usize { std::mem::size_of::<Self>() }
-    pub(crate) fn new(source: &MountedKernelMutationReceiptSource<'_>, forward: Vec<u8>) -> Self { Self { identity: source.identity(), document: source.document, base_version: source.base_version, timestamp: source.timestamp, undo_policy: source.undo_policy, strings: std::array::from_fn(|_| MountedReceiptBytes::new()), forward: MountedReceiptBytes::from_original(forward), inverse: std::array::from_fn(|_| MountedReceiptBytes::new()), dependencies: std::array::from_fn(|_| ManuallyDrop::new(Vec::new())), dependency: Some(MountedReceiptBytes::new()), phase: MountedKernelReceiptPhase::Strings, field: 0, segment: 0, offset: 0, dependency_index: 0, closing: false, transferred: false } }
+    pub(crate) fn frame_birth_bytes() -> usize { size_of::<Self>() }
+    pub(crate) fn new(source: &MountedKernelMutationReceiptSource<'_>, forward: Vec<u8>) -> Self { Self { identity: source.identity(), document: source.document, base_version: source.base_version, timestamp: source.timestamp, undo_policy: source.undo_policy, strings: std::array::from_fn(|_| MountedReceiptBytes::new()), forward: MountedReceiptBytes::from_original(forward), inverse: std::array::from_fn(|_| MountedReceiptBytes::new()), dependencies: std::array::from_fn(|_| ManuallyDrop::new(Vec::new())), dependency: Some(MountedReceiptBytes::new()), author: ManuallyDrop::new(None), phase: MountedKernelReceiptPhase::Strings, field: 0, segment: 0, offset: 0, dependency_index: 0, closing: false, transferred: false } }
     fn validate(&self, source: &MountedKernelMutationReceiptSource<'_>) -> Result<(), ValueError> { if self.closing || self.transferred || self.identity != source.identity() || self.document != source.document || self.base_version != source.base_version || self.timestamp != source.timestamp || self.undo_policy != source.undo_policy { Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted host receipt lost its exact original causal source")) } else { Ok(()) } }
     fn active_bytes(&self) -> Option<&MountedReceiptBytes> { match self.phase { MountedKernelReceiptPhase::Strings => self.strings.get(self.field), MountedKernelReceiptPhase::Inverse => self.inverse.get(self.field), MountedKernelReceiptPhase::Dependencies => self.dependency.as_ref(), _ => None } }
     fn additional(&self, source: &MountedKernelMutationReceiptSource<'_>) -> usize { match self.phase { MountedKernelReceiptPhase::Strings => (source.text_parts(self.field)[self.segment].len() - self.offset).min(64), MountedKernelReceiptPhase::Inverse => (source.inverse.len() - self.offset).min(64), MountedKernelReceiptPhase::Dependencies if self.dependency_index < source.dependencies.len() => (source.dependencies[self.dependency_index].0.len() - self.offset).min(64), _ => 0 } }
     pub(crate) fn next_capacity_byte_demand(&self, source: &MountedKernelMutationReceiptSource<'_>) -> Result<usize, ValueError> {
         self.validate(source)?;
-        if self.phase == MountedKernelReceiptPhase::DependencyBacking { return source.dependencies.len().checked_mul(std::mem::size_of::<MutationId>()).filter(|bytes| *bytes <= MOUNTED_RECEIPT_MAXIMUM_BYTES).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "mounted causal dependency backing exceeds original admission")); }
+        if self.phase == MountedKernelReceiptPhase::Author { return Ok(SharedUtf8::admission_demand().capacity_bytes); }
+        if self.phase == MountedKernelReceiptPhase::DependencyBacking { return source.dependencies.len().checked_mul(size_of::<MutationId>()).filter(|bytes| *bytes <= MOUNTED_RECEIPT_MAXIMUM_BYTES).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "mounted causal dependency backing exceeds original admission")); }
         self.active_bytes().map_or(Ok(0), |bytes| bytes.next_capacity_byte_demand(self.additional(source)))
     }
     pub(crate) fn next_release_byte_demand(&self) -> usize { self.active_bytes().map_or(0, MountedReceiptBytes::next_growth_release_byte_demand) }
@@ -313,6 +316,14 @@ impl MountedKernelMutationReceipt {
         self.validate(source)?;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.phase == MountedKernelReceiptPhase::Complete { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if self.phase == MountedKernelReceiptPhase::Author {
+            let demand = SharedUtf8::admission_demand();
+            if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            let bytes = self.strings[5].take(grant).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "mounted receipt author text is not settled"))?;
+            let (author, progress) = SharedUtf8::admit(unsafe { String::from_utf8_unchecked(bytes) }, grant).map_err(|(error, _)| error)?;
+            *self.author = Some(author); self.phase = MountedKernelReceiptPhase::Complete;
+            return Ok(RetainedCloneStep::Progress(progress));
+        }
         if self.phase == MountedKernelReceiptPhase::DependencyBacking {
             let capacity = self.next_capacity_byte_demand(source)?;
             if grant.maximum_capacity_bytes < capacity { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -323,7 +334,7 @@ impl MountedKernelMutationReceipt {
         if self.phase == MountedKernelReceiptPhase::Dependencies && self.dependency_index == source.dependencies.len() {
             if let Some(dependency) = self.dependency.as_mut() { let step = dependency.close_step(grant); if dependency.terminal_is_empty() { self.dependency = None; } return Ok(step); }
             self.field += 1; self.dependency_index = 0; self.offset = 0;
-            if self.field == 3 { self.phase = MountedKernelReceiptPhase::Complete; } else { self.dependency = Some(MountedReceiptBytes::new()); }
+            if self.field == 3 { self.phase = MountedKernelReceiptPhase::Author; } else { self.dependency = Some(MountedReceiptBytes::new()); }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         let additional = self.additional(source);
@@ -346,26 +357,29 @@ impl MountedKernelMutationReceipt {
     /// 🧳️ Assembles the complete mutation, undo ID, and undo inverse through constant original-owner moves.
     pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<(KernelMutation, MutationId, InverseMutation)> {
         if !self.is_complete() || grant.maximum_items == 0 { return None; }
-        let [id, invocation, schema, target, inverse_schema, author, undo_id, undo_target, undo_schema] = std::array::from_fn(|index| unsafe { String::from_utf8_unchecked(self.strings[index].take(grant).unwrap()) });
+        let [id, invocation, schema, target, inverse_schema, _, undo_id, undo_target, undo_schema] = std::array::from_fn(|index| if index == 5 { String::new() } else { unsafe { String::from_utf8_unchecked(self.strings[index].take(grant).unwrap()) } });
+        let author = self.author.take().expect("complete receipt owns its admitted author");
         let [inverse, undo_inverse] = std::array::from_fn(|index| self.inverse[index].take(grant).unwrap());
         let dependencies = std::mem::take(&mut *self.dependencies[0]); let inverse_dependencies = std::mem::take(&mut *self.dependencies[1]); let undo_dependencies = std::mem::take(&mut *self.dependencies[2]);
         let forward = self.forward.take(grant).unwrap(); self.transferred = true;
-        Some((KernelMutation { id: MutationId(id), document: self.document, base_version: self.base_version, invocation_id: InvocationId(invocation), diff: ArtifactDiff { schema: SchemaId(schema), payload: forward }, inverse: InverseMutation { target_mutation: MutationId(target), inverse_diff: ArtifactDiff { schema: SchemaId(inverse_schema), payload: inverse }, base_version: self.base_version, dependencies: inverse_dependencies, undo_policy: self.undo_policy }, dependencies, author: ActorId(author.into()), timestamp: self.timestamp }, MutationId(undo_id), InverseMutation { target_mutation: MutationId(undo_target), inverse_diff: ArtifactDiff { schema: SchemaId(undo_schema), payload: undo_inverse }, base_version: self.base_version, dependencies: undo_dependencies, undo_policy: self.undo_policy }))
+        Some((KernelMutation { id: MutationId(id), document: self.document, base_version: self.base_version, invocation_id: InvocationId(invocation), diff: ArtifactDiff { schema: SchemaId(schema), payload: forward }, inverse: InverseMutation { target_mutation: MutationId(target), inverse_diff: ArtifactDiff { schema: SchemaId(inverse_schema), payload: inverse }, base_version: self.base_version, dependencies: inverse_dependencies, undo_policy: self.undo_policy }, dependencies, author: ActorId(author), timestamp: self.timestamp }, MutationId(undo_id), InverseMutation { target_mutation: MutationId(undo_target), inverse_diff: ArtifactDiff { schema: SchemaId(undo_schema), payload: undo_inverse }, base_version: self.base_version, dependencies: undo_dependencies, undo_policy: self.undo_policy }))
     }
     pub(crate) fn next_close_byte_demand(&self) -> usize {
         if !self.forward.terminal_is_empty() { return self.forward.next_close_byte_demand(); }
         if let Some(bytes) = self.strings.iter().chain(self.inverse.iter()).find(|bytes| !bytes.terminal_is_empty()) { return bytes.next_close_byte_demand(); }
         if let Some(bytes) = self.dependency.as_ref() { return bytes.next_close_byte_demand(); }
-        for dependencies in &self.dependencies { if let Some(id) = dependencies.last() { return id.0.capacity(); } if dependencies.capacity() > 0 { return dependencies.capacity() * std::mem::size_of::<MutationId>(); } }
+        if let Some(author) = self.author.as_ref() { return author.original_allocation_bytes(); }
+        for dependencies in &self.dependencies { if let Some(id) = dependencies.last() { return id.0.capacity(); } if dependencies.capacity() > 0 { return dependencies.capacity() * size_of::<MutationId>(); } }
         0
     }
     /// 📏️ Quotes independent currencies for the original retained close frontier.
-    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if !self.forward.terminal_is_empty() { return mounted_nested_retirement_demand(self.forward.retirement_demands()?, 1); }
         if let Some(bytes) = self.strings.iter().chain(self.inverse.iter()).find(|bytes| !bytes.terminal_is_empty()) { return mounted_nested_retirement_demand(bytes.retirement_demands()?, 1); }
         if let Some(bytes) = self.dependency.as_ref() { return mounted_nested_retirement_demand(bytes.retirement_demands()?, 1); }
-        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 2, ..Default::default() })
+        if self.author.is_some() { return mounted_nested_retirement_demand(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 1, ..Default::default() }, 1); }
+        Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 2, ..Default::default() })
     }
     /// 🍂️ Cancels each original payload, field, dependency string, and vector backing under whole physical grants.
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
@@ -376,14 +390,20 @@ impl MountedKernelMutationReceipt {
         if !self.forward.terminal_is_empty() { return self.forward.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
         if let Some(bytes) = self.strings.iter_mut().chain(self.inverse.iter_mut()).find(|bytes| !bytes.terminal_is_empty()) { return bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
         if let Some(bytes) = self.dependency.as_mut() { let step = bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if bytes.terminal_is_empty() { self.dependency = None; } return step; }
+        if let Some(author) = self.author.take() {
+            return match author.close_original_lease(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) {
+                Ok((original, mut progress)) => { progress.released_bytes += original.as_ref().map_or(0, String::capacity); drop(original); RetainedCloneStep::Progress(progress) }
+                Err((_, author)) => { *self.author = Some(author); RetainedCloneStep::Progress(Default::default()) }
+            };
+        }
         for dependencies in &mut self.dependencies {
             if let Some(id) = dependencies.last_mut() { let bytes = id.0.capacity(); if grant.maximum_release_bytes < bytes { return RetainedCloneStep::Progress(Default::default()); } drop(std::mem::take(&mut id.0)); dependencies.pop(); return RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }); }
-            let bytes = dependencies.capacity() * std::mem::size_of::<MutationId>();
+            let bytes = dependencies.capacity() * size_of::<MutationId>();
             if bytes > 0 { if grant.maximum_release_bytes < bytes { return RetainedCloneStep::Progress(Default::default()); } drop(std::mem::take(&mut **dependencies)); return RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }); }
         }
         RetainedCloneStep::Complete(Default::default())
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool { self.forward.terminal_is_empty() && self.strings.iter().chain(self.inverse.iter()).all(MountedReceiptBytes::terminal_is_empty) && self.dependency.is_none() && self.dependencies.iter().all(|dependencies| dependencies.is_empty() && dependencies.capacity() == 0) }
+    pub(crate) fn terminal_is_empty(&self) -> bool { self.forward.terminal_is_empty() && self.strings.iter().chain(self.inverse.iter()).all(MountedReceiptBytes::terminal_is_empty) && self.dependency.is_none() && self.author.is_none() && self.dependencies.iter().all(|dependencies| dependencies.is_empty() && dependencies.capacity() == 0) }
 }
 
 impl Drop for MountedKernelMutationReceipt { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted host receipt retains every original causal field until funded transfer or close"); } }

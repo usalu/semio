@@ -1,7 +1,7 @@
 //! 🔺️ Diff for `InsertRun`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::text::schema::diff::{SemioTextDiff, SemioTextRunDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff

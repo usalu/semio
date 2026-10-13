@@ -179,13 +179,13 @@ impl<T> MutationDagFixedSlots<T> {
     fn next_backing_release_byte_demand(&self) -> usize {
         if !self.is_empty() { return 0; }
         if !self.slots.is_empty() {
-            return if self.close_page < self.slots.len() { std::mem::size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>() } else { std::mem::size_of_val(&*self.slots) };
+            return if self.close_page < self.slots.len() { size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>() } else { size_of_val(&*self.slots) };
         }
-        if !self.generations.is_empty() { return std::mem::size_of_val(&*self.generations); }
-        if !self.occupied.is_empty() { return std::mem::size_of_val(&*self.occupied); }
-        if !self.next.is_empty() { return std::mem::size_of_val(&*self.next); }
-        if !self.previous.is_empty() { return std::mem::size_of_val(&*self.previous); }
-        std::mem::size_of_val(&*self.free)
+        if !self.generations.is_empty() { return size_of_val(&*self.generations); }
+        if !self.occupied.is_empty() { return size_of_val(&*self.occupied); }
+        if !self.next.is_empty() { return size_of_val(&*self.next); }
+        if !self.previous.is_empty() { return size_of_val(&*self.previous); }
+        size_of_val(&*self.free)
     }
 
     fn close_backing_step(&mut self, maximum_items: usize, maximum_release_bytes: usize) -> (usize, usize, bool) {

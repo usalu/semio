@@ -44,7 +44,7 @@ use crate::schema::snapshot::{ObjFace, ObjGroup, ObjNormal, ObjObject, ObjTexCoo
 use crate::ObjSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec};
+#[cfg(test)] use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeSet, HashMap, HashSet};
 

@@ -5,17 +5,17 @@ use std::mem::ManuallyDrop;
 
 #[derive(Default)]
 pub(crate) struct PrivateChildGenesisInput{
-    encoder:crate::store::MemberGenesisEnvelopeEncoder,
+    encoder:store::MemberGenesisEnvelopeEncoder,
     pages:PrivateChildInputPages,
     ready:bool,
     closing:bool,
 }
 impl PrivateChildGenesisInput{
-    pub(crate) fn next_capacity_byte_demand(&self,source:crate::store::MemberGenesisEnvelopeSource<'_>)->Result<usize,semio_framework_value::ValueError>{
+    pub(crate) fn next_capacity_byte_demand(&self,source:store::MemberGenesisEnvelopeSource<'_>)->Result<usize,semio_framework_value::ValueError>{
         if let Some(length)=self.encoder.encoded_length(source)?{return Ok(if self.pages.pages.is_none(){OwnedSchemaDecodePages::allocation_byte_demand_for(length.div_ceil(OWNED_SCHEMA_DECODE_PAGE_BYTES)).unwrap_or(usize::MAX)}else{0});}
         Ok(self.encoder.next_capacity_byte_demand(source).unwrap_or(usize::MAX))
     }
-    pub(crate) fn advance(&mut self,source:crate::store::MemberGenesisEnvelopeSource<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{
+    pub(crate) fn advance(&mut self,source:store::MemberGenesisEnvelopeSource<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.closing{return Err(input_fault());}
         if self.ready{return Ok(RetainedCloneStep::Complete(Default::default()));}

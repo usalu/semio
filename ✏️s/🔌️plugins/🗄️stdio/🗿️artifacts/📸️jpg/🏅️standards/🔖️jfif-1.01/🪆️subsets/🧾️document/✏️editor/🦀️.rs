@@ -84,14 +84,14 @@ const STDIO_JPG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.jpg.tool-command.v1";
 const STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn jpgAnyEditor_example_snapshot(example_id: &str) -> JpgSnapshot {
+fn jpg_any_editor_example_snapshot(example_id: &str) -> JpgSnapshot {
     if example_id == crate::examples::demo::ID {
         <JpgSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         JpgSnapshot::default()
     }
 }
-fn jpgAnyEditor_command_id(command: &JpgAnyEditCommand) -> &'static str {
+fn jpg_any_editor_command_id(command: &JpgAnyEditCommand) -> &'static str {
     if let JpgAnyEditCommand::EditSnapshot { event } = command {
         return event.action_id();
     }
@@ -100,7 +100,7 @@ fn jpgAnyEditor_command_id(command: &JpgAnyEditCommand) -> &'static str {
         _ => "other",
     }
 }
-fn jpgAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<JpgAnyEditCommand, Fault> {
+fn jpg_any_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<JpgAnyEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) {
         return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| JpgAnyEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
     }
@@ -109,10 +109,10 @@ fn jpgAnyEditor_command_from_action(action: &str, args: Option<&semio_framework_
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
 }
-fn jpgAnyEditor_retained_extent(command: &JpgAnyEditCommand, _snapshot: &JpgSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn jpg_any_editor_retained_extent(command: &JpgAnyEditCommand, _snapshot: &JpgSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, JpgAnyEditCommand::SetActiveExample { .. }).then_some(1)
 }
-fn jpgAnyEditor_retained_reduce(
+fn jpg_any_editor_retained_reduce(
     command: &JpgAnyEditCommand,
     _snapshot: &JpgSnapshot,
     _config: &NoConfig,
@@ -123,7 +123,7 @@ fn jpgAnyEditor_retained_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<JpgMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        JpgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpgAnyEditor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
+        JpgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpg_any_editor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -233,7 +233,7 @@ impl ArtifactEditor for JpgAnyEditor {
         if !STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if jpgAnyEditor_command_id(&request.command) != request.tool_id {
+        if jpg_any_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -257,10 +257,10 @@ impl ArtifactEditor for JpgAnyEditor {
                 operation,
                 completion: request.completion,
             },
-            jpgAnyEditor_command_id,
+            jpg_any_editor_command_id,
             STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, jpgAnyEditor_retained_reduce, jpgAnyEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, jpg_any_editor_retained_reduce, jpg_any_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -276,10 +276,10 @@ impl ArtifactEditor for JpgAnyEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
-        jpgAnyEditor_command_id(command)
+        jpg_any_editor_command_id(command)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        jpgAnyEditor_command_from_action(action, args)
+        jpg_any_editor_command_from_action(action, args)
     }
 
     fn initial_snapshot() -> Self::Snapshot {
@@ -297,7 +297,7 @@ impl ArtifactEditor for JpgAnyEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             JpgAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
-            JpgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpgAnyEditor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
+            JpgAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpg_any_editor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
             JpgAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(crate::schema::mutations::ReplacePixelsMutation { pixels: pixels.clone() })])),
         }
     }

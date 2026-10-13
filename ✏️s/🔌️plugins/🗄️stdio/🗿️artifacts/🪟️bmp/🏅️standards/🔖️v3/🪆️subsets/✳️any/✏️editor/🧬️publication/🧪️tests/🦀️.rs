@@ -13,6 +13,9 @@ fn retire_owned_value<T:semio_framework_value::retirement::RetireOwned>(value:T)
  assert!(owner.terminal_is_empty());
 }
 
+fn owned_source<T:semio_framework_value::retirement::RetireOwned+Sync+'static>(value:T)->RetainedCloneSource<T,T>{RetainedCloneSource::admit_owned(value,(),semio_s_artifact_stdio_contract::testing::unbounded_grant()).map_err(|(error,_,_)|error).expect("owned source admits").0}
+fn close_source<T:Sync+'static,A:semio_framework_value::retirement::RetireOwned+Sync>(mut source:RetainedCloneSource<T,A>){for _ in 0..100000{if source.terminal_is_empty(){return;}source.close_step(semio_s_artifact_stdio_contract::testing::unbounded_grant()).expect("source closes");}panic!("source did not close");}
+
 fn close(cursor:&mut BmpPublicationCursor){
  cursor.begin_close();
  for _ in 0..100000{
@@ -28,14 +31,14 @@ fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples(
         let base=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let paint=&row["paint"];let region=BmpRegion{x:paint["x"].as_u64().unwrap()as u32,y:paint["y"].as_u64().unwrap()as u32,width:paint["width"].as_u64().unwrap()as u32,height:paint["height"].as_u64().unwrap()as u32};let revision=crate::schema::operations::bmp_revision(&base);
         let mutation=if let Some(index)=paint["paletteIndex"].as_u64(){BmpMutation::PaintIndexedRegion(PaintIndexedRegion{revision,x:region.x,y:region.y,width:region.width,height:region.height,palette_index:index as u8})}else{BmpMutation::PaintDirectRegion(PaintDirectRegion{revision,x:region.x,y:region.y,width:region.width,height:region.height,red:paint["red"].as_u64().unwrap()as u8,green:paint["green"].as_u64().unwrap()as u8,blue:paint["blue"].as_u64().unwrap()as u8,alpha:paint["alpha"].as_u64().unwrap()as u8})};
-        let source=RetainedCloneSource::from_authority(Arc::new(base.clone()),());let mutation=RetainedCloneSource::from_authority(Arc::new(mutation),());let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut cursor=BmpPublicationCursor::new();let mut post=base.clone();let mut turns=0;
+        let source=owned_source(base.clone());let mutation=owned_source(mutation);let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut cursor=BmpPublicationCursor::new();let mut post=base.clone();let mut turns=0;
         loop {turns+=1;assert!(turns<10000);let step=cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();assert!(step.progress().fits(grant));if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
         match &post.image.pixels {BmpPixels::Indexed{indices}=>assert_eq!(serde_json::json!(indices),row["expectedIndices"]),BmpPixels::Direct{samples}=>assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(samples)).unwrap(),row["expectedSamples"])}
-        let inverse=cursor.take_inverse().unwrap();let before=base.image.region_rect(region).unwrap();let after=post.image.region_rect(region).unwrap();assert_eq!(inverse,if before!=after{vec![BmpMutation::ReplaceSamples(ReplaceSamples{region,indices:before.indices.clone(),samples:before.samples.clone()})]}else{Vec::new()});close(&mut cursor);
+        let inverse=cursor.take_inverse().unwrap();let before=base.image.region_rect(region).unwrap();let after=post.image.region_rect(region).unwrap();assert_eq!(inverse,if before!=after{vec![BmpMutation::ReplaceSamples(ReplaceSamples{region,indices:before.indices.clone(),samples:before.samples.clone()})]}else{Vec::new()});close(&mut cursor);close_source(source);close_source(mutation);
         if let Some(BmpMutation::ReplaceSamples(restore))=inverse.first(){
-            let undo=RetainedCloneSource::from_authority(Arc::new(BmpMutation::ReplaceSamples(restore.clone())),());let current=RetainedCloneSource::from_authority(Arc::new(post.clone()),());let mut undone=post.clone();let mut undo_cursor=BmpPublicationCursor::new();let mut undo_turns=0;
+            let undo=owned_source(BmpMutation::ReplaceSamples(restore.clone()));let current=owned_source(post.clone());let mut undone=post.clone();let mut undo_cursor=BmpPublicationCursor::new();let mut undo_turns=0;
             loop{undo_turns+=1;assert!(undo_turns<10000);let step=undo_cursor.advance(current.borrow(),&mut undone,undo.borrow(),grant).unwrap();if matches!(step,RetainedCloneEditStep::Complete(_)){break;}}
-            assert_eq!(undone.image,base.image);assert_eq!(undo_cursor.take_inverse().unwrap(),vec![BmpMutation::ReplaceSamples(ReplaceSamples{region,indices:after.indices.clone(),samples:after.samples.clone()})]);close(&mut undo_cursor);
+            assert_eq!(undone.image,base.image);assert_eq!(undo_cursor.take_inverse().unwrap(),vec![BmpMutation::ReplaceSamples(ReplaceSamples{region,indices:after.indices.clone(),samples:after.samples.clone()})]);close(&mut undo_cursor);close_source(undo);close_source(current);
         }
         if post.image.profile==crate::schema::snapshot::BmpProfile::DirectRgb32 {let bytes=crate::standards::v_v3::subsets::any::io::encode_bmp(&post).unwrap();let (width,height,visual)=semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_visual_rgba8(&bytes).unwrap();assert_eq!((width,height),(post.image.width,post.image.height));assert_eq!(visual,crate::schema::operations::bmp_rgba8_preview(&post).unwrap());}
         retire_owned_value(inverse);
@@ -44,9 +47,9 @@ fn retained_bmp_publication_keeps_exact_components_indices_and_reserved_samples(
 }
 #[test]
 fn retained_bmp_publication_cancellation_closes_partial_result_copy() {
-    let source=RetainedCloneSource::from_authority(Arc::new(BmpSnapshot::default()),());let owner=Arc::new(BmpMutation::ReplaceImage(ReplaceImage{image:BmpImage::default()}));let mutation=RetainedCloneSource::from_authority(Arc::clone(&owner),());let mut post=BmpSnapshot::default();let mut cursor=BmpPublicationCursor::new();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };
+    let source=owned_source(BmpSnapshot::default());let mutation=owned_source(BmpMutation::ReplaceImage(ReplaceImage{image:BmpImage::default()}));let mut post=BmpSnapshot::default();let mut cursor=BmpPublicationCursor::new();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };
     for _ in 0..300 {cursor.advance(source.borrow(),&mut post,mutation.borrow(),grant).unwrap();if cursor.phase==2&&cursor.copy.is_some(){break;}}
-    cursor.cancel();close(&mut cursor);drop(mutation.into_owner());assert_eq!(Arc::strong_count(&owner),1);
+    cursor.cancel();close(&mut cursor);close_source(mutation);close_source(source);
 }
 
 #[test]
@@ -98,7 +101,7 @@ fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owne
     for row in fixture["cases"].as_array().unwrap().iter().chain(fixture["replacementCases"].as_array().unwrap().iter()){
         let target=BmpSnapshot::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse_bytes(row["snapshot"].to_string().as_bytes(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let base=BmpSnapshot::default();let mut post=base.clone();
-        let source=RetainedCloneSource::from_authority(Arc::new(base.clone()),());let mutation=RetainedCloneSource::from_authority(Arc::new(BmpMutation::ReplaceImage(ReplaceImage{image:target.image.clone()})),());
+        let source=owned_source(base.clone());let mutation=owned_source(BmpMutation::ReplaceImage(ReplaceImage{image:target.image.clone()}));
         let mut cursor=BmpPublicationCursor::new();let mut turns=0;
         loop{
             turns+=1;assert!(turns<10000);
@@ -111,7 +114,7 @@ fn retained_bmp_publication_replacement_and_inverse_use_bounded_typed_image_owne
             if matches!(step,RetainedCloneEditStep::Complete(_)){break;}
         }
         assert_eq!(post,target);let inverse=cursor.take_inverse().unwrap();assert_eq!(inverse.len(),1);
-        let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);
+        let restored=protocol::apply_diff(inverse[0].diff(&post).diff(),&post).unwrap();assert_eq!(restored,base);close(&mut cursor);close_source(source);close_source(mutation);
         retire_owned_value(inverse);
         eprintln!("[DEBUG] retained Bmp typed image replacement neutral={} turns={turns} inverseCapacityGranted=true nativeWordsExact=true",row["name"]);
     }

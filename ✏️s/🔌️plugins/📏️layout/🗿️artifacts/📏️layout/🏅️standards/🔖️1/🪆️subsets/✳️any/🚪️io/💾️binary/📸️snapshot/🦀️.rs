@@ -55,4 +55,4 @@ impl store::ArtifactPack for LayoutSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

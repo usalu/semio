@@ -7,7 +7,6 @@ use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use crate::editor::bim::terminology::BimLabels;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::UtilityRef;
-use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Registry
 /// 🪛️ One utility of the registry.

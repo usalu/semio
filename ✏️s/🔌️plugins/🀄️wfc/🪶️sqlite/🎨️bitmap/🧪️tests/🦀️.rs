@@ -1,10 +1,12 @@
 //! 🧪️ Independent byte-index edits and full raw-word owner equality share the closed corpus.
+#[path = "../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use semio_framework_os_kernel::{ArtifactPack,ArtifactSqliteSnapshot,sqlite_snapshot::*};
 use std::{io::Write,process::{Command,Stdio}};
 pub fn verify<S:ArtifactPack+ArtifactSqliteSnapshot>(source:&S,edited:Option<&S>,prefix:&str,case:&serde_json::Value){
  let expected=source.encode_pack();
- let database=source.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
- let restored=S::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+ let database=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
+ let restored=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|S::from_sqlite_database(&database, sqlite_control)).unwrap();
  assert_eq!(restored.encode_pack(),expected);
  let bytes=export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
  let script=r#"import{Database}from'bun:sqlite';const[prefix,json]=Bun.argv.slice(-2),c=JSON.parse(json),db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));try{
@@ -19,7 +21,7 @@ pub fn verify<S:ArtifactPack+ArtifactSqliteSnapshot>(source:&S,edited:Option<&S>
  let case_json=case.to_string();let mut process=Command::new("bun").args(["-e",script,prefix,&case_json]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
  process.stdin.take().unwrap().write_all(&bytes).unwrap();let output=process.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
  let physical=import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
- let actual=S::from_sqlite_database(&physical,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+ let actual=original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|S::from_sqlite_database(&physical, sqlite_control)).unwrap();
  assert_eq!(actual.encode_pack(),edited.unwrap_or(source).encode_pack(),"independent per-pixel edit must preserve every unrelated raw-word field");
  assert_eq!(source.encode_pack(),expected,"complete borrowed input is unchanged");
  for violation in["orphan","duplicate","branch"]{if case["id"]!="three-unknown-index"{break}
@@ -29,6 +31,6 @@ pub fn verify<S:ArtifactPack+ArtifactSqliteSnapshot>(source:&S,edited:Option<&S>
    "duplicate"=>malformed.table_mut(&format!("{prefix}_bitmap_pixel")).unwrap().rows[1].values[2]=SqliteValue::Integer(0),
    _=>malformed.table_mut(&format!("{prefix}_bitmap_literal_scalar")).unwrap().rows.push(SqliteRow{rowid:1,values:vec![SqliteValue::Integer(1),SqliteValue::Integer(bitmap),SqliteValue::Integer(0),SqliteValue::Text("文".into())]}),
   }
-  assert!(S::from_sqlite_database(&malformed,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).is_err(),"bitmap relationship refusal: {violation}");
+  assert!(original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|S::from_sqlite_database(&malformed, sqlite_control)).is_err(),"bitmap relationship refusal: {violation}");
  }
 }

@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2,SemioPoint3};
 use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot,BrepCurve,BrepCurve2,BrepSurface};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(value:&SemioBrepSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.brep.dsl v1\n","stdio.semio.brep.pack v1",control,|control|crate::standards::v1::subsets::brep::io::sqlite::snapshot::admit_values(value,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(value,writer,encoding),native_owner)}
 fn comma(w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.delimiter(b",",e)}

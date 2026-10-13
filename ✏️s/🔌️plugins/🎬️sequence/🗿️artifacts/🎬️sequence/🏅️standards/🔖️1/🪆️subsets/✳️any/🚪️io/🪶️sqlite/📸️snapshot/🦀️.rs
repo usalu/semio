@@ -1,7 +1,6 @@
 //! 🎬️ Handwritten parent schema and literal composed-child relational ownership.
 use crate::standards::v1::subsets::any::schema::snapshot::SequenceSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_diagnostic::{TextError,TextSpan};
 use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound}}};
 fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Sequence requires exact fields and positive aliased identities"))}Ok(())}
 impl ArtifactSqliteSnapshot for SequenceSnapshot{
@@ -9,7 +8,7 @@ impl ArtifactSqliteSnapshot for SequenceSnapshot{
  fn retire_sqlite_snapshot(self){neural_engine::ColdRetire::retire_cold(self)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(2)?;let maximum=control.limits().max_value_bytes;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {semantic_borrowed(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_borrowed(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;control.check_rows(2)?;semantic_owned(self,control)?;
@@ -31,7 +30,7 @@ impl ArtifactSqliteSnapshot for SequenceSnapshot{
   if documents.len()!=1||documents[0].rowid!=1||children.len()!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Sequence requires one document and one content child"))}
   let document=&documents[0];let child=&children[0];identity(document,2)?;identity(child,7)?;if child.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Sequence child requires the document parent"))}
   control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);let result=(||{
-  native.begin_stage(6)?;native.charge(std::mem::size_of::<Self>())?;
+  native.begin_stage(6)?;native.charge(size_of::<Self>())?;
   let schema=native.copy_text(document.text(1)?)?;native.step()?;let child_id=native.copy_text(child.text(2)?)?;native.step()?;let artifact_id=native.copy_text(child.text(3)?)?;native.step()?;
   let artifact_kind=native.copy_text(child.text(4)?)?;native.step()?;let standard=native.copy_text(child.text(5)?)?;native.step()?;let subset=native.copy_text(child.text(6)?)?;native.step()?;native.checkpoint()?;
   Ok(Self{schema,content:store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}})})})();(result,native.owned_bytes())})?

@@ -37,7 +37,7 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 
 }
-pub use diff_codec::*;
+#[cfg(test)] pub use diff_codec::*;
 
 #[allow(unused_imports)]
 mod diff_wire_codec {

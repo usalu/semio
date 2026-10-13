@@ -2,7 +2,7 @@
 
 use crate::artifact_schema::mutations::En1994Mutation;
 
-use protocol::OpText;
+#[cfg(test)] use protocol::OpText;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

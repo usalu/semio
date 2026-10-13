@@ -25,20 +25,20 @@ async fn sqlite_snapshot_ply_actual_declaration_typed_and_erased_io_mount(){
  for encoding in[store::sqlite_snapshot::SnapshotEncoding::Binary,store::sqlite_snapshot::SnapshotEncoding::Text]{
   let bytes=io_export_sqlite_snapshot(&dialect,&snapshot,encoding,limits,&mut |_|true).await.unwrap().value;let restored=io_import_sqlite_snapshot::<PlySnapshot>(&dialect,&bytes,limits,&mut |_|true).await.unwrap().value;assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);
   let payload=match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))};
-  let file=io_run_with_snapshot_control(&export,payload,limits,&mut |_|true).await.unwrap().value;let restored=io_run_with_snapshot_control(&import,file,limits,&mut |_|true).await.unwrap().value;let restored=PlySnapshot::decode_sqlite_snapshot_native(&restored,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire(restored);
+  let file=semio_s_artifact_stdio_contract::testing::io_run(&export,payload,limits,&mut |_|true).await.unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::io_run(&import,file,limits,&mut |_|true).await.unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PlySnapshot::decode_sqlite_snapshot_native(&restored,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire(restored);
  }
 }
 
 #[test]
 fn sqlite_snapshot_ply_typed_properties_scalar_cells_and_list_items_roundtrip() {
     let snapshot = fixture();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(database.table("ply_property").unwrap().rows.len(), 10);
     assert_eq!(database.table("ply_cell").unwrap().rows.len(), 19);
     assert_eq!(database.table("ply_list_item").unwrap().rows.len(), 3);
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-    let restored = PlySnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let restored = PlySnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(restored, snapshot);
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&restored))).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
@@ -53,18 +53,18 @@ fn sqlite_snapshot_ply_typed_properties_scalar_cells_and_list_items_roundtrip() 
             3 => broken.table_mut("ply_element").unwrap().rows[0].values[4] = SqliteValue::Integer(4294967296),
             _ => broken.table_mut("ply_list_item").unwrap().rows[1].values[2] = SqliteValue::Integer(0),
         }
-        assert!(PlySnapshot::from_sqlite_database(&broken, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err());
+        assert!(PlySnapshot::from_sqlite_database(&broken,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).is_err());
     }
     let limits = SqliteDatabaseLimits { max_value_bytes: 0, ..SqliteDatabaseLimits::default() };
-    assert!(PlySnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false, SqliteDatabaseLimits::default())).is_err());
+    assert!(PlySnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false,SqliteDatabaseLimits::default())).is_err());
 }
 
 #[test]
 fn sqlite_snapshot_ply_independent_sql_property_queries_and_edits_restore_scalar_types() {
     use std::{io::Write, process::{Command, Stdio}};
     let mut snapshot = fixture();
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let script = "import {Database} from 'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()));if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const rows=db.query('SELECT e.name,r.ordinal,p.name AS property,v.kind,v.integer_value,v.real_value FROM ply_element e JOIN ply_row r ON r.element_id=e.id JOIN ply_cell c ON c.row_id=r.id JOIN ply_property p ON p.element_id=e.id AND p.ordinal=c.ordinal JOIN ply_value v ON v.id=c.value_id ORDER BY e.ordinal,r.ordinal,p.ordinal').all();if(rows.length!==19||rows[8].integer_value!==4294967295||rows[0].real_value!==3.25)throw Error('typed query');db.query('UPDATE ply_value SET real_value=8.5,real_value_ieee754_bits=4620974692658839552 WHERE id=(SELECT value_id FROM ply_cell WHERE row_id=1 AND ordinal=0)').run();await Bun.write(Bun.stdout,db.serialize());db.close();";
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
@@ -72,7 +72,7 @@ fn sqlite_snapshot_ply_independent_sql_property_queries_and_edits_restore_scalar
     let output = child.wait_with_output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let edited = import_sqlite_database(&output.stdout, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-    let restored = PlySnapshot::from_sqlite_database(&edited, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let restored = PlySnapshot::from_sqlite_database(&edited,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     snapshot.elements[0].rows[0].values[0] = PlyValue::Double(8.5);
     assert_eq!(restored, snapshot);
 }
@@ -163,7 +163,7 @@ fn sqlite_snapshot_ply_erased_binary_and_text_keep_owned_schema_exact_ieee_and_i
  let coordinate=&cases["sqliteDialect"];let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:coordinate["artifactKind"].as_str().unwrap().into(),standard:coordinate["standard"].as_str().unwrap().into(),subset:coordinate["subset"].as_str().unwrap().into()};let codec=<PlySnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
  for(index,word)in cases["binary64Bits"].as_array().unwrap().iter().enumerate(){let word=u64::from_str_radix(word.as_str().unwrap(),16).unwrap();let mut snapshot=fixture();snapshot.schema="owned PLY state".into();snapshot.elements[0].rows[0].values[0]=PlyValue::Double(f64::from_bits(word));snapshot.elements[0].rows[0].values[1]=PlyValue::Float(f32::from_bits(u32::from_str_radix(cases["binary32Bits"][index].as_str().unwrap(),16).unwrap()));
   let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
-  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=(codec.import)(&snapshot.schema,&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;let restored=(codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;assert_eq!(restored,database,"native erased snapshot must retain every owned field and IEEE word");}
+  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema,&dialect,&mut Some(database.clone()),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (codec.export)(&snapshot.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(restored,database,"native erased snapshot must retain every owned field and IEEE word");}
  }
 }
 
@@ -191,9 +191,9 @@ fn sqlite_snapshot_ply_whole_native_controls_deep_values_and_exact_payload_retir
  let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧱️topology-laws.json")).unwrap();let depth=cases["depth"].as_u64().unwrap()as usize;let bits=u64::from_str_radix(cases["binary64Bits"].as_str().unwrap(),16).unwrap();let mut value=PlyValue::Double(f64::from_bits(bits));for _ in 0..depth{value=PlyValue::List(vec![value]);}
  let snapshot=PlySnapshot{schema:"deep owned state 世界".repeat(10000),format:PlyFormat::Ascii,comments:vec![],elements:vec![PlyElement{name:"independent".into(),count:u64::MAX,properties:vec![],rows:vec![PlyRow{values:vec![value]}]}]};
  for payload in[store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))]{
-  let restored=PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let mut value=&restored.elements[0].rows[0].values[0];let mut count=0;while let PlyValue::List(values)=value{count+=1;value=&values[0];}assert_eq!(count,depth);let PlyValue::Double(value)=value else{panic!()};assert_eq!(value.to_bits(),bits);crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire(restored);
-  for limits in[SqliteDatabaseLimits{max_rows:cases["maxRows"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()},SqliteDatabaseLimits{max_value_bytes:cases["maxValueBytes"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()}]{assert!(PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}
-  let mut interior=false;assert!(PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::DecodeNative&&event.completed>=cases["cancelAfter"].as_u64().unwrap()as usize&&event.completed<event.total{interior=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(interior);
+  let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();let mut value=&restored.elements[0].rows[0].values[0];let mut count=0;while let PlyValue::List(values)=value{count+=1;value=&values[0];}assert_eq!(count,depth);let PlyValue::Double(value)=value else{panic!()};assert_eq!(value.to_bits(),bits);crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire(restored);
+  for limits in[SqliteDatabaseLimits{max_rows:cases["maxRows"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()},SqliteDatabaseLimits{max_value_bytes:cases["maxValueBytes"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()}]{assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).is_err());}
+  let mut interior=false;assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::DecodeNative&&event.completed>=cases["cancelAfter"].as_u64().unwrap()as usize&&event.completed<event.total{interior=true;false}else{true}},SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(interior);
  }
  crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire(snapshot);
 }
@@ -209,7 +209,7 @@ fn sqlite_snapshot_ply_controlled_native_output_retains_deep_values_and_cancels_
  use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotPhase};
  let f:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧱️topology-laws.json")).unwrap();let depth=f["depth"].as_u64().unwrap()as usize;let bits=u64::from_str_radix(f["binary64Bits"].as_str().unwrap(),16).unwrap();let mut value=PlyValue::Double(f64::from_bits(bits));for _ in 0..depth{value=PlyValue::List(vec![value]);}
  let mut snapshot=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(PlySnapshot{schema:"世界 🪐".repeat(30000),format:PlyFormat::BinaryBigEndian,comments:vec!["independent metadata".into()],elements:vec![PlyElement{name:"independent".into(),count:u64::MAX,properties:vec![PlyProperty::List{name:"unrelated declaration".into(),count_kind:PlyScalarType::Double,value_kind:PlyScalarType::Float}],rows:vec![PlyRow{values:vec![value,PlyValue::Float(f32::from_bits(0xff800123))]}]}]},crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire);let schema_length=snapshot.as_mut().schema.len();let limits=SqliteDatabaseLimits::default();let expected=snapshot.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
- for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).expect("PLY actual controlled native output owner");let mut restored=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire);assert_eq!(restored.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);let mut interior=false;assert!(snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==schema_length&&event.completed>=65536&&event.completed<event.total{interior=true;false}else{true}},limits)).is_err());assert!(interior);for limited in[SqliteDatabaseLimits{max_rows:30,..limits},SqliteDatabaseLimits{max_value_bytes:128,..limits}]{assert!(snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}}
+ for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).expect("PLY actual controlled native output owner");let mut restored=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PlySnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap(),crate::standards::v1_0::subsets::any::io::binary::snapshot::native_pack::retire);assert_eq!(restored.as_mut().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);let mut interior=false;assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==schema_length&&event.completed>=65536&&event.completed<event.total{interior=true;false}else{true}},limits), native_owner)).is_err());assert!(interior);for limited in[SqliteDatabaseLimits{max_rows:30,..limits},SqliteDatabaseLimits{max_value_bytes:128,..limits}]{assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.as_mut().encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limited), native_owner)).is_err());}}
 }
 
 #[test]

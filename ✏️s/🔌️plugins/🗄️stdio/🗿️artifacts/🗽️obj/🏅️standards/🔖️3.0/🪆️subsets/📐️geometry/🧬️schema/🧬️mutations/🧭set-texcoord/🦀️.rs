@@ -33,7 +33,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetTexcoord {
         let Self { index, .. } = self;
         Ok({
             match base.texcoords.get(*index) {
-                Some(v) => vec![ObjMutation::SetTexcoord(set_tex_coord::SetTexcoord { index: *index, texcoord: v.clone() })],
+                Some(v) => vec![ObjMutation::SetTexcoord(SetTexcoord { index: *index, texcoord: v.clone() })],
                 None => Vec::new(),
             }
         })

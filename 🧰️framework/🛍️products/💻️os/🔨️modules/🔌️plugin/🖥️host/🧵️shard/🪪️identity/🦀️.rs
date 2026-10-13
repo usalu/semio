@@ -25,7 +25,7 @@ impl Drop for OriginalShardIdentityLoan<'_>{fn drop(&mut self){let identity=self
 impl OriginalShardIdentity{
  /// 🏭️ The original port admits the stable return slot before its physical birth.
  pub fn issue(policy:ShardIdentityPolicy,mut observer:Box<Observer<'static>>,mut allocate:Box<NativeEncodeAllocationPort<'static>>)->Result<Self,ShardIdentityIssueRefused>{
-  let bytes=std::mem::size_of::<NativeEncodeRetirementRecipient>();
+  let bytes=size_of::<NativeEncodeRetirementRecipient>();
   let demand=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1};
   if !(policy.grant.maximum_items>=demand.maximum_items&&policy.grant.maximum_copy_bytes>=demand.maximum_copy_bytes&&policy.grant.maximum_capacity_bytes>=demand.maximum_capacity_bytes&&policy.grant.maximum_release_bytes>=demand.maximum_release_bytes&&policy.grant.maximum_depth>=demand.maximum_depth){return Err(ShardIdentityIssueRefused{error:ValueError::literal(ValueRefusalKind::OwnershipLimit,"original shard receiving policy refuses its return slot"),observer,allocate})}
   let mut native=NativeEncodeControl::new_forwarded(policy.maximum_bytes,&mut *observer,&mut *allocate);
@@ -71,7 +71,7 @@ pub fn native_identity_issuer(policy:ShardIdentityPolicy,mut observer_issuer:imp
  Box::new(move |actor|{
   let observer=observer_issuer(actor);
   let allocate=Box::new(move |request:NativeEncodeAllocation|{
-   if policy.grant.maximum_items==0||policy.grant.maximum_copy_bytes<std::mem::size_of::<NativeEncodeAllocation>()||policy.grant.maximum_capacity_bytes<request.bytes||policy.grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original caller shard policy refuses physical receiving frontier"))}
+   if policy.grant.maximum_items==0||policy.grant.maximum_copy_bytes<size_of::<NativeEncodeAllocation>()||policy.grant.maximum_capacity_bytes<request.bytes||policy.grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original caller shard policy refuses physical receiving frontier"))}
    Ok(())
   });
   OriginalShardIdentity::issue(policy,observer,allocate)

@@ -192,7 +192,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     pub(crate) fn maintenance_ladder_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         for position in 0..MAINTENANCE_POSITIONS {
             let Some(unit) = self.maintenance_unit_at(position, self.maintenance_stage) else { continue };
-            if let Some(demand) = self.maintenance_unit_demand(unit, body)? {
+            if let Some(demand) = self.maintenance_unit_demand(unit, body)?.filter(|demand| *demand != RetirementDemand::default()) {
                 return Ok(demand);
             }
         }
@@ -202,6 +202,24 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
     /// 🎡️ Visits units in fair order and spends the grant on the first one that releases something. An empty or unfunded
     /// unit never consumes the call; a blocked or input-starved unit is remembered and reported only when nothing else moved.
     pub(crate) fn maintenance_ladder_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        let started_us = semio_framework_job::default_now_us();
+        let empty = RetainedCloneProgress::default();
+        let mut spent = empty;
+        loop {
+            let remaining = crate::plugin_runtime::remaining_plugin_turn_grant(grant, spent);
+            let unit = match self.maintenance_ladder_unit_step(remaining)? {
+                PluginLifecycleStep::Progress(progress) if progress != empty => progress,
+                step => return Ok(if spent == empty { step } else { PluginLifecycleStep::Progress(spent) }),
+            };
+            spent = spent.checked_add(unit).map_err(plugin_retirement_fault)?;
+            if unit.copied_items == 0 || crate::plugin_runtime::remaining_plugin_turn_grant(grant, spent).maximum_items == 0 || started_us.is_some_and(|started_us| semio_framework_job::default_now_us().is_some_and(|now_us| now_us.saturating_sub(started_us) >= INTERACTIVE_TURN_WORKER_WALL_US)) {
+                return Ok(PluginLifecycleStep::Progress(spent));
+            }
+        }
+    }
+
+    /// 🎡️ One fair unit of the rotation under what the host turn still owns; [`Self::maintenance_ladder_step`] chains units while the turn's grant lasts.
+    fn maintenance_ladder_unit_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         LAST_MAINTENANCE_STAGE.store(u64::MAX, std::sync::atomic::Ordering::Relaxed);
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
@@ -342,12 +360,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 MaintenanceTool::Idle => Ok(idle()),
                 MaintenanceTool::Worker(index, operation_id) => {
                     self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
-                    let pool = worker_pool();
                     let operation = self.tool_operations.get_mut(operation_id).ok_or_else(|| maintenance_fault("interactive-job.maintenance-tool-authority", "typed operation authority changed during one fixed maintenance step"))?;
                     let stepped = operation.drive_worker_step(grant);
                     #[cfg(target_arch = "wasm32")]
                     if let Some(now_ms) = semio_framework_job::default_now_ms() {
-                        pool.pump(now_ms);
+                        worker_pool().pump(now_ms);
                     }
                     match stepped {
                         Ok(step) => Ok(step),
@@ -824,7 +841,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
         let item = item_demand();
         if active.terminal_target.is_some() || (closing && !active.terminal()) {
             let replacement_live = active.replacement.is_some_and(|handle| self.store_replacement_jobs.get(handle.operation.0).is_some());
-            return Ok(if replacement_live || active.terminal_is_empty() { item } else { nonzero(active.retirement_demands(body)?) });
+            return Ok(if replacement_live || active.inputs_are_empty() { item } else { nonzero(active.retirement_demands(body)?) });
         }
         if active.state == ActiveDocumentArchiveLoadState::Pending {
             return Ok(item);
@@ -914,9 +931,17 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "ready recursive document archive lost its replacement acknowledgement authority"));
             }
         }
+        if active.inputs_are_empty() {
+            if grant.maximum_items == 0 {
+                return Ok(idle());
+            }
+            active.state = target;
+            active.phase = ActiveDocumentArchiveLoadPhase::Terminal;
+            return Ok(removed(RetainedCloneProgress::default()));
+        }
         match active.close_step(grant).map_err(plugin_retirement_fault)? {
             RetainedCloneStep::Complete(progress) => {
-                if !active.terminal_is_empty() {
+                if !active.inputs_are_empty() {
                     return Err(document_load_fault(DOCUMENT_LOAD_FAILED_CODE, "recursive document archive cleanup returned Complete with a live owner"));
                 }
                 active.state = target;

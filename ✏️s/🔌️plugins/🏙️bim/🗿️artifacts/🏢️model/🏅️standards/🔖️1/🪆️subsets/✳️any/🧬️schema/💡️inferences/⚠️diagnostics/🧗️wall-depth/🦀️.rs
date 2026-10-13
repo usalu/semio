@@ -41,7 +41,7 @@ fn lowest(layout: &WallLayout) -> f64 {
 /// ⚠️ The wall depth findings of one storey from the layouts and frames its `Diagnostics` node has as parents.
 pub fn storey(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>) -> Vec<Diagnostic> {
     let mut found = Vec::new();
-    for (id, wall) in snapshot.walls.iter().filter(|(_, row)| row.storey == storey) {
+    for (id, _wall) in snapshot.walls.iter().filter(|(_, row)| row.storey == storey) {
         if let Some(layout) = inputs.layouts.get(id.as_str()) {
             attaches(&mut found, storey, id, [&layout.top_attach, &layout.base_attach]);
         }

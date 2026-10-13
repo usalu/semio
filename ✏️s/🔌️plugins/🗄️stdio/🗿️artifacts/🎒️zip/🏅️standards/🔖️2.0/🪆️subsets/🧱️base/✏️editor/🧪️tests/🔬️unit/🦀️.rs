@@ -40,5 +40,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_member() {
         apply_mutation(&mut state, mutation);
     });
     assert_eq!(state.entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>(), ["a.txt", "m.txt", "b.txt"]);
-    assert_eq!(emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(emit(semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }

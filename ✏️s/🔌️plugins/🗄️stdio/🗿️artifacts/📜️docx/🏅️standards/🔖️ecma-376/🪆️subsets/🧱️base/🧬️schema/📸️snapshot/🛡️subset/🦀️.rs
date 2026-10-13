@@ -24,14 +24,14 @@ fn text(parts:&[&str],control:&mut NativeEncodeControl<'_>)->Result<String, Valu
  for part in parts{let mut start=0;while start<part.len(){let mut end=start.saturating_add(256).min(part.len());while !part.is_char_boundary(end){end-=1;}output.push_str(&part[start..end]);control.advance(end-start)?;start=end;}}Ok(output)})
 }
 fn diagnostic(output:&mut Vec<Diagnostic>,subset:&str,suffix:&str,severity:Severity,parts:&[&str],control:&mut NativeEncodeControl<'_>)->Result<(), ValueError>{
- control.charge(std::mem::size_of::<Diagnostic>())?;output.try_reserve_exact(1).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX diagnostic frontier allocation"))?;
+ control.charge(size_of::<Diagnostic>())?;output.try_reserve_exact(1).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX diagnostic frontier allocation"))?;
  output.push(Diagnostic{code:FaultCode::new(text(&["stdio.docx.",subset,".",suffix],control)?),severity,span:TextSpan::at(1,1),message:text(parts,control)?,expected:None,scope:FaultScope::default()});Ok(())
 }
 #[derive(Default)]
 struct Flags{main_strict:bool,main_trans:bool,trans:bool,vml:bool,family:bool,alternate:bool,conformance:bool}
 struct Frame<'a>{nodes:&'a[XmlNode],position:usize,attrs:&'a[XmlAttr]}
 fn push<'a>(frames:&mut Vec<Frame<'a>>,nodes:&'a[XmlNode],attrs:&'a[XmlAttr],control:&mut NativeEncodeControl<'_>)->Result<(), ValueError>{
- if frames.len()==frames.capacity(){control.charge(64*std::mem::size_of::<Frame<'a>>())?;frames.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX namespace frontier allocation"))?;}frames.push(Frame{nodes,position:0,attrs});Ok(())
+ if frames.len()==frames.capacity(){control.charge(64*size_of::<Frame<'a>>())?;frames.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX namespace frontier allocation"))?;}frames.push(Frame{nodes,position:0,attrs});Ok(())
 }
 fn colon(name:&str,control:&mut NativeEncodeControl<'_>)->Result<Option<usize>, ValueError>{
  control.scoped_stage(|control|->Result<Option<usize>, ValueError>{control.begin_stage(name.len())?;for(position,chunk)in name.as_bytes().chunks(256).enumerate(){let found=chunk.iter().position(|byte|*byte==b':');control.advance(chunk.len())?;if let Some(index)=found{return Ok(Some(position*256+index))}}Ok(None)})
@@ -61,7 +61,7 @@ fn path(target:&str,control:&mut NativeEncodeControl<'_>)->Result<String, ValueE
  control.scoped_stage(|control|->Result<String, ValueError>{control.begin_stage(length)?;control.charge(length)?;let mut output=String::new();output.try_reserve_exact(length).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX path allocation"))?;
  for(position,part)in parts.iter().enumerate(){if position!=0{output.push('/');control.step()?;}let mut start=0;while start<part.len(){let mut end=(start+256).min(part.len());while !part.is_char_boundary(end){end-=1;}output.push_str(&part[start..end]);control.advance(end-start)?;start=end;}}Ok(output)})
 }
-fn segment<'a>(part:&'a str,parts:&mut Vec<&'a str>,control:&mut NativeEncodeControl<'_>)->Result<(), ValueError>{match part{""|"."=>{},".."=>{parts.pop();},_=>{if parts.len()==parts.capacity(){control.charge(64*std::mem::size_of::<&str>())?;parts.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX relationship path frontier allocation"))?;}parts.push(part);}}Ok(())}
+fn segment<'a>(part:&'a str,parts:&mut Vec<&'a str>,control:&mut NativeEncodeControl<'_>)->Result<(), ValueError>{match part{""|"."=>{},".."=>{parts.pop();},_=>{if parts.len()==parts.capacity(){control.charge(64*size_of::<&str>())?;parts.try_reserve_exact(64).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "DOCX relationship path frontier allocation"))?;}parts.push(part);}}Ok(())}
 pub(crate) fn check(snapshot:&DocxSnapshot,subset:&str,control:&mut NativeEncodeControl<'_>)->Result<Vec<Diagnostic>, ValueError>{
  let strict=subset=="strict";let mut output=Vec::new();let mut main=None;
  for relationship in snapshot.opc.relationships.get("").into_iter().flat_map(|relationships|relationships.iter()){control.checkpoint()?;if relationship.rel_type.to_string_owner().ends_with("/officeDocument"){main=Some(path(&relationship.target.to_string_owner(),control)?);break}}

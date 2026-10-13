@@ -5,7 +5,7 @@ use protocol::causal::transition::HistoryFoldIndex;
 
 use std::collections::BTreeSet;
 
-use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Neuron, OperatorInfo, Value as NeuralValue, INPUT_KIND, OUTPUT_KIND};
+use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, Neuron, OperatorInfo, Value as NeuralValue, INPUT_KIND, OUTPUT_KIND};
 
 use crate::artifact::*;
 use semio_framework_artifact_flow_flow::widget_id_for;
@@ -214,7 +214,7 @@ fn dictionary_schema_at_port(output: &Dictionary, port: &str) -> Option<String> 
     dict.schema().map(str::to_string)
 }
 
-pub(crate) fn infer_port_schema(outputs: &protocol::causal::transition::HistoryFoldIndex<String, Dictionary>, kind_infos: &HistoryFoldIndex<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
+pub(crate) fn infer_port_schema(outputs: &HistoryFoldIndex<String, Dictionary>, kind_infos: &HistoryFoldIndex<String, OperatorInfo>, widgets: &[Widget], synapses: &[SynapseSpec], widget_id: &str, port: &str) -> String {
     if let Some(schema) = outputs.get(widget_id).and_then(|out| dictionary_schema_at_port(out, port)) {
         return schema;
     }

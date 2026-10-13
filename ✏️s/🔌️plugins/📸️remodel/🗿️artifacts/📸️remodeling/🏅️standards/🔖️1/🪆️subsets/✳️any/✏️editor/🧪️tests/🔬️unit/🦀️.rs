@@ -29,7 +29,7 @@ pub(crate) mod context {
     impl Drop for RemodelingApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0);
+                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -50,7 +50,7 @@ pub(crate) mod context {
     /// The RUNTIME side stays async (`ArtifactApp`/`VcsArtifactApp` are async traits, unlike the
     /// AUTHORING `ArtifactEditor` this crate implements), so every harness entry point awaits.
     pub async fn app() -> RemodelingApp {
-        let mut app = new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         RemodelingApp(app)
     }
@@ -111,13 +111,13 @@ pub(crate) mod context {
         };
         let view_state = window_kind.map(test_window);
         let command_id = command.command_id();
-        let mut result = app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }).await.unwrap_or_else(|fault| panic!("{command_id}: {fault:?}"));
-        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("{command_id}: settle: {fault:?}"));
+        let mut result = app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{command_id}: {fault:?}"));
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{command_id}: settle: {fault:?}"));
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -150,7 +150,7 @@ pub(crate) mod context {
 
     /// ⏯️ Dispatches one framework tool-run action and answers its output.
     pub async fn run_action(app: &mut RemodelingApp, action: &str, arguments: Vec<(String, semio_framework_plugin::DslValue)>) -> semio_framework_plugin::DslValue {
-        app.handle_action(action, Some(&semio_framework_plugin::DslValue::Object(arguments)), &meta("local")).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+        app.handle_action(action, Some(&semio_framework_plugin::DslValue::Object(arguments)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
     }
 
     /// ▶️ Starts the reconstruction tool run.
@@ -183,7 +183,7 @@ pub(crate) mod context {
     pub async fn host_turn(app: &mut RemodelingApp) {
         let meta = meta("local");
         app.maintenance_step(1, semio_framework_os_kernel::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance grant");
-        app.advance_typed_operation_publication().await.unwrap_or_else(|fault| panic!("driver turn faulted: {fault:?}"));
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap_or_else(|fault| panic!("driver turn faulted: {fault:?}"));
         while let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
             assert!(page.lane != TypedOperationResultLane::Fault, "typed operation fault: {}", String::from_utf8_lossy(page.bytes()));
             assert!(app.acknowledge_typed_operation_result(page.token).expect("result ACK"), "the exact result ACK is admitted");
@@ -199,7 +199,7 @@ pub(crate) mod context {
         for effect in effects {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 if semio_framework_plugin::is_tool_run_action_id(&action) {
-                    Box::pin(app.handle_action(&action, args.as_ref(), &meta)).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+                    Box::pin(app.handle_action(&action, args.as_ref(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
                 }
             }
         }
@@ -662,8 +662,8 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let result = semio_framework_plugin::ActionMeta { view_state: Some(view), ..artifact_app_laws::meta("local") };
-    app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result).await.expect("view dispatch");
-    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id).await.expect("view publication settles");
+    app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("view dispatch");
+    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("view publication settles");
     assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) && !receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row publishes its window-config lane and never the document lane: {:?}", receipt.lanes);
 }
 //#endregion 🔖️ManifestSanity
@@ -684,7 +684,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         |app| {
             let projection = app.snapshot().expect("materialize projection");
             (projection.params.feature.detector, projection.gcps.first().map(|gcp| gcp.name.clone()))
-        },
+        },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }

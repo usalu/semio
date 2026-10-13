@@ -26,9 +26,9 @@ impl crate::value::ToValue for ForeignTarget {
     }
 }
 impl crate::value::FromValue for ForeignTarget {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for ForeignTarget, found {value:?}")));
+            return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for ForeignTarget, found {value:?}")));
         };
         let mut artifact_id = None;
         let mut artifact_kind = None;
@@ -42,8 +42,8 @@ impl crate::value::FromValue for ForeignTarget {
             }
         }
         Ok(ForeignTarget {
-            artifact_id: artifact_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignTarget missing artifactId"))?,
-            artifact_kind: artifact_kind.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignTarget missing artifactKind"))?,
+            artifact_id: artifact_id.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "ForeignTarget missing artifactId"))?,
+            artifact_kind: artifact_kind.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "ForeignTarget missing artifactKind"))?,
             dialect,
         })
     }
@@ -72,9 +72,9 @@ impl crate::value::ToValue for ForeignStep {
     }
 }
 impl crate::value::FromValue for ForeignStep {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, ValueError> {
         let crate::value::DslValue::Object(fields) = value else {
-            return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected an object for ForeignStep, found {value:?}")));
+            return Err(ValueError::new(ValueRefusalKind::InvalidValue, format!("expected an object for ForeignStep, found {value:?}")));
         };
         let mut target = None;
         let mut mutation_id = None;
@@ -90,10 +90,10 @@ impl crate::value::FromValue for ForeignStep {
             }
         }
         Ok(ForeignStep {
-            target: target.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing target"))?,
-            mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing mutationId"))?,
-            payload: payload.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing payload"))?,
-            label: label.ok_or_else(|| crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "ForeignStep missing label"))?,
+            target: target.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "ForeignStep missing target"))?,
+            mutation_id: mutation_id.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "ForeignStep missing mutationId"))?,
+            payload: payload.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "ForeignStep missing payload"))?,
+            label: label.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "ForeignStep missing label"))?,
         })
     }
 }
@@ -211,7 +211,7 @@ impl ForeignStepsOwner {
  pub fn len(&self)->usize{self.values.len()}
  pub fn get(&self,index:usize)->Option<&ForeignStep>{self.values.get(index)}
  pub fn append_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{
-  let width=std::mem::size_of::<ForeignStep>();let count=self.len().checked_add(1).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?;
+  let width=size_of::<ForeignStep>();let count=self.len().checked_add(1).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?;
   Ok(semio_framework_value::RetirementDemand{copy_bytes:count.checked_mul(width).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?,capacity_bytes:count.checked_mul(width).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?,release_bytes:self.values.capacity().checked_mul(width).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?,depth:1})
  }
  pub fn try_append(&mut self,value:ForeignStep,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,ForeignStep)>{
@@ -234,7 +234,7 @@ impl ForeignStepsOwner {
   let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
   if let Some(child)=self.child.as_mut(){let step=child.close_step(child_grant)?;if !step.progress().fits(child_grant){return Err(refusal(ValueRefusalKind::InvariantViolated));}if child.terminal_is_empty(){self.child=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
   if !self.values.is_empty(){if child_grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let original=self.values.pop().ok_or_else(||refusal(ValueRefusalKind::InvariantViolated))?;return match ForeignStepRetirement::admit(original,child_grant){Ok((child,p))=>{self.child=Some(child);Ok(RetainedCloneStep::Progress(p))},Err((e,original))=>{self.values.push(original);Err(e)}};}
-  let release=self.values.capacity().checked_mul(std::mem::size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?;if grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  let release=self.values.capacity().checked_mul(size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))?;if grant.maximum_release_bytes<release{return Ok(RetainedCloneStep::Progress(Default::default()));}
   drop(std::mem::take(&mut*self.values));Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()}))
  }
  pub fn terminal_is_empty(&self)->bool{self.values.is_empty()&&self.values.capacity()==0&&self.child.is_none()}
@@ -243,7 +243,7 @@ impl ErasedSnapshotRetirement for ForeignStepsOwner {
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_one(g)}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_copy_byte_demand()}else{Ok(0)}}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_capacity_byte_demand(b)}else{Ok(0)}}
- fn next_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_release_byte_demand()}else if self.values.is_empty(){self.values.capacity().checked_mul(std::mem::size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))}else{Ok(0)}}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_release_byte_demand()}else if self.values.is_empty(){self.values.capacity().checked_mul(size_of::<ForeignStep>()).ok_or_else(||refusal(ValueRefusalKind::OwnershipLimit))}else{Ok(0)}}
  fn next_depth_demand(&self)->Result<usize,ValueError>{if let Some(c)=&self.child{c.next_depth_demand()?.checked_add(1).ok_or_else(||refusal(ValueRefusalKind::DepthLimit))}else{Ok(if self.values.is_empty(){usize::from(!self.terminal_is_empty())}else{2})}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
 }
@@ -259,7 +259,7 @@ impl ForeignStepsPreparation {
  /// 🔀️ Begins the next original forward only after its entire indexed source has settled.
  pub fn begin_next_source(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
   if self.closing||!self.complete||self.copy.is_some()||self.pending.is_some()||self.retiring.is_some(){return Err(refusal(ValueRefusalKind::InvariantViolated));}
-  let copied_bytes=std::mem::size_of::<usize>()+std::mem::size_of::<bool>();
+  let copied_bytes=size_of::<usize>()+size_of::<bool>();
   if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(None);}
   self.index=0;self.complete=false;
   Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))

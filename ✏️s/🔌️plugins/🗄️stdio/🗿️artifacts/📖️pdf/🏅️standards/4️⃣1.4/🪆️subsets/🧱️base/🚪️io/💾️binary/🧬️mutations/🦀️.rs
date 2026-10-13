@@ -12,11 +12,11 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 type Encoder = fn(&PdfMutation) -> Option<Result<Vec<u8>, String>>;
 type Decoder = fn(&[u8]) -> Result<PdfMutation, String>;
 pub const REGISTRY: &[(u8, Encoder, Decoder)] = &[
-    (crate::standards::v1_4::subsets::base::io::binary::mutations::insert_page::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::insert_page::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::insert_page::decode),
-    (crate::standards::v1_4::subsets::base::io::binary::mutations::remove_page::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::remove_page::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::remove_page::decode),
-    (crate::standards::v1_4::subsets::base::io::binary::mutations::move_page::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::move_page::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::move_page::decode),
-    (crate::standards::v1_4::subsets::base::io::binary::mutations::resize_page::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::resize_page::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::resize_page::decode),
-    (crate::standards::v1_4::subsets::base::io::binary::mutations::replace_page_text::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::replace_page_text::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::replace_page_text::decode),
+    (insert_page::TAG, insert_page::encode, insert_page::decode),
+    (remove_page::TAG, remove_page::encode, remove_page::decode),
+    (move_page::TAG, move_page::encode, move_page::decode),
+    (resize_page::TAG, resize_page::encode, resize_page::decode),
+    (replace_page_text::TAG, replace_page_text::encode, replace_page_text::decode),
 ];
 //#endregion 🔖️Registry
 

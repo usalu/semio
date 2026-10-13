@@ -3,7 +3,6 @@
 use crate::viewer::bim::modes::view::windows::{plan, world};
 use semio_framework_plugin::{create_default_layout, ModeDefinition, WindowLayout};
 use crate::viewer::bim::terminology::BimViewerLabels;
-use semio_framework_ui_locale::LocalizedLabel;
 
 pub const BIM_VIEW_MODE_VIEW: &str = "view";
 

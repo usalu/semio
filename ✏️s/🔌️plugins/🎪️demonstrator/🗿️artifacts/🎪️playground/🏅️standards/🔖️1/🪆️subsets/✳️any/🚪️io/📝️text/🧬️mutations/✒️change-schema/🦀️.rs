@@ -95,7 +95,8 @@ mod tests;
 //#endregion 🧪️RoundTrip
 
 mod json_orchestration {
-use crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff, mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::PlaygroundMutation, snapshot::PlaygroundSnapshot};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::{diff::PlaygroundDiff};
 
 use semio_framework_pack_json::{array, from_dsl_value, from_json_str, object, to_string, Value};
 use crate::central_apply::{bridge_step};

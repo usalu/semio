@@ -43,11 +43,11 @@ class RecursiveRetirementTest extends BundleScript {
 class StreamRolesTest extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Expected test stream-roles");
-    await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--features", "component-app-assembly", "--lib", "pdf_stream_roles_", "--", "--nocapture"], this.invocation.control);
+    await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--lib", "pdf_stream_roles_", "--", "--nocapture"], this.invocation.control);
   }
 }
 /** 🖼️ Proves logical image words and independently admitted native foreign artifact custody. */
 class SemanticBodyTest extends BundleScript {
-  async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test semantic-body");await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--features","component-app-assembly","--lib","pdf_semantic_body_","--","--nocapture"], this.invocation.control);}
+  async run(args:string[]):Promise<void>{if(args.length)throw new Error("Expected test semantic-body");await runArtifactRustTests("semio-s-artifact-stdio-pdf", this.repoRoot, ["--lib","pdf_semantic_body_","--","--nocapture"], this.invocation.control);}
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-pdf", { snapshotSqliteTests: snapshotSqliteSources, snapshotSqliteTestFeatures: ["component-app-assembly"], commands: { verify: VerifySnapshotSqliteSource }, testCommands: { "recursive-retirement": RecursiveRetirementTest, "stream-roles": StreamRolesTest, "semantic-body": SemanticBodyTest } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-pdf", { snapshotSqliteTests: snapshotSqliteSources, commands: { verify: VerifySnapshotSqliteSource }, testCommands: { "recursive-retirement": RecursiveRetirementTest, "stream-roles": StreamRolesTest, "semantic-body": SemanticBodyTest } });

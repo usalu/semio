@@ -6,7 +6,7 @@ use std::mem::ManuallyDrop;
 pub struct ArtifactStorePreparedRetirement<P,M>{pub(super) fold_digest:[u8;32],pub(super) fold_clock:HybridLogicalTimestamp,pub(super) foreign_step_presence:Option<bool>,pub(super) edit:ManuallyDrop<Option<Box<Edit<M>>>>,unboxed:ManuallyDrop<Option<Edit<M>>>,pub(super) post:ManuallyDrop<Option<Arc<P>>>,authority:ManuallyDrop<Option<Arc<ArtifactStoreOneItemLiveAuthority>>>,pub(super) strings:ManuallyDrop<[Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>;3]>,mutation_factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,snapshot_factory:ManuallyDrop<Option<Arc<dyn SnapshotRetirementFactory<P>>>>,active:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,factories:ManuallyDrop<[Option<FactoryAuthority>;2]>}
 impl<P,M> ArtifactStoreOneItemPrepared<P,M>{
  /// 📏️ The exact cursor frame is priced before any original owner moves.
- pub fn retirement_birth_demand()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:std::mem::size_of::<ArtifactStorePreparedRetirement<P,M>>(),depth:1}}
+ pub fn retirement_birth_demand()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:size_of::<ArtifactStorePreparedRetirement<P,M>>(),depth:1}}
 }
 impl<P:Send+Sync+'static,M:Send+'static> ArtifactStoreOneItemPrepared<P,M>{
  /// 🎟️ Refusal returns the actual candidate and both already captured issuers unchanged.
@@ -23,12 +23,12 @@ impl<P:Send+Sync+'static,M:Send+'static> ArtifactStorePreparedRetirement<P,M>{
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   let nested=|mut demand:RetirementDemand|->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"prepared retirement depth overflow"))?;Ok(demand)};
   if let Some(active)=self.active.as_ref(){return nested(artifact_retirement_box_demands(active,body)?);}
-  if self.edit.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Edit<M>>(),release_bytes:std::mem::size_of::<Edit<M>>(),depth:1,..Default::default()});}
-  if self.unboxed.is_some(){return Ok(RetirementDemand{capacity_bytes:std::mem::size_of::<ArtifactStoreDecodedEditRetirement<M>>(),depth:2,..Default::default()});}
+  if self.edit.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Edit<M>>(),release_bytes:size_of::<Edit<M>>(),depth:1,..Default::default()});}
+  if self.unboxed.is_some(){return Ok(RetirementDemand{capacity_bytes:size_of::<ArtifactStoreDecodedEditRetirement<M>>(),depth:2,..Default::default()});}
   if let Some(post)=self.post.as_ref(){return Ok(RetirementDemand{capacity_bytes:self.snapshot_factory.as_ref().expect("prepared original root issuer").retirement_birth_bytes(post),depth:2,..Default::default()});}
   if self.strings.iter().any(Option::is_some){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>(),depth:2,..Default::default()});}
   if let Some(authority)=self.authority.as_ref(){let birth=authority.retirement_birth_demand();return Ok(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth+1,..Default::default()});}
-  if self.mutation_factory.is_some()||self.snapshot_factory.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),depth:1,..Default::default()});}
+  if self.mutation_factory.is_some()||self.snapshot_factory.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),depth:1,..Default::default()});}
   self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()),|factory|nested(factory.demands(body)?))
  }
 }

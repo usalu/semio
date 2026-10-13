@@ -1,8 +1,5 @@
 //! 📝️ Direct-color region text codec.
-use crate::standards::v_v3::subsets::any::schema::mutations::*;
-use crate::standards::v_v3::subsets::any::schema::snapshot::*;
-use crate::standards::v_v3::subsets::any::io::text::diff::*;
-use crate::schema::mutations::{BmpMutation, PaintDirectRegion};
+use crate::schema::mutations::BmpMutation;
 use crate::standards::v_v3::subsets::any::io::text::mutations::Entry;
 pub const TEXT_OPCODE: &str = "paint-direct-region";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };

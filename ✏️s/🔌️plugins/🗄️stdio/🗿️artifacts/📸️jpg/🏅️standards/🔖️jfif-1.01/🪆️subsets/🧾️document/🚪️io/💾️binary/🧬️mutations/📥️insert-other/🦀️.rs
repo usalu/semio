@@ -1,8 +1,6 @@
 //! 💾️ Direct insert-other-segment binary codec.
 use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::*;
-use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::binary::diff::*;
-use crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::Entry;
 pub const BINARY_TAG: u8 = dsl::protocol_record::tag_u8(include_str!("../📡️.protocol.semio"), "insert-other-segment");
 pub const CODEC: Entry = Entry { tag: BINARY_TAG, encode, decode };

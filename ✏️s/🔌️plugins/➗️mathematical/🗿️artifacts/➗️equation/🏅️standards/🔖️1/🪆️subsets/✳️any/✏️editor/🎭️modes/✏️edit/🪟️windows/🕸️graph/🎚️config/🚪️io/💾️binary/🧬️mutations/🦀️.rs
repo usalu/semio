@@ -15,4 +15,3 @@ impl protocol::OpBinary for EquationGraphWindowConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

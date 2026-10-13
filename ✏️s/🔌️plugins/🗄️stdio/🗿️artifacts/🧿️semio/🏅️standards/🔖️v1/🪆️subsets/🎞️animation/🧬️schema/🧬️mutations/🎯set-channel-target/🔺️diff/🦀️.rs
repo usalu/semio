@@ -8,7 +8,7 @@ pub fn diff(payload: &super::SetChannelTarget, base: &SemioAnimationSnapshot) ->
     if timeline_at(base, payload.timeline_index).is_none_or(|t| payload.index >= t.channels.len()) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("No channel exists at index #{}.", payload.index), [payload.index.to_string()]);
     }
-    use SemioAnimationMutation::*;
+    
     let super::SetChannelTarget { timeline_index, index, target } = payload;
     protocol::MutationOutcome::new(diff_channel_field(*timeline_index, *index, AnimChannelDiff { target: Some(target.clone()), interpolation: None, keyframes: None }))
 }

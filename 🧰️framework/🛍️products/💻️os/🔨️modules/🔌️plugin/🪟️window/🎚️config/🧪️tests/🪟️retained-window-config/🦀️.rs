@@ -11,13 +11,13 @@ async fn original_window_constructor_cancellation_preserves_carriers_and_full_ph
     let original=law["originalGrant"].as_array().unwrap();
     let grant=RetainedCloneGrant{maximum_items:original[0].as_u64().unwrap()as usize,maximum_copy_bytes:original[1].as_u64().unwrap()as usize,maximum_capacity_bytes:original[2].as_u64().unwrap()as usize,maximum_release_bytes:original[3].as_u64().unwrap()as usize,maximum_depth:original[4].as_u64().unwrap()as usize};
     for capacity in [1usize,257,4096]{
-        let mut owner=TypedWindowConfigStoreOwner::<Owner>{direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new()}).map_err(|(error,_)|error).unwrap(),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(protocol::ActorId(semio_framework_value::SharedUtf8::admit("window-actor",grant).unwrap().0)),actor_retirement:None};
+        let mut owner=TypedWindowConfigStoreOwner::<Owner>{direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).unwrap(),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(protocol::ActorId(semio_framework_value::SharedUtf8::admit("window-actor".to_owned(),grant).unwrap().0)),actor_retirement:None};
         let authority=owner.capture("original-window").await.unwrap();
         let mut inputs=Vec::with_capacity(1);
         let((mutation,mut actor),source_heap)=observe_heap_allocations_on_this_thread(||{
             let mut address=String::with_capacity(capacity.max("original-window".len()));address.push_str("original-window");
             let mutation=WindowConfigMutation::of::<Owner>(address,Mutation::Snapshot{config:Box::new(Default::default())});
-            let(actor,_)=semio_framework_value::SharedUtf8::admit("window-actor",grant).unwrap();
+            let(actor,_)=semio_framework_value::SharedUtf8::admit("window-actor".to_owned(),grant).unwrap();
             (mutation,Some(ControlledRetirement::new(actor).map_err(|(error,_)|error).unwrap()))
         });
         assert_eq!(source_heap.released_bytes,0);inputs.push(mutation);

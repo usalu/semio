@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative create-load diff; no derived state is evaluated.
 use super::CreateLoad;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::{Entry, ModelDiff, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &CreateLoad, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
 if let Some(noun) = super::super::elements::taken(base, &payload.id) { return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} already exists."), [payload.id.clone()]); }

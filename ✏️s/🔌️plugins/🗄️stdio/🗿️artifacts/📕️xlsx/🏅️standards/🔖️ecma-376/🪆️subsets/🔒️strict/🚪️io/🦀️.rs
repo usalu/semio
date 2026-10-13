@@ -106,7 +106,7 @@ pub mod derived_construction {
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
-    use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
+    #[cfg(test)] use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 
     //#region 🔖️Builder
     #[derive(Clone, Debug)]
@@ -181,16 +181,16 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::strict::schema::check_strict_conformance;
-    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    #[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use crate::standards::v_ecma_376::subsets::base::io::XlsxAnalyzer as XlsxAnyAnalyzer;
     pub use crate::standards::v_ecma_376::subsets::base::io::XlsxParts;
-    use semio_framework_diagnostic::Diagnostic;
-use semio_framework_diagnostic::FaultCode;
-use semio_framework_diagnostic::FaultScope;
+    #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
+#[cfg(test)] use semio_framework_diagnostic::FaultCode;
+#[cfg(test)] use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
-use semio_framework_diagnostic::TextSpan;
+#[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+    #[cfg(test)] use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -235,7 +235,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec XlsxStrictBuilderFacets {
         construction: XlsxStrictBuilderConstruction,
         analysis: XlsxStrictAnalyzerAnalysis,
-        composition: super::io::derived_composition::XlsxStrictComposerComposition,
+        composition: XlsxStrictComposerComposition,
     }
     builder: XlsxStrictBuilder,
     analyzer: XlsxStrictAnalyzer,

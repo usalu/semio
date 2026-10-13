@@ -19,7 +19,7 @@ pub struct DagArtifact {
 
 impl semio_framework_value::FromValue for DagArtifact {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        <crate::DagSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
+        <DagSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
     }
 }
 

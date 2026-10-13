@@ -43,7 +43,7 @@ pub(super) fn reconstruct(source:&semio_framework_dsl_record::RecordValue,contro
    (Kind::Add,None,None,None,None,_,true,None,None)=>EquationNodeKind::Add{terms:group_controlled(&mut values.0,index,terms,control)?},
    (Kind::Mul,None,None,None,None,true,_,None,None)=>EquationNodeKind::Mul{factors:group_controlled(&mut values.0,index,factors,control)?},
    (Kind::Pow,None,None,None,None,true,true,Some(base),Some(exponent))=>{
-    control.charge(2*std::mem::size_of::<EquationNode>())?;
+    control.charge(2*size_of::<EquationNode>())?;
     let base=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(child_controlled(&mut values.0,index,base,control)?,retire_node);
     let exponent=child_controlled(&mut values.0,index,exponent,control)?;
     EquationNodeKind::Pow{base:Box::new(base.take()),exponent:Box::new(exponent)}

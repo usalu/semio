@@ -34,12 +34,12 @@ fn fields<const N:usize>(value:semio_framework_value::DslValue,keys:[&str;N])->R
  let semio_framework_value::DslValue::Object(entries)=value else{return Err(invalid());};if entries.len()!=N{return Err(invalid());}let mut output=std::array::from_fn(|_|semio_framework_value::DslValue::Null);let mut seen=[false;N];
  for(key,value)in entries{let index=keys.iter().position(|candidate|*candidate==key).ok_or_else(invalid)?;if seen[index]{return Err(invalid());}seen[index]=true;output[index]=value;}if seen.iter().any(|seen|!*seen){return Err(invalid());}Ok(output)
 }
-impl semio_framework_value::FromValue for DrawingIdentity{
+impl FromValue for DrawingIdentity{
  fn from_value(value:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError>{let[key]=fields(value,["key"])?;Self::admit(PagedUtf8::from_value(key)?)}
 }
-impl semio_framework_value::FromValue for DrawingIdentityCommitment{
+impl FromValue for DrawingIdentityCommitment{
  fn from_value(value:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError>{let[kind,digest]=fields(value,["kind","digest"])?;Ok(Self{kind:DrawingIdentityKind::from_value(kind)?,digest:<[u8;32]>::from_value(digest)?})}
 }
-impl semio_framework_value::FromValue for DrawingIdentityAssignment{
+impl FromValue for DrawingIdentityAssignment{
  fn from_value(value:semio_framework_value::DslValue)->Result<Self,semio_framework_value::ValueError>{let[source,target]=fields(value,["source","target"])?;let source=PagedUtf8::from_value(source)?;let target=PagedUtf8::from_value(target)?;if source.is_empty()||target.is_empty(){return Err(invalid());}Ok(Self{source,target})}
 }

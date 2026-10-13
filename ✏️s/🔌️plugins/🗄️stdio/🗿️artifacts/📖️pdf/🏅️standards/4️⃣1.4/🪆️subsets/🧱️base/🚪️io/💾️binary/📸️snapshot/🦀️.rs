@@ -33,4 +33,3 @@ impl store::ArtifactPack for PdfSnapshot {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 }
-pub use snapshot_codec::*;

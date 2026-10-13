@@ -1,7 +1,6 @@
 //! 🕸️ Explicit DAG relational parent and literal Graph child relationship.
 use crate::standards::v1::subsets::any::schema::snapshot::DagSnapshot;
 use crate::DagContentChild;
-use semio_framework_diagnostic::{TextError, TextSpan};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use store::sqlite_snapshot::{
     artifact::{Cell, Projection, Reconstruction},
@@ -65,10 +64,10 @@ impl store::ArtifactSqliteSnapshot for DagSnapshot {
             payload,
             <Self as store::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
-            |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+            |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 let value = Self::__dsl_from_record_controlled(record, native)?;
                 let guard = semio_framework_value::DecodedValue::new(value, <Self as semio_framework_value::FromValue>::retire_decoded);
-                guard.get().validate().map_err(|message|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message))?;
+                guard.get().validate().map_err(|message|ValueError::new(ValueRefusalKind::InvalidValue,message))?;
                 Ok(guard.take())
             })(); *snapshot_output = Some(constructed?); Ok(()) },
             c,

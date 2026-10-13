@@ -52,10 +52,10 @@ impl std::fmt::Display for EvalError {
 // compare its `Result` directly with no `.await` in sight — see R9
 pub fn evaluate(expr: &ExprValue, env: &HashMap<String, f64>) -> Result<f64, EvalError> {
     match expr {
-        semio_framework_dsl_record::ExprValue::Num(v) => Ok(*v),
-        semio_framework_dsl_record::ExprValue::Var(name) => env.get(name).copied().ok_or_else(|| EvalError::UnknownVariable(name.clone())),
-        semio_framework_dsl_record::ExprValue::Neg(inner) => Ok(-evaluate(inner, env)?),
-        semio_framework_dsl_record::ExprValue::Binary(op, l, r) => {
+        ExprValue::Num(v) => Ok(*v),
+        ExprValue::Var(name) => env.get(name).copied().ok_or_else(|| EvalError::UnknownVariable(name.clone())),
+        ExprValue::Neg(inner) => Ok(-evaluate(inner, env)?),
+        ExprValue::Binary(op, l, r) => {
             let (lv, rv) = (evaluate(l, env)?, evaluate(r, env)?);
             match op {
                 semio_framework_dsl_record::ExprOp::Add => Ok(lv + rv),
@@ -70,7 +70,7 @@ pub fn evaluate(expr: &ExprValue, env: &HashMap<String, f64>) -> Result<f64, Eva
                 }
             }
         }
-        semio_framework_dsl_record::ExprValue::Call(name, args) => {
+        ExprValue::Call(name, args) => {
             let values = args.iter().map(|a| evaluate(a, env)).collect::<Result<Vec<_>, _>>()?;
             match (name.as_str(), values.as_slice()) {
                 ("min", [a, b]) => Ok(a.min(*b)),

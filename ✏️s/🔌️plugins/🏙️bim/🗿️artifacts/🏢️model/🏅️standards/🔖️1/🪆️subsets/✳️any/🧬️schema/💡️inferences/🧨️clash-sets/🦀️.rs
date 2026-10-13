@@ -87,7 +87,7 @@ pub struct SolidProbe {
 impl SolidProbe {
     /// ⚖️ Bytes the probe accounts for in a cache budget.
     pub fn byte_size(&self) -> usize {
-        std::mem::size_of::<Self>() + self.mesh.positions.len() * 24 + self.mesh.indices.len() * 12 + self.bvh.triangle_count() * 48
+        size_of::<Self>() + self.mesh.positions.len() * 24 + self.mesh.indices.len() * 12 + self.bvh.triangle_count() * 48
     }
 }
 //#endregion 🔖️Values

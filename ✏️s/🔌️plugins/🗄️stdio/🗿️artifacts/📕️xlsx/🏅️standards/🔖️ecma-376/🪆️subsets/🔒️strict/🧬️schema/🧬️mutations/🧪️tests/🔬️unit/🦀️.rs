@@ -133,7 +133,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(element_names, ["xml", "v:shape"]);
     let carrier: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&document)).unwrap();
     assert_eq!(carrier, fixture["document"]);
-    let removal = XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path });
+    let removal = XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() });
     let inverse = removal.inverse(&inserted).unwrap();
     assert_eq!(inverse, vec![XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(inserted.xml_parts.len() - 1), override_index: None })]);
     let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();

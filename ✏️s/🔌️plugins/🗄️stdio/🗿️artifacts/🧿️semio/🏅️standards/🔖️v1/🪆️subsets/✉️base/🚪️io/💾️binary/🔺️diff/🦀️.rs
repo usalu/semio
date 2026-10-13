@@ -63,7 +63,7 @@ use protocol::MutationDiff;
 
 
 
-impl protocol::DiffBinary for SemioDiff {
+impl DiffBinary for SemioDiff {
 /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`diff_tag`]) as two genuine,
 /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload —
 /// for the 13 same-kind variants, that payload is exactly the wrapped subset's OWN real
@@ -141,4 +141,3 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 
 use crate::standards::v1::subsets::base::io::text::diff::{enc_rejection, dec_rejection};
 }
-pub use diff_codec::*;

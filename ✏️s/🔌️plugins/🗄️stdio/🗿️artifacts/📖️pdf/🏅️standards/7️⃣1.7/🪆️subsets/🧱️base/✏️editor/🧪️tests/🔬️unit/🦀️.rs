@@ -47,7 +47,7 @@ fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_objects
     let index = fixture["mutation"]["params"]["index"].as_u64().unwrap() as usize;
     let rotation = fixture["mutation"]["params"]["rotation"].as_u64().unwrap() as u16;
     let mutation = PdfMutation::SetPageRotation(crate::schema::mutations::SetPageRotation { index, rotation });
-    crate::io::mutation_bridge::apply_pdf_mutation(&mut snapshot, &mutation);
+    crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation(&mut snapshot, &mutation);
     let bytes = <Pdf17Editor as ArtifactEditor>::encode_natural_file(&snapshot).expect("natural PDF saves");
     let reference_spec = semio_repo_test_host::parse_json(&fixture["mutation"].to_string()).unwrap();
     let reference = oracle::oracle_apply_mutation(input, &reference_spec).expect("lopdf independently edits the input");
@@ -107,9 +107,9 @@ async fn registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes() {
 
     let mut original = PdfSnapshot::default();
     original.pages.push(PdfPage { content: vec![PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text("before") }, PdfOp::EndText], ..Default::default() });
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let loaded = app.snapshot().unwrap().clone();
     assert_eq!(loaded.pages[0].text(), "before");
     let meta = artifact_app_laws::meta("local");
@@ -118,24 +118,24 @@ async fn registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes() {
     };
 
     let edit = arguments(DocumentWindowKit::text_revision("before"), "after");
-    app.handle_action("set-page", Some(&edit), &meta).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&edit), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
     let expected = app.snapshot().unwrap().clone();
     assert_eq!(expected.pages[0].text(), "after");
 
     let no_op = arguments(DocumentWindowKit::text_revision("after"), "after");
-    app.handle_action("set-page", Some(&no_op), &meta).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
-    artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&no_op), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), loaded, "an identical Apply must not add a history entry");
-    artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), expected);
 
     let stale = arguments(DocumentWindowKit::text_revision("before"), "refused draft");
-    app.handle_action("set-page", Some(&stale), &meta).await.unwrap();
-    assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&stale), &meta, &mut identity).await).unwrap();
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err());
     assert_eq!(app.snapshot().unwrap(), expected, "a refused draft must preserve every PDF page operator");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -144,9 +144,9 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let mut original = crate::standards::v1_7::subsets::base::io::text::snapshot::demo_pdf17_snapshot();
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF17_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let loaded = app.snapshot().unwrap().clone();
     let meta = artifact_app_laws::meta("local");
     let insert = semio_framework_value::DslValue::object([
@@ -159,16 +159,16 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
         ("green".into(), semio_framework_value::DslValue::float(0.4)),
         ("blue".into(), semio_framework_value::DslValue::float(0.6)),
     ]);
-    app.handle_action("insert-rectangle", Some(&insert), &meta).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("insert-rectangle", Some(&insert), &meta, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
     let edited = app.snapshot().unwrap().clone();
     assert!(edited.pages[0].content.iter().any(|op| matches!(op, PdfOp::Rectangle { x, y, width, height } if (*x - 12.0).abs() < 0.01 && (*y - 24.0).abs() < 0.01 && (*width - 30.0).abs() < 0.01 && (*height - 16.0).abs() < 0.01)));
     assert!(edited.pages[0].text().contains("Semio"));
-    artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), loaded);
-    artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id).await;
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), edited);
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", Pdf17Editor, || semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() }, "../..");

@@ -10,8 +10,9 @@
 //! Related: Blondel's rule `2R + T`, <https://en.wikipedia.org/wiki/Stairs#Rise_and_run>.
 
 use super::super::storey_levels::{vertical_of, StoreyLevel};
-use crate::{ModelSnapshot, Point2, Stair, StairFlight, Turn};
-use std::collections::BTreeMap;
+use crate::{Point2, Stair, StairFlight, Turn};
+#[cfg(test)] use crate::{ModelSnapshot};
+#[cfg(test)] use std::collections::BTreeMap;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 //#region 🔖️Values

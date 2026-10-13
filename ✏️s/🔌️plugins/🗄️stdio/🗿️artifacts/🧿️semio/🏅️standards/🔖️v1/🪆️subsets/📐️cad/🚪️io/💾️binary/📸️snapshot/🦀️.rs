@@ -288,7 +288,6 @@ impl store::ArtifactPack for SemioCadSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {

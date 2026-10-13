@@ -77,7 +77,7 @@ mod tests;
 #[path = "⚖️checks/🦀️.rs"]
 mod checks;
 
-pub fn evaluate(document: &crate::Iso16757Snapshot) -> crate::document::CheckReport {
+pub fn evaluate(document: &Iso16757Snapshot) -> crate::document::CheckReport {
     checks::evaluate_all(document)
 }
 //#endregion 🔖️ComplianceReport

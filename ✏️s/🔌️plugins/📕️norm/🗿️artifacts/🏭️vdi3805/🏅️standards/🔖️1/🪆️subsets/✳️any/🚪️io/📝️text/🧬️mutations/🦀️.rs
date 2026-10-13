@@ -14,7 +14,6 @@ use crate::artifact_schema::mutations::{
     add_product::AddProduct, remove_curve::RemoveCurve, remove_geometry::RemoveGeometry, remove_product::RemoveProduct, remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection,
     rename_product::RenameProduct, change_curve_points::ChangeCurvePoints, change_geometry_parameters::ChangeGeometryParameters, change_product_configuration::ChangeProductConfiguration, resize_geometry::ResizeGeometry,
     change_manufacturer_file::ChangeManufacturerFile,
-    change_limits::ChangeLimits,
 };
 
 //#region 📖️SemioGrammar

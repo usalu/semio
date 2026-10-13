@@ -26,7 +26,6 @@ impl protocol::OpText for Generation3dTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 #[allow(unused_imports)]
 mod mutations_wire_codec {

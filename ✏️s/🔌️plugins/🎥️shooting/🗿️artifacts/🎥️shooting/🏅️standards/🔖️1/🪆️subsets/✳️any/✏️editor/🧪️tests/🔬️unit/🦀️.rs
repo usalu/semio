@@ -1,7 +1,7 @@
 pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::app::EditorApp;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{self, meta, new_app_with_registry};
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::{Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowMeasure};
 
@@ -29,7 +29,7 @@ pub(crate) mod context {
     impl Drop for ShootingApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -52,7 +52,7 @@ pub(crate) mod context {
     /// `Migrated` in the LIVE registry, so a bare instance faults at construction with
     /// `interactive-job.catalog-authority` now that every verb is a bounded tool.
     pub async fn shooting_app() -> ShootingApp {
-        let mut app = new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(SHOOTING_TEST_INSTANCE).await;
         ShootingApp(app)
     }
@@ -66,13 +66,14 @@ pub(crate) mod context {
     /// way the plugin host's continuation does, fold the settled receipt's effects into the answer and
     /// apply any `LoadDocument` the way the host would.
     pub async fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> Dispatched {
-        let mut result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE).await.expect("settle the typed operation");
+        let mut identity = artifact_app_laws::fixture_identity();
+        let mut result = app.dispatch_typed(command, &meta("local"), &mut identity).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut identity).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -82,13 +83,15 @@ pub(crate) mod context {
     /// the applied history rows with document ops that its completions upserted — how a law reads the one history row
     /// a gesture leaves.
     pub async fn dispatch_rows(app: &mut ShootingApp, command: ShootingCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let mut identity = artifact_app_laws::fixture_identity();
+        app.dispatch_typed(command, &meta("local"), &mut identity).await.expect("dispatch");
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut rows = Vec::new();
         while app.has_pending_typed_operations() {
             assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
-            app.maintenance_step(1, 65_536).expect("maintenance step");
-            app.advance_typed_operation_publication().await.expect("advance the publication");
+            maintain(app, 65_536);
+            app.advance_typed_operation_publication(&mut identity, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance the publication");
+            let _ = (app.take_constructor_receipt(), app.take_typed_operation_preparation_receipt(), app.take_typed_operation_retirement_receipt(), app.take_history_command_receipt(), app.take_tool_run_receipt());
             while let Some(page) = app.take_typed_operation_result_page(SHOOTING_TEST_INSTANCE) {
                 assert_ne!(page.lane, TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
                 assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
@@ -99,6 +102,13 @@ pub(crate) mod context {
             }
         }
         rows
+    }
+
+    /// 🧹️ One cooperative-maintenance unit of `app`: the mounted policy's maintenance grant, widened to the owner's own quote on every axis the way the plugin runtime funds a lifecycle turn.
+    pub fn maintain(app: &mut ShootingApp, body: usize) {
+        let policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
+        let demand = app.maintenance_retirement_demands(body).expect("maintenance quote");
+        app.maintenance_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: policy.maximum_items, maximum_copy_bytes: policy.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: policy.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: policy.maximum_release_bytes.max(demand.release_bytes), maximum_depth: policy.maximum_depth.max(demand.depth) }).expect("maintenance step");
     }
 
     /// 🧾️ A settled dispatch: the immediate answer plus the store lanes the retained publication
@@ -124,7 +134,7 @@ pub(crate) mod context {
 
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
     pub async fn history_verb(app: &mut ShootingApp, verb: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, SHOOTING_TEST_INSTANCE).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity()).await;
     }
 
     pub async fn render(app: &mut ShootingApp, body_key: &str) -> String {
@@ -444,7 +454,8 @@ async fn interaction_select_is_reachable_as_a_framework_injected_action_under_re
     let mut app = shooting_app_with_registry().await;
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).unwrap();
-    app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local")).await.expect("interactionSelect");
+    let admitted = app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("the selection admission settles");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -491,7 +502,7 @@ async fn shooting_labels_resolve_native_german() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = shooting_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 /// 🎥️ `SetCamera` is config-only — dragging the viewport camera through several ticks must never
@@ -529,7 +540,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         |app| {
             let snapshot = app.snapshot().expect("snapshot");
             (crate::standards::v1::subsets::any::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
-        },
+        },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -539,7 +550,7 @@ async fn ingest_operations_is_idempotent_for_shooting() {
     artifact_app_laws::assert_registered_ingest_idempotent::<EditorApp<ShootingPlayApp>, String, _, _>(
         || async { context::shooting_app_manifest_for_tests() },
         ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }),
-        |app| crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone(),
+        |app| crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -623,36 +634,20 @@ async fn every_example_load_settles_through_the_host_document_archive_door() {
     use set_active_example::{SetActiveExample, SHOOTING_EXAMPLE_DEFAULT_ID, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT};
     for (archive_id, example_id) in [(91_u64, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT), (92, SHOOTING_EXAMPLE_DEFAULT_ID)] {
         let mut app = shooting_app().await;
-        app.dispatch_typed(ShootingCommand::SetActiveExample(SetActiveExample { example_id: example_id.into() }), &artifact_app_laws::meta("local")).await.expect("setActiveExample is admitted");
-        let mut loaded = None;
-        for _ in 0..100_000 {
-            PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("maintenance step");
-            app.advance_typed_operation_publication().await.expect("publication");
-            if let Some(page) = app.take_typed_operation_result_page(context::SHOOTING_TEST_INSTANCE) {
-                assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
-                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge"));
-            }
-            if let Some(Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
-                loaded = Some((pack, spr));
-            }
-            app.take_typed_operation_event();
-            app.take_typed_operation_ui_scope();
-            if !app.has_pending_typed_operations() {
-                break;
-            }
-            std::thread::yield_now();
-        }
+        app.dispatch_typed(ShootingCommand::SetActiveExample(SetActiveExample { example_id: example_id.into() }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("setActiveExample is admitted");
+        let settled = artifact_app_laws::settle_registered_typed_operation(&mut *app, context::SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity()).await.expect("the example settles");
+        let loaded = settled.effects.into_iter().find_map(|effect| if let Effect::LoadDocument { pack, spr } = effect { Some((pack, spr)) } else { None });
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
         let expected = <ShootingSnapshot as store::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
         PluginApp::begin_document_archive_load(&mut *app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {
-            let polled = PluginApp::poll_document_archive_load(&mut *app, archive_id).await.expect("archive status");
+            let polled = PluginApp::poll_document_archive_load(&mut *app, archive_id, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
             if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
                 status = Some(polled);
                 break;
             }
-            PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
+            context::maintain(&mut app, 4_096);
             std::thread::yield_now();
         }
         let status = status.expect("archive load reaches a terminal state");

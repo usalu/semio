@@ -244,7 +244,7 @@ impl<T: RetireOwned> RetirementCursor for ControlledRetirement<T> {
     }
     fn terminal_is_empty(&self) -> bool { ControlledRetirement::terminal_is_empty(self) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_depth_demand(self) }
-    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.next_copy_byte_demand()}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn allows_admitted_narrow_work(&self)->bool{true}
     fn next_close_byte_demand(&self) -> Option<usize> { self.next_release_byte_demand().ok() }
     fn next_birth_bytes(&self, maximum_bytes: usize) -> Option<usize> { self.next_capacity_byte_demand(maximum_bytes).ok() }

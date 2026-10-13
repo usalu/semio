@@ -63,4 +63,4 @@ impl store::ArtifactDsl for Puzzle2dSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding,edit_lhs,edit_rhs};
 
-use crate::standards::v1::subsets::any::schema::{self, ParameterKind, Rhs};
+use crate::standards::v1::subsets::any::schema::{self, ParameterKind};
 use crate::RewritingSnapshot;
 use semio_framework_graph::manifest::PropertyValue;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};

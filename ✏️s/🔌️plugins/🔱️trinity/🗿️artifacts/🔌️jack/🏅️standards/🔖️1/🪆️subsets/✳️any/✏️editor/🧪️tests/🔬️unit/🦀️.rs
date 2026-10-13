@@ -108,7 +108,7 @@ impl Drop for JackTestApp {
 /// 📬️ Drives the mounted app's retained typed operation to quiescence (pages ACKed, effects, events
 /// and completions drained) — the receipt carries what the host would have seen.
 async fn settle(app: &mut JackTestApp) -> artifact_app_laws::TypedOperationFixtureReceipt {
-    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE).await.expect("settle the typed operation")
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation")
 }
 
 fn jack_envelope_wire() -> Vec<u8> {
@@ -226,11 +226,11 @@ async fn node_name(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_a
 async fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, ids: &[&str]) {
     let targets: Vec<semio_framework_pack_json::Value> = ids.iter().map(|id| semio_framework_pack_json::json!({ "granularity": "node", "id": id })).collect();
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": "ast", "targets": semio_framework_pack_json::to_json_string(&targets) }));
-    let admitted = app.handle_action("interactionSelect", Some(&args), &meta("local")).await.expect("interactionSelect");
+    let admitted = app.handle_action("interactionSelect", Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect");
     // 🕹️ On a mounted app the verb is admitted as a framework-reserved job and publishes later —
     // settle both so the selection is live before the next dispatch reads it.
     semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interactionSelect reserved-job commit");
-    artifact_app_laws::settle_registered_typed_operation(app, JACK_TEST_INSTANCE).await.expect("interactionSelect publication");
+    artifact_app_laws::settle_registered_typed_operation(app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect publication");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -259,7 +259,7 @@ async fn run_query_populates_results_and_a_set_query_mutates_projection() {
     let editor = view.for_window_instance("editor-main").unwrap();
     app.dispatch_typed(
         TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()), results_window_id: "results-main".into() },
-        &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("local") },
+        &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("local") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await
     .expect("run");
@@ -304,7 +304,7 @@ async fn text_edit_puts_the_query_into_the_document() {
     let mut app = new_app().await;
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
-    app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") })
+    app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("edit");
     drive_query_ownership_operations(&mut app).await.expect("edit completes");
@@ -342,7 +342,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
         now += 40;
         app.set_tool_clock_ms(Some(now));
         let args = semio_framework_value::DslValue::Object(vec![("text".into(), semio_framework_value::DslValue::String(text.clone())), (semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String("trinity.jack.query".into()))]);
-        app.handle_action("textEdit", Some(&args), &meta_of()).await.unwrap_or_else(|error| panic!("keystroke {index} was refused: {error:?}"));
+        app.handle_action("textEdit", Some(&args), &meta_of(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|error| panic!("keystroke {index} was refused: {error:?}"));
         drive_query_ownership_operations(&mut app).await.unwrap_or_else(|error| panic!("keystroke {index} did not publish: {error}"));
         artifact_app_laws::drain_maintenance_pressure(&mut app.app);
     }
@@ -350,14 +350,14 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     assert_eq!((app.snapshot().expect("projection").query.clone(), app.edit_transactions().len()), (before.clone(), edits), "nothing lands while the run is open");
     app.set_tool_clock_ms(Some(now + 750));
     let commit = semio_framework_value::DslValue::Object(vec![(semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String("trinity.jack.query".into())), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String("idle".into()))]);
-    app.handle_action("textEdit", Some(&commit), &meta_of()).await.expect("the idle commit");
+    app.handle_action("textEdit", Some(&commit), &meta_of(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the idle commit");
     drive_query_ownership_operations(&mut app).await.expect("the run publishes");
     assert_eq!(app.snapshot().expect("projection").query, run.expected);
     let transactions = app.edit_transactions();
     assert_eq!(transactions.len(), edits + 1, "the run lands as ONE edit");
     assert!(transactions.last().cloned().flatten().is_some_and(|transaction| transaction.tool.ends_with("#textEdit")), "the edit carries the run's TransactionRef: {transactions:?}");
     for (verb, expected) in [("undo", &before), ("redo", &run.expected)] {
-        let admitted = app.handle_action(verb, None, &meta_of()).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
+        let admitted = app.handle_action(verb, None, &meta_of(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{verb} settles: {fault:?}"));
         drive_query_ownership_operations(&mut app).await.unwrap_or_else(|error| panic!("{verb} publishes: {error}"));
         assert_eq!(&jack_query(&mut app, &editor).await, expected, "one {verb} moves the whole run");
@@ -378,7 +378,7 @@ async fn set_lod_mode_reflects_in_window_measures() {
     let mut app = new_app().await;
     let view = ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let addressed = view.for_window_instance("jack-graph-main").unwrap();
-    app.dispatch_typed(TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }).await.expect("lod");
+    app.dispatch_typed(TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("lod");
     // 📬️ `settle` drains the completion outbox too — a page-only loop spins forever on it.
     let receipt = settle(&mut app).await;
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault));
@@ -415,7 +415,7 @@ async fn document_tree_de_locale_translates_labels() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_the_example_with_its_preset_query() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).await.expect("set active example");
+    let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("set active example");
     let receipt = settle(&mut app).await;
     // 🩹 Pre-existing test/implementation mismatch (traced to commit `a445617c`, 2026-08-12
     // 15:50:51 +0200 — predates this migration, not introduced by it): `set_active_example`
@@ -437,7 +437,7 @@ async fn delete_selection_removes_selected_node() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id]).await;
-    let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).await.expect("delete");
+    let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("delete");
     let receipt = settle(&mut app).await;
     assert!(result.mutations.is_empty(), "deleteSelection writes no parent leaf: {:?}", result.mutations);
     assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child), "deleteSelection must publish one content child edit: lanes {:?}", receipt.lanes);
@@ -499,7 +499,7 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
         let results = view.for_window_instance("results-main").ok_or("missing results window")?;
         app.dispatch_typed(
             TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()), results_window_id: "results-main".into() },
-            &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("query-owner") },
+            &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("query-owner") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
         )
         .await
         .map_err(|error| format!("{error:?}"))?;
@@ -536,7 +536,7 @@ async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<Tri
             return Err("query operations did not finish".into());
         }
         app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.map_err(|error| format!("{error:?}"))?;
         if let Some(page) = app.take_typed_operation_result_page(1) {
             let fault = (page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
             transient_receipts += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Transient);
@@ -592,12 +592,12 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
     let denied = app
         .dispatch_typed(
             TrinityJackCommand::RunQuery { query: Some(left_query.into()), results_window_id: "editor-right".into() },
-            &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") },
+            &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
         )
         .await;
     assert!(denied.is_err(), "an attached editor cannot be promoted to results mutation authority by command payload");
 
-    app.dispatch_typed(TrinityJackCommand::TextEdit { text: left_query.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") })
+    app.dispatch_typed(TrinityJackCommand::TextEdit { text: left_query.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor_left.clone()), ..meta("query-owner") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("query edit");
     assert_eq!(drive_query_ownership_operations(&mut app).await.expect("query edit"), (0, 0, 0));
@@ -611,7 +611,7 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
     }
 
     for (context, target, query) in [(&editor_left, "results-left", None), (&editor_right, "results-right", Some(right_query.to_string()))] {
-        app.dispatch_typed(TrinityJackCommand::RunQuery { query, results_window_id: target.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") })
+        app.dispatch_typed(TrinityJackCommand::RunQuery { query, results_window_id: target.into() }, &semio_framework_plugin::ActionMeta { view_state: Some(context.clone()), ..meta("query-owner") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
             .await
             .expect("paired query");
     }
@@ -639,7 +639,7 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
 
     let reloaded = <crate::JackSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&document)).expect("the document pack decodes");
     assert_eq!(reloaded.query, left_query, "the query persists with the document");
-    let admitted = app.handle_action("undo", None, &semio_framework_plugin::ActionMeta { view_state: Some(editor_right.clone()), ..meta("query-owner") }).await.unwrap_or_else(|fault| panic!("undo admission: {fault:?}"));
+    let admitted = app.handle_action("undo", None, &semio_framework_plugin::ActionMeta { view_state: Some(editor_right.clone()), ..meta("query-owner") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("undo admission: {fault:?}"));
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("undo settles: {fault:?}"));
     drive_query_ownership_operations(&mut app).await.expect("undo publishes");
     assert_eq!(app.snapshot().expect("document after undo").query, crate::TRINITY_JACK_DEFAULT_QUERY, "one undo from either editor reverts the query edit");
@@ -692,7 +692,7 @@ async fn window_kind_actions_scope_text_verbs_to_the_query_editor() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_resolves_every_id_the_shell_can_send() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local")).await.expect("set active example");
+    let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("set active example");
     let receipt = settle(&mut app).await;
     assert!(!result.requested_effects.is_empty() || !receipt.effects.is_empty(), "the registered example id must request the LoadDocument effect");
     app.close();
@@ -743,8 +743,8 @@ async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
 /// 🕹️ Dispatches `action` with rail-staged text `args` (the Actions pane's own shape) and settles it.
 async fn dispatch_rail(app: &mut JackTestApp, action: &str, args: &[(&str, &str)]) -> Result<(), semio_framework_plugin::Fault> {
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::Object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_pack_json::Value::String((*value).to_string()))).collect()));
-    app.handle_action(action, Some(&args), &meta("local")).await?;
-    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE).await.map(|_| ())
+    app.handle_action(action, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await?;
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map(|_| ())
 }
 
 /// ⚖️ LAW: `patchNodes` pressed from the rail with an EMPTY `nodeIds` renames the selected nodes, and a
@@ -775,9 +775,9 @@ async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
         select_ast(&mut app, &ids.iter().map(String::as_str).collect::<Vec<_>>()).await;
         dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Undo")]).await.expect("patch the selection");
         assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "{selected} selected");
-        artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE).await;
+        artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         assert_eq!(node_names(&app, Some(&ids)).await, before, "undo restores all {selected} renamed nodes");
-        artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE).await;
+        artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "redo renames all {selected} again");
     }
 }
@@ -785,9 +785,9 @@ async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
 /// 🕹️ Presses one argument-less framework verb (`selectAll`, `clearSelection`, `undo`, `redo`) the whole way a shell
 /// does: admission, its reserved job, then the typed publication.
 async fn framework_verb(app: &mut JackTestApp, action: &str) {
-    let admitted = app.app.handle_action(action, None, &meta("local")).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+    let admitted = app.app.handle_action(action, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved job: {fault:?}"));
-    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+    artifact_app_laws::settle_registered_typed_operation(&mut app.app, JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
 }
 
 /// ⏪️ LAW: the shell's own round trip — `selectAll`, `patchNodes` with an empty `nodeIds`, a neutral
@@ -902,13 +902,13 @@ async fn an_agent_names_the_nodes_patch_nodes_renames_and_is_refused_by_name_wit
     let named = probe_agent_lane::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(
         create_trinity_jack_app,
         Some(&format!(r#"{{"verbs":{{"patchNodes":{{"nodeIds":["{first}"],"field":"name","value":"Agent Named"}}}}}}"#)),
-        &["patchNodes"],
+        &["patchNodes"],semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
     let probe = declared_verb_probe(&named, "patchNodes");
     assert!(declared_verb_wrote_document(probe.agent.as_ref().expect("patchNodes is agent-facing")), "the agent's preview renames the named node: {:?}", probe.agent);
     assert!(declared_verb_staged_wrote_document(probe), "the shell renames the named node too");
-    let unnamed = probe_agent_lane::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_trinity_jack_app, Some(r#"{"verbs":{"patchNodes":{"field":"name","value":"Agent Unnamed"}}}"#), &["patchNodes"]).await;
+    let unnamed = probe_agent_lane::<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_trinity_jack_app, Some(r#"{"verbs":{"patchNodes":{"field":"name","value":"Agent Unnamed"}}}"#), &["patchNodes"], semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     match declared_verb_probe(&unnamed, "patchNodes").agent.as_ref() {
         Some(DeclaredVerbOutcome::Refused { code, .. }) => assert_eq!(code, "app.command.targets-required"),
         other => panic!("an agent naming no node is refused by name: {other:?}"),

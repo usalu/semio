@@ -178,6 +178,31 @@ impl<'a> SqliteSnapshotControl<'a> {
         self.forwarded_bytes=forwarded;self.limits=limits;
         result
     }
+    /// 🗄️ Lends the same ledger, callback and allocation port to a whole receiving operation whose retained prefixes retire into the caller's empty recipient, whether or not this control already has one.
+    pub fn with_workspace_recipient<T,E:From<ValueError>>(&mut self,recipient:&mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
+        if !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(E::from(ownership_limit("SQLite snapshot workspace needs an empty original recipient")));}
+        let(forwarded,limits)=(self.forwarded_bytes,self.limits);
+        let mut child=SqliteSnapshotControl{forwarded_bytes:forwarded,allocation:match self.allocation.as_mut(){Some(port)=>Some(&mut**port),None=>None},native_retirement:Some(recipient),callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
+        let result=operation(&mut child);
+        let(forwarded,limits)=(child.forwarded_bytes,child.limits);drop(child);
+        self.forwarded_bytes=forwarded;self.limits=limits;
+        result
+    }
+    /// 🪆️ Lends the same ledger, callback and recipient to a handwritten producer whose every allocation is charged through the original receiving port, never beyond `maximum` bytes.
+    pub fn with_original_allocation<T,E:From<ValueError>>(&mut self,maximum:usize,allocation:&mut semio_framework_value::native_encoding::NativeEncodeAllocationPort<'_>,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
+        let limits=SqliteDatabaseLimits{max_allocation_bytes:self.limits.max_allocation_bytes.min(self.ledger.allocation_bytes.saturating_add(maximum)),..self.limits};
+        let mut child=SqliteSnapshotControl{forwarded_bytes:0,allocation:Some(allocation),native_retirement:match self.native_retirement.as_mut(){Some(recipient)=>Some(&mut**recipient),None=>None},callback:&mut*self.callback,limits,ledger:SqliteSnapshotLedgerSlot::Lent(&mut*self.ledger)};
+        operation(&mut child)
+    }
+    /// 🫴️ Runs `operation` as the original caller: it owns the empty retirement recipient and funds its physical close from the allocation ceiling of `limits` before returning.
+    pub fn run_as_original_caller<T,E:From<ValueError>>(callback:&mut dyn FnMut(SqliteSnapshotProgress)->bool,limits:SqliteDatabaseLimits,operation:impl FnOnce(&mut SqliteSnapshotControl<'_>)->std::result::Result<T,E>)->std::result::Result<T,E>{
+        let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();
+        let result={let mut control=SqliteSnapshotControl::new(callback,limits);control.install_native_retirement_recipient(&mut recipient)?;operation(&mut control)};
+        match close_original_recipient(&mut recipient,limits){
+            Ok(())=>result,
+            Err(error)=>{std::mem::forget(recipient);result.and(Err(E::from(error)))}
+        }
+    }
     /// 📊️ Reports physical SQL admission independently of native bytes settled to the secondary domain ceiling.
     pub fn forwarded_owned_bytes(&self)->usize{self.forwarded_bytes}
     /// 🫴️ Settles native ownership already charged through its original allocation port.
@@ -233,6 +258,28 @@ impl<'a> SqliteSnapshotControl<'a> {
     /// 👁️ Observes an original native prefix without constructing a second cancellation diagnostic.
     pub fn observe_progress(&mut self,phase:SqliteSnapshotPhase,completed:usize,total:usize)->bool{self.accept_progress(phase,completed,total)}
     pub fn checkpoint(&mut self, phase: SqliteSnapshotPhase, completed: usize, total: usize) -> std::result::Result<(), ValueError> { if self.accept_progress(phase,completed,total) { Ok(()) } else { Err(ValueError::literal(ValueRefusalKind::Canceled, "relational SQLite transfer cancelled")) } }
+}
+
+/// 🛡️ Deepest retirement nesting the original caller funds.
+const ORIGINAL_CLOSE_DEPTH: usize = 4096;
+
+/// ♻️ Drains the original recipient turn by turn under the allocation ceiling; a turn that is refused or makes no progress is retried with the grant widened to the owner's own quote, and a recipient that still stops progressing is refused.
+fn close_original_recipient(recipient:&mut semio_framework_value::native_decoding::NativeDecodeRetirementRecipient,limits:SqliteDatabaseLimits)->Result<()>{
+    use semio_framework_value::ErasedSnapshotRetirement as _;
+    let ceiling=limits.max_allocation_bytes;
+    let base=semio_framework_value::RetainedCloneGrant{maximum_items:ceiling.max(1),maximum_copy_bytes:ceiling,maximum_capacity_bytes:ceiling,maximum_release_bytes:ceiling,maximum_depth:ORIGINAL_CLOSE_DEPTH};
+    let mut grant=base;let mut idle=0usize;
+    while !recipient.terminal_is_empty(){
+        match recipient.close_step(grant){
+            Ok(step) if step.progress()!=semio_framework_value::RetainedCloneProgress::default()=>{idle=0;grant=base;continue;}
+            Ok(_)=>{if idle>=2{return Err(ownership_limit("SQLite snapshot original retirement stopped progressing"));}}
+            Err(error)=>{if idle>=2{return Err(error);}}
+        }
+        idle+=1;
+        let quote=recipient.next_demand(ceiling)?;
+        grant=semio_framework_value::RetainedCloneGrant{maximum_items:base.maximum_items,maximum_copy_bytes:base.maximum_copy_bytes.max(quote.copy_bytes),maximum_capacity_bytes:base.maximum_capacity_bytes.max(quote.capacity_bytes),maximum_release_bytes:base.maximum_release_bytes.max(quote.release_bytes),maximum_depth:base.maximum_depth.max(quote.depth)};
+    }
+    Ok(())
 }
 
 type Result<T> = std::result::Result<T, ValueError>;

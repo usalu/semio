@@ -21,8 +21,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveContentType {
         opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::content_type_removal_diff(opc, self.is_override, &self.name)))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
-        let previous = opc_layer::with_package(base, |opc| opc_layer::content_type_at(opc, self.is_override, &self.name)).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+        let previous = opc_layer::with_package(base, |opc| opc_layer::content_type_at(opc, self.is_override, &self.name)).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
         Ok(previous.map(|(at, content_type)| DocxMutation::SetContentType(set_content_type::SetContentType { is_override: self.is_override, name: self.name.clone(), content_type, index: Some(at) })).into_iter().collect())
     }
 

@@ -9,6 +9,11 @@ fn fixture() -> serde_json::Value {
     fixture
 }
 
+/// 🎟️ The grant every window-tick transition of a direct session law runs under: no axis the preview owner needs is short.
+fn tick_grant() -> semio_framework_value::RetainedCloneGrant {
+    semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 26, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4_096 }
+}
+
 fn text(value: &serde_json::Value) -> &str {
     value.as_str().unwrap_or_else(|| panic!("fixture text expected, found {value}"))
 }
@@ -32,9 +37,9 @@ fn every_run_effects_row_starts_finalizes_or_leaves_the_run() {
         let windows: Vec<(&str, &'static str)> = row["windows"].as_array().unwrap().iter().map(|window| (text(window), "procedural-view-preview")).collect();
         if !row["owed"].as_bool().unwrap() {
             for (window, _) in &windows {
-                session.arm_window_tick(window);
-                session.begin_window_tick(window);
-                session.note_window_tick_outcome(window, false);
+                session.arm_window_tick(window, tick_grant()).expect("the window tick arms");
+                session.begin_window_tick(window, tick_grant()).expect("the window tick begins");
+                session.note_window_tick_outcome(window, false, tick_grant()).expect("the window tick outcome is noted");
             }
         }
         let run = run_view(&row["run"]);
@@ -127,9 +132,9 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         let stage = |session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink| {
             if settled_windows {
                 for (window_id, _) in &windows {
-                    session.arm_window_tick(window_id);
-                    session.begin_window_tick(window_id);
-                    session.note_window_tick_outcome(window_id, false);
+                    session.arm_window_tick(window_id, tick_grant()).expect("the window tick arms");
+                    session.begin_window_tick(window_id, tick_grant()).expect("the window tick begins");
+                    session.note_window_tick_outcome(window_id, false, tick_grant()).expect("the window tick outcome is noted");
                 }
             }
             link.settled = has_settled.then_some((1, 0));
@@ -160,7 +165,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
 
         let mut emit = semio_framework_plugin::Emit::<u8>::default();
         emit.artifact_mutations = vec![0_u8; mutations];
-        let owes = owe_attached_previews_for_mutations(&mut session, &mut link, &windows, servable, &mut emit);
+        let owes = owe_attached_previews_for_mutations(&mut session, &mut link, &windows, servable, &mut emit, tick_grant()).expect("the previews are owed");
         assert_eq!(owes, expected["owes"].as_bool().unwrap(), "{id}: a gesture owes the previews exactly when it moved the document");
         let carried: Vec<&str> = emit.effects.iter().map(|effect| match effect {
             Effect::DispatchAction { action, .. } => action.as_str(),
@@ -175,9 +180,9 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         while let PreviewEvalHop::Dispatch(index) = next_preview_eval_hop(&session, &roster) {
             let (window_id, _) = &roster[index];
             hops.push(window_id.clone());
-            assert!(session.arm_window_tick(window_id), "{id}: a dispatched hop arms its window");
-            session.begin_window_tick(window_id);
-            session.note_window_tick_outcome(window_id, false);
+            assert!(session.arm_window_tick(window_id, tick_grant()).expect("the window tick arms").0, "{id}: a dispatched hop arms its window");
+            session.begin_window_tick(window_id, tick_grant()).expect("the window tick begins");
+            session.note_window_tick_outcome(window_id, false, tick_grant()).expect("the window tick outcome is noted");
             assert!(hops.len() <= roster.len(), "{id}: one landed mutation may never arm a window twice");
         }
         assert_eq!(hops, expected["hops"].as_array().unwrap().iter().map(text).collect::<Vec<_>>(), "{id}: hop schedule");
@@ -189,7 +194,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
         stage(&mut spinning, &mut spinning_link);
         let mut spinning_emit = semio_framework_plugin::Emit::<u8>::default();
         spinning_emit.artifact_mutations = vec![0_u8; mutations];
-        owe_attached_previews_for_mutations(&mut spinning, &mut spinning_link, &windows, servable, &mut spinning_emit);
+        owe_attached_previews_for_mutations(&mut spinning, &mut spinning_link, &windows, servable, &mut spinning_emit, tick_grant()).expect("the previews are owed");
         let starts = spinning_emit.effects.len() + replay_pending_effects(&mut spinning, &mut spinning_link, &windows, polls, lag, servable, poll_start_view);
         println!("[STATS] gestureRearm {id}: owes={owes} owed={owed:?} hops={hops:?} carried={carried:?} starts={starts}");
         assert_eq!(starts as u64, expected["starts"].as_u64().unwrap(), "{id}: one gesture owes at most one run start, however slowly the run view catches up");
@@ -247,7 +252,7 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
     // 🚦️ First poll: the link learns the stack, the boot's own debt is paid and the run it asked for is
     // answered — which is the state a user is in when they press undo on a settled preview.
     preview_eval_run_effects(&mut session, &mut link, &windows, None, true, edited);
-    session.note_window_tick_outcome("procedural-preview", false);
+    session.note_window_tick_outcome("procedural-preview", false, tick_grant()).expect("the window tick outcome is noted");
     link.requested = None;
     assert!(!session.window_tick_owed("procedural-preview"), "a paid window owes nothing while the document stands still");
     // ⏪️ The undo: no gesture, no emit, no app command — only the stack moving.
@@ -261,7 +266,7 @@ fn a_history_verb_owes_the_previews_the_evaluation_a_gesture_would_have() {
     preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, edited);
     let mut emit = semio_framework_plugin::Emit::<u8>::default();
     emit.artifact_mutations = vec![0_u8];
-    owe_attached_previews_for_mutations(&mut gesturing, &mut gesture_link, &windows, true, &mut emit);
+    owe_attached_previews_for_mutations(&mut gesturing, &mut gesture_link, &windows, true, &mut emit, tick_grant()).expect("the previews are owed");
     assert_eq!(emit.effects.len(), 1, "the gesture carries its own run start");
     let second = preview_eval_run_effects(&mut gesturing, &mut gesture_link, &windows, None, true, undone);
     assert!(second.is_empty(), "the poll that sees the same move must ask for no second run, got {second:?}");

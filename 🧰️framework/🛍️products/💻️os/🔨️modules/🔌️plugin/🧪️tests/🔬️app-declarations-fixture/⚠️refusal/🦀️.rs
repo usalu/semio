@@ -23,7 +23,7 @@ fn sqlite_guest_refusal_export(_: &str, dialect: &semio_framework_artifact_refer
     Err(sqlite_guest_refusal_origin(dialect))
 }
 
-fn sqlite_guest_refusal_import(_: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, _: store::sqlite_snapshot::SqliteDatabase, _: store::sqlite_snapshot::SnapshotEncoding, _: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, _: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
+fn sqlite_guest_refusal_import(_: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, _: &mut Option<store::sqlite_snapshot::SqliteDatabase>, _: store::sqlite_snapshot::SnapshotEncoding, _: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>, _: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
     Err(sqlite_guest_refusal_origin(dialect))
 }
 

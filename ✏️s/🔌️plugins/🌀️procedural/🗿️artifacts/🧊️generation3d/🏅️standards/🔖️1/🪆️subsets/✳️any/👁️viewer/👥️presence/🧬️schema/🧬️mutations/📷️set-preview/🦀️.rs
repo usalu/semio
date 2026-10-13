@@ -15,7 +15,7 @@ pub struct SetPreviewCamera {
 impl protocol::MutationKind<Generation3dViewPresence, Generation3dViewPresenceMutation> for SetPreviewCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-camera", kind: "set-preview-camera", record: "SetPreviewCamera" };
 
-    fn diff(&self, base: &Generation3dViewPresence) -> protocol::MutationOutcome<Generation3dViewPresencePatch> {
+    fn diff(&self, _base: &Generation3dViewPresence) -> protocol::MutationOutcome<Generation3dViewPresencePatch> {
         protocol::MutationOutcome::new(Generation3dViewPresencePatch { preview_camera: Some(self.camera.clone()), ..Default::default() })
     }
 

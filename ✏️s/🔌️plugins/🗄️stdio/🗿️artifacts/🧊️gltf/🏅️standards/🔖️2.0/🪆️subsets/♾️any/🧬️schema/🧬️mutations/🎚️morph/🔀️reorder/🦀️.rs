@@ -38,7 +38,7 @@ pub fn inverse(p: &GltfReorderMorphTargetAttributesPayload, base: &GltfSnapshot)
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::reorder_morph_target_attributes::mutation(super::reorder_morph_target_attributes::GltfReorderMorphTargetAttributesPayload { mesh: p.mesh, primitive: p.primitive, target: p.target, order: base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().map(|(semantic, _)| semantic.clone()).collect() })]
+    vec![mutation(GltfReorderMorphTargetAttributesPayload { mesh: p.mesh, primitive: p.primitive, target: p.target, order: base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().map(|(semantic, _)| semantic.clone()).collect() })]
 }
 
 //#region 🧬️DirectMutation
@@ -58,7 +58,7 @@ pub fn mutation(payload: GltfReorderMorphTargetAttributesPayload) -> super::Gltf
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderMorphTargetAttributesMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "morph-target-attributes", kind: "reorder-morph-target-attributes", record: "ReorderedMorphTargetAttributes" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

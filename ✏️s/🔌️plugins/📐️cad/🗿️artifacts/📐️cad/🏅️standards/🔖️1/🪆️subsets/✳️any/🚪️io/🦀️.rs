@@ -383,7 +383,7 @@ fn model_element_from_solid_handle(kernel: &Brep, kind: &str, handle: GeometryHa
 /// 🧊️ Actual imported topology remains owned until its composed child publishes or cancels.
 pub struct CadImportedObject {
     pub element: semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement,
-    pub geometry: semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot,
+    pub geometry: SemioBrepSnapshot,
 }
 
 /// 🌉️ Same OBJ-text bridge `cad_object_from_mesh` used before this wave's rewrite (reused, not
@@ -726,7 +726,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec CadBuilderFacets {
         construction: CadBuilderConstruction,
         analysis: CadAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::CadComposerComposition,
+        composition: CadComposerComposition,
     }
     builder: CadBuilder,
     analyzer: CadAnalyzer,

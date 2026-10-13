@@ -5,7 +5,7 @@ import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } f
 import { cargoDirectories } from "../../🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { buildCargoArtifacts, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildCargoArtifacts, readCargoPrebuildPlanV1, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 
 /** 🏷️ The one version every crate in this workspace carries (`[workspace.package] version`). */
 export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
@@ -24,9 +24,10 @@ export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
 export function repositoryCargoArtifactBuildPolicyV1(cwd: string, root = getWorkspaceRoot()): CargoArtifactBuildPolicyV1 {
   return { version: 1, cwd: resolve(cwd), buildDirectory: cargoDirectories(root).build, leaseDirectory: repoCacheDirectory(root, "agents", "resource-leases"), captureDirectory: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : resolve(cwd, "dist"), budgetMs: buildBudgetMs() };
 }
-/** 🦀️ Composes selected repository preparation with the neutral compiler capture port. */
+/** 🦀️ Composes selected repository preparation with the neutral compiler capture port. A caller that names a prebuild plan in `SEMIO_CARGO_PREBUILD_PLAN` has its component packages compiled together once per profile before this build runs. */
 export async function buildRepositoryCargoArtifacts(manifest: string, args: string[] = [], root = getWorkspaceRoot(), options: CargoArtifactBuildOptionsV1 = {}): Promise<void> {
   const path = resolve(root, manifest);
   prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(root),root,[options.command ?? "build", "--manifest-path", path,...args],root,options.environment??process.env);
-  await buildCargoArtifacts(path, args, { ...repositoryCargoArtifactBuildPolicyV1(root, root), captureDirectory: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : resolve(dirname(path), "dist") }, options);
+  const prebuild = options.prebuild ?? readCargoPrebuildPlanV1(options.environment ?? process.env) ?? undefined;
+  await buildCargoArtifacts(path, args, { ...repositoryCargoArtifactBuildPolicyV1(root, root), captureDirectory: process.env.SEMIO_TEST_ARTIFACT_DIR ? resolve(process.env.SEMIO_TEST_ARTIFACT_DIR) : resolve(dirname(path), "dist") }, { ...options, ...(prebuild ? { prebuild } : {}) });
 }

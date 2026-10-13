@@ -592,7 +592,7 @@ impl BitmapInferenceJob {
     }
 }
 
-impl semio_framework_job::InteractiveJob for BitmapInferenceJob {
+impl InteractiveJob for BitmapInferenceJob {
     fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         use semio_framework_job::JobOutcomeBorrow;
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {

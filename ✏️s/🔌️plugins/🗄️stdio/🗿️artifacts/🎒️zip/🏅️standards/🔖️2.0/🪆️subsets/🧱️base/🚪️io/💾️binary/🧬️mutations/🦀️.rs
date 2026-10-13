@@ -21,4 +21,3 @@ impl protocol::OpBinary for ZipMutation {
     }
 }
 }
-pub use mutations_codec::*;

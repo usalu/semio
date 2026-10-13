@@ -19,7 +19,7 @@ pub type InsertElementPayload = InsertElementMutation;
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for InsertElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "element", kind: "insert-element", record: "InsertedElement" };
 
-    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         protocol::MutationOutcome::new(diff_at_path(
             &self.path.0,
             XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![XmlChildAdded { index: self.index, item: self.node.clone() }] }) }),

@@ -87,7 +87,7 @@ fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex()
         for stop in fixture["cancelStops"].as_array().unwrap() {
             let mut cursor = ArtifactPreparedOperationCursor::default();
             for _ in 0..stop.as_u64().unwrap() { cursor.advance(ArtifactPreparedOperationSource::Text { header, body: &source }, &mut [0; 64], RetainedCloneGrant::one_payload_turn(64, 64)).unwrap(); }
-            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, ..Default::default() }).unwrap());
+            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() }).unwrap());
             assert!(progress.complete);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
@@ -151,14 +151,14 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
             if !hex { assert_eq!(serde_json::from_slice::<serde_json::Value>(&actual[header.len()..]).unwrap(), source.0); }
             assert_eq!(cursor.next_minimum_copy_bytes(), 0);
             assert_eq!((cursor.next_capacity_byte_demand().unwrap(), cursor.next_close_byte_demand().unwrap()), (0, 0));
-            let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, ..Default::default() }).unwrap());
+            let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() }).unwrap());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
         for stop in fixture["cancelStops"].as_array().unwrap() {
             let mut cursor = ArtifactPreparedOperationCursor::default();
             for _ in 0..stop.as_u64().unwrap() { cursor.advance(wire_source(), &mut [0; 64], original_json_policy(&fixture)).unwrap(); }
             let before = &source.0 as *const serde_json::Value;
-            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, ..Default::default() }).unwrap());
+            let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() }).unwrap());
             assert!(progress.complete);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(&source.0 as *const serde_json::Value, before);

@@ -93,7 +93,7 @@ async fn the_editor_declares_the_example_pickers_verb() {
 async fn the_example_switch_joins_its_exact_retained_factory() {
     use semio_framework_plugin::PluginApp;
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_tsv_editor());
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<TsvEditor>>::with_registry(EditorApp::<TsvEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<TsvEditor>>::with_registry(EditorApp::<TsvEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy());
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
@@ -127,9 +127,9 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<TsvEditor>
 /// switch's `Effect::LoadDocument`.
 async fn kit_fixture_holding(document: &TsvSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TsvEditor>, _>(async { semio_framework_plugin::App { definition: create_tsv_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<TsvEditor>, _>(async { semio_framework_plugin::App { definition: create_tsv_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_TSV_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
     app
 }
 
@@ -138,8 +138,8 @@ async fn kit_fixture_holding(document: &TsvSnapshot) -> KitFixtureApp {
 async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: semio_framework_value::DslValue) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    app.handle_action(action, Some(&args), &meta).await?;
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
+    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action(action, Some(&args), &meta, &mut identity).await)?;
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).map(|_| ())
 }
 
 /// ⚖️ LAW: `set-cell` — the verb the `TableWindowKit` mints for `🪟️main` — reaches the document through this
@@ -158,7 +158,7 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     ]);
     dispatch_settled(&mut app, "set-cell", args).await.expect("set-cell settles");
     assert_eq!(app.snapshot().expect("tsv snapshot").records[0][1], "Oak Board");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
 #[test]
@@ -232,5 +232,5 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_cell() {
     assert_eq!(state.records[0].len(), 3);
     let dropped = emit(SnapshotEditEvent::RemoveValue { path: "/records/0".into() }).expect("a row removal resolves");
     assert!(matches!(dropped.artifact_mutations.as_slice(), [TsvMutation::RemoveRow(_)]));
-    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).expect_err("no kind").code.0, "snapshot-edit.unsupported-path");
+    assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }

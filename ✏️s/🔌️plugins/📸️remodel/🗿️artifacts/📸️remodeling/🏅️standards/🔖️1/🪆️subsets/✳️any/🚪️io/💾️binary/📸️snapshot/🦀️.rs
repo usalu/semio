@@ -32,7 +32,6 @@ impl store::ArtifactPack for RemodelingSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl store::ArtifactNativeSnapshot for crate::RemodelingSnapshot {

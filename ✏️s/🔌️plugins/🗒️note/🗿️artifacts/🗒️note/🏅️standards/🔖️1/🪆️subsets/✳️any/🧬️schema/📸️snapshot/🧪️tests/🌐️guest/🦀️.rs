@@ -18,7 +18,7 @@ fn package_ref(package_id: &str, bytes: &[u8]) -> PackageRef {
 }
 
 fn open_budget() -> Budget {
-    Budget { fuel: u64::MAX, deadline_ms: 8, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget { retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn(), fuel: u64::MAX, deadline_ms: 8, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
 }
 
 fn jit_budget() -> Budget {
@@ -42,7 +42,7 @@ async fn open_to_settle(runtime: &impl GuestRuntime, instance: &mut GuestInstanc
     let started = std::time::Instant::now();
     loop {
         let events = if mid_flight(instance) { Vec::new() } else { std::mem::take(&mut owed) };
-        match runtime.execute_turn(instance, &events, budget()).await {
+        match runtime.execute_turn(instance, &events, budget(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await {
             Ok(turn) => {
                 if let Some(receipt) = turn.lifecycle_receipt {
                     owed.push(Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt }));
@@ -62,7 +62,7 @@ async fn open_to_settle(runtime: &impl GuestRuntime, instance: &mut GuestInstanc
 }
 
 fn codec_budget() -> Budget {
-    Budget { fuel: 8_000_000_000, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    Budget { retained: semio_framework_plugin::artifact_app_laws::fixture_retained_turn(), fuel: 8_000_000_000, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
 #[semio_framework_async_macros::async_test]

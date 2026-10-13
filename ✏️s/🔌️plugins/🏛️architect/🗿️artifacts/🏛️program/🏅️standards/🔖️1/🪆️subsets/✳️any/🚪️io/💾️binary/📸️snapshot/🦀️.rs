@@ -33,4 +33,3 @@ impl store::ArtifactPack for ProgramSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

@@ -59,11 +59,13 @@ fn private_child_metadata_copies_all_thirty_one_original_fields_and_admits_each_
         let (parts, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| metadata.take_ready(grant(0, 0, 0)).unwrap().unwrap());
         assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
         assert!(metadata.terminal_is_empty());
-        let actual = parts.fields().map(|field| field.map_or("", String::as_str));
+        let mut actual = parts.fields().map(|field| field.map_or("", String::as_str));
+        actual[10] = parts.actor.0.as_str();
+        actual[21] = parts.publication_actor.as_str();
         assert_eq!(serde_json::to_value(actual).unwrap(), serde_json::to_value(&original).unwrap());
         assert_eq!(parts.transaction, transaction);
         assert_eq!(parts.group_id.as_deref(), transaction.as_ref().map(|transaction| transaction.id.as_str()));
-        assert_eq!(parts.publication_actor, source.actor);
+        assert_eq!(parts.publication_actor.as_str(), source.actor);
         assert_eq!(parts.registry_owner, parts.owner);
         println!("[DEBUG] private child metadata case={} fields=31 transaction-present={} UTF8-originals=true admitted-turns={turns} max-copy=64", row["id"], transaction.is_some());
       }
@@ -108,7 +110,8 @@ fn private_parent_metadata_shares_exact_bounded_birth_copy_and_typed_transfer() 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["transactions"].as_array().unwrap() {
         let transaction = (!row.is_null()).then(|| protocol::TransactionRef { id: row["id"].as_str().unwrap().into(), tool: row["tool"].as_str().unwrap().into() });
-        let source = PrivatePublicationMetadataSource { actor: fixture["actor"].as_str().unwrap(), transaction: transaction.as_ref(), group_id: transaction.as_ref().map(|transaction| transaction.id.as_str()) };
+        let actor = semio_framework_value::SharedUtf8::from(fixture["actor"].as_str().unwrap());
+        let source = PrivatePublicationMetadataSource { actor: &actor, transaction: transaction.as_ref(), group_id: transaction.as_ref().map(|transaction| transaction.id.as_str()) };
         let mut issuer = PrivatePublicationMetadataIssuer::new();
         let mut turns = 0;
         while !issuer.ready() {
@@ -135,7 +138,7 @@ fn private_parent_metadata_shares_exact_bounded_birth_copy_and_typed_transfer() 
         assert!(metadata.take_ready(RetainedCloneGrant { maximum_items: 0, ..grant(0, 0, 0) }).unwrap().is_none());
         let (parts, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| metadata.take_ready(grant(0, 0, 0)).unwrap().unwrap());
         assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
-        assert_eq!(parts.actor, source.actor);
+        assert_eq!(parts.actor.as_str(), source.actor.as_str());
         assert_eq!(parts.transaction, transaction);
         assert_eq!(parts.group_id.as_deref(), transaction.as_ref().map(|transaction| transaction.id.as_str()));
         assert!(metadata.terminal_is_empty());
@@ -163,7 +166,8 @@ fn private_parent_metadata_shares_exact_bounded_birth_copy_and_typed_transfer() 
 #[test]
 fn private_parent_metadata_cancellation_never_frees_a_fractionally_funded_original() {
     let transaction = protocol::TransactionRef { id: "txn:δ".into(), tool: "cad#verschieben-ä".into() };
-    let source = PrivatePublicationMetadataSource { actor: "actor:private-child", transaction: Some(&transaction), group_id: Some(&transaction.id) };
+    let actor = semio_framework_value::SharedUtf8::from("actor:private-child");
+    let source = PrivatePublicationMetadataSource { actor: &actor, transaction: Some(&transaction), group_id: Some(&transaction.id) };
     for stop in [0, 1, 3, 7, 8] {
         let mut issuer = PrivatePublicationMetadataIssuer::new();
         for _ in 0..stop { let capacity = issuer.next_capacity_byte_demand(source).unwrap(); issuer.advance(source, grant(64, capacity, 0)).unwrap(); }
@@ -192,7 +196,8 @@ fn private_publication_metadata_preserves_group_id_independently_of_transaction(
         let transaction = (!transaction.is_null()).then(|| protocol::TransactionRef { id: transaction["id"].as_str().unwrap().into(), tool: transaction["tool"].as_str().unwrap().into() });
         for group_id in fixture["groupIds"].as_array().unwrap() {
             let group_id = group_id.as_str();
-            let parent_source = PrivatePublicationMetadataSource { actor: fixture["actor"].as_str().unwrap(), transaction: transaction.as_ref(), group_id };
+            let parent_actor = semio_framework_value::SharedUtf8::from(fixture["actor"].as_str().unwrap());
+            let parent_source = PrivatePublicationMetadataSource { actor: &parent_actor, transaction: transaction.as_ref(), group_id };
             let child_source = PrivateChildMemberMetadataSource { expected: &expected, parent_id: "parent:β", parent_dialect: &expected.dialect, key: MemberKeyRef::root("slot:α", "local:δ"), actor: parent_source.actor, transaction: transaction.as_ref(), group_id };
             let mut parent = PrivatePublicationMetadataIssuer::new();
             let mut child = PrivateChildMemberMetadataIssuer::new();

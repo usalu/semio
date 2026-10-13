@@ -54,10 +54,13 @@ fn inbound_request_budget() -> semio_framework::kernel::Budget {
 /// `Fn(&[u8]) -> Result<Vec<u8>, Fault>` that answers in the capability's own encoding and refuses an
 /// undecodable request with the SAME `extension.evaluate.bad-request` code the shipped crates use.
 fn inbound_request_bundle(capability: &str) -> crate::plugin_runtime::ExtensionBundle {
-    crate::plugin_runtime::ExtensionBundle::new("inbound-request", "Inbound Request", "0.0.1").extends("test").handler(capability, |request| {
+    crate::plugin_runtime::ExtensionBundle::new("inbound-request", "Inbound Request", "0.0.1").extends("test").handler(capability, |request, cx| {
         let text = std::str::from_utf8(request).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate.bad-request"), error.to_string()))?;
         let value: serde_json::Value = serde_json::from_str(text).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate.bad-request"), error.to_string()))?;
-        Ok(serde_json::to_vec(&serde_json::json!({ "echo": value })).expect("the echo answer serializes"))
+        let answer = serde_json::to_vec(&serde_json::json!({ "echo": value })).expect("the echo answer serializes");
+        let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: answer.len(), retained_capacity_bytes: answer.capacity(), ..Default::default() };
+        cx.consume_retained(progress).map_err(|error| semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
+        Ok(crate::plugin_runtime::ExtensionInvokeStep { payload: Some(answer), retained_progress: progress, refusal: None })
     })
 }
 

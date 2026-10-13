@@ -3356,4 +3356,5 @@ impl IncrementalSfm {
 mod tests;
 // #endregion 🔖️Tests
 
-use crate::optimize::{schur_lm, SchurLmPreparation, SchurResult};
+use crate::optimize::{SchurLmPreparation};
+#[cfg(test)] use crate::optimize::{schur_lm, SchurResult};

@@ -37,4 +37,4 @@ pub fn encode_vdi3805_pack(snapshot: &Vdi3805Snapshot) -> Vec<u8> { store::Artif
 }
 pub use native_snapshot_codec::*;
 
-crate::impl_norm_artifact_record!(@binary crate::Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);
+crate::impl_norm_artifact_record!(@binary Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::sqlite_codec);

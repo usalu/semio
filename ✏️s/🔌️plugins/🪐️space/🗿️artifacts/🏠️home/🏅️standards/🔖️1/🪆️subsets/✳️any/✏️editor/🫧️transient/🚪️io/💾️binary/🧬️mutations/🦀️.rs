@@ -15,4 +15,3 @@ impl protocol::OpBinary for HomeTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

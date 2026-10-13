@@ -40,4 +40,3 @@ fn parse_diff(text: &str) -> Result<Self, semio_framework_diagnostic::TextError>
 }
 }
 }
-pub use diff_codec::*;

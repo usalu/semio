@@ -292,7 +292,7 @@ pub struct Puzzle5dWindowTransient {
     pub brush_candidate_index: usize,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum Puzzle5dWindowTransientMutation {
     Snapshot { transient: Puzzle5dWindowTransient },
 }
@@ -718,19 +718,11 @@ impl protocol::DiffAlgebra<Puzzle5dWindowTransient> for Puzzle5dWindowTransientD
 
 semio_framework_value::artifact_retire_struct!(Puzzle5dWindowTransient { suggestion_menu, engagement_input, brush_candidate_index });
 
-impl semio_framework_value::retirement::RetireOwned for Puzzle5dWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
-        }
-    }
-}
-
 fn puzzle5d_window_transient_preflight(mutation: &Puzzle5dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let Puzzle5dWindowTransientMutation::Snapshot { transient } = mutation;
     let menu = transient.suggestion_menu.as_ref().map_or(Some(0), |menu| menu.window_id.capacity().checked_add(menu.vortex_full_id.capacity()));
     let retained_bytes = menu
-        .and_then(|menu| std::mem::size_of::<Puzzle5dWindowTransient>().checked_add(transient.engagement_input.capacity())?.checked_add(menu))
+        .and_then(|menu| size_of::<Puzzle5dWindowTransient>().checked_add(transient.engagement_input.capacity())?.checked_add(menu))
         .ok_or_else(|| "Puzzle 5D window transient footprint overflowed".to_string())?;
     Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes))
 }

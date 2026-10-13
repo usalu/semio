@@ -175,7 +175,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Din18599BuilderFacets {
         construction: Din18599BuilderConstruction,
         analysis: Din18599AnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Din18599ComposerComposition,
+        composition: Din18599ComposerComposition,
     }
     builder: Din18599Builder,
     analyzer: Din18599Analyzer,

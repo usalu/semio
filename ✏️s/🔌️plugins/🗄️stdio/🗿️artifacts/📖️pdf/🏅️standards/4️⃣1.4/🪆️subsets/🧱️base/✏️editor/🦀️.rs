@@ -121,7 +121,7 @@ impl ArtifactEditor for Pdf14Editor {
         })
     }
 
-    fn agent_target_revision(action: &str, args: &semio_framework_value::DslValue, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
+    fn agent_target_revision(action: &str, args: &semio_framework_value::DslValue, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         page::agent_target_revision(action, doc.snapshot, args)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {

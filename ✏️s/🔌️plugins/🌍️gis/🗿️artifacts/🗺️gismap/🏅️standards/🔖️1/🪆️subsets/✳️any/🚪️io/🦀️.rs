@@ -337,7 +337,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec GismapBuilderFacets {
         construction: GismapBuilderConstruction,
         analysis: GisMapAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::GisMapComposerComposition,
+        composition: GisMapComposerComposition,
     }
     builder: GismapBuilder,
     analyzer: GisMapAnalyzer,

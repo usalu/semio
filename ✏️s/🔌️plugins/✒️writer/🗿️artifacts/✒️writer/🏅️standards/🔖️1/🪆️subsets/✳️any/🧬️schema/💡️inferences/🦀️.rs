@@ -6,7 +6,6 @@
 
 use crate::WriterSnapshot;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_trinity_jack::core::{example_graph, lint};
 use serde::{Deserialize, Serialize};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a writer snapshot. One field per named inference under

@@ -35,6 +35,5 @@ impl store::ArtifactPack for DeflateSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 pub use crate::standards::v_rfc1950::subsets::any::io::sqlite::snapshot::native::{compress_zlib,decompress_zlib};

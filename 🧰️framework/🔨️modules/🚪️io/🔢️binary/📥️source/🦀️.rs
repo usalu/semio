@@ -81,7 +81,7 @@ impl BinarySourceJob{
  }
  pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&self)->Result<&[u8],BinarySourceError>{self.check()?;if self.phase!="complete"{return Err(BinarySourceError::Incomplete);}Ok(&self.output)}
- pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<u8>,RetainedCloneProgress)>,BinarySourceError>{self.check()?;if self.phase!="complete"{return Err(BinarySourceError::Incomplete);}if grant.maximum_items==0||grant.maximum_copy_bytes<std::mem::size_of::<Vec<u8>>()||grant.maximum_depth==0{return Ok(None);}self.phase="transferred";Ok(Some((std::mem::take(&mut self.output),RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Vec<u8>>(),..Default::default()})))}
+ pub fn take_result(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<u8>,RetainedCloneProgress)>,BinarySourceError>{self.check()?;if self.phase!="complete"{return Err(BinarySourceError::Incomplete);}if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<Vec<u8>>()||grant.maximum_depth==0{return Ok(None);}self.phase="transferred";Ok(Some((std::mem::take(&mut self.output),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<u8>>(),..Default::default()})))}
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

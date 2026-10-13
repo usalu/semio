@@ -42,7 +42,7 @@ use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiDocumentNodePage, UiFixedL
 /// caller can draw the surface chrome (`paint::paint_overlay_surface`) without re-measuring.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct UiOverlayPlacement {
-    pub root: crate::wgpu::arena::NodeId,
+    pub root: NodeId,
     pub kind: OverlayKind,
     /// 🌫️ `Dialog`/`CommandPalette`: draw `paint::paint_overlay_backdrop` first.
     pub backdrop: bool,
@@ -451,7 +451,7 @@ impl UiCandidateBaseline {
     }
 }
 
-fn retire_surface_scene(document_id: UiNodeId, window_id: &str, window_generation: u64, retirements: &mut VecDeque<UiRetiredComponentScene>, node_id: crate::wgpu::arena::NodeId, node: &crate::wgpu::tree::Node) -> bool {
+fn retire_surface_scene(document_id: UiNodeId, window_id: &str, window_generation: u64, retirements: &mut VecDeque<UiRetiredComponentScene>, node_id: NodeId, node: &crate::wgpu::tree::Node) -> bool {
     let UiNode::ComponentScene(scene) = &node.spec.0 else { return true };
     if retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
         return false;
@@ -589,7 +589,7 @@ impl Drop for LayoutWorkerAdmission {
 }
 
 /// 🧾️ Records one original worker close receipt before a child error crosses the layout boundary.
-fn consume_layout_retirement(context:&mut semio_framework_job::StepContext<'_>,step:Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
+fn consume_layout_retirement(context:&mut StepContext<'_>,step:Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>)->Result<bool,semio_framework_value::ValueError>{
     match step{Ok(Some(progress))=>{context.consume_retained(progress)?;Ok(true)},Ok(None)=>Ok(false),Err(error)=>{context.consume_retained(error.retained_progress())?;Err(error)}}
 }
 
@@ -603,16 +603,16 @@ const RETAINED_HIT_REGISTRY_CAPACITY: usize = 4_096;
 
 #[derive(Clone, Copy)]
 struct RetainedPaintVisit {
-    node: crate::wgpu::arena::NodeId,
+    node: NodeId,
     origin_x: f32,
     origin_y: f32,
-    next_child: Option<crate::wgpu::arena::NodeId>,
+    next_child: Option<NodeId>,
     entered: bool,
     /// 🪟️ The OPEN overlay root this visit sits under, inherited down the subtree — `None` for
     /// ordinary in-flow content. The paint phase routes a visit that names one into `DrawList`'s
     /// overlay bucket so a floating surface's content composites above every panel, on top of the
     /// surface chrome the `Overlays` phase drew for it (ticket 26/09/17 packet W15a).
-    overlay_root: Option<crate::wgpu::arena::NodeId>,
+    overlay_root: Option<NodeId>,
 }
 
 struct RetainedPaintWalk {
@@ -621,14 +621,14 @@ struct RetainedPaintWalk {
 }
 
 enum RetainedPaintWalkStep {
-    Visit(crate::wgpu::arena::NodeId, f32, f32, Option<crate::wgpu::arena::NodeId>),
+    Visit(NodeId, f32, f32, Option<NodeId>),
     Scalar,
     Complete,
     DepthFault,
 }
 
 impl RetainedPaintWalk {
-    fn new(tree: &UiTree, root: crate::wgpu::arena::NodeId) -> Self {
+    fn new(tree: &UiTree, root: NodeId) -> Self {
         let root_visit = RetainedPaintVisit { node: root, origin_x: 0.0, origin_y: 0.0, next_child: retained_first_child(tree, root), entered: false, overlay_root: None };
         let mut visits = [None; RETAINED_PAINT_DEPTH_CREDITS];
         visits[0] = Some(root_visit);
@@ -682,7 +682,7 @@ fn offset_rect(rect: crate::wgpu::geometry::Rect, x: f32, y: f32) -> crate::wgpu
     crate::wgpu::geometry::Rect::new(rect.x + x, rect.y + y, rect.w, rect.h)
 }
 
-fn retained_node_clip(tree: &UiTree, node: crate::wgpu::arena::NodeId) -> Option<crate::wgpu::geometry::Rect> {
+fn retained_node_clip(tree: &UiTree, node: NodeId) -> Option<crate::wgpu::geometry::Rect> {
     if tree.node(node).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(_)) && node.state.open) {
         return None;
     }
@@ -718,7 +718,7 @@ fn retained_node_clip(tree: &UiTree, node: crate::wgpu::arena::NodeId) -> Option
     clip
 }
 
-fn retained_first_child(tree: &UiTree, id: crate::wgpu::arena::NodeId) -> Option<crate::wgpu::arena::NodeId> {
+fn retained_first_child(tree: &UiTree, id: NodeId) -> Option<NodeId> {
     tree.disclosure_open(id).unwrap_or(true).then(|| tree.node(id).and_then(|node| node.first_child)).flatten()
 }
 
@@ -816,7 +816,7 @@ impl UiFramePaintCensus {
 /// every per-kind pointer/pick resolver is expressed against.
 #[derive(Clone, Debug, PartialEq)]
 pub struct UiSceneHit {
-    pub node: crate::wgpu::arena::NodeId,
+    pub node: NodeId,
     pub surface_id: String,
     pub controller_id: String,
     pub kind: crate::wgpu::component::ui::SurfaceKind,
@@ -826,7 +826,7 @@ pub struct UiSceneHit {
 /// 🖱️ `node`'s own absolute rect plus its scene identity, when it IS a `ComponentScene` leaf — the
 /// ONE geometry answer `UiTree::absolute_rect` gives, so a scene inside an open floating overlay
 /// resolves at that overlay's placement exactly as the paint and hit walks put it there.
-fn scene_slot_for_node_absolute(tree: &UiTree, id: crate::wgpu::arena::NodeId) -> Option<UiSceneHit> {
+fn scene_slot_for_node_absolute(tree: &UiTree, id: NodeId) -> Option<UiSceneHit> {
     let UiNode::ComponentScene(scene) = &tree.node(id)?.spec.0 else { return None };
     Some(UiSceneHit { node: id, surface_id: scene.surface_id.clone(), controller_id: scene.controller_id.clone(), kind: scene.component_kind, rect: tree.absolute_rect(id)? })
 }
@@ -858,7 +858,7 @@ fn register_retained_hit(
     driver_drag: UiDriverDrag,
     reversed: bool,
     inline: ui_contract::FlowInline,
-    node: crate::wgpu::arena::NodeId,
+    node: NodeId,
     origin_x: f32,
     origin_y: f32,
     clip: Option<crate::wgpu::geometry::Rect>,
@@ -921,9 +921,9 @@ struct RetainedPaintFrame {
     phase: RetainedPaintPhase,
     walk: RetainedPaintWalk,
     candidate: DrawList,
-    sync_node: Option<crate::wgpu::arena::NodeId>,
+    sync_node: Option<NodeId>,
     node_sync: RetainedInteractiveSyncCursor,
-    paint_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
+    paint_node: Option<(NodeId, f32, f32)>,
     /// 🪟️ Whether the node `paint_node` names paints into the overlay bucket — true exactly when it
     /// sits under one of `overlay_chrome`'s roots.
     paint_overlay: bool,
@@ -933,7 +933,7 @@ struct RetainedPaintFrame {
     /// 🪟️ How far the `Overlays` phase has walked `overlay_chrome`.
     overlay_index: usize,
     node_paint: RetainedNodePaintCursor,
-    scene_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
+    scene_node: Option<(NodeId, f32, f32)>,
     scene_paint: ScenePaintCursor,
     tooltip: Option<RetainedTooltipPaint>,
     interaction_epoch: u64,
@@ -1445,7 +1445,7 @@ impl Ui {
         self.windows.get(window_id).filter(|window| window.closing.is_none()).is_some_and(|window| window.sealed_input_candidate.is_some_and(|(candidate, base)| candidate == witness && base == window.presented_interaction_epoch))
     }
 
-    pub fn candidate_scene_node_for_presented_node(&self, window_id: &str, witness: u64, presented_node: crate::wgpu::arena::NodeId) -> Option<crate::wgpu::arena::NodeId> {
+    pub fn candidate_scene_node_for_presented_node(&self, window_id: &str, witness: u64, presented_node: NodeId) -> Option<NodeId> {
         let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
         let sealed = window.sealed_input_candidate.is_some_and(|(candidate, base)| candidate == witness && base == window.presented_interaction_epoch);
         if !sealed {
@@ -1469,7 +1469,7 @@ impl Ui {
     }
 
     /// 📐️ Resolves the exact candidate scene node and painted rectangle for one presented node.
-    pub fn candidate_scene_geometry_for_presented_node(&self, window_id: &str, witness: u64, presented_node: crate::wgpu::arena::NodeId) -> Option<(crate::wgpu::arena::NodeId, crate::wgpu::geometry::Rect)> {
+    pub fn candidate_scene_geometry_for_presented_node(&self, window_id: &str, witness: u64, presented_node: NodeId) -> Option<(NodeId, crate::wgpu::geometry::Rect)> {
         let node = self.candidate_scene_node_for_presented_node(window_id, witness, presented_node)?;
         Some((node, self.windows.get(window_id)?.tree.absolute_rect(node)?))
     }
@@ -3647,13 +3647,13 @@ impl Ui {
     /// façade-level entry point for React's `Popover`/`Dialog`/`CommandPalette` portals
     /// (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`). Placement, escape/outside-press
     /// dismissal and the `Dialog`/`CommandPalette` focus trap all come from `events`' own policy.
-    pub fn open_overlay(&mut self, window_id: &str, root: crate::wgpu::arena::NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
+    pub fn open_overlay(&mut self, window_id: &str, root: NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return };
         window.router.open_overlay(&mut window.tree, root, kind, anchor);
     }
 
     /// 🚪️ Closes one open overlay by its content root.
-    pub fn close_overlay(&mut self, window_id: &str, root: crate::wgpu::arena::NodeId) -> Vec<UiCommand> {
+    pub fn close_overlay(&mut self, window_id: &str, root: NodeId) -> Vec<UiCommand> {
         let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
         window.router.close_overlay(&mut window.tree, root)
     }
@@ -3696,7 +3696,7 @@ impl Ui {
      * (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`), where the children are ordinary
      * DOM inside the portalled box. */
     fn publish_overlay_origins(&mut self, window_id: &str) {
-        let origins: Vec<(crate::wgpu::arena::NodeId, f32, f32)> = self.overlay_placements(window_id).into_iter().filter(|placement| placement.kind != OverlayKind::SelectPopup).map(|placement| (placement.root, placement.x, placement.y)).collect();
+        let origins: Vec<(NodeId, f32, f32)> = self.overlay_placements(window_id).into_iter().filter(|placement| placement.kind != OverlayKind::SelectPopup).map(|placement| (placement.root, placement.x, placement.y)).collect();
         if let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) {
             window.tree.set_overlay_origins(origins);
         }
@@ -3807,7 +3807,7 @@ impl Ui {
     /// the record's accessibility label, with its declared shortcut in parentheses when it has one.
     /// A node with no label of its own has no tooltip, matching `useControlTooltipText`'s own
     /// `if (!label) return undefined`.
-    pub fn tooltip_label(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<String> {
+    pub fn tooltip_label(&self, window_id: &str, node: NodeId) -> Option<String> {
         tooltip_label_in_tree(self.tree(window_id)?, node)
     }
     //#endregion 🪟️OverlayApi
@@ -3907,7 +3907,7 @@ impl Ui {
         edit.text = published;
         edit.caret = edit.text.len(); edit.anchor = edit.caret; edit.composition = None; edit.scroll_x = 0.0;
         node.state.number_refusal = None;
-        tree.mark_dirty(submitted.node, crate::wgpu::tree::NodeFlags::DIRTY_PAINT);
+        tree.mark_dirty(submitted.node, NodeFlags::DIRTY_PAINT);
         if window.presented_ready {
             window.advance_presented_interaction();
             mark_window_paint_dirty(window);
@@ -3953,7 +3953,7 @@ impl Ui {
         self.windows.get(window_id).map(|window| &window.tree)
     }
 
-    pub fn presented_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {
+    pub fn presented_document_id(&self, window_id: &str, node: NodeId) -> Option<UiNodeId> {
         self.windows.get(window_id)?.presented_tree.document_id(node)
     }
 
@@ -3965,7 +3965,7 @@ impl Ui {
         window.presented_tree.document_node(document_id)
     }
 
-    pub fn retained_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {
+    pub fn retained_document_id(&self, window_id: &str, node: NodeId) -> Option<UiNodeId> {
         let window = self.windows.get(window_id)?;
         if window.presented_ready {
             window.presented_tree.document_id(node)
@@ -3974,7 +3974,7 @@ impl Ui {
         }
     }
 
-    pub fn candidate_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {
+    pub fn candidate_document_id(&self, window_id: &str, node: NodeId) -> Option<UiNodeId> {
         self.windows.get(window_id)?.tree.document_id(node)
     }
 

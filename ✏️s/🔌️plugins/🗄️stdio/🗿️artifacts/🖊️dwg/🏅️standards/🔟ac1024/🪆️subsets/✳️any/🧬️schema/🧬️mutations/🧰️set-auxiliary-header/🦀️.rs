@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetAuxiliaryHeader {
         protocol::MutationOutcome::new(DwgDiff { auxiliary_header: (base.auxiliary_header != self.auxiliary_header).then(|| self.auxiliary_header.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.auxiliary_header != self.auxiliary_header).then(|| DwgMutation::SetAuxiliaryHeader(set_auxiliary_header::SetAuxiliaryHeader { auxiliary_header: base.auxiliary_header.clone() })).into_iter().collect())
+        Ok((base.auxiliary_header != self.auxiliary_header).then(|| DwgMutation::SetAuxiliaryHeader(SetAuxiliaryHeader { auxiliary_header: base.auxiliary_header.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set auxiliary header", "Hilfskopf setzen")

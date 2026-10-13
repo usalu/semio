@@ -289,11 +289,11 @@ const F_TRANSITION_PAYLOAD: u16 = 4;
 const F_TRANSITION_OBSERVED: u16 = 5;
 
 fn doc_spec() -> RecordSpec {
-    semio_framework_dsl_record::RecordSpec::new(Some("doc"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
+    RecordSpec::new(Some("doc"), semio_framework_dsl_record::RecordLayout::Inline, vec![FieldSpec::new(F_DOC_ID, "", Shape::Text).positional(0), FieldSpec::new(F_DOC_SCHEMA, "schema", Shape::Text)])
 }
 
 fn edit_spec() -> RecordSpec {
-    semio_framework_dsl_record::RecordSpec::new(
+    RecordSpec::new(
         Some("edit"),
         semio_framework_dsl_record::RecordLayout::Inline,
         vec![
@@ -310,7 +310,7 @@ fn edit_spec() -> RecordSpec {
 /// 🔀️ `transition <id> actor=<actor> hlc=<actor>,<physical_ms>,<logical> dependencies=[...]
 /// payload=<base64> [observed=<id>]` — one [`HistoryTransitionRecord`].
 fn transition_spec() -> RecordSpec {
-    semio_framework_dsl_record::RecordSpec::new(
+    RecordSpec::new(
         Some("transition"),
         semio_framework_dsl_record::RecordLayout::Inline,
         vec![
@@ -330,7 +330,7 @@ fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
 
 fn field_text(record: &RecordValue, id: u16) -> Option<String> {
     match record.get(id) {
-        Some(semio_framework_dsl_record::FieldValue::Text(s)) => Some(s.clone()),
+        Some(FieldValue::Text(s)) => Some(s.clone()),
         _ => None,
     }
 }
@@ -341,15 +341,15 @@ fn required_text(record: &RecordValue, id: u16, what: &'static str) -> Result<St
 
 fn field_text_list(record: &RecordValue, id: u16) -> Vec<String> {
     match record.get(id) {
-        Some(semio_framework_dsl_record::FieldValue::List(items)) => items.iter().filter_map(|v| if let semio_framework_dsl_record::FieldValue::Text(s) = v { Some(s.clone()) } else { None }).collect(),
+        Some(FieldValue::List(items)) => items.iter().filter_map(|v| if let FieldValue::Text(s) = v { Some(s.clone()) } else { None }).collect(),
         _ => Vec::new(),
     }
 }
 
 fn field_hlc(record: &RecordValue, id: u16) -> Result<(u64, u64, u64), ProtocolError> {
     match record.get(id) {
-        Some(semio_framework_dsl_record::FieldValue::Tuple(items)) => match items.as_slice() {
-            [semio_framework_dsl_record::FieldValue::UInt(actor), semio_framework_dsl_record::FieldValue::UInt(physical_ms), semio_framework_dsl_record::FieldValue::UInt(logical)] => Ok((*actor, *physical_ms, *logical)),
+        Some(FieldValue::Tuple(items)) => match items.as_slice() {
+            [FieldValue::UInt(actor), FieldValue::UInt(physical_ms), FieldValue::UInt(logical)] => Ok((*actor, *physical_ms, *logical)),
             _ => Err(ProtocolError::Malformed { what: "transition hlc", offset: 0, detail: "expected three unsigned integers".to_string() }),
         },
         _ => Err(ProtocolError::Malformed { what: "transition hlc", offset: 0, detail: "missing required field in ops text".to_string() }),
@@ -358,7 +358,7 @@ fn field_hlc(record: &RecordValue, id: u16) -> Result<(u64, u64, u64), ProtocolE
 
 fn field_bytes(record: &RecordValue, id: u16, what: &'static str) -> Result<Vec<u8>, ProtocolError> {
     match record.get(id) {
-        Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => Ok(bytes.clone()),
+        Some(FieldValue::Bytes64(bytes)) => Ok(bytes.clone()),
         _ => Err(ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() }),
     }
 }
@@ -429,7 +429,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                     finished_at: field_text(&record, F_EDIT_FINISHED),
                     verb: field_text(&record, F_EDIT_VERB),
                     line: match record.get(F_EDIT_LINE) {
-                        Some(semio_framework_dsl_record::FieldValue::List(values)) if values.len() <= 1 => values.first().map(|value| match value { semio_framework_dsl_record::FieldValue::Text(line) => Ok(line.clone()), _ => Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected text".into() }) }).transpose()?,
+                        Some(FieldValue::List(values)) if values.len() <= 1 => values.first().map(|value| match value { FieldValue::Text(line) => Ok(line.clone()), _ => Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected text".into() }) }).transpose()?,
                         _ => return Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected explicit zero-or-one text list".into() }),
                     },
                 });
@@ -469,13 +469,13 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     for edit in &log.edits {
         let mut fields = vec![(F_EDIT_ID, FieldValue::Text(edit.id.clone())), (F_EDIT_STARTED, FieldValue::Text(edit.started_at.clone())), (F_EDIT_LINE, FieldValue::List(edit.line.iter().cloned().map(FieldValue::Text).collect()))];
         if let Some(actor) = &edit.actor {
-            fields.push((F_EDIT_ACTOR, semio_framework_dsl_record::FieldValue::Text(actor.as_str().to_owned())));
+            fields.push((F_EDIT_ACTOR, FieldValue::Text(actor.as_str().to_owned())));
         }
         if let Some(finished) = &edit.finished_at {
-            fields.push((F_EDIT_FINISHED, semio_framework_dsl_record::FieldValue::Text(finished.clone())));
+            fields.push((F_EDIT_FINISHED, FieldValue::Text(finished.clone())));
         }
         if let Some(verb) = &edit.verb {
-            fields.push((F_EDIT_VERB, semio_framework_dsl_record::FieldValue::Text(verb.clone())));
+            fields.push((F_EDIT_VERB, FieldValue::Text(verb.clone())));
         }
         out.push_str(&semio_framework_dsl_record::print(&record_with(fields), &edit_spec(), semio_framework_dsl_record::JoinMode::Inline));
         out.push('\n');
@@ -498,7 +498,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
             (F_TRANSITION_PAYLOAD, FieldValue::Bytes64(transition.payload.clone())),
         ];
         if let Some(observed) = &transition.observed {
-            fields.push((F_TRANSITION_OBSERVED, semio_framework_dsl_record::FieldValue::Text(observed.clone())));
+            fields.push((F_TRANSITION_OBSERVED, FieldValue::Text(observed.clone())));
         }
         out.push_str(&semio_framework_dsl_record::print(&record_with(fields), &transition_spec(), semio_framework_dsl_record::JoinMode::Inline));
         out.push('\n');

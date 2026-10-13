@@ -20,7 +20,7 @@ fn store_sample(bytes:&mut[u8],offset:usize,bits:u32,word:u64,order:TiffByteOrde
  for lane in 0..bits as usize{let bit=offset+lane;let byte=bytes.get_mut(bit/8).ok_or("tiff: packed sample output extent")?;*byte|=(((word>>(bits as usize-1-lane))&1)as u8)<<(7-bit%8);}Ok(())
 }
 fn lzw_decode(input:&[u8],expected:usize,c:&mut NativeDecodeControl<'_>)->Result<Vec<u8>,ValueError>{
- c.charge(4096*(std::mem::size_of::<u16>()+2))?;
+ c.charge(4096*(size_of::<u16>()+2))?;
  let mut parents=[0u16;4096];let mut tails=[0u8;4096];let mut stack=[0u8;4096];for index in 0..256{tails[index]=index as u8;}
  let mut output=c.allocate_vec::<u8>(expected)?;let(mut cursor,mut width,mut next,mut previous)=(0usize,9usize,258usize,None::<usize>);
  c.begin_stage(expected)?;
@@ -56,7 +56,7 @@ fn decompress(input:&[u8],compression:u32,expected:usize,width:usize,height:usiz
  match compression{
   1=>{if input.len()<expected{return Err(invalid("tiff: native raster truncated"))}c.copy_bytes(&input[..expected])},
   32773=>{c.begin_stage(expected)?;c.charge(expected)?;let output=packbits_decode(input,expected).map_err(invalid)?;c.advance(expected)?;Ok(output)},
-  2|3|4=>super::fax::decode(input,compression,width,height,fill,options,c),
+  2|3|4=>fax::decode(input,compression,width,height,fill,options,c),
   5=>lzw_decode(input,expected,c),
   6|7=>{let output=jpeg_samples(input,tables,width,height,channels,c)?;if output.len()!=expected{return Err(invalid("tiff: JPEG exact raster extent"))}Ok(output)},
   8|32946=>semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decompress_zlib(input,expected,c),
@@ -109,7 +109,7 @@ pub(super) fn admit(native:NativeSnapshot,c:&mut NativeDecodeControl<'_>,maximum
 pub(super) fn lower(snapshot:&TiffSnapshot,options:TiffNativeOptions,c:&mut NativeEncodeControl<'_>)->Result<NativeSnapshot,ValueError>{
  snapshot.validate().map_err(invalid)?;let mut ifds=c.allocate_vec::<NativeIfd>(snapshot.ifds.len())?;
  for ifd in &snapshot.ifds{
-  let mut entries=c.allocate_vec::<TiffTag>(ifd.entries.len()+4)?;c.begin_stage(ifd.entries.len())?;for tag in &ifd.entries{c.charge(super::values_owned_bytes(&tag.values)?)?;entries.push(tag.clone());c.step()?;}let mut storage=NativeStorage::default();
+  let mut entries=c.allocate_vec::<TiffTag>(ifd.entries.len()+4)?;c.begin_stage(ifd.entries.len())?;for tag in &ifd.entries{c.charge(values_owned_bytes(&tag.values)?)?;entries.push(tag.clone());c.step()?;}let mut storage=NativeStorage::default();
   if let Some(block)=ifd.blocks.first(){
    let channels=block.channels as usize;let source=ifd.integers(TAG_BITS_PER_SAMPLE);c.charge(source.len()*4)?;let mut depths=c.allocate_vec::<u32>(channels)?;depths.extend(source);if depths.is_empty(){depths.push(1)}if depths.len()==1{depths.resize(channels,depths[0]);}
    let(chunk_width,chunk_height,kind)=match options.layout{TiffNativeLayout::SingleStrip=>(block.width,block.height,NativeStorageKind::Strips),TiffNativeLayout::Strips{rows}=>(block.width,rows.min(block.height),NativeStorageKind::Strips),TiffNativeLayout::Tiles{width,height}=>(width,height,NativeStorageKind::Tiles)};
@@ -118,7 +118,7 @@ pub(super) fn lower(snapshot:&TiffSnapshot,options:TiffNativeOptions,c:&mut Nati
    for tile_y in 0..down{for tile_x in 0..across{
     let visible_width=chunk_width.min(block.width-tile_x*chunk_width);let visible_height=chunk_height.min(block.height-tile_y*chunk_height);let stored_height=if kind==NativeStorageKind::Tiles{chunk_height}else{visible_height};let length=row_bytes.checked_mul(stored_height as usize).ok_or_else(||invalid("tiff: native raster size overflow"))?;let mut raw=c.allocate_vec::<u8>(length)?;raw.resize(length,0);c.begin_stage(visible_width as usize*visible_height as usize*channels)?;
     for y in 0..visible_height as usize{let mut bit=y*row_bytes*8;for x in 0..visible_width as usize{let at=((tile_y as usize*chunk_height as usize+y)*block.width as usize+tile_x as usize*chunk_width as usize+x)*channels;for channel in 0..channels{store_sample(&mut raw,bit,depths[channel],block.samples[at+channel].word(),options.byte_order).map_err(invalid)?;bit+=depths[channel]as usize;c.step()?;}}}
-    chunks.push(match options.compression{TiffCompression::None=>raw,TiffCompression::ModifiedHuffman|TiffCompression::Group3|TiffCompression::Group4=>{if channels!=1||depths[0]!=1||!matches!(ifd.integer(TAG_PHOTOMETRIC),Some(0|1)){return Err(invalid("tiff: CCITT output requires bilevel grayscale samples"))}super::fax::encode(&raw,match options.compression{TiffCompression::ModifiedHuffman=>2,TiffCompression::Group3=>3,_=>4},chunk_width as usize,stored_height as usize,c)?},TiffCompression::PackBits=>{c.charge(raw.len().checked_mul(2).ok_or_else(||invalid("TIFF PackBits output extent"))?)?;packbits_encode(&raw)},TiffCompression::Lzw=>{c.charge(raw.len().checked_mul(2).and_then(|n|n.checked_add(8)).ok_or_else(||invalid("TIFF LZW output extent"))?)?;lzw_encode_literal(&raw)},TiffCompression::Deflate=>{c.charge(raw.len().checked_mul(2).and_then(|n|n.checked_add(64)).ok_or_else(||invalid("TIFF Deflate output extent"))?)?;semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&raw).map_err(invalid)?}});
+    chunks.push(match options.compression{TiffCompression::None=>raw,TiffCompression::ModifiedHuffman|TiffCompression::Group3|TiffCompression::Group4=>{if channels!=1||depths[0]!=1||!matches!(ifd.integer(TAG_PHOTOMETRIC),Some(0|1)){return Err(invalid("tiff: CCITT output requires bilevel grayscale samples"))}fax::encode(&raw,match options.compression{TiffCompression::ModifiedHuffman=>2,TiffCompression::Group3=>3,_=>4},chunk_width as usize,stored_height as usize,c)?},TiffCompression::PackBits=>{c.charge(raw.len().checked_mul(2).ok_or_else(||invalid("TIFF PackBits output extent"))?)?;packbits_encode(&raw)},TiffCompression::Lzw=>{c.charge(raw.len().checked_mul(2).and_then(|n|n.checked_add(8)).ok_or_else(||invalid("TIFF LZW output extent"))?)?;lzw_encode_literal(&raw)},TiffCompression::Deflate=>{c.charge(raw.len().checked_mul(2).and_then(|n|n.checked_add(64)).ok_or_else(||invalid("TIFF Deflate output extent"))?)?;semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&raw).map_err(invalid)?}});
    }}
    c.charge(2+4*usize::from(kind==NativeStorageKind::Strips)+8*usize::from(kind==NativeStorageKind::Tiles))?;let compression=match options.compression{TiffCompression::None=>1,TiffCompression::PackBits=>32773,TiffCompression::Lzw=>5,TiffCompression::Deflate=>8,TiffCompression::ModifiedHuffman=>2,TiffCompression::Group3=>3,TiffCompression::Group4=>4};
    if ifd.integer(TAG_PHOTOMETRIC)==Some(6){c.charge(4)?;entries.push(TiffTag{tag:530,values:TiffValues::Short(vec![1,1])});}

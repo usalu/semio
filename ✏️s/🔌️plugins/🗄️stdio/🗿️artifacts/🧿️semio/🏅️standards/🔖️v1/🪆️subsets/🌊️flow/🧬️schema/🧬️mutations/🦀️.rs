@@ -68,7 +68,7 @@ pub mod drag_nodes;
 /// same JSON object the tag lives in, so `decode_semio_flow_mutation_json`'s committed
 /// specification vectors and the `🌊️mutate-semio-flow` test adapter's `{"mutation":"insertNode",...}`
 /// payloads keep decoding byte-for-byte unchanged after this migration.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioFlowSnapshot, diff = SemioFlowDiff, schema = "SemioFlowMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -112,7 +112,7 @@ pub const KINDS: &[&str] = &["insert-node", "remove-node", "set-node-kind", "set
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_flow_mutation(mutation: &SemioFlowMutation, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<SemioFlowDiff> {
-    <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(mutation, base)
+    <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::diff(mutation, base)
 }
 
 

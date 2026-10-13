@@ -111,4 +111,4 @@ impl OpText for XlsxMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;

@@ -17,7 +17,7 @@ pub struct SetFrameTransparency {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameTransparency {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-transparency", kind: "set-frame-transparency", record: "SetFrameTransparency" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, transparent_index } = self;
         protocol::MutationOutcome::new({
             let d = GifFrameDiff { transparent_index: Some(*transparent_index), ..Default::default() };
@@ -27,7 +27,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameTransparency {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.frames.get(*index) {
-            Some(f) => vec![GifMutation::SetFrameTransparency(set_frame_transparency::SetFrameTransparency { index: *index, transparent_index: f.transparent_index })],
+            Some(f) => vec![GifMutation::SetFrameTransparency(SetFrameTransparency { index: *index, transparent_index: f.transparent_index })],
             None => Vec::new(),
         })
     }

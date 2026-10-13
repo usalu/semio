@@ -32,16 +32,16 @@ fn blueprint_meta() -> ActionMeta {
 }
 
 fn close_registered(mut app: LayoutApp) {
-    artifact_app_laws::close_registered_fixture_app(&mut app.0);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// 🔁️ Dispatches one command against the Blueprint window and settles its retained publication the
 /// way the plugin host does; the receipt's `effects` are exactly what the host would have been handed.
 async fn settled_dispatch(app: &mut LayoutApp, command: LayoutCommand) -> artifact_app_laws::TypedOperationFixtureReceipt {
     let meta = blueprint_meta();
-    let result = app.dispatch_typed(command, &meta).await.expect("dispatch");
+    let result = app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
     assert!(result.mutations.is_empty(), "canvas gestures never mutate the document directly");
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await.expect("retained publication settles")
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained publication settles")
 }
 
 async fn selected_elements(app: &LayoutApp) -> Vec<String> {

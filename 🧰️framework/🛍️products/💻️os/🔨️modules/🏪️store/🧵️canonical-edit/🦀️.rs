@@ -366,7 +366,7 @@ impl ArtifactCanonicalJsonCursor {
                 }
                 (3, 0) => { self.frames[top].phase = 1; Ok(Some(b'{')) }
                 (3, 1) if self.frames[top].index == self.frames[top].length => { self.depth -= 1; Ok(Some(b'}')) }
-                (3, 1) => { self.frames[top].phase = 2; self.frames[top].offset = 0; self.frames[top].chunk = 0; copied += 1 + 2 * std::mem::size_of::<usize>(); Ok(Some(b'"')) }
+                (3, 1) => { self.frames[top].phase = 2; self.frames[top].offset = 0; self.frames[top].chunk = 0; copied += 1 + 2 * size_of::<usize>(); Ok(Some(b'"')) }
                 (3, 3) => { self.frames[top].phase = 4; Ok(Some(b'"')) }
                 (3, 4) => { self.frames[top].phase = 5; Ok(Some(b':')) }
                 (4, _) if self.frames[top].offset == self.scalar.length => { self.depth -= 1; Ok(None) }
@@ -403,11 +403,11 @@ impl ArtifactStoreOneItemAuthorityRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
-    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.owner.next_copy_byte_demand() }
-    fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { self.owner.next_capacity_byte_demand(maximum_body_bytes) }
-    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.owner.next_release_byte_demand() }
-    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.owner.next_depth_demand() }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owner.step(grant) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_copy_byte_demand() }
+    fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { self.owner.next_capacity_byte_demand(maximum_body_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_release_byte_demand() }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { self.owner.next_depth_demand() }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.owner.step(grant) }
     fn terminal_is_empty(&self) -> bool { self.owner.terminal_is_empty() }
 }
 
@@ -471,13 +471,13 @@ pub struct ArtifactStoreOneItemSealer<P, M> {
 
 impl<P, M> ArtifactStoreOneItemSealer<P, M> {
     /// 🎟️ Measures the original edit/source frames before native ownership transfer.
-    pub fn constructor_demand() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand where M: semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree {
-        semio_framework_value::retained_clone::RetainedCloneBirthDemand {
+    pub fn constructor_demand() -> RetainedCloneBirthDemand where M: semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree {
+        RetainedCloneBirthDemand {
             capacity_bytes: ArtifactStoreCanonicalSource::<M>::source_constructor_demand().capacity_bytes,
             depth: 1,
         }
     }
-    pub fn constructor_copy_byte_demand()->usize where M:semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree{std::mem::size_of::<Edit<M>>()+ArtifactStoreCanonicalSource::<M>::source_constructor_demand().copy_bytes+std::mem::size_of::<Self>()}
+    pub fn constructor_copy_byte_demand()->usize where M:semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree{size_of::<Edit<M>>()+ArtifactStoreCanonicalSource::<M>::source_constructor_demand().copy_bytes+size_of::<Self>()}
 
     /// 🧳️ Retains every exact original input when constructor capacity or depth is refused.
     pub fn admit(
@@ -499,7 +499,7 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
     pub(super) fn new(authority: Arc<ArtifactStoreOneItemLiveAuthority>, edit: Edit<M>, post: Arc<P>, mutation_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>) -> Self where M: semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree {
         Self {
             native: Some(Box::new(ArtifactStoreCanonicalSource::new(Arc::clone(&authority),Box::new(edit)))),
-            native_frame_bytes:std::mem::size_of::<ArtifactStoreCanonicalSource<M>>(),
+            native_frame_bytes:size_of::<ArtifactStoreCanonicalSource<M>>(),
             native_identities:None,
             native_identities_close:None,
             prepared_digest:None,
@@ -666,19 +666,20 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
     /// 📐️ Quotes the actual selected native child or the separately retained source-frame/publication handoff.
     pub fn preparation_demands(&self) -> Result<RetirementDemand,ValueError> {
         if let Some(owner)=self.native.as_ref(){
-            if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Box<dyn ArtifactStoreCanonicalOwner<M>>>>(),release_bytes:self.native_frame_bytes,depth:1,..Default::default()});}
+            if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<dyn ArtifactStoreCanonicalOwner<M>>>>(),release_bytes:self.native_frame_bytes,depth:1,..Default::default()});}
             let mut demand=owner.next_demand()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"canonical preparation child depth overflow"))?;return Ok(demand);
         }
         if self.prepared.is_some(){return Ok(Default::default());}
-        Ok(RetirementDemand{copy_bytes:std::mem::size_of::<ArtifactStoreOneItemPrepared<P,M>>()+std::mem::size_of::<Box<Edit<M>>>()+std::mem::size_of::<Arc<P>>()+std::mem::size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+std::mem::size_of::<[semio_framework_value::paged::PagedUtf8<{usize::MAX}>;3]>(),depth:1,..Default::default()})
+        Ok(RetirementDemand{copy_bytes:size_of::<ArtifactStoreOneItemPrepared<P,M>>()+size_of::<Box<Edit<M>>>()+size_of::<Arc<P>>()+size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<[semio_framework_value::paged::PagedUtf8<{usize::MAX}>;3]>(),depth:1,..Default::default()})
     }
     /// 🧾️ Returns every actual currency from the preceding canonical preparation turn.
     pub fn ownership_progress(&self)->RetainedCloneProgress{self.ownership}
     pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, ValueError> {
         self.ownership=Default::default();self.last_length=0;self.last_canonical=false;
-        if !grant.permits_one()||self.cancelled||self.closing{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-        if self.replay.is_some(){self.cancelled=true;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.native-checkpoint-unsupported"));}
+        if self.cancelled||self.closing{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         if self.prepared.is_some(){return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.progress(),self.ownership));}
+        if !grant.permits_one(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+        if self.replay.is_some(){self.cancelled=true;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-edit.native-checkpoint-unsupported"));}
         let demand=match self.preparation_demands(){Ok(demand)=>demand,Err(error)=>{self.cancelled=true;self.ownership=error.retained_progress();return Err(error)}};
         if demand.copy_bytes>grant.maximum_copy_bytes||demand.capacity_bytes>grant.maximum_capacity_bytes||demand.release_bytes>grant.maximum_release_bytes||demand.depth>grant.maximum_depth{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
         let retained=grant.retained_grant();
@@ -718,18 +719,18 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
 impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, M> {
     pub fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         let depth_error = || ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "canonical sealer depth overflow");
-        if let Some(owner)=self.native.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Box<dyn ArtifactStoreCanonicalOwner<M>>>>(),release_bytes:self.native_frame_bytes,depth:1,..Default::default()});}let mut demand=owner.next_demand()?;demand.depth=demand.depth.checked_add(1).ok_or_else(depth_error)?;return Ok(demand);}
-        if self.native_identities.is_some(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<[semio_framework_value::paged::PagedUtf8<{usize::MAX}>;3]>()+std::mem::size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<(semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>)>>(),depth:1,..Default::default()});}
-        if let Some(owner)=self.native_identities_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of_val(&self.native_identities_close),depth:1,..Default::default()});}let body=owner.next_copy_byte_demand()?;return Ok(RetirementDemand{copy_bytes:body,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(depth_error)?});}
-        if let Some(active) = self.active_retirement.as_ref() { let mut demand = super::artifact_retirement_box_demands(active, maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(depth_error)?; return Ok(demand); }
+        if let Some(owner)=self.native.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<dyn ArtifactStoreCanonicalOwner<M>>>>(),release_bytes:self.native_frame_bytes,depth:1,..Default::default()});}let mut demand=owner.next_demand()?;demand.depth=demand.depth.checked_add(1).ok_or_else(depth_error)?;return Ok(demand);}
+        if self.native_identities.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<[semio_framework_value::paged::PagedUtf8<{usize::MAX}>;3]>()+size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<(semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>,semio_framework_value::paged::PagedUtf8<{usize::MAX}>)>>(),depth:1,..Default::default()});}
+        if let Some(owner)=self.native_identities_close.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of_val(&self.native_identities_close),depth:1,..Default::default()});}let body=owner.next_copy_byte_demand()?;return Ok(RetirementDemand{copy_bytes:body,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(depth_error)?});}
+        if let Some(active) = self.active_retirement.as_ref() { let mut demand = artifact_retirement_box_demands(active, maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(depth_error)?; return Ok(demand); }
         if let Some(bytes) = self.identities.iter().find(|bytes| bytes.capacity() != 0) { return Ok(RetirementDemand { release_bytes: bytes.capacity(), depth: 1, ..Default::default() }); }
         if self.prepared.is_some() { let birth=ArtifactStoreOneItemPrepared::<P,M>::retirement_birth_demand();return Ok(RetirementDemand { capacity_bytes:birth.capacity_bytes,depth:birth.depth+1, ..Default::default() }); }
-        if self.edit.is_some() { return Ok(RetirementDemand { release_bytes: std::mem::size_of::<Edit<M>>(), depth: 1, ..Default::default() }); }
-        if self.unboxed_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
+        if self.edit.is_some() { return Ok(RetirementDemand { release_bytes: size_of::<Edit<M>>(), depth: 1, ..Default::default() }); }
+        if self.unboxed_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
         if let Some(post) = self.post.as_ref() { return Ok(RetirementDemand { capacity_bytes: self.snapshot_retirement.as_ref().expect("original sealer snapshot factory").retirement_birth_bytes(post), depth: 2, ..Default::default() }); }
         if let Some(value) = self.retirement_strings.iter().find_map(Option::as_ref) { return Ok(RetirementDemand { release_bytes: value.capacity(), depth: 1, ..Default::default() }); }
         if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth.checked_add(1).ok_or_else(depth_error)?, ..Default::default() }); }
-        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.iter().find_map(Option::as_ref) { let mut demand = factory.demands(maximum_body_bytes)?; demand.depth = demand.depth.checked_add(1).ok_or_else(depth_error)?; return Ok(demand); }
         Ok(Default::default())
     }
@@ -743,7 +744,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         if let Some([a,b,c])=self.native_identities.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new((a,b,c)){Ok(owner)=>self.native_identities_close=Some(owner),Err((error,(a,b,c)))=>{self.native_identities=Some([a,b,c]);return Err(error);}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(owner)=self.native_identities_close.as_mut(){if owner.terminal_is_empty(){self.native_identities_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return owner.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active_retirement.is_some() { return super::artifact_retirement_box_close_step(&mut self.active_retirement, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(bytes) = self.identities.iter_mut().find(|bytes| bytes.capacity() != 0) {
             let released_bytes = bytes.capacity();
             *bytes = Vec::new();
@@ -759,7 +760,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         }
         if let Some(edit) = self.unboxed_edit.take() {
             let factory = self.mutation_retirement.as_ref().expect("original mutation factory");
-            return match super::admit_artifact_retirement(edit, child, |original| ArtifactStoreDecodedEditRetirement::new(original, Arc::clone(factory))) {
+            return match admit_artifact_retirement(edit, child, |original| ArtifactStoreDecodedEditRetirement::new(original, Arc::clone(factory))) {
                 Ok((active, progress)) => { self.active_retirement = Some(active); Ok(RetainedCloneStep::Progress(progress)) },
                 Err((error, original)) => { self.unboxed_edit = Some(original); Err(error) },
             };

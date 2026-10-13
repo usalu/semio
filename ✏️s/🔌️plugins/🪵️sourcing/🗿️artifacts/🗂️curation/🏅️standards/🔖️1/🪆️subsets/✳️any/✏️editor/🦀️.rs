@@ -118,9 +118,9 @@ pub fn sourcing_window_action(action: &str, args: Option<semio_framework_value::
 }
 
 /// 🎯️ The table-scene action descriptor a stepper, row button or drop target dispatches to this app.
-pub fn sourcing_table_action(action: &str, object_id: Option<&str>) -> semio_framework_plugin::ActionDescriptor {
+pub fn sourcing_table_action(action: &str, object_id: Option<&str>) -> ActionDescriptor {
     let args = object_id.map(|id| semio_framework_value::DslValue::object([("objectId".to_string(), semio_framework_value::DslValue::String(id.to_string()))]));
-    semio_framework_plugin::ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 /// 🧾️ One table row record for a stock kind: its id, the `{objectId}` payload a drag carries under
@@ -587,7 +587,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, Sourc
     }
 
     fn begin_demand(&self, _mutation: &SourcingCurationConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<SourcingCurationConfigPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<SourcingCurationConfigPreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation, SourcingCurationConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation, SourcingCurationConfigMutation>)> {
@@ -743,7 +743,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMut
     }
 
     fn begin_demand(&self, _mutation: &SourcingMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<SourcingCurationArtifactPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<SourcingCurationArtifactPreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation, SourcingMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation, SourcingMutation>)> {
@@ -839,7 +839,7 @@ impl ArtifactEditor for SourcingCurationApp {
     const DIALECT: Dialect = crate::SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::curation_child_restore_projection(snapshot)
     }
 
@@ -1080,7 +1080,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             .artifact_kind(crate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {
                 id: "catalogue.kinds".into(),
-                label: semio_framework_ui_locale::LocalizedLabel::native("Kind Catalogue", "Typenkatalog"),
+                label: LocalizedLabel::native("Kind Catalogue", "Typenkatalog"),
                 source_format: "catalogue.kinds".into(),
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),
@@ -1097,7 +1097,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             // which declares the SAME `kit.catalog` shape independently).
             .artifact_kind(ArtifactKindSpec {
                 id: "kit.catalog".into(),
-                label: semio_framework_ui_locale::LocalizedLabel::native("Kit Catalogue", "Bausatzkatalog"),
+                label: LocalizedLabel::native("Kit Catalogue", "Bausatzkatalog"),
                 source_format: "kit.catalog".into(),
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),

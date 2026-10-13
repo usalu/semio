@@ -175,7 +175,7 @@ impl ArtifactEditor for Iso16757PlayApp {
 
     /// 🎞️ `"model:in"`/`"artifact:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, Iso16757Snapshot>) -> Result<Emit<Iso16757Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
-        let base = doc.snapshot.clone();
+        let _base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media)
     }
     //#endregion 🔖️MediaPorts

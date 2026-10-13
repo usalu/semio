@@ -316,7 +316,7 @@ impl LayoutDataEntriesDelta {
     }
 
     /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
-    pub fn commit_onto(&self, base: &[crate::FormDictionaryEntry], capability: protocol::ApplyCapability) -> Result<Vec<crate::FormDictionaryEntry>, protocol::list_delta::ApplyError> {
+    pub fn commit_onto(&self, base: &[crate::FormDictionaryEntry], capability: ApplyCapability) -> Result<Vec<crate::FormDictionaryEntry>, protocol::list_delta::ApplyError> {
         let rows = base.iter().cloned().map(LayoutDataEntryRow).collect::<Vec<LayoutDataEntryRow>>();
         Ok(self.clone().into_parts().commit_onto(&rows, capability)?.into_iter().map(|row| row.0).collect())
     }
@@ -451,7 +451,7 @@ impl PageFramesDelta {
     }
 
     /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
-    pub fn commit_onto(&self, base: &Vec<Frame>, capability: protocol::ApplyCapability) -> Result<Vec<Frame>, protocol::list_delta::ApplyError> {
+    pub fn commit_onto(&self, base: &Vec<Frame>, capability: ApplyCapability) -> Result<Vec<Frame>, protocol::list_delta::ApplyError> {
         self.clone().into_parts().commit_onto(base, capability)
     }
 
@@ -469,7 +469,7 @@ impl PageFramesDelta {
 
     /// 🕳️ Whether the delta changes nothing.
     pub fn is_empty(&self) -> bool {
-        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| protocol::list_delta::RowPatch::<Frame>::is_empty(&entry.patch))
+        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| RowPatch::<Frame>::is_empty(&entry.patch))
     }
 }
 
@@ -670,7 +670,7 @@ impl RowPatch<TextStory> for TextStoryPatch {
     }
 }
 
-impl crate::FramePatch {
+impl FramePatch {
     fn or(self, earlier: Self) -> Self {
         Self {
             x: self.x.or(earlier.x),
@@ -695,14 +695,14 @@ impl crate::FramePatch {
     }
 
     /// ↩️ The absolute setters restoring the fields this patch sets to the values `frame` holds.
-    fn restoring(&self, frame: &crate::Frame) -> Self {
+    fn restoring(&self, frame: &Frame) -> Self {
         let bounds = frame.bounds();
         let (fill, stroke) = match frame {
-            crate::Frame::Rect { fill, stroke, .. } => (Some(*fill), Some(*stroke)),
+            Frame::Rect { fill, stroke, .. } => (Some(*fill), Some(*stroke)),
             _ => (None, None),
         };
         let text = match frame {
-            crate::Frame::Text { wrap_mode, columns, story_id, thread_next, inset, .. } => Some((wrap_mode, *columns, story_id, thread_next, inset)),
+            Frame::Text { wrap_mode, columns, story_id, thread_next, inset, .. } => Some((wrap_mode, *columns, story_id, thread_next, inset)),
             _ => None,
         };
         Self {

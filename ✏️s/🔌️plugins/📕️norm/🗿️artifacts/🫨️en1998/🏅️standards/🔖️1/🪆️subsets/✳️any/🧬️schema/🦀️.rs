@@ -77,7 +77,7 @@ impl Default for En1998Artifact {
 
 // Re-export formula modules (kept below for evaluate).
 
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use crate::document::AnnexChoice;
 
 pub mod na_de {
     /// 🌋️ German seismic zone per DIN EN 1998-1/NA (classic zones 0–3).
@@ -248,7 +248,7 @@ pub mod part_1 {
     }
 
 
-    use super::*;
+    #[cfg(test)] use super::*;
 
     pub fn gamma_i(importance: &str) -> f64 {
         match importance.trim().to_ascii_uppercase().as_str() {
@@ -446,7 +446,7 @@ pub mod part_1 {
 }
 
 pub mod part_2 {
-    use super::*;
+    #[cfg(test)] use super::*;
     pub fn isolation_reduction_factor(period_ratio: f64) -> f64 {
         let r = period_ratio.max(1.0);
         (r * r).max(1.0)

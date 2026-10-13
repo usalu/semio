@@ -45,17 +45,17 @@ fn find(parent: &BTreeMap<String, String>, id: &str) -> String {
 /// whose endpoints already share a root closes a cycle; `component_count` is the final number of
 /// distinct roots among every counted node.
 pub fn compute_wires_topology(board_snapshot: &DslValue) -> WiresTopology {
-    let ids: BTreeSet<String> = board_snapshot.get("nodes").and_then(semio_framework_value::DslValue::as_array).map(|items| items.iter().filter_map(|item| item.get("id").and_then(semio_framework_value::DslValue::as_str)).map(str::to_string).collect()).unwrap_or_default();
+    let ids: BTreeSet<String> = board_snapshot.get("nodes").and_then(DslValue::as_array).map(|items| items.iter().filter_map(|item| item.get("id").and_then(DslValue::as_str)).map(str::to_string).collect()).unwrap_or_default();
 
     let edges: Vec<(String, String)> = board_snapshot
         .get("edges")
-        .and_then(semio_framework_value::DslValue::as_array)
+        .and_then(DslValue::as_array)
         .map(|items| {
             items
                 .iter()
                 .filter_map(|item| {
-                    let source = item.get("source").and_then(semio_framework_value::DslValue::as_str)?;
-                    let target = item.get("target").and_then(semio_framework_value::DslValue::as_str)?;
+                    let source = item.get("source").and_then(DslValue::as_str)?;
+                    let target = item.get("target").and_then(DslValue::as_str)?;
                     Some((source.to_string(), target.to_string()))
                 })
                 .collect()

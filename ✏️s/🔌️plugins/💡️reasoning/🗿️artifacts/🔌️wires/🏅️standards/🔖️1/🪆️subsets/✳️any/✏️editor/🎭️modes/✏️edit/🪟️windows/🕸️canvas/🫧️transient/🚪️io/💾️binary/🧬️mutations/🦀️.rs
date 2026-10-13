@@ -15,4 +15,3 @@ impl protocol::OpBinary for WiresCanvasTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

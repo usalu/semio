@@ -4,7 +4,6 @@
 //! brush/fill utilities live in `☑️options/*`; genuinely per-window chrome lives under that window's
 //! own `☑️options/`.
 
-use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::commands::engagement_submit::PUZZLE5D_ENGAGEMENT_VERBS;
 use crate::editor::puzzle5d::modes::edit::tools::fill;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d};

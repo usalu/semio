@@ -297,7 +297,7 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     let eval_json = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
     let outputs = semio_framework_pack_json::parse(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let handles = crate::standards::v1::subsets::any::io::text::snapshot::output_drawing_handles(&snapshot.host_snapshot, &outputs);
+    let handles = text::snapshot::output_drawing_handles(&snapshot.host_snapshot, &outputs);
     semio_drawing_from_scenes(&handles.iter().map(|handle| semio_framework_os_flow::render_scene_json(handle)).collect::<Vec<_>>())
 }
 
@@ -424,7 +424,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Generation2dBuilderFacets {
         construction: Generation2dBuilderConstruction,
         analysis: Generation2dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Generation2dComposerComposition,
+        composition: Generation2dComposerComposition,
     }
     builder: Generation2dBuilder,
     analyzer: Generation2dAnalyzer,

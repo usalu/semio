@@ -3,7 +3,7 @@
 use crate::schema::mutations::WriterMutation;
 #[cfg(test)]
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
-use crate::WriterDiff;
+#[cfg(test)] use crate::WriterDiff;
 use crate::WriterSnapshot;
 use protocol::Mutation;
 

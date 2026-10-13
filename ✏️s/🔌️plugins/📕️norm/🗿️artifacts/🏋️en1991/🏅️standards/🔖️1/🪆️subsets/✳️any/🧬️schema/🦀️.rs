@@ -2,7 +2,6 @@
 
 //#region 🔖️Artifact
 use crate::document::AnnexChoice;
-use crate::{AccidentalCase, FloorArea, RoofArea, SelfWeightElement, WindFace};
 use framework_schema::ArtifactSchema;
 
 /// 🧬️ Full En1991 artifact state across the artifact and presence lanes.
@@ -13,7 +12,7 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1991")]
 pub struct En1991Artifact {
     #[state(artifact)]
-    pub annex: crate::document::AnnexChoice,
+    pub annex: AnnexChoice,
     #[state(artifact)]
     pub snow_zone: String,
     #[state(artifact)]
@@ -961,7 +960,7 @@ pub mod part_1_6 {
 }
 
 pub mod part_1_7 {
-    use super::*;
+    #[cfg(test)] use super::*;
     pub fn vehicle_impact_force_n(mass_kg: f64, speed_m_s: f64) -> f64 {
         let delta = 0.1;
         0.5 * mass_kg * speed_m_s * speed_m_s / delta

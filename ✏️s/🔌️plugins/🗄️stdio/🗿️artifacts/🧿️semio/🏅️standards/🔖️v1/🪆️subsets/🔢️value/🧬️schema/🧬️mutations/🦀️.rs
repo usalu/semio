@@ -34,7 +34,7 @@ use protocol::{Mutation};
 /// 🧭️ One step of a [`SemioValuePath`] — a map key or a list position. Struct (named-field)
 /// variants throughout, never bare tuple variants — same internally-tagged runtime-serialization
 /// hazard `SemioValue`'s own doc comment cites.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum SemioValuePathSegment {
@@ -96,7 +96,7 @@ pub mod set_value;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioValueSnapshot, diff = SemioValueTreeDiff, schema = "SemioValueMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -154,7 +154,7 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioValueSnapshot) -> protocol::MutationOutcome<SemioValueTreeDiff> {
-    <SemioValueMutation as protocol::Mutation<SemioValueSnapshot>>::diff(mutation, base)
+    <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, base)
 }
 
 

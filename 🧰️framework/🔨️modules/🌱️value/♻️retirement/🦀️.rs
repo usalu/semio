@@ -13,7 +13,8 @@ mod original_result;
 pub trait RetireOwned: Send + 'static {
     fn retirement(self) -> Box<dyn RetirementCursor>;
     fn retirement_birth_bytes(&self) -> Option<usize> { None }
-    fn controlled_retirement_supported() -> bool { false }
+    /// 🔐️ Whether this owner retires through a controlled cursor whose births and releases are priced up front. Required, never defaulted: an owner that forgot to declare it was refused by every factory that demands controlled retirement, and the refusal only surfaced after a fixture deadline.
+    fn controlled_retirement_supported() -> bool;
     /// 🧮️ Declares an element's complete inline payload work before a collection discards it.
     fn retirement_element_copy_bytes() -> usize { 0 }
 }
@@ -251,7 +252,8 @@ impl<T:RetireOwned> RetirementCursor for VectorIterator<T> {
     fn terminal_is_empty(&self)->bool {self.0.len()==0}
 }
 impl<T:RetireOwned> Drop for VectorIterator<T> {fn drop(&mut self) {assert!(std::thread::panicking() || self.0.len()==0,"owned iterator retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.0)}}}
-impl<T:RetireOwned> RetireOwned for std::vec::IntoIter<T> {fn retirement(self)->Box<dyn RetirementCursor> {Box::new(VectorIterator(ManuallyDrop::new(self)))}}
+/// 🔓️ Stays uncontrolled on purpose: a consumed `Vec` iterator hides its backing capacity, so its release cannot be quoted exactly; it is only an internal cursor field of parents that price their own scaffold, never a payload, snapshot or factory input.
+impl<T:RetireOwned> RetireOwned for std::vec::IntoIter<T> {fn retirement(self)->Box<dyn RetirementCursor> {Box::new(VectorIterator(ManuallyDrop::new(self)))} fn controlled_retirement_supported()->bool{false}}
 
 /// 🧺️ Drains one hashed element per turn; the standard table backing is not priced, only the element scaffolds and this cursor shell.
 struct UnorderedSet<T: RetireOwned>{head:ManuallyDrop<Option<T>>,rest:ManuallyDrop<std::collections::hash_set::IntoIter<T>>}

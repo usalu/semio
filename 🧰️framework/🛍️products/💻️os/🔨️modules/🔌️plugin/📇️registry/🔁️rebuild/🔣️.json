@@ -3,6 +3,7 @@
   "steps": [
     { "id": "provenance", "stage": "inputs", "command": ["nx", "run", "repo:cargo-provenance-check"] },
     { "id": "mutation-authority", "stage": "inputs", "command": ["nx", "run", "@semio-tech/dsl-derive-rs:check-generated"] },
+    { "id": "schema-index", "stage": "inputs", "command": ["nx", "run", "@semio-tech/dsl-derive-rs:check-schema-index"] },
     { "id": "guest-framework", "stage": "inputs", "command": ["nx", "run", "@semio-tech/plugin-registry:guest-framework-check"] },
     { "id": "components", "stage": "descriptors", "command": ["nx", "run-many", "-t", "describe", "materialize-dev", "--exclude", "@semio-tech/os-plugin-describe-rs", "--parallel=2"] },
     { "id": "generate", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:generate"] },

@@ -827,26 +827,31 @@ where
     let quota = instance_task_quota(instance);
     let live = TASK_RECORDS.with(|records| records.borrow().count_instance(instance) as u64);
     if live >= quota {
-        return Err(semio_framework::Fault::new(
+        let fault = semio_framework::Fault::new(
             semio_framework::FaultOrigin::Plugin,
             semio_framework::FaultCode::new("plugin.task.quota-exceeded"),
             format!("instance {instance} already has {live} outstanding task(s) (quota {quota}); `{}` was not spawned", task.label),
-        ));
+        );
+        task.dispose_cold();
+        return Err(fault);
     }
 
-    let (label, key, restart, run) = task.into_parts();
-    if label.len() > REACTOR_TASK_LABEL_BYTES || restart.as_ref().is_some_and(|bytes| bytes.len() > REACTOR_TASK_RESTART_BYTES) {
+    if task.label.len() > REACTOR_TASK_LABEL_BYTES || task.restart.as_ref().is_some_and(|bytes| bytes.len() > REACTOR_TASK_RESTART_BYTES) {
+        task.dispose_cold();
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task-authority-too-large"), "task label or restart authority exceeds its fixed admitted byte bound"));
     }
-    if key.as_ref().is_some_and(|key| key.len() > REACTOR_TASK_KEY_BYTES) {
+    if task.key.as_ref().is_some_and(|key| key.len() > REACTOR_TASK_KEY_BYTES) {
+        task.dispose_cold();
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.key-too-large"), format!("task key exceeds {REACTOR_TASK_KEY_BYTES} bytes")));
     }
+    let (_label, key, restart, run) = task.into_parts();
 
     if let Some(key) = &key {
         if let Some(previous) = TASK_RECORDS.with(|records| records.borrow().find_key(instance, key)) {
             let detached = TASK_EXECUTOR.with(|executor| executor.detach(previous));
             let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(previous));
             if detached.is_none() && record.is_none() {
+                crate::app::dispose_cold_task_run(run);
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession found no exact previous owner to dispose"));
             }
             drop(record);
@@ -854,9 +859,16 @@ where
         }
     }
 
-    let reservation = TASK_EXECUTOR.with(|executor| executor.reserve()).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message))?;
+    let reservation = match TASK_EXECUTOR.with(|executor| executor.reserve()) {
+        Ok(reservation) => reservation,
+        Err(message) => {
+            crate::app::dispose_cold_task_run(run);
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message));
+        }
+    };
     let task_id = reservation.id();
     if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
+        crate::app::dispose_cold_task_run(run);
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.record-capacity"), "fixed task record authority rejected an executor-reserved direct slot"));
     }
     TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, restart }));
@@ -864,8 +876,9 @@ where
     let ctx = crate::app::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
     let resume_instance = instance;
     let resume_meta = meta.clone();
+    let mut cold_run = crate::app::ColdTaskRun::new(run);
     reservation.install(Box::pin(async move {
-        let future = run.run(ctx);
+        let future = cold_run.take().run(ctx);
         let outcome = match future.await {
             Ok(crate::app::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
             Ok(crate::app::TaskResolution::Emit(emit)) => {
@@ -1184,6 +1197,7 @@ pub use wit_bridge::{poll, stage_cold_pair_page, stage_command_page};
 mod turn;
 pub use turn::poll_kernel;
 pub use turn::retained_command_ingress_occupancy;
+pub use turn::retained_extension_invocation_occupancy;
 pub use turn::{last_turn_more_work_sources, TurnMoreWorkSources};
 
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]

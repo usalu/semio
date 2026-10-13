@@ -220,7 +220,7 @@ impl DiagnosticCode {
 
     /// 🗂️ The category of the code, the domain of its slug (`clash`, `reference`, `opening`, ...).
     pub fn category(self) -> &'static str {
-        index::category_of(self)
+        category_of(self)
     }
 }
 

@@ -23,7 +23,7 @@ pub(crate) mod context {
     /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it was
     /// driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
     pub fn close(app: &mut NormApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     }
     
     pub async fn dispatch(app: &mut NormApp, command: Din18599Command) -> InvocationResult {
@@ -36,7 +36,7 @@ pub(crate) mod context {
                 ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             });
         }
-        let result = app.dispatch_typed(command, &action_meta).await.expect("dispatch");
+        let result = app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -45,7 +45,7 @@ pub(crate) mod context {
     /// EVERY result page: a bare `maintenance_step` loop retires nothing and turns a publication fault
     /// into a silent timeout, which is exactly how ticket 26/09/18 slice B2b lost the real cause.
     pub async fn settle(app: &mut NormApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
     }
     
     pub async fn render(app: &mut NormApp, body_key: &str) -> String {
@@ -212,10 +212,10 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     context::dispatch(&mut app, Din18599Command::SetField(set_field::SetField { path: "netFloorAreaM2".into(), value_json: (base.net_floor_area_m2 + 1.0).to_string() })).await;
     let edited = app.snapshot().expect("projection");
     assert_ne!(edited, base, "the concrete setter moved the document");
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
     context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), base);
-    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("redo");
     context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), edited);
     context::close(&mut app);

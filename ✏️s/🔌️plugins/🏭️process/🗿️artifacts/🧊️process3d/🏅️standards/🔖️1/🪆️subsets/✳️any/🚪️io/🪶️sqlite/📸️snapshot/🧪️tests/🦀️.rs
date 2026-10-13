@@ -1,4 +1,6 @@
 //! 🏭️ Genuine Process3d parent capability and complete persisted-state baselines.
+#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
+mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Process3dSnapshot;
 use crate::*;
 use store::{ArtifactDsl, ArtifactPack};
@@ -183,11 +185,11 @@ fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_
                 SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(expected.encode_pack_with(&store::PackEncodeOptions::default()).unwrap()),
                 SnapshotEncoding::Text => store::io_schema::IoPayload::Text(expected.print_dsl()),
             };
-            let database = (capability.export)(crate::PROCESS_3D_SCHEMA, &dialect, &input, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            let database = original_owners::with_decoding(|native_owner|(capability.export)(crate::PROCESS_3D_SCHEMA, &dialect, &input, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             assert_eq!(database.tables.len(), 32);
             assert_eq!(database.table("process3_document").unwrap().single_row().unwrap().text(1).unwrap(), expected.stock_id);
             assert_eq!(database.table("process3_stock_payload").unwrap().single_row().unwrap().text(2).unwrap(), expected.stock_payload.id);
-            let output = (capability.import)(crate::PROCESS_3D_SCHEMA, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            let output = original_owners::with_encoding(|native_owner|(capability.import)(crate::PROCESS_3D_SCHEMA, &dialect, &mut Some(database), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
             let actual = match output {
                 store::io_schema::IoPayload::Text(v) => Process3dSnapshot::parse_dsl(&v).unwrap(),
                 store::io_schema::IoPayload::Binary(v) => Process3dSnapshot::decode_pack(&v).unwrap(),

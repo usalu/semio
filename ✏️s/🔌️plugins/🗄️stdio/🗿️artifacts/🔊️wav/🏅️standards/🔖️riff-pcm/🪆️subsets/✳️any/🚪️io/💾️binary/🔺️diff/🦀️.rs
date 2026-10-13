@@ -23,4 +23,3 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 }
-pub use diff_codec::*;

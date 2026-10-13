@@ -11,7 +11,7 @@ use crate::standards::iana::subsets::any::schema::diff::{TsvDiff, TsvRowAdded, T
 
 use crate::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region 🔖️Mutations
 #[path = "➕insert-row/🦀️.rs"]

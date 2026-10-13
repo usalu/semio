@@ -570,7 +570,7 @@
   "boundedHistoryRead": {
     "closeGrant": {
       "maximumItems": 1,
-      "maximumReleaseBytes": 4096
+      "maximumReleaseBytes": 16384
     },
     "physicalInversePageBytes": 4096,
     "maximumWorkPerStep": 1,

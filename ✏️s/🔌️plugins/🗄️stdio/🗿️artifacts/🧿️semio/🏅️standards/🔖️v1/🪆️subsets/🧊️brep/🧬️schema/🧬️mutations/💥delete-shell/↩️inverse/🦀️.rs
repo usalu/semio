@@ -1,6 +1,6 @@
 //! ↩️ Inverse for `DeleteShell`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{create_shell, delete_shell, SemioBrepMutation};
+use crate::standards::v1::subsets::brep::schema::mutations::{create_shell, SemioBrepMutation};
 use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse

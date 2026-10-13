@@ -16,4 +16,3 @@ impl protocol::OpBinary for ArchitectConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

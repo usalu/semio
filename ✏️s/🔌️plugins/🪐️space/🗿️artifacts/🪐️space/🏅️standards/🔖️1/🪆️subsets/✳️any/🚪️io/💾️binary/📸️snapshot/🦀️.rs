@@ -27,4 +27,3 @@ impl store::ArtifactPack for SSpaceSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

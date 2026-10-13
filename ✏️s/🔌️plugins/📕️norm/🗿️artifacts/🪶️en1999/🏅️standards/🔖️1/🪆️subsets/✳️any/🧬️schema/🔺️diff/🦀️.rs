@@ -18,7 +18,7 @@ pub struct En1999MaterialsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumMaterial> for En1999MaterialsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumMaterial, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::AluminiumMaterial, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.designation {
             row.designation = value.clone();
         }
@@ -71,7 +71,7 @@ pub struct En1999SectionsElementsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::PlateElement> for En1999SectionsElementsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::PlateElement, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::PlateElement, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.thickness {
             row.thickness = value.clone();
         }
@@ -218,7 +218,7 @@ pub struct En1999MembersActionsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::MemberAction> for En1999MembersActionsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::MemberAction, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::MemberAction, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.n_k {
             row.n_k = value.clone();
         }
@@ -357,7 +357,7 @@ pub struct En1999ConnectionsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumConnection> for En1999ConnectionsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumConnection, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::AluminiumConnection, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.welds_throat {
             row.welds.throat = value.clone();
         }
@@ -426,7 +426,7 @@ pub struct En1999FireScenariosPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::FireScenario> for En1999FireScenariosPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::FireScenario, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::FireScenario, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.member_id {
             row.member_id = value.clone();
         }
@@ -499,7 +499,7 @@ pub struct En1999FatigueDetailsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::FatigueDetail> for En1999FatigueDetailsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::FatigueDetail, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::FatigueDetail, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.member_id {
             row.member_id = value.clone();
         }
@@ -599,7 +599,7 @@ pub struct En1999ColdFormedPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::ColdFormedSheet> for En1999ColdFormedPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::ColdFormedSheet, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::ColdFormedSheet, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.material_id {
             row.material_id = value.clone();
         }
@@ -691,7 +691,7 @@ pub struct En1999ShellsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::snapshot::AluminiumShell> for En1999ShellsPatch {
-    fn commit_into(&self, row: &mut crate::snapshot::AluminiumShell, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::snapshot::AluminiumShell, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.material_id {
             row.material_id = value.clone();
         }

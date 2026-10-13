@@ -60,7 +60,7 @@ fn patch_parameter_action(entries: impl IntoIterator<Item = (&'static str, UiVal
     crate::engine::space::s_play_action("patchParameter", Some(ui_value_map(entries)?))
 }
 
-fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNode> {
     match parameter {
         WorkflowParameter::Numeric { id, value, step, .. } => {
             let action = patch_parameter_action([("parameterId", ui_value_text(id.as_str())?), ("field", ui_value_text("value")?)])?;

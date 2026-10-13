@@ -58,7 +58,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value, what: &str) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args))), &meta)).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
+    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{what}: {verb} was refused: {:?}", result.output);
 }
 
@@ -73,7 +73,7 @@ fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(&mut Puzzle2dApp) -> bo
         if done(app) {
             return;
         }
-        block_on(app.advance_typed_operation_publication()).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+        block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
         while app.take_typed_operation_ui_progress().is_some() {}
         if what == "the remote change is adopted" && turn + 1 >= 1024 && (turn + 1).is_power_of_two() {
             let patch = block_on(app.history_snapshot()).expect("remote replay progress history");
@@ -126,8 +126,8 @@ fn history_lane(app: &mut Puzzle2dApp, verb: &str, what: &str) {
 fn reload(app: &mut Puzzle2dApp, form: &str, what: &str) {
     let mut reloaded = app_with_registry();
     match form {
-        "text" => block_on(semio_framework_plugin::app::artifact_app_laws::load_document_text(&mut reloaded, &block_on(app.document_text()).expect("document text"))).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
-        _ => block_on(semio_framework_plugin::app::artifact_app_laws::load_document(&mut reloaded, &block_on(app.document_pack()).expect("document pack"))).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
+        "text" => block_on(semio_framework_plugin::app::artifact_app_laws::load_document_text(&mut reloaded, &block_on(app.document_text()).expect("document text"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{what}: text reload: {fault:?}")),
+        _ => block_on(semio_framework_plugin::app::artifact_app_laws::load_document(&mut reloaded, &block_on(app.document_pack()).expect("document pack"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{what}: pack reload: {fault:?}")),
     }
     let mut previous = std::mem::replace(app, reloaded);
     close_app(&mut previous);
@@ -376,7 +376,7 @@ fn replay_progress_rides_the_ui_frames_over_a_long_downstream() {
     while app.take_typed_operation_ui_progress().is_some() {}
     let mut stages = Vec::new();
     for _ in 0..100_000 {
-        block_on(app.advance_typed_operation_publication()).expect("driver turn");
+        block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("driver turn");
         while let Some(progress) = app.take_typed_operation_ui_progress() {
             let Some(status) = progress.history_patch.and_then(|patch| patch.time_travel) else { continue };
             if status.stage == HistoryTimeTravelStage::Replaying {
@@ -406,7 +406,7 @@ fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut Puzzle2d
     for message in block_on(from.receive()).expect("replica outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         block_on(into.send(message)).expect("relay an event batch");
     }
-    block_on(to.tick_backbone()).expect("ingest the relayed events");
+    block_on(to.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("ingest the relayed events");
 }
 
 /// ⚖️ LAW (design §16.6, G9): a remote history change whose replay exceeds one turn's budget
@@ -440,15 +440,15 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     assert!(waiting.total > 0 && waiting.done < waiting.total && !waiting.paused && waiting.kind == semio_framework::kernel::HistoryReprojectionKind::Remote && waiting.fault.is_none(), "{waiting:?}");
     assert_eq!(fixture_of(&remote), before, "the replica shows the history before the change");
     let meta = ActionMeta { view_state: Some(focused_view()), ..semio_framework_plugin::artifact_app_laws::meta("remote") };
-    let cancelled = block_on(remote.handle_action("historyEditCancelReplay", Some(&semio_framework_value::ToValue::to_value(&(&json!({})))), &meta)).expect("cancel");
+    let cancelled = block_on(remote.handle_action("historyEditCancelReplay", Some(&semio_framework_value::ToValue::to_value(&(&json!({})))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("cancel");
     assert!(cancelled.output.get("rejected").is_none(), "{:?}", cancelled.output);
     assert!(remote.time_travel_ledger().reprojection_paused(), "cancel pauses the remote replay");
     for _ in 0..4 {
-        block_on(remote.advance_typed_operation_publication()).expect("driver turn");
+        block_on(remote.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("driver turn");
     }
     assert_eq!(fixture_of(&remote), before, "paused, the change is not adopted");
     assert_eq!(block_on(remote.history_snapshot()).expect("history").reprojection.map(|replay| replay.paused), Some(true), "the wire says paused");
-    let resumed = block_on(remote.handle_action("historyEditRerun", Some(&semio_framework_value::ToValue::to_value(&(&json!({})))), &meta)).expect("rerun");
+    let resumed = block_on(remote.handle_action("historyEditRerun", Some(&semio_framework_value::ToValue::to_value(&(&json!({})))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("rerun");
     assert!(resumed.output.get("rejected").is_none(), "{:?}", resumed.output);
     pump(&mut remote, "the remote change is adopted", |app| block_on(app.history_snapshot()).expect("history").reprojection.is_none());
     assert_eq!(board_snapshot_nodes(&fixture_of(&remote)), board_snapshot_nodes(&fixture_of(&local)), "the adoption equals the author's head");
@@ -505,19 +505,19 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         assert_eq!(dispatch(&mut app, "undo", None, None).err().map(|fault| fault.code.0), Some("history.replaying".to_string()), "a further history step waits");
         let first = edits(&mut app)[seed].mutations[0].mutation_id.clone();
         let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-        let busy = block_on(app.handle_action("historyEditBegin", Some(&semio_framework_value::ToValue::to_value(&(&json!({ "mutationId": first })))), &meta)).expect("begin answers");
+        let busy = block_on(app.handle_action("historyEditBegin", Some(&semio_framework_value::ToValue::to_value(&(&json!({ "mutationId": first })))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("begin answers");
         assert_eq!(busy.output.get("rejected").and_then(semio_framework_value::DslValue::as_str), Some("timeTravel.busy"), "history editing waits for the step");
         if cancel {
             history_edit(&mut app, "historyEditCancelReplay", json!({}), "cancel the switch");
             for _ in 0..4 {
-                block_on(app.advance_typed_operation_publication()).expect("driver turn");
+                block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("driver turn");
             }
             assert_eq!(board_trace(&mut app), before, "a cancelled switch leaves zero trace");
         } else {
             let mut turns = 0;
             while block_on(app.history_snapshot()).expect("history").reprojection.is_some_and(|replay| replay.kind == semio_framework::kernel::HistoryReprojectionKind::Step) {
                 let done = block_on(app.history_snapshot()).expect("history").reprojection.map_or(0, |replay| replay.done);
-                block_on(app.advance_typed_operation_publication()).expect("driver turn");
+                block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("driver turn");
                 while app.take_typed_operation_ui_progress().is_some() {}
                 if let Some(after) = block_on(app.history_snapshot()).expect("history").reprojection.map(|replay| replay.done) {
                     assert!(after.saturating_sub(done) as usize <= semio_framework_plugin::app::time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, "one turn replays at most one budget: {done} → {after}");

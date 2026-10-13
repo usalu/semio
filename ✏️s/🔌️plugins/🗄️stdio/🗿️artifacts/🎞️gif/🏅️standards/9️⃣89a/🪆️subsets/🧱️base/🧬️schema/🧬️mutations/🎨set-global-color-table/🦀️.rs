@@ -24,7 +24,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetGlobalColorTable {
         protocol::MutationOutcome::new(GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
-        Ok(vec![GifMutation::SetGlobalColorTable(set_global_color_table::SetGlobalColorTable { gct: base.gct.clone() })])
+        Ok(vec![GifMutation::SetGlobalColorTable(SetGlobalColorTable { gct: base.gct.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set global color table", "Globale Farbtabelle setzen")

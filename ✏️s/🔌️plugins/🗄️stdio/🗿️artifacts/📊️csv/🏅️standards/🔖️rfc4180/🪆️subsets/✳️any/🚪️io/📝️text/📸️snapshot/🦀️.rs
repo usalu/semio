@@ -23,7 +23,6 @@ impl store::ArtifactDsl for CsvSnapshot{
  fn print_dsl(&self)->String{let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared CSV logical envelope");store::semio_format::wrap_text(&envelope,&body)}
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {

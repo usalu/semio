@@ -24,4 +24,3 @@ impl store::ArtifactDsl for Ifc2x3Snapshot {
     fn print_dsl(&self) -> String { native::print_text(self) }
 }
 }
-pub use snapshot_codec::*;

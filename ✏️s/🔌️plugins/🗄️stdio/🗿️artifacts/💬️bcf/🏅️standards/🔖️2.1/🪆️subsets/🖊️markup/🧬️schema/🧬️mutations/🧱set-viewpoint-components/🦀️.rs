@@ -18,13 +18,13 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents
 
     fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
         let Self { topic_guid, guid, components } = self;
-        protocol::MutationOutcome::new({ wrap_viewpoint_diff(base, topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }) })
+        protocol::MutationOutcome::new(wrap_viewpoint_diff(base, topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }))
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
         let Self { topic_guid, guid, .. } = self;
         Ok({
             match find_viewpoint(base, topic_guid, guid) {
-                Some(v) => vec![BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: topic_guid.clone(), guid: guid.clone(), components: v.components.clone() })],
+                Some(v) => vec![BcfMutation::SetViewpointComponents(SetViewpointComponents { topic_guid: topic_guid.clone(), guid: guid.clone(), components: v.components.clone() })],
                 None => Vec::new(),
             }
         })

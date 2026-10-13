@@ -334,8 +334,8 @@ fn far_side(boundary: Boundary) -> FarSide {
     }
 }
 
-fn contains(boundary: &[crate::Vertex], holes: &[Vec<crate::Vertex>], x: f64, y: f64) -> bool {
-    let plan = |vertices: &[crate::Vertex]| -> Vec<loops::Vertex> { vertices.iter().map(|vertex| loops::Vertex::new(Point::new(vertex.point.x, vertex.point.y), vertex.bulge)).collect() };
+fn contains(boundary: &[Vertex], holes: &[Vec<Vertex>], x: f64, y: f64) -> bool {
+    let plan = |vertices: &[Vertex]| -> Vec<loops::Vertex> { vertices.iter().map(|vertex| loops::Vertex::new(Point::new(vertex.point.x, vertex.point.y), vertex.bulge)).collect() };
     let probe = Point::new(x, y);
     loops::contains(&plan(boundary), probe) && !holes.iter().any(|hole| loops::contains(&plan(hole), probe))
 }

@@ -1,7 +1,7 @@
 //! 📐️ ISO 16757-2 geometry graph, solids, ports, spaces, placement.
 
-use super::common::{assess, catalogue_subject, copy, fail, na, pass, q_dim, q_len, q_vol, subject, controlled_ordinal};
-use crate::document::{CheckReport, CheckStatus, Quantity, QuantityKind, Remedy, RemedyBound};
+use super::common::{assess, copy, fail, na, pass, q_dim, q_len, q_vol, subject, controlled_ordinal};
+use crate::document::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use crate::part_2::{GeometryCatalogue, GeometryNode, GeometryObject, SpaceKind};
 use crate::standards::v1::subsets::any::schema::part_2 as helpers;
 use crate::Iso16757Snapshot;
@@ -291,7 +291,7 @@ pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 }],
             ));
         } else {
-            for (pi, port) in obj.ports.iter().enumerate() {
+            for (_pi, port) in obj.ports.iter().enumerate() {
                 let dir_len = (port.direction[0].powi(2) + port.direction[1].powi(2) + port.direction[2].powi(2)).sqrt();
                 if dir_len < 1e-9 || port.medium.trim().is_empty() || port.port_type.trim().is_empty() {
                     port_fail += 1;

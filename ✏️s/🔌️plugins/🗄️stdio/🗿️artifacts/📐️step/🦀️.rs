@@ -1,7 +1,7 @@
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 //! 🎪 `stdio.step` artifact — stdio reference format.
-use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
+#[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
 
 extern crate semio_framework_os_kernel as dsl;
@@ -97,12 +97,12 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .subset_validators(step_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .document_codec_bare::<StepSnapshot, standards::v_ap214::subsets::cc1::schema::mutations::StepCc1Mutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc1") })
-        .document_codec_bare::<StepSnapshot, standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc2") })
-        .document_codec_bare::<StepSnapshot, standards::v_ap214::subsets::cc3::schema::mutations::StepCc3Mutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc3") })
-        .document_codec_bare::<StepSnapshot, standards::v_ap214::subsets::cc4::schema::mutations::StepCc4Mutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc4") })
-        .document_codec_bare::<StepSnapshot, standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc5") })
-        .document_codec_bare::<StepSnapshot, standards::v_ap214::subsets::cc6::schema::mutations::StepCc6Mutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc6") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc1") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc2") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc3") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc4") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc5") })
+        .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("cc6") })
         .try_build()
 }
 
@@ -428,7 +428,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -671,7 +670,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

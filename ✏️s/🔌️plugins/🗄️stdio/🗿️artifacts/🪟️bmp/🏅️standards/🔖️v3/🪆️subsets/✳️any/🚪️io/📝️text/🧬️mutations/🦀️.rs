@@ -9,7 +9,7 @@ pub struct Entry {
     pub print: fn(&BmpMutation) -> Option<String>,
     pub parse: fn(&str) -> Result<BmpMutation, semio_framework_diagnostic::TextError>,
 }
-pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::text::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::paint_direct_region::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::replace_image::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::replace_samples::CODEC];
+pub const REGISTRY: &[Entry] = &[paint_indexed_region::CODEC, paint_direct_region::CODEC, replace_image::CODEC, replace_samples::CODEC];
 //#endregion Registry
 
 //#region Framing

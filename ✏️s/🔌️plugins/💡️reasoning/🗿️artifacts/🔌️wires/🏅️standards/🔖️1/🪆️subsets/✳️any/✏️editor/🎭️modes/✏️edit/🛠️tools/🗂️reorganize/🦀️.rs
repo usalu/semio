@@ -44,18 +44,18 @@ pub struct WiresLayoutGraph {
 }
 
 fn number(entity: &DslValue, key: &str) -> Option<f64> {
-    entity.get(key).and_then(semio_framework_value::DslValue::as_f64).filter(|value| value.is_finite())
+    entity.get(key).and_then(DslValue::as_f64).filter(|value| value.is_finite())
 }
 
 fn visible(entity: &DslValue) -> bool {
-    match entity.get("hidden").and_then(semio_framework_value::DslValue::as_bool) {
+    match entity.get("hidden").and_then(DslValue::as_bool) {
         Some(hidden) => !hidden,
-        None => entity.get("visible").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(true),
+        None => entity.get("visible").and_then(DslValue::as_bool).unwrap_or(true),
     }
 }
 
 fn repulsion_radius(node: &DslValue) -> f64 {
-    if node.get("shape").and_then(semio_framework_value::DslValue::as_str) == Some("rectangle") {
+    if node.get("shape").and_then(DslValue::as_str) == Some("rectangle") {
         let (width, height) = (number(node, "width").unwrap_or(40.0), number(node, "height").unwrap_or(40.0));
         return ((width * width + height * height).sqrt() * 0.5).max(8.0);
     }
@@ -67,26 +67,26 @@ fn repulsion_radius(node: &DslValue) -> f64 {
 pub fn layout_graph(board: &DslValue) -> WiresLayoutGraph {
     let (mut layout, mut index, mut handles) = (WiresLayoutGraph::default(), HashMap::new(), HashMap::new());
     for node in crate::schema::board_snapshot_nodes(board).iter().filter(|node| visible(node)) {
-        let Some(id) = node.get("id").and_then(semio_framework_value::DslValue::as_str) else { continue };
+        let Some(id) = node.get("id").and_then(DslValue::as_str) else { continue };
         if index.contains_key(id) {
             continue;
         }
         let at = layout.node_ids.len() as u32;
         index.insert(id.to_string(), at);
-        for handle in node.get("handles").and_then(semio_framework_value::DslValue::as_array).unwrap_or(&[]).iter().filter(|handle| visible(handle)) {
-            if let Some(handle_id) = handle.get("id").and_then(semio_framework_value::DslValue::as_str) {
+        for handle in node.get("handles").and_then(DslValue::as_array).unwrap_or(&[]).iter().filter(|handle| visible(handle)) {
+            if let Some(handle_id) = handle.get("id").and_then(DslValue::as_str) {
                 handles.insert(handle_id.to_string(), at);
             }
         }
         let origin = number(node, "x").zip(number(node, "y")).map(|(x, y)| LayoutRunPoint::new(x, y));
-        let pinned = origin.is_some() && node.get("locked").and_then(semio_framework_value::DslValue::as_bool) == Some(true);
+        let pinned = origin.is_some() && node.get("locked").and_then(DslValue::as_bool) == Some(true);
         layout.graph.nodes.push(LayoutRunNode { entity: layout_run_entity(id), origin, radius: repulsion_radius(node), pinned, anchor: None });
         layout.node_ids.push(id.to_string());
     }
     let resolve = |endpoint: Option<&str>| endpoint.and_then(|endpoint| handles.get(endpoint).or_else(|| index.get(endpoint)).copied());
     let mut seen = BTreeSet::new();
     for edge in crate::schema::board_snapshot_edges(board).iter().filter(|edge| visible(edge)) {
-        let (Some(source), Some(target)) = (resolve(edge.get("source").and_then(semio_framework_value::DslValue::as_str)), resolve(edge.get("target").and_then(semio_framework_value::DslValue::as_str))) else { continue };
+        let (Some(source), Some(target)) = (resolve(edge.get("source").and_then(DslValue::as_str)), resolve(edge.get("target").and_then(DslValue::as_str))) else { continue };
         if source != target && seen.insert((source.min(target), source.max(target))) {
             layout.graph.edges.push(LayoutRunEdge { source: source.min(target), target: source.max(target), weight: 1.0 });
         }

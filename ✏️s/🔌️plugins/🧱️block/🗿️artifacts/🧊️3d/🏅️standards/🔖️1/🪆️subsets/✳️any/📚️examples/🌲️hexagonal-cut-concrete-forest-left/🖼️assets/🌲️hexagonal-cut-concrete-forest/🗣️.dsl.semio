@@ -3,7 +3,7 @@ schema=block.3d
 object-kind {
   id="Hexagonal Cut Concrete Forest Left" name="Hexagonal Cut Concrete Forest Left" label="Hexagonal Cut Concrete Forest Left" description=""
 }
-catalog=child_id=catalog-3b18d1b44d9af6de target="catalog-3b18d1b44d9af6de!s.stdio.semio@v1/kit"
+catalog=child_id=catalog-3b18d1b44d9af6de target=artifact-id=catalog-3b18d1b44d9af6de artifact-kind=s.stdio.semio standard=v1 subset=kit
 camera3d {
   position=@4,-4,3 target=@0,0,0 zoom=1
 }

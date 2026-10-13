@@ -47,7 +47,7 @@ pub use mutations::*;
 /// 📏️ Heap bytes one property value retains (inline enum size plus every owned string/key), the
 /// same walk for a table cell and for a fixture node's property bag.
 fn property_value_retained_bytes(value: &crate::PropertyValue) -> usize {
-    let inline = std::mem::size_of::<crate::PropertyValue>();
+    let inline = size_of::<crate::PropertyValue>();
     match value {
         crate::PropertyValue::Null | crate::PropertyValue::Bool(_) | crate::PropertyValue::Number(_) => inline,
         crate::PropertyValue::String(text) => inline.saturating_add(text.len()),
@@ -62,26 +62,26 @@ fn property_value_retained_bytes(value: &crate::PropertyValue) -> usize {
 /// output could ever be published. The executor already refuses results past its ceiling, so this
 /// count is bounded by it.
 fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> Result<usize, semio_framework_value::ValueError> {
-    let mut bytes = std::mem::size_of::<crate::ast::QueryResult>();
+    let mut bytes = size_of::<crate::ast::QueryResult>();
     for column in &result.columns {
-        bytes = bytes.saturating_add(std::mem::size_of::<String>()).saturating_add(column.len());
+        bytes = bytes.saturating_add(size_of::<String>()).saturating_add(column.len());
     }
     for row in &result.rows {
-        bytes = bytes.saturating_add(std::mem::size_of::<Vec<crate::PropertyValue>>());
+        bytes = bytes.saturating_add(size_of::<Vec<crate::PropertyValue>>());
         for cell in row {
             bytes = bytes.saturating_add(property_value_retained_bytes(cell));
         }
     }
     if let Some(fixture) = result.graph_snapshot.as_deref() {
         let scene = crate::jack_working_scene(fixture)?;
-        bytes = bytes.saturating_add(std::mem::size_of::<crate::JackSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
+        bytes = bytes.saturating_add(size_of::<crate::JackSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
         for node in &scene.nodes {
-            bytes = bytes.saturating_add(std::mem::size_of::<crate::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
+            bytes = bytes.saturating_add(size_of::<crate::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
             bytes = node.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
-            bytes = node.ports.iter().fold(bytes, |bytes, port| bytes.saturating_add(std::mem::size_of::<crate::Port>()).saturating_add(port.id.len()).saturating_add(port.kind.len()));
+            bytes = node.ports.iter().fold(bytes, |bytes, port| bytes.saturating_add(size_of::<crate::Port>()).saturating_add(port.id.len()).saturating_add(port.kind.len()));
         }
         for edge in &scene.edges {
-            bytes = bytes.saturating_add(std::mem::size_of::<crate::Edge>()).saturating_add(edge.id.len()).saturating_add(edge.kind.len()).saturating_add(edge.source.len()).saturating_add(edge.target.len());
+            bytes = bytes.saturating_add(size_of::<crate::Edge>()).saturating_add(edge.id.len()).saturating_add(edge.kind.len()).saturating_add(edge.source.len()).saturating_add(edge.target.len());
             bytes = edge.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
         }
     }
@@ -91,7 +91,7 @@ fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> Result<usize
 fn results_window_transient_footprint(mutation: &JackResultsWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let JackResultsWindowTransientMutation::ReplaceQueryResult(value) = mutation;
     let result_bytes = match value.result.as_ref() { Some(result) => query_result_retained_bytes(result).map_err(semio_framework_value::ValueError::into_message)?, None => 0 };
-    let retained_bytes = std::mem::size_of::<JackResultsWindowTransient>()
+    let retained_bytes = size_of::<JackResultsWindowTransient>()
         .checked_add(value.execution_id.as_ref().map_or(0, String::len))
         .and_then(|bytes| bytes.checked_add(value.error.as_ref().map_or(0, String::len)))
         .and_then(|bytes| bytes.checked_add(result_bytes))

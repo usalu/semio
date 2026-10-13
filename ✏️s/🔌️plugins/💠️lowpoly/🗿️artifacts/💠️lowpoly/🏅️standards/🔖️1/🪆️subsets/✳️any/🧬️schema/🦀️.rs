@@ -131,9 +131,9 @@ pub fn lowpoly_snapshot_from_mesh(mesh: &MeshData) -> Result<crate::LowpolySnaps
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|error| format!("{error:?}"))?;
     let state = crate::LowpolyMeshState::from_mesh(halfedge);
     let child = crate::managed_mesh_child_handle("obj-1", &state);
-    Ok(crate::LowpolySnapshot { schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![crate::LowpolyObject {
+    Ok(crate::LowpolySnapshot { schema: crate::LOWPOLY_DOCUMENT_SCHEMA.into(), objects: vec![LowpolyObject {
         id: "obj-1".into(), name: "Imported Mesh".into(), transform: crate::LowpolyTransform::default(), smooth_shading: false,
-        mesh: Some(child), paint_layers: vec![crate::LowpolyPaintLayer::new("Base")], mesh_content: String::new(), mesh_state: Some(state),
+        mesh: Some(child), paint_layers: vec![LowpolyPaintLayer::new("Base")], mesh_content: String::new(), mesh_state: Some(state),
     }] })
 }
 

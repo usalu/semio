@@ -73,7 +73,7 @@ pub fn flow_catalogue_sections() -> Vec<CatalogueSection> {
     sections.into_values().collect()
 }
 
-pub(crate) fn catalogue_section_identity(info: &neural::OperatorInfo) -> (String, String) {
+pub(crate) fn catalogue_section_identity(info: &OperatorInfo) -> (String, String) {
     let extension = titleize_extension(&info.extension);
     if info.group.is_empty() { return (info.extension.clone(), extension); }
     (format!("{}/{}", info.extension, info.group.join("/")), format!("{} / {}", extension, info.group.join(" / ")))

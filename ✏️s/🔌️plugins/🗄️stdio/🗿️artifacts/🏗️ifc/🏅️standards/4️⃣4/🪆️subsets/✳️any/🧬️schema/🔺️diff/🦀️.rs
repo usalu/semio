@@ -11,7 +11,8 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
+use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
+#[cfg(test)] use crate::schema::snapshot::{IfcTypedValue};
 use crate::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -130,7 +131,7 @@ fn absorb_indexed_collection<T: Clone, D: Clone>(
 /// ↩️ Diff-level inverse for an index-keyed collection triple, given the ORIGINAL base items.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn rewind_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, T)], base_items: &[T], rewind_item: impl Fn(&D, &T) -> D) -> IndexedDiffParts<D, T> {
-    let removed_sorted: Vec<usize> = removed.iter().copied().collect::<std::collections::BTreeSet<usize>>().into_iter().collect();
+    let removed_sorted: Vec<usize> = removed.iter().copied().collect::<BTreeSet<usize>>().into_iter().collect();
     let mut added_index_sorted: Vec<usize> = added.iter().map(|(i, _)| *i).collect();
     added_index_sorted.sort_unstable();
 

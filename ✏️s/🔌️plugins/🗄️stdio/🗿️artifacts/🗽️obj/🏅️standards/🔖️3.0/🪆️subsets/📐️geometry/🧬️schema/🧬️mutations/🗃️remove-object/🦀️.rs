@@ -20,7 +20,7 @@ pub struct RemoveObject {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "object", kind: "remove-object", record: "RemoveObject" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_object(name))
     }

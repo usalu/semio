@@ -1,6 +1,6 @@
 //! 🔤 Symbol interning, token alphabet, escapes, numbers, and units.
 
-use semio_framework_diagnostic::{Limits, TextError, TextSpan};
+use semio_framework_diagnostic::TextSpan;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 

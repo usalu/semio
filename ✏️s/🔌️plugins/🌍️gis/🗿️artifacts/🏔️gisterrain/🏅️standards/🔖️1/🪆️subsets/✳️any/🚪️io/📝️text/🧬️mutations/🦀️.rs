@@ -1,8 +1,8 @@
 //! ⚡️ Gis3dTerrain artifact — OpText/OpBinary codecs + grammar for `GisTerrainMutation`.
 
-use crate::schema::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
+use crate::schema::mutations::GisTerrainMutation;
 
-pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeExaggeration", crate::standards::v1::subsets::any::io::text::mutations::change_exaggeration::TEXT_OPCODE), ("ChangeImportedFeatures", crate::standards::v1::subsets::any::io::text::mutations::change_imported_features::TEXT_OPCODE)];
+pub const TEXT_OPCODES: &[(&str, &str)] = &[("ChangeExaggeration", change_exaggeration::TEXT_OPCODE), ("ChangeImportedFeatures", change_imported_features::TEXT_OPCODE)];
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

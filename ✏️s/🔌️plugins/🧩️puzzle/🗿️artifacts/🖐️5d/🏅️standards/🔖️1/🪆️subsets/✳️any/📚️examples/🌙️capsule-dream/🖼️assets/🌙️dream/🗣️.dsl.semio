@@ -3,7 +3,7 @@ schema=puzzle.5d domain=architecture label="Capsule Dream"
 meta {
   description="Transferred from compose metabolism Capsule Dream for puzzle design-app parity."
 }
-kind-catalogs=child_id=kind-catalogs-ce8f60fe1ae0e3ce target="kind-catalogs-ce8f60fe1ae0e3ce!s.stdio.semio@v1/kit" kind-catalogs-extra=
+kind-catalogs=child_id=kind-catalogs-ce8f60fe1ae0e3ce target=artifact-id=kind-catalogs-ce8f60fe1ae0e3ce artifact-kind=s.stdio.semio standard=v1 subset=kit kind-catalogs-extra=
 parts [id:TEXT name:TEXT label:TEXT description:TEXT icon:TEXT image:TEXT unit:TEXT is-abstract:BOOL base-kinds:LIST representations:LIST grips:LIST attributes:LIST authors:LIST] {
 }
 grips [id:TEXT code:TEXT label:TEXT order:INT compatible-with:LIST description:TEXT icon:TEXT color:TEXT default-rope-kind:REF] {

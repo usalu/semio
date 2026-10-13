@@ -62,7 +62,7 @@ impl store::ArtifactDsl for LowpolySnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 use crate::{LowpolyObject,LowpolyPaintLayer,LowpolyTransform,LOWPOLY_DOCUMENT_SCHEMA};
 use crate::schema::LOWPOLY_DEFAULT_EXAMPLE_LABEL;
@@ -89,7 +89,7 @@ const CONCRETE_FOREST_LEFT_MESH_JSON: &str = include_str!("../../../📚️examp
 /// 🧺 One caller-owned default document pair. The parent snapshot owns only the exact
 /// `ArtifactChild` handle while the app session owns its matching mesh payload.
 pub struct LowpolyOwnedDefaultDocument {
-    pub snapshot: crate::LowpolySnapshot,
+    pub snapshot: LowpolySnapshot,
     pub mesh_workspace: std::collections::HashMap<String, crate::LowpolyMeshState>,
 }
 
@@ -111,7 +111,7 @@ pub fn default_owned_document() -> LowpolyOwnedDefaultDocument {
 }
 
 /// 🎞️ Default document projection used by tests and the play app.
-pub fn default_snapshot() -> crate::LowpolySnapshot {
+pub fn default_snapshot() -> LowpolySnapshot {
     default_owned_document().snapshot
 }
 

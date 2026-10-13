@@ -2,7 +2,8 @@
 
 #[cfg(test)]
 use crate::Frame;
-use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory};
+#[cfg(test)] use crate::{LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -100,7 +101,7 @@ pub mod drawing_child;
 
 /// 🧹️ Releases recursive child and dictionary owners before the plain snapshot fields.
 pub fn retire(mut value: LayoutSnapshot) {
-    if let Some(child) = value.background_drawing.take() { crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire(child); }
+    if let Some(child) = value.background_drawing.take() { drawing_child::retire(child); }
     if let Some(dictionary) = value.data_fields.take() { <crate::FormDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary); }
     drop(value);
 }

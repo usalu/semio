@@ -13,12 +13,12 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 /// 📖️ Parses `.en1990` DSL bytes into a snapshot.
 pub fn en1990_from_dsl_bytes(bytes: &[u8]) -> Result<En1990Snapshot, semio_framework_diagnostic::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-    crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text)
+    text::snapshot::parse_dsl(text)
 }
 
 /// 🖨️ Prints a snapshot to `.en1990` DSL bytes.
 pub fn en1990_to_dsl_bytes(snapshot: &En1990Snapshot) -> Vec<u8> {
-    crate::standards::v1::subsets::any::io::text::snapshot::print_dsl(snapshot).into_bytes()
+    text::snapshot::print_dsl(snapshot).into_bytes()
 }
 
 /// 📦️ Decodes a semio pack into a snapshot.
@@ -199,7 +199,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec En1990BuilderFacets {
         construction: En1990BuilderConstruction,
         analysis: En1990AnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::En1990ComposerComposition,
+        composition: En1990ComposerComposition,
     }
     builder: En1990Builder,
     analyzer: En1990Analyzer,

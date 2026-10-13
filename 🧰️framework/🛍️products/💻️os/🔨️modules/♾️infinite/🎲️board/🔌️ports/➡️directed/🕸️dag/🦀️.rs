@@ -1,7 +1,7 @@
 //! 🌳️ Directed acyclic port graph: rectangle IO nodes on infinite canvas.
 
 use std::cell::Cell;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use crate::os_spr::causal::transition::{HistoryFoldIndex,HistoryFoldSet};
 
 use semio_framework_value::DslValue;
@@ -12,7 +12,6 @@ pub mod input_application;
 use semio_framework_artifact_infinite_dag::*;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-use ::graph::manifest::{PropertyBag, PropertyValue};
 
 pub use crate::infinite::board::ports::directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak,
@@ -326,23 +325,23 @@ fn clamp_preview_image_size(w: f64, h: f64) -> (f64, f64) {
 
 fn preview_tree_collapsed_summary(value: &DslValue) -> String {
     match value {
-        semio_framework_value::DslValue::Object(entries) => format!("{{{} keys}}", entries.len()),
-        semio_framework_value::DslValue::Array(arr) => format!("[{} items]", arr.len()),
-        semio_framework_value::DslValue::String(s) => format!("\"{s}\""),
-        semio_framework_value::DslValue::Bytes(bytes) => format!("<{} bytes>", bytes.len()),
-        semio_framework_value::DslValue::Number(n) => match n {
+        DslValue::Object(entries) => format!("{{{} keys}}", entries.len()),
+        DslValue::Array(arr) => format!("[{} items]", arr.len()),
+        DslValue::String(s) => format!("\"{s}\""),
+        DslValue::Bytes(bytes) => format!("<{} bytes>", bytes.len()),
+        DslValue::Number(n) => match n {
             semio_framework_value::Number::UInt(v) => v.to_string(),
             semio_framework_value::Number::Int(v) => v.to_string(),
             semio_framework_value::Number::Float(v) => v.to_string(),
         },
-        semio_framework_value::DslValue::Bool(b) => b.to_string(),
-        semio_framework_value::DslValue::Null => "null".into(),
+        DslValue::Bool(b) => b.to_string(),
+        DslValue::Null => "null".into(),
     }
 }
 
 fn preview_tree_scalar_display(value: &DslValue) -> String {
     match value {
-        semio_framework_value::DslValue::String(s) => format!("\"{s}\""),
+        DslValue::String(s) => format!("\"{s}\""),
         other => preview_tree_collapsed_summary(other),
     }
 }
@@ -406,7 +405,7 @@ fn hit_byte_in_note_line(line: &str, world_x: f64, line_origin_x: f64, font_px: 
 fn preview_tree_rows(json: &DslValue, expanded: &DagExpandedPaths, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
     let mut rows = Vec::new();
     match json {
-        semio_framework_value::DslValue::Object(entries) => {
+        DslValue::Object(entries) => {
             for (key, val) in entries {
                 let row_path = if path.is_empty() { key.clone() } else { format!("{path}.{key}") };
                 let has_children = matches!(val, DslValue::Object(_) | DslValue::Array(_));
@@ -418,7 +417,7 @@ fn preview_tree_rows(json: &DslValue, expanded: &DagExpandedPaths, path: &str, d
                 }
             }
         }
-        semio_framework_value::DslValue::Array(arr) => {
+        DslValue::Array(arr) => {
             for (i, val) in arr.iter().enumerate() {
                 let key = format!("[{i}]");
                 let row_path = if path.is_empty() { key.clone() } else { format!("{path}{key}") };
@@ -859,7 +858,8 @@ pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &
 // #endregion 🔖️Acyclicity
 
 // #region 🔖️Layout
-use crate::infinite::board::schema::layout::{DagLayoutOptions,DagLayoutOrientation,LayoutControl};
+use crate::infinite::board::schema::layout::{DagLayoutOptions, LayoutControl};
+#[cfg(test)] use crate::infinite::board::schema::layout::{DagLayoutOrientation};
 /// 🌳️ Applies original layered geometry directly to admitted DAG records.
 pub fn apply_dag_layout(snapshot:&mut DagHostSnapshot,opts:&DagLayoutOptions,control:&mut LayoutControl<'_>)->Result<(),DagError>{
  if snapshot.schema!="dag.hostDocument"{return Err(DagError::SchemaMismatch);}
@@ -867,7 +867,7 @@ pub fn apply_dag_layout(snapshot:&mut DagHostSnapshot,opts:&DagLayoutOptions,con
  let mut handle_owners=HashMap::new();for node in &snapshot.nodes{for port in node.inputs().iter().chain(node.outputs().iter()){handle_owners.insert(format!("{}@{}",node.id,port.id),node.id.clone());}}
  let resolve=|key:&str|handle_owners.get(key).cloned().or_else(||ids.contains(key).then(||key.to_owned())).or_else(||key.split('@').next().filter(|base|ids.contains(*base)).map(str::to_owned)).unwrap_or_else(||key.to_owned());
  let directed:Vec<(String,String)>=snapshot.edges.iter().filter_map(|e|{let a=resolve(&e.source);let b=resolve(&e.target);(a!=b&&ids.contains(&a)&&ids.contains(&b)).then_some((a,b))}).collect();
- let positions=crate::infinite::board::schema::layout_inferences::layered::layered_positions(&ids,&directed,opts,control).map_err(|e|DagError::Json(e.to_string()))?;
+ let positions=infinite::board::schema::layout_inferences::layered::layered_positions(&ids,&directed,opts,control).map_err(|e|DagError::Json(e.to_string()))?;
  for node in &mut snapshot.nodes{if let Some(&(x,y))=positions.get(&node.id){node.x=x;node.y=y;}}Ok(())
 }
 // #endregion 🔖️Layout
@@ -1207,14 +1207,14 @@ pub struct DagPointerPlan {
     drag: Option<DagDragOffset>,
 }
 
-impl crate::infinite::board::schema::dag_input::DagSelectionSource for DagHost {
-    fn selection_candidate_count(&self,domain:crate::infinite::board::schema::dag_input::DagSelectionDomain)->usize {
-        match domain {crate::infinite::board::schema::dag_input::DagSelectionDomain::Nodes=>self.host_snapshot.nodes.len(),crate::infinite::board::schema::dag_input::DagSelectionDomain::Edges=>self.host_snapshot.edges.len()}
+impl infinite::board::schema::dag_input::DagSelectionSource for DagHost {
+    fn selection_candidate_count(&self,domain:infinite::board::schema::dag_input::DagSelectionDomain)->usize {
+        match domain {infinite::board::schema::dag_input::DagSelectionDomain::Nodes=>self.host_snapshot.nodes.len(),infinite::board::schema::dag_input::DagSelectionDomain::Edges=>self.host_snapshot.edges.len()}
     }
-    fn selection_candidate_id(&self,domain:crate::infinite::board::schema::dag_input::DagSelectionDomain,index:usize)->Option<&str>{
+    fn selection_candidate_id(&self,domain:infinite::board::schema::dag_input::DagSelectionDomain,index:usize)->Option<&str>{
         match domain {
-            crate::infinite::board::schema::dag_input::DagSelectionDomain::Nodes=>{let id=u64::try_from(index.checked_add(1)?).ok()?;(self.node_id_map.get(&id)==Some(&index)&&self.engine.selection.node_ids.contains(&id)).then(||self.host_snapshot.nodes.get(index).map(|node|node.id.as_str())).flatten()},
-            crate::infinite::board::schema::dag_input::DagSelectionDomain::Edges=>self.edge_engine_ids.get(index).and_then(|id|*id).filter(|id|self.engine.selection.edge_ids.contains(id)).and_then(|_|self.host_snapshot.edges.get(index).map(|edge|edge.id.as_str())),
+            infinite::board::schema::dag_input::DagSelectionDomain::Nodes=>{let id=u64::try_from(index.checked_add(1)?).ok()?;(self.node_id_map.get(&id)==Some(&index)&&self.engine.selection.node_ids.contains(&id)).then(||self.host_snapshot.nodes.get(index).map(|node|node.id.as_str())).flatten()},
+            infinite::board::schema::dag_input::DagSelectionDomain::Edges=>self.edge_engine_ids.get(index).and_then(|id|*id).filter(|id|self.engine.selection.edge_ids.contains(id)).and_then(|_|self.host_snapshot.edges.get(index).map(|edge|edge.id.as_str())),
         }
     }
 }
@@ -2045,7 +2045,7 @@ impl DagHost {
         None
     }
 
-    fn channel_view(&self, target:u64)->Option<crate::infinite::board::schema::dag_input::output::DagChannelView<'_>> {
+    fn channel_view(&self, target:u64)->Option<infinite::board::schema::dag_input::output::DagChannelView<'_>> {
         if self.node_id_map.contains_key(&target) {
             return None;
         }
@@ -2054,7 +2054,7 @@ impl DagHost {
         let node=self.host_snapshot.nodes.get(*self.node_id_map.get(&handle.node_id)?)?;
         let port=key.get(node.id.len().checked_add(1)?..)?;
         let direction=match handle.role{HandleRole::Target=>DagChannelDirection::In,HandleRole::Source=>DagChannelDirection::Out,_=>return None};
-        Some(crate::infinite::board::schema::dag_input::output::DagChannelView {widget_id:&node.id,port,direction})
+        Some(infinite::board::schema::dag_input::output::DagChannelView {widget_id:&node.id,port,direction})
     }
 
     fn decode_channel_ref(&self,target:u64)->Option<DagChannelRef>{self.channel_view(target).map(|value|DagChannelRef{widget_id:value.widget_id.to_owned(),port:value.port.to_owned(),direction:value.direction})}
@@ -2113,14 +2113,14 @@ impl DagHost {
     /// off screen — the typed read the census needs before it can scan inside it.
     fn entity_screen_rect(&self, domain: &str, id: &str) -> Option<[f64; 4]> {
         let value = semio_framework_pack_json::parse(&self.entity_screen_json(domain, id), semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
-        if value.get("visible").and_then(semio_framework_pack_json::Value::as_bool) != Some(true) {
+        if value.get("visible").and_then(Value::as_bool) != Some(true) {
             return None;
         }
         let rect = value.get("rect")?.as_array()?;
         if rect.len() < 4 {
             return None;
         }
-        let read = |index: usize| rect.get(index).and_then(semio_framework_pack_json::Value::as_f64);
+        let read = |index: usize| rect.get(index).and_then(Value::as_f64);
         Some([read(0)?, read(1)?, read(2)?, read(3)?])
     }
 
@@ -4157,7 +4157,7 @@ impl DagHost {
         cancelled
     }
 
-    pub fn set_canvas_palette(&mut self, overlay:&crate::infinite::board::BoardPaletteOverlay) {
+    pub fn set_canvas_palette(&mut self, overlay:&infinite::board::BoardPaletteOverlay) {
         self.canvas_theme.apply_overlay(overlay);
         self.icon_paint_cache.clear();
     }
@@ -5477,17 +5477,17 @@ mod wasm_bridge {
 }
 //#endregion 🔖️WasmBridge
 
-impl crate::infinite::board::schema::dag_input::output::DagOutputCandidates for DagHost{
+impl infinite::board::schema::dag_input::output::DagOutputCandidates for DagHost{
     fn node_candidate_count(&self)->usize{self.engine.selection.node_ids.len()}
     fn node_candidate_id(&self,index:usize)->Option<&str>{self.widget_id_for_node_id_ref(*self.engine.selection.node_ids.key_at_rank(index)?)}
     fn edge_candidate_count(&self)->usize{self.engine.selection.edge_ids.len()}
     fn edge_candidate_id(&self,index:usize)->Option<&str>{self.edge_id_map.get(self.engine.selection.edge_ids.key_at_rank(index)?).map(String::as_str)}
     fn channel_candidate_count(&self)->usize{self.engine.selection.handle_ids.len()}
-    fn channel_candidate(&self,index:usize)->Option<crate::infinite::board::schema::dag_input::output::DagChannelView<'_>>{self.channel_view(*self.engine.selection.handle_ids.key_at_rank(index)?)}
+    fn channel_candidate(&self,index:usize)->Option<infinite::board::schema::dag_input::output::DagChannelView<'_>>{self.channel_view(*self.engine.selection.handle_ids.key_at_rank(index)?)}
     fn handle_candidate_identity(&self,index:usize)->Option<&str>{let id=self.engine.selection.handle_ids.key_at_rank(index)?;self.channel_view(*id)?;self.handle_key_map.get(id).map(String::as_str)}
-    fn hovered_channel_view(&self)->Option<crate::infinite::board::schema::dag_input::output::DagChannelView<'_>>{self.engine.hover.and_then(|id|self.channel_view(id))}
-    fn wire_refusal_view(&self)->Option<crate::infinite::board::schema::dag_input::output::DagRefusalView<'_>>{
+    fn hovered_channel_view(&self)->Option<infinite::board::schema::dag_input::output::DagChannelView<'_>>{self.engine.hover.and_then(|id|self.channel_view(id))}
+    fn wire_refusal_view(&self)->Option<infinite::board::schema::dag_input::output::DagRefusalView<'_>>{
         let(source,target)=self.engine.wire_drag_type_refusal()?;
-        Some(crate::infinite::board::schema::dag_input::output::DagRefusalView{source:self.handle_key_map.get(&source)?,source_types:self.engine.handles.get(&source).map_or(&[],|handle|handle.value_types.as_slice()),target:self.handle_key_map.get(&target)?,target_types:self.engine.handles.get(&target).map_or(&[],|handle|handle.value_types.as_slice())})
+        Some(infinite::board::schema::dag_input::output::DagRefusalView{source:self.handle_key_map.get(&source)?,source_types:self.engine.handles.get(&source).map_or(&[],|handle|handle.value_types.as_slice()),target:self.handle_key_map.get(&target)?,target_types:self.engine.handles.get(&target).map_or(&[],|handle|handle.value_types.as_slice())})
     }
 }

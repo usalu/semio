@@ -5,7 +5,7 @@ use std::mem::{MaybeUninit,ManuallyDrop};
 #[derive(Clone,Copy)]
 struct GlyphSlot(MaybeUninit<FontMappedScalar>);
 semio_framework_value::artifact_retire_leaf!(GlyphSlot);
-const _:()=assert!(std::mem::size_of::<GlyphSlot>()==std::mem::size_of::<FontMappedScalar>()&&std::mem::align_of::<GlyphSlot>()==std::mem::align_of::<FontMappedScalar>());
+const _:()=assert!(size_of::<GlyphSlot>()==size_of::<FontMappedScalar>()&&align_of::<GlyphSlot>()==align_of::<FontMappedScalar>());
 #[derive(Default,semio_framework_value::RetireOwned)]
 pub(crate) struct FontWorkingMapping{pub face:usize,slots:Vec<GlyphSlot>,gap_start:usize,gap_count:usize}
 impl FontWorkingMapping{

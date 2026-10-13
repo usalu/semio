@@ -170,7 +170,7 @@ pub(crate) fn generation2d_apply_initialization_mutation(snapshot: &mut Generati
             Some(Generation2dReplayDisplaced::Widget(std::mem::replace(&mut snapshot.host_snapshot.widgets[index], next)))
         }
         Generation2dMutation::MoveNodes(payload) => {
-            crate::standards::v1::subsets::any::schema::mutations::generation2d_targets_invariant(&payload.ids)?;
+            generation2d_targets_invariant(&payload.ids)?;
             if !payload.dx.is_finite() || !payload.dy.is_finite() || payload.ids.len() > GENERATION2D_MAXIMUM_DOMAIN_ITEMS {
                 return Err("generation2d-replay.nodes-invariant");
             }
@@ -454,7 +454,7 @@ pub(crate) fn generation2d_apply_retained_mutations_for_test(snapshot: &mut Gene
 /// travels as the outcome's own messages, codes and levels unchanged, and an apply-time rejection joins them as the
 /// `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist.
 pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
-    let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
+    let (delta, messages) = Mutation::diff(mutation, &*projection).into_parts();
     if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
         delta.retire_cold();
         return Err(messages);

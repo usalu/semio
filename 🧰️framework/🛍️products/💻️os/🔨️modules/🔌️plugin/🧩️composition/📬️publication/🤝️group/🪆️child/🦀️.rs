@@ -84,7 +84,7 @@ impl PrivateChildPublicationInput {
             let parts = self.metadata.as_mut().and_then(PrivateChildMemberMetadata::parts_mut).unwrap();
             let expected = take_reference(&mut parts.expected);
             let owner = store::OwnerRef { parent: take_reference(&mut parts.owner.parent), slot: std::mem::take(&mut parts.owner.slot), child_id: std::mem::take(&mut parts.owner.child_id) };
-            let request = store::MemberOpenRequest::new(operation, generation, expires_at_us, expected, Some(owner), pages, protocol::ActorId(std::mem::take(&mut parts.actor.0)));
+            let request = store::MemberOpenRequest::new(operation, generation, expires_at_us, expected, Some(owner), pages, ActorId(std::mem::take(&mut parts.actor.0)));
             match request.admit(now_us) {
                 Ok(request) => *self.request = Some(request),
                 Err(rejected) => { *self.request = Some(rejected.request); return Err(input_error("private child input failed exact semantic request admission")); }
@@ -102,7 +102,7 @@ impl PrivateChildPublicationInput {
         if grant.maximum_items == 0 || !self.ready || self.closing || !self.genesis.terminal_is_empty() { return None; }
         Some(PrivateChildPublicationInputParts { source: self.source.take()?, metadata: self.metadata.take()?, request: self.request.take() })
     }
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let mut demand = if let Some(request) = self.request.as_ref() {
             RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(body)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()? }

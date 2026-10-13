@@ -15,7 +15,7 @@ pub struct SetStreamHeader {
 impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-header", kind: "set-stream-header", record: "SetStreamHeader" };
 
-    fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
+    fn diff(&self, _base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
         let Self { stream_index, strh } = self;
         protocol::MutationOutcome::new(stream_diff_for(*stream_index, AviStreamDiff { strh: Some(strh.clone()), ..AviStreamDiff::default() }))
     }
@@ -23,7 +23,7 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamHeader {
         let Self { stream_index, .. } = self;
         Ok({
             match base.streams.get(*stream_index) {
-                Some(stream) => vec![AviMutation::SetStreamHeader(set_stream_header::SetStreamHeader { stream_index: *stream_index, strh: stream.strh.clone() })],
+                Some(stream) => vec![AviMutation::SetStreamHeader(SetStreamHeader { stream_index: *stream_index, strh: stream.strh.clone() })],
                 None => Vec::new(),
             }
         })

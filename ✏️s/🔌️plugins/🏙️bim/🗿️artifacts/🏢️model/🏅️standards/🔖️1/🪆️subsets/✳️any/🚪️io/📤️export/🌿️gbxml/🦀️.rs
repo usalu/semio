@@ -8,7 +8,8 @@
 //! 📎 https://www.gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html, https://www.iso.org/standard/65708.html
 
 use super::holders::{holder_of, layers_of, Holder};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSpace};
 use crate::{ModelInference, ModelSnapshot, OpeningKind};
 use codec::{attr, element, leaf, number, quantity};
 use geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};

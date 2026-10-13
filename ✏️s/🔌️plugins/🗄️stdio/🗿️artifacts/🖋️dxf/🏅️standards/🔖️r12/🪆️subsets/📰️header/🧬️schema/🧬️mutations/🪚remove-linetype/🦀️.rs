@@ -13,7 +13,7 @@ pub struct RemoveLinetype {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveLinetype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "linetype", kind: "remove-linetype", record: "RemoveLinetype" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { name } = self;
         protocol::MutationOutcome::new(diff_remove_linetype(name))
     }

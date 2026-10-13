@@ -6,32 +6,24 @@
 //! `#[path]` mounts stay `🦀️.rs`'s job per design.md §1's "owner mounts children" rule, and
 //! `🦀️.rs` is outside this file's own directory anyway).
 
-#[cfg(feature = "component-app-assembly")]
 use crate::editor::binary as editor;
-#[cfg(feature = "component-app-assembly")]
 use crate::standards::v_raw::subsets::any::{io, schema};
-#[cfg(feature = "component-app-assembly")]
 use crate::viewer::binary as viewer;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_plugin::ExampleSource;
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-#[cfg(feature = "component-app-assembly")]
 use std::sync::OnceLock;
 
 /// 🎯️ `s.stdio.binary@raw/*` — `CARRIER_BINARY` in `semio_framework::io_schema`.
 pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "component-app-assembly")]
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "component-app-assembly")]
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::binary_artifact_inference_descriptor()]).as_slice()
@@ -41,7 +33,6 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 /// empty by the carrier law (see `🚪️io/🦀️.rs`'s `io()` doc comment), `examples` carries
 /// the one `demo` example, `inferences` carries the `extent` inference descriptor.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-#[cfg(feature = "component-app-assembly")]
 pub fn subset() -> SubsetDeclaration<crate::BinaryApps> {
     SubsetDeclaration {
         dialect: DIALECT,

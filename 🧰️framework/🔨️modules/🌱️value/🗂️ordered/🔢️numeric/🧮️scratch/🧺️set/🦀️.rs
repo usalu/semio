@@ -18,8 +18,8 @@ impl<K:Copy+Ord> NumericSet<K>{
  pub fn begin_insert(&self,key:K)->NumericInsertCursor<K,()>{NumericInsertCursor::new(key,())}
  pub fn insert_step(&mut self,cursor:&mut NumericInsertCursor<K,()>,units:usize,control:&mut crate::NativeDecodeControl<'_>)->Result<bool,crate::ValueError>{cursor.step(&mut self.index,units,control)}
  pub fn terminal_is_empty(&self)->bool{self.index.terminal_is_empty()}
- pub fn insert_capacity_byte_demand(&self,cursor:&super::NumericInsertCursor<K,()>)->Result<usize,crate::ValueError>{cursor.next_capacity_byte_demand(&self.index)}
- pub fn insert_depth_demand(&self,cursor:&super::NumericInsertCursor<K,()>)->Result<usize,crate::ValueError>{cursor.next_depth_demand(&self.index)}
+ pub fn insert_capacity_byte_demand(&self,cursor:&NumericInsertCursor<K,()>)->Result<usize,crate::ValueError>{cursor.next_capacity_byte_demand(&self.index)}
+ pub fn insert_depth_demand(&self,cursor:&NumericInsertCursor<K,()>)->Result<usize,crate::ValueError>{cursor.next_depth_demand(&self.index)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,crate::list::PagedListError>{self.index.next_close_release_byte_demand()}
  pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<crate::list::PagedListProgress,crate::list::PagedListError>{self.index.close_copy_step(maximum_items,maximum_release_bytes)}
 }

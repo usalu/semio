@@ -1036,3 +1036,26 @@ fn source_drafts_fill_tree_control_width_for_empty_and_nonempty_documents() {
         }
     }
 }
+
+fn heavy_item(id: &str, fillers: usize) -> UiAssemblyResult<ui_contract::TreeItemBuilder> {
+    let mut item = ui_contract::tree_item(label(id)?).try_id(id).map_err(|_| error("test.id"))?;
+    for index in 0..fillers {
+        let leaf = ui_contract::tree_item(label("x")?).try_id(&format!("{id}-{index}")).map_err(|_| error("test.leaf-id"))?.try_build().map_err(|_| error("test.leaf"))?;
+        item = item.try_child(leaf).map_err(|_| error("test.child"))?;
+    }
+    Ok(item)
+}
+
+#[test]
+fn a_nested_window_leaves_its_enclosing_row_its_own_price() {
+    let windows = TreeWindows::unhosted();
+    let section = tree_window_indexed_section(&windows, "root", label("Root").unwrap(), true, 2, |index| {
+        if index == 0 {
+            tree_window_indexed_item(&windows, heavy_item("parent", 20)?, "parent-children", true, 48, |child| heavy_item(&format!("child-{child}"), 20)?.try_build().map_err(|_| error("test.child-build")))
+        } else {
+            heavy_item("tail", 1)?.try_build().map_err(|_| error("test.tail-build"))
+        }
+    })
+    .expect("nested windowed section");
+    assert_eq!(section.children.len(), 2, "the enclosing row and the row after it must both be materialised (items left {})", windows.items_remaining());
+}

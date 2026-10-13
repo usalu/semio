@@ -197,7 +197,7 @@ pub fn host_activation(view: Option<&semio_framework_plugin::ViewModel>) -> Stri
     view.and_then(|view| view.active_tool_id.clone().or_else(|| view.active_utility_id.clone())).unwrap_or_default()
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum Puzzle3dWindowTransientMutation { Snapshot { transient: Puzzle3dWindowTransient } }
 
 impl protocol::Mutation<Puzzle3dWindowTransient> for Puzzle3dWindowTransientMutation {
@@ -545,14 +545,6 @@ impl protocol::DiffAlgebra<Puzzle3dWindowTransient> for Puzzle3dWindowTransientD
 }
 
 semio_framework_value::artifact_retire_struct!(Puzzle3dWindowTransient { suggestion_menu, engagement_input, brush_candidate_index, activation });
-
-impl semio_framework_value::retirement::RetireOwned for Puzzle3dWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
-        }
-    }
-}
 
 /// 📏️ The exact heap bytes ONE window transient retains: the suggestion popup's two owned ids when
 /// it is open, plus the engagement input line. Every other field is a fixed-width scalar the

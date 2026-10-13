@@ -2,7 +2,6 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
-use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 

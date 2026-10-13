@@ -93,11 +93,71 @@ fn test_app_command_emit<const RETAINED: bool, const TOOLS: u8>(job: &TestAppCom
 /// owners, and the framework-reserved dispatch generator this fixture also drives is already
 /// measured at ~1.75 MiB of the 2 MiB bounded thread stack
 /// (`one_framework_reserved_route_fits_a_bounded_thread_stack`).
+struct TestRawLease(crate::app::ArtifactToolRawInput);
+
+struct TestRawLeaseCursor {
+    lease: std::mem::ManuallyDrop<Option<crate::app::ArtifactToolRawInput>>,
+}
+
+impl semio_framework_value::retirement::RetireOwned for TestRawLease {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        Box::new(TestRawLeaseCursor { lease: std::mem::ManuallyDrop::new(Some(self.0)) })
+    }
+
+    fn retirement_birth_bytes(&self) -> Option<usize> {
+        Some(std::mem::size_of::<TestRawLeaseCursor>())
+    }
+
+    fn controlled_retirement_supported() -> bool {
+        true
+    }
+}
+
+impl semio_framework_value::retirement::RetirementCursor for TestRawLeaseCursor {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::RetirementStep;
+        if self.lease.is_none() {
+            return RetirementStep::Complete;
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return RetirementStep::BudgetExhausted;
+        }
+        drop(self.lease.take());
+        RetirementStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.lease.is_none()
+    }
+
+    fn next_birth_bytes(&self, _copy: usize) -> Option<usize> {
+        Some(0)
+    }
+
+    fn next_close_byte_demand(&self) -> Option<usize> {
+        Some(0)
+    }
+
+    fn terminal_release_bytes(&self) -> Option<usize> {
+        self.lease.is_none().then_some(std::mem::size_of::<Self>())
+    }
+}
+
+impl Drop for TestRawLeaseCursor {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.lease.is_none(), "fixture raw wire lease reached Drop before it returned");
+        if self.lease.is_none() {
+            unsafe { std::mem::ManuallyDrop::drop(&mut self.lease) };
+        }
+    }
+}
+
+#[derive(semio_framework_value::RetireOwned)]
 struct TestAppCommandInputs {
-    raw_wire: crate::app::ArtifactToolRawInput,
+    raw_wire: TestRawLease,
     window_config: Option<crate::app::WindowConfigSnapshot>,
-    interaction_state: std::sync::Arc<InteractionState>,
-    interaction_hover: std::sync::Arc<InteractionHoverState>,
+    interaction_state: semio_framework_value::retirement::shared::SharedControlledRetirement<InteractionState>,
+    interaction_hover: semio_framework_value::retirement::shared::SharedControlledRetirement<InteractionHoverState>,
     instance_operation_owner: crate::app::ArtifactInstanceOperationOwnerHandle,
     output_chunks: ArtifactOutputChunks,
 }
@@ -127,12 +187,14 @@ impl<const RETAINED: bool, const TOOLS: u8> TestAppCommandJob<RETAINED, TOOLS> {
         }
         if let Some(owner) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(owner, body); }
         if self.command.is_some() { return store::artifact_retirement_owned_birth_demands(&self.command); }
-        if self.snapshot.is_some() { return store::artifact_retirement_owned_birth_demands(&self.snapshot); }
-        if self.config.is_some() { return store::artifact_retirement_owned_birth_demands(&self.config); }
-        if self.history.is_some() { return store::artifact_retirement_owned_birth_demands(&self.history); }
+        if self.snapshot.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.snapshot); }
+        if self.config.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.config); }
+        if self.history.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.history); }
         if self.completion.is_some() { return store::artifact_retirement_owned_birth_demands(&self.completion); }
         if self.metadata.is_some() { return store::artifact_retirement_owned_birth_demands(&self.metadata); }
-        if self.context.is_some() || self.residual.is_some() || self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture retains original context until its issuing authority is installed")); }
+        if self.context.is_some() { return store::artifact_retirement_owned_birth_demands(&self.context); }
+        if self.residual.is_some() { return store::artifact_retirement_owned_birth_demands(&self.residual); }
+        if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture retains original context until its issuing authority is installed")); }
         if self.snapshot_read.is_some() { return store::artifact_retirement_owned_birth_demands(&self.snapshot_read); }
         Ok(Default::default())
     }
@@ -197,11 +259,13 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         }
         let step = if self.retirement.is_some() { store::artifact_retirement_box_close_step(&mut self.retirement, grant) }
             else if self.command.is_some() { store::artifact_retirement_admit_owned(&mut self.command, &mut self.retirement, grant) }
-            else if self.snapshot.is_some() { store::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.retirement, grant) }
-            else if self.config.is_some() { store::artifact_retirement_admit_owned(&mut self.config, &mut self.retirement, grant) }
-            else if self.history.is_some() { store::artifact_retirement_admit_owned(&mut self.history, &mut self.retirement, grant) }
+            else if self.snapshot.is_some() { store::artifact_retirement_admit_shared_lease(&mut self.snapshot, &mut self.retirement, grant) }
+            else if self.config.is_some() { store::artifact_retirement_admit_shared_lease(&mut self.config, &mut self.retirement, grant) }
+            else if self.history.is_some() { store::artifact_retirement_admit_shared_lease(&mut self.history, &mut self.retirement, grant) }
             else if self.completion.is_some() { store::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
             else if self.metadata.is_some() { store::artifact_retirement_admit_owned(&mut self.metadata, &mut self.retirement, grant) }
+            else if self.context.is_some() { store::artifact_retirement_admit_owned(&mut self.context, &mut self.retirement, grant) }
+            else if self.residual.is_some() { store::artifact_retirement_admit_owned(&mut self.residual, &mut self.retirement, grant) }
             else if self.snapshot_read.is_some() { store::artifact_retirement_admit_owned(&mut self.snapshot_read, &mut self.retirement, grant) }
             else { Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
         match step {
@@ -273,115 +337,6 @@ impl<const RETAINED: bool, const TOOLS: u8> ArtifactOwnedToolJobFactory for Test
 
 //#endregion 🧰️TestAppCommandOwner
 
-//#region 📬️TestCompletionRetirement
-type TestCompletionValue<const RETAINED: bool, const TOOLS: u8> = ArtifactToolCompletionValue<TestApp<RETAINED, TOOLS>>;
-
-struct TestCompletionPayload<const RETAINED: bool, const TOOLS: u8>(TestCompletionValue<RETAINED, TOOLS>);
-
-struct TestCompletionCursor<const RETAINED: bool, const TOOLS: u8> {
-    original: std::mem::ManuallyDrop<Option<TestCompletionValue<RETAINED, TOOLS>>>,
-}
-
-/// 📬️ The fixture app retains only vacant emitted completions: every lane is empty, so the original payload owns no further allocation.
-fn test_completion_supported<const RETAINED: bool, const TOOLS: u8>(value: &TestCompletionValue<RETAINED, TOOLS>) -> bool {
-    match value {
-        ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
-            emit.artifact_mutations.is_empty()
-                && emit.config_mutations.is_empty()
-                && emit.window_config_mutations.is_empty()
-                && emit.draft_mutations.is_empty()
-                && emit.effects.is_empty()
-                && emit.extension_invocations.is_empty()
-                && emit.events.is_empty()
-                && emit.child_emits.is_empty()
-                && emit.owned_child_emits.is_empty()
-                && emit.child_preparations.is_empty()
-                && emit.interaction_writes.is_empty()
-                && emit.tasks.is_empty()
-                && ephemeral.presence.is_empty()
-                && ephemeral.transient.is_empty()
-                && ephemeral.window_transient.is_empty()
-        }
-        _ => false,
-    }
-}
-
-fn test_completion_birth<const RETAINED: bool, const TOOLS: u8>(value: &TestCompletionValue<RETAINED, TOOLS>) -> Option<usize> {
-    test_completion_supported(value).then_some(std::mem::size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<TestCompletionPayload<RETAINED, TOOLS>>>())
-}
-
-fn test_completion_admit<const RETAINED: bool, const TOOLS: u8>(
-    value: &mut Option<TestCompletionValue<RETAINED, TOOLS>>,
-    grant: semio_framework_value::retained_clone::RetainedCloneGrant,
-) -> Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
-    let Some(original) = value.as_ref() else { return Ok(None) };
-    let bytes = test_completion_birth(original).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture completion retains a non-vacant payload without a retirement facet"))?;
-    if grant.maximum_items == 0 || grant.maximum_capacity_bytes < bytes || grant.maximum_depth == 0 {
-        return Ok(None);
-    }
-    match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(TestCompletionPayload(value.take().unwrap()), grant) {
-        Ok((owner, progress)) => Ok(Some((owner as Box<dyn semio_framework_value::ErasedSnapshotRetirement>, progress))),
-        Err((error, TestCompletionPayload(original))) => {
-            *value = Some(original);
-            Err(error)
-        }
-    }
-}
-
-impl<const RETAINED: bool, const TOOLS: u8> semio_framework_value::retirement::RetireOwned for TestCompletionPayload<RETAINED, TOOLS> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        Box::new(TestCompletionCursor { original: std::mem::ManuallyDrop::new(Some(self.0)) })
-    }
-
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        test_completion_supported(&self.0).then_some(std::mem::size_of::<TestCompletionCursor<RETAINED, TOOLS>>())
-    }
-
-    fn controlled_retirement_supported() -> bool {
-        true
-    }
-}
-
-impl<const RETAINED: bool, const TOOLS: u8> semio_framework_value::retirement::RetirementCursor for TestCompletionCursor<RETAINED, TOOLS> {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
-        use semio_framework_value::retirement::RetirementStep;
-        if self.original.is_none() {
-            return RetirementStep::Complete;
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return RetirementStep::BudgetExhausted;
-        }
-        drop(self.original.take());
-        RetirementStep::Complete
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.original.is_none()
-    }
-
-    fn next_birth_bytes(&self, _copy: usize) -> Option<usize> {
-        Some(0)
-    }
-
-    fn next_close_byte_demand(&self) -> Option<usize> {
-        Some(0)
-    }
-
-    fn terminal_release_bytes(&self) -> Option<usize> {
-        self.original.is_none().then_some(std::mem::size_of::<Self>())
-    }
-}
-
-impl<const RETAINED: bool, const TOOLS: u8> Drop for TestCompletionCursor<RETAINED, TOOLS> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.original.is_none(), "fixture completion payload reached Drop before it returned");
-        if self.original.is_none() {
-            unsafe { std::mem::ManuallyDrop::drop(&mut self.original) };
-        }
-    }
-}
-//#endregion 📬️TestCompletionRetirement
-
 //#region 🧵️RestartCommandOwner
 const TEST_RESTART_TOOL: &str = "applyCountFromTask";
 const TEST_RESTART_SCHEMA: &str = "semio.test.restart-command.v1";
@@ -434,8 +389,8 @@ fn test_app_command_spec<const RETAINED: bool, const TOOLS: u8>(request: Artifac
     let job = TestAppCommandJob {
         rejected: None,
         admitted: false,
-        residual: Some(TestAppCommandInputs { raw_wire: request.raw_wire, window_config: request.window_config, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, instance_operation_owner: request.instance_operation_owner, output_chunks: request.output_chunks }),
-        metadata: Some(AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed }),
+        residual: Some(TestAppCommandInputs { raw_wire: TestRawLease(request.raw_wire), window_config: request.window_config, interaction_state: semio_framework_value::retirement::shared::SharedControlledRetirement::lease(request.interaction_state), interaction_hover: semio_framework_value::retirement::shared::SharedControlledRetirement::lease(request.interaction_hover), instance_operation_owner: request.instance_operation_owner, output_chunks: request.output_chunks }),
+        metadata: Some(AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, retained: request.retained, authoring_seed: request.authoring_seed }),
         command: Some(request.command),
         snapshot: Some(request.snapshot),
         snapshot_read: Some(request.snapshot_read),
@@ -467,7 +422,8 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
     let law = &fixture["restartAuthority"];
     let items = law["closeItems"].as_u64().unwrap() as usize;
     let body = law["closeBodyBytes"].as_u64().unwrap() as usize;
-    let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await;
+    let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    crate::app::artifact_app_laws::settle_store_constructor(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
     let outcome: Result<(u64, u64, u64, u64, u64, i32), Fault> = async {
         app.bind_instance_id(meta.instance_id).await;
         let contracts = app.tool_public_contracts().await;

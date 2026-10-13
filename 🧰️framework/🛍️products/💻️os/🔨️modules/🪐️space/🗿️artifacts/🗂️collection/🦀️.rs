@@ -13,8 +13,6 @@ extern crate semio_framework_os_kernel as store;
 pub use io::sqlite::snapshot::{register_sqlite_snapshot,SQLITE_SNAPSHOT_DIALECT};
 extern crate semio_framework_value_derive as value_derive;
 
-#[path = "♻️retirement/🦀️.rs"]
-mod retirement;
 
 #[path = "🌲️canonical/🦀️.rs"]
 mod canonical;
@@ -270,7 +268,7 @@ pub fn empty_collection_snapshot(name: &str) -> CollectionSnapshot {
 /// re-parenting is derivation rule 5's hierarchy verb (`move-to-<container>`, not `change-*` — SMO
 /// corrected DKM's first `ChangeFolderParent`/`ChangeEntryFolder` proposal on exactly this point), and
 /// `RenameCollection` replaces `SetName` since the target is the document root's identity field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
 pub enum CollectionMutation {
     RenameCollection {
         new_name: String,

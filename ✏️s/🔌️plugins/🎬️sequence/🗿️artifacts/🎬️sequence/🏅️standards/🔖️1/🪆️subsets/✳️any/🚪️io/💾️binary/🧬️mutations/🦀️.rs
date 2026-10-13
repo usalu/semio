@@ -18,4 +18,3 @@ impl protocol::OpBinary for SequenceMutation {
     }
 }
 }
-pub use mutations_codec::*;

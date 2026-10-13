@@ -96,7 +96,7 @@ pub fn render(snapshot: &TiffSnapshot, config: &TiffEditorConfig, locale: Locale
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &TiffSnapshot, ifd_index: usize) -> semio_framework_plugin::UiAssemblyResult<ImageView> {
-    let page = encode_tiff_page_png(snapshot, ifd_index).map_err(|message| semio_framework_plugin::PluginAssemblyError::new("stdio.tiff.preview", message))?;
+    let page = encode_tiff_page_png(snapshot, ifd_index).map_err(|message| PluginAssemblyError::new("stdio.tiff.preview", message))?;
     Ok(ImageView { width: page.width, height: page.height, mime: "image/png".into(), base64: semio_s_artifact_stdio_contract::base64_standard(&page.bytes) })
 }
 

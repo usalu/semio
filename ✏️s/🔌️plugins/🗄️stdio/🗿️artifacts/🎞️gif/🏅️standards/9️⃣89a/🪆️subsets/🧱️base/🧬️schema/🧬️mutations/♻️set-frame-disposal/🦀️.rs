@@ -16,7 +16,7 @@ pub struct SetFrameDisposal {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-disposal", kind: "set-frame-disposal", record: "SetFrameDisposal" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, disposal } = self;
         protocol::MutationOutcome::new({
             let d = GifFrameDiff { disposal: Some(*disposal), ..Default::default() };
@@ -26,7 +26,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameDisposal {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.frames.get(*index) {
-            Some(f) => vec![GifMutation::SetFrameDisposal(set_frame_disposal::SetFrameDisposal { index: *index, disposal: f.disposal })],
+            Some(f) => vec![GifMutation::SetFrameDisposal(SetFrameDisposal { index: *index, disposal: f.disposal })],
             None => Vec::new(),
         })
     }

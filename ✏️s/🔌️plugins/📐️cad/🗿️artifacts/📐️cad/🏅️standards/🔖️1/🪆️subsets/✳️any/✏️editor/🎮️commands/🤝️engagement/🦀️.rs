@@ -170,7 +170,7 @@ pub mod world_pointer_down {
         // (mirrors the pre-B1 `args.get("position")` extraction — NOT re-wrapped in another
         // `{"position": ...}` object).
         let point_value =
-            (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| semio_framework_value::DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
+            (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
         let commit = runtime.engagement_session.as_mut().and_then(|session| {
             inject_selection(session, &ctx.interaction.ids);
             apply_event(session, "pointer.down", point_value.as_ref()).then(|| (session.state.clone(), session.clone()))
@@ -202,7 +202,7 @@ pub mod world_pointer_move {
         // (updating the session's cursor/preview context) in the window transient only — never an
         // object, never config, never a history row.
         let point_value =
-            (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| semio_framework_value::DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
+            (payload.x.is_some() || payload.y.is_some() || payload.z.is_some()).then(|| DslValue::Array(vec![DslValue::float(payload.x.unwrap_or(0.0)), DslValue::float(payload.y.unwrap_or(0.0)), DslValue::float(payload.z.unwrap_or(0.0))]));
         let mut runtime = runtime_of(cfg, &ctx.window_transient);
         if let Some(session) = runtime.engagement_session.as_mut() {
             apply_event(session, "pointer.move", point_value.as_ref());

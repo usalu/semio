@@ -24,7 +24,7 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for InsertSample {
             sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: sample.clone() }] }, Some(vec![count]))
         })
     }
-    fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
         let Self { track_index, index, .. } = self;
         Ok({
             {

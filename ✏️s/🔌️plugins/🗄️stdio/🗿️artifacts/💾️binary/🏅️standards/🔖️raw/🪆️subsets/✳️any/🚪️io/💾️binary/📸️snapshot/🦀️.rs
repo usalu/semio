@@ -42,4 +42,3 @@ impl store::ArtifactPackReceiving for BinarySnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

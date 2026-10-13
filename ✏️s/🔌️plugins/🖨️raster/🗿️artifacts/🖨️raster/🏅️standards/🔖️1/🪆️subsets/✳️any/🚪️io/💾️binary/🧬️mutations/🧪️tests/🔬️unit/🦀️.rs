@@ -70,7 +70,7 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
                 }),
             })],
             transaction: None,
-        })
+        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
@@ -555,7 +555,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
                 }),
             })],
             transaction: None,
-        })
+        }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
         .await
         .expect("apply");
     let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
@@ -656,7 +656,7 @@ async fn raster_close_diagnosis_direct_store_add_layer_releases_all_owners() {
     let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(RASTER_DOCUMENT_SCHEMA,"close-owner-law",document,None);
     let mut document=store::ArtifactStore::new(envelope,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     document.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
-    document.dispatch(store::ArtifactCommand::Apply{mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer{parent_id:None,index:0,layer:Box::new(crate::standards::v1::subsets::any::schema::create_pixel_layer("Close",512,512))})],transaction:None}).await.unwrap();
+    document.dispatch(store::ArtifactCommand::Apply{mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer{parent_id:None,index:0,layer:Box::new(crate::standards::v1::subsets::any::schema::create_pixel_layer("Close",512,512))})],transaction:None}, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
     store::os_store::test_support::close_plain_test_store(&mut document);
     assert!(document.close_owned_store_terminal_is_empty(),"direct store AddLayer closure must release all owners");
 }

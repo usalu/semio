@@ -16,3 +16,8 @@ impl protocol::MutationKind<PngSnapshot,PngMutation> for ReplaceImage {
     fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native("Replace native image","Natives Bild ersetzen")}
     fn target(&self)->Vec<String>{vec!["image".into()]}
 }
+
+#[cfg(test)]
+pub(crate) fn test_case() -> PngMutation {
+    PngMutation::ReplaceImage(ReplaceImage { image: PngImage { samples: vec![1, 2, 3, 4], ..PngImage::default() } })
+}

@@ -263,4 +263,3 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapsho
 
 
 }
-pub use snapshot_codec::*;

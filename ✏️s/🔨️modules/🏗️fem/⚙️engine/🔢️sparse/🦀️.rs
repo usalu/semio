@@ -621,7 +621,7 @@ impl semio_framework_value::ToValue for Csr {
 }
 
 impl semio_framework_value::FromValue for Csr {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, ValueError> {
         let wire = <CsrWire as semio_framework_value::FromValue>::from_value(value)?;
         Ok(Self::from_owned_parts(wire.n, wire.indptr, wire.indices, wire.vals))
     }

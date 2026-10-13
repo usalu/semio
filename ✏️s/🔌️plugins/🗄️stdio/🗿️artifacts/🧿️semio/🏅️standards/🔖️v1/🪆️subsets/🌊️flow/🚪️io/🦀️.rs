@@ -119,7 +119,7 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("flow") }, store::ArtifactCodec::of::<SemioFlowSnapshot, crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("flow") }, store::ArtifactCodec::of::<SemioFlowSnapshot, crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         #[cfg(feature = "conversion-flow")]
@@ -133,7 +133,7 @@ pub mod derived_composition {
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
             .schemas([crate::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioFlowSnapshot, crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("flow") })
+            .document_codec_bare::<SemioFlowSnapshot, crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("flow") })
             .subset_validators(std::slice::from_ref(validator_entry()))
             .inferences([crate::standards::v1::subsets::flow::schema::inferences::semio_flow_artifact_inference_descriptor()]);
         #[cfg(feature = "conversion-flow")]
@@ -282,7 +282,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec SemioFlowBuilderFacets {
         construction: SemioFlowBuilderConstruction,
         analysis: SemioFlowAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::flow::io::derived_composition::SemioFlowComposerComposition,
+        composition: SemioFlowComposerComposition,
     }
     builder: SemioFlowBuilder,
     analyzer: SemioFlowAnalyzer,

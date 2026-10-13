@@ -11,4 +11,3 @@ impl protocol::OpBinary for JackResultsWindowTransientMutation {
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
 }
 }
-pub use mutations_codec::*;

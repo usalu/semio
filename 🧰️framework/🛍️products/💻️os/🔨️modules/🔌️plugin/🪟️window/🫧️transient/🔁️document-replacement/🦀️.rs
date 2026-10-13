@@ -53,7 +53,7 @@ fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<W
     let step=retired.close_step(grant)?;
     if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!retired.terminal_is_empty(){return Err(plugin_sdk_fault("displaced window transient violated its original grant or terminal ownership"));}
     if step.progress().is_none_or(|progress|progress==RetainedCloneProgress::default()){
-        let bytes=std::mem::size_of::<usize>();
+        let bytes=size_of::<usize>();
         if grant.maximum_copy_bytes<bytes{return Ok(step);}
         *cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
         return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
@@ -64,7 +64,7 @@ fn retire_document_window_registry_step(registries: &mut ArtifactFixedRegistry<W
 
 /// 📏️ Borrows one original generation or its exact final empty registry allocation.
 fn retire_document_window_registry_demands(registries:&ArtifactFixedRegistry<WindowTransientOwnerRegistry>,cursor:usize,body:usize,closing:bool)->Result<RetirementDemand,ValueError>{
-    if let Some((_,generation))=registries.next_id_from(cursor){let original=registries.get(generation).expect("selected original window transient generation remains owned");return if original.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<WindowTransientOwnerRegistry>(),depth:1,..Default::default()})}else{original.retirement_demands(body)};}
+    if let Some((_,generation))=registries.next_id_from(cursor){let original=registries.get(generation).expect("selected original window transient generation remains owned");return if original.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<WindowTransientOwnerRegistry>(),depth:1,..Default::default()})}else{original.retirement_demands(body)};}
     let release_bytes=if closing{registries.empty_backing_byte_demand().unwrap_or(0)}else{0};
     Ok(RetirementDemand{release_bytes,depth:usize::from(release_bytes!=0),..Default::default()})
 }

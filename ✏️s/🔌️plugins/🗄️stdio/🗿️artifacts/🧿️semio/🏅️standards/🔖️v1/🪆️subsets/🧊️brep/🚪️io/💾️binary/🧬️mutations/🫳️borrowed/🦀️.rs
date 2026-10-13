@@ -106,5 +106,5 @@ fn at<'a>(root: &'a dyn Borrowed, path: &[usize]) -> Result<&'a dyn Borrowed, se
 
 impl ArtifactCanonicalJson for SemioBrepSnapshot {
     fn canonical_json_node(&self, path: &[usize]) -> Result<Node<'_>, semio_framework_value::ValueError> { Ok(at(self, path)?.node()) }
-    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> { at(self, path)?.key(index).map(Into::into) }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<store::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> { at(self, path)?.key(index).map(Into::into) }
 }

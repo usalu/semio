@@ -15,4 +15,3 @@ impl protocol::OpBinary for ShootingConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

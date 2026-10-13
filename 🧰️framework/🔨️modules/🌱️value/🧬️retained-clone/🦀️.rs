@@ -133,7 +133,7 @@ impl RetainedCloneGrant {
 }
 impl crate::ToValue for RetainedCloneGrant {
     fn to_value(&self)->crate::DslValue{
-        let fields=self.wire_fields();let bytes=5*std::mem::size_of::<(String,crate::DslValue)>()+fields.iter().map(|(name,_)|name.len()).sum::<usize>();
+        let fields=self.wire_fields();let bytes=5*size_of::<(String,crate::DslValue)>()+fields.iter().map(|(name,_)|name.len()).sum::<usize>();
         let mut accepted=|_|true;self.to_value_controlled(&mut crate::NativeEncodeControl::new(bytes,&mut accepted)).expect("fixed canonical grant encoding")
     }
     fn to_value_controlled(&self,control:&mut crate::NativeEncodeControl<'_>)->Result<crate::DslValue,crate::ValueError>{
@@ -209,7 +209,7 @@ impl RetainedCloneProgress {
 }
 impl crate::ToValue for RetainedCloneProgress {
     fn to_value(&self)->crate::DslValue{
-        let fields=self.wire_fields();let bytes=4*std::mem::size_of::<(String,crate::DslValue)>()+fields.iter().map(|(name,_)|name.len()).sum::<usize>();
+        let fields=self.wire_fields();let bytes=4*size_of::<(String,crate::DslValue)>()+fields.iter().map(|(name,_)|name.len()).sum::<usize>();
         let mut accepted=|_|true;self.to_value_controlled(&mut crate::NativeEncodeControl::new(bytes,&mut accepted)).expect("fixed canonical progress encoding")
     }
     fn to_value_controlled(&self,control:&mut crate::NativeEncodeControl<'_>)->Result<crate::DslValue,crate::ValueError>{

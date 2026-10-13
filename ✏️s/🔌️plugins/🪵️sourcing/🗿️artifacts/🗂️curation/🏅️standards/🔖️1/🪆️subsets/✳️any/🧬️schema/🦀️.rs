@@ -201,9 +201,9 @@ pub fn box_parts(recipe: &GeometryRecipe) -> Option<Vec<([f64; 3], [f64; 3])>> {
 }
 
 /// 🥽️ Public mesh route when geometry references a delivered GLB asset.
-pub fn geometry_mesh_url(recipe: &crate::GeometryRecipe) -> Option<&str> {
+pub fn geometry_mesh_url(recipe: &GeometryRecipe) -> Option<&str> {
     match recipe {
-        crate::GeometryRecipe::Glb { url, .. } => Some(url.as_str()),
+        GeometryRecipe::Glb { url, .. } => Some(url.as_str()),
         _ => None,
     }
 }

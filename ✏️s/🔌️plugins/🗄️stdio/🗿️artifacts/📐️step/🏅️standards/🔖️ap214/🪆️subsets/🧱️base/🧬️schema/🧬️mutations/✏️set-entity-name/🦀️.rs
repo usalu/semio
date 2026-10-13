@@ -25,7 +25,7 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetEntityName {
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
         let Self { id, .. } = self;
         Ok(match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) => vec![StepMutation::SetEntityName(set_entity_name::SetEntityName { id: *id, name: e.name.clone() })],
+            Some(e) => vec![StepMutation::SetEntityName(SetEntityName { id: *id, name: e.name.clone() })],
             None => Vec::new(),
         })
     }

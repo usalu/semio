@@ -1741,7 +1741,7 @@ impl<E:Copy+Send+'static> semio_framework_value::retirement::RetireOwned for Cor
  fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
  fn controlled_retirement_supported()->bool{true}
- fn retirement_element_copy_bytes()->usize{std::mem::size_of::<Self>()}
+ fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
 impl semio_framework_value::retirement::RetireOwned for Node{
  fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};let Self{id,center,radius,width,height,shape,draggable,kind,label,properties}=self;sequence(vec![deferred(id),deferred((center.x,center.y)),deferred(radius),deferred(width),deferred(height),deferred(shape),deferred(draggable),deferred(kind),deferred(label),deferred(properties)])}

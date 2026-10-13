@@ -3,10 +3,10 @@
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("create-artifact", crate::standards::v1::subsets::any::io::text::mutations::create_artifact::TEXT_OPCODE),
-    ("delete-artifact", crate::standards::v1::subsets::any::io::text::mutations::delete_artifact::TEXT_OPCODE),
-    ("rename-artifact", crate::standards::v1::subsets::any::io::text::mutations::rename_artifact::TEXT_OPCODE),
-    ("touch-artifact", crate::standards::v1::subsets::any::io::text::mutations::touch_artifact::TEXT_OPCODE),
+    ("create-artifact", create_artifact::TEXT_OPCODE),
+    ("delete-artifact", delete_artifact::TEXT_OPCODE),
+    ("rename-artifact", rename_artifact::TEXT_OPCODE),
+    ("touch-artifact", touch_artifact::TEXT_OPCODE),
 ];
 
 //#region 📖️SemioGrammar

@@ -9,7 +9,7 @@
 
 use crate::NoteDiff;
 use crate::NoteSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations

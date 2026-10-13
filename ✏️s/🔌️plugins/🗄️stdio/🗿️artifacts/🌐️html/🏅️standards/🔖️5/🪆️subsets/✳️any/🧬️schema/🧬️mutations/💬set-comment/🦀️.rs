@@ -14,7 +14,7 @@ pub struct SetComment {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comment", kind: "set-comment", record: "SetComment" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
+    fn diff(&self, _base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         let Self { path, text } = self;
         protocol::MutationOutcome::new(diff_at_path(path, HtmlNodeDiff::Comment { text: Some(text.clone()) }))
     }
@@ -25,7 +25,7 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetComment {
                 Ok(HtmlNode::Comment { text }) => text.clone(),
                 _ => String::new(),
             };
-            vec![HtmlMutation::SetComment(set_comment::SetComment { path: path.clone(), text: old })]
+            vec![HtmlMutation::SetComment(SetComment { path: path.clone(), text: old })]
         })
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

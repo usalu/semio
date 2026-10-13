@@ -59,4 +59,4 @@ impl store::ArtifactPack for CadSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

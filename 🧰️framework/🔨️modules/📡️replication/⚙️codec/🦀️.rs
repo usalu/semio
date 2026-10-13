@@ -432,8 +432,8 @@ pub fn deflate_compress_controlled(raw:&[u8],control:&mut crate::value::native_e
     {
         struct Admission<'a,'b>{control:&'a mut crate::value::native_encoding::NativeEncodeControl<'b>,phase:Option<semio_framework_deflate::DeflateEncodePhase>,completed:usize,total:usize}
         impl semio_framework_deflate::DeflateEncodeControl for Admission<'_,'_>{
-            fn admit(&mut self,bytes:usize)->Result<(),crate::value::ValueError>{self.control.charge(bytes)}
-            fn checkpoint(&mut self,event:semio_framework_deflate::DeflateEncodeProgress)->Result<(),crate::value::ValueError>{if self.phase!=Some(event.phase)||self.total!=event.total||event.completed<self.completed{self.control.begin_stage(event.total)?;self.phase=Some(event.phase);self.total=event.total;self.completed=0;}let advance=event.completed.checked_sub(self.completed).ok_or_else(||crate::value::ValueError::new(crate::value::ValueRefusalKind::InvariantViolated,"Deflate output progress regressed"))?;self.control.advance(advance)?;self.completed=event.completed;self.control.checkpoint()}
+            fn admit(&mut self,bytes:usize)->Result<(),ValueError>{self.control.charge(bytes)}
+            fn checkpoint(&mut self,event:semio_framework_deflate::DeflateEncodeProgress)->Result<(),ValueError>{if self.phase!=Some(event.phase)||self.total!=event.total||event.completed<self.completed{self.control.begin_stage(event.total)?;self.phase=Some(event.phase);self.total=event.total;self.completed=0;}let advance=event.completed.checked_sub(self.completed).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Deflate output progress regressed"))?;self.control.advance(advance)?;self.completed=event.completed;self.control.checkpoint()}
         }
         control.scoped_stage(|control|{semio_framework_deflate::deflate_controlled(raw,&mut Admission{control,phase:None,completed:0,total:0})}).map_err(PackRefusal::ValueRefusal)
     }
@@ -502,8 +502,8 @@ impl DeflateRetainedCursor {
     pub fn retirement_demands(&self) -> semio_framework_value::RetirementDemand {
         use semio_framework_value::RetirementDemand;
         if self.closed { return Default::default(); }
-        if self.pending.is_some() { return RetirementDemand { copy_bytes: std::mem::size_of::<u8>(), depth: 1, ..Default::default() }; }
-        self.inflater.as_ref().map_or(RetirementDemand { depth: 1, ..Default::default() }, |owner| if owner.retained_terminal_is_empty() { RetirementDemand { copy_bytes: std::mem::size_of::<semio_framework_deflate::Inflater>(), depth: 1, ..Default::default() } } else { owner.retained_retirement_demands() })
+        if self.pending.is_some() { return RetirementDemand { copy_bytes: size_of::<u8>(), depth: 1, ..Default::default() }; }
+        self.inflater.as_ref().map_or(RetirementDemand { depth: 1, ..Default::default() }, |owner| if owner.retained_terminal_is_empty() { RetirementDemand { copy_bytes: size_of::<semio_framework_deflate::Inflater>(), depth: 1, ..Default::default() } } else { owner.retained_retirement_demands() })
     }
     pub fn try_new(expected: u64, limit: u64, maximum_allocation_bytes: usize) -> Result<Self, PackRefusal> {
         if expected > limit {
@@ -628,26 +628,26 @@ impl DeflateRetainedCursor {
         self.inflater.as_ref().and_then(semio_framework_deflate::Inflater::next_retained_release_allocation_bytes)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_deflate::RetainedInflateCloseStep {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> RetainedInflateCloseStep {
         if self.closed {
-            return semio_framework_deflate::RetainedInflateCloseStep::Complete;
+            return RetainedInflateCloseStep::Complete;
         }
         if maximum_items == 0 && maximum_bytes == 0 {
-            return semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
         if self.pending.is_some() {
             if maximum_items == 0 {
-                return semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
             }
             self.pending = None;
-            return semio_framework_deflate::RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            return RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         let step = self
             .inflater
             .as_mut()
             .expect("retained deflate close owner")
             .close_retained_step(maximum_items, maximum_bytes);
-        if step == semio_framework_deflate::RetainedInflateCloseStep::Complete {
+        if step == RetainedInflateCloseStep::Complete {
             drop(self.inflater.take());
             self.complete = true;
             self.closed = true;

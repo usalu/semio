@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use crate::{GisMapSnapshot, MapFeature};
-use protocol::{Mutation, MutationDiff, OpBinary};
+use protocol::{Mutation, OpBinary};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
 struct GisMapStoreInitializationAuthority {
@@ -709,18 +709,18 @@ impl GisMapStoreInitializationAuthority {
         }
         if let Some(envelope) = self.envelope.as_ref() {
             let Some(owners) = self.owners.as_ref() else {
-                return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), capacity_bytes: store::bounded_artifact_store_owners_birth_bytes::<GisMapSnapshot, GisMapMutation>(), depth: 1, ..Default::default() });
+                return Ok(RetirementDemand { copy_bytes: size_of::<Option<store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), capacity_bytes: store::bounded_artifact_store_owners_birth_bytes::<GisMapSnapshot, GisMapMutation>(), depth: 1, ..Default::default() });
             };
             if !owners.constructor_is_complete() {
                 return Self::nested(owners.constructor_demands(body)?);
             }
             let mut demand = Self::nested(owners.uninstalled_envelope_retirement_demands(envelope))?;
-            demand.copy_bytes = demand.copy_bytes.checked_add(std::mem::size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS initializer envelope placement overflow"))?;
+            demand.copy_bytes = demand.copy_bytes.checked_add(size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS initializer envelope placement overflow"))?;
             return Ok(demand);
         }
         if let Some(owners) = self.owners.as_ref() {
             return if owners.uninstalled_owners_terminal_is_empty() {
-                Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), depth: 1, ..Default::default() })
+                Ok(RetirementDemand { copy_bytes: size_of::<Option<store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), depth: 1, ..Default::default() })
             } else {
                 Self::nested(owners.uninstalled_owners_demands(body)?)
             };
@@ -782,7 +782,7 @@ impl GisMapStoreInitializationAuthority {
         }
         if let Some(retirement) = self.envelope_retirement.as_mut() {
             if retirement.terminal_is_empty() {
-                let released = std::mem::size_of_val(retirement.as_ref());
+                let released = size_of_val(retirement.as_ref());
                 drop(self.envelope_retirement.take());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: released, ..empty }));
             }
@@ -810,7 +810,7 @@ impl GisMapStoreInitializationAuthority {
             if !owners.constructor_is_complete() {
                 return owners.admit_constructor(child).map(RetainedCloneStep::Progress).map_err(|(error, progress)| error.with_retained_progress(progress));
             }
-            let placement = std::mem::size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>();
+            let placement = size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>();
             let child = RetainedCloneGrant { maximum_copy_bytes: child.maximum_copy_bytes - placement, ..child };
             let owners = self.owners.take().expect("retained initializer owner catalog");
             let envelope = self.envelope.take().expect("retained initializer envelope");

@@ -117,14 +117,14 @@ fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: 
     owner.record_progress(counting.progress())?;
     let extent = extent?;
     let fault = owner.receive::<MediaFaultReceiving, Fault>(|slot, native, wallet| {
-        let transfer = std::mem::size_of::<Option<MediaArtifactError>>();
+        let transfer = size_of::<Option<MediaArtifactError>>();
         wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: transfer, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 2 })?;
         native.checkpoint()?;
         *slot = Some(MediaFaultReceiving { source: source.take(), fault: None, parameters: (String::new(), String::new(), String::new(), String::new()), entries: Vec::new() });
         wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: transfer, ..Default::default() })?;
         let state = slot.as_mut().unwrap();
-        let scope_bytes = std::mem::size_of::<FaultScope>();
-        wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: std::mem::size_of::<Option<Fault>>(), maximum_capacity_bytes: scope_bytes, maximum_release_bytes: 0, maximum_depth: 2 })?;
+        let scope_bytes = size_of::<FaultScope>();
+        wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Option<Fault>>(), maximum_capacity_bytes: scope_bytes, maximum_release_bytes: 0, maximum_depth: 2 })?;
         native.checkpoint()?;
         native.charge(scope_bytes)?;
         state.fault = Some(Fault {
@@ -139,7 +139,7 @@ fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: 
             params: None,
             retryable: false,
         });
-        wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Option<Fault>>(), retained_capacity_bytes: scope_bytes, released_bytes: 0 })?;
+        wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: size_of::<Option<Fault>>(), retained_capacity_bytes: scope_bytes, released_bytes: 0 })?;
         let fault = state.fault.as_mut().unwrap();
         wallet.copy_encode_text_into(native, code, &mut fault.code.0, 2)?;
         wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: extent, maximum_capacity_bytes: extent, maximum_release_bytes: 0, maximum_depth: 2 })?;
@@ -163,18 +163,18 @@ fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: 
             wallet.copy_encode_text_into(native, "found", &mut state.parameters.2, 2)?;
             wallet.copy_encode_text_into(native, found, &mut state.parameters.3, 2)?;
             wallet.allocate_encode_vec_into(native, 2, &mut state.entries, 2)?;
-            let transfer = std::mem::size_of::<(String, String, String, String)>();
-            let params_bytes = std::mem::size_of::<FaultParams>();
-            wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: transfer + std::mem::size_of::<Vec<(String, String)>>(), maximum_capacity_bytes: params_bytes, maximum_release_bytes: 0, maximum_depth: 2 })?;
+            let transfer = size_of::<(String, String, String, String)>();
+            let params_bytes = size_of::<FaultParams>();
+            wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: transfer + size_of::<Vec<(String, String)>>(), maximum_capacity_bytes: params_bytes, maximum_release_bytes: 0, maximum_depth: 2 })?;
             native.checkpoint()?;
             native.charge(params_bytes)?;
             let (expected_key, expected, found_key, found) = std::mem::take(&mut state.parameters);
             state.entries.push((expected_key, expected));
             state.entries.push((found_key, found));
             fault.params = Some(Box::new(FaultParams(std::mem::take(&mut state.entries))));
-            wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: transfer + std::mem::size_of::<Vec<(String, String)>>(), retained_capacity_bytes: params_bytes, released_bytes: 0 })?;
+            wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: transfer + size_of::<Vec<(String, String)>>(), retained_capacity_bytes: params_bytes, released_bytes: 0 })?;
         }
-        let transfer = std::mem::size_of::<Option<Fault>>();
+        let transfer = size_of::<Option<Fault>>();
         wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: transfer, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 2 })?;
         native.checkpoint()?;
         wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: transfer, ..Default::default() })?;

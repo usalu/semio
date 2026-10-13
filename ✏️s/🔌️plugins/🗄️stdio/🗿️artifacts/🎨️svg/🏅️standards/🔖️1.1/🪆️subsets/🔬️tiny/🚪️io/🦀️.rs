@@ -177,18 +177,18 @@ pub mod derived_analysis {
     use crate::standards::v1_1::subsets::base::io::SvgAnalyzer as SvgAnyAnalyzer;
     pub use crate::standards::v1_1::subsets::base::io::SvgParts;
     use semio_framework_diagnostic::Diagnostic;
-use semio_framework_diagnostic::FaultCode;
+#[cfg(test)] use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
-use semio_framework_diagnostic::TextSpan;
+#[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use crate::schema::snapshot::{SvgAttributeValue, SvgAttr, SvgNode};
+    #[cfg(test)] use crate::schema::snapshot::{SvgAttributeValue, SvgAttr, SvgNode};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") };
 
     use crate::standards::v1_1::subsets::tiny::schema::conformance::*;
     /// 🚦️ Binds physical SQLite progress to pure owned profile validation.
-    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{crate::standards::v1_1::subsets::tiny::schema::conformance::check_svg_tiny_conformance_with(snapshot,&mut |completed,total|control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,completed,total))}
+    pub fn check_svg_tiny_conformance_controlled(snapshot:&SvgSnapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_value::ValueError>{check_svg_tiny_conformance_with(snapshot,&mut |completed,total|control.checkpoint(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,completed,total))}
 
     //#region 🔖️Analyzer
     /// 🧐️ Analyzes `stdio.svg` (1.1/🔬️tiny): delegates the real parse to the ✳️any subset's analyzer
@@ -231,7 +231,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec SvgTinyBuilderFacets {
         construction: SvgTinyBuilderConstruction,
         analysis: SvgTinyAnalyzerAnalysis,
-        composition: super::io::derived_composition::SvgTinyComposerComposition,
+        composition: SvgTinyComposerComposition,
     }
     builder: SvgTinyBuilder,
     analyzer: SvgTinyAnalyzer,

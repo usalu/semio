@@ -40,7 +40,7 @@ async fn node_graph_viewport_writes_config_not_mutations() {
     let result = app
         .dispatch_typed(
             EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
-            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") },
+            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
         )
         .await
         .expect("viewport");
@@ -77,8 +77,8 @@ async fn node_graph_edit_delete_removes_nodes_and_incident_edges() {
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_refuses_an_unknown_operation_and_an_empty_array_emits_nothing() {
     let mut app = math_app().await;
-    assert!(app.dispatch_typed(node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local")).await.is_err(), "a row outside the shared vocabulary refuses the batch");
-    let result = app.dispatch_typed(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("empty array");
+    assert!(app.dispatch_typed(node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.is_err(), "a row outside the shared vocabulary refuses the batch");
+    let result = app.dispatch_typed(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("empty array");
     assert!(result.mutations.is_empty());
 }
 
@@ -91,7 +91,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
         EquationCommand::AddNode(AddNode { x: 1.0, y: 2.0 }),
         |app| app.snapshot().expect("projection").graph.nodes.len(),
         before,
-        before + 1,
+        before + 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }

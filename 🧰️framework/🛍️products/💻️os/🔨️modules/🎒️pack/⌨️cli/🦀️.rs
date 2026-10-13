@@ -202,7 +202,7 @@ async fn print_manifest(manifest: &crate::os_pack::Manifest, footer: &crate::os_
 /// 🔍️ `pack inspect <file>` — prints header/footer/manifest/segment-span text; never
 /// panics on corrupt input, degrading to a forward-scan recovery summary if the manifest fails
 /// to load.
-async fn cmd_inspect(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_inspect(rest: &[String], context: &control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack inspect <file>");
@@ -270,7 +270,7 @@ async fn cmd_inspect(rest: &[String], context: &crate::os_pack::control::Command
 /// 🛡️ `pack verify <file> [--level=trusted|standard|full]` — opens the manifest, reads
 /// the document body, and reads every chunk at the requested `VerificationLevel`; prints `OK`/
 /// `FAIL: <reason>` and never panics on corrupt input.
-async fn cmd_verify(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_verify(rest: &[String], context: &control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack verify <file> [--level=trusted|standard|full]");
@@ -316,7 +316,7 @@ async fn cmd_verify(rest: &[String], context: &crate::os_pack::control::CommandC
 //#region 🔖️Hash
 /// #⃣ `pack hash <file>` — prints the footer's `content_hash` hex, reading only the
 /// trailing footer bytes via `crate::os_pack::content_hash`.
-async fn cmd_hash(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_hash(rest: &[String], context: &control::CommandContext) -> i32 {
     let (positional, _flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack hash <file>");
@@ -345,7 +345,7 @@ async fn cmd_hash(rest: &[String], context: &crate::os_pack::control::CommandCon
 //#region 🔖️ToDsl
 /// 📤️ `pack to-dsl <file> --schema <name>` — decodes against a registry spec and prints
 /// canonical `Document`-mode DSL text to stdout.
-async fn cmd_to_dsl(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_to_dsl(rest: &[String], context: &control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack to-dsl <file> --schema <name>");
@@ -390,7 +390,7 @@ async fn cmd_to_dsl(rest: &[String], context: &crate::os_pack::control::CommandC
 //#region 🔖️FromDsl
 /// 📥️ `pack from-dsl <file> --schema <name> --out <file>` — parses `<file>`'s DSL text
 /// against a registry spec and encodes+writes the resulting pack file atomically to `--out`.
-async fn cmd_from_dsl(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_from_dsl(rest: &[String], context: &control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     let Some(path) = positional.first() else {
         eprintln!("usage: pack from-dsl <file> --schema <name> --out <file>");
@@ -465,7 +465,7 @@ async fn diff_records(a: &semio_framework_dsl_record::RecordValue, b: &semio_fra
 /// 🌗️ `pack diff <file-a> <file-b> [--schema <name>]` — structural `RecordValue` diff
 /// when `--schema` resolves, else a raw content-hash/length/first-mismatch summary. Exit code
 /// `0` when identical, `1` when they differ, `2` on a usage/resolution error.
-async fn cmd_diff(rest: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+async fn cmd_diff(rest: &[String], context: &control::CommandContext) -> i32 {
     let (positional, flags) = parse_args(rest).await;
     if positional.len() < 2 {
         eprintln!("usage: pack diff <file-a> <file-b> [--schema <name>]");
@@ -560,7 +560,7 @@ async fn print_help() {
 /// 🚪️ The CLI's single testable entry point — `main` is a thin `std::process::exit`
 /// wrapper around this. Never panics on malformed input; every subcommand handler maps errors
 /// to a printed message and a non-zero exit code instead.
-pub async fn main_impl(args: &[String], context: &crate::os_pack::control::CommandContext) -> i32 {
+pub async fn main_impl(args: &[String], context: &control::CommandContext) -> i32 {
     let Some((command, rest)) = args.split_first() else {
         print_help().await;
         return 2;

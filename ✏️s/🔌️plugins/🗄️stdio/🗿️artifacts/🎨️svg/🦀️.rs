@@ -11,7 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-#[cfg(feature = "component-app-assembly")]
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
 pub(crate) use semio_s_artifact_stdio_contract::impl_serde_op_codec;
 
@@ -121,9 +120,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .composers(standards::v1_1::subsets::base::io::io_registry::entries())
         .subset_validators(declared_subset_validators())
         .languages(pilot_languages())
-        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_artifact_reference::StandardId("1.1"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_artifact_reference::StandardId("1.1"), subset: semio_framework_artifact_reference::SubsetId("tiny") })
-        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework_artifact_reference::StandardId("1.1"), subset: semio_framework_artifact_reference::SubsetId("basic") })
+        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") })
+        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("tiny") })
+        .document_codec_bare::<SvgSnapshot, SvgMutation>(STDIO_SVG_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("basic") })
         .try_build()
 }
 
@@ -386,7 +385,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -493,7 +491,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

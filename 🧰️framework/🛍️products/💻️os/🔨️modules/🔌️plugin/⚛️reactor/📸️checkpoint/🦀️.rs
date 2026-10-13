@@ -95,7 +95,7 @@ pub(crate) const RESTORE_DOCUMENT_LOAD_OPERATION: u64 = 1 << 62;
 pub(crate) const RESTORE_AUTHORITY_BYTES: usize = 1 << 20;
 
 /// 🫴️ Admits the original decoded actor text through the same decoder and caller wallet before its shared frame is born.
-pub(crate) fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<crate::protocol::ActorId,semio_framework_value::ValueError>{
+pub(crate) fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<protocol::ActorId,semio_framework_value::ValueError>{
     use semio_framework_value::{SharedUtf8,ValueError,ValueRefusalKind};
     if source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"restored actor requires its original decoded text"))}
     let demand=SharedUtf8::admission_demand();
@@ -107,7 +107,7 @@ pub(crate) fn admit_restored_actor(source:&mut Option<String>,original:&mut semi
     original.native().charge(demand.capacity_bytes)?;
     let text=source.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"restored actor lost original decoded text"))?;
     match SharedUtf8::admit(text,grant){
-        Ok((text,progress))=>{original.record_progress(progress)?;Ok(crate::protocol::ActorId(text))}
+        Ok((text,progress))=>{original.record_progress(progress)?;Ok(protocol::ActorId(text))}
         Err((error,text))=>{*source=Some(text);Err(error)}
     }
 }

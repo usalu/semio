@@ -172,7 +172,7 @@ fn quoted(demand:RetirementDemand,items:usize)->RetainedCloneGrant {
 
 struct PausedPartitionDisposer {
     paused: Arc<std::sync::atomic::AtomicBool>,
-    inner: Option<Box<dyn ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>>>>,
+    inner: Box<dyn ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>>>,
 }
 
 impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPartitionDisposer {
@@ -189,8 +189,7 @@ impl ArtifactOwnedDisposer<WindowTransientStore<ReplacementWindow>> for PausedPa
         !self.paused.load(std::sync::atomic::Ordering::Acquire) && self.inner.terminal_is_empty(owner)
     }
 
-    fn terminal_is_empty(&self,_:&WindowTransientStore<ReplacementWindow>)->bool {self.inner.is_none() && !self.paused.load(std::sync::atomic::Ordering::Acquire)}
-    fn terminal_frame_release_bytes(&self)->Option<usize>{self.inner.is_none().then_some(std::mem::size_of::<Self>())}
+    fn terminal_frame_release_bytes(&self) -> Option<usize> { self.inner.terminal_frame_release_bytes().map(|inner| inner + std::mem::size_of::<Self>()) }
 }
 #[test]
 fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {

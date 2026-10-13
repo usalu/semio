@@ -95,7 +95,7 @@ fn a_paste_gesture_is_a_create_part_per_clone_then_a_connect_grips_per_fastener(
 #[test]
 fn a_painted_volume_is_one_create_target_volume_and_a_flag_gesture_on_it_is_one_change_row() {
     let before = base();
-    let create = commands::add_target_volume::add_target_volume_mutation("target-volume-1".into(), [1.1, 2.0, 2.9], 1.0, [2, 2, 2]);
+    let create = crate::editor::puzzle5d::commands::add_target_volume::add_target_volume_mutation("target-volume-1".into(), [1.1, 2.0, 2.9], 1.0, [2, 2, 2]);
     let (after, restored) = replay(&before, std::slice::from_ref(&create));
     assert_eq!(after.target_volumes.len(), 1);
     assert_eq!(restored, before);

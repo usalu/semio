@@ -8,23 +8,12 @@ fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {
     SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() }
 }
 
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn flow_snapshot(node_ids: &[&str]) -> SemioSnapshot {
-    SemioSnapshot {
-        subset: SemioSubsetSnapshot::Flow(SemioFlowSnapshot {
-            nodes: node_ids.iter().map(|id| FlowNode { id: (*id).into(), kind: "task".into(), label: (*id).into(), params: vec![], position: SemioPoint2 { x: 0.0, y: 0.0 } }).collect(),
-            ..Default::default()
-        }),
-        ..Default::default()
-    }
-}
-
 /// 🧪️ diff_codec_text_binary_roundtrip_law across `NoChange`, a same-kind nested diff (one
-/// per subset kind, proving the dispatch table's all 13 tags), and `Replace`.
+/// per subset kind, proving the dispatch table's all 13 tags), and `Rejected`.
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
     let nested = SemioDiff::Audio(crate::standards::v1::subsets::audio::schema::diff::SemioAudioDiff { sample_rate: Some(48_000), ..Default::default() });
-    let replace = SemioDiff::Replace(Box::new(flow_snapshot(&["n1"])));
+    let replace = SemioDiff::Rejected(protocol::MutationApplyError::new("mutation.apply.subset-change", "a subset-kind change is a document load"));
     for d in [SemioDiff::NoChange, nested, replace] {
         let printed = d.print_diff();
         assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

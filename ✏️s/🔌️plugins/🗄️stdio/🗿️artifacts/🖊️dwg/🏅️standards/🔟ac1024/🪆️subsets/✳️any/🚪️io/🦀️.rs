@@ -3082,7 +3082,7 @@ fn parse_product_information(rendered: &str) -> Result<crate::schema::snapshot::
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_application_history(bytes: &[u8]) -> Result<crate::schema::snapshot::DwgApplicationHistory, String> {
-    use crate::schema::snapshot::{DwgApplicationHistory, DwgApplicationProperty, DwgApplicationPropertyKind, DwgProductInformation};
+    use crate::schema::snapshot::DwgApplicationHistory;
     let mut cursor = DwgSectionCursor::new(bytes);
     let history_identifier_one = decode_digest128(cursor.take(16)?);
     let history_identifier_two = decode_digest128(cursor.take(16)?);
@@ -11677,7 +11677,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec DwgBuilderFacets {
         construction: DwgBuilderConstruction,
         analysis: DwgAnalyzerAnalysis,
-        composition: crate::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition,
+        composition: DwgComposerComposition,
     }
     builder: DwgBuilder,
     analyzer: DwgAnalyzer,

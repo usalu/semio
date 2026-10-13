@@ -206,7 +206,7 @@ pub(crate) mod context {
         let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         view_state.active_utility_id = Some(active_utility_id.into());
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        let mut result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(command, &action_meta)).expect("dispatch");
+        let mut result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("dispatch");
         let receipt = settle(app);
         result.requested_effects.extend(receipt.effects.iter().cloned());
         (result, receipt)
@@ -219,7 +219,7 @@ pub(crate) mod context {
     /// 🏁️ The settling action bridge — same reason as [`settled_dispatch`]: the host verb's retained
     /// operation publishes after the call answers.
     pub fn settled_action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action(action, args, &meta("local"))).expect("action dispatch");
+        let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action(action, args, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("action dispatch");
         // 🛂️ A framework-reserved verb (`interactionSelect`, `interactionHover`, undo/redo, …) is only
         // ADMITTED by `handle_action` — it finishes in a reserved job handed back as an
         // `Effect::SpawnJob`. Without driving that job home the selection never lands in the
@@ -233,7 +233,7 @@ pub(crate) mod context {
     /// 🏁️ Drives every pending typed operation of the bound instance to its publication, the way the
     /// plugin host's continuation does.
     pub fn settle(app: &mut Process3dRawApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id)).expect("settle the typed operation")
+        ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("settle the typed operation")
     }
     
     /// 🧾️ Whether a settled publication reached the DOCUMENT lane — the mounted app's observable
@@ -645,7 +645,7 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
         ));
     }
     let mut checkpoint = [0u8; 40];
-    assert_eq!(uninterrupted.checkpoint(&mut checkpoint).expect("checkpoint"), checkpoint.len());
+    assert_eq!(uninterrupted.checkpoint(&mut checkpoint, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("checkpoint"), checkpoint.len());
     let mut wrong_tool = Process3dResumableCommandWork::new("engagementInput", extent);
     assert!(wrong_tool.restore(&checkpoint).is_err(), "a config command must not accept another tool's checkpoint");
     let mut replayed = Process3dResumableCommandWork::new("setContributions", extent);
@@ -1020,7 +1020,7 @@ async fn undo_after_add_step_restores_the_steps_handle() {
         Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }),
         |app| app.snapshot().expect("snapshot").steps == before,
         true,
-        false,
+        false,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -1033,7 +1033,7 @@ async fn undo_after_add_workshop_machine_restores_previous_machine_count() {
         Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }),
         |app| app.snapshot().expect("snapshot").workshop.machines.len(),
         11,
-        12,
+        12,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -1454,7 +1454,7 @@ fn the_real_contributions_push_passes_the_host_configuration_output_gate() {
 fn settle_member_less_archive(app: &mut context::Process3dRawApp, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
     PluginApp::begin_document_archive_load(app, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     for _ in 0..200_000 {
-        let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(app, operation)).expect("archive status");
+        let polled = ::semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(app, operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             PluginApp::acknowledge_document_archive_load(app, operation).expect("archive acknowledgement");
             return polled;
@@ -1478,7 +1478,7 @@ fn published_example_load(app: &mut context::Process3dRawApp, example: &str) -> 
             break;
         }
         PluginApp::maintenance_step(app, 1, 4_096).expect("example maintenance step");
-        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication()).expect("example publication");
+        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("example publication");
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).expect("example result ack"));
         }

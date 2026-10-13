@@ -6,7 +6,6 @@ use semio_s_artifact_trinity_jack::ast::{Pattern as JackPattern, PatternEdge, Pa
 use semio_s_artifact_trinity_jack::executor::execute;
 use semio_s_artifact_trinity_jack::language_service::parse;
 use semio_s_artifact_trinity_jack::Graph;
-use std::collections::BTreeMap;
 #[path="🌳️typed/🗂️layout/🦀️.rs"]
 pub mod layout;
 pub use layout::RuleLayout;
@@ -24,9 +23,9 @@ pub struct RewritingArtifact {
     #[child(kind="s.stdio.semio")]
     pub working_graph: semio_s_artifact_trinity_jack::JackSnapshot,
     #[state(artifact)]
-    pub lhs: crate::standards::v1::subsets::any::schema::Lhs,
+    pub lhs: Lhs,
     #[state(artifact)]
-    pub rhs: crate::standards::v1::subsets::any::schema::Rhs,
+    pub rhs: Rhs,
     #[state(artifact)]
     pub parameter_bindings: semio_framework_graph::manifest::PropertyBag,
     #[state(artifact)]
@@ -155,29 +154,29 @@ pub struct RuleQueryResult {
 
 //#region 📐️RuleGraphSlots
 /// 📐️ The LHS window's semantic nodes with their default positions: the match, then the WHERE clause when the rule has one.
-pub fn lhs_graph_slots(lhs: &Lhs) -> Vec<(String, crate::LayoutPoint)> {
-    let mut slots = vec![("lhs-match".to_string(), crate::LayoutPoint { x: 0.0, y: 0.0 })];
+pub fn lhs_graph_slots(lhs: &Lhs) -> Vec<(String, LayoutPoint)> {
+    let mut slots = vec![("lhs-match".to_string(), LayoutPoint { x: 0.0, y: 0.0 })];
     if lhs.where_clause.as_deref().is_some_and(|clause| !clause.trim().is_empty()) {
-        slots.push(("lhs-where".to_string(), crate::LayoutPoint { x: 220.0, y: 80.0 }));
+        slots.push(("lhs-where".to_string(), LayoutPoint { x: 220.0, y: 80.0 }));
     }
     slots
 }
 
 /// 📐️ The RHS window's semantic nodes with their default positions: one row per clause list (create, merge, set, delete,
 /// parameter), 220 units between the clauses of a row and 80 between rows; `rhs-empty` stands for a side without clauses.
-pub fn rhs_graph_slots(rhs: &Rhs) -> Vec<(String, crate::LayoutPoint)> {
+pub fn rhs_graph_slots(rhs: &Rhs) -> Vec<(String, LayoutPoint)> {
     let rows = [("rhs-create", rhs.create.len()), ("rhs-merge", rhs.merge.len()), ("rhs-set", rhs.set.len()), ("rhs-delete", rhs.delete.len()), ("rhs-parameter", rhs.parameters.len())];
-    let slots: Vec<(String, crate::LayoutPoint)> =
-        rows.into_iter().enumerate().flat_map(|(row, (prefix, count))| (0..count).map(move |index| (format!("{prefix}-{index}"), crate::LayoutPoint { x: index as f64 * 220.0, y: row as f64 * 80.0 }))).collect();
+    let slots: Vec<(String, LayoutPoint)> =
+        rows.into_iter().enumerate().flat_map(|(row, (prefix, count))| (0..count).map(move |index| (format!("{prefix}-{index}"), LayoutPoint { x: index as f64 * 220.0, y: row as f64 * 80.0 }))).collect();
     match slots.is_empty() {
-        true => vec![("rhs-empty".to_string(), crate::LayoutPoint { x: 0.0, y: 0.0 })],
+        true => vec![("rhs-empty".to_string(), LayoutPoint { x: 0.0, y: 0.0 })],
         false => slots,
     }
 }
 
 /// 📍️ Where the semantic rule-graph node `id` sits on `snapshot`: its `rule_layout` point, else its default slot; `None` for
 /// an id the rule draws no node for, or a side that does not decode.
-pub fn rule_graph_position(snapshot: &crate::RewritingSnapshot, id: &str) -> Option<crate::LayoutPoint> {
+pub fn rule_graph_position(snapshot: &crate::RewritingSnapshot, id: &str) -> Option<LayoutPoint> {
     let lhs = lhs_graph_slots(&snapshot.lhs);
     let rhs = rhs_graph_slots(&snapshot.rhs);
     let default = lhs.into_iter().chain(rhs).find(|(slot, _)| slot == id).map(|(_, point)| point)?;

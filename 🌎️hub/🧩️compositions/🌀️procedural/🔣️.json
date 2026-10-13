@@ -33282,6 +33282,30 @@
         "children": []
       }
     ],
+    "inferenceServices": [
+      {
+        "owner": "procedural",
+        "artifactKind": "s.procedural.generation3d",
+        "artifactSchema": "s.procedural.generation3d",
+        "artifactSchemaVersion": 1,
+        "inferenceSchema": "s.procedural.generation3d.inference",
+        "inferenceSchemaVersion": 1,
+        "algorithmVersion": 1,
+        "policyVersion": 1,
+        "contributor": "procedural",
+        "payload": {
+          "payloadSchemaId": "s.procedural.generation3d.geometry.payload",
+          "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/geometry.request.json\",\n  \"title\": \"Generation3dGeometryRequest\",\n  \"description\": \"Evaluates every widget of a generation3d snapshot to typed geometry. State the snapshot in full, or name the artifact so the gateway binds its document. A run is resumed by handing the previous result back as the previous state.\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"oneOf\": [\n    { \"required\": [\"snapshot\"] },\n    { \"required\": [\"document\"] }\n  ],\n  \"properties\": {\n    \"snapshot\": {\n      \"type\": \"object\",\n      \"description\": \"A Generation3dSnapshot (s.procedural.generation3d): the flow host snapshot of widgets and synapses, and the generation play state.\",\n      \"required\": [\"hostSnapshot\", \"generation\"]\n    },\n    \"document\": {\n      \"type\": \"object\",\n      \"description\": \"The artifact to evaluate, bound by the gateway from the artifact id; a caller never states these bytes.\",\n      \"additionalProperties\": false,\n      \"required\": [\"pack\", \"spr\"],\n      \"properties\": {\n        \"pack\": { \"type\": \"string\", \"contentEncoding\": \"base64\" },\n        \"spr\": { \"type\": \"string\", \"contentEncoding\": \"base64\" }\n      }\n    },\n    \"generation\": {\n      \"type\": \"string\",\n      \"minLength\": 1,\n      \"description\": \"The id of the generation whose values override the slider, note, image and variable widgets.\"\n    }\n  }\n}\n",
+          "outputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/geometry.result.json\",\n  \"title\": \"Generation3dGeometryResult\",\n  \"description\": \"The progress of a geometry run and a summary of every widget finished so far. The geometry itself stays in the instance; the dependency hash names it.\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"complete\", \"progress\", \"computed\", \"cacheHits\", \"fuelUsed\", \"faulted\", \"cursor\", \"widgets\"],\n  \"properties\": {\n    \"complete\": { \"type\": \"boolean\" },\n    \"progress\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"completed\", \"total\", \"fraction\"],\n      \"properties\": {\n        \"completed\": { \"type\": \"integer\", \"minimum\": 0 },\n        \"total\": { \"type\": \"integer\", \"minimum\": 0 },\n        \"fraction\": { \"type\": \"number\", \"minimum\": 0, \"maximum\": 1 }\n      }\n    },\n    \"computed\": { \"type\": \"integer\", \"minimum\": 0, \"description\": \"Widgets computed by this call.\" },\n    \"cacheHits\": { \"type\": \"integer\", \"minimum\": 0, \"description\": \"Widgets served from the cache by this call.\" },\n    \"fuelUsed\": { \"type\": \"integer\", \"minimum\": 0, \"description\": \"Work units this call spent.\" },\n    \"faulted\": { \"type\": \"integer\", \"minimum\": 0 },\n    \"cursor\": {\n      \"oneOf\": [\n        { \"type\": \"null\" },\n        {\n          \"type\": \"object\",\n          \"additionalProperties\": false,\n          \"required\": [\"digest\", \"next\"],\n          \"properties\": {\n            \"digest\": { \"type\": \"string\", \"pattern\": \"^[0-9a-f]{64}$\" },\n            \"next\": { \"type\": \"integer\", \"minimum\": 0 }\n          }\n        }\n      ]\n    },\n    \"widgets\": {\n      \"type\": \"array\",\n      \"items\": { \"$ref\": \"#/definitions/widget\" }\n    }\n  },\n  \"definitions\": {\n    \"widget\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\"id\", \"dep\", \"quality\", \"fault\", \"outputs\"],\n      \"properties\": {\n        \"id\": { \"type\": \"string\", \"minLength\": 1 },\n        \"dep\": { \"type\": \"string\", \"pattern\": \"^([0-9a-f]{64})?$\" },\n        \"quality\": { \"enum\": [\"exact-analytic\", \"exact-numerical\", \"approximate\", \"mesh-derived-brep\", \"polygon-mesh\", \"tessellated-mesh\"] },\n        \"fault\": {\n          \"oneOf\": [\n            { \"type\": \"null\" },\n            {\n              \"type\": \"object\",\n              \"additionalProperties\": false,\n              \"required\": [\"code\", \"en\", \"de\", \"port\"],\n              \"properties\": {\n                \"code\": { \"type\": \"string\", \"pattern\": \"^[a-z0-9]+(\\\\.[a-z0-9-]+)+$\" },\n                \"en\": { \"type\": \"string\", \"minLength\": 1 },\n                \"de\": { \"type\": \"string\", \"minLength\": 1 },\n                \"port\": { \"type\": [\"string\", \"null\"] }\n              }\n            }\n          ]\n        },\n        \"outputs\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"object\",\n            \"additionalProperties\": false,\n            \"required\": [\"port\", \"kind\", \"detail\"],\n            \"properties\": {\n              \"port\": { \"type\": \"string\", \"minLength\": 1 },\n              \"kind\": { \"enum\": [\"number\", \"integer\", \"boolean\", \"text\", \"vector\", \"point\", \"plane\", \"shape\", \"mesh\", \"selection\", \"list\"] },\n              \"detail\": { \"type\": \"string\" }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n",
+          "progressUnit": "widget-step",
+          "artifactBinding": {
+            "field": "document",
+            "encoding": "artifact-pack-base64",
+            "required": false
+          }
+        }
+      }
+    ],
     "ioEntries": [
       {
         "owner": {
@@ -33504,8 +33528,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "b1b6b14e1e4b63bf0f693eecb2356ca36fc1eec0b005114651ef421148c3cc5f",
-    "coreWasmSha256": "8e5c27621c359792d412c62010a2c26dc4e95fcac76ffecb773ce333a420c3d5",
-    "descriptorSha256": "c693d8deea8206b70ef5540e78120d05b5fcf8f43bee7bd8e48eb6f53195c0d7"
+    "wasmSha256": "12f9a279c49787edcc79d419272eb0ee9f17c6155bf1a3738ff41752c9d71a82",
+    "coreWasmSha256": "9e6b6809f45f9227ab70420f4615e4869ac2cea751da7b3f22f2de55ada6a2ca",
+    "descriptorSha256": "d4807edb49b7705122ca147b3ae48268638362ca8d5441c6ac347b307df4b94d"
   }
 }

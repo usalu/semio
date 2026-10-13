@@ -18,4 +18,3 @@ impl protocol::OpBinary for WriterMainWindowTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

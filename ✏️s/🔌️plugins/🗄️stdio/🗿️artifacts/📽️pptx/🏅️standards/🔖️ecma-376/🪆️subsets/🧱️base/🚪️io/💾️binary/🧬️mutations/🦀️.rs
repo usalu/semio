@@ -30,7 +30,6 @@ impl OpBinary for PptxMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ `PptxMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.

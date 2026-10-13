@@ -187,7 +187,7 @@ fn a_move_interaction_commits_a_relative_drag() {
 /// 🧱️ Adds one box to the mounted app's shape pane and answers its id.
 async fn place_box(app: &mut CadFixtureApp) -> String {
     use crate::editor::cad::commands::object::add_object::AddObject;
-    app.dispatch_typed(CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).await.expect("addObject is admitted");
+    app.dispatch_typed(CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("addObject is admitted");
     settle(app).await;
     pane_objects(app, CadPaneId::Shape).await.last().expect("the box is placed").id.clone()
 }
@@ -208,7 +208,7 @@ async fn a_mounted_translate_is_one_history_row_keyed_by_its_transaction() {
     let placed = place_box(&mut app).await;
     let origin_before = placed_origin(&app, &placed).await;
     let rows_before = member_rows(&mut app).await.len();
-    app.dispatch_typed(CadCommand::TranslateSelection(TranslateSelection { object_ids: vec![placed.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).await.expect("the translate is admitted");
+    app.dispatch_typed(CadCommand::TranslateSelection(TranslateSelection { object_ids: vec![placed.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the translate is admitted");
     settle(&mut app).await;
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), rows_before + 1, "one gesture, one row: {rows:?}");
@@ -237,8 +237,8 @@ async fn stream_translate(app: &mut CadFixtureApp, target: &str, gesture: &str, 
         ("gesture".to_string(), semio_framework_value::DslValue::String(gesture.into())),
     ];
     args.extend(phase.map(|(key, value)| (key.to_string(), value)));
-    app.handle_action("translateSelection", Some(&semio_framework_value::DslValue::Object(args)), &meta("local")).await.expect("the streamed translate is admitted");
-    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, TEST_INSTANCE).await;
+    app.handle_action("translateSelection", Some(&semio_framework_value::DslValue::Object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the streamed translate is admitted");
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 /// 🪟️ The streamed gumball (design §17.4): every tick of one press stays provisional — the pane's child and the history

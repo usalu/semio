@@ -88,7 +88,7 @@ impl<'source,J:InteractiveJob+'static> WorkerJobAdmission<'source,J>{
     fn destination_owner(&self)->&WorkerJobAuthorityOwner<J>{let inner=self.session.as_ref().expect("original staged session remains owned").inner.0.as_ref().expect("original staged Arc remains owned");unsafe{(&*inner.authority.get()).as_ref().expect("original staged authority remains owned")}}
     fn destination_owner_mut(&mut self)->&mut WorkerJobAuthorityOwner<J>{let inner=self.session.as_mut().expect("original staged session remains owned").inner.0.as_ref().expect("original staged Arc remains owned");unsafe{(&mut *inner.authority.get()).as_mut().expect("original staged authority remains owned")}}
     /// 📍️ Borrows the same prepaid native page before and after its paid payload publication.
-    pub fn destination_page_identity(&self)->Option<*const std::mem::MaybeUninit<u8>>{let owner=self.destination_owner();owner.admission_fault_source.as_ref().map(JobPayloadPageSource::backing_identity).or_else(||owner.preadmitted_fault.original().and_then(|payload|payload.pages[0].as_ref().map(|page|page.source.backing_identity())))}
+    pub fn destination_page_identity(&self)->Option<*const MaybeUninit<u8>>{let owner=self.destination_owner();owner.admission_fault_source.as_ref().map(JobPayloadPageSource::backing_identity).or_else(||owner.preadmitted_fault.original().and_then(|payload|payload.pages[0].as_ref().map(|page|page.source.backing_identity())))}
     /// 🧩️ Observes publication of all initialized payload fields without taking their child ownership.
     pub fn destination_is_initialized(&self)->bool{self.destination_owner().preadmitted_fault.original().is_some()}
     /// 📏️ Quotes the next initialized page slot and cursor, or the final original page publication.

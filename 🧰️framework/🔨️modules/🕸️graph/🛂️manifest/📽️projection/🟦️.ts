@@ -116,7 +116,7 @@ function emitRustManifest(doc: ManifestDocument): string {
     emitRustFamily(prefix, "Window", familyRows(doc, "windowKinds"), fnName) +
     emitRustFamily(prefix, "FileNode", familyRows(doc, "fileNodeKinds"), fnName) +
     emitRustFamily(prefix, "Descriptor", familyRows(doc, "descriptorKinds"), fnName);
-  let out = `// Generated from ${doc.id}.manifest.json\n\nuse semio_framework_graph::manifest::Manifest;\n\n`;
+  let out = `// Generated from ${doc.id}.manifest.json\n\n#![allow(dead_code)]\n\nuse semio_framework_graph::manifest::Manifest;\n\n`;
   out += families;
   out += `pub const ${prefix.toUpperCase()}_MANIFEST_JSON: &str = ${rustStr(json)};\n\n`;
   out += `pub fn ${fnName}() -> Manifest {\n    semio_framework_pack_json::from_json_str(${prefix.toUpperCase()}_MANIFEST_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("manifest json")\n}\n`;

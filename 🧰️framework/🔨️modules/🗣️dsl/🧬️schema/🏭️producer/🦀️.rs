@@ -60,4 +60,4 @@ pub fn record<C:NativeSchemaControl>(keyword:Option<&str>,layout:super::RecordLa
 }
 
 /// 📦️ Admits one shape wrapper before allocating its owned child slot.
-pub fn boxed<C:NativeSchemaControl>(shape:super::Shape,control:&mut C)->Result<Box<super::Shape>,ValueError>{control.charge(std::mem::size_of::<super::Shape>())?;Ok(Box::new(shape))}
+pub fn boxed<C:NativeSchemaControl>(shape:super::Shape,control:&mut C)->Result<Box<super::Shape>,ValueError>{control.charge(size_of::<super::Shape>())?;Ok(Box::new(shape))}

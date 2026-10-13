@@ -61,7 +61,7 @@ mod tests;
 
 //#region 🔖️ComplianceReport
 /// 📋️ `En1996Snapshot -> CheckReport` — full masonry-building evaluation.
-pub fn evaluate(document: &crate::En1996Snapshot) -> crate::document::CheckReport {
+pub fn evaluate(document: &En1996Snapshot) -> crate::document::CheckReport {
     crate::artifact_schema::evaluate_building(
         document.annex,
         document.masonry_class,

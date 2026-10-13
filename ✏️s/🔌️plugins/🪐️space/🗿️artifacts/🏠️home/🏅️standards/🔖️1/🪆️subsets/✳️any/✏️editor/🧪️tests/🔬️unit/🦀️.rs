@@ -223,8 +223,8 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     });
     let args = DslValue::Object(vec![("pageJson".into(), DslValue::String(page_json))]);
     for (turn, expects_item) in [(1, true), (2, false)] {
-        app.handle_action("applyDirectoryEventPage", Some(&args), &meta).await.unwrap_or_else(|fault| panic!("page {turn} admission: {fault:?}"));
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.unwrap_or_else(|fault| panic!("page {turn} settles: {fault:?}"));
+        app.handle_action("applyDirectoryEventPage", Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("page {turn} admission: {fault:?}"));
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("page {turn} settles: {fault:?}"));
         assert!(!settled.lanes.contains(&TypedOperationResultLane::Config) && !settled.lanes.contains(&TypedOperationResultLane::Artifact), "page {turn}: a directory page never writes a history lane: {:?}", settled.lanes);
         assert_eq!(settled.lanes.contains(&TypedOperationResultLane::Transient), expects_item, "page {turn}: {:?}", settled.lanes);
         let receipt = settled.events.iter().find(|event| event.kind == crate::editor::home::transient::DirectoryProjectionReceiptV1::SCHEMA).expect("the terminal receipt event");
@@ -234,7 +234,7 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     let rendered = app.render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, None, &view).await.expect("host-facing render");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(rendered).expect("render projection");
     assert!(json.contains("Transient Fixture"), "the host-facing render lists the folded space: {json}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 //#endregion 🫧️DirectoryTransient
 

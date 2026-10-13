@@ -91,4 +91,3 @@ impl OpText for IfcMutation {
     }
 }
 }
-pub use mutations_codec::*;

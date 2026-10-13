@@ -179,6 +179,7 @@ mod tests {
             match edit.advance(post, mutation, grant())? {
                 PagedOneItemEditStep::Progress(progress) => assert!(progress.fits(grant()) && progress.copied_items <= 1),
                 PagedOneItemEditStep::Complete(progress, inverse) => return Ok((turns, progress, inverse)),
+                PagedOneItemEditStep::CompleteRows(..) => panic!("a ZIP text edit completes with one inverse mutation"),
             }
             turns += 1;
             assert!(turns < 1_000, "bounded edit converges");
@@ -241,7 +242,7 @@ mod tests {
         let starved = RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant() };
         match edit.advance(&mut post, &mutation, starved).expect("starved comment turn") {
             PagedOneItemEditStep::Progress(progress) => assert_eq!(progress, RetainedCloneProgress::default()),
-            PagedOneItemEditStep::Complete(..) => panic!("starved grant must not complete"),
+            PagedOneItemEditStep::Complete(..) | PagedOneItemEditStep::CompleteRows(..) => panic!("starved grant must not complete"),
         }
         assert_eq!(post, source);
     }

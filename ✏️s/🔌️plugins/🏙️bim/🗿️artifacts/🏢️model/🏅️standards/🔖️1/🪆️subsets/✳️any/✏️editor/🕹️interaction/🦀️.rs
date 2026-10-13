@@ -15,7 +15,6 @@ use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::TopologyNode;
-use semio_framework_ui_locale::LocalizedLabel;
 
 //#region 🔖️Constants
 pub const BIM_ELEMENT_DOMAIN: &str = "elements";

@@ -481,7 +481,7 @@ impl Grid2dEditor {
     fn armed_pick(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, utility: &str, x: u32, y: u32) -> Result<Option<Grid2dMutation>, Fault> {
         Ok(match utility {
             grid::UTILITY_PIN => {
-                let tile = Self::active_tile(document, config).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.tile.none-armed"), "wfc.grid2d.tile.none-armed"))?;
+                let tile = Self::active_tile(document, config).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.tile.none-armed"), "wfc.grid2d.tile.none-armed"))?;
                 Some(pin_cell(x, y, tile))
             }
             grid::UTILITY_MASK => {
@@ -507,7 +507,7 @@ impl Grid2dEditor {
     }
 
     fn config_emit(view_state: Option<&ViewModel>, mutation: window::Grid2dWindowConfigMutation) -> Result<Emit<Grid2dMutation>, Fault> {
-        let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
+        let view = view_state.ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
         let mutation = window::addressed_config(view, mutation)?;
         Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
     }

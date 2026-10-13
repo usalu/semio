@@ -31,4 +31,3 @@ impl store::ArtifactDsl for ZipSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

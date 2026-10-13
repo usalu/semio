@@ -4,7 +4,7 @@ use crate::mutations::update_cooling::UpdateCooling;
 use crate::mutations::Din18599Mutation;
 use crate::Din18599Snapshot;
 
-pub fn inverse(payload: &UpdateCooling, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
+pub fn inverse(_payload: &UpdateCooling, base: &Din18599Snapshot) -> Result<Vec<Din18599Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
     vec![Din18599Mutation::UpdateCooling(UpdateCooling { new_cooling: base.cooling.clone() })]
 

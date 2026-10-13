@@ -511,6 +511,27 @@ mod tests {
         }
     }
 
+    /// ✍️ Law: the OS workflow store authors an edit, its undo and its redo through the canonical wire its catalog carries, and each authored row is the independent serde_json document of its operation.
+    #[test]
+    fn the_os_workflow_store_authors_apply_undo_redo_and_its_rows_through_its_catalog_wire() {
+        test_identity!(identity);
+        let mut store = test_workflow_store();
+        let base = store.snapshot().expect("base snapshot").parameters.len();
+        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Authored", &mut identity).expect("apply authors through the catalog wire");
+        assert_eq!(store.snapshot().expect("applied snapshot").parameters.len(), base + 1);
+        let (forward_rows, inverse_rows) = store.inner.authored_edit_operation_bytes(&mut identity).expect("rows author").expect("the applied edit has rows");
+        let (forwards, inverses, _) = store.inner.edit_mutations().expect("the applied edit");
+        let document = |mutation: &workflow::WorkflowMutation| serde_json::to_value(semio_framework_value::ToValue::to_value(mutation)).expect("independent serde_json document");
+        let parsed = |row: &[u8]| { assert!(row.starts_with(b"op"), "the canonical wire carries its operation header"); serde_json::from_slice::<serde_json::Value>(&row[2..]).expect("the wire body is JSON an independent parser accepts") };
+        assert_eq!(forward_rows.iter().map(|row| parsed(row)).collect::<Vec<_>>(), forwards.iter().map(document).collect::<Vec<_>>());
+        assert_eq!(inverse_rows.iter().map(|row| parsed(row)).collect::<Vec<_>>(), (0..inverses.len()).map(|index| document(inverses.get(index).expect("inverse row"))).collect::<Vec<_>>());
+        resolve_kernel_future(store.inner.dispatch(ArtifactCommand::Undo, &mut identity)).expect("undo authors");
+        assert_eq!(store.snapshot().expect("undone snapshot").parameters.len(), base);
+        resolve_kernel_future(store.inner.dispatch(ArtifactCommand::Redo, &mut identity)).expect("redo authors");
+        assert_eq!(store.snapshot().expect("redone snapshot").parameters.len(), base + 1);
+        close_workflow_fixture(&mut store);
+    }
+
     /// 🧮️ The complete history position (applied, redo, checkpoint, alternative) the event log of `edits` + `transitions` folds to.
     fn workflow_history<'a>(document_id: &str, edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &[protocol::MutationEnvelope], conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
         let head = protocol::ViewerHead::canonical_trunk(&protocol::ArtifactId(document_id.to_string()));

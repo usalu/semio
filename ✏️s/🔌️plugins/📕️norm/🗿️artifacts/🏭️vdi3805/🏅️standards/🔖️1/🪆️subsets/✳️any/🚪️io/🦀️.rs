@@ -206,7 +206,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Vdi3805BuilderFacets {
         construction: Vdi3805BuilderConstruction,
         analysis: Vdi3805AnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Vdi3805ComposerComposition,
+        composition: Vdi3805ComposerComposition,
     }
     builder: Vdi3805Builder,
     analyzer: Vdi3805Analyzer,

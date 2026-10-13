@@ -7,15 +7,24 @@ fn overflow()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(overflow)}
 fn reserve<T>(values:&mut Vec<T>,count:usize,control:&mut SqliteSnapshotControl<'_>)->Result<()>{if values.capacity()!=0{return Err(overflow())}let bytes=count.checked_mul(size_of::<T>()).filter(|v|*v<=isize::MAX as usize).ok_or_else(overflow)?;control.admit_allocation_bytes(bytes)?;values.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"SQLite schema storage allocation"))}
 
-#[derive(Debug,semio_framework_value::RetireOwned)]
+#[derive(Debug)]
 struct Token{text:String,quoted:bool,literal:bool,start:usize,end:usize}
+/// 🪙️ A token's only owned allocation is its text: the scalar positions need no cursor, so one byte cursor retires the whole token.
+impl semio_framework_value::retirement::RetireOwned for Token{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::bytes(self.text.into_bytes())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::bytes_birth_bytes())}
+ fn controlled_retirement_supported()->bool{true}
+}
 impl Token{fn keyword(&self,value:&str)->bool{!self.quoted&&!self.literal&&self.text.eq_ignore_ascii_case(value)}}
-#[derive(Debug,semio_framework_value::RetireOwned)]
+#[derive(Debug,Clone,Copy)]
 struct Column{name:usize,integer:bool}
-#[derive(Debug,semio_framework_value::RetireOwned)]
+#[derive(Debug,Clone,Copy)]
 struct Table{name:usize,start:usize,end:usize,columns_start:usize,columns_end:usize}
+#[derive(Debug,Clone,Copy)]
+struct Group{from:usize,to:usize}
+semio_framework_value::artifact_retire_leaf!(Column,Table,Group);
 #[derive(Debug,semio_framework_value::RetireOwned)]
-struct Unit{tokens:Vec<Token>,tables:Vec<Table>,columns:Vec<Column>,groups:Vec<(usize,usize)>,names:Vec<usize>,identifiers:Vec<u8>,table_order:Vec<usize>}
+struct Unit{tokens:Vec<Token>,tables:Vec<Table>,columns:Vec<Column>,groups:Vec<Group>,names:Vec<usize>,identifiers:Vec<u8>,table_order:Vec<usize>}
 impl Unit{fn empty()->Self{Self{tokens:Vec::new(),tables:Vec::new(),columns:Vec::new(),groups:Vec::new(),names:Vec::new(),identifiers:Vec::new(),table_order:Vec::new()}}}
 /// 🫙️ Holds every original schema-validation allocation across success, refusal and cancellation.
 #[derive(Debug,semio_framework_value::RetireOwned)]
@@ -52,9 +61,9 @@ fn parse_into(unit:&mut Unit,phase:SqliteSnapshotPhase,control:&mut SqliteSnapsh
 }
 fn parse_table_into(unit:&mut Unit,start:usize,end:usize,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<()>{
  let tokens=&unit.tokens;let slice=&tokens[start..end];if slice.len()<5||!slice[0].keyword("CREATE")||!slice[1].keyword("TABLE")||slice[2].literal||slice[2].text.is_empty()||slice[3].text!="("{return Err(invalid("expected CREATE TABLE"))}if slice.iter().any(|token|["UNIQUE","AUTOINCREMENT","WITHOUT","DESC","GENERATED"].iter().any(|word|token.keyword(word))){return Err(invalid("unsupported implicit index or table feature"))}if slice[2].text.get(..7).is_some_and(|v|v.eq_ignore_ascii_case("sqlite_")){return Err(invalid("reserved table name"))}
- let groups_start=unit.groups.len();let mut depth=1usize;let mut group_start=start+4;let mut close=None;for at in start+4..end{let token=&tokens[at];if !token.quoted&&!token.literal{match token.text.as_str(){"("=>depth=add(depth,1)?,")"=>{depth=depth.checked_sub(1).ok_or_else(||invalid("unbalanced table definition"))?;if depth==0{if group_start<at{unit.groups.push((group_start,at));}close=Some(at);break}},"," if depth==1=>{if group_start==at{return Err(invalid("empty column definition"))}unit.groups.push((group_start,at));group_start=at+1},_=>{}}}if at%256==0{control.checkpoint(phase,at,tokens.len())?;}}
+ let groups_start=unit.groups.len();let mut depth=1usize;let mut group_start=start+4;let mut close=None;for at in start+4..end{let token=&tokens[at];if !token.quoted&&!token.literal{match token.text.as_str(){"("=>depth=add(depth,1)?,")"=>{depth=depth.checked_sub(1).ok_or_else(||invalid("unbalanced table definition"))?;if depth==0{if group_start<at{unit.groups.push(Group{from:group_start,to:at});}close=Some(at);break}},"," if depth==1=>{if group_start==at{return Err(invalid("empty column definition"))}unit.groups.push(Group{from:group_start,to:at});group_start=at+1},_=>{}}}if at%256==0{control.checkpoint(phase,at,tokens.len())?;}}
  let close=close.ok_or_else(||invalid("unbalanced table definition"))?;if close+1!=end||groups_start==unit.groups.len(){return Err(invalid("unsupported table suffix or empty table"))}let columns_start=unit.columns.len();let mut primary=None;
- for &(mut from,to) in &unit.groups[groups_start..]{let mut group=&tokens[from..to];if group[0].keyword("CONSTRAINT"){if group.len()<3{return Err(invalid("incomplete named constraint"))}from+=2;group=&tokens[from..to];}if group[0].keyword("PRIMARY"){if group.len()<5||!group[1].keyword("KEY")||group[2].text!="("||group.last().is_none_or(|t|t.text!=")")||(group.len()!=5&&!(group.len()==6&&group[4].keyword("ASC")))||primary.is_some(){return Err(invalid("unsupported table primary key"))}primary=Some(from+3);continue}if group[0].keyword("FOREIGN")||group[0].keyword("CHECK"){continue}if group[0].literal||group[0].text.is_empty(){return Err(invalid("invalid column"))}
+ for &Group{from:mut from,to} in &unit.groups[groups_start..]{let mut group=&tokens[from..to];if group[0].keyword("CONSTRAINT"){if group.len()<3{return Err(invalid("incomplete named constraint"))}from+=2;group=&tokens[from..to];}if group[0].keyword("PRIMARY"){if group.len()<5||!group[1].keyword("KEY")||group[2].text!="("||group.last().is_none_or(|t|t.text!=")")||(group.len()!=5&&!(group.len()==6&&group[4].keyword("ASC")))||primary.is_some(){return Err(invalid("unsupported table primary key"))}primary=Some(from+3);continue}if group[0].keyword("FOREIGN")||group[0].keyword("CHECK"){continue}if group[0].literal||group[0].text.is_empty(){return Err(invalid("invalid column"))}
   let constraints=["PRIMARY","NOT","NULL","DEFAULT","CHECK","REFERENCES","COLLATE","CONSTRAINT"];let type_end=(1..group.len()).find(|i|constraints.iter().any(|word|group[*i].keyword(word))).unwrap_or(group.len());let mut depth=0usize;for(index,token)in group.iter().enumerate(){if !token.quoted&&!token.literal{if token.text=="("{depth=add(depth,1)?;}else if token.text==")"{depth=depth.checked_sub(1).ok_or_else(||invalid("unbalanced column definition"))?;}}if index%256==0{control.checkpoint(phase,from+index,tokens.len())?;}}
   if group.windows(2).any(|v|v[0].keyword("PRIMARY")&&v[1].keyword("KEY")){if primary.is_some(){return Err(invalid("multiple primary keys"))}primary=Some(from);}unit.columns.push(Column{name:from,integer:type_end==2&&group[1].text.eq_ignore_ascii_case("INTEGER")});
  }

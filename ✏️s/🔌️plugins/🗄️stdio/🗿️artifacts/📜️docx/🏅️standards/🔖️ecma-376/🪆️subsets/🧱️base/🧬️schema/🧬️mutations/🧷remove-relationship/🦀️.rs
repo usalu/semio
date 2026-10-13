@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveRelationship {
         opc_layer::outcome(opc_layer::with_package(base, |opc| opc_layer::relationship_removal_diff(opc, &self.owner, &self.id)))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
-        let previous = opc_layer::with_package(base, |opc| opc_layer::relationship_at(opc, &self.owner, &self.id)).map_err(|message| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
+        let previous = opc_layer::with_package(base, |opc| opc_layer::relationship_at(opc, &self.owner, &self.id)).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
         Ok(previous.map(|(at, existing)| DocxMutation::SetRelationship(set_relationship::SetRelationship::of(&self.owner, &existing, Some(at)))).into_iter().collect())
     }
 

@@ -6,8 +6,9 @@
 
 use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
-use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, edit_rules, set_cell};
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
+use crate::standards::v_ecma_376::subsets::base::schema::mutations::{edit_rules};
+#[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::mutations::{cell_address::xlsx_cell_address, set_cell};
+#[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
@@ -42,7 +43,6 @@ pub const XLSX_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.xlsx"
 //#endregion 🔖️Dialect
 
 //#region 🔖️TableProjection
-pub(crate) use crate::editor::xlsx::standards::v_ecma_376::subsets::base::{parse_xlsx_cell_value, render_xlsx_cell_value};
 //#endregion 🔖️TableProjection
 
 //#region 🔖️Command
@@ -151,7 +151,7 @@ impl ArtifactEditor for XlsxStrictEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-cell")
     }
 
-    fn agent_target_revision(_action: &str, args: &semio_framework_value::DslValue, doc: &semio_framework_plugin::ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
+    fn agent_target_revision(_action: &str, args: &semio_framework_value::DslValue, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         crate::editor::xlsx::standards::v_ecma_376::subsets::base::xlsx_agent_target_revision(doc.snapshot, args)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {

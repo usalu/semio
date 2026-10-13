@@ -22,7 +22,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     /// 🗣️ The five `dsl::LanguageSpec`s this subset declares, built once and leaked because
     /// `dsl::passthrough_hooks` is not `const fn`. Indices: 0=document 1=op 2=diff 3=pack 4=spr.
     fn languages() -> &'static [semio_framework_dsl::LanguageSpec; 5] {
-        use crate::standards::v1::subsets::any::schema::{mutations, snapshot};
+        #[cfg(test)] use crate::standards::v1::subsets::any::schema::{mutations, snapshot};
         static LANGUAGES: OnceLock<[semio_framework_dsl::LanguageSpec; 5]> = OnceLock::new();
         LANGUAGES.get_or_init(|| {
             [
@@ -30,20 +30,20 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     id: "wfc.grid2d",
                     extension: Some("wfcgrid2d"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "wfc.grid2d.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.op"),
                 },
                 semio_framework_dsl::LanguageSpec { id: "wfc.grid2d.diff", extension: None, role: semio_framework_dsl::LanguageRole::Diff, grammar: None, grammar_path: None, protocol: None, protocol_path: None, hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.diff") },
@@ -53,8 +53,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -63,8 +63,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("wfc.grid2d.spr"),
                 },
             ]

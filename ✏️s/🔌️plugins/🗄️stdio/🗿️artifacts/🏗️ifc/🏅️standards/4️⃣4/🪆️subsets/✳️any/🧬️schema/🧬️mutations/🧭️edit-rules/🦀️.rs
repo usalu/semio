@@ -4,7 +4,7 @@
 //! addressed by its id, an argument by its position, and an edit below an argument replaces that argument. Complex constituents, the entity ids
 //! and the document schema have no kind and are refused.
 
-use super::*;
+#[cfg(test)] use super::*;
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector};
 
 const ENTITY: &[Selector] = &[Selector::Field { payload: "id", field: "id" }];

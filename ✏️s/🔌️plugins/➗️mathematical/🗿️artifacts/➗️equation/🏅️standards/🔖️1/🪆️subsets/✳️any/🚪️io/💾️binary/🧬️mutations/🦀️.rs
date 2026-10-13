@@ -35,7 +35,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::schema::mutations::EquationMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::standards::v1::subsets::{

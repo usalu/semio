@@ -15,7 +15,7 @@ pub struct SetPreviewEval {
 impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransientMutation> for SetPreviewEval {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-eval", kind: "set-preview-eval", record: "SetPreviewEval" };
 
-    fn diff(&self, base: &Generation3dViewTransient) -> protocol::MutationOutcome<Generation3dViewTransientPatch> {
+    fn diff(&self, _base: &Generation3dViewTransient) -> protocol::MutationOutcome<Generation3dViewTransientPatch> {
         protocol::MutationOutcome::new(Generation3dViewTransientPatch { preview_eval_text: Some(Generation3dPreviewEvalChange { text: self.eval_text.clone() }), ..Default::default() })
     }
 

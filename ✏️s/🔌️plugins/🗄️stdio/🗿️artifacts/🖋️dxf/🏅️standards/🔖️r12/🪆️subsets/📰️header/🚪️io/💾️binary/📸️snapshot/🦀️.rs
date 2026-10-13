@@ -34,7 +34,6 @@ impl store::ArtifactPack for DxfSnapshot {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(snapshot_text::spec()) }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod diff_codec {
@@ -49,4 +48,3 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use crate::standards::v_r12::subsets::any::io::binary::diff::{enc_other_table_bin, dec_other_table_bin, enc_dxf_tables_bin, dec_dxf_tables_bin};
 }
-pub use diff_codec::*;

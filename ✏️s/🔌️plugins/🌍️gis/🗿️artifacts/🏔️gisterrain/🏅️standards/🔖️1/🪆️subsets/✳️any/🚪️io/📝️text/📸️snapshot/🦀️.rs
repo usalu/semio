@@ -65,7 +65,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot
 
 
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
@@ -235,7 +235,7 @@ impl ImportedMap {
 }
 
 /// 🗺️ Admits bundled scenery before the semantic descriptor projection.
-pub fn fixture_descriptor(document:&crate::GisTerrainSnapshot)->crate::schema::TerrainDescriptorJson {
+pub fn fixture_descriptor(document:&GisTerrainSnapshot)->crate::schema::TerrainDescriptorJson {
  let map=crate::schema::ImportedMap::from_json(include_str!("../../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
  crate::standards::v1::subsets::any::schema::inferences::parse_descriptor(document,&map)
 }

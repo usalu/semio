@@ -339,12 +339,19 @@ codegen-units = 1
 # inherited `incremental = true` split it by the caller's `CARGO_INCREMENTAL` into two compiles with two
 # different wasm hashes (ticket 26/09/23 W1: descriptor `ce48…`/`2a5c…` vs staged `a740…`).
 incremental = false
+# 🎚️ Composition components link at `opt-level = 1`. At `opt-level = 0` rustc keeps every trivial generic adapter
+# (`Option::map`, `Iterator::fold`, drop glue, the `ToValue`/`FromValue`/`RetireOwned`/`RetainedClone`/`CanonicalJsonTree`
+# derive bodies) as its own wasm function; after the grant-based retained-clone rollout (ticket 26/09/23
+# BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT) `semio-hub-stdio` reached 1 105 567 functions / 318 MB and `semio-hub-norm`
+# also crossed `wasm-component-ld`'s 1 000 000-function ceiling and the 256 MiB dev-component bound
+# (`FRESH_COMPONENT_MAX_BYTES`). `opt-level = 1` inlines the adapters: the same stdio assembly measures 299 058 functions
+# / 185 MB. Hot render paths below stay at `opt-level = 2`.
+opt-level = 1
 
 # 🎚️ The plugin guest must meet the framework's 8 ms interactive-step contract even in the dev
 # profile: at `opt-level = 0` a lowpoly render turn tessellates its seeded mesh in 10-11.5 ms and
 # the runtime traps it with `plugin.internal.interactive-ceiling`, so the window renders a fault
-# instead of geometry. Scoped to this package rather than raised on the whole profile because the
-# io layer (`semio-s-plugin-stdio`) is not on the render path and is far more expensive to compile.
+# instead of geometry. Raised beyond the profile's `opt-level = 1` for this render-path package only.
 [profile.wasm-dev.package.semio-framework-os-flow]
 opt-level = 2
 
@@ -378,8 +385,9 @@ trim-paths = "object"
 #   gets the "z"-class shrink without paying that runtime cost in every plugin.
 # - lto "thin" (not "fat"): fat LTO re-links ~25 plugin cdylibs individually — 2-4x slower per plugin
 #   for a low single-digit percent size gain over thin. Thin still gets full cross-crate inlining.
-# - codegen-units = 1: maximizes cross-crate dedup/inlining and also sidesteps the LLVM-22
-#   ElemSection::writeBody crash noted above (a stable low CGU count, same fix as `store`'s override).
+# - codegen-units = 16: measured on the raster hub (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT,
+#   2026-10-13): 317 s / 8.2 GB peak vs 612 s / 10.6 GB at 1, for +11% raw but only +2.4% brotli bytes on the wire
+#   (5.13 vs 5.01 MB); the ElemSection::writeBody crash no longer reproduces with the current toolchain.
 # - strip = "symbols": drops the wasm `name` custom section, which is pure debug/dev-tooling weight
 #   (measured ~14MB on the largest single plugin, ~87MB across the built fleet) never used at runtime.
 # - incremental = false: deterministic output; release units are rebuilt whole anyway, so incremental
@@ -392,15 +400,11 @@ trim-paths = "object"
 inherits = "release"
 opt-level = "s"
 lto = "thin"
-codegen-units = 1
+codegen-units = 16
 strip = "symbols"
 incremental = false
 trim-paths = "object"
 
-# Explicit: profile inheritance does NOT inherit package-specific overrides from the parent
-# profile, so without this `store` would fall back to workspace defaults under `wasm-release`.
-[profile.wasm-release.package.semio-framework-os-kernel]
-codegen-units = 1
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced

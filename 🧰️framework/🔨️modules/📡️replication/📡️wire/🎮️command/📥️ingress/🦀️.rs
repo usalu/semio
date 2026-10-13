@@ -126,7 +126,7 @@ impl serde::Serialize for FixedCommandPage {
     }
 }
 
-impl<'de> serde::Deserialize<'de> for FixedCommandPage {
+impl<'de> Deserialize<'de> for FixedCommandPage {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let bytes = Vec::<u8>::deserialize(deserializer)?;
         FixedCommandPage::try_copy_from(&bytes).map_err(|fault| serde::de::Error::custom(fault.message))

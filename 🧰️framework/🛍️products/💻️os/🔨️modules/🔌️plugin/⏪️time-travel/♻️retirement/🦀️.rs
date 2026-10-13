@@ -1,6 +1,6 @@
 //! ⏪️ Original actor retirement quotes and admits each retained physical frontier independently.
 use super::*;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,FactoryAuthority,FactoryOwnedRetirement,ArtifactOwnedValueRetirementFactory,close_factory_ticket,factory_ticket_demands};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,FactoryAuthority,FactoryOwnedRetirement,close_factory_ticket,factory_ticket_demands};
 use std::mem::{size_of,size_of_val};
 fn original_refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"actor retirement depth overflow"))?;Ok(demand)}
@@ -38,7 +38,7 @@ impl<A:ArtifactApp> TimeTravelLedger<A> {
    let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original time travel session")?;return Ok(Some(progress(step)));
   }
   let original=std::mem::take(&mut self.session);
-  match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>{self.session_retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))},Err((error,original))=>{self.session=original;Err(error)}}
+  match ControlledRetirement::new(original){Ok(owner)=>{self.session_retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))},Err((error,original))=>{self.session=original;Err(error)}}
  }
 }
 
@@ -53,11 +53,11 @@ pub(crate) use tests::assert_pending_command_original;
 pub(crate) use tests::assert_discard_publication_original;
 #[cfg(test)]
 pub(crate) use tests::native_original_actor_grant;
-impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+protocol::OpBinary+protocol::OpText+Send+'static {
+impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+OpBinary+OpText+Send+'static {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(demand)=self.discard_effects_retirement_demands(body)?{return Ok(demand)}
   if let Some(owner)=self.snapshot_close.as_ref(){return store::artifact_retirement_box_demands(owner,body);}
-  if self.snapshot_aliases.iter().any(Option::is_some){self.snapshot_issuers.as_ref().ok_or_else(||original_refusal("derived snapshot retains its original missing issuers"))?;return Ok(RetirementDemand{capacity_bytes:store::ArtifactStore::<P,Mu>::history_read_retirement_birth_bytes(),depth:2,..Default::default()});}
+  if self.snapshot_aliases.iter().any(Option::is_some){self.snapshot_issuers.as_ref().ok_or_else(||original_refusal("derived snapshot retains its original missing issuers"))?;return Ok(RetirementDemand{capacity_bytes:ArtifactStore::<P,Mu>::history_read_retirement_birth_bytes(),depth:2,..Default::default()});}
   if self.snapshot_issuers.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   if let Some(owner)=self.snapshot_issuer_close.iter().flatten().next(){return nested(owner.demands(body)?);}
   if let Some(owner)=self.retirements.back(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{nested(factory_ticket_demands(owner,body)?)};}

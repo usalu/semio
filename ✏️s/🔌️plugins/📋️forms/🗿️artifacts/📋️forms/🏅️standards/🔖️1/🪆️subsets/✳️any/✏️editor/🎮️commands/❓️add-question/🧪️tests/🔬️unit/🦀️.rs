@@ -19,7 +19,7 @@ async fn adding_a_question_recovers_after_removing_the_last_page() {
         FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
         |app| { let snapshot = app.snapshot().unwrap(); (snapshot.definition.steps.len(), snapshot.definition.steps.iter().map(|step| step.blocks.len()).sum::<usize>()) },
         (0, 0),
-        (1, 1),
+        (1, 1),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     ).await;
 }
 
@@ -39,7 +39,7 @@ async fn add_question_undo_redo_round_trip() {
         FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
         |app| crate::schema::flatten_questions(&app.snapshot().expect("projection")).len(),
         before,
-        before + 1,
+        before + 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }

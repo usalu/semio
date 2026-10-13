@@ -54,7 +54,7 @@ pub(crate) mod context {
     /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
     pub fn app_with_registry() -> Puzzle2dApp {
-        let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
+        let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
         block_on(app.bind_instance_id(1));
         app
     }
@@ -140,7 +140,7 @@ pub(crate) mod context {
                 return fault.map_or(Ok(result), Err);
             }
             crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-            block_on(app.advance_typed_operation_publication())?;
+            block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation))?;
             // 📄️ EVERY presented page and EVERY completion per turn, never one: `has_pending_typed_operations`
             // counts the outboxes and the mounted operations but NOT a page already presented and waiting
             // for its ACK, so a turn that leaves a second page (or the terminal completion that CARRIES
@@ -185,10 +185,10 @@ pub(crate) mod context {
                 | "hostEvent"
         ) {
             let dsl_args = args.map(semio_framework_value::DslValue::from);
-            let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
+            let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
             return settle(app, result);
         }
-        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
+        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
         settle(app, result)
     }
 
@@ -196,7 +196,7 @@ pub(crate) mod context {
     /// such as the window's active utility.
     pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
+        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
         settle(app, result)
     }
 
@@ -223,7 +223,7 @@ pub(crate) mod context {
         let mut loaded = 0;
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() })).expect("the example loads");
+                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the example loads");
                 loaded += 1;
             }
         }
@@ -362,7 +362,7 @@ pub(crate) mod context {
         let mut loaded = 0;
         for effect in result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() })).expect("the import loads");
+                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the import loads");
                 loaded += 1;
             }
         }
@@ -599,7 +599,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let mut store = puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None }).await.expect("apply");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_node(node, None)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle2dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle2dSnapshot, Puzzle2dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
@@ -969,8 +969,8 @@ async fn ingest_operations_is_idempotent() {
     let operations = envelopes;
 
     let mut receiver = app();
-    receiver.ingest_operations(&operations).await.expect("ingest once");
-    receiver.ingest_operations(&operations).await.expect("ingest twice");
+    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest once");
+    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
     assert_eq!(board_snapshot_nodes(&fixture_of(&receiver)).len(), 1, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
     close_app(&mut receiver);

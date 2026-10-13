@@ -40,7 +40,7 @@ pub fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_fra
 
 
 pub fn to_record(snapshot:&JpgSnapshot)->semio_framework_dsl_record::RecordValue {
-    use semio_framework_dsl_record::FieldValue as V;
+    
     semio_framework_dsl_record::RecordValue { fields: [
         (1,semio_framework_dsl_record::FieldValue::Text(snapshot.schema.clone())),(2,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.width.into())),(3,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.height.into())),(4,semio_framework_dsl_record::FieldValue::Bytes64(snapshot.image.pixels.clone())),
         (5,semio_framework_dsl_record::FieldValue::Value(snapshot.image.jfif_version.to_value())),(6,semio_framework_dsl_record::FieldValue::Value(snapshot.image.jfif_density_units.to_value())),(7,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.jfif_x_density.into())),(8,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.jfif_y_density.into())),
@@ -52,7 +52,7 @@ pub fn to_record(snapshot:&JpgSnapshot)->semio_framework_dsl_record::RecordValue
 /// 🛫️ Projects the ten owned fields with cumulative allocation and exact stage control.
 pub fn to_record_controlled(snapshot:&JpgSnapshot,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordValue,ValueError>{
     control.scoped_depth(64,|control|control.scoped_stage(|control|->Result<_,ValueError>{
-        use semio_framework_dsl_record::FieldValue as V;
+        
         control.begin_stage(10)?;let mut record=semio_framework_dsl_record::native_encoding::EncodedRecord::new(10,control)?;
         record.insert(1,semio_framework_dsl_record::FieldValue::Text(control.copy_text(&snapshot.schema)?))?;control.step()?;
         record.insert(2,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.width.into()))?;control.step()?;
@@ -69,7 +69,7 @@ pub fn to_record_controlled(snapshot:&JpgSnapshot,control:&mut semio_framework_v
 }
 fn project<T:ToValue>(value:&T,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control).map(semio_framework_dsl_record::FieldValue::Value)})}
 
-fn error(key:&str)->semio_framework_diagnostic::TextError { semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("JPG owned snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)) }
+fn error(key:&str)->semio_framework_diagnostic::TextError { semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, format!("JPG owned snapshot field {key} is missing or has a different shape"),semio_framework_diagnostic::TextSpan::at(1,1)) }
 fn value<T:FromValue>(record:&mut semio_framework_dsl_record::RecordValue,id:u16,key:&str)->Result<T,semio_framework_diagnostic::TextError> {
     match record.fields.remove(&id) { Some(semio_framework_dsl_record::FieldValue::Value(value))=>T::from_value(value).map_err(|failure|semio_framework_diagnostic::TextError::from_value_error(failure, semio_framework_diagnostic::TextSpan::at(1,1))),_=>Err(error(key)) }
 }
@@ -78,14 +78,14 @@ fn unsigned<T:TryFrom<u64>>(record:&mut semio_framework_dsl_record::RecordValue,
 }
 
 pub fn from_record(mut record:semio_framework_dsl_record::RecordValue)->Result<JpgSnapshot,semio_framework_diagnostic::TextError> {
-    if record.fields.len()!=10 || record.fields.keys().any(|id|!(1..=10).contains(id)) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JPG owned snapshot requires exactly ten declared fields",semio_framework_diagnostic::TextSpan::at(1,1))); }
+    if record.fields.len()!=10 || record.fields.keys().any(|id|!(1..=10).contains(id)) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "JPG owned snapshot requires exactly ten declared fields",semio_framework_diagnostic::TextSpan::at(1,1))); }
     let schema=match record.fields.remove(&1){Some(semio_framework_dsl_record::FieldValue::Text(value))=>value,_=>return Err(error("schema"))};
     let width=unsigned(&mut record,2,"width")?;let height=unsigned(&mut record,3,"height")?;
     let pixels=match record.fields.remove(&4){Some(semio_framework_dsl_record::FieldValue::Bytes64(value))=>value,_=>return Err(error("pixels"))};
     let jfif_version=value(&mut record,5,"jfifVersion")?;let jfif_density_units=value(&mut record,6,"jfifDensityUnits")?;
     let jfif_x_density=unsigned(&mut record,7,"jfifXDensity")?;let jfif_y_density=unsigned(&mut record,8,"jfifYDensity")?;let jfif_thumbnail=value(&mut record,9,"jfifThumbnail")?;
     let other_segments=value(&mut record,10,"otherSegments")?;
-    Ok(JpgSnapshot { schema, image: crate::schema::snapshot::JpgImage { width,height,pixels,jfif_version,jfif_density_units,jfif_x_density,jfif_y_density,jfif_thumbnail,other_segments } })
+    Ok(JpgSnapshot { schema, image: JpgImage { width,height,pixels,jfif_version,jfif_density_units,jfif_x_density,jfif_y_density,jfif_thumbnail,other_segments } })
 }
 
 fn object<'a,const N:usize>(value:&'a semio_framework_value::DslValue,keys:[&str;N],control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<[&'a semio_framework_value::DslValue;N],ValueError>{
@@ -110,7 +110,7 @@ pub fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,co
     let jfif_x_density=field_unsigned(record,7)?;control.step()?;let jfif_y_density=field_unsigned(record,8)?;control.step()?;
     let jfif_thumbnail=control.scoped_stage(|control|optional(field_value(record,9)?,control,thumbnail))?;control.step()?;
     let other_segments=control.scoped_stage(|control|list(field_value(record,10)?,control,segment))?;control.step()?;
-    Ok(JpgSnapshot { schema, image: crate::schema::snapshot::JpgImage { width,height,pixels,jfif_version,jfif_density_units,jfif_x_density,jfif_y_density,jfif_thumbnail,other_segments } })
+    Ok(JpgSnapshot { schema, image: JpgImage { width,height,pixels,jfif_version,jfif_density_units,jfif_x_density,jfif_y_density,jfif_thumbnail,other_segments } })
     })()
 }
 
@@ -133,14 +133,14 @@ impl store::ArtifactDsl for JpgSnapshot {
     }
 
     fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
-        let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
-        if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JPG owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)));}
-        owned_text::from_record(semio_framework_dsl_record::parse_exact(body,&owned_text::spec(),&semio_framework_dsl_record::ParseOptions::default())?)
+        let(envelope,body)=store::semio_format::split_text_preamble(text).map_err(|error|semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, error.to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))?;
+        if !envelope.matches_identity(Self::envelope_id(),store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "JPG owned Text envelope mismatch",semio_framework_diagnostic::TextSpan::at(1,1)));}
+        from_record(semio_framework_dsl_record::parse_exact(body,&spec(),&semio_framework_dsl_record::ParseOptions::default())?)
     }
     fn print_dsl(&self)->String{
-        let body=semio_framework_dsl_record::print(&owned_text::to_record(self),&owned_text::spec(),semio_framework_dsl_record::JoinMode::Document);
+        let body=semio_framework_dsl_record::print(&to_record(self),&spec(),semio_framework_dsl_record::JoinMode::Document);
         let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::envelope_id(),store::semio_format::Component::Dsl,1).expect("declared JPG envelope");store::semio_format::wrap_text(&envelope,&body)
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

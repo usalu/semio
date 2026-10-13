@@ -431,7 +431,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec ProgramBuilderFacets {
         construction: ProgramBuilderConstruction,
         analysis: ProgramAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::ProgramComposerComposition,
+        composition: ProgramComposerComposition,
     }
     builder: ProgramBuilder,
     analyzer: ProgramAnalyzer,

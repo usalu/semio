@@ -59,7 +59,7 @@ impl<const MERGE_DOWN:bool> ArtifactCommandWork<EditorApp<RasterPlayApp>> for La
     fn tool_id(&self)->&'static str {if MERGE_DOWN {"mergeDown"} else {"flattenLayers"}}
     fn extent(&self,command:&RasterCommand,_snapshot:&RasterSnapshot,_interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>)->Option<usize> {(matches!((MERGE_DOWN,command),(false,RasterCommand::FlattenLayers(_))|(true,RasterCommand::MergeDown(_)))).then_some(1)}
     fn work_demands(&self,_input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {
-        let stage=if self.encoding.is_some() {std::mem::size_of::<PngEncodeJob>()+std::mem::size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else if self.compositing.is_some() {std::mem::size_of::<RasterStackJob>()+std::mem::size_of::<PngEncodeJob>()} else {std::mem::size_of::<RasterStackPreparation>()+std::mem::size_of::<RasterStackJob>()};
+        let stage=if self.encoding.is_some() {size_of::<PngEncodeJob>()+size_of::<Emit<RasterMutation,RasterConfigMutation>>()} else if self.compositing.is_some() {size_of::<RasterStackJob>()+size_of::<PngEncodeJob>()} else {size_of::<RasterStackPreparation>()+size_of::<RasterStackJob>()};
         Ok(semio_framework_value::RetirementDemand {copy_bytes:stage,depth:1,..Default::default()})
     }
     fn step(&mut self,input:&ArtifactCommandInputs<'_,EditorApp<RasterPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<EditorApp<RasterPlayApp>>,Fault> {

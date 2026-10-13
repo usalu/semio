@@ -301,7 +301,9 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioGraphDiff> {
     use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified};
     use crate::standards::v1::subsets::graph::schema::snapshot::demo_graph_snapshot;
     let demo = demo_graph_snapshot();
-    let added = |items: Vec<_>| items.into_iter().enumerate().map(|(index, item)| IndexAdded { index, item }).collect::<Vec<_>>();
+    fn added<T>(items: Vec<T>) -> Vec<IndexAdded<T>> {
+        items.into_iter().enumerate().map(|(index, item)| IndexAdded { index, item }).collect()
+    }
     vec![
         SemioGraphDiff::default(),
         SemioGraphDiff { nodes: Some(IndexedTripleDiff { added: added(demo.nodes.clone()), ..Default::default() }), edges: None },

@@ -38,5 +38,4 @@ impl OpText for PptxMutation {
     }
 }
 }
-pub use mutations_codec::*;
 

@@ -15,7 +15,7 @@ fn numeric(v:&D)->Result<f64,semio_framework_value::ValueError>{match v{semio_fr
 fn integer(v:&D)->Result<i64,semio_framework_value::ValueError>{match v{semio_framework_value::DslValue::Number(v)=>v.as_i64().ok_or_else(||invalid("expected exact catalogue integer")),_=>Err(invalid("expected catalogue integer"))}}
 fn array(v:&D)->Result<&[D],semio_framework_value::ValueError>{match v{semio_framework_value::DslValue::Array(v)=>Ok(v),_=>Err(invalid("expected catalogue array"))}}
 fn unit(v:&D,c:&mut NativeDecodeControl<'_>)->Result<CatalogueUnit,semio_framework_value::ValueError>{let v=object(v)?;keys(v,&["symbol","dimension","siFactor"],c)?;let d=object(field(v,"dimension",c)?)?;keys(d,&["length","mass","time","temperature"],c)?;let symbol=copy(field(v,"symbol",c)?,c)?;let si_factor=numeric(field(v,"siFactor",c)?)?;let mut signed=|key|i8::try_from(integer(field(d,key,c)?)?).map_err(|_|invalid("catalogue dimension exceeds signed8"));Ok(CatalogueUnit{symbol,si_factor,dimension:DimensionSignature{length:signed("length")?,mass:signed("mass")?,time:signed("time")?,temperature:signed("temperature")?}})}
-fn reserve<T>(v:&mut Vec<T>,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{if v.len()==v.capacity(){let extra=v.capacity().max(1);let bytes=v.capacity().checked_add(extra).and_then(|n|n.checked_mul(std::mem::size_of::<T>())).filter(|n|*n<=isize::MAX as usize).ok_or_else(||invalid("catalogue frontier allocation overflow"))?;c.charge(bytes)?;v.try_reserve_exact(extra).map_err(|_|invalid("catalogue construction allocation failed"))?;}Ok(())}
+fn reserve<T>(v:&mut Vec<T>,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{if v.len()==v.capacity(){let extra=v.capacity().max(1);let bytes=v.capacity().checked_add(extra).and_then(|n|n.checked_mul(size_of::<T>())).filter(|n|*n<=isize::MAX as usize).ok_or_else(||invalid("catalogue frontier allocation overflow"))?;c.charge(bytes)?;v.try_reserve_exact(extra).map_err(|_|invalid("catalogue construction allocation failed"))?;}Ok(())}
 fn push<T>(v:&mut Vec<T>,value:T,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{reserve(v,c)?;v.push(value);Ok(())}
 
 fn push_value(values:&mut Vec<V>,value:V,c:&mut NativeDecodeControl<'_>)->Result<(),semio_framework_value::ValueError>{if let Err(error)=reserve(values,c){crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_value(value);return Err(error)}values.push(value);Ok(())}
@@ -23,7 +23,7 @@ struct Values(Vec<V>);
 impl Drop for Values{fn drop(&mut self){for v in self.0.drain(..){crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_value(v);}}}
 enum Task<'a>{Value(&'a D),List(usize)}
 pub fn catalogue_value(value:&FieldValue,c:&mut NativeDecodeControl<'_>)->Result<V,semio_framework_value::ValueError>{
- let semio_framework_dsl_record::FieldValue::Value(root)=value else{return Err(invalid("expected catalogue intrinsic syntax value"))};
+ let FieldValue::Value(root)=value else{return Err(invalid("expected catalogue intrinsic syntax value"))};
  c.begin_stage(0)?;let mut pending=Vec::new();push(&mut pending,Task::Value(root),c)?;let mut values=Values(Vec::new());
  while let Some(task)=pending.pop(){c.step()?;match task{
   Task::List(count)=>{let offset=values.0.len().checked_sub(count).ok_or_else(||invalid("catalogue list construction differs"))?;let mut items=Values(c.allocate_vec(count)?);for index in offset..values.0.len(){c.step()?;items.0.push(std::mem::replace(&mut values.0[index],V::Null{state:NullState::Unknown}));}values.0.truncate(offset);push_value(&mut values.0,V::List{items:std::mem::take(&mut items.0)},c)?;},
@@ -51,11 +51,11 @@ pub fn catalogue_value(value:&FieldValue,c:&mut NativeDecodeControl<'_>)->Result
 }
 pub fn part_number(value:&FieldValue,c:&mut NativeDecodeControl<'_>)->Result<PartNumberRule,semio_framework_value::ValueError>{
  c.begin_stage(0)?;
- let semio_framework_dsl_record::FieldValue::Value(value)=value else{return Err(invalid("expected part number intrinsic syntax value"))};let v=object(value)?;let kind=text(field(v,"kind",c)?)?;keys(v,match kind{"literal"=>&["kind","value"],"script"=>&["kind","function_id","source"],"table"=>&["kind","rows","output_column"],_=>return Err(invalid("unknown part number variant"))},c)?;
+ let FieldValue::Value(value)=value else{return Err(invalid("expected part number intrinsic syntax value"))};let v=object(value)?;let kind=text(field(v,"kind",c)?)?;keys(v,match kind{"literal"=>&["kind","value"],"script"=>&["kind","function_id","source"],"table"=>&["kind","rows","output_column"],_=>return Err(invalid("unknown part number variant"))},c)?;
  match kind{
   "literal"=>Ok(PartNumberRule::Literal{value:copy(field(v,"value",c)?,c)?}),
   "script"=>Ok(PartNumberRule::Script{function_id:copy(field(v,"function_id",c)?,c)?,source:copy(field(v,"source",c)?,c)?}),
-  "table"=>{let input=array(field(v,"rows",c)?)?;let mut rows=c.allocate_vec(input.len())?;for row in input{c.step()?;let mut result=BTreeMap::new();for(key,value)in object(row)?{c.step()?;c.charge(std::mem::size_of::<(String,String)>().checked_add(128).ok_or_else(||invalid("part number ownership overflow"))?)?;let key=c.copy_text(key)?;let value=copy(value,c)?;if result.insert(key,value).is_some(){return Err(invalid("duplicate part number column"))}}rows.push(result);}Ok(PartNumberRule::Table{rows,output_column:copy(field(v,"output_column",c)?,c)?})},
+  "table"=>{let input=array(field(v,"rows",c)?)?;let mut rows=c.allocate_vec(input.len())?;for row in input{c.step()?;let mut result=BTreeMap::new();for(key,value)in object(row)?{c.step()?;c.charge(size_of::<(String,String)>().checked_add(128).ok_or_else(||invalid("part number ownership overflow"))?)?;let key=c.copy_text(key)?;let value=copy(value,c)?;if result.insert(key,value).is_some(){return Err(invalid("duplicate part number column"))}}rows.push(result);}Ok(PartNumberRule::Table{rows,output_column:copy(field(v,"output_column",c)?,c)?})},
   _=>Err(invalid("unknown part number variant"))
  }
 }

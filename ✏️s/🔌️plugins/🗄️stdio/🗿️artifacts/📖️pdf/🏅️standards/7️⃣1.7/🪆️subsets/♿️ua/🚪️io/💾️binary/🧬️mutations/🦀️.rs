@@ -5,17 +5,17 @@ use protocol::OpBinary;
 
 //#region 🧾️DerivedRegistry
 pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[
-    ("SetMarkInfo", "setMarkInfo", self::set_mark_info::BINARY_TAG),
-    ("RemoveMarkInfo", "removeMarkInfo", self::remove_mark_info::BINARY_TAG),
-    ("SetStructTreeRoot", "setStructTreeRoot", self::set_struct_tree_root::BINARY_TAG),
-    ("RemoveStructTreeRoot", "removeStructTreeRoot", self::remove_struct_tree_root::BINARY_TAG),
-    ("SetLang", "setLang", self::set_lang::BINARY_TAG),
-    ("RemoveLang", "removeLang", self::remove_lang::BINARY_TAG),
-    ("SetDisplayDocTitle", "setDisplayDocTitle", self::set_display_doc_title::BINARY_TAG),
-    ("RemoveDisplayDocTitle", "removeDisplayDocTitle", self::remove_display_doc_title::BINARY_TAG),
-    ("SetInfoTitle", "setInfoTitle", self::set_info_title::BINARY_TAG),
-    ("EmbedFontFile", "embedFontFile", self::embed_font_file::BINARY_TAG),
-    ("RemoveFontFile", "removeFontFile", self::remove_font_file::BINARY_TAG),
+    ("SetMarkInfo", "setMarkInfo", set_mark_info::BINARY_TAG),
+    ("RemoveMarkInfo", "removeMarkInfo", remove_mark_info::BINARY_TAG),
+    ("SetStructTreeRoot", "setStructTreeRoot", set_struct_tree_root::BINARY_TAG),
+    ("RemoveStructTreeRoot", "removeStructTreeRoot", remove_struct_tree_root::BINARY_TAG),
+    ("SetLang", "setLang", set_lang::BINARY_TAG),
+    ("RemoveLang", "removeLang", remove_lang::BINARY_TAG),
+    ("SetDisplayDocTitle", "setDisplayDocTitle", set_display_doc_title::BINARY_TAG),
+    ("RemoveDisplayDocTitle", "removeDisplayDocTitle", remove_display_doc_title::BINARY_TAG),
+    ("SetInfoTitle", "setInfoTitle", set_info_title::BINARY_TAG),
+    ("EmbedFontFile", "embedFontFile", embed_font_file::BINARY_TAG),
+    ("RemoveFontFile", "removeFontFile", remove_font_file::BINARY_TAG),
 ];
 //#endregion 🧾️DerivedRegistry
 

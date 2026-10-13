@@ -63,7 +63,7 @@ pub(crate) mod context {
     /// 🪪️ Bound to the `local` instance id, as the runtime mounts it — an unbound app refuses every
     /// retained typed command with `interactive-job.live-instance`.
     pub async fn app_with_registry() -> Block5dAppFixture {
-        let mut app = new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
         Block5dAppFixture(app)
     }
@@ -71,8 +71,8 @@ pub(crate) mod context {
     /// 🔁️ Admits one typed command and settles it through the same bounded continuation, maintenance
     /// and ACK protocol the plugin host drives — a fault in any of those turns fails the dispatch.
     pub async fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle typed operation");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle typed operation");
         result
     }
     
@@ -90,7 +90,7 @@ pub(crate) mod context {
         assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
         for effect in emit.effects {
             if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                semio_framework_plugin::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the example loads");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the example loads");
             }
         }
     }
@@ -272,10 +272,10 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let kinds = app.snapshot().expect("snapshot").grip_kinds.len();
     context::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
-    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("undo settles");
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds);
-    let admitted = app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    let admitted = app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("redo");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("redo settles");
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
 }

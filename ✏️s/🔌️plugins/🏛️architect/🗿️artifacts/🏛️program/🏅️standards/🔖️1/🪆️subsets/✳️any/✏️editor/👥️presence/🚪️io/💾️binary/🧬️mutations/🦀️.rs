@@ -16,4 +16,3 @@ impl protocol::OpBinary for ArchitectPresenceMutation {
     }
 }
 }
-pub use mutations_codec::*;

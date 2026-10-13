@@ -162,4 +162,3 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 
 use crate::standards::v1::subsets::drawing::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_node_diff, dec_node_diff, enc_canvas, dec_canvas, enc_style_diff, dec_style_diff, enc_layer_diff, dec_layer_diff};
 }
-pub use diff_codec::*;

@@ -15,7 +15,8 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::{SequenceContentChild, SequenceSnapshot};
+use crate::{SequenceSnapshot};
+#[cfg(test)] use crate::{SequenceContentChild};
 
 //#region 🔖️ArtifactDslCodec
 impl store::ArtifactDsl for SequenceSnapshot {

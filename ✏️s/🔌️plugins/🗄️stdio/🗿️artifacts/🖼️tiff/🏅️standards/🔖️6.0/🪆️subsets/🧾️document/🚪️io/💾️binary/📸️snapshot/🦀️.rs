@@ -24,4 +24,4 @@ impl store::ArtifactPack for TiffSnapshot {
  }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

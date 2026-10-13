@@ -277,7 +277,8 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfObject, PdfSnapshot};
+    #[cfg(test)] use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfIndirectObject};
     use crate::standards::v1_7::subsets::base::io::PdfAnalyzer as PdfAnyAnalyzer;
     pub use crate::standards::v1_7::subsets::base::io::PdfParts;
     use crate::standards::v1_7::subsets::x::io::check_x_conformance;
@@ -424,7 +425,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PdfVtBuilderFacets {
         construction: PdfVtBuilderConstruction,
         analysis: PdfVtAnalyzerAnalysis,
-        composition: super::io::derived_composition::PdfVtComposerComposition,
+        composition: PdfVtComposerComposition,
     }
     builder: PdfVtBuilder,
     analyzer: PdfVtAnalyzer,

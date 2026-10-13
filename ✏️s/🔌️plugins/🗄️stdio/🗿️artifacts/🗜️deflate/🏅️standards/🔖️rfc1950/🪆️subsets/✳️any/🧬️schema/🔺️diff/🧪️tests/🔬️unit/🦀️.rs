@@ -64,7 +64,7 @@ async fn inverse_law_mutation_and_diff_level() {
         // 🔁️ diff-level: d.diff().inverse(base).apply(&d.diff().apply(base)) == base.
         let d = m.diff(&base);
         let applied = protocol::apply_diff(d.diff(), &base).unwrap();
-        let undone = protocol::apply_diff(d.diff().inverse(&base), &applied).unwrap();
+        let undone = protocol::apply_diff(&d.diff().inverse(&base), &applied).unwrap();
         assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
     }
 }

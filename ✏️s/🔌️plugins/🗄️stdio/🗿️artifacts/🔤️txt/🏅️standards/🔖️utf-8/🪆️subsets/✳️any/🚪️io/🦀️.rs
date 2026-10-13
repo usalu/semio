@@ -92,30 +92,30 @@ pub fn register_pilot_languages() {
         id: "stdio.txt",
         extension: Some("txt"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::standards::v_utf_8::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v_utf_8::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::standards::v_utf_8::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v_utf_8::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.txt.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::standards::v_utf_8::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v_utf_8::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::diff::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::diff::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.diff"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -124,8 +124,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -134,8 +134,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_utf_8::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.txt.spr"),
     });
 }
@@ -338,7 +338,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec TxtBuilderFacets {
         construction: TxtBuilderConstruction,
         analysis: TxtAnalyzerAnalysis,
-        composition: crate::standards::v_utf_8::subsets::any::io::derived_composition::TxtComposerComposition,
+        composition: TxtComposerComposition,
     }
     builder: TxtBuilder,
     analyzer: TxtAnalyzer,

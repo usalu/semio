@@ -415,6 +415,7 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
+    crate::plugin_runtime::test_admit_instance_actor(&runtime, 7, "local");
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
     assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
     let rejection = denied

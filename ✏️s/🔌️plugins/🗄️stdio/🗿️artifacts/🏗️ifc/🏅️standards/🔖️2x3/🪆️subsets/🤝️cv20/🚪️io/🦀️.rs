@@ -399,7 +399,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Ifc2x3Cv20BuilderFacets {
         construction: Ifc2x3Cv20BuilderConstruction,
         analysis: Ifc2x3Cv20AnalyzerAnalysis,
-        composition: super::io::derived_composition::Ifc2x3Cv20ComposerComposition,
+        composition: Ifc2x3Cv20ComposerComposition,
     }
     builder: Ifc2x3Cv20Builder,
     analyzer: Ifc2x3Cv20Analyzer,

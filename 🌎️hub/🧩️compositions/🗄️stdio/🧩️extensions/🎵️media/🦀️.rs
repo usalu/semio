@@ -46,4 +46,4 @@ pub fn plugin() -> Result<Plugin<StdioMediaApps>, PluginAssemblyError> {
 }
 
 #[cfg(feature = "plugin-root")]
-semio_framework_plugin::plugin_exports!(plugin, StdioMediaApps);
+semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, StdioMediaApps);

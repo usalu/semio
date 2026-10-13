@@ -19,10 +19,10 @@ impl LinkRoot {
         else { self.insert(source.into(), vec![target.into()]); }
     }
     pub(super) fn copy_demand(&self) -> usize {
-        self.0.last().map_or(0, |row| if !row.1.is_empty() { std::mem::size_of::<String>() } else if row.1.capacity() == 0 && row.0.capacity() == 0 { std::mem::size_of::<Row>() } else { 0 })
+        self.0.last().map_or(0, |row| if !row.1.is_empty() { size_of::<String>() } else if row.1.capacity() == 0 && row.0.capacity() == 0 { size_of::<Row>() } else { 0 })
     }
     pub(super) fn release_demand(&self) -> usize {
-        self.0.last().map_or(self.0.capacity() * std::mem::size_of::<Row>(), |row| if let Some(target) = row.1.last() { target.capacity() } else if row.1.capacity() != 0 { row.1.capacity() * std::mem::size_of::<String>() } else { row.0.capacity() })
+        self.0.last().map_or(self.0.capacity() * size_of::<Row>(), |row| if let Some(target) = row.1.last() { target.capacity() } else if row.1.capacity() != 0 { row.1.capacity() * size_of::<String>() } else { row.0.capacity() })
     }
     pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
         let empty = RetainedCloneProgress::default();

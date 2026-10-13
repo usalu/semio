@@ -25,9 +25,10 @@ use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 use crate::editor::flow::terminology::{flow_play_labels, FlowPlayLabels};
 use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
+use semio_framework_artifact_flow_flow::{CameraJson, Widget};
+#[cfg(test)] use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
 use semio_framework_artifact_infinite_dag::DagDrawLod;
-use semio_framework_plugin::app::{ChildEmit,ChildEmitPreparation, InteractionView};
+use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
@@ -68,7 +69,8 @@ use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 use semio_framework::kernel::UiDirtyScope;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, PortRef, SemioFlowSnapshot};
+#[cfg(test)] use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode};
 #[cfg(test)]
 use serde_json::Value;
 use std::collections::HashMap;
@@ -385,7 +387,7 @@ fn flow_direct_store_emit(command: &FlowCommand, config: &FlowMainWindowConfig, 
     let mut next = config.clone();
     match command {
         FlowCommand::NodeGraphViewport(payload) => {
-            next.camera = semio_framework_artifact_flow_flow::CameraJson { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom };
+            next.camera = CameraJson { x: payload.viewport.x, y: payload.viewport.y, zoom: payload.viewport.zoom };
         }
         FlowCommand::SetLodMode(payload) => {
             if payload.value == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(&payload.value).is_some() {
@@ -589,7 +591,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         }
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
         let context = context.ok_or_else(|| Fault::from("flow-window-context-required"))?;
         let view = context.view_state.as_ref().ok_or_else(|| Fault::from("flow-window-view-required"))?;
@@ -622,7 +624,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     return Ok(ArtifactCommandWorkStep::Progress { stage: "flow-duplicate-source", preview: br#"{"en":"Finding source widget","de":"Quell-Widget wird gesucht"}"# });
                 }
                 self.completed = true;
-                return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("duplicateWidget found no widget \"{}\"", payload.widget_id)));
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("duplicateWidget found no widget \"{}\"", payload.widget_id)));
             }
             let source_index = self.duplicate_source.ok_or_else(|| Fault::from("flow-duplicate-source-owner"))?;
             let source = child.nodes.get(source_index).filter(|node| node.id == payload.widget_id).ok_or_else(|| Fault::from("flow-duplicate-source-stale"))?;
@@ -732,8 +734,8 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             self.completed = true;
             if node_ids.is_empty() && edge_ids.is_empty() {
                 return Err(match command {
-                    FlowCommand::RemoveWidget(payload) => semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("removeWidget found no widget \"{}\"", payload.widget_id)),
-                    FlowCommand::Disconnect(payload) => semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("disconnect found no synapse \"{}\"", payload.synapse_id)),
+                    FlowCommand::RemoveWidget(payload) => Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("removeWidget found no widget \"{}\"", payload.widget_id)),
+                    FlowCommand::Disconnect(payload) => Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("disconnect found no synapse \"{}\"", payload.synapse_id)),
                     _ => Fault::from("flow-retained-direct-route-mismatch"),
                 });
             }
@@ -795,7 +797,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let node_ids = self.node_ids.take().ok_or_else(|| Fault::from("flow-retained-delete-selection-owner"))?;
             self.completed = true;
             if node_ids.is_empty() && edge_ids.is_empty() {
-                return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.delete-selection-empty"), "deleteSelection needs at least one selected widget or synapse"));
             }
             return Ok(ArtifactCommandWorkStep::Complete(flow_content_leaves_emit(&snapshot.content.child_id, flow_removal_leaves(&child, &node_ids, &edge_ids))));
         }
@@ -946,7 +948,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1227,7 +1229,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1586,11 +1588,11 @@ impl FlowGraphOperationWork {
         instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
             owner.with_session(|session| match command {
                 FlowCommand::ConnectMediaPorts(payload) if resolved == [true, true] => connect_media_ports::connect_edit(payload, composed, config, session),
-                FlowCommand::ConnectMediaPorts(payload) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("connectMediaPorts found no widget \"{}\"", if resolved[0] { &payload.target_node_id } else { &payload.source_node_id }))),
+                FlowCommand::ConnectMediaPorts(payload) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("connectMediaPorts found no widget \"{}\"", if resolved[0] { &payload.target_node_id } else { &payload.source_node_id }))),
                 FlowCommand::Reorganize(_) => reorganize::reorganize_edit(composed, config, session),
                 FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] && !payload.value.trim().is_empty() => rename_flow_widget::rename_edit(payload, composed),
-                FlowCommand::RenameFlowWidget(payload) if !resolved[0] => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("renameFlowWidget found no widget \"{}\"", payload.old_id))),
-                FlowCommand::RenameFlowWidget(payload) => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.widget-id-unavailable"), format!("renameFlowWidget cannot rename \"{}\" to \"{}\": the id is empty or taken", payload.old_id, payload.value.trim()))),
+                FlowCommand::RenameFlowWidget(payload) if !resolved[0] => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("mutation.target-missing"), format!("renameFlowWidget found no widget \"{}\"", payload.old_id))),
+                FlowCommand::RenameFlowWidget(payload) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.widget-id-unavailable"), format!("renameFlowWidget cannot rename \"{}\" to \"{}\": the id is empty or taken", payload.old_id, payload.value.trim()))),
                 FlowCommand::RunExtensionAction(payload) => run_extension_action::extension_action_result(payload, composed, config, session),
                 FlowCommand::SetActiveExample(payload) => set_active_example::set_active_example_edit(payload),
                 _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
@@ -1686,7 +1688,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(usize::from(self.instance_owner.is_some())) }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -1935,7 +1937,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         self.closing = true;
     }
 
-    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
@@ -2173,8 +2175,8 @@ impl ArtifactEditor for FlowPlayApp {
     /// 🧭️ The leaf that names a node-drag release (design §19.1): a release that also drew a wire lands its `insert-edge`
     /// before the relative `drag-nodes`, and the history row is still labelled by the drag.
     fn tool_intent_kinds(tool: &str) -> &'static [&'static str] {
-        match tool.strip_prefix(crate::editor::flow::modes::edit::tools::drag::FLOW_EDITOR_APP_ID).and_then(|verb| verb.strip_prefix('#')) {
-            Some(crate::editor::flow::commands::node_graph_edit::NODE_GRAPH_EDIT_VERB | "moveMediaNode") => &["drag-nodes"],
+        match tool.strip_prefix(edit::tools::drag::FLOW_EDITOR_APP_ID).and_then(|verb| verb.strip_prefix('#')) {
+            Some(node_graph_edit::NODE_GRAPH_EDIT_VERB | "moveMediaNode") => &["drag-nodes"],
             _ => &[],
         }
     }

@@ -244,9 +244,11 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
 /// mid-`AppBuilder::try_build_definition` with a bare "error while executing" and no mention of
 /// fuel. Debug wasm is the build the describe step actually consumes, so it is the build the cap
 /// must be sized against; `semio-s-plugin-gis` exhausted **4_000_000_000** fuel at ~1_024_604 ms
-/// (2026-09-17), so `8_000_000_000` is the next measured step. Re-measure, do not re-estimate, if a
-/// larger plugin trips it.
-const DESCRIBE_FUEL_BUDGET: u64 = 8_000_000_000;
+/// (2026-09-17), so `8_000_000_000` was the next measured step. `🏛️architect` (the program artifact
+/// hosted over the whole `stdio-semio` member set) exhausted it at `opt-level = 1` on 2026-10-12 and then
+/// completed at **22_659_514_423** fuel (≈ 490 s), so `32_000_000_000` is the next measured step. Re-measure,
+/// do not re-estimate, if a larger plugin trips it.
+const DESCRIBE_FUEL_BUDGET: u64 = 32_000_000_000;
 
 /// ⏳️ How long `describe()` may make NO fuel progress at all before the build gives up. It is a
 /// stall bound, not a total-runtime bound — `OwnedDeadline::NoFuelProgress`, which

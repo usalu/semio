@@ -247,7 +247,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec FlowBuilderFacets {
         construction: FlowBuilderConstruction,
         analysis: FlowAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::FlowComposerComposition,
+        composition: FlowComposerComposition,
     }
     builder: FlowBuilder,
     analyzer: FlowAnalyzer,

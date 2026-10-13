@@ -19,7 +19,7 @@ const AGENT_LANE_DIVERGENCES: &[&str] = &["translateSelection", "rotateSelection
 /// transaction, never settles without it.
 #[semio_framework_async_macros::async_test]
 async fn the_agent_lane_runs_the_puzzle3d_editors_own_tool_command_job() {
-    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>, <Puzzle3dPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_puzzle3d_app, None, BATTERY_VERBS).await;
+    let probes = probe_agent_lane::<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>, <Puzzle3dPlayApp as semio_framework_plugin::ArtifactEditor>::Members>(create_puzzle3d_app, None, BATTERY_VERBS, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     let outcomes = probes.iter().map(|probe| format!("{}: shell {:?} / agent {:?}", probe.verb, probe.windows.iter().map(|window| &window.staged).collect::<Vec<_>>(), probe.agent)).collect::<Vec<_>>();
     for probe in &probes {
         assert!(!matches!(&probe.agent, Some(DeclaredVerbOutcome::Unreachable { code, .. }) if code != "interactive-job.agent-lane-uncarried"), "{} is refused before its job ran: {outcomes:#?}", probe.verb);

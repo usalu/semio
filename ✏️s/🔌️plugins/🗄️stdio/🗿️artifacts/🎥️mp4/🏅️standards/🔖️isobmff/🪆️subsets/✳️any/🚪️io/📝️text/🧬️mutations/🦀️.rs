@@ -37,4 +37,4 @@ impl OpText for Mp4Mutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;

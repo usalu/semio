@@ -4,7 +4,6 @@ use crate::editor::gis2d::modes::edit::windows::map::config::{layer_visible, Map
 use crate::editor::gis2d::terminology::{gis2d_layer_label, Gis2dPlayLabels};
 use crate::editor::gis2d::{gis2d_window_action, GIS_MAP_LAYER_IDS};
 use semio_framework_plugin::WindowMeasure;
-use serde_json::json;
 
 //#region 🔖️Option
 pub const GIS2D_LAYERS_MEASURE_ID: &str = "gis2d-play-window.layers";

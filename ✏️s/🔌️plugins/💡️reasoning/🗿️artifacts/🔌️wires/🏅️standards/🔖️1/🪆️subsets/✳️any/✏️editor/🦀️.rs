@@ -552,7 +552,7 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 
     const DIALECT: Dialect = crate::WIRES_DIALECT;
     /// 🧬️ The crate's one loaded-parent child projection (`crate::wires_child_restore_projection`).
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
         crate::wires_child_restore_projection(snapshot)
     }
 

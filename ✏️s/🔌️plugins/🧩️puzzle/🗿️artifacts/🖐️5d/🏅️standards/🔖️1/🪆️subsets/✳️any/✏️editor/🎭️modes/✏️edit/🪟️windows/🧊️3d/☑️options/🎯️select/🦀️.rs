@@ -6,7 +6,6 @@
 //! record, so the body is declared once here as [`selectable_kind_group`] and the board pane's
 //! `◻️2d/☑️options/🎯️select` calls it with its own group id.
 
-use semio_framework_pack_json::json;
 use crate::editor::puzzle5d::config::Puzzle5dRuntime;
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::{puzzle5d_action, PUZZLE5D_PLAY_CONTROLLER_ID};

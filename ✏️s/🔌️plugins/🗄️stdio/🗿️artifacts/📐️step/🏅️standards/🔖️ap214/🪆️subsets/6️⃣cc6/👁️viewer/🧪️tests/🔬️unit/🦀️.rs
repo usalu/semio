@@ -14,5 +14,5 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn viewer_never_mutates_the_document_or_draft_store() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<StepCc6Viewer>().await;
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<StepCc6Viewer>(semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
 }

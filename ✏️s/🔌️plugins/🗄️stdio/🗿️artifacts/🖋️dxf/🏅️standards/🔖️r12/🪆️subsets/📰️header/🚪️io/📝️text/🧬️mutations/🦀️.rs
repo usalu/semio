@@ -127,4 +127,3 @@ impl OpText for DxfMutation {
     }
 }
 }
-pub use mutations_codec::*;

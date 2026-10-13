@@ -575,7 +575,7 @@ pub use snapshot_wire_codec::*;
 
 #[cfg(feature = "component-app-assembly")]
 pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
-    let mut host = crate::standards::v1::subsets::any::io::text::snapshot::generation_preview_host(host_snapshot, values);
+    let mut host = generation_preview_host(host_snapshot, values);
     let evaluated = host.evaluate().unwrap_or_default();
     host.retire_cold();
     evaluated

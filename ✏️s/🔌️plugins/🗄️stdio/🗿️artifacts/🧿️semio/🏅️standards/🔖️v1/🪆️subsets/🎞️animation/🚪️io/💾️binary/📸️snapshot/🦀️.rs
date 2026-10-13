@@ -287,4 +287,3 @@ impl store::ArtifactPack for SemioAnimationSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

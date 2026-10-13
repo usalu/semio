@@ -1,6 +1,6 @@
 //! 🧬️ Note artifact schema — every field of the artifact with its state class.
 
-use crate::{NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use crate::{NoteTableCell, NoteTextParagraph, NoteTextRun};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};

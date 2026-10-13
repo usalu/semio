@@ -9,4 +9,4 @@ paint-native-samples-op = "paint-native-samples" "payload" "=" hex
 set-gamma-op = "set-gamma" "payload" "=" hex
 replace-samples-op = "replace-samples" "payload" "=" hex
 
-replace-image-op = "replace-image" "image" "=" hex
+replace-image-op = "replace-image" "payload" "=" hex

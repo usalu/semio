@@ -10,7 +10,7 @@ async fn editable_archive_restores_nested_masks_assets_adjustments_and_history()
     let layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();crate::retire_raster_layers(std::mem::replace(&mut document.layers,layers));
     let mut envelope=store::create_document_envelope::<crate::RasterSnapshot,crate::RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"raster",document,None);envelope.dialect=Some(crate::RASTER_DIALECT.into());
     let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
-    let mut source=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut source, &files).await.unwrap();
+    let mut source=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut source, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
     let before=source.snapshot().unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&before.layers)).unwrap(),fixture["layers"]);
     let rename=&fixture["rename"];let id=rename["id"].as_str().unwrap();
@@ -20,7 +20,7 @@ async fn editable_archive_restores_nested_masks_assets_adjustments_and_history()
     let mut restored=context::app().await;restored.begin_document_archive_load(71,archive).unwrap();
     let mut ready=false;
     for _ in 0..100000 {
-        let status=restored.poll_document_archive_load(71).await.unwrap();
+        let status=restored.poll_document_archive_load(71, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
         match status.state {
             protocol::DocumentArchiveLoadState::Ready=>{ready=true;break;},
             protocol::DocumentArchiveLoadState::Fault=>panic!("{}",semio_framework_diagnostic::decode_fault_bytes(&status.fault).describe()),

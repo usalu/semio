@@ -22,7 +22,7 @@ use crate::editor::puzzle3d::commands::{
     set_proximity_radius, set_selectable_kind, set_selection_flag, set_snap_enabled, set_spacing, set_target_volume_flag, set_transform_gumball_flag, set_visible, set_vortex_direction, set_vortex_show, set_voxel_dims, target_brush_suggestions,
     translate_selection, world_relocate,
 };
-use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime, Puzzle3dConfigSetFillCount, Puzzle3dConfigSetContactTolerance, Puzzle3dConfigSetObjectKindWeights, Puzzle3dConfigSetVortexKindWeights, Puzzle3dConfigSetActiveExampleId};
+use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dRuntime, Puzzle3dConfigSetFillCount, Puzzle3dConfigSetObjectKindWeights, Puzzle3dConfigSetVortexKindWeights, Puzzle3dConfigSetActiveExampleId};
 use crate::editor::puzzle3d::modes::edit;
 use crate::editor::puzzle3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::puzzle3d::modes::edit::windows::main;
@@ -34,7 +34,7 @@ use crate::editor::puzzle3d::presence;
 use crate::editor::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
 use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
 use crate::editor::puzzle3d::window as window_ownership;
-use crate::standards::v1::subsets::any::schema::mutations::{};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{};
 use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dMutation};
@@ -62,7 +62,7 @@ use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
 use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::BuiltNode;
+#[cfg(test)] use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::DialogDefinition;
@@ -124,7 +124,8 @@ use semio_framework_2d::compute::EngineHandles;
 use semio_framework_value::FromValue;
 use semio_framework_pack_json::{from_json_str, json, object, parse, to_json_string, to_string, Object, Value};
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
+#[cfg(test)] use std::collections::{BTreeMap};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{LazyLock, Mutex, OnceLock};
 
@@ -502,8 +503,8 @@ pub fn puzzle3d_snapshot_from_host_snapshot(scene_snapshot: &Puzzle3dSceneSnapsh
         schema: scene_snapshot.schema.clone(),
         domain: scene_snapshot.domain.clone(),
         meta: crate::Puzzle3dMeta {
-            kind_catalogs: scene_snapshot.meta.kind_catalogs.clone().map(semio_framework_value::FromValue::from_value).transpose()?,
-            kind_compatibility: match scene_snapshot.meta.kind_compatibility.clone(){Some(value)=>semio_framework_value::FromValue::from_value(value)?,None=>Default::default()},
+            kind_catalogs: scene_snapshot.meta.kind_catalogs.clone().map(FromValue::from_value).transpose()?,
+            kind_compatibility: match scene_snapshot.meta.kind_compatibility.clone(){Some(value)=>FromValue::from_value(value)?,None=>Default::default()},
         },
         objects: scene_snapshot.objects.iter().map(snapshot_object_from_host_snapshot).collect::<Result<_,_>>()?,
         attractions: scene_snapshot.attractions.iter().map(snapshot_attraction_from_host_snapshot).collect(),
@@ -520,7 +521,7 @@ fn snapshot_object_from_host_snapshot(object: &Puzzle3dObject) -> Result<crate::
         anchor: crate::Puzzle3dObjectAnchor::default(),
         origin: object.origin,
         orientation: object.orientation,
-        scale: object.scale.clone().map(semio_framework_value::FromValue::from_value).transpose()?,
+        scale: object.scale.clone().map(FromValue::from_value).transpose()?,
         mesh_url: object.mesh_url.clone(),
         vortices: object.vortices.iter().map(snapshot_vortex_from_host_snapshot).collect(),
         hidden: object.hidden,
@@ -549,7 +550,7 @@ fn snapshot_attraction_from_host_snapshot(attraction: &Puzzle3dAttraction) -> cr
 }
 
 fn snapshot_target_volume_from_host_snapshot(volume: &Puzzle3dTargetVolume) -> Result<crate::Puzzle3dTargetVolume,semio_framework_value::ValueError> {
-    Ok(crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().map(semio_framework_value::FromValue::from_value).transpose()?, hidden: volume.hidden, locked: volume.locked })
+    Ok(crate::Puzzle3dTargetVolume { id: volume.id.clone(), origin: volume.origin, orientation: volume.orientation, scale: volume.scale.clone().map(FromValue::from_value).transpose()?, hidden: volume.hidden, locked: volume.locked })
 }
 
 fn snapshot_reference_from_host_snapshot(reference: &Puzzle3dReference) -> crate::Puzzle3dReference {
@@ -685,7 +686,7 @@ fn puzzle3d_upsert_catalog_rows(catalogs: &mut semio_framework_value::DslValue, 
 }
 
 pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
-    args.and_then(|value| value.get("ids")).and_then(|value| semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(value)).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
+    args.and_then(|value| value.get("ids")).and_then(|value| FromValue::from_value(semio_framework_pack_json::to_dsl_value(value)).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
 
 /// 📢️ The localized notice of every refusal code the puzzle 3d guest names (design §20.12): a set-verb's missing flag value and
@@ -950,8 +951,8 @@ pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &semio_framework_valu
                 .iter()
                 .enumerate()
                 .map(|(index, template)| {
-                    let position = template.get("point").or_else(|| template.get("position")).and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
-                    let direction = template.get("direction").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok());
+                    let position = template.get("point").or_else(|| template.get("position")).and_then(|value| FromValue::from_value(value.clone()).ok()).unwrap_or([0.0, 0.0, 0.0]);
+                    let direction = template.get("direction").and_then(|value| FromValue::from_value(value.clone()).ok());
                     let radius = template.get("radius").and_then(|value| value.as_f64());
                     Puzzle3dVortex { id: format!("v{index}"), vortex_kind: template.get("vortexKind").and_then(|value| value.as_str()).map(str::to_string), position, direction, radius, hidden: false, locked: false }
                 })
@@ -1255,11 +1256,11 @@ pub(crate) fn scene_config(envelope: &Puzzle3dScene) -> Option<crate::standards:
     let meta = &envelope.scene_snapshot.meta;
     let kind_catalogs = match meta.kind_catalogs.as_ref() {
         None | Some(semio_framework_value::DslValue::Null) => None,
-        Some(catalogs) => Some(semio_framework_value::FromValue::from_value(catalogs.clone()).ok()?),
+        Some(catalogs) => Some(FromValue::from_value(catalogs.clone()).ok()?),
     };
     let kind_compatibility = match meta.kind_compatibility.as_ref() {
         None => Vec::new(),
-        Some(entries) => semio_framework_value::FromValue::from_value(entries.clone()).ok()?,
+        Some(entries) => FromValue::from_value(entries.clone()).ok()?,
     };
     Some(crate::standards::v1::subsets::any::schema::SceneConfig {
         scene_snapshot: crate::standards::v1::subsets::any::schema::EngineSceneSnapshot {
@@ -2783,7 +2784,7 @@ impl Puzzle3dPlayApp {
         let fingerprint = main::scene_geometry_fingerprint(scene_snapshot);
         let mut residency = self.instance_residency.lock().expect("instance residency");
         let residency = residency.get_or_insert_with(Box::<main::Puzzle3dInstanceResidency>::default);
-        let republished = residency.refresh(scene_snapshot, provisional, referenced);
+        let _republished = residency.refresh(scene_snapshot, provisional, referenced);
         let mut meshes = self.mesh_cache.lock().expect("mesh cache");
         let mesh_miss = meshes.as_ref().is_none_or(|(cached, _)| *cached != fingerprint);
         if mesh_miss {
@@ -3351,10 +3352,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         Some(1)
     }
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -3430,7 +3431,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dWindowWorkOwners { prologue: std::mem::take(&mut self.prologue), session: self.session.take(), instance_owner: self.instance_owner.take() });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -3455,7 +3456,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -3551,10 +3552,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         match self.stage {
             Puzzle3dKindWeightStage::Catalog => {
@@ -3676,7 +3677,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dKindWeightWorkOwners { ids: std::mem::take(&mut self.ids), result: std::mem::take(&mut self.result), changed_id: std::mem::take(&mut self.changed_id) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -3701,7 +3702,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -3829,10 +3830,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let catalogs = snapshot.typed().meta.kind_catalogs.as_ref();
         match self.stage {
@@ -3939,7 +3940,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dAddObjectKindWorkOwners { catalog_mutation: std::mem::take(&mut self.catalog_mutation), mutation: std::mem::take(&mut self.mutation), vortices: std::mem::take(&mut self.vortices), mesh_url: std::mem::take(&mut self.mesh_url), object_id: std::mem::take(&mut self.object_id), payload: std::mem::take(&mut self.payload) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -3964,7 +3965,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4095,10 +4096,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         match self.stage {
             Puzzle3dTransformStage::Read => {
@@ -4130,7 +4131,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dTransformWorkOwners { record: std::mem::take(&mut self.record), scan: std::mem::take(&mut self.scan), refusal: std::mem::take(&mut self.refusal).map(Puzzle3dRefusal) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -4155,7 +4156,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4446,10 +4447,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context: _context, .. } = *input;
         match self.stage {
             Puzzle3dPatchInspectorStage::Selection => {
@@ -4562,7 +4563,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dPatchInspectorWorkOwners { selected: std::mem::take(&mut self.selected), mutations: std::mem::take(&mut self.mutations), pending_attraction: std::mem::take(&mut self.pending_attraction) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -4587,7 +4588,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4701,10 +4702,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let (attracting_id, attracted_id) = Self::ids(command);
         if attracting_id.is_empty() || attracted_id.is_empty() || attracting_id == attracted_id {
@@ -4792,7 +4793,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dCreateAttractionWorkOwners { attracting: std::mem::take(&mut self.attracting), attracted: std::mem::take(&mut self.attracted) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -4817,7 +4818,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -4943,10 +4944,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let Some(target) = Self::target(command) else { return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit::default())) };
         match self.stage {
@@ -5016,7 +5017,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 Ok(crate::puzzle_progress_step!("puzzle3d-example-catalogs", "Updating kind catalogs", "Artenkataloge werden aktualisiert"))
             }
             Puzzle3dSetActiveExampleStage::Catalogs => {
-                let catalogs = target.meta.kind_catalogs.as_ref().map(|catalogs| semio_framework_value::FromValue::from_value(catalogs.clone())).transpose().map_err(|_| Fault::from("puzzle3d-set-active-example-catalogs-malformed"))?;
+                let catalogs = target.meta.kind_catalogs.as_ref().map(|catalogs| FromValue::from_value(catalogs.clone())).transpose().map_err(|_| Fault::from("puzzle3d-set-active-example-catalogs-malformed"))?;
                 self.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(catalogs))?;
                 self.advance(Puzzle3dSetActiveExampleStage::CreateObjects);
                 Ok(crate::puzzle_progress_step!("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"))
@@ -5027,7 +5028,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 if !range.is_empty() {
                     for object in &items[range] {
                         let value = semio_framework_value::ToValue::to_value(object);
-                        let object = semio_framework_value::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
+                        let object = FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-object-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_object(object, None))?;
                     }
                     return Ok(crate::puzzle_progress_step!("puzzle3d-example-create-object", "Adding example object", "Beispielobjekt wird hinzugefügt"));
@@ -5065,7 +5066,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 if !range.is_empty() {
                     for volume in &items[range] {
                         let value = semio_framework_value::ToValue::to_value(volume);
-                        let volume = semio_framework_value::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
+                        let volume = FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-volume-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_target_volume(volume, None))?;
                     }
                     return Ok(crate::puzzle_progress_step!("puzzle3d-example-create-volume", "Adding example target volume", "Beispielzielvolumen wird hinzugefügt"));
@@ -5079,7 +5080,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 if !range.is_empty() {
                     for reference in &items[range] {
                         let value = semio_framework_value::ToValue::to_value(reference);
-                        let reference = semio_framework_value::FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
+                        let reference = FromValue::from_value(value).map_err(|_| Fault::from("puzzle3d-set-active-example-reference-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::create_reference(reference, None))?;
                     }
                     return Ok(crate::puzzle_progress_step!("puzzle3d-example-create-reference", "Adding example reference", "Beispielreferenz wird hinzugefügt"));
@@ -5092,7 +5093,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                 let range = Self::take_chunk(&mut self.cursor, items.len());
                 if !range.is_empty() {
                     for row in items[range].iter().cloned() {
-                        let row: crate::Puzzle3dKindCompatibility = semio_framework_value::FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
+                        let row: crate::Puzzle3dKindCompatibility = FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
                         self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity, None))?;
                     }
                     return Ok(crate::puzzle_progress_step!("puzzle3d-example-create-compatibility", "Adding example compatibility", "Beispielkompatibilität wird hinzugefügt"));
@@ -5125,7 +5126,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -5150,7 +5151,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5275,10 +5276,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         // 🧯️ Every early terminal below is a click that placed nothing. Each one now says so — an
@@ -5408,7 +5409,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dAddBrushObjectWorkOwners { payload: std::mem::take(&mut self.payload), object_id: std::mem::take(&mut self.object_id), mesh_url: std::mem::take(&mut self.mesh_url), vortices: std::mem::take(&mut self.vortices), mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -5433,7 +5434,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5507,10 +5508,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -5580,7 +5581,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dFocusSelectionWorkOwners { selected: std::mem::take(&mut self.selected) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -5605,7 +5606,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -5703,10 +5704,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_transient_snapshot = context.and_then(|context| context.window_transient.as_ref());
@@ -5826,7 +5827,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
                     anchor: Default::default(),
                     origin: candidate.origin,
                     orientation: Some(candidate.orientation),
-                    scale: candidate.scale.clone().and_then(|value| semio_framework_value::FromValue::from_value(value).ok()),
+                    scale: candidate.scale.clone().and_then(|value| FromValue::from_value(value).ok()),
                     mesh_url: Some(candidate.mesh_url.clone()),
                     vortices: std::mem::take(&mut self.vortices),
                     hidden: false,
@@ -5865,7 +5866,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dAcceptSuggestionWorkOwners { vortices: std::mem::take(&mut self.vortices), mutations: std::mem::take(&mut self.mutations), target_id: std::mem::take(&mut self.target_id), object_id: std::mem::take(&mut self.object_id), candidate: std::mem::take(&mut self.candidate), instance_owner: std::mem::take(&mut self.instance_owner) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -5890,7 +5891,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -6010,10 +6011,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle3dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle3dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle3dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -6154,7 +6155,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
         self.close_owners.stage(Puzzle3dPrecomputeWorkOwners { prologue: std::mem::take(&mut self.prologue), session: self.session.take(), instance_owner: self.instance_owner.take() });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
         self.close_owners.close_step(grant)
     }
 
@@ -6179,7 +6180,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -6754,7 +6755,7 @@ impl Puzzle3dClipboardJob {
             },
             "paste" => {
                 let Some(args) = args else { return Emit::default() };
-                let Some(fragment) = args.get("fragment").and_then(|value| semio_framework_value::FromValue::from_value(value.clone()).ok()) else { return Emit::default() };
+                let Some(fragment) = args.get("fragment").and_then(|value| FromValue::from_value(value.clone()).ok()) else { return Emit::default() };
                 let placement = PastePlacement::default();
                 match puzzle3d_paste_operations(&fragment, &placement) {
                     Ok(mutations) => Emit { artifact_mutations: mutations, ..Default::default() },
@@ -7218,7 +7219,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         puzzle3d_upsert_catalog_rows(&mut catalogs, "vortices", fragment.get("vortexKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "cables", fragment.get("cableKinds"));
         puzzle3d_upsert_catalog_rows(&mut catalogs, "attractions", fragment.get("attractionKinds"));
-        let kind_catalogs: Option<crate::Puzzle3dKindCatalogs> = Some(<crate::Puzzle3dKindCatalogs as semio_framework_value::FromValue>::from_value(catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
+        let kind_catalogs: Option<crate::Puzzle3dKindCatalogs> = Some(<crate::Puzzle3dKindCatalogs as FromValue>::from_value(catalogs).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?);
         let mut operations = Vec::new();
         if kind_catalogs != before.meta.kind_catalogs {
             operations.push(crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(kind_catalogs));
@@ -7227,7 +7228,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         if let Some(incoming_compat) = fragment.get("kindCompatibility").and_then(Value::as_array) {
             let mut rows = before.meta.kind_compatibility.clone();
             for incoming in incoming_compat {
-                let row = <crate::Puzzle3dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(incoming)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let row = <crate::Puzzle3dKindCompatibility as FromValue>::from_value(semio_framework_pack_json::to_dsl_value(incoming)).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 let connect = crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None);
                 match rows.iter().position(|entry| entry.source == row.source && entry.target == row.target) {
                     None => {
@@ -7261,7 +7262,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// scene's selection/gumball/vortex-marker paint, the suggestion popup and the inspection panel's
     /// per-entity field groups all read it instead of ever storing selection in this app again.
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle3dConfig>,

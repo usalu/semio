@@ -1,27 +1,30 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { join, resolve } from "node:path";
-import { mkdir, mkdtemp } from "node:fs/promises";
+import { availableParallelism, totalmem } from "node:os";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { componentPrebuildPlanV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { runOwnedNxInvocationV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts";
 import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
 import { PLAY_HOST } from "../🧩️runtime/🟦️.ts";
 import { publishPlayPages } from "./📄pages/🟦️.ts";
-import { PLAY_FRESH_BUILD_ARGS, playFreshBuildEnvironment } from "./🆕️fresh-build/🟦️.ts";
+import { PLAY_COMPONENT_WORKSPACES, PLAY_FRESH_GENERATION_PREFIX, playFreshBuildArgs, playFreshBuildEnvironment } from "./🆕️fresh-build/🟦️.ts";
 
-/** 🆕️ Executes the complete release graph in a new compiler and Nx cache generation. */
+/** 🆕️ Executes the complete release graph in a new compiler and Nx cache generation. Every plugin and extension component of the hub and artifact workspaces is compiled in one Cargo pass per profile (`SEMIO_CARGO_PREBUILD_PLAN`), and the nested Nx run streams its complete output to the generation's `o.log` (`SEMIO_NX_OUTPUT_LOG`) so this task's own output stays bounded. */
 class FreshBuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("The fresh play build accepts no arguments");
-    const directory = repoCacheDirectory(this.repoRoot, "play-fleet");
+    const directory = repoCacheDirectory(this.repoRoot);
     await mkdir(directory, { recursive: true });
-    const generation = await mkdtemp(join(directory, "release-")), environment = playFreshBuildEnvironment(this.repoRoot, generation, process.env);
+    const generation = await mkdtemp(join(directory, PLAY_FRESH_GENERATION_PREFIX)), environment = playFreshBuildEnvironment(this.repoRoot, generation, process.env);
     for (const key of Object.keys(process.env)) if (!(key in environment)) delete process.env[key];
     Object.assign(process.env, environment);
+    await writeFile(environment.SEMIO_CARGO_PREBUILD_PLAN!, JSON.stringify(componentPrebuildPlanV1(this.repoRoot, PLAY_COMPONENT_WORKSPACES)));
     console.log(`Fresh play release cache: ${generation}`);
-    await runOwnedNxInvocationV1(this.repoRoot, PLAY_FRESH_BUILD_ARGS, this.invocation);
+    await runOwnedNxInvocationV1(this.repoRoot, playFreshBuildArgs({ cpus: availableParallelism(), memoryBytes: totalmem() }), this.invocation);
   }
 }
 

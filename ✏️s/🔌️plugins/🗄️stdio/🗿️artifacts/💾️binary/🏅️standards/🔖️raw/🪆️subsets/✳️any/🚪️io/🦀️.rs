@@ -105,33 +105,33 @@ pub fn register_schema_specs() {}
 /// `protocol_walk_law` (`💡️inferences/🦀️.rs`), just not wired through a 6th `LanguageRole`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    use crate::standards::v_raw::subsets::any::schema;
+    
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary",
         extension: Some("bin"),
         role: semio_framework_dsl::LanguageRole::Document,
-        grammar: Some(crate::standards::v_raw::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v_raw::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(crate::standards::v_raw::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v_raw::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.binary.diff",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Diff,
-        grammar: Some(crate::standards::v_raw::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(crate::standards::v_raw::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+        grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
         protocol: None,
         protocol_path: None,
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.diff"),
@@ -142,8 +142,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Pack,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.pack"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -152,8 +152,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(crate::standards::v_raw::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.binary.spr"),
     });
 }
@@ -327,7 +327,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec BinaryBuilderFacets {
         construction: BinaryBuilderConstruction,
         analysis: BinaryAnalyzerAnalysis,
-        composition: crate::standards::v_raw::subsets::any::io::derived_composition::BinaryComposerComposition,
+        composition: BinaryComposerComposition,
     }
     builder: BinaryBuilder,
     analyzer: BinaryAnalyzer,

@@ -16,7 +16,7 @@ pub struct SetFrameInterlace {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frame-interlace", kind: "set-frame-interlace", record: "SetFrameInterlace" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, interlace } = self;
         protocol::MutationOutcome::new({
             let d = GifFrameDiff { interlace: Some(*interlace), ..Default::default() };
@@ -26,7 +26,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.frames.get(*index) {
-            Some(f) => vec![GifMutation::SetFrameInterlace(set_frame_interlace::SetFrameInterlace { index: *index, interlace: f.interlace })],
+            Some(f) => vec![GifMutation::SetFrameInterlace(SetFrameInterlace { index: *index, interlace: f.interlace })],
             None => Vec::new(),
         })
     }

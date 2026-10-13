@@ -10,8 +10,8 @@ fn check<P:ArtifactSqliteSnapshot+ArtifactDsl+ArtifactPack+Default+PartialEq+std
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:subset.into()};
     for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
         let payload=match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>store::io::IoPayload::Text(snapshot.print_dsl())};
-        match P::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())){Ok(actual)=>assert_eq!(actual,snapshot,"{name} {encoding:?}"),Err(error)=>{failures.push(format!("{name} {encoding:?}: {error}"));continue;}}
-        if let Err(error)=(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())){failures.push(format!("{name} declaration {encoding:?}: {error:?}"));}
+        match semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| P::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)){Ok(actual)=>assert_eq!(actual,snapshot,"{name} {encoding:?}"),Err(error)=>{failures.push(format!("{name} {encoding:?}: {error}"));continue;}}
+        if let Err(error)=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)){failures.push(format!("{name} declaration {encoding:?}: {error:?}"));}
     }
 }
 

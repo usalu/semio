@@ -418,7 +418,7 @@ pub struct Puzzle2dWindowTransient {
     pub suggestion_menu: Option<Puzzle2dSuggestionMenu>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
 pub enum Puzzle2dWindowTransientMutation {
     Snapshot { transient: Puzzle2dWindowTransient },
 }
@@ -548,14 +548,6 @@ impl protocol::DiffAlgebra<Puzzle2dWindowTransient> for Puzzle2dWindowTransientD
 semio_framework_value::artifact_retire_struct!(Puzzle2dSuggestionMenu { x, y, window_id, handle_id });
 semio_framework_value::artifact_retire_struct!(Puzzle2dWindowTransient { engagement_input, brush_candidate_index, brush_candidates, brush_candidate_source_handle_id, suggestion_menu });
 
-impl semio_framework_value::retirement::RetireOwned for Puzzle2dWindowTransientMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self {
-            Self::Snapshot { transient } => semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::leaf(0u8), semio_framework_value::retirement::RetireOwned::retirement(transient)]),
-        }
-    }
-}
-
 fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient) -> Option<usize> {
     fn charge(bytes: &mut usize, increment: usize) -> Option<()> {
         *bytes = bytes.checked_add(increment)?;
@@ -563,14 +555,14 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
     }
 
     let mut bytes = 0;
-    charge(&mut bytes, std::mem::size_of::<Puzzle2dWindowTransient>())?;
+    charge(&mut bytes, size_of::<Puzzle2dWindowTransient>())?;
     charge(&mut bytes, transient.engagement_input.capacity())?;
     charge(&mut bytes, transient.brush_candidate_source_handle_id.capacity())?;
     if let Some(menu) = transient.suggestion_menu.as_ref() {
         charge(&mut bytes, menu.window_id.capacity())?;
         charge(&mut bytes, menu.handle_id.capacity())?;
     }
-    charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(std::mem::size_of::<semio_framework_value::DslValue>())?)?;
+    charge(&mut bytes, transient.brush_candidates.capacity().checked_mul(size_of::<semio_framework_value::DslValue>())?)?;
     let mut pending = Vec::new();
     pending.try_reserve(transient.brush_candidates.len()).ok()?;
     pending.extend(transient.brush_candidates.iter());
@@ -579,12 +571,12 @@ fn puzzle2d_window_transient_retained_bytes(transient: &Puzzle2dWindowTransient)
             semio_framework_value::DslValue::String(value) => charge(&mut bytes, value.capacity())?,
             semio_framework_value::DslValue::Bytes(value) => charge(&mut bytes, value.capacity())?,
             semio_framework_value::DslValue::Array(values) => {
-                charge(&mut bytes, values.capacity().checked_mul(std::mem::size_of::<semio_framework_value::DslValue>())?)?;
+                charge(&mut bytes, values.capacity().checked_mul(size_of::<semio_framework_value::DslValue>())?)?;
                 pending.try_reserve(values.len()).ok()?;
                 pending.extend(values);
             }
             semio_framework_value::DslValue::Object(entries) => {
-                charge(&mut bytes, entries.capacity().checked_mul(std::mem::size_of::<(String, semio_framework_value::DslValue)>())?)?;
+                charge(&mut bytes, entries.capacity().checked_mul(size_of::<(String, semio_framework_value::DslValue)>())?)?;
                 pending.try_reserve(entries.len()).ok()?;
                 for (key, value) in entries {
                     charge(&mut bytes, key.capacity())?;

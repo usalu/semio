@@ -10,7 +10,7 @@ struct DecodeOwner{
  value:Option<Part21Value>,instance:Option<Part21Instance>,decimal:Option<Part21Decimal>,header:Option<Part21Header>,document:Option<Part21Document>,
 }
 fn admitted<T>(control:&mut NativeDecodeControl<'_>,operation:impl FnOnce(&mut DecodeOwner,&mut NativeDecodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{
- control.with_retirement_owner(std::mem::size_of::<ControlledRetirement<DecodeOwner>>(),|control|{
+ control.with_retirement_owner(size_of::<ControlledRetirement<DecodeOwner>>(),|control|{
   let original=DecodeOwner::default();let mut owner=Box::new(ControlledRetirement::new(original).unwrap_or_else(|_|panic!("original Part21 workspace has typed retirement")));
   let result=operation(owner.original_mut().unwrap(),control);(result,Some(owner))
  })

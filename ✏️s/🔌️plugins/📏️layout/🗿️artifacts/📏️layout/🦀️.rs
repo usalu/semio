@@ -79,16 +79,16 @@ fn layout_drawing_child_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "handle", <store::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::shape()), semio_framework_dsl_record::FieldSpec::new(1, "content", semio_framework_dsl_record::Shape::Value)])
 }
 
-fn layout_drawing_child_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{crate::standards::v1::subsets::any::schema::snapshot::drawing_child::producer()}
+fn layout_drawing_child_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{standards::v1::subsets::any::schema::snapshot::drawing_child::producer()}
 
 /// 🧬️ Record binding for the derived `LayoutSnapshot` pack: the child handle through the framework's
 /// own `ArtifactChild` record, the stdio drawing content as its first-party value (the stdio drawing
 /// subset declares no `dsl::DslField` of its own).
 impl semio_framework_dsl_record::DslField for LayoutDrawingChild {
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(layout_drawing_child_spec_producer()))}
-    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{crate::standards::v1::subsets::any::schema::snapshot::drawing_child::decode(value,control)}
-    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{crate::standards::v1::subsets::any::schema::snapshot::drawing_child::encode(self,control)}
-    fn retire_decoded(self){crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire(self)}
+    fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{standards::v1::subsets::any::schema::snapshot::drawing_child::decode(value,control)}
+    fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,semio_framework_value::ValueError>{standards::v1::subsets::any::schema::snapshot::drawing_child::encode(self,control)}
+    fn retire_decoded(self){standards::v1::subsets::any::schema::snapshot::drawing_child::retire(self)}
     fn shape() -> semio_framework_dsl_record::Shape {
         semio_framework_dsl_record::Shape::Record(layout_drawing_child_spec_producer())
     }
@@ -145,7 +145,7 @@ pub fn set_drawing_text(content: &mut SemioDrawingSnapshot, index: u32, text: &s
 
 //#region 🔖️DropPreview
 /// 👻️ Ephemeral catalogue drag-ghost state (layout app config / artifact local-ui).
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -750,8 +750,8 @@ impl Identified<String> for Spread {
     }
 }
 
-impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch> for ParagraphStyle {
-    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::ParagraphStylePatch) {
+impl Patchable<standards::v1::subsets::any::schema::diff::ParagraphStylePatch> for ParagraphStyle {
+    fn apply_patch(&mut self, patch: &standards::v1::subsets::any::schema::diff::ParagraphStylePatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -776,8 +776,8 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParagraphStyleP
     }
 }
 
-impl Patchable<crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch> for CharacterStyle {
-    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::CharacterStylePatch) {
+impl Patchable<standards::v1::subsets::any::schema::diff::CharacterStylePatch> for CharacterStyle {
+    fn apply_patch(&mut self, patch: &standards::v1::subsets::any::schema::diff::CharacterStylePatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -802,8 +802,8 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::CharacterStyleP
     }
 }
 
-impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParentPagePatch> for ParentPage {
-    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::ParentPagePatch) {
+impl Patchable<standards::v1::subsets::any::schema::diff::ParentPagePatch> for ParentPage {
+    fn apply_patch(&mut self, patch: &standards::v1::subsets::any::schema::diff::ParentPagePatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -816,8 +816,8 @@ impl Patchable<crate::standards::v1::subsets::any::schema::diff::ParentPagePatch
     }
 }
 
-impl Patchable<crate::standards::v1::subsets::any::schema::diff::SpreadPatch> for Spread {
-    fn apply_patch(&mut self, patch: &crate::standards::v1::subsets::any::schema::diff::SpreadPatch) {
+impl Patchable<standards::v1::subsets::any::schema::diff::SpreadPatch> for Spread {
+    fn apply_patch(&mut self, patch: &standards::v1::subsets::any::schema::diff::SpreadPatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -928,7 +928,7 @@ pub fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
 pub struct TextStoryPatch {
     pub content: Option<String>,
     #[value(default)]
-    pub style_runs: Option<crate::standards::v1::subsets::any::schema::diff::TextStyleRunsDelta>,
+    pub style_runs: Option<standards::v1::subsets::any::schema::diff::TextStyleRunsDelta>,
 }
 
 impl Patchable<TextStoryPatch> for TextStory {
@@ -936,7 +936,7 @@ impl Patchable<TextStoryPatch> for TextStory {
         if let Some(content) = &patch.content {
             self.content = content.clone();
         }
-        if let Some(style_runs) = patch.style_runs.as_ref().and_then(|delta| crate::standards::v1::subsets::any::schema::diff::apply_story_runs(&self.style_runs, delta).ok()) {
+        if let Some(style_runs) = patch.style_runs.as_ref().and_then(|delta| standards::v1::subsets::any::schema::diff::apply_story_runs(&self.style_runs, delta).ok()) {
             self.style_runs = style_runs;
         }
     }

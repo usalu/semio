@@ -745,7 +745,7 @@ async function runDwgArtifactOwnership(root: string, repoRoot: string): Promise<
 
 type HomeIoSurfaceFixture = {
   readonly schema: "semio.stdio.home-io-surface/v1";
-  readonly features: { readonly homeIo: "home-io"; readonly fullArtifactCatalog: "full-artifact-catalog"; readonly componentAppAssembly: "component-app-assembly"; readonly spaceGuest: "space-guest" };
+  readonly features: { readonly homeIo: "home-io"; readonly fullArtifactCatalog: "full-artifact-catalog"; readonly componentAppAssembly: "component-app-assembly" };
   readonly directArtifacts: readonly ["csv", "json", "xlsx", "zip"];
   readonly sharedCodecs: readonly ["binary", "deflate", "txt", "xml"];
   readonly fullArtifactCount: number;
@@ -815,18 +815,11 @@ class HomeIoSurfaceScript extends BundleScript {
     assert.match(root, /#\[cfg\(feature = "component-app-assembly"\)\]\s+#\[path = "🔌️plugin\/🦀️\.rs"\]\s+pub mod plugin;/u);
     assert.match(root, /#\[path = "🔌️plugin\/📇️catalog\/🦀️\.rs"\]\s+pub mod catalog;/u);
     assert(!root.includes("pub mod artifacts"), "Stdio composition remounted artifact implementations");
-    for (const path of [
-      resolve(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/💾️binary/🦀️.rs"),
-      resolve(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🦀️.rs"),
-      resolve(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🦀️.rs"),
-      resolve(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/🔤️txt/🦀️.rs"),
-      resolve(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🦀️.rs"),
-      resolve(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🦀️.rs"),
-    ]) assert.match(readFileSync(path, "utf8"), /#\[cfg\(feature = "component-app-assembly"\)\]\s+pub fn (?:artifact|standard|subset)\(/u, `${relative(this.repoRoot, path)} leaked its plugin app declaration into a catalog-only library`);
     const spaceManifestPath = resolve(this.repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml");
     const spaceManifest = readFileSync(spaceManifestPath, "utf8");
     assert(!spaceManifest.includes("semio-hub-stdio"), "Space retains the Stdio composition dependency");
-    assert.match(spaceManifest, new RegExp(`semio-framework-os\\s*=\\s*\\{[^\\n]*features\\s*=\\s*\\["${fixture.features.spaceGuest}"\\][^\\n]*\\}`, "u"));
+    assert.match(spaceManifest, /^semio-framework-os\s*=\s*\{[^\n}]*\}$/mu);
+    assert(!/^semio-framework-os\s*=[^\n]*features/mu.test(spaceManifest), "Space selects an OS host feature set");
     const workspace = parseToml(readFileSync(join(this.repoRoot, "Cargo.toml"), "utf8")) as unknown as { workspace: { dependencies: Record<string, { package?: string } | string> } };
     const dependencyNames = (cargo: any): string[] => [cargo, ...Object.values(cargo.target ?? {})].flatMap((table: any) => Object.entries(table.dependencies ?? {}).map(([alias, value]: [string, any]) => {
       const declaration = value?.workspace === true ? workspace.workspace.dependencies[alias] : value;
@@ -837,6 +830,7 @@ class HomeIoSurfaceScript extends BundleScript {
       const cargo = parseToml(readFileSync(path, "utf8")) as any;
       if (cargo.package?.name?.startsWith(artifactPrefix)) artifactManifests.set(cargo.package.name, cargo);
     }
+    for (const artifact of [...fixture.directArtifacts, ...fixture.sharedCodecs]) assert(!Object.hasOwn(artifactManifests.get(`${artifactPrefix}${artifact}`)?.features ?? {}, fixture.features.componentAppAssembly), `${artifact} keeps a per-consumer app feature, so its library compiles once per consumer feature set instead of once per profile`);
     const homeClosure = new Set<string>();
     const visitArtifact = (name: string): void => {
       if (name === `${artifactPrefix}contract`) return;
@@ -864,12 +858,12 @@ class HomeIoSurfaceScript extends BundleScript {
     assert(!neutralManifest.features?.[fixture.features.fullArtifactCatalog], "general Stdio assembly contains a default concrete roster");
     const osHostManifest = readFileSync(osHostManifestPath, "utf8");
     const osHostCargo = parseToml(osHostManifest) as any;
-    assert((osHostCargo.features[fixture.features.spaceGuest] as string[]).every((name) => !name.includes("stdio")), "neutral Space guest selects Stdio artifacts");
-    assert.match(osHostManifest, new RegExp(`^os-host-full\\s*=\\s*\\["${fixture.features.spaceGuest}",\\s*"dep:semio-framework-deflate",\\s*"semio-framework-os-kernel/sync"\\]$`, "mu"));
+    assert(!osHostCargo.features, "OS host declares features, so hub components compile more than one OS host unit");
+    assert(osHostCargo.target['cfg(not(all(target_arch = "wasm32", target_env = "p2")))'].dependencies["semio-framework-os-kernel"].features.includes("sync"), "OS host lost the native kernel sync transport");
     assert(!consumers.includes(osHostManifestPath), "OS host must not select domain artifact codecs");
     assert(!osHostManifest.includes("semio-hub-stdio"), "OS host depends on Stdio");
     const osHostRoot = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs"), "utf8");
-    for (const module of ["host", "backbone", "instance", "workflow", "registry"]) assert.match(osHostRoot, new RegExp(`#\\[cfg\\(any\\(feature = "os-host-full", feature = "${fixture.features.spaceGuest}"\\)\\)\\]\\s+pub mod ${module} \\{`, "u"));
+    for (const module of ["host", "backbone", "instance", "workflow", "registry"]) assert.match(osHostRoot, new RegExp(`^pub mod ${module} \\{`, "mu"));
     const spaceRoot = resolve(this.repoRoot, "✏️s/🔌️plugins/🪐️space");
     const productionRefs = stdioWalkText(spaceRoot)
       .filter((path) => path.endsWith(".rs") && path.includes("/🗿️artifacts/🏠️home/") && !path.includes("/🧪️tests/"))
@@ -906,8 +900,8 @@ async function testEditorCatalogContract(packageRoot: string): Promise<void> {
   if (roots !== fixture.editorCount) throw new Error(`editor catalogue expects ${fixture.editorCount} editors; native acceptance covers ${roots}`);
   const formats = new Map<string, string>();
   const apps = new Map<string, string>();
-  for (const { id, manifest } of stdioPackageManifests(root)) {
-    for (const format of stdioPackageEditorFormats(manifest)) {
+  for (const { id, assembly, manifest } of stdioPackageManifests(root)) {
+    for (const format of stdioPackageEditorFormats(readFileSync(assembly, "utf8"))) {
       if (formats.has(format)) throw new Error(`${format} editors ship in both ${formats.get(format)} and ${id}`);
       formats.set(format, id);
     }
@@ -922,31 +916,19 @@ async function testEditorCatalogContract(packageRoot: string): Promise<void> {
   console.log(`🧾️ editor catalogue fixture validated: ${roots} editors in ${new Set(apps.values()).size} packages, ${fixture.actions.length} edit operations`);
 }
 
-/** 📦️ Every stdio package manifest, parsed by Bun's TOML reader independently of the Rust census law's row scan: the
- * stdio component's own and one per family component under `🧩️extensions`. */
-function stdioPackageManifests(root: string): { readonly id: string; readonly path: string; readonly manifest: StdioPackageManifest }[] {
+/** 📦️ Every stdio package manifest, parsed by Bun's TOML reader independently of the Rust census law's row scan, with its
+ * generated plugin assembly source: the stdio component's own and one per family component under `🧩️extensions`. */
+function stdioPackageManifests(root: string): { readonly id: string; readonly path: string; readonly assembly: string; readonly manifest: StdioPackageManifest }[] {
   const families = readdirSync(resolve(root, "🧩️extensions"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => resolve(root, "🧩️extensions", entry.name, "📦️packages/🦀️rust/Cargo.toml"));
   return [join(root, "📦️packages/🦀️rust/Cargo.toml"), ...families.sort()].map((path) => {
     const manifest = Bun.TOML.parse(readFileSync(path, "utf8")) as StdioPackageManifest;
-    return { id: manifest.package.metadata.component.package.slice("semio:".length), path, manifest };
+    return { id: manifest.package.metadata.component.package.slice("semio:".length), path, assembly: path === join(root, "📦️packages/🦀️rust/Cargo.toml") ? join(root, "🔌️plugin/🦀️.rs") : resolve(dirname(path), "../../🦀️.rs"), manifest };
   });
 }
 
-/** 🧩️ The stdio formats whose editors one package's default build assembles: `component-app-assembly` reached through its
- * default feature closure (the stdio component) or requested on the artifact dependency itself (a family component). */
-function stdioPackageEditorFormats(manifest: StdioPackageManifest): readonly string[] {
-  const selected = new Set<string>();
-  const pending = ["default"];
-  while (pending.length) {
-    const feature = pending.pop()!;
-    if (selected.has(feature)) continue;
-    selected.add(feature);
-    pending.push(...(manifest.features?.[feature] ?? []));
-  }
-  const prefix = "semio-s-artifact-stdio-";
-  const viaFeatures = [...selected].filter((feature) => feature.startsWith(prefix) && feature.endsWith("/component-app-assembly")).map((feature) => feature.slice(prefix.length, -"/component-app-assembly".length));
-  const viaDependencies = Object.entries(manifest.dependencies ?? {}).filter(([name, spec]) => name.startsWith(prefix) && typeof spec === "object" && (spec.features ?? []).includes("component-app-assembly")).map(([name]) => name.slice(prefix.length));
-  return [...new Set([...viaFeatures, ...viaDependencies])];
+/** 🧩️ The stdio formats whose editors one package's generated plugin assembly registers (`builder.editor::<semio_s_artifact_stdio_<format>::…>`). */
+function stdioPackageEditorFormats(assembly: string): readonly string[] {
+  return [...new Set([...assembly.matchAll(/builder\.editor::<semio_s_artifact_stdio_([a-z0-9]+)::/gu)].map((match) => match[1]!))];
 }
 
 /** 📜️ The Cargo manifest fields the editor catalogue contract reads from a stdio package. */

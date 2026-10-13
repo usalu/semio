@@ -570,7 +570,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<BitmapSnapshot, BitmapMutatio
         if lane != store::HistoryLane::Document {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "wfc-bitmap-artifact-retained-lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<BitmapOneItemPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<BitmapOneItemPreparation>(), depth: 1 })
     }
 
     fn begin(
@@ -678,7 +678,7 @@ pub struct BitmapEditor;
 
 impl ArtifactEditor for BitmapEditor {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         use semio_framework_ui_locale::LocalizedLabel;
         static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 13]> = std::sync::LazyLock::new(|| {
             [
@@ -996,18 +996,18 @@ impl BitmapEditor {
     /// (`captureLost`, zero trace). A stroke left open outside a window is refused: nothing would hold it.
     pub fn paint_stroke(command: &BitmapEditorCommand, doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, slot: &semio_framework_plugin::app::GestureSlot<BitmapMutation>, interrupt: bool) -> Result<Emit<BitmapMutation>, Fault> {
         let BitmapEditorCommand::PaintStroke { xs, ys, color, phase, reason } = command else { return Err(Fault::from("wfc-bitmap-command-unmapped")) };
-        let phase = GesturePhase::parse(phase.as_deref(), reason.as_deref()).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.phase-invalid"), "wfc.bitmap.stroke.phase-invalid"))?;
+        let phase = GesturePhase::parse(phase.as_deref(), reason.as_deref()).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.phase-invalid"), "wfc.bitmap.stroke.phase-invalid"))?;
         if xs.len() != ys.len() {
-            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.points-invalid"), "wfc.bitmap.stroke.points-invalid"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.points-invalid"), "wfc.bitmap.stroke.points-invalid"));
         }
         let color = color.unwrap_or_else(|| input::config::current(cfg).active_color);
         let open = !interrupt && slot.open().is_some();
         let opens = matches!(phase, GesturePhase::Once) || (!open && matches!(phase, GesturePhase::Stream | GesturePhase::Commit));
         if opens && color as usize >= doc.snapshot.input.palette.len() {
-            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
         }
         if matches!(phase, GesturePhase::Once) && xs.is_empty() {
-            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.points-required"), "wfc.bitmap.stroke.points-required"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.points-required"), "wfc.bitmap.stroke.points-required"));
         }
         let points = xs.iter().zip(ys).map(|(x, y)| BitmapStrokePoint { x: *x, y: *y }).collect();
         let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
@@ -1016,7 +1016,7 @@ impl BitmapEditor {
         }
         let committed = slot.drive::<BitmapBrush>(None, BITMAP_PAINT_STROKE_VERB, phase, Some(BrushToolRequest::on(doc.snapshot, points, color)), seed)?;
         if slot.window().is_empty() && slot.open().is_some() {
-            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.window-required"), "wfc.bitmap.stroke.window-required"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.stroke.window-required"), "wfc.bitmap.stroke.window-required"));
         }
         Ok(semio_framework_plugin::app::gesture_emit(committed, seed))
     }
@@ -1038,11 +1038,11 @@ impl BitmapEditor {
 
     /// 🎨️ The active brush colour is per-window-instance state: refused outright when the index is
     /// not a real palette entry, so a pane can never arm a colour the document does not have.
-    fn set_active_color(doc: &ArtifactView<'_, BitmapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: Option<&semio_framework_plugin::ViewModel>, index: u32) -> Result<Emit<BitmapMutation>, Fault> {
+    fn set_active_color(doc: &ArtifactView<'_, BitmapSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: Option<&semio_framework_plugin::ViewModel>, index: u32) -> Result<Emit<BitmapMutation>, Fault> {
         if index as usize >= doc.snapshot.input.palette.len() {
-            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
         }
-        let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.view-required"), "wfc.bitmap.window.view-required"))?;
+        let view = view_state.ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.view-required"), "wfc.bitmap.window.view-required"))?;
         let mutation: WindowConfigMutation = input::config::addressed(view, input::config::BitmapInputWindowConfigMutation::SetActiveColor { color: index })?;
         Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
     }

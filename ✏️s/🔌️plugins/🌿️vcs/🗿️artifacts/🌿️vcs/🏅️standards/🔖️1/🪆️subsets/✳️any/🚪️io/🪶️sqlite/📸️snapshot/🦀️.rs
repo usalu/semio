@@ -34,7 +34,7 @@ impl ArtifactSqliteSnapshot for VcsSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let limits=control.limits();extent(limits)?;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    admit_record(record,limits,native)?;
    Self::__dsl_from_record_controlled(record,native)
   })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)

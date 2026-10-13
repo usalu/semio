@@ -281,7 +281,7 @@ where
             return ConfigStoreHydrationStep::Pending(self.progress());
         }
         if self.retired_messages.is_some() {
-            let capacity = std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>();
+            let capacity = size_of::<super::ArtifactStoreMessageLedgerRetirement>();
             if grant.maximum_depth < 2 { return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
             if grant.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
             let messages = self.retired_messages.take().expect("original exhausted messages retain their edit identity");
@@ -716,7 +716,7 @@ where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn retirement_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn retirement_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
         use semio_framework_value::retirement::RetireOwned;
         if self.terminal_is_empty_unbounded() { return Ok(Default::default()); }
@@ -744,9 +744,9 @@ where
         if let Some(value) = self.pending_metadata.as_ref() { return controlled(value); }
         if self.owners.is_some() {
             if let Some(owner) = self.runtime.as_ref() { return child(owner.initialization_retirement_demands(copy)?); }
-            if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
+            if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
         }
-        if self.retired_messages.is_some() || self.pending_messages.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>(), depth: 2, ..Default::default() }); }
+        if self.retired_messages.is_some() || self.pending_messages.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<super::ArtifactStoreMessageLedgerRetirement>(), depth: 2, ..Default::default() }); }
         if self.owners.is_none() {
             if self.runtime.is_some() || self.pending_edit.is_some() || self.pending_snapshot.is_some() || self.validation.is_some() || self.current.is_some() || self.envelope.is_some() || self.initial.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "config root retirement requires its original catalog")); }
             if let Some(value) = self.history.as_ref() { return controlled(value); }
@@ -757,10 +757,10 @@ where
             return Ok(Default::default());
         }
         if let Some(owner) = self.runtime.as_ref() { return child(owner.initialization_retirement_demands(copy)?); }
-        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
+        if self.pending_edit.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<super::ArtifactStoreDecodedEditRetirement<M>>(), depth: 2, ..Default::default() }); }
         if let Some(value) = self.pending_snapshot.as_ref().or_else(|| self.validation.as_ref()).or_else(|| self.current.as_ref()) { let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original config retirement lost its catalog"))?; return Ok(RetirementDemand { capacity_bytes: owners.initial_snapshot_retirement.retirement_birth_bytes(value), depth: 2, ..Default::default() }); }
-        if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
-        if self.initial.is_some() { return Ok(RetirementDemand { capacity_bytes: std::mem::size_of::<super::ArtifactGenesisRetirement<P>>(), depth: 2, ..Default::default() }); }
+        if self.envelope.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>(), depth: 2, ..Default::default() }); }
+        if self.initial.is_some() { return Ok(RetirementDemand { capacity_bytes: size_of::<super::ArtifactGenesisRetirement<P>>(), depth: 2, ..Default::default() }); }
         if let Some(value) = self.history.as_ref() { return controlled(value); }
         if let Some(value) = self.edit_lookup.as_ref() { return controlled(value); }
         if let Some(value) = self.expected_id.as_ref() { return controlled(value); }
@@ -776,11 +776,11 @@ where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
-    fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(0).map(|demand| demand.copy_bytes) }
-    fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
-    fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(0).map(|demand| demand.release_bytes) }
-    fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { self.retirement_demands(0).map(|demand| demand.depth) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.copy_bytes) }
+    fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.depth) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close}};
         use semio_framework_value::retirement::controlled::admit_typed_controlled_retirement;
         let empty = RetainedCloneProgress::default();

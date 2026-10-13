@@ -90,7 +90,7 @@ pub fn reserve_transport<E:Error+Send+Sync+'static,F:FnMut(TransportCaptureStage
 }
 
 fn reserve_with<E:Error+Send+Sync+'static,F:FnMut(TransportCaptureStage,usize)->bool,A:FnOnce(&mut Vec<TransportCell<E>>)->bool>(admission:&mut TransportAdmission,category:PackTransportCategory,retry:PackRetryDisposition,mut observe:F,allocate:A)->Result<TransportReservation<'_,E>,TransportCaptureRefusal>{
- let before=admission.committed_bytes;let requested=std::mem::size_of::<TransportCell<E>>();
+ let before=admission.committed_bytes;let requested=size_of::<TransportCell<E>>();
  let refuse=|kind,reason,physical_bytes|TransportCaptureRefusal{kind,reason,allocated_bytes:0,physical_bytes};
  let remaining=admission.maximum_bytes.checked_sub(before).ok_or_else(||refuse(ValueRefusalKind::OwnershipLimit,"transport admission baseline exceeds maximum",0))?;
  if requested>isize::MAX as usize||requested>remaining{return Err(refuse(ValueRefusalKind::OwnershipLimit,"transport cell exceeds owned physical ceiling",0));}

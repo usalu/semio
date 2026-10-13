@@ -6,7 +6,7 @@ use semio_framework_plugin::{
     ArtifactApp, ArtifactMediaExportJobRequest, ArtifactReservedJob, ArtifactSnapshotDisposer, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, ToolExecutionContract,
 };
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
+use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::marker::PhantomData;
 use std::sync::Arc;
 

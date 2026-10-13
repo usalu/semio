@@ -9,7 +9,7 @@ pub enum ArtifactStoreConstructorPhase { Preparation, Close }
 
 pub(super) struct OriginalCatalogConstructor<P,Mu>
 where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue,
-Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+protocol::Mutation<P>{
+Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  original:ManuallyDrop<Option<Result<store::DocumentStoreOwners<P,Mu>,store::DocumentStoreOwnersAdmissionError<P,Mu>>>>,
  refusal:ManuallyDrop<Option<ValueError>>,
  refusal_close:ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
@@ -17,7 +17,7 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+protoco
 }
 impl<P,Mu> OriginalCatalogConstructor<P,Mu>
 where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,
-Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+protocol::Mutation<P>+protocol::OpBinary+protocol::OpText+Send+'static{
+Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>+OpBinary+OpText+Send+'static{
  pub(super) fn new()->Self{Self{original:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),refusal_close:ManuallyDrop::new(None),done:false}}
  fn refusal_demands(&self,body:usize)->Option<Result<RetirementDemand,ValueError>>{
   if let Some(owner)=self.refusal_close.as_ref(){return Some(store::artifact_retirement_box_demands(owner,body))}
@@ -80,6 +80,6 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+protoco
 
 impl<P,Mu> Drop for OriginalCatalogConstructor<P,Mu>
 where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue,
-Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+protocol::Mutation<P>{
+Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  fn drop(&mut self){let empty=self.done&&self.original.is_none()&&self.refusal.is_none()&&self.refusal_close.is_none();assert!(std::thread::panicking()||empty,"original catalog cursor requires controlled source/error/ticket closure before shallow Drop");if empty{unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.refusal);ManuallyDrop::drop(&mut self.refusal_close)}}}
 }

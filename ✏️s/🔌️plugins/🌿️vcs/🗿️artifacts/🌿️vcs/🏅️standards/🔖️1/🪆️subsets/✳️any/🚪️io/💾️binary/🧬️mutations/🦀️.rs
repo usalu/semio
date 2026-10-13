@@ -31,7 +31,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
+#[cfg(test)] use super::*;
 use crate::schema::mutations::VcsDemoMutation;
 
 impl protocol::OpBinary for VcsDemoMutation {

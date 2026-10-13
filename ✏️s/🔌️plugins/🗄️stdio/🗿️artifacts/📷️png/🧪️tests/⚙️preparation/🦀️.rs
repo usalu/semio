@@ -96,3 +96,32 @@ fn publication_preparation_turns_are_bounded_by_pages_at_real_image_size() {
     assert!(large_turns - small_turns <= 8 * (large_pages - small_pages), "turns grow at most 8 per additional page: {turns_by_size:?}");
     assert!(large_turns < 12_000, "a 4 MiB image edit is O(pages), not O(samples): {large_turns} turns");
 }
+
+#[test]
+fn publication_preparation_turns_of_a_large_paint_region_are_bounded_by_pages_through_the_sealer() {
+    use semio_framework_value::retained_clone::RETAINED_CLONE_BULK_PAGE_BYTES;
+    use semio_s_artifact_stdio_png::schema::mutations::PaintNativeSamplesMutation;
+    use semio_s_artifact_stdio_png::schema::operations::png_revision;
+    use semio_s_artifact_stdio_png::schema::snapshot::{PngNativePaint, PngRegion};
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let mut base = PngSnapshot::default();
+    base.image.width = 1024;
+    base.image.height = 512;
+    base.image.samples = (0..1024usize * 512 * 4).map(|index| (index % 251) as u16).collect();
+    let region = PngRegion { x: 16, y: 8, width: 256, height: 128 };
+    let region_samples = region.width as usize * region.height as usize * 4;
+    let mutation = PngMutation::PaintNativeSamples(PaintNativeSamplesMutation { revision: png_revision(&base), region, paint: PngNativePaint::rgba(200, 100, 50, 255) });
+    let factory = <PngEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the PNG document lane declares a preparation factory");
+    let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
+    let mut expected = base.clone();
+    apply_mutation(&mut expected, &mutation);
+    assert_eq!(*law.post, expected);
+    let mut restored = (*law.post).clone();
+    for row in &law.inverse {
+        apply_mutation(&mut restored, row);
+    }
+    assert_eq!(restored, base);
+    let pages = (base.image.samples.len() * 2 + region_samples * 6).div_ceil(RETAINED_CLONE_BULK_PAGE_BYTES);
+    eprintln!("[DEBUG] png 1024x512 paint of {region_samples} samples ({pages} pages of image plus inverse JSON) edited in {} turns", law.turns);
+    assert!(law.turns < 12_000, "a {region_samples}-sample paint seals its inverse a page per turn: {} turns", law.turns);
+}

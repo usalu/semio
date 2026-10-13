@@ -169,7 +169,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Grid3dBuilderFacets {
         construction: Grid3dBuilderConstruction,
         analysis: Grid3dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Grid3dComposerComposition,
+        composition: Grid3dComposerComposition,
     }
     builder: Grid3dBuilder,
     analyzer: Grid3dAnalyzer,

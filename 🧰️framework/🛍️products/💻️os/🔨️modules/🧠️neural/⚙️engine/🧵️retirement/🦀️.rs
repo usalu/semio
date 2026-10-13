@@ -8,7 +8,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{controlled::ControlledRetirement,queue::RetirementQueue,RetireOwned,RetirementCursor};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close};
 use std::collections::VecDeque;
-use std::mem::{size_of, ManuallyDrop};
+use std::mem::size_of;
 use std::sync::Arc;
 
 //#region 🧵️DomainRetirement
@@ -104,19 +104,19 @@ impl RetirementCursor for ValueRetirement {
     fn next_depth_demand(&self)->Result<usize,ValueError> {Self::next_depth_demand(self)}
     fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
 }
-impl semio_framework_value::retirement::RetireOwned for Dictionary {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.pairs)}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.pairs)}
+impl RetireOwned for Dictionary {
+    fn retirement(self)->Box<dyn RetirementCursor> {RetireOwned::retirement(self.pairs)}
+    fn retirement_birth_bytes(&self)->Option<usize> {RetireOwned::retirement_birth_bytes(&self.pairs)}
     fn controlled_retirement_supported()->bool {true}
 }
-impl semio_framework_value::retirement::RetireOwned for Value {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {match self {Value::Atom(value)=>semio_framework_value::retirement::RetireOwned::retirement(value),Value::Dictionary(value)=>semio_framework_value::retirement::RetireOwned::retirement(value)}}
-    fn retirement_birth_bytes(&self)->Option<usize> {match self {Value::Atom(value)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(value),Value::Dictionary(value)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(value)}}
+impl RetireOwned for Value {
+    fn retirement(self)->Box<dyn RetirementCursor> {match self {Value::Atom(value)=>RetireOwned::retirement(value),Value::Dictionary(value)=>RetireOwned::retirement(value)}}
+    fn retirement_birth_bytes(&self)->Option<usize> {match self {Value::Atom(value)=>RetireOwned::retirement_birth_bytes(value),Value::Dictionary(value)=>RetireOwned::retirement_birth_bytes(value)}}
     fn controlled_retirement_supported()->bool {true}
 }
-impl semio_framework_value::retirement::RetireOwned for Atom {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {match self {Atom::String(value)=>semio_framework_value::retirement::RetireOwned::retirement(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>semio_framework_value::retirement::RetireOwned::retirement(())}}
-    fn retirement_birth_bytes(&self)->Option<usize> {match self {Atom::String(value)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&())}}
+impl RetireOwned for Atom {
+    fn retirement(self)->Box<dyn RetirementCursor> {match self {Atom::String(value)=>RetireOwned::retirement(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>RetireOwned::retirement(())}}
+    fn retirement_birth_bytes(&self)->Option<usize> {match self {Atom::String(value)=>RetireOwned::retirement_birth_bytes(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>RetireOwned::retirement_birth_bytes(&())}}
     fn controlled_retirement_supported()->bool {true}
 }
 semio_framework_value::artifact_retire_struct!(FieldSpec {key,value,default,label});
@@ -137,13 +137,13 @@ semio_framework_value::artifact_retire_struct!(EvalChannels {outputs,inputs});
 semio_framework_value::artifact_retire_struct!(super::OperatorImpl {schemas,operator});
 semio_framework_value::artifact_retire_struct!(super::OperatorRecord {info,implementations});
 semio_framework_value::artifact_retire_struct!(super::Registry {schemas,operators,operator_produces,schema_providers,finalized});
-impl semio_framework_value::retirement::RetireOwned for super::VariadicSpec {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.slot_key)}
-    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.slot_key)}
+impl RetireOwned for super::VariadicSpec {
+    fn retirement(self)->Box<dyn RetirementCursor> {RetireOwned::retirement(self.slot_key)}
+    fn retirement_birth_bytes(&self)->Option<usize> {RetireOwned::retirement_birth_bytes(&self.slot_key)}
     fn controlled_retirement_supported()->bool {true}
 }
-impl semio_framework_value::retirement::RetireOwned for super::Cardinality {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(())}
+impl RetireOwned for super::Cardinality {
+    fn retirement(self)->Box<dyn RetirementCursor> {RetireOwned::retirement(())}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(semio_framework_value::retirement::leaf_birth_bytes::<()>())}
     fn controlled_retirement_supported()->bool {true}
 }
@@ -186,7 +186,7 @@ impl ColdDictionaryBuilder {
         assert!(update.terminal_is_empty());
     }
     /// 🛬️ Constructs one canonical dictionary entry with admitted metadata and resumable key comparisons.
-    pub fn insert_controlled(&mut self, key: String, value: Value, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
+    pub fn insert_controlled(&mut self, key: String, value: Value, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<(), ValueError> {
         let value = ColdValueOwner::new(value);
         control.charge(size_of::<String>() + size_of::<Value>() + 4 * size_of::<usize>())?;
         let dictionary = self.dictionary.as_mut().unwrap();

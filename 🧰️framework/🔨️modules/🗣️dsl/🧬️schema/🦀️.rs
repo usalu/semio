@@ -16,7 +16,8 @@ use semio_framework_dsl::SpannedToken;
 
 use semio_framework_dsl::TokenClass;
 use semio_framework_dsl::TokenKind;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
+#[cfg(test)] use std::collections::{HashMap};
 use crate::notation as dsl_notation;
 #[path = "🖋️notation/🦀️.rs"]
 pub mod notation;
@@ -552,7 +553,7 @@ impl Cursor {
         if self.peek().kind == kind {
             Ok(self.advance())
         } else {
-            Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected {:?}, found {:?} '{}'", kind, self.peek().kind, self.peek().text.as_str()),self.span()))
+            Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected {:?}, found {:?} '{}'", kind, self.peek().kind, self.peek().text.as_str()),self.span()))
         }
     }
 
@@ -573,7 +574,7 @@ impl Cursor {
 
     fn dynamic_attr_key(&self) -> Result<Option<String>, TextError> {
         if self.peek().kind == TokenKind::Text && self.peek_at(1).kind == TokenKind::Equals {
-            semio_framework_dsl::unescape_text(&self.peek().text.as_str(), false).map(Some).map_err(|message| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,self.span()))
+            semio_framework_dsl::unescape_text(&self.peek().text.as_str(), false).map(Some).map_err(|message| TextError::new(ValueRefusalKind::InvalidValue,message,self.span()))
         } else {
             Ok(self.at_attr_key())
         }
@@ -626,54 +627,54 @@ fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextEr
             match token.text.as_str().as_ref() {
                 "true" => Ok(FieldValue::Bool(true)),
                 "false" => Ok(FieldValue::Bool(false)),
-                other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected 'true' or 'false', found '{other}'"),token.span)),
+                other => Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected 'true' or 'false', found '{other}'"),token.span)),
             }
         }
         Shape::Int => {
             let token = cursor.expect(TokenKind::Int)?;
-            let value: i64 = token.text.as_str().parse().map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("invalid integer '{}'", token.text.as_str()),token.span))?;
+            let value: i64 = token.text.as_str().parse().map_err(|_| TextError::new(ValueRefusalKind::InvalidValue,format!("invalid integer '{}'", token.text.as_str()),token.span))?;
             Ok(FieldValue::Int(value))
         }
         Shape::UInt => {
             let token = cursor.expect(TokenKind::Int)?;
-            let value: u64 = token.text.as_str().parse().map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("invalid unsigned integer '{}'", token.text.as_str()),token.span))?;
+            let value: u64 = token.text.as_str().parse().map_err(|_| TextError::new(ValueRefusalKind::InvalidValue,format!("invalid unsigned integer '{}'", token.text.as_str()),token.span))?;
             Ok(FieldValue::UInt(value))
         }
         Shape::Float => {
             let is_float_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
             if !is_float_token {
-                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a float, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
+                return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected a float, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
             }
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
             Ok(FieldValue::Float(value))
         }
         Shape::Text => parse_scalar_text(cursor),
         Shape::Bytes64 => {
             let token = cursor.expect(TokenKind::Text)?;
-            let bytes = base64_decode(&token.text.as_str()).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+            let bytes = base64_decode(&token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
             Ok(FieldValue::Bytes64(bytes))
         }
         Shape::Enum(variants) => {
             let token = cursor.expect(TokenKind::Ident)?;
             let text = token.text.as_str();
-            variants.iter().find(|(tag, _)| tag == text.as_ref()).map(|(_, ordinal)| FieldValue::Enum(*ordinal)).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown enum tag '{text}'"),token.span))
+            variants.iter().find(|(tag, _)| tag == text.as_ref()).map(|(_, ordinal)| FieldValue::Enum(*ordinal)).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,format!("unknown enum tag '{text}'"),token.span))
         }
         Shape::Quantity(declared) | Shape::Angle(declared) => parse_quantity(cursor, declared),
         Shape::Ref(_) => parse_scalar_text(cursor),
         Shape::Embed(declared_lang) => parse_embed(cursor, declared_lang),
-        Shape::EmbedFrom(_) => Err(TextError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"EmbedFrom field must be parsed in record context",cursor.span())),
+        Shape::EmbedFrom(_) => Err(TextError::new(ValueRefusalKind::UnsupportedOwner,"EmbedFrom field must be parsed in record context",cursor.span())),
         Shape::Count => {
             if cursor.peek().kind != TokenKind::Ident {
-                return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a count literal like 'x24', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
+                return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected a count literal like 'x24', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
             }
             let token = cursor.advance();
             let text = token.text.as_str();
-            let digits = text.strip_prefix('x').ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a count literal like 'x24', found '{text}'"),token.span))?;
-            let value: u64 = digits.parse().map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("invalid count literal 'x{digits}'"),token.span))?;
+            let digits = text.strip_prefix('x').ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,format!("expected a count literal like 'x24', found '{text}'"),token.span))?;
+            let value: u64 = digits.parse().map_err(|_| TextError::new(ValueRefusalKind::InvalidValue,format!("invalid count literal 'x{digits}'"),token.span))?;
             Ok(FieldValue::UInt(value))
         }
-        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,format!("shape {other:?} is not a scalar"),cursor.span())),
+        other => Err(TextError::new(ValueRefusalKind::UnsupportedOwner,format!("shape {other:?} is not a scalar"),cursor.span())),
     }
 }
 
@@ -713,7 +714,7 @@ fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprValue) ->
         }
         let rhs = if glued_negative {
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
             parse_expr_continue(cursor, prec + 1, ExprValue::Num(-value))?
         } else {
             cursor.advance();
@@ -736,12 +737,12 @@ fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
     match cursor.peek().kind {
         TokenKind::Float | TokenKind::Int => {
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
             Ok(ExprValue::Num(value))
         }
         TokenKind::Ident | TokenKind::Text => {
             let token = cursor.advance();
-            let name = if token.kind==TokenKind::Text{semio_framework_dsl::unescape_text(&token.text.as_str(),false).map_err(|error|TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,token.span))?}else{ident_like_text(&token)};
+            let name = if token.kind==TokenKind::Text{semio_framework_dsl::unescape_text(&token.text.as_str(),false).map_err(|error|TextError::new(ValueRefusalKind::InvalidValue,error,token.span))?}else{ident_like_text(&token)};
             if cursor.peek().kind == TokenKind::LParen {
                 cursor.advance();
                 let mut args = Vec::new();
@@ -767,7 +768,7 @@ fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
             cursor.expect(TokenKind::RParen)?;
             Ok(inner)
         }
-        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a number, variable, or '(', found {other:?} '{}'", cursor.peek().text.as_str()),cursor.span())),
+        other => Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected a number, variable, or '(', found {other:?} '{}'", cursor.peek().text.as_str()),cursor.span())),
     }
 }
 
@@ -829,14 +830,14 @@ fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
     match cursor.peek().kind {
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = semio_framework_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+            let text = semio_framework_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
             Ok(FieldValue::Text(text))
         }
         TokenKind::Ident => {
             let token = cursor.advance();
             Ok(FieldValue::Text(ident_like_text(&token)))
         }
-        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Text, found {other:?} '{}'", cursor.peek().text.as_str()),cursor.span())),
+        other => Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected Text, found {other:?} '{}'", cursor.peek().text.as_str()),cursor.span())),
     }
 }
 
@@ -848,9 +849,9 @@ fn parse_embed(cursor: &mut Cursor, declared_lang: &str) -> Result<FieldValue, T
     if cursor.peek().kind == TokenKind::Fence {
         let token = cursor.advance();
         let raw = token.text.as_str();
-        let (lang, content) = raw.split_once('\u{0}').ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"malformed fence token (missing separator)",token.span))?;
+        let (lang, content) = raw.split_once('\u{0}').ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,"malformed fence token (missing separator)",token.span))?;
         if !lang.is_empty() && !declared_lang.is_empty() && lang != declared_lang {
-            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("fence declares lang '{lang}', field expects '{declared_lang}'"),token.span));
+            return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("fence declares lang '{lang}', field expects '{declared_lang}'"),token.span));
         }
         return Ok(FieldValue::Text(content.to_string()));
     }
@@ -880,16 +881,16 @@ fn parse_field_shape(cursor: &mut Cursor, field: &FieldSpec, spec: &RecordSpec, 
 fn parse_quantity(cursor: &mut Cursor, declared: &'static semio_framework_dsl::UnitSpec) -> Result<FieldValue, TextError> {
     let is_number_token = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) || (cursor.peek().kind == TokenKind::Ident && matches!(cursor.peek().text.as_str().as_ref(), "nan" | "inf" | "-inf"));
     if !is_number_token {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a quantity, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected a quantity, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
     }
     let number_token = cursor.advance();
-    let value = parse_f64(&number_token.text.as_str()).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,number_token.span))?;
+    let value = parse_f64(&number_token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,number_token.span))?;
     let suffix = cursor.peek();
     if suffix.kind == TokenKind::Ident && suffix.byte_range.0 == number_token.byte_range.1 {
         let suffix_token = cursor.advance();
         let symbol = suffix_token.text.as_str().to_string();
-        let suffix_unit = semio_framework_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown unit '{symbol}'"),suffix_token.span))?;
-        let converted = if value.is_nan(){if suffix_unit.dimension!=declared.dimension{return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span));}value}else{semio_framework_dsl::convert(value,suffix_unit,declared).ok_or_else(||TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span))?};
+        let suffix_unit = semio_framework_dsl::unit_by_symbol(&symbol).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,format!("unknown unit '{symbol}'"),suffix_token.span))?;
+        let converted = if value.is_nan(){if suffix_unit.dimension!=declared.dimension{return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span));}value}else{semio_framework_dsl::convert(value,suffix_unit,declared).ok_or_else(||TextError::new(ValueRefusalKind::InvalidValue,format!("unit '{symbol}' is not compatible with expected unit '{}'",declared.symbol),suffix_token.span))?};
         Ok(FieldValue::Float(converted))
     } else {
         Ok(FieldValue::Float(value))
@@ -899,10 +900,10 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static semio_framework_dsl::U
 /// 🔢️ Reads a complete numeric token for coordinate, direction, dimension and range components.
 fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
     if !(matches!(cursor.peek().kind,TokenKind::Float|TokenKind::Int)||(cursor.peek().kind==TokenKind::Ident&&matches!(cursor.peek().text.as_str().as_ref(),"nan"|"inf"|"-inf"))) {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a number, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected a number, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
     }
     let token = cursor.advance();
-    parse_f64(&token.text.as_str()).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))
+    parse_f64(&token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))
 }
 
 /// 📍️ Shared body for `Shape::Coord`/`Shape::Dir`: a fixed-arity comma-separated run of
@@ -917,7 +918,7 @@ fn parse_fixed_number_tuple(cursor: &mut Cursor, arity: usize, what: &str) -> Re
         cursor.expect(TokenKind::Comma)?;
     }
     if cursor.peek().kind == TokenKind::Comma {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("{what} literal expects exactly {arity} components"),cursor.span()));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("{what} literal expects exactly {arity} components"),cursor.span()));
     }
     Ok(FieldValue::Tuple(items))
 }
@@ -934,7 +935,7 @@ fn parse_dim(cursor: &mut Cursor, dims: usize) -> Result<FieldValue, TextError> 
     if dims > 1 {
         let suffix = cursor.peek();
         if suffix.kind != TokenKind::Ident || suffix.byte_range.0 != first_token.byte_range.1 {
-            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("dimension literal expects {dims} components glued with 'x' (e.g. '2x3'), found only one"),cursor.span()));
+            return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("dimension literal expects {dims} components glued with 'x' (e.g. '2x3'), found only one"),cursor.span()));
         }
         let suffix_token = cursor.advance();
         let suffix_text = suffix_token.text.as_str();
@@ -942,10 +943,10 @@ fn parse_dim(cursor: &mut Cursor, dims: usize) -> Result<FieldValue, TextError> 
         // `"x0.12x0.24".split('x')` yields `["", "0.12", "0.24"]` — the leading empty piece is the
         // text before the first `x`, which is always empty since the suffix itself starts with it.
         if parts.first() != Some(&"") || parts.len() != dims {
-            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("dimension literal expects {dims} components glued with 'x', found '{}{}'", format_f64(first), suffix_text),suffix_token.span));
+            return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("dimension literal expects {dims} components glued with 'x', found '{}{}'", format_f64(first), suffix_text),suffix_token.span));
         }
         for part in &parts[1..] {
-            let value = parse_f64(part).map_err(|_| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("invalid dimension component '{part}'"),suffix_token.span))?;
+            let value = parse_f64(part).map_err(|_| TextError::new(ValueRefusalKind::InvalidValue,format!("invalid dimension component '{part}'"),suffix_token.span))?;
             items.push(FieldValue::Float(value));
         }
     }
@@ -956,7 +957,7 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
     cursor.limits.check_depth(depth, cursor.span())?;
     match shape {
         Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Quantity(_) | Shape::Angle(_) | Shape::Ref(_) | Shape::Count | Shape::Embed(_) => parse_scalar(cursor, shape),
-        Shape::EmbedFrom(_) => Err(TextError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"EmbedFrom field must be parsed in record context",cursor.span())),
+        Shape::EmbedFrom(_) => Err(TextError::new(ValueRefusalKind::UnsupportedOwner,"EmbedFrom field must be parsed in record context",cursor.span())),
         Shape::Coord(dims) => {
             cursor.expect(TokenKind::At)?;
             parse_fixed_number_tuple(cursor, *dims as usize, "coordinate")
@@ -997,7 +998,7 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
             }
             if let Some(expected_len) = len {
                 if items.len() != *expected_len {
-                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("tuple expects {} elements, found {}", expected_len, items.len()),cursor.span()));
+                    return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("tuple expects {} elements, found {}", expected_len, items.len()),cursor.span()));
                 }
             }
             Ok(FieldValue::Tuple(items))
@@ -1017,7 +1018,7 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
                 };
                 items.push(value);
                 if cursor.pos == pos_before {
-                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("list element made no progress at {:?} '{}' — likely an unrecognized field key", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
+                    return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("list element made no progress at {:?} '{}' — likely an unrecognized field key", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
                 }
                 cursor.limits.check_nodes(items.len(), cursor.span())?;
             }
@@ -1103,7 +1104,7 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
         }
         TokenKind::Text => {
             let token = cursor.advance();
-            let text = semio_framework_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+            let text = semio_framework_dsl::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
             Ok(DslValue::String(text))
         }
         TokenKind::Int => {
@@ -1114,28 +1115,28 @@ fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextEr
             } else if let Ok(v) = text.parse::<i64>() {
                 Ok(DslValue::Number(Number::Int(v)))
             } else {
-                let value = parse_f64(&text).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+                let value = parse_f64(&text).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
                 Ok(DslValue::Number(Number::Float(value)))
             }
         }
         TokenKind::Float => {
             let token = cursor.advance();
-            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,e,token.span))?;
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
             Ok(DslValue::Number(Number::Float(value)))
         }
         TokenKind::Ident => {
             let token = cursor.advance();
             match token.text.as_str().as_ref() {
-                "int64"=>{cursor.expect(TokenKind::LParen)?;let token=cursor.expect(TokenKind::Int)?;let value=token.text.as_str().parse::<i64>().map_err(|error|TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string(),token.span))?;cursor.expect(TokenKind::RParen)?;Ok(DslValue::Number(Number::Int(value)))},
-                "bytes64"=>{cursor.expect(TokenKind::LParen)?;let token=cursor.expect(TokenKind::Text)?;let bytes=base64_decode(&token.text.as_str()).map_err(|error|TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,token.span))?;cursor.expect(TokenKind::RParen)?;Ok(DslValue::Bytes(bytes))},
+                "int64"=>{cursor.expect(TokenKind::LParen)?;let token=cursor.expect(TokenKind::Int)?;let value=token.text.as_str().parse::<i64>().map_err(|error|TextError::new(ValueRefusalKind::InvalidValue,error.to_string(),token.span))?;cursor.expect(TokenKind::RParen)?;Ok(DslValue::Number(Number::Int(value)))},
+                "bytes64"=>{cursor.expect(TokenKind::LParen)?;let token=cursor.expect(TokenKind::Text)?;let bytes=base64_decode(&token.text.as_str()).map_err(|error|TextError::new(ValueRefusalKind::InvalidValue,error,token.span))?;cursor.expect(TokenKind::RParen)?;Ok(DslValue::Bytes(bytes))},
                 "null" => Ok(DslValue::Null),
                 "true" => Ok(DslValue::Bool(true)),
                 "false" => Ok(DslValue::Bool(false)),
-                "nan"|"inf"=>Ok(DslValue::Number(Number::Float(parse_f64(&token.text.as_str()).map_err(|error|TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error,token.span))?))),
-                other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a value literal, found ident '{other}'"),token.span)),
+                "nan"|"inf"=>Ok(DslValue::Number(Number::Float(parse_f64(&token.text.as_str()).map_err(|error|TextError::new(ValueRefusalKind::InvalidValue,error,token.span))?))),
+                other => Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected a value literal, found ident '{other}'"),token.span)),
             }
         }
-        other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected a value literal, found {other:?}"),cursor.span())),
+        other => Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected a value literal, found {other:?}"),cursor.span())),
     }
 }
 
@@ -1154,7 +1155,7 @@ fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
         };
         let label = WireEdgeLabel { id, kind };
         if label.is_empty() {
-            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"edge label `[...]` must name an id and/or a `:kind`",cursor.span()));
+            return Err(TextError::new(ValueRefusalKind::InvalidValue,"edge label `[...]` must name an id and/or a `:kind`",cursor.span()));
         }
         cursor.expect(TokenKind::RBracket)?;
         Ok(label)
@@ -1196,7 +1197,7 @@ fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
                     false
                 }
                 other => {
-                    return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected `->` or `--` to close a labeled edge, found {other:?}"),cursor.span()));
+                    return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected `->` or `--` to close a labeled edge, found {other:?}"),cursor.span()));
                 }
             };
             let to = parse_wire_node(cursor)?;
@@ -1257,7 +1258,7 @@ fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
         if cursor.at_keyword(keyword) {
             cursor.advance();
         } else {
-            return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected keyword '{keyword}', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
+            return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected keyword '{keyword}', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
         }
     }
     parse_record_fields(cursor, spec, depth)
@@ -1269,12 +1270,12 @@ fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Re
 /// key (here, always `)`), so no special "bounded sub-cursor" is needed to keep it from reading
 /// past the closing paren.
 fn parse_call_record(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
-    let name_field = spec.fields.iter().find(|f| f.is_call_name).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"RecordLayout::Call requires exactly one field marked call_name()",cursor.span()))?;
+    let name_field = spec.fields.iter().find(|f| f.is_call_name).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,"RecordLayout::Call requires exactly one field marked call_name()",cursor.span()))?;
     let name = ident_like_text(&cursor.expect(TokenKind::Ident)?);
     cursor.expect(TokenKind::Equals)?;
-    let keyword = spec.keyword.as_deref().ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"RecordLayout::Call requires RecordSpec.keyword (the call target)",cursor.span()))?;
+    let keyword = spec.keyword.as_deref().ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,"RecordLayout::Call requires RecordSpec.keyword (the call target)",cursor.span()))?;
     if !cursor.at_keyword(keyword) {
-        return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected call target '{keyword}', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
+        return Err(TextError::new(ValueRefusalKind::InvalidValue,format!("expected call target '{keyword}', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()),cursor.span()));
     }
     cursor.advance();
     cursor.expect(TokenKind::LParen)?;
@@ -1408,7 +1409,7 @@ fn shape_is_self_delimiting(shape: &Shape) -> bool {
 fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {
     for field in &spec.fields {
         if !shape_is_self_delimiting(&field.shape) {
-            return Err(TextError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,format!("table column '{}' has a non-self-delimiting shape ({}) and cannot be a table column", field.key, shape_type_name(&field.shape)),TextSpan::at(1, 1)));
+            return Err(TextError::new(ValueRefusalKind::UnsupportedOwner,format!("table column '{}' has a non-self-delimiting shape ({}) and cannot be a table column", field.key, shape_type_name(&field.shape)),TextSpan::at(1, 1)));
         }
     }
     Ok(())
@@ -1469,7 +1470,7 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: RecordSpecProducer, depth: usiz
             cursor.advance();
             cursor.expect(TokenKind::Ident)?; // type tag — documentation only, not re-validated here
         }
-        let field_spec = element_spec.fields.iter().find(|f| f.key == key).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown table column '{key}'"),key_token.span))?;
+        let field_spec = element_spec.fields.iter().find(|f| f.key == key).ok_or_else(|| TextError::new(ValueRefusalKind::InvalidValue,format!("unknown table column '{key}'"),key_token.span))?;
         columns.push(field_spec);
     }
     cursor.expect(TokenKind::RBracket)?;

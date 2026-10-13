@@ -67,8 +67,11 @@ impl<'a> IntoIterator for &'a CadReferenceIndex {
     type IntoIter = std::iter::Map<std::slice::Iter<'a, (String, CadReferenceList)>, fn(&'a (String, CadReferenceList)) -> Self::Item>;
     fn into_iter(self) -> Self::IntoIter { self.entries.iter().map(|(key, rows)| (key, rows)) }
 }
+/// 🗂️ The keyed reference index retires through its sorted entry vector.
 impl RetireOwned for CadReferenceIndex {
+    fn controlled_retirement_supported() -> bool { <Vec<(String, CadReferenceList)> as RetireOwned>::controlled_retirement_supported() }
     fn retirement(self) -> Box<dyn RetirementCursor> { self.entries.retirement() }
+    fn retirement_birth_bytes(&self) -> Option<usize> { self.entries.retirement_birth_bytes() }
 }
 
 pub(crate) fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }

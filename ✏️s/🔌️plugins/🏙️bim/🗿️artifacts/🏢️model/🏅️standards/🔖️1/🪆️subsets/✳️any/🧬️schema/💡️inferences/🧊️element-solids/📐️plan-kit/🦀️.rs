@@ -4,7 +4,7 @@
 
 pub use crate::standards::v1::subsets::any::schema::authored::plan::{mark, point, segment_of as seg};
 use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 use crate::{Layer, ModelSnapshot, Profile, StairFlight, Vertex as PlanVertex};
 use semio_framework_geometry::loops::Vertex;
 use semio_framework_geometry::{Point, Vec2};

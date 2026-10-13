@@ -7,7 +7,7 @@
 
 use super::brep::{body_kind, mesh_item};
 use super::data::{define, label, property_set};
-use super::writer::{en, opt_text, refs, rf, unset, V};
+use super::writer::{en, opt_text, refs, unset, V};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;

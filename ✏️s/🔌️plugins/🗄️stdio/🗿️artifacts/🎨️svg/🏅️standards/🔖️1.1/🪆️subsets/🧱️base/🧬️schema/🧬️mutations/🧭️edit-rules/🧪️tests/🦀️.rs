@@ -46,7 +46,8 @@ fn root_children(snapshot: &SvgSnapshot) -> &[SvgNode] {
 fn an_attribute_value_edit_raises_set_attribute_by_name_at_the_node_path() {
     let mutations = resolve(SnapshotEditEvent::SetValue { path: "/doc/root/children/0/attrs/1/value".into(), value: DslValue::object([("kind".to_string(), text("text")), ("value".to_string(), text("changed"))]) });
     assert_eq!(mutations, vec![SvgMutation::SetAttribute(SetAttributePayload { path: vec![0], name: "class".into(), value: Some(SvgAttributeValue::Text("changed".into())), index: None })]);
-    let SvgNode::Element { attrs, .. } = &root_children(&replay(&mutations))[0] else { panic!("element") };
+    let replayed = replay(&mutations);
+    let SvgNode::Element { attrs, .. } = &root_children(&replayed)[0] else { panic!("element") };
     assert_eq!(attrs[1], text_attribute("class", "changed"));
 }
 
@@ -71,13 +72,16 @@ fn children_insert_remove_and_move_by_position() {
 #[test]
 fn attributes_insert_remove_and_move_by_position() {
     let inserted = resolve(SnapshotEditEvent::InsertValue { path: "/doc/root/children/0/attrs/0".into(), value: DslValue::object([("name".to_string(), text("lang")), ("value".to_string(), DslValue::object([("kind".to_string(), text("text")), ("value".to_string(), text("en"))]))]) });
-    let SvgNode::Element { attrs, .. } = &root_children(&replay(&inserted))[0] else { panic!("element") };
+    let replayed = replay(&inserted);
+    let SvgNode::Element { attrs, .. } = &root_children(&replayed)[0] else { panic!("element") };
     assert_eq!(attrs.iter().map(|attribute| attribute.name.as_str()).collect::<Vec<_>>(), ["lang", "id", "class"]);
     let removed = resolve(SnapshotEditEvent::RemoveValue { path: "/doc/root/children/0/attrs/0".into() });
-    let SvgNode::Element { attrs, .. } = &root_children(&replay(&removed))[0] else { panic!("element") };
+    let replayed = replay(&removed);
+    let SvgNode::Element { attrs, .. } = &root_children(&replayed)[0] else { panic!("element") };
     assert_eq!(attrs, &[text_attribute("class", "b")]);
     let moved = resolve(SnapshotEditEvent::MoveValue { from: "/doc/root/children/0/attrs/0".into(), path: "/doc/root/children/0/attrs/1".into() });
-    let SvgNode::Element { attrs, .. } = &root_children(&replay(&moved))[0] else { panic!("element") };
+    let replayed = replay(&moved);
+    let SvgNode::Element { attrs, .. } = &root_children(&replayed)[0] else { panic!("element") };
     assert_eq!(attrs.iter().map(|attribute| attribute.name.as_str()).collect::<Vec<_>>(), ["class", "id"]);
 }
 

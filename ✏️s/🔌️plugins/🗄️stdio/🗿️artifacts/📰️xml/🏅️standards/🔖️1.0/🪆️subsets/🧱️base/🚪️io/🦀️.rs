@@ -187,7 +187,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec XmlBuilderFacets {
         construction: XmlBuilderConstruction,
         analysis: XmlAnalyzerAnalysis,
-        composition: crate::standards::v1_0::subsets::base::io::derived_composition::XmlComposerComposition,
+        composition: XmlComposerComposition,
     }
     builder: XmlBuilder,
     analyzer: XmlAnalyzer,

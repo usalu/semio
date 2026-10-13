@@ -6,7 +6,7 @@ use super::schema::{WiresCanvasOptionalNode, WiresCanvasTransientDiff};
 mod set_drag;
 pub use set_drag::SetDrag;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = WiresCanvasTransient, diff = WiresCanvasTransientDiff, schema = "wires.canvas-window-transient")]
 pub enum WiresCanvasTransientMutation {

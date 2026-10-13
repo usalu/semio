@@ -24,7 +24,7 @@
 use crate::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{insert_xml_part_diff, remove_xml_part_diff, retarget_attribute_values_diff, retype_xml_part_diff, root_attribute_diff, root_edits_diff, xml_part_positions};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-use protocol::Mutation;
+#[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};

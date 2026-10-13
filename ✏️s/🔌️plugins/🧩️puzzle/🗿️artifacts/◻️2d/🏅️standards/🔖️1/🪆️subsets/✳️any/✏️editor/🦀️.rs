@@ -95,7 +95,8 @@ use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
 // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};
-use semio_framework_pack_json::{json,Value,Object};
+use semio_framework_pack_json::{json, Value};
+#[cfg(test)] use semio_framework_pack_json::{Object};
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use semio_framework_2d::compute::EngineHandles;
@@ -2426,10 +2427,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-window-work-repeated"));
@@ -2467,10 +2468,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-export-work-repeated"));
@@ -3179,10 +3180,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     /// number of `step()` calls matches [`Puzzle2dForceLayoutWork::extent`] instead of running one
     /// force evaluation per checkpoint.
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
         let edges = snapshot.value().get("edges").and_then(Value::as_array);
@@ -3305,7 +3306,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 
@@ -3552,10 +3553,10 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(std::mem::size_of::<Self>())
+        crate::retained_command::step_demands::<EditorApp<Puzzle2dPlayApp>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Puzzle2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-redraw-nodes-missing"))?;
         match self.stage {
@@ -3623,7 +3624,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puz
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 }
 //#endregion 🧵️RetainedCommands
@@ -4160,7 +4161,7 @@ struct Puzzle2dClipboardJob {
     interaction: Option<semio_framework::InteractionState>,
     hover: Option<semio_framework_plugin::app::InteractionHoverState>,
     completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
-    rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
+    rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
     outbox: crate::puzzle_job::JobOutbox,
     closing: bool,
     owners: crate::puzzle_job::WorkClosing<Puzzle2dClipboardOwners>,
@@ -4176,7 +4177,7 @@ struct Puzzle2dClipboardOwners {
     snapshot: Option<std::sync::Arc<Puzzle2dPlaySnapshot>>,
     raw_wire: Vec<u8>,
     completion: Option<ArtifactToolCompletion<EditorApp<Puzzle2dPlayApp>>>,
-    rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
+    rejection: Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,
 }
 
 impl Puzzle2dClipboardJob {

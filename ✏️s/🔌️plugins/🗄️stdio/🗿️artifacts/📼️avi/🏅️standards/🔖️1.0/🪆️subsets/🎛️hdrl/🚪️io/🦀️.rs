@@ -47,7 +47,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.avi", standard: semio_framework_artifact_reference::StandardId("1.0"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<AviSnapshot, crate::standards::v1_0::subsets::any::schema::mutations::AviMutation>(crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.avi", standard: StandardId("1.0"), subset: SubsetId("*") }, store::ArtifactCodec::bare::<AviSnapshot, crate::standards::v1_0::subsets::any::schema::mutations::AviMutation>(crate::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -63,7 +63,7 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-use crate::apply_mutation;
+#[cfg(test)] use crate::apply_mutation;
 use crate::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk, STDIO_AVI_DOCUMENT_SCHEMA};
 
 //#region 🔖️Riff
@@ -1328,7 +1328,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec AviBuilderFacets {
         construction: AviBuilderConstruction,
         analysis: AviAnalyzerAnalysis,
-        composition: crate::standards::v1_0::subsets::any::io::derived_composition::AviComposerComposition,
+        composition: AviComposerComposition,
     }
     builder: AviBuilder,
     analyzer: AviAnalyzer,

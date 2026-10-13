@@ -29,7 +29,6 @@ impl protocol::OpText for WriterMainWindowTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 #[allow(unused_imports)]
 mod mutations_wire_codec {

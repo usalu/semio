@@ -99,7 +99,7 @@ pub mod derived_construction {
     use crate::standards::v1_0::subsets::base::schema::diff::XmlDiff;
     use crate::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot;
     use crate::standards::v1_0::subsets::valid::schema::check_valid_conformance;
-    use crate::apply_mutation;
+    #[cfg(test)] use crate::apply_mutation;
     use crate::standards::v1_0::subsets::valid::schema::valid_mutations::XmlValidMutation;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -167,14 +167,15 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlNode, XmlSnapshot};
+    use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlSnapshot};
+    #[cfg(test)] use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlNode};
     use crate::standards::v1_0::subsets::base::io::XmlAnalyzer as XmlAnyAnalyzer;
     pub use crate::standards::v1_0::subsets::base::io::XmlParts;
     use semio_framework_diagnostic::Diagnostic;
-use semio_framework_diagnostic::FaultCode;
-use semio_framework_diagnostic::FaultScope;
+#[cfg(test)] use semio_framework_diagnostic::FaultCode;
+#[cfg(test)] use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
-use semio_framework_diagnostic::TextSpan;
+#[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
@@ -227,7 +228,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec XmlValidBuilderFacets {
         construction: XmlValidBuilderConstruction,
         analysis: XmlValidAnalyzerAnalysis,
-        composition: crate::standards::v1_0::subsets::valid::io::derived_composition::XmlValidComposerComposition,
+        composition: XmlValidComposerComposition,
     }
     builder: XmlValidBuilder,
     analyzer: XmlValidAnalyzer,

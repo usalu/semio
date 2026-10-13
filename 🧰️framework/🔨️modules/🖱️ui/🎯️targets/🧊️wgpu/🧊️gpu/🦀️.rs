@@ -671,7 +671,7 @@ impl GpuContext {
             }
             PreparedRenderUpload::SceneRaster { key, lease } => {
                 let descriptor = lease.identity().descriptor();
-                if !self.raster_store.prepare_admission_step(key, descriptor.width, descriptor.height,crate::wgpu::draw::RasterUploadPixels::Scene(lease).mip_levels(descriptor.width,descriptor.height), lease.identity().content(), candidate).map_err(str::to_owned)? {
+                if !self.raster_store.prepare_admission_step(key, descriptor.width, descriptor.height,RasterUploadPixels::Scene(lease).mip_levels(descriptor.width,descriptor.height), lease.identity().content(), candidate).map_err(str::to_owned)? {
                     return Ok(false);
                 }
                 self.ensure_raster_texture_step(key, RasterUploadPixels::Scene(lease), descriptor.width, descriptor.height, candidate, expected).map_err(str::to_owned)?

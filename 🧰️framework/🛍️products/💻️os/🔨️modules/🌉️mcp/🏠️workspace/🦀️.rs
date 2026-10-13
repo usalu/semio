@@ -307,7 +307,8 @@ impl semio_framework_value::FromValue for ProbeDiff {
 }
 
 /// 🧪️ Replaces the complete ordered JSON node tree.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned, semio_framework_value::ToValue)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum ProbeMutation {
     SetValue(semio_framework_value::DslValue),
 }

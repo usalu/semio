@@ -15,13 +15,13 @@ pub struct InsertRow {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for InsertRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "row", kind: "insert-row", record: "InsertRow" };
 
-    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
+    fn diff(&self, _base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
         let Self { index, row } = self;
         protocol::MutationOutcome::new(TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![TsvRowAdded { index: *index, row: row.clone() }] }), ..TsvDiff::default() })
     }
-    fn inverse(&self, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
-        Ok({ vec![TsvMutation::RemoveRow(remove_row::RemoveRow { index: *index })] })
+        Ok(vec![TsvMutation::RemoveRow(remove_row::RemoveRow { index: *index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert row", "Zeile einfügen")

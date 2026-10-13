@@ -388,7 +388,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec StlBuilderFacets {
         construction: StlBuilderConstruction,
         analysis: StlAnalyzerAnalysis,
-        composition: crate::standards::v_ascii::subsets::any::io::derived_composition::StlComposerComposition,
+        composition: StlComposerComposition,
     }
     builder: StlBuilder,
     analyzer: StlAnalyzer,

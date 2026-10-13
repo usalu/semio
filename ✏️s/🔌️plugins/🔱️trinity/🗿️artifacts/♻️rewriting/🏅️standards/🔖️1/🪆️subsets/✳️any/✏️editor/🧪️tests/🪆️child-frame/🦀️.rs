@@ -26,7 +26,7 @@ async fn full_frame_app()->RichFrameApp{
  let target=contract["target"]["artifactId"].as_str().expect("target").to_owned();
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()};
  parent.working_graph.content=store::ArtifactChild::new(logical.clone(),ArtifactRef{artifact_id:target.clone(),dialect:dialect.clone()});
- app.test_parent_store_mut().dispatch(store::ArtifactCommand::Apply{mutations:vec![schema::mutations::edit_working_graph(parent.working_graph)],transaction:None}).await.expect("declare actual owner identity");
+ app.test_parent_store_mut().dispatch(store::ArtifactCommand::Apply{mutations:vec![schema::mutations::edit_working_graph(parent.working_graph)],transaction:None}, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("declare actual owner identity");
  let mut envelope=store::create_document_envelope::<SemioGraphSnapshot,SemioGraphMutation>("stdio.semio",&target,full_frame_child(&contract,false),None);
  envelope.dialect=Some(dialect.clone());
  let mut child=store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("actual rich member store");
@@ -44,7 +44,7 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
  let expected=encode_semio_graph_snapshot_json(&old).expect("all words and fields");
  let key=("workingGraph".to_owned(),contract["childId"].as_str().expect("declared member key").to_owned());
  let RichFrameMembers::Graph(member)=app.test_child_member_mut(&key).expect("real member") else{panic!("workingGraph member must be the actual Semio Graph owner")};
- member.dispatch(store::ArtifactCommand::Apply{mutations:vec![SemioGraphMutation::ChangeNodeLabel(semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::change_node_label::ChangeNodeLabel{id:old.nodes[0].id.clone(),new_label:full_frame_child(&contract,true).nodes[0].label.clone()})],transaction:None}).await.expect("actual next child publication");
+ member.dispatch(store::ArtifactCommand::Apply{mutations:vec![SemioGraphMutation::ChangeNodeLabel(semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::change_node_label::ChangeNodeLabel{id:old.nodes[0].id.clone(),new_label:full_frame_child(&contract,true).nodes[0].label.clone()})],transaction:None}, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("actual next child publication");
  app.test_publish_child_content(&key.0,&key.1).await.expect("real next root");
  assert_eq!(&*old as *const SemioGraphSnapshot,pointer);
  assert_eq!(encode_semio_graph_snapshot_json(&old).expect("old full owner"),expected);
@@ -73,8 +73,8 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_rewriting_real_command_reads_exact_declared_full_child(){
  let mut app=full_frame_app().await;
- app.dispatch_typed(TrinityRewritingCommand::PatchNodes{node_ids:vec!["a".into()],field:"name".into(),value:"edited !@/\0引用😀".into()},&meta("local")).await.expect("admit actual document command");
- artifact_app_laws::settle_registered_typed_operation(&mut app,REWRITING_TEST_INSTANCE).await.expect("actual reducer obtains the declared full child without local Any materialization");
+ app.dispatch_typed(TrinityRewritingCommand::PatchNodes{node_ids:vec!["a".into()],field:"name".into(),value:"edited !@/\0引用😀".into()},&meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("admit actual document command");
+ artifact_app_laws::settle_registered_typed_operation(&mut app,REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("actual reducer obtains the declared full child without local Any materialization");
  let view=app.test_child_content_view();
  let id=full_frame_contract()["childId"].as_str().expect("declared member key").to_owned();
  let child=view.typed_read::<SemioGraphSnapshot>("workingGraph",&id).expect("actual published child edit");

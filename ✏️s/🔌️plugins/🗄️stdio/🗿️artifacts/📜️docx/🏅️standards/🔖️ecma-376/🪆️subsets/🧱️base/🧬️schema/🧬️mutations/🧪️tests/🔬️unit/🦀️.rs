@@ -328,7 +328,7 @@ fn run_text_edit_replaces_all_text_contributions_and_has_compact_exact_inverse()
         assert!(prepared.diff.opc.is_none());
         let part_diff = prepared.diff.xml_parts.as_ref().unwrap();
         assert_eq!(part_diff.modified.len(), 1);
-        assert!(part_diff.added.is_empty() && part_diff.removed.is_empty());
+        assert!(part_diff.inserted.is_empty() && part_diff.moved.is_empty() && part_diff.removed.is_empty());
 
         apply_addressed(&mut snapshot, &mutation).unwrap();
         let inverse = prepared.inverse.clone();

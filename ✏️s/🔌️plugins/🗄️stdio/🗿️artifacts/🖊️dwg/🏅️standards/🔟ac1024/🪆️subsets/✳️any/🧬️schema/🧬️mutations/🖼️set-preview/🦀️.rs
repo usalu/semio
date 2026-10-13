@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetPreview {
         protocol::MutationOutcome::new(DwgDiff { preview: (base.preview != self.preview).then(|| self.preview.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.preview != self.preview).then(|| DwgMutation::SetPreview(set_preview::SetPreview { preview: base.preview.clone() })).into_iter().collect())
+        Ok((base.preview != self.preview).then(|| DwgMutation::SetPreview(SetPreview { preview: base.preview.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set preview image", "Vorschaubild setzen")

@@ -18,7 +18,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleBasedOn {
         optional_plan_outcome(style_based_on_plan(base, &self.id, self.based_on.as_deref()))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
         Ok(optional_plan_inverse(style_based_on_plan(base, &self.id, self.based_on.as_deref())))
     }
 

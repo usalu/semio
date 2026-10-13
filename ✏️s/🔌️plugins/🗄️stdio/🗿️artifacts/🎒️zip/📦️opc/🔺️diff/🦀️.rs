@@ -8,7 +8,7 @@
 use super::{OpcPackage, OpcPart, OpcRelationship, OpcRelationshipOwners, OpcTargetMode};
 use semio_s_artifact_stdio_contract::kernel::list_delta::RowPatch;
 use semio_s_artifact_stdio_contract::kernel::{ApplyCapability, MutationApplyError};
-use semio_s_artifact_stdio_contract::list_delta::{compose_optional, Composable};
+use semio_s_artifact_stdio_contract::list_delta::compose_optional;
 
 //#region 🔖️Rows
 /// 🏷️ One `[Content_Types].xml` entry as a list row: the extension (default) or part name (override) and its content type.

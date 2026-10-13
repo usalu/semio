@@ -22,7 +22,7 @@ fn value_type(mut id:i64,read:&mut Reader<'_,'_,'_>)->Result<ValueType,ValueErro
   };break value;
  };
  let mut value=DecodedValue::new(value,retire);
- for n in 0..depth{read.control.admit_allocation_bytes(std::mem::size_of::<ValueType>())?;value=DecodedValue::new(ValueType::List(Box::new(value.take())),retire);read.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,n+1,depth)?;}
+ for n in 0..depth{read.control.admit_allocation_bytes(size_of::<ValueType>())?;value=DecodedValue::new(ValueType::List(Box::new(value.take())),retire);read.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,n+1,depth)?;}
  Ok(value.take())
 }
 fn declarations(table:usize,parent:i64,read:&mut Reader<'_,'_,'_>)->Result<Vec<PropertyDef>,ValueError>{

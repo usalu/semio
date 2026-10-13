@@ -140,7 +140,7 @@ impl<'a> Lowering<'a> {
     fn record_glyphs(&mut self, ops: &[PdfOp]) {
         let mut current: Option<String> = None;
         let mut stack: Vec<Option<String>> = Vec::new();
-        let mut use_text = |lowering: &mut Self, font: &Option<String>, text: &PdfTextString| {
+        let use_text = |lowering: &mut Self, font: &Option<String>, text: &PdfTextString| {
             let Some(font) = font else { return };
             let Some(codec) = lowering.codecs.get(font) else { return };
             let decoded = match text {

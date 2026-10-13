@@ -51,4 +51,4 @@ impl store::ArtifactPack for PlaybookSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

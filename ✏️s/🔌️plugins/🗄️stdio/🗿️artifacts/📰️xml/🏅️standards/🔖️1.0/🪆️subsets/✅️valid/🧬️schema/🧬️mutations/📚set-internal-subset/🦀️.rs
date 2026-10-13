@@ -22,7 +22,7 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetInternalSubset
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
         Ok(match base.doc.doctype.as_ref() {
-            Some(doctype) => vec![XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations: doctype.declarations.clone() })],
+            Some(doctype) => vec![XmlValidMutation::SetInternalSubset(SetInternalSubset { declarations: doctype.declarations.clone() })],
             None => Vec::new(),
         })
     }

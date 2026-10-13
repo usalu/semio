@@ -4,7 +4,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{SpaceSnapshot,SpaceKind,SpaceVisibility,SpaceRole,SpaceUser,CollectionRef,InstalledExtension,S_SPACE_SCHEMA};
 use semio_framework_os_kernel as store;
 use store::ArtifactSqliteSnapshot;
-use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell}};
+use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell}};
 #[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
 pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_SPACE_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
@@ -20,9 +20,7 @@ fn write_rows(value:&SpaceSnapshot,total:usize,p:&mut RowWriter<'_,'_>)->Result<
   for(index,row)in value.programs.iter().enumerate(){p.insert("space_program",&[Cell::Integer(document),Cell::Integer(fields::ordinal(index)?),Cell::Text(row)])?;p.checkpoint_total(total)?;}
   for(index,row)in value.extensions.iter().enumerate(){p.insert("space_extension",&[Cell::Integer(document),Cell::Integer(fields::ordinal(index)?),Cell::Text(&row.extension_id),Cell::Text(&row.version),Cell::Text(&row.source_uri),Cell::Text(&row.package_hash),Cell::Integer(i64::from(row.enabled))])?;p.checkpoint_total(total)?;}Ok(())}
 fn semantic(value:&SpaceSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{schema(control)?;let total=rows(value)?;control.check_rows(total)?;let mut p=RowWriter::borrowed(control,phase)?;write_rows(value,total,&mut p)?;p.finish_borrowed()}
-impl store::ArtifactSqliteSnapshot for SpaceSnapshot{
- fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->Result<SqliteDatabase,ValueError>{owner.native().checkpoint()?;self.to_sqlite_database(control)}
- fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->Result<Self,ValueError>{owner.native().checkpoint()?;Self::from_sqlite_database(database,control)}
+impl ArtifactSqliteSnapshot for SpaceSnapshot{
  fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
  fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
@@ -37,7 +35,7 @@ impl store::ArtifactSqliteSnapshot for SpaceSnapshot{
   let(result,owned)={
    let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|control.checkpoint(event.phase,event.completed,event.total).is_ok();
    let mut child=SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_allocation_bytes:maximum,..limits});
-   let result=store::decode_sqlite_snapshot_record_native(payload,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+   let result=store::decode_sqlite_snapshot_record_native(payload,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
     admission::record(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)
    })(); *snapshot_output = Some(constructed?); Ok(()) },&mut child,native_owner);
    (result,maximum-child.allocation_remaining_bytes())

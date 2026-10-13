@@ -101,7 +101,7 @@ impl ImportCloseOwner {
 fn import_controller<T:semio_framework_value::retirement::RetireOwned>(value:T)->ControlledRetirement<T> {ControlledRetirement::new(value).unwrap_or_else(|_|panic!("original import payload requires typed ownership"))}
 fn import_progress()->RetainedCloneStep {RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()})}
 /// 📦 The current result of advancing the existing mesh import mutation.
-pub enum MeshImportStep { Working, Cancelled, Done(crate::brep::representation::topology::EntityRef) }
+pub enum MeshImportStep { Working, Cancelled, Done(EntityRef) }
 impl MeshImportCursor {
     /// 🚦️ Checks constant-sized admission facts before a retained owner transfers its buffers.
     pub fn validate_admission_counts(position_scalars:usize,index_count:usize,tolerance:f64)->Result<(),KernelError> {
@@ -147,7 +147,7 @@ impl MeshImportCursor {
                 let copy=self.next_close_copy_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?;
                 let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(body,copy).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_release_bytes:self.next_close_release_byte_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?,maximum_depth:self.next_close_depth_demand(body).map_err(|error|KernelError::Operation(error.to_string()))?};
                 self.close_step(body,grant).map_err(|error|KernelError::Operation(error.to_string()))?;
-                if self.retired {return Ok(if self.cancelled {MeshImportStep::Cancelled}else {MeshImportStep::Done(if let Some(solid)=self.solid.take() {crate::brep::representation::topology::EntityRef::Solid(solid)}else {crate::brep::representation::topology::EntityRef::Shell(self.shell.take().expect("original completed import shell"))})});}
+                if self.retired {return Ok(if self.cancelled {MeshImportStep::Cancelled}else {MeshImportStep::Done(if let Some(solid)=self.solid.take() {EntityRef::Solid(solid)}else {EntityRef::Shell(self.shell.take().expect("original completed import shell"))})});}
             } else {if let Err(error)=self.advance(body) {self.cancelled=true;return Err(error);}}
             self.units=self.units.saturating_add(1);
         }
@@ -157,16 +157,16 @@ impl MeshImportCursor {
     fn removal_demand(&self,body:&Body)->(usize,usize) {
         if self.retirement_stage!=2 || !self.cancelled {return (0,0);}
         match self.recorder.last_owned() {
-            Some(crate::brep::representation::topology::EntityRef::Vertex(id))=>body.vertices.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Edge(id))=>body.edges.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Coedge(id))=>body.coedges.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Loop(id))=>body.loops.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Face(id))=>body.faces.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Shell(id))=>body.shells.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Solid(id))=>body.solids.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Curve3(id))=>body.curves3.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Curve2(id))=>body.curves2.remove_backing_demand(id),
-            Some(crate::brep::representation::topology::EntityRef::Surface(id))=>body.surfaces.remove_backing_demand(id),
+            Some(EntityRef::Vertex(id))=>body.vertices.remove_backing_demand(id),
+            Some(EntityRef::Edge(id))=>body.edges.remove_backing_demand(id),
+            Some(EntityRef::Coedge(id))=>body.coedges.remove_backing_demand(id),
+            Some(EntityRef::Loop(id))=>body.loops.remove_backing_demand(id),
+            Some(EntityRef::Face(id))=>body.faces.remove_backing_demand(id),
+            Some(EntityRef::Shell(id))=>body.shells.remove_backing_demand(id),
+            Some(EntityRef::Solid(id))=>body.solids.remove_backing_demand(id),
+            Some(EntityRef::Curve3(id))=>body.curves3.remove_backing_demand(id),
+            Some(EntityRef::Curve2(id))=>body.curves2.remove_backing_demand(id),
+            Some(EntityRef::Surface(id))=>body.surfaces.remove_backing_demand(id),
             None=>(0,0),
         }
     }
@@ -187,16 +187,16 @@ impl MeshImportCursor {
             2=>{
                 if let Some(entity)=self.recorder.last_owned().filter(|_|self.cancelled) {
                     let (removed,progress)=match entity {
-                        crate::brep::representation::topology::EntityRef::Vertex(id)=>{let (value,progress)=body.vertices.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Vertex{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Edge(id)=>{let (value,progress)=body.edges.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Edge{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Coedge(id)=>{let (value,progress)=body.coedges.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Coedge{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Loop(id)=>{let (value,progress)=body.loops.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Loop{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Face(id)=>{let (value,progress)=body.faces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Face{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Shell(id)=>{let (value,progress)=body.shells.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Shell{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Solid(id)=>{let (value,progress)=body.solids.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Solid{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Curve3(id)=>{let (value,progress)=body.curves3.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Curve3{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Curve2(id)=>{let (value,progress)=body.curves2.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Curve2{value}),progress)},
-                        crate::brep::representation::topology::EntityRef::Surface(id)=>{let (value,progress)=body.surfaces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Surface{value}),progress)},
+                        EntityRef::Vertex(id)=>{let (value,progress)=body.vertices.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Vertex{value}),progress)},
+                        EntityRef::Edge(id)=>{let (value,progress)=body.edges.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Edge{value}),progress)},
+                        EntityRef::Coedge(id)=>{let (value,progress)=body.coedges.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Coedge{value}),progress)},
+                        EntityRef::Loop(id)=>{let (value,progress)=body.loops.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Loop{value}),progress)},
+                        EntityRef::Face(id)=>{let (value,progress)=body.faces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Face{value}),progress)},
+                        EntityRef::Shell(id)=>{let (value,progress)=body.shells.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Shell{value}),progress)},
+                        EntityRef::Solid(id)=>{let (value,progress)=body.solids.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Solid{value}),progress)},
+                        EntityRef::Curve3(id)=>{let (value,progress)=body.curves3.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Curve3{value}),progress)},
+                        EntityRef::Curve2(id)=>{let (value,progress)=body.curves2.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Curve2{value}),progress)},
+                        EntityRef::Surface(id)=>{let (value,progress)=body.surfaces.remove_granted(id,grant)?;(value.map(|value|RemovedImportEntity::Surface{value}),progress)},
                     };
                     if progress==Default::default() {return Ok(RetainedCloneStep::Progress(progress));}
                     self.recorder.pop_retired_owned(entity);
@@ -207,7 +207,7 @@ impl MeshImportCursor {
             _=>{self.retired=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,..Default::default()}))}
         }
     }
-    fn advance(&mut self,body:&mut Body)->Result<Option<crate::brep::representation::topology::EntityRef>,KernelError> {
+    fn advance(&mut self,body:&mut Body)->Result<Option<EntityRef>,KernelError> {
         use crate::brep::representation::topology::EntityRef;
         match self.phase {
             0=>{

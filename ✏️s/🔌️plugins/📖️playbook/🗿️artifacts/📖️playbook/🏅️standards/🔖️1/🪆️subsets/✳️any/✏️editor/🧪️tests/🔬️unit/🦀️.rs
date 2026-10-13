@@ -27,7 +27,7 @@ pub(crate) mod context {
     impl Drop for PlaybookApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0);
+                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
             }
         }
     }
@@ -63,13 +63,13 @@ pub(crate) mod context {
     /// 🚚️ Dispatches one typed command, settles its retained operation and applies any `LoadDocument`
     /// effect exactly as the host would; a mounted app's `result.mutations` is always empty.
     pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
-        let mut result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
-        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.expect("retained playbook operation settles");
+        let mut result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained playbook operation settles");
         result.requested_effects.extend(receipt.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -77,7 +77,7 @@ pub(crate) mod context {
 
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) through admission, commit and publication.
     pub async fn history_verb(app: &mut PlaybookApp, action: &str) {
-        settle_history_verb(&mut app.0, action, meta("local").instance_id).await;
+        settle_history_verb(&mut app.0, action, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     }
 
     pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
@@ -254,9 +254,9 @@ async fn set_contributions_boots_because_presence_declares_its_retirement_owners
     );
 
     let mut app = playbook_app().await;
-    let outcome = app.dispatch_typed(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }), &artifact_app_laws::meta("local")).await;
+    let outcome = app.dispatch_typed(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert!(outcome.is_ok(), "setContributions must not be refused at boot: {:?}", outcome.err());
-    artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id).await.expect("setContributions publishes");
+    artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("setContributions publishes");
 }
 
 /// ↩️ Spelled out over the `flow` child (the law helper's probe is a synchronous closure over the parent projection, which
@@ -293,12 +293,12 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
     let receiver = meta("actor-a").instance_id;
-    instance_a.dispatch_typed(PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a")).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }), &meta("actor-b")).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
-    instance_a.tick_backbone().await.expect("a folds b's events");
-    instance_b.tick_backbone().await.expect("b folds a's events");
+    instance_a.dispatch_typed(PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut *instance_a, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut *instance_b, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b's edit publishes");
+    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
     let shape = |spec: crate::PlaybookSpec| spec.steps.iter().map(|step| (step.id.clone(), step.blocks.len())).collect::<Vec<_>>();
     let converged = shape(live_spec(&instance_a).await);
     assert_eq!(converged, shape(live_spec(&instance_b).await), "both instances must converge on the same composed playbook");

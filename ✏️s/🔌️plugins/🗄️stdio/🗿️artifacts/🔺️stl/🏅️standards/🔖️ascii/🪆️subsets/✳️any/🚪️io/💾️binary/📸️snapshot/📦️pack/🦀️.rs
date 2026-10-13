@@ -1,6 +1,5 @@
 //! 📦️ Typed STL facet records preserve snapshot identity and every binary64 word.
 use crate::standards::v_ascii::subsets::any::schema::snapshot::{StlSnapshot,StlTriangle};
-use semio_framework_diagnostic::{TextError,TextSpan};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub(crate) struct Point{x:f64,y:f64,z:f64}
@@ -16,7 +15,7 @@ impl From<Snapshot> for StlSnapshot{fn from(value:Snapshot)->Self{Self{schema:va
 impl store::ArtifactPack for StlSnapshot{
  fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let snapshot=Snapshot::from(self);let inner=store::pack_rt::encode_document(&Snapshot::__dsl_spec(),&snapshot.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.stl",store::semio_format::Component::Pack,1).map_err(|error|store::PackError::from(error.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&inner))}
- fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity("stdio.stl",store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "owned snapshot pack identity differs")));}let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::text_error_to_pack_error)}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity("stdio.stl",store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "owned snapshot pack identity differs")));}let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::text_error_to_pack_error)}
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
 }
 
@@ -28,8 +27,8 @@ pub(crate)fn record_controlled(snapshot:&StlSnapshot,control:&mut semio_framewor
  Snapshot{schema,solid_name,triangles}.__dsl_to_record_controlled(control)
 }
 pub(crate)fn reconstruct_record_controlled(record:&semio_framework_dsl_record::RecordValue,control:&mut semio_framework_value::NativeDecodeControl<'_>,maximum_rows:usize)->Result<StlSnapshot,ValueError>{
- control.checkpoint()?;let count=match record.fields.get(&2){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),_=>return Err(semio_framework_value::ValueError::new(ValueRefusalKind::InvalidValue,"STL native facet list differs"))};
- let rows=count.checked_mul(4).and_then(|n|n.checked_add(1)).ok_or_else(||semio_framework_value::ValueError::new(ValueRefusalKind::WorkLimit,"STL native row count overflow"))?;if rows>maximum_rows{return Err(semio_framework_value::ValueError::new(ValueRefusalKind::OwnershipLimit,"STL native row limit"))}
+ control.checkpoint()?;let count=match record.fields.get(&2){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"STL native facet list differs"))};
+ let rows=count.checked_mul(4).and_then(|n|n.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"STL native row count overflow"))?;if rows>maximum_rows{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"STL native row limit"))}
  let Snapshot{schema,solid_name,triangles}=Snapshot::__dsl_from_record_controlled(record,control)?;
  control.begin_stage(count)?;let mut owned=control.allocate_vec::<StlTriangle>(count)?;
  for value in triangles{control.step()?;owned.push(StlTriangle{normal:value.normal.into(),vertices:[value.vertex0.into(),value.vertex1.into(),value.vertex2.into()]});}

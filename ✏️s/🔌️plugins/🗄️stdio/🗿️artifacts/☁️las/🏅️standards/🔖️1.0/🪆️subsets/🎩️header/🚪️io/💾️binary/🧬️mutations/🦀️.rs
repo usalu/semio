@@ -144,7 +144,6 @@ impl protocol::OpBinary for LasMutation {
 
 
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `LasMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

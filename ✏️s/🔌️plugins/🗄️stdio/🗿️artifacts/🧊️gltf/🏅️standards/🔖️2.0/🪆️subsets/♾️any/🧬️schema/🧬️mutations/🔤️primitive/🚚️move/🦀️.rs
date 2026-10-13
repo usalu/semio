@@ -1,7 +1,7 @@
 //! 🧬️ Direct move-primitive-attribute mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level_collections::*;
-use crate::schema::snapshot::*;
+#[cfg(test)] use crate::schema::snapshot::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -45,7 +45,7 @@ pub fn inverse(p: &GltfMovePrimitiveAttributePayload, base: &GltfSnapshot) -> Ve
     let Some(index) = base.document.meshes[p.mesh].primitives[p.primitive].attributes.iter().position(|(semantic, _)| semantic == &p.semantic) else {
         return Vec::new();
     };
-    vec![super::move_primitive_attribute::mutation(super::move_primitive_attribute::GltfMovePrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone(), position: index })]
+    vec![mutation(GltfMovePrimitiveAttributePayload { mesh: p.mesh, primitive: p.primitive, semantic: p.semantic.clone(), position: index })]
 }
 
 //#region 🧬️DirectMutation
@@ -65,7 +65,7 @@ pub fn mutation(payload: GltfMovePrimitiveAttributePayload) -> super::GltfMutati
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MovePrimitiveAttributeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "primitive-attribute", kind: "move-primitive-attribute", record: "MovedPrimitiveAttribute" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

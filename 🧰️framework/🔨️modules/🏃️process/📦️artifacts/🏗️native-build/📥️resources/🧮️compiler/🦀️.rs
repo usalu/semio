@@ -87,16 +87,16 @@ pub fn read_to_string(path: impl AsRef<Path>) -> io::Result<String> {
     String::from_utf8(read(path)?).map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))
 }
 
-/// 🗂️ Retains one real directory enumeration while keeping entry failures visible to its caller.
+/// 🗂️ Retains one real directory enumeration while keeping entry failures visible to its caller. The directory itself is not a compiler dependency; freshness comes from the files that are read.
+#[allow(dead_code)]
 #[track_caller]
 pub fn read_dir(path: impl AsRef<Path>) -> io::Result<std::vec::IntoIter<io::Result<fs::DirEntry>>> {
     let path = absolute(path);
     require_capture();
-    let read_operation = operation(file!(), line!(), "read_dir"); let entries = match fs::read_dir(&path) { Ok(entries) => entries.collect::<Vec<_>>(), Err(error) => { CURRENT.with(|current| { if let Some(capture) = current.borrow_mut().as_mut() { (capture.track)(&path); capture.complete = false; } }); return Err(error); } };
+    let read_operation = operation(file!(), line!(), "read_dir"); let entries = match fs::read_dir(&path) { Ok(entries) => entries.collect::<Vec<_>>(), Err(error) => { CURRENT.with(|current| { if let Some(capture) = current.borrow_mut().as_mut() { capture.complete = false; } }); return Err(error); } };
     let location = Location::caller();
     CURRENT.with(|current| {
         if let Some(capture) = current.borrow_mut().as_mut() {
-            (capture.track)(&path);
             if capture.directory.is_some() {
                 let mut observed = Vec::new();
                 for entry in &entries {

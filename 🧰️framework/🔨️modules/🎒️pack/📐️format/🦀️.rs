@@ -1499,7 +1499,7 @@ impl RetainedPackSourceCursor {
         retained_page_close_demands(&self.pages)
     }
 
-    pub fn next_release_allocation_bytes(&self) -> Result<usize, protocol::list::PagedListError> {
+    pub fn next_release_allocation_bytes(&self) -> Result<usize, PagedListError> {
         self.pages.next_release_allocation_bytes()
     }
 
@@ -1586,7 +1586,7 @@ impl RetainedPackSourceCursor {
         Ok(Some(RetainedPackSourceEvent::Byte { offset, value }))
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, protocol::list::PagedListError> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, PagedListError> {
         if maximum_items == 0 && maximum_bytes == 0 {
             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -2769,7 +2769,7 @@ impl RetainedPackSymbolTable {
         Ok(())
     }
 
-    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, protocol::list::PagedListError> {
+    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, PagedListError> {
         if !self.scalars.is_empty() || !self.symbols.is_empty() {
             return Ok(None);
         }
@@ -2782,7 +2782,7 @@ impl RetainedPackSymbolTable {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, protocol::list::PagedListError> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, PagedListError> {
         if !self.closed && maximum_items == 0 && maximum_bytes == 0 {
             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
@@ -3344,7 +3344,7 @@ impl RetainedPackCatalogCursor {
         self.pending.is_some()
     }
 
-    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, protocol::list::PagedListError> {
+    pub fn next_release_allocation_bytes(&self) -> Result<Option<usize>, PagedListError> {
         if self.pending.is_some()
             || self.active.is_some()
             || !self.symbol_parser.closed
@@ -3367,7 +3367,7 @@ impl RetainedPackCatalogCursor {
         Ok(None)
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, protocol::list::PagedListError> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<RetainedPackCloseStep, PagedListError> {
         if maximum_items == 0 && maximum_bytes == 0 {
             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }

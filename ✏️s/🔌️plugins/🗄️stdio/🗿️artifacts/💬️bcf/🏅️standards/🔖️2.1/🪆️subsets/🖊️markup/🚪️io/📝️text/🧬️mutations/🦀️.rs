@@ -150,4 +150,3 @@ impl protocol::OpText for BcfMutation {
     }
 }
 }
-pub use mutations_codec::*;

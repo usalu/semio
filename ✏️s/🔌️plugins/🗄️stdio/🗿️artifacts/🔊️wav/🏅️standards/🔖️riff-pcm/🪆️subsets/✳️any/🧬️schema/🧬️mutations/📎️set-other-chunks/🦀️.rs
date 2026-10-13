@@ -35,7 +35,7 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetOtherChunks {
         }
     }
     fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
-        Ok((!protocol::DiffAlgebra::is_empty(&self.wanted(base))).then(|| WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: base.other_chunks.clone(), chunk_order: Some(base.chunk_order.clone()) })).into_iter().collect())
+        Ok((!protocol::DiffAlgebra::is_empty(&self.wanted(base))).then(|| WavMutation::SetOtherChunks(SetOtherChunks { chunks: base.other_chunks.clone(), chunk_order: Some(base.chunk_order.clone()) })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set other chunks", "Sonstige Chunks setzen")

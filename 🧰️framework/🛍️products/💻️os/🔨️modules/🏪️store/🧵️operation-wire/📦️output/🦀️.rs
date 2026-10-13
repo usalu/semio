@@ -65,7 +65,7 @@ impl ArtifactPreparedOperationOutput {
     /// 🤝️ Moves the exact original byte backing into the canonical Value payload without allocation.
     pub fn take_bytes(&mut self,grant:RetainedCloneGrant)->Result<Option<(semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>,RetainedCloneProgress)>,ValueError>{
         if self.closing||self.closed||self.contiguous.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation output handoff requires its live paged owner"));}
-        let copy=std::mem::size_of::<PagedList<u8,{isize::MAX as usize}>>();
+        let copy=size_of::<PagedList<u8,{isize::MAX as usize}>>();
         if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(None);}
         let original=std::mem::replace(&mut *self.bytes,PagedList::empty());self.closed=true;
         Ok(Some((semio_framework_value::paged::PagedBytes::from_retained_bytes(original),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})))
@@ -79,7 +79,7 @@ impl ArtifactPreparedOperationOutput {
         if self.closing||self.closed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"contiguous operation transfer requires its live original owner"));}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.contiguous.is_none(){
-            let capacity=self.bytes.len();let copied_bytes=std::mem::size_of::<Vec<u8>>();
+            let capacity=self.bytes.len();let copied_bytes=size_of::<Vec<u8>>();
             if self.bytes.allocated_bytes().checked_add(capacity).is_none_or(|total|total>self.maximum_capacity_bytes){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"contiguous operation backing exceeds original total capacity authority"));}
             if grant.maximum_capacity_bytes<capacity||grant.maximum_copy_bytes<copied_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
             let output=if capacity==0{Vec::new()}else{
@@ -94,9 +94,9 @@ impl ArtifactPreparedOperationOutput {
             let output=self.contiguous.as_mut().expect("contiguous transfer retains its actual buffer");
             let count=(self.bytes.len()-output.len()).min(64).min(grant.maximum_copy_bytes);
             if output.len()==self.bytes.len(){
-                if grant.maximum_copy_bytes<std::mem::size_of::<bool>(){return Ok(RetainedCloneStep::Progress(Default::default()));}
+                if grant.maximum_copy_bytes<size_of::<bool>(){return Ok(RetainedCloneStep::Progress(Default::default()));}
                 self.contiguous_complete=true;
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<bool>(),..Default::default()}));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()}));
             }
             if count==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
             let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
@@ -112,7 +112,7 @@ impl ArtifactPreparedOperationOutput {
     /// 🤝️ Hands the exact already funded contiguous buffer to the actual protocol recipient.
     pub fn take_contiguous(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<u8>,RetainedCloneProgress)>,ValueError>{
         if self.closing||self.closed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"contiguous operation handoff requires its live original owner"));}
-        let copied_bytes=std::mem::size_of::<Vec<u8>>();
+        let copied_bytes=size_of::<Vec<u8>>();
         if !self.contiguous_complete||!self.bytes.terminal_is_empty()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(None);}
         let original=self.contiguous.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"contiguous operation handoff lost its original backing"))?;self.closed=true;
         Ok(Some((original,RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})))
@@ -136,7 +136,7 @@ impl ArtifactPreparedOperationOutput {
     /// 📏️ The original retained frontier refuses authority rather than enlarging any currency.
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{
         if self.closed{return Ok(Default::default());}
-        if let Some(output)=self.contiguous.as_ref(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Vec<u8>>(),release_bytes:output.capacity(),depth:1,..Default::default()});}
+        if let Some(output)=self.contiguous.as_ref(){return Ok(RetirementDemand{copy_bytes:size_of::<Vec<u8>>(),release_bytes:output.capacity(),depth:1,..Default::default()});}
         self.paged_demands()
     }
 }

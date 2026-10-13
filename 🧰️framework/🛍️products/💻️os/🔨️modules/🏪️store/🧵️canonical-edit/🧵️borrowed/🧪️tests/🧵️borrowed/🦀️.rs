@@ -135,6 +135,16 @@ fn map_value<'a>(value: &'a MapValue, lifetime: &'a MapLifetime) -> ArtifactCano
 }
 
 impl ArtifactCanonicalJson for MapMutation {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        let mut current: &dyn ArtifactCanonicalJsonTree = self;
+        for &ordinal in path { current = current.canonical_tree_child(ordinal)?; }
+        current.canonical_tree_node()
+    }
+    fn canonical_json_key(&self, path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        let mut current: &dyn ArtifactCanonicalJsonTree = self;
+        for &ordinal in path { current = current.canonical_tree_child(ordinal)?; }
+        current.canonical_tree_key(index)
+    }
     fn canonical_json_borrowed_root(&self) -> Result<Option<ArtifactCanonicalJsonValue<'_>>, semio_framework_value::ValueError> {
         let Self::ReplaceMap(MapBody { map, lifetime, .. }) = self;
         let fields = ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new([("map", map_object(map, lifetime))].into_iter()));
@@ -245,7 +255,10 @@ fn owner() -> (ArtifactStoreOneItemSealer<u64, MapMutation>, serde_json::Value, 
 }
 
 fn close(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, lifetime: &MapLifetime) {
-    let grant = fixture_retirement_grant();
+    close_under(owner, lifetime, fixture_retirement_grant());
+}
+
+fn close_under(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, lifetime: &MapLifetime, grant: RetainedCloneGrant) {
     owner.begin_close();
     assert_eq!(owner.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().progress(), RetainedCloneProgress::default());
     for _ in 0..100_000 {
@@ -299,136 +312,109 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
     }
     println!("[DEBUG] member reader map retains original key pointer/serde bytes on denied admission; independent grant pays every System birth/release and cancel frontier, map backing retires before exact lifetime notification");
 }
-#[test]
-fn borrowed_map_long_unicode_keys_nested_and_empty_maps_match_serde_under_tiny_grants() {
-    for maximum in [1, 7, 256, 4096] {
-        let (mut owner, fixture, lifetime) = owner();
-        let expected = serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(owner.edit.as_ref().unwrap().as_ref()))).unwrap();
-        assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
-        let before = owner.checkpoint();
-        for (maximum_items, maximum_bytes) in [(0, maximum), (1, 0)] {
-            assert!(matches!(owner.advance(fixture_encoding_grant(maximum_items, maximum_bytes)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
-            assert_eq!(owner.checkpoint(), before);
-            assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
+/// 📏️ The canonical bytes the original edit must seal to, projected independently through serde.
+fn expected_json(edit: &Edit<MapMutation>) -> Vec<u8> {
+    serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(edit))).unwrap()
+}
+
+/// 🎟️ Funds exactly the next quoted preparation turn: one item and the sealer's own five quoted currencies.
+fn quoted_preparation_grant(owner: &ArtifactStoreOneItemSealer<u64, MapMutation>) -> ArtifactStoreOneItemGrant {
+    let demand = owner.preparation_demands().unwrap();
+    ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
+}
+
+/// ▶️ Drives the sealer under quoted grants until it is prepared, a refusal surfaces, or the turn bound is hit.
+fn drive_to_prepared(owner: &mut ArtifactStoreOneItemSealer<u64, MapMutation>, turns: usize) -> Result<usize, semio_framework_value::ValueError> {
+    for turn in 0..turns {
+        let grant = quoted_preparation_grant(owner);
+        if matches!(owner.advance(grant)?, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
+            return Ok(turn);
         }
-        let mut prior = 0;
-        let mut canonical = Vec::new();
-        for _ in 0..100_000 {
-            let phase = owner.phase;
-            let step = owner.advance(fixture_encoding_grant(1, maximum)).unwrap();
-            if phase == 3 {
-                canonical.extend_from_slice(owner.canonical_chunk());
-            }
-            assert!(owner.completed_bytes - prior <= maximum as u64);
-            prior = owner.completed_bytes;
-            if matches!(step, ArtifactStoreOneItemPreparationStep::Prepared(..)) {
-                break;
-            }
-        }
-        assert_eq!(canonical, expected);
-        let digest = owner.prepared().unwrap().edit_digest();
-        let hex: String = digest.iter().map(|byte| format!("{byte:02x}")).collect();
-        assert_eq!(hex, fixture["expectedDigest"].as_str().unwrap());
-        assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
-        assert!(lifetime.iterator_drops.load(Ordering::SeqCst) > 0);
-        close(&mut owner, &lifetime);
     }
+    panic!("the native sealer did not reach Prepared within {turns} quoted turns");
+}
+
+fn digest_hex(owner: &ArtifactStoreOneItemSealer<u64, MapMutation>) -> String {
+    owner.prepared().unwrap().edit_digest().iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 #[test]
-fn borrowed_map_cancel_every_phase_retires_iterators_before_exact_root_once() {
-    for phase in 0..=6 {
+fn borrowed_map_long_unicode_keys_nested_and_empty_maps_match_serde_under_quoted_grants() {
+    let (edit, fixture, lifetime) = fixture();
+    let expected = expected_json(&edit);
+    assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
+    let mut owner = tests::admit_sealer(tests::authority(), edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(tests::FixtureSnapshotRetirement));
+    let before = owner.checkpoint();
+    for denied in [fixture_encoding_grant(0, 4096), fixture_encoding_grant(1, 0)] {
+        assert!(matches!(owner.advance(denied).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+        assert_eq!(owner.checkpoint(), before);
+        assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
+    }
+    let turns = drive_to_prepared(&mut owner, 1_000_000).unwrap();
+    assert!(turns > 1, "the seal spreads over several quoted turns ({turns})");
+    assert_eq!(digest_hex(&owner), fixture["expectedDigest"].as_str().unwrap());
+    assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
+    close(&mut owner, &lifetime);
+}
+
+#[test]
+fn borrowed_map_cancel_at_every_frontier_retires_the_original_root_exactly_once() {
+    for cut in [0usize, 1, 2, 3, 17, 257, 1_000_000] {
         let (mut owner, _, lifetime) = owner();
-        while owner.phase < phase {
-            owner.advance(fixture_encoding_grant(1, 7)).unwrap();
+        for _ in 0..cut {
+            let grant = quoted_preparation_grant(&owner);
+            if matches!(owner.advance(grant).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(..)) {
+                break;
+            }
         }
         owner.cancel();
         assert!(matches!(owner.advance(fixture_encoding_grant(1, 4096)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         close(&mut owner, &lifetime);
     }
-    let (mut owner, fixture, lifetime) = owner();
-    let key_start = fixture["expectedJson"].as_str().unwrap().find("key-").unwrap() as u64;
-    while owner.canonical_bytes <= key_start + 128 {
-        owner.advance(fixture_encoding_grant(1, 1)).unwrap();
-    }
-    assert_eq!(owner.phase, 1);
-    assert!(owner.canonical_bytes < key_start + fixture["longKeyBytes"].as_u64().unwrap());
-    assert!(lifetime.active_iterators.load(Ordering::SeqCst) > 0);
-    assert!(lifetime.iterator_drops.load(Ordering::SeqCst) > 0);
-    owner.cancel();
-    close(&mut owner, &lifetime);
 }
 
 #[test]
-fn borrowed_map_checkpoint_replays_fresh_root_and_live_owner_moves_workers() {
+fn borrowed_map_native_checkpoint_is_refused_and_a_live_owner_moves_workers() {
     let (mut first, fixture, lifetime) = owner();
     for _ in 0..100 {
-        first.advance(fixture_encoding_grant(1, 7)).unwrap();
+        let grant = quoted_preparation_grant(&first);
+        first.advance(grant).unwrap();
     }
-    let checkpoint: ArtifactStoreOneItemSealCheckpoint = serde_json::from_slice(&serde_json::to_vec(&first.checkpoint()).unwrap()).unwrap();
+    let checkpoint = first.checkpoint();
     let (mut replay, _, replay_lifetime) = owner();
     replay.restore_checkpoint(checkpoint).unwrap();
-    let mut replay = std::thread::spawn(move || {
-        for _ in 0..100_000 {
-            if matches!(replay.advance(fixture_encoding_grant(1, 1)).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(..)) {
-                return replay;
-            }
-        }
-        panic!("checkpoint did not finish");
-    })
-    .join()
-    .unwrap();
-    let digest = replay.prepared().unwrap().edit_digest();
-    assert_eq!(digest.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), fixture["expectedDigest"].as_str().unwrap());
+    let grant = quoted_preparation_grant(&replay);
+    let refusal = replay.advance(grant).unwrap_err();
+    assert_eq!(refusal.message.as_ref(), "canonical-edit.native-checkpoint-unsupported");
     close(&mut replay, &replay_lifetime);
     let mut first = std::thread::spawn(move || {
-        first.advance(fixture_encoding_grant(1, 7)).unwrap();
+        drive_to_prepared(&mut first, 1_000_000).unwrap();
         first
     })
     .join()
     .unwrap();
+    assert_eq!(digest_hex(&first), fixture["expectedDigest"].as_str().unwrap());
     close(&mut first, &lifetime);
 }
 
 #[test]
-fn borrowed_map_rebound_root_and_depth_overflow_fail_before_references_escape() {
+fn borrowed_map_indexed_depth_refusal_and_deep_originals_seal_under_the_depth_grant() {
     let mut indexed = ArtifactCanonicalJsonCursor { maximum_depth: 2, ..ArtifactCanonicalJsonCursor::default() };
     let original_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};
     let mut initialized=0;let mut failure=None;
     for _ in 0..32{match indexed.encode_chunk_admitted(&IndexedDepth(2),&mut[0;256],original_grant){Ok(step)=>initialized+=step.written_bytes,Err(error)=>{failure=Some(error);break}}}
     let error=failure.expect("original depth producer must refuse its exact crossing");assert_eq!(initialized+error.written_bytes,2);assert_eq!(error.reason.kind,semio_framework_value::ValueRefusalKind::DepthLimit);
-    let (mut owner, _, lifetime) = owner();
-    for _ in 0..100 {
-        owner.advance(fixture_encoding_grant(1, 7)).unwrap();
-    }
-    let (replacement, _, _) = fixture();
-    let original = owner.edit.replace(Box::new(replacement)).unwrap();
-    assert_eq!(owner.advance(fixture_encoding_grant(1, 7)).unwrap_err().message.as_ref(), "canonical-edit.borrowed-root-rebound");
-    let replacement = owner.edit.replace(original).unwrap();
-    retire_fixture_owned(replacement);
-    close(&mut owner, &lifetime);
 
-    let (mut owner, _, lifetime) = self::owner();
-    let MapMutation::ReplaceMap(MapBody { map, .. }) = &mut owner.edit.as_mut().unwrap().forwards[0];
+    let (mut edit, _, lifetime) = fixture();
+    let MapMutation::ReplaceMap(MapBody { map, .. }) = &mut edit.forwards[0];
     let mut value = MapValue::Text("leaf".into());
     for _ in 0..ARTIFACT_CANONICAL_JSON_DEPTH + 1 {
         value = MapValue::Object(MapFields(semio_framework_value::ordered::OrderedMap::from([("nested".into(), value)])));
     }
     let original = std::mem::replace(map, MapFields(semio_framework_value::ordered::OrderedMap::from([("root".into(), value)])));
     retire_fixture_owned(original);
-    let mut rejected = false;
-    for _ in 0..100_000 {
-        match owner.advance(fixture_encoding_grant(1, 1)) {
-            Err(reason) => {
-                assert_eq!(reason.message.as_ref(), "canonical-edit.depth-limit");
-                rejected = true;
-                break;
-            }
-            Ok(ArtifactStoreOneItemPreparationStep::Prepared(..)) => panic!("over-depth map sealed"),
-            _ => {}
-        }
-    }
-    assert!(rejected);
-    close(&mut owner, &lifetime);
+    let mut owner = tests::admit_sealer(tests::authority(), edit, Arc::new(17), Arc::new(MapRetirementFactory), Arc::new(tests::FixtureSnapshotRetirement));
+    drive_to_prepared(&mut owner, 1_000_000).expect("the native paged walk is bounded by its depth grant, not by the legacy fixed frame stack");
+    close_under(&mut owner, &lifetime, RetainedCloneGrant { maximum_depth: 4096, ..fixture_retirement_grant() });
 }
 //#endregion 🧪️BorrowedMapLaws

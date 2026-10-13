@@ -337,7 +337,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     // binding and deliberately not an app chord: `SurfaceAccessibilityShell` fires it only for the
     // focused canvas and `preventDefault`s it, whereas an `enter` chord in the app keybinding table
     // would fire on every focused button in the shell.
-    let surface = crate::activatable_scene_surface(surface, crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
+    let surface = crate::activatable_scene_surface(surface, GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
     semio_framework_ui_contract::column()
         .grow(true)
         .try_id("procedural-play-main.body")

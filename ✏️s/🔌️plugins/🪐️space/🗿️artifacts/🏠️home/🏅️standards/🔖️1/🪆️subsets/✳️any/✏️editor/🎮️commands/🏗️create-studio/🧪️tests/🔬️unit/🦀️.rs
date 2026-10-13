@@ -34,7 +34,7 @@ async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
     ];
     for command in routes {
         let id = command.command_id();
-        let fault = home.dispatch_typed(command, &artifact_app_laws::meta("local")).await.expect_err("a registry fixture owns no live instance");
+        let fault = home.dispatch_typed(command, &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect_err("a registry fixture owns no live instance");
         assert_ne!(fault.code.0.as_str(), "interactive-job.not-ui-safe", "{id} must be past the classification gate");
         assert_eq!(fault.code.0.as_str(), "interactive-job.live-instance", "{id} must fail only for the fixture's missing live instance");
     }

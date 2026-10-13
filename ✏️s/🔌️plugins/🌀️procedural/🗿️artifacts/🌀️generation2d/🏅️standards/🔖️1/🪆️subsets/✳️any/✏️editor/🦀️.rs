@@ -424,7 +424,7 @@ impl Generation2dSessionCommandWork {
 
 /// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
 fn command_work_step_demands<A: semio_framework_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(std::mem::size_of::<semio_framework_plugin::Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
 }
 
 impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSessionCommandWork {
@@ -443,14 +443,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dSession
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-session-command-work-repeated"));
         }
@@ -497,14 +497,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-flow-eval-work-repeated"));
         }
@@ -616,14 +616,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dGenerat
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-generation-command-work-repeated"));
         }
@@ -771,14 +771,14 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
     }
 
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(std::mem::size_of::<Self>())
+        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, Fault> {
         if self.consumed {
             return Err(Fault::from("generation2d-contributions-work-repeated"));
         }
@@ -977,7 +977,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generat
         if lane != store::HistoryLane::Document {
             return Err(generation2d_preparation_refusal("generation2d-artifact-lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Generation2dArtifactStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Generation2dArtifactStorePreparation>(), depth: 1 })
     }
 
     fn begin(
@@ -1123,7 +1123,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         if lane != store::HistoryLane::Document {
             return Err(generation2d_preparation_refusal("generation2d-config-lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Generation2dConfigPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Generation2dConfigPreparation>(), depth: 1 })
     }
 
     fn begin(
@@ -1586,8 +1586,8 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
     /// 📢️ The localized notices of the editor's own refusal codes (design §20.12): the preview evaluation's and the document-level
     /// ones.
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-        static NOTICES: std::sync::LazyLock<Vec<(&'static str, semio_framework_ui_locale::LocalizedLabel)>> = std::sync::LazyLock::new(|| crate::preview_eval::preview_eval_fault_notices().iter().chain(crate::generation2d_document_fault_notices()).cloned().collect());
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| crate::preview_eval::preview_eval_fault_notices().iter().chain(crate::generation2d_document_fault_notices()).cloned().collect());
         NOTICES.as_slice()
     }
 
@@ -1714,7 +1714,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the generation 2d command does not match its exact registered tool"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "the generation 2d command does not match its exact registered tool"));
         }
         let tool_id = request.command.command_id();
         let contributions = GENERATION2D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
@@ -2349,8 +2349,8 @@ fn generation2d_render_body(
 /// 🧬️ The whole-document replacement that picking an example or importing a file emits: the artifact's load effect, outside undo history and
 /// never a mutation row. `store::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
 /// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.
-pub fn reset_generation2d_document_effect(document: &Generation2dSnapshot) -> semio_framework_plugin::Effect {
+pub fn reset_generation2d_document_effect(document: &Generation2dSnapshot) -> Effect {
     let pack = <Generation2dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("generation2d", crate::GENERATION_2D_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("generation2d", GENERATION_2D_SCHEMA));
+    Effect::LoadDocument { pack, spr }
 }

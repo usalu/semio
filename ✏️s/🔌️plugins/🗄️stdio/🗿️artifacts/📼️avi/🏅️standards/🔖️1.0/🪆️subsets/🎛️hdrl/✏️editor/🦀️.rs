@@ -82,14 +82,14 @@ const STDIO_AVI_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_AVI_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.avi.tool-command.v1";
 const STDIO_AVI_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_AVI_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn aviEditor_example_snapshot(example_id: &str) -> AviSnapshot {
+fn avi_editor_example_snapshot(example_id: &str) -> AviSnapshot {
     if example_id == crate::examples::demo::ID {
         <AviSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         AviSnapshot::default()
     }
 }
-fn aviEditor_command_id(command: &AviEditCommand) -> &'static str {
+fn avi_editor_command_id(command: &AviEditCommand) -> &'static str {
     if let AviEditCommand::EditSnapshot { event } = command {
         return event.action_id();
     }
@@ -98,7 +98,7 @@ fn aviEditor_command_id(command: &AviEditCommand) -> &'static str {
         _ => "other",
     }
 }
-fn aviEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<AviEditCommand, Fault> {
+fn avi_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<AviEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) {
         return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| AviEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
     }
@@ -107,10 +107,10 @@ fn aviEditor_command_from_action(action: &str, args: Option<&semio_framework_val
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
 }
-fn aviEditor_retained_extent(command: &AviEditCommand, _snapshot: &AviSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn avi_editor_retained_extent(command: &AviEditCommand, _snapshot: &AviSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, AviEditCommand::SetActiveExample { .. }).then_some(1)
 }
-fn aviEditor_retained_reduce(
+fn avi_editor_retained_reduce(
     command: &AviEditCommand,
     _snapshot: &AviSnapshot,
     _config: &NoConfig,
@@ -121,7 +121,7 @@ fn aviEditor_retained_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<AviMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        AviEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&aviEditor_example_snapshot(example_id), STDIO_AVI_DOCUMENT_SCHEMA)], ..Default::default() }),
+        AviEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&avi_editor_example_snapshot(example_id), STDIO_AVI_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -244,7 +244,7 @@ impl ArtifactEditor for AviEditor {
         if !STDIO_AVI_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if aviEditor_command_id(&request.command) != request.tool_id {
+        if avi_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -268,10 +268,10 @@ impl ArtifactEditor for AviEditor {
                 operation,
                 completion: request.completion,
             },
-            aviEditor_command_id,
+            avi_editor_command_id,
             STDIO_AVI_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, aviEditor_retained_reduce, aviEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, avi_editor_retained_reduce, avi_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -287,10 +287,10 @@ impl ArtifactEditor for AviEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_AVI_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
-        aviEditor_command_id(command)
+        avi_editor_command_id(command)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        aviEditor_command_from_action(action, args)
+        avi_editor_command_from_action(action, args)
     }
 
     fn initial_snapshot() -> Self::Snapshot {
@@ -323,7 +323,7 @@ impl ArtifactEditor for AviEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             AviEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
-            AviEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&aviEditor_example_snapshot(example_id), STDIO_AVI_DOCUMENT_SCHEMA)], ..Default::default() }),
+            AviEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&avi_editor_example_snapshot(example_id), STDIO_AVI_DOCUMENT_SCHEMA)], ..Default::default() }),
         }
     }
 

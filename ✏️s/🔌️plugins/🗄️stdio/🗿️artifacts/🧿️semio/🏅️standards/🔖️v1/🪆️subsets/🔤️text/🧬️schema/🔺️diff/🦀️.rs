@@ -5,7 +5,7 @@
 //! rebuilt list. No `snapshot: Option<SemioTextSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_rows, absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;

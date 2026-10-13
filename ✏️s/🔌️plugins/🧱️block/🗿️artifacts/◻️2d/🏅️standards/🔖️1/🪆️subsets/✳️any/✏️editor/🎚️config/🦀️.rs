@@ -90,12 +90,9 @@ impl protocol::MutationDiff<Block2dConfig> for Block2dConfigDiff {
 
 //#region 🔖️ConfigOperations
 /// 🧮️ An empty config has no mutation: the enum is uninhabited, so no diff can be raised against it.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum Block2dConfigMutation {}
-
-impl semio_framework_value::retirement::RetireOwned for Block2dConfigMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { match self {} }
-}
 
 impl protocol::Mutation<Block2dConfig> for Block2dConfigMutation {
     type Diff = Block2dConfigDiff;

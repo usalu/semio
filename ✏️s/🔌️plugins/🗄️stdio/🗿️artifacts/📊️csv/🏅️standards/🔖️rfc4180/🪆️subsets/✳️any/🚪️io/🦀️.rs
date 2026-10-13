@@ -214,7 +214,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec CsvBuilderFacets {
         construction: CsvBuilderConstruction,
         analysis: CsvAnalyzerAnalysis,
-        composition: crate::standards::v_rfc4180::subsets::any::io::derived_composition::CsvComposerComposition,
+        composition: CsvComposerComposition,
     }
     builder: CsvBuilder,
     analyzer: CsvAnalyzer,

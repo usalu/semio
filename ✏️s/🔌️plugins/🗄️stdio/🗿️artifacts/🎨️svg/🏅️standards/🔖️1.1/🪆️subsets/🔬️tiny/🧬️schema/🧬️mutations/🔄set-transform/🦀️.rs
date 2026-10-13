@@ -24,7 +24,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetTransform {
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         let (value, index) = prior_attribute(base, path, "transform");
-        Ok(vec![SvgTinyMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: value.and_then(|value| if let SvgAttributeValue::Transform(transform) = value { Some(transform) } else { None }), index })])
+        Ok(vec![SvgTinyMutation::SetTransform(SetTransform { path: path.clone(), transform: value.and_then(|value| if let SvgAttributeValue::Transform(transform) = value { Some(transform) } else { None }), index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set transform", "Transformation setzen")

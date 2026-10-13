@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetRevisionHistory {
         protocol::MutationOutcome::new(DwgDiff { revision_history: (base.revision_history != self.revision_history).then(|| self.revision_history.clone()), ..DwgDiff::default() })
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-        Ok((base.revision_history != self.revision_history).then(|| DwgMutation::SetRevisionHistory(set_revision_history::SetRevisionHistory { revision_history: base.revision_history.clone() })).into_iter().collect())
+        Ok((base.revision_history != self.revision_history).then(|| DwgMutation::SetRevisionHistory(SetRevisionHistory { revision_history: base.revision_history.clone() })).into_iter().collect())
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set revision history", "Revisionsverlauf setzen")

@@ -16,4 +16,3 @@ impl protocol::OpBinary for Wfc2dTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

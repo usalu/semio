@@ -624,7 +624,7 @@ pub fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
 pub fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
     encode_opc_with_path_order(pkg, |paths| {
         let mut ordered = Vec::with_capacity(paths.len());
-        let mut pending: std::collections::HashSet<String> = std::mem::take(paths).into_iter().collect();
+        let mut pending: HashSet<String> = std::mem::take(paths).into_iter().collect();
         let mut take = |path: String| {
             if let Some(path) = pending.take(&path) {
                 ordered.push(path);

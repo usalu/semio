@@ -12,7 +12,7 @@ use super::super::storey_levels::StoreyLevel;
 use crate::ModelSnapshot;
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_value::DslValue;
-use std::collections::BTreeMap;
+#[cfg(test)] use std::collections::BTreeMap;
 
 //#region 🔖️Values
 
@@ -169,7 +169,7 @@ impl ElementSolid {
     }
     /// ⚖️ Bytes the solid accounts for in a cache budget.
     pub fn byte_size(&self) -> usize {
-        std::mem::size_of::<Self>() + 8 * (self.positions.len() + self.normals.len()) + 4 * (self.indices.len() + self.face_groups.len())
+        size_of::<Self>() + 8 * (self.positions.len() + self.normals.len()) + 4 * (self.indices.len() + self.face_groups.len())
     }
 }
 

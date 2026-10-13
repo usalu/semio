@@ -20,7 +20,7 @@ pub struct RemoveNormal {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveNormal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "normal", kind: "remove-normal", record: "RemoveNormal" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(diff_remove_normal(*index))
     }

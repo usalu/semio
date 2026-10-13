@@ -1,8 +1,7 @@
 use super::*;
 use semio_framework_plugin::ArtifactBuilder;
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{GltfAccessorType, GltfComponentType};
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationSampler, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm};
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::{GltfAccessorSpec, GltfBuilderConstruction as GltfDocBuilder};
+use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessorType, GltfComponentType, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationSampler, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm};
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{GltfAccessorSpec, GltfBuilderConstruction as GltfDocBuilder};
 
 /// 🏗️ Builds a real, decodable glTF document: two nodes, one animation with a Linear
 /// Translation channel (2 keyframes) and a CubicSpline Weights channel (2 keyframes, arity 2)

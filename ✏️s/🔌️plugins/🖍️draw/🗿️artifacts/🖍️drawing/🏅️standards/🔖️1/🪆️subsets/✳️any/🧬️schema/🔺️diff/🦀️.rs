@@ -3,7 +3,7 @@
 //! asset moved to `🚪️io/📝️text/🔺️diff/🦀️.rs`, but `apply`/`absorb` are not a byte-boundary
 //! codec — they transform already-decoded `DrawingDiff`/`DrawingSnapshot` values — so they stayed here).
 
-use crate::schema::{insert_layer, layer_base, layer_base_mut, layer_id, remove_layer_from_tree, update_layer_in_tree};
+use crate::schema::{layer_base, layer_base_mut, layer_id, remove_layer_from_tree, update_layer_in_tree};
 use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
@@ -286,13 +286,13 @@ fn fill_slots(children: &mut PagedList<DrawingLayerNode, {usize::MAX}>, entering
 }
 
 fn contains_layer(layers: &PagedList<DrawingLayerNode, {usize::MAX}>, id: &(impl Utf8Text + ?Sized)) -> bool {
-    layers.iter().any(|layer| crate::schema::layer_id(layer).eq_text(id) || matches!(layer, DrawingLayerNode::Group(group) if contains_layer(&group.children, id)))
+    layers.iter().any(|layer| layer_id(layer).eq_text(id) || matches!(layer, DrawingLayerNode::Group(group) if contains_layer(&group.children, id)))
 }
 
 fn validate_unique_layer_ids(layers: &PagedList<DrawingLayerNode, {usize::MAX}>) -> protocol::MutationApplyResult<()> {
-    fn visit<'a>(layers: &'a PagedList<DrawingLayerNode, {usize::MAX}>, ids: &mut std::collections::BTreeSet<&'a PagedUtf8<{usize::MAX}>>) -> bool {
+    fn visit<'a>(layers: &'a PagedList<DrawingLayerNode, {usize::MAX}>, ids: &mut BTreeSet<&'a PagedUtf8<{usize::MAX}>>) -> bool {
         for layer in layers {
-            if !ids.insert(crate::schema::layer_id(layer)) {
+            if !ids.insert(layer_id(layer)) {
                 return false;
             }
             if let DrawingLayerNode::Group(group) = layer {
@@ -303,7 +303,7 @@ fn validate_unique_layer_ids(layers: &PagedList<DrawingLayerNode, {usize::MAX}>)
         }
         true
     }
-    if !visit(layers, &mut std::collections::BTreeSet::new()) {
+    if !visit(layers, &mut BTreeSet::new()) {
         return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting layer tree contains duplicate identities").at(["identities"]));
     }
     Ok(())
@@ -377,7 +377,7 @@ fn apply_layer_patch_entry(layers: &mut PagedList<DrawingLayerNode, {usize::MAX}
 fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) -> protocol::MutationApplyResult<()> {
     if let Some(modified) = &patch.layer {
         let replacement = modified.clone();
-        if crate::schema::layer_id(&replacement) != crate::schema::layer_id(layer) {
+        if layer_id(&replacement) != layer_id(layer) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch cannot change the target identity").at(["layer"]));
         }
         *layer = replacement;

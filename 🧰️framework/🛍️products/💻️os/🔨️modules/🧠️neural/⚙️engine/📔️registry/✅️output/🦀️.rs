@@ -1,5 +1,6 @@
 //! ✅️ Bounded validation of the same original finished output owner.
-use crate::{Registry,Dictionary,Value,Atom,ChannelSpec,Cardinality,EvalError,RetainedCloneGrant,RetainedCloneProgress,SCHEMA_KEY};
+use crate::{Registry, Dictionary, Value, Atom, EvalError, RetainedCloneGrant, RetainedCloneProgress, SCHEMA_KEY};
+#[cfg(test)] use crate::{ChannelSpec, Cardinality};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 
 /// 🧭️ Keeps scalar positions into the original Registry, channels, and immutable output.

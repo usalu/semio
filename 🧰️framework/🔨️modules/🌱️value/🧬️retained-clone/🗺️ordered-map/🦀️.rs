@@ -105,7 +105,7 @@ impl<'de,K:Ord+serde::Deserialize<'de>,V:serde::Deserialize<'de>> serde::Deseria
         struct Visitor<K,V>(std::marker::PhantomData<(K,V)>);
         impl<'de,K:Ord+serde::Deserialize<'de>,V:serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<K,V>{
             type Value=RetainedOrderedMap<K,V>;
-            fn expecting(&self,formatter:&mut std::fmt::Formatter)->std::fmt::Result{formatter.write_str("an object with unique ordered keys")}
+            fn expecting(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{formatter.write_str("an object with unique ordered keys")}
             fn visit_map<M:serde::de::MapAccess<'de>>(self,mut input:M)->Result<Self::Value,M::Error>{let mut map=RetainedOrderedMap::default();while let Some((key,value))=input.next_entry::<K,V>()?{if map.get(&key).is_some(){return Err(serde::de::Error::custom("duplicate ordered-map key"));}map.cold_insert(key,value);}Ok(map)}
         }
         deserializer.deserialize_map(Visitor(std::marker::PhantomData))
@@ -173,7 +173,7 @@ impl<K: RetainedClone, V: RetainedClone> Default for RetainedOrderedMapCloneCurs
 
 impl<K: RetainedClone, V: RetainedClone> RetainedOrderedMapCloneCursor<K, V> {
     fn progress_from_close(step: RetainedCloneStep, terminal_is_empty: bool, grant: RetainedCloneGrant, context: &'static str) -> Result<RetainedCloneStep, crate::ValueError> {
-        let progress = super::admit_retained_clone_close(grant, step, terminal_is_empty, context)?.progress();
+        let progress = admit_retained_clone_close(grant, step, terminal_is_empty, context)?.progress();
         Ok(RetainedCloneStep::Progress(progress))
     }
 }
@@ -497,7 +497,7 @@ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueE
 fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
     fn compare(&mut self, left: RetainedCloneRef<'_, T>, right: RetainedCloneRef<'_, T>, grant: BoundedOrdGrant, retirement:RetainedCloneGrant) -> Result<BoundedOrdStep, crate::ValueError> {
         if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
         if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
@@ -544,7 +544,7 @@ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueE
 fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::release_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{RetainedCloneBinding::depth_demand(if self.left.is_some(){&self.left}else{&self.right})}
 fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()}
-fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}super::close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
+fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator must begin close"));}close_retained_binding(if self.left.is_some(){&mut self.left}else{&mut self.right},grant)}
     fn compare(&mut self, left: RetainedCloneRef<'_, String>, right: RetainedCloneRef<'_, String>, grant: BoundedOrdGrant, retirement:RetainedCloneGrant) -> Result<BoundedOrdStep, crate::ValueError> {
         if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"comparator is closing"));}
         if self.left.is_none()&&grant.maximum_items==0{return Ok(BoundedOrdStep::Progress(Default::default()));}
@@ -670,7 +670,7 @@ impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{
         if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close"));}
         if let Some(c)=self.comparison.as_mut(){let step=c.close_step(grant)?;if c.terminal_is_empty(){self.comparison=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        super::close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},grant)
+        close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},grant)
     }
     pub fn terminal_is_empty(&self)->bool{self.comparison.is_none()&&self.source.is_none()&&self.target.is_none()}
 }

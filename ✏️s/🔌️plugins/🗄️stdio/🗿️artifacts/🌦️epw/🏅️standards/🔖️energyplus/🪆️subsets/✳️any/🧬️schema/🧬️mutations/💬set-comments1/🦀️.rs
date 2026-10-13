@@ -14,12 +14,12 @@ pub struct SetComments1 {
 impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetComments1 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comments1", kind: "set-comments1", record: "SetComments1" };
 
-    fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
+    fn diff(&self, _base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
         let Self { value } = self;
         protocol::MutationOutcome::new(EpwDiff { comments_1: Some(value.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-        Ok(vec![EpwMutation::SetComments1(set_comments1::SetComments1 { value: base.comments_1.clone() })])
+        Ok(vec![EpwMutation::SetComments1(SetComments1 { value: base.comments_1.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set comments 1", "Kommentare 1 setzen")

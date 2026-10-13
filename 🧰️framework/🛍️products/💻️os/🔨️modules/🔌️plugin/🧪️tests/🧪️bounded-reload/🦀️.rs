@@ -70,16 +70,24 @@ std::thread_local! {
 }
 
 /// 🧮️ A test operation that counts every fold of it (`diff`), so the reload law bounds what one initializer step folds.
-#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 struct ReloadCountedOp(TestMutation);
 
 impl semio_framework_value::ToValue for ReloadCountedOp {
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
+        semio_framework_value::ToValue::to_value_controlled(&self.0, control)
+    }
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::ToValue::to_value(&self.0)
     }
 }
 
 impl semio_framework_value::FromValue for ReloadCountedOp {
+    fn from_value_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        <TestMutation as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Self)
+    }
+    fn retire_decoded(self) { <TestMutation as semio_framework_value::FromValue>::retire_decoded(self.0) }
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
         <TestMutation as semio_framework_value::FromValue>::from_value(value).map(Self)
     }
@@ -147,12 +155,14 @@ fn close_reload_counted_store(store:&mut store::ArtifactStore<TestSnapshot,Reloa
 #[semio_framework_async_macros::async_test]
 async fn a_long_history_reloads_one_operation_per_initializer_step() {
     use crate::test_app_mutation_fixture::SetCount;
-    let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let mut observer=|_|true;let mut identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize,&mut observer).unwrap();let original=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🔬️plugin-runtime-runtime-close-budget/🧫️fixtures/🧾️fixture-caller/🔣️.json")).unwrap();let mut observer=|_|true;let mut identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(law["native"]["maximumIdentityBytes"].as_u64().unwrap()as usize,&mut observer).unwrap();let original=crate::app::artifact_app_laws::fixture_mounted_policy().maintenance;
     let genesis = store::create_document_envelope::<TestSnapshot, ReloadCountedOp>(RELOAD_DOCUMENT_SCHEMA, "long-reload", TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }, None);
     let mut source = Box::pin(store::ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("source store");
+    source.install_operation_wire(store::ArtifactOperationWire::canonical());
     store::install_unscheduled_catalog(&mut source, store::funded_bounded_artifact_store_owners::<TestSnapshot, ReloadCountedOp>()).expect("source owners");
     for value in 1..=240 {
         Box::pin(source.dispatch(store::ArtifactCommand::Apply { mutations: vec![ReloadCountedOp(TestMutation::SetCount(SetCount { value }))], transaction: None },&mut identity)).await.expect("source edit");
+        crate::app::artifact_app_laws::drain_store_displaced_retirements(&mut source);
     }
     let first = source.mutation_ops().expect("source operations")[0].mutation_id.clone();
     let inputs = vec![store::SupersedeInput { target: first, replacement: Some(ReloadCountedOp(TestMutation::SetCount(SetCount { value: 1000 }))) }];
@@ -170,17 +180,23 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
         let before = RELOAD_FOLDS.with(std::cell::Cell::get);
         let mut ownership=RetainedCloneProgress::default();
         let mut cx=semio_framework_job::StepContext::new(operation,generation,semio_framework_job::StepBudget::new(1,u64::MAX,original),semio_framework_job::CancelToken::root_now(),semio_framework_job::default_now_us,&mut sequence,&mut ownership);
-        let outcome = semio_framework_job::InteractiveJob::step(&mut job, &mut cx);
+        let finished = match semio_framework_job::InteractiveJob::step(&mut job, &mut cx) {
+            Ok(None) | Ok(Some(semio_framework_job::JobOutcomeBorrow::Yield { .. })) => false,
+            Ok(Some(semio_framework_job::JobOutcomeBorrow::Complete { .. })) => true,
+            _ => panic!("the reload stopped at initializer step {steps}"),
+        };
         assert!(RELOAD_FOLDS.with(std::cell::Cell::get) - before <= 1, "initializer step {steps} folded more than one operation");
         let progress = job.progress();
-        assert!(progress.0 >= folded && progress.0 <= progress.1.max(progress.0) && (progress.1 == 0 || progress.1 == 240), "initializer progress only grows toward the applied operations: {progress:?} at step {steps}");
-        folded = progress.0;
-        steps += 1;
-        match outcome {
-            semio_framework_job::StepOutcome::Yield => assert!(steps < 1_000_000, "the reload finishes"),
-            semio_framework_job::StepOutcome::Complete(_) => break,
-            _ => panic!("the reload stopped at initializer step {steps}"),
+        assert!(progress.1 <= 1 || progress.1 == 240, "initializer phases total one unit or the applied operations: {progress:?} at step {steps}");
+        if progress.1 == 240 {
+            assert!(progress.0 >= folded, "initializer progress only grows toward the applied operations: {progress:?} at step {steps}");
+            folded = progress.0;
         }
+        steps += 1;
+        if finished {
+            break;
+        }
+        assert!(steps < 1_000_000, "the reload finishes");
     }
     assert!(steps >= 240, "the reload spreads over the history ({steps} steps)");
     assert_eq!(job.progress(), (240, 240), "the initializer reports every applied operation folded");

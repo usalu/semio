@@ -46,7 +46,7 @@ pub mod derived_composition {
     pub async fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences().await;
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.mp4", standard: semio_framework_artifact_reference::StandardId("isobmff"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.mp4", standard: StandardId("isobmff"), subset: SubsetId("*") }, store::ArtifactCodec::bare::<Mp4Snapshot, crate::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -75,7 +75,7 @@ pub use derived_composition::*;
 // The schema retains named ISO-BMFF concepts and semantic encoded sample payloads only. Native
 // box syntax is parsed at import and deterministically rebuilt at export.
 
-use crate::apply_mutation;
+#[cfg(test)] use crate::apply_mutation;
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Bitrate, Mp4Codec, Mp4CodecFormat, Mp4Color, Mp4Edit, Mp4Ftyp, Mp4HevcConfig, Mp4HevcNalArray, Mp4Movie, Mp4PixelAspectRatio, Mp4Sample, Mp4Snapshot, Mp4Track, Mp4TrackMetadata, Mp4VisualSampleEntry, STDIO_MP4_DOCUMENT_SCHEMA};
 
 #[path = "📦️boxes/🦀️.rs"]
@@ -1896,7 +1896,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Mp4BuilderFacets {
         construction: Mp4BuilderConstruction,
         analysis: Mp4AnalyzerAnalysis,
-        composition: crate::standards::isobmff::subsets::any::io::derived_composition::Mp4ComposerComposition,
+        composition: Mp4ComposerComposition,
     }
     builder: Mp4Builder,
     analyzer: Mp4Analyzer,

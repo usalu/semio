@@ -105,17 +105,17 @@ fn text_into(value:&DslValue,output:&mut String,c:&mut NativeDecodeControl<'_>,b
 }
 fn string_into(value:&DslValue,key:&str,output:&mut String,c:&mut NativeDecodeControl<'_>,body:&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>{text_into(field(value,key)?,output,c,body)}
 fn inline(body:&mut crate::os_store::NativeSnapshotBodyWallet,bytes:usize,depth:usize,operation:impl FnOnce())->Result<(),ValueError>{body.admit_frontier(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:depth})?;operation();body.record_progress(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})}
-fn push<T>(output:&mut Vec<T>,body:&mut crate::os_store::NativeSnapshotBodyWallet,depth:usize,value:impl FnOnce()->T)->Result<(),ValueError>{if output.len()==output.capacity()&&std::mem::size_of::<T>()>0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"space history child slot has no admitted backing"))}inline(body,std::mem::size_of::<T>(),depth,||output.push(value()))}
+fn push<T>(output:&mut Vec<T>,body:&mut crate::os_store::NativeSnapshotBodyWallet,depth:usize,value:impl FnOnce()->T)->Result<(),ValueError>{if output.len()==output.capacity()&&size_of::<T>()>0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"space history child slot has no admitted backing"))}inline(body,size_of::<T>(),depth,||output.push(value()))}
 fn optional_into(value:&DslValue,key:&str,output:&mut Option<String>,c:&mut NativeDecodeControl<'_>,body:&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>{
     let DslValue::Object(fields)=value else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native object is required"))};
     match fields.iter().find(|(name,_)|name==key).map(|(_,value)|value){
         None|Some(DslValue::Null)=>Ok(()),
-        Some(value)=>{inline(body,std::mem::size_of::<Option<String>>(),6,||*output=Some(String::new()))?;text_into(value,output.as_mut().unwrap(),c,body)}
+        Some(value)=>{inline(body,size_of::<Option<String>>(),6,||*output=Some(String::new()))?;text_into(value,output.as_mut().unwrap(),c,body)}
     }
 }
 fn construct(value:&DslValue,output:&mut Option<SpaceHistorySnapshot>,c:&mut NativeDecodeControl<'_>,body:&mut crate::os_store::NativeSnapshotBodyWallet)->Result<(),ValueError>{
     c.begin_stage(0)?;
-    inline(body,std::mem::size_of::<SpaceHistorySnapshot>(),2,||*output=Some(SpaceHistorySnapshot::default()))?;
+    inline(body,size_of::<SpaceHistorySnapshot>(),2,||*output=Some(SpaceHistorySnapshot::default()))?;
     let output=output.as_mut().unwrap();
     body.allocate_vec_into(c,list(field(value,"checkpoints")?)?.len(),&mut output.checkpoints,3)?;
     for row in list(field(value,"checkpoints")?)?{
@@ -134,7 +134,7 @@ fn construct(value:&DslValue,output:&mut Option<SpaceHistorySnapshot>,c:&mut Nat
             c.step()?;
         }
         let clock=field(row,"timestamp")?;
-        for(key,output)in[("actor",&mut checkpoint.timestamp.actor),("physical_ms",&mut checkpoint.timestamp.physical_ms),("logical",&mut checkpoint.timestamp.logical)]{let value=u64::from_value_controlled(field(clock,key)?,c)?;inline(body,std::mem::size_of::<u64>(),5,||*output=value)?;}
+        for(key,output)in[("actor",&mut checkpoint.timestamp.actor),("physical_ms",&mut checkpoint.timestamp.physical_ms),("logical",&mut checkpoint.timestamp.logical)]{let value=u64::from_value_controlled(field(clock,key)?,c)?;inline(body,size_of::<u64>(),5,||*output=value)?;}
         body.allocate_vec_into(c,list(field(row,"members")?)?.len(),&mut checkpoint.members,5)?;
         for pin in list(field(row,"members")?)?{
             push(&mut checkpoint.members,body,6,||SpaceMemberPin{document_id:String::new(),checkpoint_id:String::new(),alternative_id:String::new()})?;
@@ -226,27 +226,23 @@ fn write_json(value:&DslValue,owner:&mut crate::os_store::NativeSnapshotEncodeOw
 }
 
 pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner:&mut crate::os_store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<crate::io_schema::IoPayload, ValueError> {
-    let grant=native_owner.remaining_grant();
-    let mut retained=semio_framework_value::retained_clone::RetainedCloneProgress::default();
-    let native_control=native_owner.native();
     let limits = control.limits();
     let result=control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
         let mut progress = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
-        let before = native_control.owned_bytes();
+        let before = native_owner.native().owned_bytes();
         let maximum = before.checked_add(remaining).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native allocation allowance overflow"));
-        let result = maximum.and_then(|maximum| native_control.scoped_maximum(maximum, |native| native.scoped_observer(&mut progress, |c| {
-            let value = semio_framework_value::DecodedValue::new(project(value, c)?, retire_projection);
+        let result = maximum.and_then(|maximum| native_owner.scoped_native(maximum, &mut progress, |owner| {
+            let value = semio_framework_value::DecodedValue::new(project(value, owner.native())?, retire_projection);
             match encoding {
                 SnapshotEncoding::Text => {
-                    c.begin_stage(0)?;
-                    if json_size(value.get(), c)? > limits.max_file_bytes {
+                    owner.native().begin_stage(0)?;
+                    if json_size(value.get(), owner.native())? > limits.max_file_bytes {
                         return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history native text exceeds file limit"));
                     }
-                    let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(c,grant);
-                    let result=write_json(value.get(),&mut owner);retained=owner.progress();
-                    result.map(crate::io_schema::IoPayload::Text)
+                    write_json(value.get(), owner).map(crate::io_schema::IoPayload::Text)
                 }
                 SnapshotEncoding::Binary => {
+                    let c = owner.native();
                     let spec = spec(c)?;
                     let mut record = EncodedRecord::new(1, c)?;
                     record.insert(1, FieldValue::Value(value.take()))?;
@@ -258,10 +254,9 @@ pub(super) fn encode(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding, c
                     Ok(crate::io_schema::IoPayload::Binary(bytes))
                 }
             }
-        })));
-        (result, native_control.owned_bytes() - before)
+        }));
+        (result, native_owner.native().owned_bytes() - before)
     });
-    native_owner.record_progress(retained)?;
     result?
 }
 
@@ -277,38 +272,30 @@ pub(crate) fn decode_with<T:semio_framework_value::retirement::RetireOwned>(payl
     if length>limits.max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native input exceeds file limit"))}
     let before=native_owner.native().owned_bytes();
     let maximum=before.checked_add(control.reconstruction_remaining_bytes()?.min(control.allocation_remaining_bytes())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"space history native reconstruction allowance overflow"))?;
-    let grant=native_owner.remaining_grant();
-    let mut performed=semio_framework_value::retained_clone::RetainedCloneProgress::default();
     let mut refused=None;
     let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|match control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
-    let result=native_owner.native().scoped_maximum(maximum,|native|native.scoped_observer(&mut progress,|native|{
-        let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(native,grant);
-        let result=owner.receive::<(Option<semio_framework_dsl_record::RecordSpec>,Option<semio_framework_dsl_record::RecordValue>,Option<DslValue>,Option<T>),T>(|intermediate,native,body|{
-            *intermediate=Some((None,None,None,None));
-            let (schema,record,value,output)=intermediate.as_mut().unwrap();
-            match payload{
-                crate::io_schema::IoPayload::Text(text)=>{
-                    *value=Some(semio_framework_pack_json::from_json_str_controlled::<DslValue>(text,semio_framework_pack_json::JsonMemberPolicy::Reject,native)?);
-                    bind(value.as_ref().unwrap(),output,native,body)?;
-                }
-                crate::io_schema::IoPayload::Binary(bytes)=>{
-                    *schema=Some(spec(native)?);
-                    *record=Some(pack::record::decode_document_controlled(bytes,schema.as_ref().unwrap(),&pack::record::DecodeOptions::default(),native).map_err(crate::os_store::PackRefusal::into_value_error)?.0);
-                    let Some(semio_framework_dsl_record::FieldValue::Value(value))=record.as_ref().unwrap().get(1)else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native value field is missing"))};
-                    bind(value,output,native,body)?;
-                }
+    let result=native_owner.scoped_native(maximum,&mut progress,|owner|owner.receive::<(Option<RecordSpec>,Option<semio_framework_dsl_record::RecordValue>,Option<DslValue>,Option<T>),T>(|intermediate,native,body|{
+        *intermediate=Some((None,None,None,None));
+        let (schema,record,value,output)=intermediate.as_mut().unwrap();
+        match payload{
+            crate::io_schema::IoPayload::Text(text)=>{
+                *value=Some(semio_framework_pack_json::from_json_str_controlled::<DslValue>(text,semio_framework_pack_json::JsonMemberPolicy::Reject,native)?);
+                bind(value.as_ref().unwrap(),output,native,body)?;
             }
-            output.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"space history native constructor did not retain output"))
-        });
-        performed=owner.progress();
-        result
+            crate::io_schema::IoPayload::Binary(bytes)=>{
+                *schema=Some(spec(native)?);
+                *record=Some(pack::record::decode_document_controlled(bytes,schema.as_ref().unwrap(),&pack::record::DecodeOptions::default(),native).map_err(crate::os_store::PackRefusal::into_value_error)?.0);
+                let Some(FieldValue::Value(value))=record.as_ref().unwrap().get(1)else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"space history native value field is missing"))};
+                bind(value,output,native,body)?;
+            }
+        }
+        output.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"space history native constructor did not retain output"))
     }));
     drop(progress);
-    native_owner.record_progress(performed).map_err(|error|error.with_retained_progress(performed))?;
     let owned=native_owner.native().owned_bytes().saturating_sub(before);
     control.admit_allocation_bytes(owned)?;
     control.admit_reconstruction_bytes(owned)?;
-    if let Some(error)=refused{Err(error.with_retained_progress(performed))}else{result}
+    if let Some(error)=refused{Err(error)}else{result}
 }
 
 #[test]

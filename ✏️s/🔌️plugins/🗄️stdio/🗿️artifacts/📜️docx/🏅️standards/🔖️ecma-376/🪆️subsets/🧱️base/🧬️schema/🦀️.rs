@@ -113,7 +113,7 @@ pub async fn demo_docx_snapshot() -> DocxSnapshot {
         ],
         styles: vec![DocxStyle { id: "Normal".into(), name: "Normal".into(), based_on: None }, DocxStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }],
     };
-    let mut snap = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(document);
+    let mut snap = construction::build_minimal_docx(document);
     snap.xml_parts
         .try_push(
             crate::schema::snapshot::DocxXmlPart::try_from_document(

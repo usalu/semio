@@ -139,7 +139,7 @@ async fn composition_group_cycle_hops_and_cancellation_preserve_original_forest(
     let mut owner = ArtifactGroupVisibilityOwner::new(); let visibility = owner.view(); let mut preparation = graph.begin_owns_group(&visibility, 2).unwrap();
     let rows = fixture["pendingCycle"]["additions"].as_array().unwrap();
     for (index, row) in rows.iter().enumerate() { let result = prepare_edge(&graph, &mut preparation, row[0].as_str().unwrap(), row[1].as_str().unwrap(), row[2].as_str().unwrap()); if index == 0 { assert!(result.is_ok()); } else { assert_eq!(result, Err(GroupOwnsError::Cycle)); } }
-    assert!(owner.abort()); close_group(&mut graph, &mut preparation); assert!(graph.terminal_is_empty());
+    assert!(owner.abort()); close_group(&mut graph, &mut preparation); close_graph(&mut graph); assert!(graph.terminal_is_empty());
     println!("[DEBUG] SQLite neutral65hop/pending cycles refused;16 partial metadata/merge/seal cancellations preserve original live root and exact physical ownership");
 }
 

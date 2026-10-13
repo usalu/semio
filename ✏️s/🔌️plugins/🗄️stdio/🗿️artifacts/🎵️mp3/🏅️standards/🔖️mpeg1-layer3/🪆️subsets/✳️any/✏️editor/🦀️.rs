@@ -82,14 +82,14 @@ const STDIO_MP3_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.mp3.tool-command.v1";
 const STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn mp3Editor_example_snapshot(example_id: &str) -> Mp3Snapshot {
+fn mp3_editor_example_snapshot(example_id: &str) -> Mp3Snapshot {
     if example_id == crate::examples::demo::ID {
         <Mp3Snapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         Mp3Snapshot::default()
     }
 }
-fn mp3Editor_command_id(command: &Mp3EditCommand) -> &'static str {
+fn mp3_editor_command_id(command: &Mp3EditCommand) -> &'static str {
     if let Mp3EditCommand::EditSnapshot { event } = command {
         return event.action_id();
     }
@@ -98,7 +98,7 @@ fn mp3Editor_command_id(command: &Mp3EditCommand) -> &'static str {
         _ => "other",
     }
 }
-fn mp3Editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Mp3EditCommand, Fault> {
+fn mp3_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Mp3EditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) {
         return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| Mp3EditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
     }
@@ -107,10 +107,10 @@ fn mp3Editor_command_from_action(action: &str, args: Option<&semio_framework_val
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
 }
-fn mp3Editor_retained_extent(command: &Mp3EditCommand, _snapshot: &Mp3Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn mp3_editor_retained_extent(command: &Mp3EditCommand, _snapshot: &Mp3Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, Mp3EditCommand::SetActiveExample { .. }).then_some(1)
 }
-fn mp3Editor_retained_reduce(
+fn mp3_editor_retained_reduce(
     command: &Mp3EditCommand,
     _snapshot: &Mp3Snapshot,
     _config: &NoConfig,
@@ -121,7 +121,7 @@ fn mp3Editor_retained_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<Mp3Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        Mp3EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp3Editor_example_snapshot(example_id), STDIO_MP3_DOCUMENT_SCHEMA)], ..Default::default() }),
+        Mp3EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp3_editor_example_snapshot(example_id), STDIO_MP3_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -247,7 +247,7 @@ impl ArtifactEditor for Mp3Editor {
         if !STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if mp3Editor_command_id(&request.command) != request.tool_id {
+        if mp3_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -271,10 +271,10 @@ impl ArtifactEditor for Mp3Editor {
                 operation,
                 completion: request.completion,
             },
-            mp3Editor_command_id,
+            mp3_editor_command_id,
             STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, mp3Editor_retained_reduce, mp3Editor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, mp3_editor_retained_reduce, mp3_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -290,10 +290,10 @@ impl ArtifactEditor for Mp3Editor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_MP3_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
-        mp3Editor_command_id(command)
+        mp3_editor_command_id(command)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        mp3Editor_command_from_action(action, args)
+        mp3_editor_command_from_action(action, args)
     }
 
     fn initial_snapshot() -> Self::Snapshot {
@@ -327,7 +327,7 @@ impl ArtifactEditor for Mp3Editor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Mp3EditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
-            Mp3EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp3Editor_example_snapshot(example_id), STDIO_MP3_DOCUMENT_SCHEMA)], ..Default::default() }),
+            Mp3EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp3_editor_example_snapshot(example_id), STDIO_MP3_DOCUMENT_SCHEMA)], ..Default::default() }),
         }
     }
 

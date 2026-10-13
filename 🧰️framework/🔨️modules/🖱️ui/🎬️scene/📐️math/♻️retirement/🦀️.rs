@@ -6,7 +6,7 @@ pub(super) struct NumericSeen {
     occupied: Vec<usize>,
 }
 impl NumericSeen {
-    pub(super) fn capacity_bytes(count:usize)->Option<usize> { let slots=if count==0{0}else{count.checked_mul(2)?.checked_next_power_of_two()?};slots.checked_mul(std::mem::size_of::<Option<(u64,u32)>>())?.checked_add(count.checked_mul(std::mem::size_of::<usize>())?) }
+    pub(super) fn capacity_bytes(count:usize)->Option<usize> { let slots=if count==0{0}else{count.checked_mul(2)?.checked_next_power_of_two()?};slots.checked_mul(size_of::<Option<(u64,u32)>>())?.checked_add(count.checked_mul(size_of::<usize>())?) }
     pub(super) fn new(count:usize)->Self { let slots=if count==0{0}else{(count*2).next_power_of_two()};Self{slots:vec![None;slots],occupied:Vec::with_capacity(count)} }
     pub(super) fn len(&self)->usize {self.occupied.len()}
     pub(super) fn is_empty(&self)->bool {self.occupied.is_empty()}

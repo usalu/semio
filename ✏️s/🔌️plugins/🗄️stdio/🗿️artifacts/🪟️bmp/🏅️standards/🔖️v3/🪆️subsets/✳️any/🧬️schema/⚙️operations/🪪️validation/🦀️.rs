@@ -14,7 +14,7 @@ impl BmpOwnedValidationWork {
                 for entry in &image.palette[self.cursor..self.cursor+run]{feed(&mut self.hash,&[entry.r,entry.g,entry.b,entry.reserved]);}
                 self.cursor+=run;page=run*4;},
             2=>{let count=match &image.pixels {BmpPixels::Indexed{indices}=>indices.len(),BmpPixels::Direct{samples}=>samples.len()};if self.cursor==count {feed(&mut self.hash,&(image.opaque_gap.len()as u64).to_le_bytes());self.stage=3;self.cursor=0;continue;}
-                let width=match &image.pixels {BmpPixels::Indexed{..}=>1,BmpPixels::Direct{..}=>std::mem::size_of::<crate::schema::snapshot::BmpNativeSample>()};
+                let width=match &image.pixels {BmpPixels::Indexed{..}=>1,BmpPixels::Direct{..}=>size_of::<crate::schema::snapshot::BmpNativeSample>()};
                 let run=(count-self.cursor).min(bulk_run_elements(budget,width));if run==0{return Ok((false,used));}
                 for ordinal in self.cursor..self.cursor+run{image.validate_sample(ordinal)?;match &image.pixels {BmpPixels::Indexed{indices}=>feed(&mut self.hash,&indices[ordinal..ordinal+1]),BmpPixels::Direct{samples}=>{let sample=samples[ordinal];for value in [sample.red,sample.green,sample.blue,sample.alpha,sample.reserved] {feed(&mut self.hash,&value.to_le_bytes());}}}}
                 self.cursor+=run;page=run*width;},

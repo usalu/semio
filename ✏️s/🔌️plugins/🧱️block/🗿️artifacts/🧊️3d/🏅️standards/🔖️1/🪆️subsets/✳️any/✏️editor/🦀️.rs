@@ -30,7 +30,6 @@ use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCo
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactKindSpec;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
@@ -470,7 +469,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block3dSnapshot, Block3dMutat
     }
 
     fn begin_demand(&self, _mutation: &Block3dMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Block3dArtifactStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Block3dArtifactStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation, Block3dMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Block3dSnapshot, Block3dMutation, Block3dMutation>)> {
@@ -575,7 +574,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block3dConfig, Block3dConfigM
     }
 
     fn begin_demand(&self, _mutation: &Block3dConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Block3dConfigStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Block3dConfigStorePreparation>(), depth: 1 })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation, Block3dConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Block3dConfig, Block3dConfigMutation, Block3dConfigMutation>)> {
@@ -761,7 +760,7 @@ impl ArtifactEditor for Block3dPlayApp {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id || block3d_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
-            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "block3d-retained-command-tool-mismatch"));
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "block3d-retained-command-tool-mismatch"));
         }
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = match tool_id {

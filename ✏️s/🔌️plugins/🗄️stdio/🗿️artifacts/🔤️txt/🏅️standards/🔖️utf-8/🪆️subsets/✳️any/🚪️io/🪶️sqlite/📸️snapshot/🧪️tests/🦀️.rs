@@ -89,11 +89,11 @@ fn sqlite_snapshot_txt_projection_and_reconstruction_cancel_inside_long_literal_
     let text = fixture["controls"]["longText"].as_str().unwrap().repeat(fixture["controls"]["longRepeat"].as_u64().unwrap() as usize);
     for schema_field in [false, true] {
         let snapshot = if schema_field { TxtSnapshot { schema: text.clone(), ..TxtSnapshot::default() } } else { TxtSnapshot { lines: vec![text.clone()], ..TxtSnapshot::default() } };
-        let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+        let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
         for phase in [SqliteSnapshotPhase::ProjectSnapshot, SqliteSnapshotPhase::ReconstructSnapshot] {
             let mut interior = false;
             let mut callback = |event: store::sqlite_snapshot::SqliteSnapshotProgress| { let cancel = event.phase == phase && event.completed >= fixture["controls"]["cancelAtBytes"].as_u64().unwrap() as usize && event.total > event.completed; interior |= cancel; !cancel };
-            let result = if phase == SqliteSnapshotPhase::ProjectSnapshot { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default())).map(|_| ()) } else { TxtSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits::default())).map(|_| ()) };
+            let result = if phase == SqliteSnapshotPhase::ProjectSnapshot { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default())).map(|_| ()) } else { TxtSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default())).map(|_| ()) };
             let error = result.unwrap_err();
             assert!(interior && error.kind == semio_framework_value::ValueRefusalKind::Canceled, "{phase:?}: {error}");
         }
@@ -106,12 +106,12 @@ fn sqlite_snapshot_txt_surrogate_ids_and_literal_metadata_are_not_native_headers
     let fixture = native_fixture();
     for schema in fixture["literalSchemas"].as_array().unwrap() {
         let snapshot = TxtSnapshot { schema: schema.as_str().unwrap().into(), lines: vec!["任意\0\nembedded".into(), String::new()], ..TxtSnapshot::default() };
-        let mut database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+        let mut database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
         let key = fixture["controls"]["rootIdentity"].as_i64().unwrap();
         database.table_mut("text_document").unwrap().rows[0].rowid = key;
         database.table_mut("text_document").unwrap().rows[0].values[0] = SqliteValue::Integer(key);
         for row in &mut database.table_mut("text_line").unwrap().rows { row.values[1] = SqliteValue::Integer(key); }
-        assert_eq!(TxtSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(), snapshot);
+        assert_eq!(TxtSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap(), snapshot);
         let valid = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.txt".into(), standard: "utf-8".into(), subset: "*".into() };
         assert!(snapshot.validate_sqlite_snapshot_subset(&valid, &database, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_ok());
         for invalid in [semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.csv".into(), ..valid.clone() }, semio_framework_artifact_reference::ArtifactDialect { standard: "other".into(), ..valid.clone() }, semio_framework_artifact_reference::ArtifactDialect { subset: "other".into(), ..valid.clone() }] {
@@ -120,7 +120,7 @@ fn sqlite_snapshot_txt_surrogate_ids_and_literal_metadata_are_not_native_headers
         for corruption in 0..6 {
             let mut broken = database.clone();
             match corruption { 0 => broken.table_mut("text_document").unwrap().rows[0].rowid = -1, 1 => broken.table_mut("text_document").unwrap().rows[0].values[0] = SqliteValue::Integer(key + 1), 2 => broken.table_mut("text_document").unwrap().rows[0].values.push(SqliteValue::Null), 3 => broken.table_mut("text_line").unwrap().rows[0].values[1] = SqliteValue::Integer(key + 1), 4 => broken.table_mut("text_line").unwrap().rows[0].values[2] = SqliteValue::Integer(-1), _ => broken.table_mut("text_line").unwrap().rows[0].values.push(SqliteValue::Null) }
-            assert!(TxtSnapshot::from_sqlite_database(&broken, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err());
+            assert!(TxtSnapshot::from_sqlite_database(&broken,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).is_err());
         }
     }
     println!("[DEBUG] TXT semantic SQL restores arbitrary literal metadata and positive independent surrogate identities");
@@ -165,9 +165,9 @@ fn sqlite_snapshot_txt_actual_bare_factory_transfers_native_carriers() {
 
 #[test]
 fn sqlite_snapshot_text_reconstruction_respects_value_budget() {
-    let database = TxtSnapshot::default().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let database = TxtSnapshot::default().to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     let limits = SqliteDatabaseLimits { max_value_bytes: 0, ..SqliteDatabaseLimits::default() };
-    assert!(TxtSnapshot::from_sqlite_database(&database, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());
+    assert!(TxtSnapshot::from_sqlite_database(&database,&mut SqliteSnapshotControl::new(&mut |_| true,limits)).is_err());
 }
 
 #[test]
@@ -175,7 +175,7 @@ fn sqlite_snapshot_text_value_preflight_can_be_cancelled() {
     let snapshot = TxtSnapshot { lines: vec![String::new(); 1024], ..TxtSnapshot::default() };
     let limits = SqliteDatabaseLimits { max_value_bytes: 0, ..SqliteDatabaseLimits::default() };
     let mut checkpoints = 0;
-    let error = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| { checkpoints += 1; checkpoints < 2 }, limits)).unwrap_err();
+    let error = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| { checkpoints += 1; checkpoints < 2 },limits)).unwrap_err();
     assert!(error.kind == semio_framework_value::ValueRefusalKind::Canceled, "{error}");
 }
 
@@ -183,18 +183,18 @@ fn sqlite_snapshot_text_value_preflight_can_be_cancelled() {
 fn sqlite_snapshot_text_lines_preserve_order_and_line_endings() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let snapshot = TxtSnapshot { schema: fixture["schema"].as_str().unwrap().into(), lines: fixture["lines"].as_array().unwrap().iter().map(|line| line.as_str().unwrap().into()).collect(), trailing_newline: true, line_ending: LineEnding::CrLf };
-    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+    let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
     assert_eq!(database.table("text_line").unwrap().rows.len(), 3);
     assert_eq!(database.table("text_document").unwrap().rows[0].values[3], SqliteValue::Text("crlf".into()));
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let reopened = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
-    assert_eq!(TxtSnapshot::from_sqlite_database(&reopened, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(), snapshot);
+    assert_eq!(TxtSnapshot::from_sqlite_database(&reopened,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap(), snapshot);
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
     assert_eq!(oracle, fixture);
     let mut broken = reopened;
     broken.table_mut("text_line").unwrap().rows[1].values[2] = SqliteValue::Integer(0);
-    assert!(TxtSnapshot::from_sqlite_database(&broken, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).is_err());
-    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false, SqliteDatabaseLimits::default())).is_err());
+    assert!(TxtSnapshot::from_sqlite_database(&broken,&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).is_err());
+    assert!(snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| false,SqliteDatabaseLimits::default())).is_err());
 }
 
 
@@ -206,7 +206,7 @@ fn txt_original_encoding_grant(law:&serde_json::Value,name:&str)->semio_framewor
 
 /// ♻️ Verifies every actual funded close against System allocation and release.
 fn txt_original_encoding_retire<T:semio_framework_value::retirement::RetireOwned>(output:T,law:&serde_json::Value)->(usize,usize){
- let grant=txt_original_encoding_grant(law,"closeGrant");let mut owner=semio_framework_value::retirement::ControlledRetirement::new(output).ok().unwrap();let(mut born,mut freed)=(0,0);
+ let grant=txt_original_encoding_grant(law,"closeGrant");let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap();let(mut born,mut freed)=(0,0);
  for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}
  assert!(owner.terminal_is_empty());(born,freed)
 }
@@ -228,8 +228,8 @@ fn txt_original_encoding_original_owner_cancellation_and_funded_close_conserve_e
  use semio_framework_value::{NativeEncodeControl,RetainedCloneProgress};use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;use std::cell::Cell;
  let law=txt_original_encoding_fixture();let policy=txt_original_encoding_grant(&law,"bodyGrant");let close=txt_original_encoding_grant(&law,"closeGrant");let zero=txt_original_encoding_grant(&law,"deniedCloseGrant");let text=law["source"]["unit"].as_str().unwrap().repeat(law["source"]["repeat"].as_u64().unwrap()as usize);let source=TxtSnapshot{lines:vec![text],..Default::default()};let source_pointer=source.lines[0].as_ptr();let bytes=source.lines[0].len();
  for encoding in [SnapshotEncoding::Text,SnapshotEncoding::Binary]{
-  let prefix=if encoding==SnapshotEncoding::Binary{law["prefix"]["bytes"].as_u64().unwrap()as usize}else{0};let extent=bytes+prefix;let cut=prefix+law["source"]["cancelAfterBytes"].as_u64().unwrap()as usize;let blocked=Cell::new(false);let canceled=Cell::new(false);let callback_count=Cell::new(0);let ledger=Cell::new(0);let mut original=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{callback_count.set(callback_count.get()+1);let hit=event.total==extent&&event.completed>=cut;canceled.set(canceled.get()||hit);!blocked.get()&&!hit};let mut allocation=|event:semio_framework_value::native_encoding::NativeEncodeAllocation|{assert_eq!(event.owned_bytes,ledger.get());ledger.set(event.next_owned_bytes);Ok(())};let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new_forwarded(law["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut original,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let prior=native.copy_text("original").unwrap();let before=native.owned_bytes();let maximum=native.maximum_bytes();let mut sql_yes=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_yes,SqliteDatabaseLimits::default());let sql_before=sql.allocation_remaining_bytes();let mut owner=store::NativeSnapshotEncodeOwner::new(&mut native,policy);
-  let(result,heap)=observe(||source.encode_sqlite_snapshot_native(encoding,&mut sql,&mut owner));let error=result.unwrap_err();let accepted=owner.progress();assert_eq!(owner.grant(),policy);assert!(accepted.fits(policy));assert_eq!(error.retained_progress(),accepted);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::Canceled);assert_eq!(error.message,law["nativeCause"]["message"].as_str().unwrap());assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));assert_eq!((heap.requested_bytes,heap.released_bytes),(accepted.retained_capacity_bytes,accepted.released_bytes));assert_eq!(accepted.released_bytes,0);assert!(canceled.get());drop(owner);assert!(native.has_retirement_owner());assert_eq!(native.maximum_bytes(),maximum);assert_eq!(native.owned_bytes()-before,ledger.get()-before);assert_eq!(sql_before-sql.allocation_remaining_bytes(),native.owned_bytes()-before);assert_eq!(prior,"original");assert_eq!(source.lines[0].as_ptr(),source_pointer);
+  let prefix=if encoding==SnapshotEncoding::Binary{law["prefix"]["bytes"].as_u64().unwrap()as usize}else{0};let extent=bytes+prefix;let cut=prefix+law["source"]["cancelAfterBytes"].as_u64().unwrap()as usize;let blocked=Cell::new(false);let canceled=Cell::new(false);let callback_count=Cell::new(0);let ledger=std::sync::atomic::AtomicUsize::new(0);let mut original=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{callback_count.set(callback_count.get()+1);let hit=event.total==extent&&event.completed>=cut;canceled.set(canceled.get()||hit);!blocked.get()&&!hit};let mut allocation=|event:semio_framework_value::native_encoding::NativeEncodeAllocation|{assert_eq!(event.owned_bytes,ledger.load(std::sync::atomic::Ordering::Relaxed));ledger.store(event.next_owned_bytes,std::sync::atomic::Ordering::Relaxed);Ok(())};let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=NativeEncodeControl::new_forwarded(law["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut original,&mut allocation);native.install_retirement_recipient(&mut recipient).unwrap();let prior=native.copy_text("original").unwrap();let before=native.owned_bytes();let maximum=native.maximum_bytes();let mut sql_yes=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_yes,SqliteDatabaseLimits::default());let sql_before=sql.allocation_remaining_bytes();let mut owner=store::NativeSnapshotEncodeOwner::new(&mut native,policy);
+  let(result,heap)=observe(||source.encode_sqlite_snapshot_native(encoding,&mut sql,&mut owner));let error=result.unwrap_err();let accepted=owner.progress();assert_eq!(owner.grant(),policy);assert!(accepted.fits(policy));assert_eq!(error.retained_progress(),accepted);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::Canceled);assert_eq!(error.message,law["nativeCause"]["message"].as_str().unwrap());assert!(matches!(error.message,std::borrow::Cow::Borrowed(_)));assert_eq!((heap.requested_bytes,heap.released_bytes),(accepted.retained_capacity_bytes,accepted.released_bytes));assert_eq!(accepted.released_bytes,0);assert!(canceled.get());drop(owner);assert!(native.has_retirement_owner());assert_eq!(native.maximum_bytes(),maximum);assert_eq!(native.owned_bytes()-before,ledger.load(std::sync::atomic::Ordering::Relaxed)-before);assert_eq!(sql_before-sql.allocation_remaining_bytes(),native.owned_bytes()-before);assert_eq!(prior,"original");assert_eq!(source.lines[0].as_ptr(),source_pointer);
   let count=callback_count.get();let(zero_step,zero_heap)=observe(||native.close_retirement_recipient(zero).unwrap());assert_eq!(zero_step.progress(),RetainedCloneProgress::default());assert_eq!((zero_heap.requested_bytes,zero_heap.released_bytes),(0,0));assert_eq!(callback_count.get(),count);assert!(native.has_retirement_owner());blocked.set(true);let(result,heap)=observe(||native.close_retirement_recipient(close));let close_error=result.unwrap_err();assert_eq!(close_error.kind,semio_framework_value::ValueRefusalKind::Canceled);assert_eq!(close_error.message,law["nativeCause"]["message"].as_str().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(native.has_retirement_owner());blocked.set(false);let(mut born,mut freed)=(0,0);
   for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if !native.has_retirement_owner(){break}let(step,heap)=observe(||native.close_retirement_recipient(close).unwrap());assert!(step.progress().fits(close));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}assert!(!native.has_retirement_owner());assert_eq!(accepted.retained_capacity_bytes+born,accepted.released_bytes+freed);assert_eq!(source.lines[0].as_ptr(),source_pointer);assert_eq!(native.maximum_bytes(),maximum);drop(native);assert!(!recipient.has_owner());
  }
@@ -278,7 +278,7 @@ static TXT_ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trac
 
 #[test]
 fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and_actual_line_receipt(){
- use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::ControlledRetirement};
+ use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  use std::cell::Cell;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫴️receiving.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let mut successes=0;

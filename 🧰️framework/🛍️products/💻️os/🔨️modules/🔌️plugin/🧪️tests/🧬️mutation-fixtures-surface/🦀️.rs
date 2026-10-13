@@ -900,7 +900,12 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), data, 4_096);
     let mut sequence = 0;
     let mut actual=semio_framework_job::RetainedCloneProgress::default();
-    match surface_natural_file_step(&mut cancelled, operation, cancel.clone(), turn, &mut sequence,&mut actual) {
+    let mut first = crate::app::artifact_app_laws::FixtureStepOutcome::Idle;
+    for _ in 0..64 {
+        first = surface_natural_file_step(&mut cancelled, operation, cancel.clone(), turn, &mut sequence, &mut actual);
+        if !matches!(first, crate::app::artifact_app_laws::FixtureStepOutcome::Idle) { break; }
+    }
+    match first {
         crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
             assert_eq!(applied_progress, cancel_after);
         }
@@ -986,7 +991,7 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
             crate::app::artifact_app_laws::FixtureStepOutcome::Complete { .. } => {
                 break;
             }
-            crate::app::artifact_app_laws::FixtureStepOutcome::Yield => {}
+            crate::app::artifact_app_laws::FixtureStepOutcome::Yield | crate::app::artifact_app_laws::FixtureStepOutcome::Idle => {}
             crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("controlled natural-file decode cancelled without a request"),
             crate::app::artifact_app_laws::FixtureStepOutcome::Fault(bytes) => {
                 let detail = String::from_utf8_lossy(&bytes).into_owned();
@@ -1220,7 +1225,7 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
         assert!(owner.terminal_is_empty());
         println!("[DEBUG] surface borrowed original count={count} birth={birth} retained-pointer=true actual-paid-release={released}");
     }
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/📚️history-cases/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let count = row["historyEntries"].as_u64().unwrap() as usize;
         verify::<EditorApp<SurfaceEditorFixture>>(count);
@@ -1347,15 +1352,16 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
         assert!(PrivateChildPublicationGroup::<store::NoMembers>::frame_birth_bytes() <= 262_144);
         assert!(PrivateChildPublicationGroup::<store::NoMembers>::row_birth_bytes() <= 262_144);
         let dialect = ArtifactDialect { artifact_kind: "neutral.parent".into(), standard: "1".into(), subset: "*".into() };
+        let private_genesis_actor = semio_framework_value::SharedUtf8::from("actor:private-genesis");
         for _ in 0..stop {
-            let capacity = group.next_input_capacity_byte_demand(&app.children, "neutral-parent-α", &dialect, "actor:private-genesis").unwrap();
+            let capacity = group.next_input_capacity_byte_demand(&app.children, "neutral-parent-α", &dialect, &private_genesis_actor).unwrap();
             assert!(capacity <= grant.maximum_capacity_bytes);
             for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), capacity.checked_sub(1).map(|maximum_capacity_bytes| RetainedCloneGrant { maximum_capacity_bytes, ..grant })].into_iter().flatten() {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, "actor:private-genesis", semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, denied).unwrap());
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, denied).unwrap());
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, "actor:private-genesis", semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, grant).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, grant).unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         }

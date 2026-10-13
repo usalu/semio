@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_png::{standards::v1_2::subsets::any::io::PngProjection, schema::snapshot::{PngChunkMarker, PngTextChunk, PngTextKind}};
+use semio_s_artifact_stdio_png::{standards::v1_2::subsets::any::io::{PngChunkMarker, PngProjection}, schema::snapshot::{PngTextChunk, PngTextKind}};
 
 fn sample_png() -> PngSnapshot {
     let projection = PngProjection {
@@ -25,6 +25,6 @@ async fn maps_checked_projection_pixels_metadata_and_source_profile() {
 #[semio_framework_async_macros::async_test]
 async fn rejects_invalid_source_authority() {
     let mut bad = sample_png();
-    bad.bytes[20] ^= 1;
+    bad.image.samples.pop();
     assert!(::semio_framework_async::poll::resolve_ready(SemioImageFromPng::deserialize(&bad)).is_err());
 }

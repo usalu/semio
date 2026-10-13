@@ -1,8 +1,8 @@
 //! 📝️ Direct remove-other-segment text codec.
 use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::*;
-use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
+#[cfg(test)] use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::text::diff::*;
-use crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::*;
+#[cfg(test)] use crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::*;
 use crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::Entry;
 pub const TEXT_OPCODE: &str = "remove-other-segment";
 pub const CODEC: Entry = Entry { opcode: TEXT_OPCODE, print, parse };

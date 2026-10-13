@@ -475,7 +475,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem3dSnapshot, Fem3dMutation>
         if lane != store::HistoryLane::Document {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fem3d-artifact-lane"));
         }
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<Fem3dArtifactPreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Fem3dArtifactPreparation>(), depth: 1 })
     }
 
     fn begin(
@@ -708,7 +708,7 @@ pub struct Fem3dPlayApp;
 
 impl ArtifactEditor for Fem3dPlayApp {
     /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12), the fem 2d table.
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         semio_s_artifact_fem_2d::editor::fem2d::commands::gumball::fem_fault_notices()
     }
 

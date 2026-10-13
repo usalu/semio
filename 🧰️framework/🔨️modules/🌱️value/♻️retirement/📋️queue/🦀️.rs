@@ -100,7 +100,7 @@ impl Drop for RetirementQueue {
 }
 impl RetireOwned for RetirementQueue {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(self)}
-    fn retirement_birth_bytes(&self)->Option<usize> {Some(std::mem::size_of::<Self>())}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
     fn controlled_retirement_supported()->bool {true}
 }
 impl RetirementCursor for RetirementQueue {
@@ -113,11 +113,11 @@ impl RetirementCursor for RetirementQueue {
     }
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_depth_demand(&self)->Result<usize,ValueError> {Self::next_depth_demand(self)}
-    fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {self.next_copy_byte_demand()}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn allows_admitted_narrow_work(&self)->bool{true}
     fn next_close_byte_demand(&self)->Option<usize> {self.next_release_byte_demand().ok()}
     fn next_birth_bytes(&self,maximum_body_bytes:usize)->Option<usize> {self.next_capacity_byte_demand(maximum_body_bytes).ok()}
-    fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 fn empty_progress()->RetainedCloneProgress {RetainedCloneProgress {copied_items:0,copied_bytes:0,retained_capacity_bytes:0,released_bytes:0}}
 fn refusal(kind:ValueRefusalKind,message:&'static str)->ValueError {ValueError::literal(kind,message)}

@@ -242,7 +242,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec ShootingBuilderFacets {
         construction: ShootingBuilderConstruction,
         analysis: ShootingAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::ShootingComposerComposition,
+        composition: ShootingComposerComposition,
     }
     builder: ShootingBuilder,
     analyzer: ShootingAnalyzer,

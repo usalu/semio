@@ -5,16 +5,16 @@ use protocol::OpText;
 
 //#region 🧾️DerivedRegistry
 pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
-    ("SetInfoTitle", self::set_info_title::TEXT_OPCODE),
-    ("SetInfoAuthor", self::set_info_author::TEXT_OPCODE),
-    ("InsertJavascriptAction", self::insert_javascript_action::TEXT_OPCODE),
-    ("RemoveJavascriptAction", self::remove_javascript_action::TEXT_OPCODE),
-    ("InsertLaunchAction", self::insert_launch_action::TEXT_OPCODE),
-    ("RemoveLaunchAction", self::remove_launch_action::TEXT_OPCODE),
-    ("InsertSignatureField", self::insert_signature_field::TEXT_OPCODE),
-    ("RemoveSignatureField", self::remove_signature_field::TEXT_OPCODE),
-    ("EmbedFontFile", self::embed_font_file::TEXT_OPCODE),
-    ("RemoveFontFile", self::remove_font_file::TEXT_OPCODE),
+    ("SetInfoTitle", set_info_title::TEXT_OPCODE),
+    ("SetInfoAuthor", set_info_author::TEXT_OPCODE),
+    ("InsertJavascriptAction", insert_javascript_action::TEXT_OPCODE),
+    ("RemoveJavascriptAction", remove_javascript_action::TEXT_OPCODE),
+    ("InsertLaunchAction", insert_launch_action::TEXT_OPCODE),
+    ("RemoveLaunchAction", remove_launch_action::TEXT_OPCODE),
+    ("InsertSignatureField", insert_signature_field::TEXT_OPCODE),
+    ("RemoveSignatureField", remove_signature_field::TEXT_OPCODE),
+    ("EmbedFontFile", embed_font_file::TEXT_OPCODE),
+    ("RemoveFontFile", remove_font_file::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

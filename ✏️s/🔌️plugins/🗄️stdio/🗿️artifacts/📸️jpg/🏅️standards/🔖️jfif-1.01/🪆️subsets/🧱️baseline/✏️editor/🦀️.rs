@@ -85,14 +85,14 @@ const STDIO_JPG_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.jpg.tool-command.v1";
 const STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn jpgBaselineEditor_example_snapshot(example_id: &str) -> JpgSnapshot {
+fn jpg_baseline_editor_example_snapshot(example_id: &str) -> JpgSnapshot {
     if example_id == crate::examples::demo::ID {
         <JpgSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         JpgSnapshot::default()
     }
 }
-fn jpgBaselineEditor_command_id(command: &JpgBaselineEditCommand) -> &'static str {
+fn jpg_baseline_editor_command_id(command: &JpgBaselineEditCommand) -> &'static str {
     if let JpgBaselineEditCommand::EditSnapshot { event } = command {
         return event.action_id();
     }
@@ -101,7 +101,7 @@ fn jpgBaselineEditor_command_id(command: &JpgBaselineEditCommand) -> &'static st
         _ => "other",
     }
 }
-fn jpgBaselineEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<JpgBaselineEditCommand, Fault> {
+fn jpg_baseline_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<JpgBaselineEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) {
         return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| JpgBaselineEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
     }
@@ -110,10 +110,10 @@ fn jpgBaselineEditor_command_from_action(action: &str, args: Option<&semio_frame
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
 }
-fn jpgBaselineEditor_retained_extent(command: &JpgBaselineEditCommand, _snapshot: &JpgSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn jpg_baseline_editor_retained_extent(command: &JpgBaselineEditCommand, _snapshot: &JpgSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, JpgBaselineEditCommand::SetActiveExample { .. }).then_some(1)
 }
-fn jpgBaselineEditor_retained_reduce(
+fn jpg_baseline_editor_retained_reduce(
     command: &JpgBaselineEditCommand,
     _snapshot: &JpgSnapshot,
     _config: &NoConfig,
@@ -124,7 +124,7 @@ fn jpgBaselineEditor_retained_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<JpgMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        JpgBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpgBaselineEditor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
+        JpgBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpg_baseline_editor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -252,7 +252,7 @@ impl ArtifactEditor for JpgBaselineEditor {
         if !STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if jpgBaselineEditor_command_id(&request.command) != request.tool_id {
+        if jpg_baseline_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -276,10 +276,10 @@ impl ArtifactEditor for JpgBaselineEditor {
                 operation,
                 completion: request.completion,
             },
-            jpgBaselineEditor_command_id,
+            jpg_baseline_editor_command_id,
             STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, jpgBaselineEditor_retained_reduce, jpgBaselineEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, jpg_baseline_editor_retained_reduce, jpg_baseline_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -295,10 +295,10 @@ impl ArtifactEditor for JpgBaselineEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
-        jpgBaselineEditor_command_id(command)
+        jpg_baseline_editor_command_id(command)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        jpgBaselineEditor_command_from_action(action, args)
+        jpg_baseline_editor_command_from_action(action, args)
     }
 
     fn initial_snapshot() -> Self::Snapshot {
@@ -316,7 +316,7 @@ impl ArtifactEditor for JpgBaselineEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             JpgBaselineEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            JpgBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpgBaselineEditor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
+            JpgBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpg_baseline_editor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
             JpgBaselineEditCommand::SetPixelRegion { pixels } => {
                 Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::ReplacePixelsMutation { pixels:pixels.clone() })]))
             }

@@ -3,7 +3,9 @@
 use crate::{retirement::queue::RetirementQueue,retained_clone::{RetainedCloneGrant,RetainedCloneStep},observe_retirement_allocations};
 
 struct Unsupported(String);
+/// 🛑️ Deliberately refuses controlled retirement so the queue admission returns the original frame owner.
 impl crate::retirement::RetireOwned for Unsupported {
+    fn controlled_retirement_supported() -> bool { false }
     fn retirement(self)->Box<dyn crate::retirement::RetirementCursor> {panic!("unsupported original owner must return before retirement construction")}
 }
 

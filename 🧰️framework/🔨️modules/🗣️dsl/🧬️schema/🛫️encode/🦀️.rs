@@ -53,14 +53,14 @@ impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
                 let mut frame=FieldProjectionMeasureFrame::default();
                 let (count,width)=match source.projection_view(&self.measure_path[..depth])?{
                     V::Text(text)|V::IntrinsicText(text)=>(text.len(),1),V::TextSource(text)|V::IntrinsicTextSource(text)=>(text.len(),1),V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>(bytes.len(),1),
-                    V::Record(ids)=>{if ids.len()>256{return Err(ValueError::new(K::OwnershipLimit,"retained record exceeds declared field capacity"))}frame.kind=3;frame.length=ids.len();(ids.len(),std::mem::size_of::<(u16,FieldValue)>())},
-                    V::List(length)|V::Tuple(length)=>{frame.kind=4;frame.length=length;(length,std::mem::size_of::<FieldValue>())},
-                    V::Map(length)=>{frame.kind=7;frame.length=length;(length,std::mem::size_of::<(String,FieldValue)>())},
-                    V::Statements(length)=>{frame.kind=13;frame.length=length;(length,std::mem::size_of::<(String,RecordValue)>())},
-                    V::Wire(_)=>{frame.kind=12;frame.length=9;(1,std::mem::size_of::<super::WireValue>())},
-                    V::Block=>{frame.kind=6;frame.length=1;(1,std::mem::size_of::<FieldValue>())},
-                    V::IntrinsicArray(length)=>{frame.kind=10;frame.length=length;(length,std::mem::size_of::<super::DslValue>())},
-                    V::IntrinsicObject(length)=>{frame.kind=11;frame.length=length;(length,std::mem::size_of::<(String,super::DslValue)>())},
+                    V::Record(ids)=>{if ids.len()>256{return Err(ValueError::new(K::OwnershipLimit,"retained record exceeds declared field capacity"))}frame.kind=3;frame.length=ids.len();(ids.len(),size_of::<(u16,FieldValue)>())},
+                    V::List(length)|V::Tuple(length)=>{frame.kind=4;frame.length=length;(length,size_of::<FieldValue>())},
+                    V::Map(length)=>{frame.kind=7;frame.length=length;(length,size_of::<(String,FieldValue)>())},
+                    V::Statements(length)=>{frame.kind=13;frame.length=length;(length,size_of::<(String,RecordValue)>())},
+                    V::Wire(_)=>{frame.kind=12;frame.length=9;(1,size_of::<super::WireValue>())},
+                    V::Block=>{frame.kind=6;frame.length=1;(1,size_of::<FieldValue>())},
+                    V::IntrinsicArray(length)=>{frame.kind=10;frame.length=length;(length,size_of::<super::DslValue>())},
+                    V::IntrinsicObject(length)=>{frame.kind=11;frame.length=length;(length,size_of::<(String,super::DslValue)>())},
                     _=>(0,1),
                 };
                 self.measure_charge(count,width,maximum_source_bytes)?;self.measure_frames[depth]=frame;self.measure_depth=depth+1;self.measure_started=true;self.measure_enter=false;
@@ -93,8 +93,8 @@ impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
             V::Tuple(length)=>{frame.kind=5;frame.length=length;FieldValue::Tuple(control.allocate_vec(length)?)},
             V::Map(length)=>{frame.kind=7;frame.length=length;FieldValue::Map(control.allocate_vec(length)?)},
             V::Statements(length)=>{frame.kind=13;frame.length=length;FieldValue::Statements(control.allocate_vec(length)?)},
-            V::Wire(directed)=>{control.charge(std::mem::size_of::<super::WireValue>())?;frame.kind=12;frame.length=9;FieldValue::Wire(super::WireValue{from:super::WireNode::default(),edge:directed.map(|directed|(directed,super::WireNode::default())),edge_label:super::WireEdgeLabel::default(),properties:super::DslValue::Null})},
-            V::Block=>{control.charge(std::mem::size_of::<FieldValue>())?;frame.kind=6;frame.length=1;FieldValue::Block(Box::new(FieldValue::Absent))},
+            V::Wire(directed)=>{control.charge(size_of::<super::WireValue>())?;frame.kind=12;frame.length=9;FieldValue::Wire(super::WireValue{from:super::WireNode::default(),edge:directed.map(|directed|(directed,super::WireNode::default())),edge_label:super::WireEdgeLabel::default(),properties:super::DslValue::Null})},
+            V::Block=>{control.charge(size_of::<FieldValue>())?;frame.kind=6;frame.length=1;FieldValue::Block(Box::new(FieldValue::Absent))},
             V::IntrinsicNull=>FieldValue::Value(super::DslValue::Null),V::IntrinsicBool(value)=>FieldValue::Value(super::DslValue::Bool(value)),V::IntrinsicNumber(value)=>FieldValue::Value(super::DslValue::Number(value)),
             V::IntrinsicText(text)=>{control.charge(text.len())?;let mut value=String::new();value.try_reserve_exact(text.len()).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"retained intrinsic text allocation failed"))?;frame.kind=8;frame.length=text.len();FieldValue::Value(super::DslValue::String(value))},
             V::IntrinsicBytes(bytes)=>{frame.kind=9;frame.length=bytes.len();FieldValue::Value(super::DslValue::Bytes(control.allocate_vec(bytes.len())?))},

@@ -78,4 +78,4 @@ impl protocol::OpText for LasMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;

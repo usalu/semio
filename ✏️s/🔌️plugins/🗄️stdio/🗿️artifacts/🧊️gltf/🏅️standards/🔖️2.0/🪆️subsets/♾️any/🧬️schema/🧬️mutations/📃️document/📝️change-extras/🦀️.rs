@@ -1,6 +1,6 @@
 //! 🧬️ Direct change-document-extra-data mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::top_level_collections::*;
+#[cfg(test)] use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::schema::snapshot::GltfJson;
@@ -35,7 +35,7 @@ pub fn inverse(p: &GltfChangeDocumentExtraDataPayload, base: &GltfSnapshot) -> V
     if current == &p.data {
         return Vec::new();
     }
-    vec![super::change_document_extra_data::mutation(super::change_document_extra_data::GltfChangeDocumentExtraDataPayload { data: current.clone() })]
+    vec![mutation(GltfChangeDocumentExtraDataPayload { data: current.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -55,7 +55,7 @@ pub fn mutation(payload: GltfChangeDocumentExtraDataPayload) -> super::GltfMutat
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeDocumentExtraDataMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "document-extra-data", kind: "change-document-extra-data", record: "ChangedDocumentExtraData" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

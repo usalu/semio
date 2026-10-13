@@ -7,7 +7,7 @@
 //! typed lanes and content operators can name resources directly.
 
 use super::colour::{array_n, extra_entries, lift_colour_space, lift_ext_g_state, lift_function, lift_shading, matrix_of, numbers_of, rect_of};
-use super::content::{content_references, parse_content, FontTable};
+use super::content::{parse_content, FontTable};
 use super::fonts::{base_encoding_from_name, cmap, decode_text_string, FontCodec};
 use super::images::lift_image;
 use super::lexer::{dict_f64, dict_get, dict_i64, dict_name};
@@ -405,8 +405,8 @@ impl Lifter<'_> {
         if fresh {
             let resolved = self.source.deref(value);
             let dict = resolved.as_dict().map(<[PdfDictEntry]>::to_vec).unwrap_or_default();
-            let mut form_id_of = |group: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_form_id(group) };
-            let mut font_id_of = |font: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_font_id(font) };
+            let form_id_of = |group: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_form_id(group) };
+            let font_id_of = |font: &PdfObject, _source: &mut dyn ObjectSource| -> Option<String> { self_font_id(font) };
             // 🧷 Soft-mask groups and fonts are lifted first so the closures above only look up.
             if let Some(mask) = dict_get(&dict, "SMask").map(|m| self.source.deref(m)) {
                 if let Some(group) = mask.dict_get("G").cloned() {
@@ -1250,7 +1250,7 @@ impl Lifter<'_> {
                 let registry_name = self.text(dict_get(&dict, "RegistryName"));
                 let info = self.text(dict_get(&dict, "Info"));
                 let profile = dict_get(&dict, "DestOutputProfile").map(|p| self.source.deref(p)).and_then(|p| match p {
-                    stream @ PdfObject::Stream { .. } => { use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort; let reference = crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default().admit("s.stdio.icc", stream).ok()?; if let Some(value) = dict_get(&dict, "DestOutputProfile") { self.source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: reference.clone() }); } Some(reference) },
+                    stream @ PdfObject::Stream { .. } => { use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort; let reference = NativePdfArtifactResources::default().admit("s.stdio.icc", stream).ok()?; if let Some(value) = dict_get(&dict, "DestOutputProfile") { self.source.record_role(value, PdfStreamRoleValue::ReferenceBody { reference: reference.clone() }); } Some(reference) },
                     _ => None,
                 });
                 self.snapshot.output_intents.push(PdfOutputIntent { subtype: dict_name(&dict, "S").unwrap_or("GTS_PDFA1").to_string(), condition_identifier, condition, registry_name, info, profile });

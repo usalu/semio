@@ -27,7 +27,7 @@ use semio_framework_geometry::placement::Affine3;
 use semio_framework_geometry::vector::{perp, LENGTH_EPS};
 use semio_framework_geometry::{Point, Vec2};
 use semio_framework_value::DslValue;
-use std::collections::BTreeMap;
+#[cfg(test)] use std::collections::BTreeMap;
 use std::f64::consts::FRAC_PI_2;
 
 //#region 🔖️Values

@@ -1855,8 +1855,8 @@ fn coincident_face_alignment(body: &Body, fa: FaceId, fb: FaceId, tol: f64) -> O
     body.face_coedges(fa).into_iter().find_map(|coedge| {
         let edge = body.edges.get(body.coedges.get(coedge)?.edge)?;
         let point = body.curves3.get(edge.curve)?.eval((edge.range.0 + edge.range.1) * 0.5);
-        let ua = crate::brep::representation::surface::surface_ops::closest_uv(sa, sa.domain(), point, tol);
-        let ub = crate::brep::representation::surface::surface_ops::closest_uv(sb, sb.domain(), point, tol);
+        let ua = closest_uv(sa, sa.domain(), point, tol);
+        let ub = closest_uv(sb, sb.domain(), point, tol);
         let na = sa.normal(ua.u, ua.v)? * if a.flipped { -1.0 } else { 1.0 };
         let nb = sb.normal(ub.u, ub.v)? * if b.flipped { -1.0 } else { 1.0 };
         Some(na.dot(nb) > 0.0)

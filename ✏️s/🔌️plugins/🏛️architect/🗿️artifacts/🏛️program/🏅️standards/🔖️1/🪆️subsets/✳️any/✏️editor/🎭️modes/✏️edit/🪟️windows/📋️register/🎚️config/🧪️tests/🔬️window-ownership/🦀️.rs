@@ -180,8 +180,8 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
 
                 async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand, view: Option<&ViewModel>) -> Result<TypedOperationFixtureReceipt, String> {
                     let meta = ActionMeta { instance_id: 93, view_state: view.cloned(), ..artifact_app_laws::meta("architect-window-ownership") };
-                    app.dispatch_typed(command, &meta).await.map_err(|error| format!("{error:?}"))?;
-                    artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map_err(|error| format!("{error:?}"))
+                    app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                    artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))
                 }
 
                 async fn register_config(app: &mut ArchitectApp, view: &ViewModel) -> Result<ArchitectRegisterWindowConfig, String> {
@@ -305,7 +305,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     let restored_right_graph = graph_config(&mut reopened, &graph_right).await?;
                     let restored_left_report = report_config(&mut reopened, &report_left).await?;
                     let restored_right_report = report_config(&mut reopened, &report_right).await?;
-                    artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                     if restored_left_register.active_register != "requirements"
                         || restored_right_register != ArchitectRegisterWindowConfig::default()
                         || restored_left_adjacency.adjacency_kind_filter != Some(crate::registers::AdjacencyKind::Preferred)
@@ -330,7 +330,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 if let Err(error) = &outcome {
                     eprintln!("Architect exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut *app);
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                 outcome.expect("Architect exact-window ownership runtime law");
             }))
         })

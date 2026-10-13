@@ -52,8 +52,11 @@ pub const SEQUENCE_DIALECT: semio_framework_artifact_reference::Dialect = semio_
 pub struct StepParams(pub Dictionary);
 
 impl semio_framework_value::retirement::RetireOwned for StepParams {
-    fn retirement(mut self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::RetireOwned::retirement(std::mem::take(&mut self.0))
+    fn controlled_retirement_supported() -> bool { <Dictionary as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() }
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+        let owner = std::mem::ManuallyDrop::new(self);
+        let dictionary = unsafe { std::ptr::read(&owner.0) };
+        semio_framework_value::retirement::RetireOwned::retirement(dictionary)
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)
@@ -311,7 +314,7 @@ pub fn require_sequence_working_scene(handle: &SequenceContentChild) -> Result<S
 /// reloaded or remote parent carries no scene of its own (design §20.15), so readers without a child view (the `topology`
 /// inference) read this and answer the empty scene for any other child, never a materialization fault.
 pub fn sequence_derivable_scene(snapshot: &SequenceSnapshot) -> Option<neural_engine::ColdOwner<SequenceWorkingScene>> {
-    let genesis = neural_engine::ColdOwner::new(crate::snapshot::schema::default_host_snapshot());
+    let genesis = neural_engine::ColdOwner::new(default_host_snapshot());
     (sequence_content_child_handle(&genesis.steps, &genesis.edges).child_id == snapshot.content.child_id).then(|| neural_engine::ColdOwner::new(SequenceWorkingScene { steps: genesis.steps.clone(), edges: genesis.edges.clone() }))
 }
 

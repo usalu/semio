@@ -24,7 +24,6 @@ impl store::ArtifactPack for DocxSnapshot {
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{native::decode_binary(bytes,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,native::pack_limits(&options.limits))).map_err(store::PackError::from)}
 }
 }
-pub use snapshot_codec::*;
 
 
 #[path="🧩️native/🦀️.rs"]

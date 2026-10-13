@@ -1,7 +1,7 @@
 //! 🔺️ `change-script-limits` — sparse diff construction.
 
 use super::mutation::ChangeScriptLimits;
-use crate::{part_5::ScriptLimits, Iso16757Snapshot};
+use crate::Iso16757Snapshot;
 use crate::diff::{Iso16757Diff, Iso16757ScriptLimitsPatch};
 
 //#region 🔖️Diff

@@ -139,15 +139,15 @@ impl MountedMemberReceipt {
         Ok(self.triples.back().map_or(self.triples.capacity() * size_of::<MemberMutationTriple>(), |triple| match self.close_field { 0..=9 => MountedGroupReceipt::mutation_demand(&triple.0, self.close_field), 10 => triple.1.0.capacity(), 11..=14 => MountedGroupReceipt::inverse_demand(&triple.2, self.close_field - 11), _ => 0 }))
     }
     /// 📏️ Prices retained encoder paths separately from fixed causal release fields.
-    pub(crate) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if let Some(owner) = self.kernel.as_ref() { return mounted_nested_retirement_demand(owner.retirement_demands()?, 1); }
         if let Some(owner) = self.forward.as_ref() { return mounted_nested_retirement_demand(owner.retirement_demands()?, 1); }
         if let Some(owner) = self.inverse_encoder.as_ref() { return mounted_nested_retirement_demand(owner.retirement_demands()?, 1); }
-        if self.inverse.capacity() > 0 { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.inverse.capacity(), depth: 1, ..Default::default() }); }
+        if self.inverse.capacity() > 0 { return Ok(RetirementDemand { release_bytes: self.inverse.capacity(), depth: 1, ..Default::default() }); }
         if !self.edit.terminal_is_empty() { return mounted_nested_retirement_demand(self.edit.retirement_demands()?, 1); }
         let depth = if self.triples.back().is_some() { match self.close_field { 7 | 8 | 14 => 4, _ => 3 } } else { 1 };
-        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth, ..Default::default() })
+        Ok(RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth, ..Default::default() })
     }
     /// 🍂️ Retires one exact original physical owner per turn without fractional release credit.
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {

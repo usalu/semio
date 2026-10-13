@@ -40,7 +40,7 @@ pub fn inverse(p: &GltfReorderNodeChildrenPayload, base: &GltfSnapshot) -> Vec<s
     if validate(p, base).is_err() {
         return Vec::new();
     }
-    vec![super::reorder_node_children::mutation(super::reorder_node_children::GltfReorderNodeChildrenPayload { parent: p.parent, order: base.document.nodes[p.parent].children.clone() })]
+    vec![mutation(GltfReorderNodeChildrenPayload { parent: p.parent, order: base.document.nodes[p.parent].children.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -60,7 +60,7 @@ pub fn mutation(payload: GltfReorderNodeChildrenPayload) -> super::GltfMutation 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderNodeChildrenMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "node-children", kind: "reorder-node-children", record: "ReorderedNodeChildren" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

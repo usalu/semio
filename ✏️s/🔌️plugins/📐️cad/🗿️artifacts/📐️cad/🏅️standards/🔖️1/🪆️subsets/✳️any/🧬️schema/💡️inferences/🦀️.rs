@@ -570,16 +570,16 @@ pub use construct_query::*;
 // moved to `🚪️io/🦀️.rs` instead; the interaction statechart moved to the app's own
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
-    use crate::standards::v1::subsets::any::schema::geometry::{
-        centroid_from_host_snapshot_primitives, import_geometry_handles, objects_from_host_snapshot_model, parse_geometry, resolve_primitive_handle, tessellate_geometry_handle, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject,
-        CadPrimitiveSlot,
-    };
-    use crate::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CadWorkingScene, CAD_PLAY_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::schema::geometry::{centroid_from_host_snapshot_primitives, import_geometry_handles, resolve_primitive_handle, tessellate_geometry_handle, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject, CadPrimitiveSlot};
+    #[cfg(test)] use crate::standards::v1::subsets::any::schema::geometry::{objects_from_host_snapshot_model, parse_geometry};
+    use crate::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
+    #[cfg(test)] use crate::{CadWorkingScene};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;
     use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};
-    use std::sync::{Arc, OnceLock};
+    use std::sync::{OnceLock};
+    #[cfg(test)] use std::sync::{Arc};
 
     pub const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 

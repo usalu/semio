@@ -17,8 +17,6 @@ pub type SemioMeshInferenceText = String;
 
 mod semantic_cache_codec {
 use crate::standards::v1::subsets::mesh::schema::inferences::aabb::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
 /// 🌉 Hand-written, not dual-derived: `SemioAabb`'s own field type `SemioPoint3` has already
 /// dropped `serde` entirely in favor of `ToValue`/`FromValue` — a `#[derive(Serialize,
 /// Deserialize)]` here would need it to grow serde back. `store::InferredField::Value` still

@@ -113,8 +113,8 @@ fn a_content_type_row_inserts_removes_and_changes_through_its_own_kinds() {
     let demo = defaults.iter().position(|(extension, _)| extension == "zzdemo").expect("the fixture carries the demo default");
     let removed = resolve(&base, SnapshotEditEvent::RemoveValue { path: format!("/opc/contentTypes/defaults/{demo}") });
     assert_eq!(removed, vec![DocxMutation::RemoveContentType(remove_content_type::RemoveContentType { is_override: false, name: "zzdemo".into() })]);
-    let changed = resolve(&base, SnapshotEditEvent::SetValue { path: format!("/opc/contentTypes/defaults/{demo}/1"), value: DslValue::String("application/x-semio-changed".into()) });
+    let changed = resolve(&base, SnapshotEditEvent::SetValue { path: format!("/opc/contentTypes/defaults/{demo}/contentType"), value: DslValue::String("application/x-semio-changed".into()) });
     assert_eq!(changed, vec![DocxMutation::SetContentType(set_content_type::SetContentType { is_override: false, name: "zzdemo".into(), content_type: "application/x-semio-changed".into(), index: None })]);
-    let inserted = resolve(&base, SnapshotEditEvent::InsertValue { path: "/opc/contentTypes/defaults/-".into(), value: ("zzpointer".to_string(), "application/x-semio-demo".to_string()).to_value() });
+    let inserted = resolve(&base, SnapshotEditEvent::InsertValue { path: "/opc/contentTypes/defaults/-".into(), value: ContentTypeRow { name: "zzpointer".into(), content_type: "application/x-semio-demo".into() }.to_value() });
     assert!(matches!(inserted.as_slice(), [DocxMutation::SetContentType(set_content_type::SetContentType { is_override: false, index: Some(_), .. })]));
 }

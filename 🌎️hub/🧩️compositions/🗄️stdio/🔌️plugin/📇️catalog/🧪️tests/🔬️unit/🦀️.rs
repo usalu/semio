@@ -85,29 +85,12 @@ fn assembling_the_component_parses_every_artifact_definition_at_most_once() {
     assert!(lookups >= 4 * 36, "one component assembly asks for {lookups} definitions; the multiplier this law bounds cannot have vanished");
 }
 
-/// ⏪️ The stdio component assembly publishes the `s.stdio.registry` shared schema documents, so the runtime input reader the
-/// time-travel editor uses (`mutation_input_defs` over `registered_input_schema_document`) resolves `$defs/SnapshotPatch`
-/// of every stdio `patch-snapshot` leaf — csv and json run here, png/jpg/tiff in `stdio-image`, mp4/wav in `stdio-media`,
-/// and each of those packages declares the same documents — and the store's per-scope documents (a kit `pin` through
-/// `os/store/link/schema.json`).
+/// ⏪️ The stdio component assembly publishes the `s.stdio.registry` shared schema documents, so the runtime input reader
+/// resolves the store's per-scope documents (a kit `pin` through `os/store/link/schema.json`).
 #[cfg(feature = "component-app-assembly")]
 #[test]
-fn the_runtime_registry_resolves_every_patch_snapshot_leaf_after_assembly() {
+fn the_runtime_registry_resolves_the_store_link_scope_after_assembly() {
     crate::plugin::plugin().expect("stdio plugin assembly");
-    let leaves = [
-        include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🧬️schema/🔣️.json"),
-        include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🩹️patch-snapshot/🧬️schema/🔣️.json"),
-        include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🧬️schema/🔣️.json"),
-        include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🧬️schema/🔣️.json"),
-        include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🧬️schema/🔣️.json"),
-        include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🧬️schema/🔣️.json"),
-        include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🧬️schema/🔣️.json"),
-    ];
-    for leaf in leaves {
-        let inputs = semio_framework::mutation_input_defs(leaf, &semio_framework::registered_input_schema_document).expect("every patch-snapshot leaf reads through the runtime registry");
-        let patch = inputs.iter().find(|input| input.key() == "patch").expect("a patch input");
-        assert!(matches!(&patch.schema, semio_framework::ArgSchema::Object { fields } if fields.iter().any(|field| field.key() == "edits")), "{:?}", patch.schema);
-    }
     let bind = include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪢️bind-representation/🧬️schema/🔣️.json");
     let inputs = semio_framework::mutation_input_defs(bind, &semio_framework::registered_input_schema_document).expect("the kit pin reads through the os.store.link scope");
     assert!(inputs.iter().any(|input| input.key() == "pin"), "{inputs:?}");

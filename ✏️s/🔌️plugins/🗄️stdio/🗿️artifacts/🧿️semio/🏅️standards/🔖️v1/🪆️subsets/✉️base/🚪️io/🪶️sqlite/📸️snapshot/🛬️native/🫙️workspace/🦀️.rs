@@ -34,7 +34,7 @@ impl<T:RetireOwned>Drop for Workspace<T>{fn drop(&mut self){assert!(std::thread:
 /// 🛬️ Reserves the exact typed workspace before initializing any field and transfers its original body on every result.
 pub(crate)fn decode<T:RetireOwned>(control:&mut NativeDecodeControl<'_>,empty:impl FnOnce()->T,read:impl FnOnce(&mut T,&mut NativeDecodeControl<'_>)->Result<(),ValueError>)->Result<T,ValueError>{
 if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native prefix has no typed controlled retirement"))}
-control.with_retirement_owner(std::mem::size_of::<Workspace<T>>(),|control|{
+control.with_retirement_owner(size_of::<Workspace<T>>(),|control|{
 let mut owner=Box::new(Workspace::new(empty()));
 let result=read(owner.get_mut(),control).and_then(|()|{control.checkpoint()?;Ok(owner.take())});
 (result,Some(owner as Box<dyn ErasedSnapshotRetirement>))
@@ -44,7 +44,7 @@ let result=read(owner.get_mut(),control).and_then(|()|{control.checkpoint()?;Ok(
 /// 🧾️ Transfers a completed typed result while retaining its original auxiliary owners for caller retirement.
 pub(crate)fn decode_projected<T:RetireOwned,R>(control:&mut NativeDecodeControl<'_>,empty:impl FnOnce()->T,read:impl FnOnce(&mut T,&mut NativeDecodeControl<'_>)->Result<(),ValueError>,take:impl FnOnce(&mut T)->R)->Result<R,ValueError>{
 if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native prefix has no typed controlled retirement"))}
-control.with_retirement_owner(std::mem::size_of::<Workspace<T>>(),|control|{
+control.with_retirement_owner(size_of::<Workspace<T>>(),|control|{
 let mut owner=Box::new(Workspace::new(empty()));
 let result=read(owner.get_mut(),control).and_then(|()|{control.checkpoint()?;Ok(take(owner.get_mut()))});
 (result,Some(owner as Box<dyn ErasedSnapshotRetirement>))
@@ -54,7 +54,7 @@ let result=read(owner.get_mut(),control).and_then(|()|{control.checkpoint()?;Ok(
 /// 🏛️ Admits the original relational reconstruction workspace and returns every unfinished field to its caller.
 pub(crate)fn reconstruct<T:RetireOwned>(control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,empty:impl FnOnce()->T,read:impl FnOnce(&mut T,&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<(),ValueError>)->Result<T,ValueError>{
 if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"SQLite prefix has no typed controlled retirement"))}
-control.with_retirement_owner(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot,std::mem::size_of::<Workspace<T>>(),|control|{
+control.with_retirement_owner(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot,size_of::<Workspace<T>>(),|control|{
 let mut owner=Box::new(Workspace::new(empty()));
 let result=read(owner.get_mut(),control).and_then(|()|{control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;Ok(owner.take())});
 (result,Some(owner as Box<dyn ErasedSnapshotRetirement>))
@@ -64,7 +64,7 @@ let result=read(owner.get_mut(),control).and_then(|()|{control.checkpoint(store:
 /// 🗂️ Moves completed relational output while preserving the original typed index and ordering scratch owners.
 pub(crate)fn reconstruct_projected<T:RetireOwned,R>(control:&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>,empty:impl FnOnce()->T,read:impl FnOnce(&mut T,&mut store::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<(),ValueError>,take:impl FnOnce(&mut T)->R)->Result<R,ValueError>{
 if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"SQLite prefix has no typed controlled retirement"))}
-control.with_retirement_owner(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot,std::mem::size_of::<Workspace<T>>(),|control|{
+control.with_retirement_owner(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot,size_of::<Workspace<T>>(),|control|{
 let mut owner=Box::new(Workspace::new(empty()));
 let result=read(owner.get_mut(),control).and_then(|()|{control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;Ok(take(owner.get_mut()))});
 (result,Some(owner as Box<dyn ErasedSnapshotRetirement>))

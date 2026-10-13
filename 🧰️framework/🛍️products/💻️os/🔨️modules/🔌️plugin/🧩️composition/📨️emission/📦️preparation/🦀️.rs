@@ -4,6 +4,11 @@ use semio_framework_diagnostic::{Fault,FaultFrom};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
+use semio_framework_ui_locale::LocalizedLabel;
+
+/// 📏️ Capacity one encoded operation and its semantic label may cost per preparation turn; the actual cost is read back off the allocations and refused above the caller's grant.
+const CHILD_OPERATION_ENCODE_QUOTE_BYTES:usize=2_048;
+type ChildEncode<M>=fn(&M)->Result<(Vec<u8>,LocalizedLabel),::protocol::ProtocolError>;
 
 type BuiltinAdmit<M>=fn(&mut Option<M>,&mut Option<Box<dyn ErasedSnapshotRetirement>>,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
 type BuiltinDemand<M>=fn(&Option<M>)->Result<RetirementDemand,ValueError>;
@@ -36,7 +41,7 @@ impl OwnedChildEmit {
         if self.metadata.is_none()||self.mutations.is_none(){return None;}
         Some((self.metadata.take().unwrap(),self.mutations.take().unwrap()))
     }
-    pub fn retirement_demands(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+    pub fn retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>{
         use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
         if let Some(batch)=self.mutations.as_ref(){let mut demand=batch.next_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"owned child source depth overflow"))?;return Ok(demand);}
         if let Some(metadata)=self.metadata.as_ref(){
@@ -48,7 +53,7 @@ impl OwnedChildEmit {
         Ok(Default::default())
     }
     /// 🎟️ Keeps logical work independent from original typed source and metadata physical release.
-    pub fn close_granted(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+    pub fn close_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -83,14 +88,15 @@ trait ChildEmitPreparationOwner: Send {
     fn step_demands(&self)->Result<RetirementDemand,ValueError>;
     fn preparation_is_ready(&self)->bool;
     fn take_ready(&mut self)->Option<ChildEmit>;
+    fn begin_preview(&mut self);
     fn next_owned_capacity_byte_demand(&self)->usize;
-    fn take_ready_owned(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>;
+    fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>;
     fn begin_close(&mut self);
     fn close_step(&mut self, grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>;
     fn terminal_is_empty(&self)->bool;
     fn retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>;
     fn refusal(&self)->Option<&::protocol::ProtocolError>;
-    fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>;
+    fn retirement_refusal(&self)->Option<&ValueError>;
     fn accepted_prefix(&self)->Option<&ChildEmit>;
     fn retained_operation_count(&self)->usize;
 }
@@ -99,16 +105,16 @@ pub struct ChildEmitPreparation {
 }
 impl ChildEmitPreparation {
     pub fn of<S,M>(slot:impl Into<String>,child_id:impl Into<String>,operations:Vec<M>)->Self
-    where M:protocol::SemanticMutation<S>+::protocol::OpBinary+semio_framework_value::retirement::RetireOwned {
+    where M:protocol::SemanticMutation<S>+::protocol::OpBinary+RetireOwned {
         Self::with_factory_kind::<S,M>(slot.into(),child_id.into(),operations,None,Some((store::artifact_retirement_admit_owned::<M>,store::artifact_retirement_owned_birth_demands::<M>)))
     }
     /// 📦️ Retains the original typed mutation vector for direct member admission.
     pub fn of_owned<S,M>(slot:impl Into<String>,child_id:impl Into<String>,operations:Vec<M>)->Self
-    where M:protocol::SemanticMutation<S>+::protocol::OpBinary+semio_framework_value::retirement::RetireOwned {
+    where M:protocol::SemanticMutation<S>+::protocol::OpBinary+RetireOwned {
         let mut preparation=Self::with_factory_kind::<S,M>(slot.into(),child_id.into(),Vec::new(),None,Some((store::artifact_retirement_admit_owned::<M>,store::artifact_retirement_owned_birth_demands::<M>)));
         let owner=preparation.owner.as_any_mut().downcast_mut::<TypedChildEmitPreparation<M>>().unwrap();
         owner.operation_count=operations.len();
-        owner.backing_bytes=operations.capacity().checked_mul(std::mem::size_of::<M>()).expect("typed source vector layout");
+        owner.backing_bytes=operations.capacity().checked_mul(size_of::<M>()).expect("typed source vector layout");
         owner.remaining.take();
         *owner.owned_source=Some(operations);
         owner.batch_capacity_bytes=store::MemberStoreOwnedBatch::scaffold_byte_demand::<M>();
@@ -117,7 +123,7 @@ impl ChildEmitPreparation {
     }
     /// 🌱️ Carries the explicit member source with the same retained typed operation prefix.
     pub fn with_genesis<S,M>(slot: impl Into<String>, child_id: impl Into<String>, genesis: crate::app::ChildEmitGenesis, operations: Vec<M>) -> Self
-    where M: protocol::SemanticMutation<S> + protocol::OpBinary + semio_framework_value::retirement::RetireOwned {
+    where M: protocol::SemanticMutation<S> + protocol::OpBinary + RetireOwned {
         let mut preparation=Self::of_owned::<S,M>(slot,child_id,operations);
         preparation.owner.as_any_mut().downcast_mut::<TypedChildEmitPreparation<M>>().expect("exact typed genesis operation owner").prefix.as_mut().expect("retained genesis prefix").genesis=Some(genesis);
         preparation
@@ -129,12 +135,13 @@ impl ChildEmitPreparation {
     fn with_factory_kind<S,M>(slot:String,child_id:String,operations:Vec<M>,factory:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>,retire_builtin:Option<(BuiltinAdmit<M>,BuiltinDemand<M>)>)->Self
     where M:protocol::SemanticMutation<S>+::protocol::OpBinary+Send+'static {
         let operation_count=operations.len();
-        let backing_bytes=operations.capacity().checked_mul(std::mem::size_of::<M>()).expect("owned mutation vector allocation has a representable layout");
+        let backing_bytes=operations.capacity().checked_mul(size_of::<M>()).expect("owned mutation vector allocation has a representable layout");
         Self{owner:Box::new(TypedChildEmitPreparation::<M>{
             remaining:ManuallyDrop::new(Some(operations.into_iter())),owned_source:ManuallyDrop::new(None),take_batch:None,batch_capacity_bytes:0,backing_bytes,operation_count,
             current:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),retired_schema:ManuallyDrop::new(None),
             prefix:Some(ChildEmit::open(slot,child_id,0)),cause:ManuallyDrop::new(None),close_refusal:ManuallyDrop::new(None),factory:ManuallyDrop::new(factory),closing_factory:ManuallyDrop::new(None),retire_builtin,
-            schema_parts:|operation|{let semantics=protocol::SemanticMutation::<S>::semantics(operation);(semantics.entity,semantics.kind)},schema_offset:0,schema_started:false,
+            schema_parts:|operation|{let semantics=protocol::SemanticMutation::<S>::semantics(operation);(semantics.entity,semantics.kind)},schema_offset:0,schema_started:false,schema_done:false,
+            encode:|operation|{let encoded=::protocol::OpBinary::encode_op(operation)?;Ok((encoded,protocol::SemanticMutation::<S>::label(operation)))},
             closing:false,ready:false,
         })}
     }
@@ -151,15 +158,17 @@ impl ChildEmitPreparation {
     pub fn step_demands(&self)->Result<RetirementDemand,ValueError>{self.owner.step_demands()}
     pub fn preparation_is_ready(&self)->bool{self.owner.preparation_is_ready()}
     pub fn take_ready(&mut self)->Option<ChildEmit>{self.owner.take_ready()}
+    /// 🎭️ Turns an applying typed source into a wire preview: the same operation vector, owner and order, now consumed by the incremental encoder instead of handed to a member store.
+    pub fn begin_preview(&mut self){self.owner.begin_preview()}
     pub fn next_owned_capacity_byte_demand(&self)->usize{self.owner.next_owned_capacity_byte_demand()}
-    pub fn take_ready_owned(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{self.owner.take_ready_owned(grant)}
+    pub fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{self.owner.take_ready_owned(grant)}
     pub fn begin_close(&mut self){self.owner.begin_close()}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{self.owner.close_step(grant)}
     pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
-    pub fn owner_cell_bytes(&self)->usize{std::mem::size_of_val(self.owner.as_ref())}
+    pub fn owner_cell_bytes(&self)->usize{size_of_val(self.owner.as_ref())}
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.owner.retirement_demands(body)}
     pub fn refusal(&self)->Option<&::protocol::ProtocolError>{self.owner.refusal()}
-    pub fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>{self.owner.retirement_refusal()}
+    pub fn retirement_refusal(&self)->Option<&ValueError>{self.owner.retirement_refusal()}
     pub fn accepted_prefix(&self)->Option<&ChildEmit>{self.owner.accepted_prefix()}
     pub fn retained_operation_count(&self)->usize{self.owner.retained_operation_count()}
 }
@@ -170,7 +179,7 @@ struct TypedChildEmitPreparation<M> {
     remaining:ManuallyDrop<Option<std::vec::IntoIter<M>>>,
     owned_source:ManuallyDrop<Option<Vec<M>>>,
     batch_capacity_bytes:usize,
-    take_batch:Option<fn(Vec<M>,semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Vec<M>)>>,
+    take_batch:Option<fn(Vec<M>,RetainedCloneGrant)->Result<(store::MemberStoreOwnedBatch,RetainedCloneProgress),(ValueError,Vec<M>)>>,
     backing_bytes:usize,
     operation_count:usize,
     current:ManuallyDrop<Option<M>>,
@@ -178,13 +187,15 @@ struct TypedChildEmitPreparation<M> {
     retired_schema:ManuallyDrop<Option<String>>,
     prefix:Option<ChildEmit>,
     cause:ManuallyDrop<Option<::protocol::ProtocolError>>,
-    close_refusal:ManuallyDrop<Option<semio_framework_value::ValueError>>,
+    close_refusal:ManuallyDrop<Option<ValueError>>,
     factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
     closing_factory:ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
     retire_builtin:Option<(BuiltinAdmit<M>,BuiltinDemand<M>)>,
     schema_parts:fn(&M)->(&'static str,&'static str),
     schema_offset:usize,
     schema_started:bool,
+    schema_done:bool,
+    encode:ChildEncode<M>,
     closing:bool,
     ready:bool,
 }
@@ -260,8 +271,53 @@ where M:Send+'static {
         self.remaining.take();self.owned_source.take();
         Ok(RetainedCloneStep::Complete(idle))
     }
+    /// 🧵️ Grows the wire prefix vectors by one doubling step, else moves the next source operation through the codec: its encoded bytes and semantic label join the prefix, the typed operation stays in custody until its retirement. A codec refusal retains the operation and the refusal.
+    fn encode_next(&mut self)->Result<ChildEmitPreparationStep,Fault>{
+        let idle=RetainedCloneProgress::default();
+        let element=Self::wire_element_bytes();
+        let target=self.wire_growth_target();
+        let encode=self.encode;
+        let prefix=self.prefix.as_mut().expect("exact wire prefix");
+        if prefix.ops.len()==prefix.ops.capacity()||prefix.labels.len()==prefix.labels.capacity(){
+            let released_bytes=prefix.ops.capacity().saturating_mul(size_of::<Vec<u8>>()).saturating_add(prefix.labels.capacity().saturating_mul(size_of::<LocalizedLabel>()));
+            let copied_bytes=prefix.ops.len().saturating_mul(element);
+            prefix.ops.try_reserve_exact(target.saturating_sub(prefix.ops.len())).map_err(|_|Fault::from("owned-child-wire-allocation-refused"))?;
+            prefix.labels.try_reserve_exact(target.saturating_sub(prefix.labels.len())).map_err(|_|Fault::from("owned-child-wire-allocation-refused"))?;
+            let retained_capacity_bytes=prefix.ops.capacity().saturating_mul(size_of::<Vec<u8>>()).saturating_add(prefix.labels.capacity().saturating_mul(size_of::<LocalizedLabel>()));
+            return Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes}));
+        }
+        let moved=size_of::<M>();
+        let operation=self.remaining.as_mut().and_then(Iterator::next).expect("a counted source operation");
+        match encode(&operation){
+            Ok((encoded,label))=>{
+                let retained=encoded.capacity().saturating_add(label.retained_bytes());
+                let length=encoded.len();
+                prefix.ops.push(encoded);
+                prefix.labels.push(label);
+                *self.current=Some(operation);
+                Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes:moved.saturating_add(length),retained_capacity_bytes:retained,..idle}))
+            }
+            Err(error)=>{
+                *self.current=Some(operation);
+                let fault=error.to_fault();
+                *self.cause=Some(error);
+                Ok(ChildEmitPreparationStep::Refused(fault,RetainedCloneProgress{copied_items:1,copied_bytes:moved,..idle}))
+            }
+        }
+    }
+    /// 🥇️ The first operation still held by the source: its semantics name the group's schema.
+    fn first_operation(&self)->Option<&M>{
+        self.owned_source.as_ref().and_then(|source|source.first()).or_else(||self.remaining.as_ref().and_then(|source|source.as_slice().first()))
+    }
+    /// 📏️ Worst-case element extent of the wire prefix's operation and label vectors.
+    fn wire_element_bytes()->usize{size_of::<Vec<u8>>()+size_of::<LocalizedLabel>()}
+    /// 📈️ The capacity the next growth of the wire prefix vectors reaches: doubled, at least four, never beyond the source's operation count.
+    fn wire_growth_target(&self)->usize{
+        let prefix=self.prefix.as_ref().expect("exact wire prefix");
+        prefix.ops.capacity().max(prefix.labels.capacity()).saturating_mul(2).max(4).min(self.operation_count.max(prefix.ops.len().saturating_add(1)))
+    }
     fn schema_length(&self)->Result<Option<usize>,ValueError>{
-        let Some(operation)=self.owned_source.as_ref().and_then(|source|source.first())else{return Ok(None)};
+        let Some(operation)=self.first_operation()else{return Ok(None)};
         let(entity,kind)=(self.schema_parts)(operation);
         entity.len().checked_add(1).and_then(|length|length.checked_add(kind.len())).map(Some).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"owned-child-schema-layout-overflow"))
     }
@@ -276,15 +332,25 @@ where M:Send+'static {
     fn step_demands(&self)->Result<RetirementDemand,ValueError>{
         if self.ready||self.cause.is_some(){return Ok(Default::default());}
         if self.retired_schema.is_some()||self.retirement.is_some()||self.current.is_some(){return self.retire_demands(0);}
-        if self.owned_source.is_some(){
-            let Some(length)=self.schema_length()?else{return Ok(Default::default())};
-            let prefix=self.prefix.as_ref().expect("exact owned prefix");
-            if !self.schema_started{return Ok(RetirementDemand{depth:1,..Default::default()});}
-            if prefix.op_schema.0.capacity()<length{return Ok(RetirementDemand{capacity_bytes:length,release_bytes:prefix.op_schema.0.capacity(),depth:1,..Default::default()});}
-            if self.schema_offset<length{return Ok(RetirementDemand{copy_bytes:4.min(length-self.schema_offset),depth:1,..Default::default()});}
-            return Ok(Default::default());
+        if !self.schema_done{
+            if let Some(length)=self.schema_length()?{
+                let prefix=self.prefix.as_ref().expect("exact owned prefix");
+                if !self.schema_started{return Ok(RetirementDemand{depth:1,..Default::default()});}
+                if prefix.op_schema.0.capacity()<length{return Ok(RetirementDemand{capacity_bytes:length,release_bytes:prefix.op_schema.0.capacity(),depth:1,..Default::default()});}
+                if self.schema_offset<length{return Ok(RetirementDemand{copy_bytes:4.min(length-self.schema_offset),depth:1,..Default::default()});}
+            }
+            return Ok(RetirementDemand{depth:1,..Default::default()});
         }
-        if self.remaining.as_ref().is_some_and(|owner|owner.len()!=0){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if self.owned_source.is_some(){return Ok(Default::default());}
+        if self.remaining.as_ref().is_some_and(|owner|owner.len()!=0){
+            let prefix=self.prefix.as_ref().expect("exact wire prefix");
+            if prefix.ops.len()==prefix.ops.capacity()||prefix.labels.len()==prefix.labels.capacity(){
+                let element=Self::wire_element_bytes();
+                let target=self.wire_growth_target();
+                return Ok(RetirementDemand{copy_bytes:prefix.ops.len().saturating_mul(element),capacity_bytes:target.saturating_mul(element),release_bytes:prefix.ops.capacity().saturating_mul(size_of::<Vec<u8>>()).saturating_add(prefix.labels.capacity().saturating_mul(size_of::<LocalizedLabel>())),depth:1});
+            }
+            return Ok(RetirementDemand{copy_bytes:size_of::<M>(),capacity_bytes:CHILD_OPERATION_ENCODE_QUOTE_BYTES,depth:1,..Default::default()});
+        }
         self.retire_demands(0)
     }
     fn step(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,Fault>{
@@ -296,9 +362,9 @@ where M:Send+'static {
         let demand=self.step_demands().map_err(value_fault)?;
         if grant.maximum_depth<demand.depth||yields(grant,demand){return Ok(ChildEmitPreparationStep::Pending(idle));}
         if self.retired_schema.is_some()||self.retirement.is_some()||self.current.is_some(){return Ok(ChildEmitPreparationStep::Pending(self.retire_one(grant)?.progress()));}
-        if self.owned_source.is_some(){
+        if !self.schema_done{
             if let Some(length)=self.schema_length().map_err(value_fault)?{
-                let(entity,kind)=(self.schema_parts)(self.owned_source.as_ref().and_then(|source|source.first()).expect("quoted first operation"));
+                let(entity,kind)=(self.schema_parts)(self.first_operation().expect("quoted first operation"));
                 let prefix=self.prefix.as_mut().expect("exact owned prefix");
                 if !self.schema_started{
                     *self.retired_schema=Some(std::mem::take(&mut prefix.op_schema.0));self.schema_started=true;
@@ -319,12 +385,18 @@ where M:Send+'static {
                     return Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes:self.schema_offset-before,..idle}));
                 }
             }
-            self.ready=true;return Ok(ChildEmitPreparationStep::Ready(RetainedCloneProgress{copied_items:1,..idle}));
+            self.schema_done=true;
+            if self.owned_source.is_some(){self.ready=true;return Ok(ChildEmitPreparationStep::Ready(RetainedCloneProgress{copied_items:1,..idle}));}
+            return Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,..idle}));
         }
-        if self.remaining.as_ref().is_some_and(|source|source.len()!=0){return Err(Fault::from("owned-child-wire-preview-awaits-original-incremental-encoding"));}
+        if self.owned_source.is_some(){self.ready=true;return Ok(ChildEmitPreparationStep::Ready(RetainedCloneProgress{copied_items:1,..idle}));}
+        if self.remaining.as_ref().is_some_and(|source|source.len()!=0){return self.encode_next();}
         let step=self.retire_one(grant)?;let progress=step.progress();
         if !matches!(step,RetainedCloneStep::Complete(_))||progress!=idle||self.factory.is_some(){return Ok(ChildEmitPreparationStep::Pending(progress));}
         self.ready=true;Ok(ChildEmitPreparationStep::Ready(RetainedCloneProgress{copied_items:1,..idle}))
+    }
+    fn begin_preview(&mut self){
+        if let Some(source)=self.owned_source.take(){*self.remaining=Some(source.into_iter());}
     }
     fn take_ready(&mut self)->Option<ChildEmit>{
         if !self.ready||self.closing||self.retired_schema.is_some()||self.current.is_some()||self.retirement.is_some()||self.remaining.is_some()||self.owned_source.is_some(){return None;}
@@ -332,14 +404,14 @@ where M:Send+'static {
         self.prefix.take()
     }
     fn next_owned_capacity_byte_demand(&self)->usize{if self.owned_source.is_some(){self.batch_capacity_bytes}else{0}}
-    fn take_ready_owned(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+    fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{
         if !self.ready||self.closing||self.retired_schema.is_some()||self.current.is_some()||self.retirement.is_some(){return Ok(None);}
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<self.batch_capacity_bytes{return Ok(None);}
         let Some(take)=self.take_batch else{return Ok(None)};
         let Some(source)=self.owned_source.take()else{return Ok(None)};
         match take(source,grant){
             Ok((batch,progress))=>{self.backing_bytes=0;Ok(Some((self.prefix.take().expect("ready typed owner retains its wire prefix"),batch,progress)))},
-            Err((error,source))=>{*self.owned_source=Some(source);if error.kind==semio_framework_value::ValueRefusalKind::AllocationFailed{Ok(None)}else{Err(error)}}
+            Err((error,source))=>{*self.owned_source=Some(source);if error.kind==ValueRefusalKind::AllocationFailed{Ok(None)}else{Err(error)}}
         }
     }
     fn begin_close(&mut self){self.closing=true;}
@@ -401,7 +473,7 @@ where M:Send+'static {
         Ok(Default::default())
     }
     fn refusal(&self)->Option<&::protocol::ProtocolError>{self.cause.as_ref()}
-    fn retirement_refusal(&self)->Option<&semio_framework_value::ValueError>{self.close_refusal.as_ref()}
+    fn retirement_refusal(&self)->Option<&ValueError>{self.close_refusal.as_ref()}
     fn accepted_prefix(&self)->Option<&ChildEmit>{self.prefix.as_ref()}
     fn retained_operation_count(&self)->usize{self.owned_source.as_ref().map_or(0,Vec::len)+self.remaining.as_ref().map_or(0,ExactSizeIterator::len)+usize::from(self.current.is_some())+usize::from(self.retirement.is_some())}
 }
@@ -417,7 +489,7 @@ pub(crate) fn close_protocol_owned_cause_one(cause:&mut Option<::protocol::Proto
     ::protocol::close_protocol_error_one(cause,grant).map(|step|PluginLifecycleStep::retained(step,cause.is_none()))
 }
 
-pub(crate) fn retirement_refusal_fault(error:&semio_framework_value::ValueError)->Fault{
+pub(crate) fn retirement_refusal_fault(error:&ValueError)->Fault{
     Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,"interactive-job.child-emission-retirement-refused",error.message.as_ref()).with_param("refusalKind",error.kind.as_str()).with_retained_progress(error.retained_progress())
 }
 

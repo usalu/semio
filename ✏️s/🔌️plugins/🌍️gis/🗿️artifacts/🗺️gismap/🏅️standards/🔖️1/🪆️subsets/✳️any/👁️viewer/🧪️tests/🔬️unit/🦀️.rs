@@ -45,7 +45,7 @@ async fn the_camera_route_joins_its_exact_retained_factory_on_the_window_config_
     assert_eq!(contracts[0].lanes, &[ArtifactToolPublicationLane::WindowConfig], "a viewer may never name the artifact lane");
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_gismap_viewer());
     let mut app = semio_framework_plugin::VcsArtifactApp::<ViewerApp<GisMapViewer>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry(ViewerApp::<GisMapViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     assert!(app.close_terminal_is_empty());
 }
 
@@ -98,11 +98,11 @@ async fn a_dispatched_pan_is_retained_by_its_window_and_rendered_back() {
     let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(view.clone());
     let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>("{\"surfaceId\":\"gis2d.view.composite\",\"camera\":{\"x\":12.0,\"y\":-4.5,\"zoom\":2.0}}", semio_framework_pack_json::JsonMemberPolicy::Reject).expect("args");
-    app.handle_action(map::SET_CAMERA_ACTION_ID, Some(&args), &meta).await.expect("the pan is admitted");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("the pan settles");
+    app.handle_action(map::SET_CAMERA_ACTION_ID, Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the pan is admitted");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the pan settles");
     let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(map::BODY_KEY, None, &view).await.expect("render")).expect("projection");
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::TiledMapScene>(&projection).expect("tiled map scene");
     assert_eq!(scene.camera_json, map::config::GisMapViewerCamera { x: 12.0, y: -4.5, zoom: 2.0 }.scene_camera_json());
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 //#endregion 🧭️ViewerCamera

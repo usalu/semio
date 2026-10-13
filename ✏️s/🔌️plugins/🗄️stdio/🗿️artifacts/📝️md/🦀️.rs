@@ -114,7 +114,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor()])
         .composers(standards::v_commonmark::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.md", standard: semio_framework_artifact_reference::StandardId("commonmark"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") })
         .try_build()
 }
 
@@ -341,7 +341,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -382,7 +381,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

@@ -69,7 +69,7 @@ pub(crate) mod context {
     /// 🎬️ Dispatches one typed command and drives its retained operation to publication, the way the
     /// host does — a migrated command's document and config edits land only once it settles.
     pub async fn dispatch(app: &mut SourcingApp, command: SourcingCurationCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -79,7 +79,7 @@ pub(crate) mod context {
         let mut effects = Vec::new();
         for turn in 0usize..100_000 {
             app.maintenance_step(1, 4_096).expect("maintenance step");
-            app.advance_typed_operation_publication().await.expect("typed operation publication");
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("typed operation publication");
             if let Some(page) = app.take_typed_operation_result_page(1) {
                 assert!(app.acknowledge_typed_operation_result(page.token).expect("typed operation acknowledgement"));
             }
@@ -165,12 +165,12 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
-        app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }).await.unwrap();
+        app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
         let mut document = None;
         let mut terminal = false;
         for turn in 0usize..100_000 {
             app.maintenance_step(1, 4_096).unwrap();
-            app.advance_typed_operation_publication().await.unwrap();
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
             if let Some(page) = app.take_typed_operation_result_page(7) {
                 assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                 terminal |= page.lane == TypedOperationResultLane::Terminal;
@@ -221,11 +221,11 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
-    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }).await.unwrap();
+    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
     let mut loaded = None;
     for _ in 0..100_000 {
         app.maintenance_step(1, 4_096).unwrap();
-        app.advance_typed_operation_publication().await.unwrap();
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(7) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
@@ -243,7 +243,7 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     PluginApp::begin_document_archive_load(&mut *app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 91).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
@@ -274,7 +274,7 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
     PluginApp::begin_document_archive_load(&mut *app, 92, archive).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 92).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 92, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;

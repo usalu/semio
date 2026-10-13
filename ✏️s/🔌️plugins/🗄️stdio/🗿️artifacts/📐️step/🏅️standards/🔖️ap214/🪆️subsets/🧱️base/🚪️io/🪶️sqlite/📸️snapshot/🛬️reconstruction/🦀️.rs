@@ -58,7 +58,7 @@ impl<'a> Catalog<'a>{
     }
     fn edge(&self,table:usize,index:usize)->Relation{self.tables[table].relations[index]}
     fn list(&mut self,table:usize,header:i64,control:&mut NativeDecodeControl<'_>)->Result<Vec<String>,ValueError>{
-        let range=self.tables[table].range((0,header));let mut output=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<String>>);
+        let range=self.tables[table].range((0,header));let mut output=DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<String>>);
         for index in range{let row=self.take(table,self.edge(table,index).id)?;output.as_mut().push(control.copy_text(row.text(3)?)?);control.step()?;}
         Ok(output.take())
     }
@@ -72,7 +72,7 @@ struct Forest{
 impl Forest{
     fn new(count:usize,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{
         let mut state=control.allocate_vec(count)?;state.resize(count,0);
-        let mut values=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(count)?,native::close::<Vec<Option<StepValue>>>);values.as_mut().resize_with(count,||None);
+        let mut values=DecodedFieldOwner::new(control.allocate_vec(count)?,native::close::<Vec<Option<StepValue>>>);values.as_mut().resize_with(count,||None);
         let size=count.checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"STEP value frontier size overflow"))?;
         Ok(Self{state,values,pending:control.allocate_vec(size)?})
     }
@@ -101,8 +101,8 @@ impl Forest{
                 "unset"=>StepValue::Unset,"derived"=>StepValue::Derived,"integer"=>StepValue::Integer(row.integer(2)?),"real"=>StepValue::Real(read_binary64(row,3,REAL)?),
                 "string"=>StepValue::String(control.copy_text(row.text(4)?)?),"enum"=>StepValue::Enum(control.copy_text(row.text(5)?)?),
                 "reference"=>{let word=unsigned(row.text(6)?)?;let entity=row.integer(7)?;let actual=entities.binary_search_by_key(&entity,|item|item.0).ok().map(|index|entities[index].1);if actual!=Some(word){return Err(invalid("STEP reference word differs from related entity identity"));}StepValue::Reference(word)},
-                "aggregate"=>{let range=catalog.tables[10].range((0,id));let mut output=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<StepValue>>);for edge in range{let row=catalog.tables[10].row(catalog.edge(10,edge).id)?;output.as_mut().push(self.pop(catalog,row.integer(3)?)?);control.step()?;}StepValue::Aggregate(output.take())},
-                "typedValue"=>{let edge=catalog.tables[11].range((0,id)).start;let row=catalog.tables[11].row(catalog.edge(11,edge).id)?;let name=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.copy_text(row.text(2)?)?,native::close::<String>);let mut slot=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(1)?,native::close::<Vec<StepValue>>);slot.as_mut().push(self.pop(catalog,row.integer(3)?)?);StepValue::TypedValue(StepTypedValue {type_name:name.take(),value:native::box_slot(slot.take())?})},
+                "aggregate"=>{let range=catalog.tables[10].range((0,id));let mut output=DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<StepValue>>);for edge in range{let row=catalog.tables[10].row(catalog.edge(10,edge).id)?;output.as_mut().push(self.pop(catalog,row.integer(3)?)?);control.step()?;}StepValue::Aggregate(output.take())},
+                "typedValue"=>{let edge=catalog.tables[11].range((0,id)).start;let row=catalog.tables[11].row(catalog.edge(11,edge).id)?;let name=DecodedFieldOwner::new(control.copy_text(row.text(2)?)?,native::close::<String>);let mut slot=DecodedFieldOwner::new(control.allocate_vec(1)?,native::close::<Vec<StepValue>>);slot.as_mut().push(self.pop(catalog,row.integer(3)?)?);StepValue::TypedValue(StepTypedValue {type_name:name.take(),value:native::box_slot(slot.take())?})},
                 _=>unreachable!(),
             };
             self.state[index]=2;self.values.as_mut()[index]=Some(value);
@@ -110,7 +110,7 @@ impl Forest{
         self.pop(catalog,id)
     }
     fn arguments(&mut self,catalog:&mut Catalog<'_>,parent:(u8,i64),entities:&[(i64,u64)],control:&mut NativeDecodeControl<'_>)->Result<Vec<StepValue>,ValueError>{
-        let range=catalog.tables[9].range(parent);let mut output=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<StepValue>>);
+        let range=catalog.tables[9].range(parent);let mut output=DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<StepValue>>);
         for edge in range{let row=catalog.take(9,catalog.edge(9,edge).id)?;output.as_mut().push(self.value(catalog,row.integer(4)?,entities,control)?);control.step()?;}
         Ok(output.take())
     }
@@ -119,7 +119,7 @@ fn reconstruct(database:&SqliteDatabase,control:&mut NativeDecodeControl<'_>)->R
     let mut catalog=Catalog::new(database,control)?;
     if catalog.tables[0].rows.len()!=1||catalog.tables[1].rows.len()!=1{return Err(invalid("STEP must own one document and one header"));}
     let document=catalog.take(0,catalog.tables[0].rows[0].rowid)?;let header=catalog.take(1,document.integer(2)?)?;
-    let mut result=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(StepSnapshot{schema:String::new(),header:StepHeader{file_description:StepFileDescription{description:Vec::new(),implementation_level:String::new()},file_name:StepFileName{name:String::new(),timestamp:String::new(),author:Vec::new(),organization:Vec::new(),preprocessor_version:String::new(),originating_system:String::new(),authorization:String::new()},file_schema:StepFileSchema{schemas:Vec::new()}},entities:Vec::new()},native::close::<StepSnapshot>);
+    let mut result=DecodedFieldOwner::new(StepSnapshot{schema:String::new(),header:StepHeader{file_description:StepFileDescription{description:Vec::new(),implementation_level:String::new()},file_name:StepFileName{name:String::new(),timestamp:String::new(),author:Vec::new(),organization:Vec::new(),preprocessor_version:String::new(),originating_system:String::new(),authorization:String::new()},file_schema:StepFileSchema{schemas:Vec::new()}},entities:Vec::new()},native::close::<StepSnapshot>);
     let out=result.as_mut();out.schema=control.copy_text(document.text(1)?)?;
     out.header.file_description.implementation_level=control.copy_text(header.text(1)?)?;
     out.header.file_description.description=catalog.list(2,header.rowid,control)?;
@@ -135,11 +135,11 @@ fn reconstruct(database:&SqliteDatabase,control:&mut NativeDecodeControl<'_>)->R
     let range=catalog.tables[6].range((0,document.rowid));out.entities=control.allocate_vec(range.len())?;
     for edge in range{
         let row=catalog.take(6,catalog.edge(6,edge).id)?;let word=unsigned(row.text(3)?)?;
-        let mut entity=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(StepEntity{id:word,name:control.copy_text(row.text(4)?)?,args:Vec::new(),complex:Vec::new()},native::close::<StepEntity>);
+        let mut entity=DecodedFieldOwner::new(StepEntity{id:word,name:control.copy_text(row.text(4)?)?,args:Vec::new(),complex:Vec::new()},native::close::<StepEntity>);
         entity.as_mut().args=forest.arguments(&mut catalog,(0,row.rowid),&entities,control)?;
         let range=catalog.tables[7].range((0,row.rowid));entity.as_mut().complex=control.allocate_vec(range.len())?;
         for edge in range{
-            let row=catalog.take(7,catalog.edge(7,edge).id)?;let mut complex=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(StepComplexType{name:control.copy_text(row.text(3)?)?,args:Vec::new()},native::close::<StepComplexType>);
+            let row=catalog.take(7,catalog.edge(7,edge).id)?;let mut complex=DecodedFieldOwner::new(StepComplexType{name:control.copy_text(row.text(3)?)?,args:Vec::new()},native::close::<StepComplexType>);
             complex.as_mut().args=forest.arguments(&mut catalog,(1,row.rowid),&entities,control)?;
             entity.as_mut().complex.push(complex.take());control.step()?;
         }

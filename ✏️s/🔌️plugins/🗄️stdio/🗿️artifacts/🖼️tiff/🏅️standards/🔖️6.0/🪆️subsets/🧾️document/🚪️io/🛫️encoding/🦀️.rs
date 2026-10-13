@@ -9,7 +9,7 @@ fn census(snapshot:&TiffSnapshot,control:&mut NativeEncodeControl<'_>,maximum_ro
 }
 
 fn encode(snapshot:&TiffSnapshot,control:&mut NativeEncodeControl<'_>,maximum_rows:usize,maximum_file_bytes:usize)->Result<Vec<u8>,ValueError>{
-    census(snapshot,control,maximum_rows)?;control.checkpoint()?;let native=super::owned_samples::lower(snapshot,TiffNativeOptions::default(),control)?;let encoded=super::write_native(&native,control).map_err(invalid)?;if encoded.len()>maximum_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"TIFF native output file limit"));}let mut output=control.allocate_vec::<u8>(encoded.len())?;control.begin_stage(encoded.len())?;for chunk in encoded.chunks(65536){output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(output)
+    census(snapshot,control,maximum_rows)?;control.checkpoint()?;let native=owned_samples::lower(snapshot,TiffNativeOptions::default(),control)?;let encoded=write_native(&native,control).map_err(invalid)?;if encoded.len()>maximum_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"TIFF native output file limit"));}let mut output=control.allocate_vec::<u8>(encoded.len())?;control.begin_stage(encoded.len())?;for chunk in encoded.chunks(65536){output.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok(output)
 }
 
 /// 📤️ Emits the TIFF carrier with admitted snapshot traversal and physical copy progress.

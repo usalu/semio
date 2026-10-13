@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-assets/moves-asset-hero-behind-asset-prop: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["assets"]["edits"][0]["id"], "asset-hero", "reorder-assets/moves-asset-hero-behind-asset-prop: the moved asset is named by id");
-    assert_eq!(committed["assets"]["edits"][0]["index"], 1, "reorder-assets/moves-asset-hero-behind-asset-prop: the destination is the last position");
+    assert_eq!(committed["assets"]["edits"][0]["to"], 1, "reorder-assets/moves-asset-hero-behind-asset-prop: the destination is the last position");
     assert!(
         committed["assets"]["patched"].as_array().expect("patched is an array").is_empty() && committed["assets"]["edits"].as_array().expect("edits is an array").len() == 1,
         "reorder-assets/moves-asset-hero-behind-asset-prop: reordering is one move row — no record is patched or re-added"

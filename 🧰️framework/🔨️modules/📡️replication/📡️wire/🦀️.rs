@@ -2217,6 +2217,10 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
 #[path = "🧪️tests/🔬️presence-codec/🦀️.rs"]
 mod presence_codec_tests;
 
+#[cfg(test)]
+#[path = "🧪️tests/🔬️interaction-wire/🦀️.rs"]
+mod interaction_wire_tests;
+
 //#endregion 🔖️Presence
 
 //#region 🔖️Interaction
@@ -2409,7 +2413,9 @@ impl crate::value::FromValue for HierarchyProvider {
 /// the transitional state the serde-fanout playbook prescribes ("add alongside, do not blind-swap").
 /// Attributes are restored verbatim from 67fb4216b2 so the serde wire shape stays byte-identical to
 /// the twin. Drop them once every consumer in `🔗️causal`/`📡️wire`/`⚔️conflict` moves to `ToValue`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionMode {
     Single,
@@ -2420,36 +2426,6 @@ impl crate::value::retirement::RetireOwned for SelectionMode {
     fn retirement(self)->Box<dyn crate::value::retirement::RetirementCursor>{crate::value::retirement::leaf(())}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(crate::value::retirement::leaf_birth_bytes::<()>())}
     fn controlled_retirement_supported()->bool{true}
-}
-
-/// 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): hand-written, not
-/// derived — this crate physically owns `ToValue`/`FromValue`/`DslValue` (`crate::value`), and the
-/// `#[derive(ToValue, FromValue)]` macro's generated code is rooted at
-/// `::semio_framework_os_kernel::…`, which this crate cannot depend on (os-kernel depends on
-/// `protocol`, not the reverse). A bare-string representation matching `serde`'s own default for a
-/// data-less enum (`"single"`/`"multiple"`, not `{"tag":"single"}`).
-impl crate::value::ToValue for SelectionMode {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::String(
-            match self {
-                SelectionMode::Single => "single",
-                SelectionMode::Multiple => "multiple",
-            }
-            .to_string(),
-        )
-    }
-}
-impl crate::value::FromValue for SelectionMode {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        match value {
-            crate::value::DslValue::String(s) => match s.as_str() {
-                "single" => Ok(SelectionMode::Single),
-                "multiple" => Ok(SelectionMode::Multiple),
-                other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("unknown SelectionMode variant `{other}`"))),
-            },
-            other => Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
-        }
-    }
 }
 
 /// 🎯️ How a surface gathers targets for one `interactionSelect` dispatch.
@@ -2596,54 +2572,25 @@ impl crate::value::FromValue for InteractionTarget {
 /// Its consumers in `⚔️conflict`, `📡️wire/🏠️local-interaction` and `🔗️causal` still serialize it
 /// through serde; the three fields are `String`/`Vec<String>`/`Option<String>`, so the derives add no
 /// bound fan-out. Drop them once those call sites move to `ToValue`.
-#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DomainSelection {
-    pub granularity: String,
-    pub ids: Vec<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub anchor_id: Option<String>,
+    pub granularity: String,
+    pub ids: Vec<String>,
 }
 
 crate::value::artifact_retire_struct!(DomainSelection {granularity,ids,anchor_id});
 
-/// 🌱️ Hand-written twin of the `SelectionMode` note above — same reason (this crate cannot depend
-/// on the derive macro's target crate).
-impl crate::value::ToValue for DomainSelection {
-    fn to_value(&self) -> crate::value::DslValue {
-        let mut entries: Vec<(String, crate::value::DslValue)> = Vec::with_capacity(if self.anchor_id.is_some() { 3 } else { 2 });
-        if self.anchor_id.is_some() {
-            entries.push(("anchorId".to_string(), crate::value::ToValue::to_value(&self.anchor_id)));
-        }
-        entries.extend([
-            ("granularity".to_string(), crate::value::ToValue::to_value(&self.granularity)),
-            ("ids".to_string(), crate::value::ToValue::to_value(&self.ids)),
-        ]);
-        crate::value::DslValue::Object(entries)
-    }
-}
-impl crate::value::FromValue for DomainSelection {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let entries = value.into_object()?;
-        let granularity = match entries.iter().find(|(k, _)| k == "granularity") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("granularity"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `granularity`")),
-        };
-        let ids = match entries.iter().find(|(k, _)| k == "ids") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("ids"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `ids`")),
-        };
-        let anchor_id = match entries.iter().find(|(k, _)| k == "anchorId") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("anchorId"))?,
-            None => ::std::default::Default::default(),
-        };
-        Ok(Self { granularity, ids, anchor_id })
-    }
-}
-
 /// 🐁️ One domain's current hover on one channel: the transitive closure (root first) when
 /// `HoverSpec::transitive`, otherwise just the raw hovered ids.
-#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct DomainHover {
     pub channel: String,
@@ -2651,78 +2598,20 @@ pub struct DomainHover {
 }
 crate::value::artifact_retire_struct!(DomainHover {channel,ids});
 
-/// 🌱️ Hand-written twin of the `SelectionMode` note above.
-impl crate::value::ToValue for DomainHover {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object([
-            ("channel".to_string(), crate::value::ToValue::to_value(&self.channel)),
-            ("ids".to_string(), crate::value::ToValue::to_value(&self.ids)),
-        ])
-    }
-}
-impl crate::value::FromValue for DomainHover {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let entries = value.into_object()?;
-        let channel = match entries.iter().find(|(k, _)| k == "channel") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("channel"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `channel`")),
-        };
-        let ids = match entries.iter().find(|(k, _)| k == "ids") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("ids"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `ids`")),
-        };
-        Ok(Self { channel, ids })
-    }
-}
-
 /// 🗺️ Own persisted-local selection (`Interaction` history lane).await + ephemeral-local hover, keyed by
 /// domain id — the framework-owned counterpart to what every per-app config used to hand-roll.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionState {
-    pub selection: BTreeMap<String, DomainSelection>,
-    pub hover: BTreeMap<String, DomainHover>,
-    pub active_mode: BTreeMap<String, SelectionMode>,
     pub active_granularity: BTreeMap<String, String>,
+    pub active_mode: BTreeMap<String, SelectionMode>,
+    pub hover: BTreeMap<String, DomainHover>,
+    pub selection: BTreeMap<String, DomainSelection>,
 }
 crate::value::artifact_retire_struct!(InteractionState {selection,hover,active_mode,active_granularity});
 
-/// 🌱️ Hand-written twin of the `SelectionMode` note above — this is the type
-/// `crate::app::InteractionConfigMutation` (`🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`)
-/// composes through `SetInteractionState`, so it must satisfy `Mutation`/`MutationDiff`'s
-/// `ToValue + FromValue` supertrait bound like every other mutation payload.
-impl crate::value::ToValue for InteractionState {
-    fn to_value(&self) -> crate::value::DslValue {
-        crate::value::DslValue::object([
-            ("activeGranularity".to_string(), crate::value::ToValue::to_value(&self.active_granularity)),
-            ("activeMode".to_string(), crate::value::ToValue::to_value(&self.active_mode)),
-            ("hover".to_string(), crate::value::ToValue::to_value(&self.hover)),
-            ("selection".to_string(), crate::value::ToValue::to_value(&self.selection)),
-        ])
-    }
-}
-impl crate::value::FromValue for InteractionState {
-    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
-        let entries = value.into_object()?;
-        let selection = match entries.iter().find(|(k, _)| k == "selection") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("selection"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `selection`")),
-        };
-        let hover = match entries.iter().find(|(k, _)| k == "hover") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("hover"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `hover`")),
-        };
-        let active_mode = match entries.iter().find(|(k, _)| k == "activeMode") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("activeMode"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `activeMode`")),
-        };
-        let active_granularity = match entries.iter().find(|(k, _)| k == "activeGranularity") {
-            Some((_, v)) => crate::value::FromValue::from_value(v.clone()).map_err(|error: crate::value::ValueError| error.under("activeGranularity"))?,
-            None => return Err(crate::value::ValueError::new(crate::value::ValueRefusalKind::InvalidValue, "missing field `activeGranularity`")),
-        };
-        Ok(Self { selection, hover, active_mode, active_granularity })
-    }
-}
 //#endregion 🔖️Runtime
 
 //#region 🔖️Topology

@@ -22,7 +22,7 @@ pub(super) fn ops(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  if matches!(tag,"markedContentPointWithProperties"|"beginMarkedContentWithProperties"){let p=field(v,"properties")?;let k=kind(p)?;f[O::PropertyKind as usize]=Text(k);match k{"named"=>f[O::PropertyName as usize]=Text(text(field(p,"name")?)?),"inline"=>{objects::dictionary(c,field(p,"entries")?)?;f[O::PropertyDictionary as usize]=Int;},_=>return Err(invalid())}}
  let mut cells=Cells::from(&[Int,Int,Text(tag)]);cells.extend(f);c.row("pdf_operation",&cells)?;
  match tag{
- "transform"|"setTextMatrix"=>{let a=list(field(v,"matrix")?)?;let cells=resources::rect(field(v,"matrix")?,6)?;c.row("pdf_operation_matrix",&cells)?;},
+ "transform"|"setTextMatrix"=>{let _a=list(field(v,"matrix")?)?;let cells=resources::rect(field(v,"matrix")?,6)?;c.row("pdf_operation_matrix",&cells)?;},
  "setDash"|"setStrokeColor"|"setFillColor"|"setStrokeColorN"|"setFillColorN"=>colors::sequence(c,"pdf_operation_component",field(v,if tag=="setDash"{"array"}else{"components"})?)?,
  "showTextArray"=>{for item in list(field(v,"items")?)?{let k=kind(item)?;let (t,b,a)=match k{"text"=>(Text(text(field(item,"text")?)?),Null,Null),"codes"=>{logical_codes(c,"pdf_array_item_code",field(item,"codes")?)?;(Null,Int,Null)},"adjust"=>(Null,Null,real(field(item,"amount")?)?),_=>return Err(invalid())};c.row("pdf_text_array_item",&[Int,Int,Text(k),t,b,a])?;}},
  "unknown"=>{for operand in list(field(v,"operands")?)?{objects::object(c,operand)?;c.relation("pdf_unknown_operand")?;}},_=>{}

@@ -32,7 +32,7 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetPart {
         part_outcome(set_part_diff(base, &self.path, &self.content_type, &self.payload, self.index, self.override_index))
     }
 
-    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, ValueError> {
         set_part_inverse(base, &self.path)
     }
 

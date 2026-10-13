@@ -55,27 +55,27 @@ impl Default for EnergyModelSnapshot {
 // directly — `Model` now derives both.
 impl ToValue for EnergyModelSnapshot {
     fn to_value(&self) -> DslValue {
-        semio_framework_value::DslValue::object([
+        DslValue::object([
             ("schema".to_string(), self.schema.to_value()),
             ("model".to_string(), self.model.to_value()),
-            ("structure".to_string(), semio_framework_value::ToValue::to_value(&self.structure)),
-            ("zones".to_string(), semio_framework_value::ToValue::to_value(&self.zones)),
-            ("referencedModel".to_string(), semio_framework_value::ToValue::to_value(&self.referenced_model)),
-            ("weatherLink".to_string(), semio_framework_value::ToValue::to_value(&self.weather_link)),
+            ("structure".to_string(), ToValue::to_value(&self.structure)),
+            ("zones".to_string(), ToValue::to_value(&self.zones)),
+            ("referencedModel".to_string(), ToValue::to_value(&self.referenced_model)),
+            ("weatherLink".to_string(), ToValue::to_value(&self.weather_link)),
         ])
     }
 }
 impl FromValue for EnergyModelSnapshot {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        let entries = semio_framework_value::DslValue::into_object(value)?;
-        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(semio_framework_value::DslValue::Null, |(_, v)| v.clone());
+        let entries = DslValue::into_object(value)?;
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map_or(DslValue::Null, |(_, v)| v.clone());
         Ok(Self {
             schema: String::from_value(field("schema"))?,
             model: crate::model::Model::from_value(field("model"))?,
-            structure: semio_framework_value::FromValue::from_value(field("structure"))?,
-            zones: semio_framework_value::FromValue::from_value(field("zones"))?,
-            referenced_model: semio_framework_value::FromValue::from_value(field("referencedModel"))?,
-            weather_link: semio_framework_value::FromValue::from_value(field("weatherLink"))?,
+            structure: FromValue::from_value(field("structure"))?,
+            zones: FromValue::from_value(field("zones"))?,
+            referenced_model: FromValue::from_value(field("referencedModel"))?,
+            weather_link: FromValue::from_value(field("weatherLink"))?,
         })
     }
 }

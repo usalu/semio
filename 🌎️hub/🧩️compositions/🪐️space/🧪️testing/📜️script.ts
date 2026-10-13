@@ -21,7 +21,7 @@ class NativeTestScript extends BundleScript {
     const { rest } = resolveTestLevel(segments);
     if (rest.length) throw new Error("The complete Space document native gate accepts no cohort filters.");
     for (const project of contract.nativeProjects) {
-      const features = project === "@semio-tech/framework-os-host-rs" ? ["--", "rust", "--features", "os-host-full"] : project === "@semio-tech/space-space-rs" || project === "@semio-tech/space-home-rs" ? ["--", "--features", "component-app-assembly"] : [];
+      const features = project === "@semio-tech/space-space-rs" || project === "@semio-tech/space-home-rs" ? ["--", "--features", "component-app-assembly"] : [];
       await runRepositoryTestCommand(process.execPath, ["nx", "run", `${project}:test`, "--skip-nx-cache", ...features], { cwd: resolve(this.root, "../../../.."), budgetMs: 3_600_000 });
     }
   }

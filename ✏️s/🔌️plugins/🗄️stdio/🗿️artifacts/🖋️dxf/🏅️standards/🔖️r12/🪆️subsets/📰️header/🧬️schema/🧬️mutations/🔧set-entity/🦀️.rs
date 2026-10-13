@@ -25,7 +25,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetEntity {
         let Self { index, .. } = self;
         Ok({
             match base.entities.get(*index) {
-                Some(e) => vec![DxfMutation::SetEntity(set_entity::SetEntity { index: *index, entity: e.clone() })],
+                Some(e) => vec![DxfMutation::SetEntity(SetEntity { index: *index, entity: e.clone() })],
                 None => vec![DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: *index })],
             }
         })

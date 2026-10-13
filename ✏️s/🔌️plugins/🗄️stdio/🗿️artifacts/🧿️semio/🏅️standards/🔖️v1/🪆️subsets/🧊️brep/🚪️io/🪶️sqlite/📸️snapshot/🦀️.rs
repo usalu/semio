@@ -1,12 +1,13 @@
 //! 🧊️ Full typed BRep topology, analytic geometry, p-curves and NURBS parameter sequences.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow,RowIndex,reconstruct_text};
+#[cfg(test)] use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
+use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
+#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::artifact::{RowIndex, reconstruct_text};
 use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot,BrepVertex,BrepEdge,BrepLoop,BrepLoopEdge,BrepCoedge,BrepFace,BrepShell,BrepShellFace,BrepSolid,BrepSolidShell,BrepCurve,BrepCurve2,BrepSurface};
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2,SemioPoint3};
 use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,Reconstruction},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
-use semio_framework_os_kernel::sqlite_snapshot::transfer;
+#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::transfer;
 #[path="🧮️semantic/🦀️.rs"]
 pub(crate)mod semantic;
 fn unsigned64(mut value:u64,buffer:&mut[u8;20])->&str{let mut start=buffer.len();loop{start-=1;buffer[start]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&buffer[start..]).expect("decimal digits are UTF8")}
@@ -47,9 +48,9 @@ fn shape(row:SqliteRow<'_>,active:&[usize])->Result<(),ValueError>{for index in 
 impl ArtifactSqliteSnapshot for SemioBrepSnapshot{
 fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
-fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{crate::standards::v1::subsets::brep::io::sqlite::snapshot::native_encoding::encode(self,encoding,control,native_owner)}
-fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{crate::standards::v1::subsets::brep::io::sqlite::snapshot::native_decoding::decode(payload,control,native_control.native())}
-fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
+fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
+fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
+fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{let result=(||->Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})();result}
 
 fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{let result=(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
 control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;

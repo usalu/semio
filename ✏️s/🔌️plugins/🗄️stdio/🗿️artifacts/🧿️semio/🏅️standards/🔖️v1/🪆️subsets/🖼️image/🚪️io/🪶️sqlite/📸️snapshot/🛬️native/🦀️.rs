@@ -10,10 +10,10 @@ fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)-
 fn rows(count:usize,limits:SqliteDatabaseLimits)->Result<(),ValueError>{if count>limits.max_rows{Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"image native entities exceed caller row limit"))}else{Ok(())}}
 
 /// 🖼️ Reads each named image field without delegating ownership to an uncontrolled codec.
-pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<SemioImageSnapshot,ValueError>{
+pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioImageSnapshot,ValueError>{
  let limits=control.limits();crate::standards::v1::subsets::image::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Image native input exceeds file limit"))}
- control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+ control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,_checkpoint|{
   let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
   let result=(||->Result<SemioImageSnapshot,ValueError>{let result=match payload{
    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
@@ -62,4 +62,4 @@ pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:Sql
  while let Some(value)=metadata_items.next(control)?{let(key,value)=pair(value,control)?;let key=hex_text(key,control)?;let value=hex_text(value,control)?;metadata.push(SemioImageMetadataEntry{key,value});control.step()?;}control.checkpoint()?;Ok(SemioImageSnapshot{schema,width,height,colorspace,bit_depth,icc,frames,metadata})
 }
 /// 🕳️ The empty typed root every native prefix starts from.
-pub(crate) fn empty()->crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot{crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot{schema:String::new(),width:0,height:0,colorspace:Default::default(),bit_depth:0,frames:Vec::new(),icc:None,metadata:Vec::new()}}
+pub(crate) fn empty()->SemioImageSnapshot{SemioImageSnapshot{schema:String::new(),width:0,height:0,colorspace:Default::default(),bit_depth:0,frames:Vec::new(),icc:None,metadata:Vec::new()}}

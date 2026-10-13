@@ -63,7 +63,7 @@ impl Plan{
  fn add(&mut self,count:usize,maximum:usize)->Result<(),ValueError>{self.rows=self.rows.checked_add(count).ok_or_else(||limit(ValueRefusalKind::WorkLimit,"Raster row count overflow"))?;if self.rows>maximum{return Err(limit(ValueRefusalKind::OwnershipLimit,"Raster domain exceeds row limit"))}Ok(())}
  fn units(&self,assets:usize)->Result<usize,ValueError>{[self.layers,self.values,self.items,self.members,self.parameters,assets].into_iter().try_fold(0usize,|total,n|total.checked_add(n).ok_or_else(||limit(ValueRefusalKind::WorkLimit,"Raster native workload overflow")))}
 }
-fn push<T>(pending:&mut Vec<T>,value:T,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{if pending.len()==pending.capacity(){control.charge(std::mem::size_of::<T>())?;pending.try_reserve_exact(1).map_err(|_|limit(ValueRefusalKind::AllocationFailed,"Raster borrowed frontier allocation"))?;}pending.push(value);Ok(())}
+fn push<T>(pending:&mut Vec<T>,value:T,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{if pending.len()==pending.capacity(){control.charge(size_of::<T>())?;pending.try_reserve_exact(1).map_err(|_|limit(ValueRefusalKind::AllocationFailed,"Raster borrowed frontier allocation"))?;}pending.push(value);Ok(())}
 fn forecast(s:&RasterSnapshot,maximum:usize,control:&mut NativeEncodeControl<'_>)->Result<Plan,ValueError>{
  control.begin_stage(0)?;let mut plan=Plan::default();plan.add(1,maximum)?;plan.add(s.assets.len(),maximum)?;if s.assets.len()>crate::RASTER_OWNED_MAP_CAPACITY{return Err(limit(ValueRefusalKind::OwnershipLimit,"Raster asset map capacity"))}
  if s.layers.len()>maximum.saturating_sub(plan.rows){return Err(limit(ValueRefusalKind::OwnershipLimit,"Raster root forest exceeds row limit"))}let mut layers=Vec::new();for layer in s.layers.iter().rev(){plan.add(0,maximum)?;push(&mut layers,layer,control)?;}
@@ -154,8 +154,8 @@ impl RasterNativeDocument{
  if self.assets.len()>crate::RASTER_OWNED_MAP_CAPACITY{return Err(limit(ValueRefusalKind::OwnershipLimit,"Raster asset native map capacity"))}for asset in self.assets{let map=&mut snapshot.0.as_mut().unwrap().assets;if let Some((previous,_))=map.entry_at(map.len().saturating_sub(1)){if !keys_before(previous,&asset.key,control)?{return Err(invalid("Raster asset native key order"))}}if map.page_required_for_insert(&asset.key){control.charge(RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes())?;map.admit_one_page().map_err(|reason|limit(ValueRefusalKind::OwnershipLimit,reason))?;}map.insert_pre_admitted(asset.key,asset.child).map_err(|e|invalid(e.reason))?;control.step()?;}
  if values.0.iter().any(Option::is_some)||layers.0.iter().any(Option::is_some){return Err(invalid("Raster orphan native entity"))}Ok(snapshot.0.take().unwrap())
  }
- pub(crate) fn ordinary(s:&RasterSnapshot)->Self{Self::from_snapshot(s,usize::MAX,&mut semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut |_|true)).expect("literal Raster native projection")}
- pub(crate) fn ordinary_snapshot(self)->Result<RasterSnapshot,ValueError>{self.into_snapshot(usize::MAX,&mut semio_framework_value::NativeDecodeControl::new(usize::MAX,&mut |_|true))}
+ pub(crate) fn ordinary(s:&RasterSnapshot)->Self{Self::from_snapshot(s,usize::MAX,&mut NativeEncodeControl::new(usize::MAX,&mut |_|true)).expect("literal Raster native projection")}
+ pub(crate) fn ordinary_snapshot(self)->Result<RasterSnapshot,ValueError>{self.into_snapshot(usize::MAX,&mut NativeDecodeControl::new(usize::MAX,&mut |_|true))}
 }
 struct EncodedMembers(Vec<(String,semio_framework_value::DslValue)>);
 impl Drop for EncodedMembers{fn drop(&mut self){while let Some((_,value))=self.0.pop(){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(value);}}}

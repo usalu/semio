@@ -193,6 +193,7 @@
     "framework-manifest",
     "graph-catalog",
     "jco-package-adapter",
+    "mutation-schema-document-index",
     "mutation-source-authority",
     "playground-session",
     "plugin-registry",

@@ -16,7 +16,7 @@ pub struct SetImageInterlace {
 impl protocol::MutationKind<GifSnapshot, GifMutation> for SetImageInterlace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "image-interlace", kind: "set-image-interlace", record: "SetImageInterlace" };
 
-    fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
+    fn diff(&self, _base: &GifSnapshot) -> protocol::MutationOutcome<GifDiff> {
         let Self { index, interlace } = self;
         protocol::MutationOutcome::new({
             let d = GifImageDiff { interlace: Some(*interlace), ..Default::default() };
@@ -26,7 +26,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetImageInterlace {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.images.get(*index) {
-            Some(img) => vec![GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: *index, interlace: img.interlace })],
+            Some(img) => vec![GifMutation::SetImageInterlace(SetImageInterlace { index: *index, interlace: img.interlace })],
             None => Vec::new(),
         })
     }

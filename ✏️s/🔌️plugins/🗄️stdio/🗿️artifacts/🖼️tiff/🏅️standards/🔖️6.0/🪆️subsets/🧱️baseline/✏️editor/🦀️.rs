@@ -78,26 +78,26 @@ const STDIO_TIFF_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.tiff.tool-command.v1";
 const STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn tiffBaselineEditor_example_snapshot(example_id: &str) -> TiffSnapshot {
+fn tiff_baseline_editor_example_snapshot(example_id: &str) -> TiffSnapshot {
     if example_id == crate::examples::demo::ID { <TiffSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { TiffSnapshot::default() }
 }
-fn tiffBaselineEditor_command_id(command: &TiffBaselineEditCommand) -> &'static str {
+fn tiff_baseline_editor_command_id(command: &TiffBaselineEditCommand) -> &'static str {
     if let TiffBaselineEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command { TiffBaselineEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, _ => "other" }
 }
-fn tiffBaselineEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TiffBaselineEditCommand, Fault> {
+fn tiff_baseline_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<TiffBaselineEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| TiffBaselineEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TiffBaselineEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
 }
-fn tiffBaselineEditor_retained_extent(command: &TiffBaselineEditCommand, _snapshot: &TiffSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn tiff_baseline_editor_retained_extent(command: &TiffBaselineEditCommand, _snapshot: &TiffSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, TiffBaselineEditCommand::SetActiveExample { .. }).then_some(1)
 }
-fn tiffBaselineEditor_retained_reduce(command: &TiffBaselineEditCommand, _snapshot: &TiffSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffBaselineEditor>>>, _operation: &AppOperationContext) -> Result<Emit<TiffBaselineMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn tiff_baseline_editor_retained_reduce(command: &TiffBaselineEditCommand, _snapshot: &TiffSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffBaselineEditor>>>, _operation: &AppOperationContext) -> Result<Emit<TiffBaselineMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        TiffBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiffBaselineEditor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
+        TiffBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_baseline_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -163,9 +163,9 @@ impl ArtifactEditor for TiffBaselineEditor {
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
         if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
         if !STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
-        if tiffBaselineEditor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
+        if tiff_baseline_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
         let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
-        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiffBaselineEditor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, tiffBaselineEditor_retained_reduce, tiffBaselineEditor_retained_extent)));
+        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, tiff_baseline_editor_command_id, STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, tiff_baseline_editor_retained_reduce, tiff_baseline_editor_retained_extent)));
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -174,8 +174,8 @@ impl ArtifactEditor for TiffBaselineEditor {
     fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation, actor))
     }
-    fn command_id(command: &Self::Command) -> &'static str { tiffBaselineEditor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiffBaselineEditor_command_from_action(action, args) }
+    fn command_id(command: &Self::Command) -> &'static str { tiff_baseline_editor_command_id(command) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiff_baseline_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
         crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
@@ -193,7 +193,7 @@ impl ArtifactEditor for TiffBaselineEditor {
         match command {
             TiffBaselineEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
             TiffBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiffBaselineEditor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_baseline_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }
@@ -210,7 +210,7 @@ impl ArtifactEditor for TiffBaselineEditor {
 //#endregion 🔖️Editor
 
 
-fn tiffBaselineEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
+fn tiff_baseline_editor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
 }
 
@@ -234,13 +234,16 @@ impl editing::SnapshotEditingEditor for TiffBaselineEditor {
         if row.tag != TAG_PHOTOMETRIC && row.tag != TAG_BITS_PER_SAMPLE {
             return Ok(None);
         }
-        let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(row), &format!("/ifds/0/entries/{entry}"), event).map_err(|error| tiffBaselineEditor_edit_fault(error.code, error.to_string()))?;
-        let edited = <TiffTag as semio_framework_value::FromValue>::from_value(edited).map_err(|error| tiffBaselineEditor_edit_fault("stdio.tiff.invalid-tag", error.to_string()))?;
-        let TiffValues::Short(words) = edited.values else { return Err(tiffBaselineEditor_edit_fault("stdio.tiff.baseline-short-words", "the baseline interpretation tags hold SHORT words")) };
+        let edited = editing::edited_subtree(&semio_framework_value::ToValue::to_value(row), &format!("/ifds/0/entries/{entry}"), event).map_err(|error| tiff_baseline_editor_edit_fault(error.code, error.to_string()))?;
+        let edited = <TiffTag as semio_framework_value::FromValue>::from_value(edited).map_err(|error| tiff_baseline_editor_edit_fault("stdio.tiff.invalid-tag", error.to_string()))?;
+        if edited == *row {
+            return Ok(Some(Vec::new()));
+        }
+        let TiffValues::Short(words) = edited.values else { return Err(tiff_baseline_editor_edit_fault("stdio.tiff.baseline-short-words", "the baseline interpretation tags hold SHORT words")) };
         Ok(Some(vec![match (row.tag, words.as_slice()) {
             (TAG_PHOTOMETRIC, [photometric]) => TiffBaselineMutation::SetPhotometricInterpretation(SetPhotometricInterpretation { photometric: *photometric }),
             (TAG_BITS_PER_SAMPLE, _) => TiffBaselineMutation::SetBitsPerSample(SetBitsPerSample { bits: words }),
-            _ => return Err(tiffBaselineEditor_edit_fault("stdio.tiff.baseline-photometric-single", "the photometric interpretation holds exactly one SHORT word")),
+            _ => return Err(tiff_baseline_editor_edit_fault("stdio.tiff.baseline-photometric-single", "the photometric interpretation holds exactly one SHORT word")),
         }]))
     }
 }

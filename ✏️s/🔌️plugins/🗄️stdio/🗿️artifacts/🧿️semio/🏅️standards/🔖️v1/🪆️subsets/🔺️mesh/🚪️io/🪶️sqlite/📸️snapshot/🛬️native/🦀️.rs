@@ -5,10 +5,10 @@ use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding a
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<SemioMeshSnapshot,ValueError>{
+pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioMeshSnapshot,ValueError>{
  let limits=control.limits();crate::standards::v1::subsets::mesh::io::sqlite::snapshot::admit_layout(limits)?;
  let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Mesh native input exceeds file limit"))}
- control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
+ control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,_checkpoint|{
   let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
   let result=(||->Result<SemioMeshSnapshot,ValueError>{let result=match payload{
    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOMESH_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
@@ -43,4 +43,4 @@ pub(crate) fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:Sql
  owner.get_mut().textures=native::text_list(fields[3].unwrap_or("[]"),control,limits,&mut entities,|value,control,_|{let[id,mime,bytes]=native::record(value,control)?;let id=native::hex_text(id,control)?;let mut texture=native::Owned::new(SemioTexture{id,mime:String::new(),bytes:Vec::new()});texture.get_mut().mime=native::hex_text(mime,control)?;texture.get_mut().bytes=native::hex(bytes,control)?;Ok(texture.take())})?;Ok(owner.take())
 }
 /// 🕳️ The empty typed root every native prefix starts from.
-pub(crate) fn empty()->crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot{crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot{schema:String::new(),meshes:Vec::new(),materials:Vec::new(),textures:Vec::new()}}
+pub(crate) fn empty()->SemioMeshSnapshot{SemioMeshSnapshot{schema:String::new(),meshes:Vec::new(),materials:Vec::new(),textures:Vec::new()}}

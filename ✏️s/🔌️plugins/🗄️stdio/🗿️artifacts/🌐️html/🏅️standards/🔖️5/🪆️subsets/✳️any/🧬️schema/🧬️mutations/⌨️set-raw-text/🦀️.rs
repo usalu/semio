@@ -14,7 +14,7 @@ pub struct SetRawText {
 impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetRawText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "raw-text", kind: "set-raw-text", record: "SetRawText" };
 
-    fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
+    fn diff(&self, _base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
         let Self { path, text } = self;
         protocol::MutationOutcome::new(diff_at_path(path, HtmlNodeDiff::RawText { parent_kind: None, text: Some(text.clone()) }))
     }
@@ -25,7 +25,7 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetRawText {
                 Ok(HtmlNode::RawText { text, .. }) => text.clone(),
                 _ => String::new(),
             };
-            vec![HtmlMutation::SetRawText(set_raw_text::SetRawText { path: path.clone(), text: old })]
+            vec![HtmlMutation::SetRawText(SetRawText { path: path.clone(), text: old })]
         })
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

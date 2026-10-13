@@ -314,7 +314,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec Puzzle2dBuilderFacets {
         construction: Puzzle2dBuilderConstruction,
         analysis: Puzzle2dAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::Puzzle2dComposerComposition,
+        composition: Puzzle2dComposerComposition,
     }
     builder: Puzzle2dBuilder,
     analyzer: Puzzle2dAnalyzer,

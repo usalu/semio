@@ -52,7 +52,7 @@ fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurationConfigMutati
 #[semio_framework_async_macros::async_test]
 async fn curation_and_example_actions_survive_registry_enforcement() {
     let mut app = new_app().await;
-    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set example");
+    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("set example");
     let effects = crate::editor::sourcing::unit_tests::context::settle(&mut app).await;
     let Some(Effect::LoadDocument { pack, .. }) = effects.first() else { panic!("setActiveExample must publish a LoadDocument effect") };
     let loaded = <CurationSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
@@ -60,7 +60,7 @@ async fn curation_and_example_actions_survive_registry_enforcement() {
     let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
     crate::editor::sourcing::unit_tests::context::dispatch(&mut app, SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id: object_id.clone() })).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 1, "curationAdd is a document operation");
-    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("undo settles its reserved job");
     crate::editor::sourcing::unit_tests::context::settle(&mut app).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 0, "undo reverts the curation edit");

@@ -89,7 +89,7 @@ impl store::ArtifactDsl for Process3dSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
@@ -120,9 +120,9 @@ pub fn process3d_identity_report_json(dsl_text: &str) -> Result<String, String> 
     let packed = <Process3dSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <Process3dSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
     let report = semio_framework_pack_json::object([
-        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&parsed))),
-        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&reparsed))),
-        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&unpacked))),
+        ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&ToValue::to_value(&reparsed))),
+        ("packDecoded".to_string(), semio_framework_pack_json::from_dsl_value(&ToValue::to_value(&unpacked))),
         ("canonicalText".to_string(), semio_framework_pack_json::Value::String(canonical)),
         ("canonicalTextAgain".to_string(), semio_framework_pack_json::Value::String(canonical_again)),
     ]);
@@ -145,7 +145,7 @@ use store::mounted_pack_rt as mounted;
 
 
 }
-pub use snapshot_wire2_codec::*;
+#[cfg(test)] pub use snapshot_wire2_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire3_codec {

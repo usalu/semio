@@ -3,7 +3,7 @@ schema=puzzle.5d domain=architecture label="Nakagin capsule tower"
 meta {
   description="Unified puzzle 5d source for Nakagin play; 2d and 3d views project from this model."
 }
-kind-catalogs=child_id=kind-catalogs-7904dd65836c8ff4 target="kind-catalogs-7904dd65836c8ff4!s.stdio.semio@v1/kit" kind-catalogs-extra=
+kind-catalogs=child_id=kind-catalogs-7904dd65836c8ff4 target=artifact-id=kind-catalogs-7904dd65836c8ff4 artifact-kind=s.stdio.semio standard=v1 subset=kit kind-catalogs-extra=
 parts [id:TEXT name:TEXT label:TEXT description:TEXT icon:TEXT image:TEXT unit:TEXT is-abstract:BOOL base-kinds:LIST representations:LIST grips:LIST attributes:LIST authors:LIST] {
 }
 grips [id:TEXT code:TEXT label:TEXT order:INT compatible-with:LIST description:TEXT icon:TEXT color:TEXT default-rope-kind:REF] {

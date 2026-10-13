@@ -22,7 +22,7 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
         let Self { path, name, .. } = self;
-        Ok(vec![HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })])
+        Ok(vec![HtmlMutation::SetAttribute(SetAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set attribute", "Attribut setzen")

@@ -90,7 +90,7 @@ semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust", default-features = false }
+semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -141,8 +141,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 # 🔮 Test-only geometry ORACLE (never a `[dependencies]` entry, never reachable from a
 # production target) — same crate and version `semio-framework-3d` already uses as its collision
@@ -222,6 +223,11 @@ path = "../../🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/�
 [[test]]
 name = "flow_original_close"
 path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/🧾️original/🦀️.rs"
+
+[[test]]
+name = "preparation_law"
+path = "../../🧪️tests/⚙️preparation/🦀️.rs"
+required-features = ["component-app-assembly"]
 
 [[test]]
 name = "native_prefix"

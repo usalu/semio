@@ -677,7 +677,7 @@ fn superseded_preview_mesh_handle(session: &FlowEvalSession, painted_handle: &st
     }
 }
 
-fn converged_preview_handle(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, widget_id: &str, channel: &str, index: usize) -> Option<String> {
+fn converged_preview_handle(session: &FlowEvalSession, _host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, widget_id: &str, channel: &str, index: usize) -> Option<String> {
     let converged = session.converged_eval_json();
     if converged.is_empty() {
         return None;

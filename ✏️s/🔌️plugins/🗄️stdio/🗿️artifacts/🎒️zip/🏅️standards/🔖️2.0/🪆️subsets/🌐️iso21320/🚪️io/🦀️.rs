@@ -368,7 +368,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec ZipIso21320BuilderFacets {
         construction: ZipIso21320BuilderConstruction,
         analysis: ZipIso21320AnalyzerAnalysis,
-        composition: crate::standards::v2_0::subsets::iso21320::io::derived_composition::ZipIso21320ComposerComposition,
+        composition: ZipIso21320ComposerComposition,
     }
     builder: ZipIso21320Builder,
     analyzer: ZipIso21320Analyzer,

@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 /// 🛡️ Retains an actual owned field until complete parent publication.
-pub(super) fn guarded<T>(value:T,retire:fn(T))->DecodedFieldOwner<T>{semio_framework_dsl_record::__rt::DecodedFieldOwner::new(value,retire)}
+pub(super) fn guarded<T>(value:T,retire:fn(T))->DecodedFieldOwner<T>{DecodedFieldOwner::new(value,retire)}
 /// 🌊️ Releases the actual persisted snapshot through its existing cold retirement owner.
 pub(super) fn snapshot(value:FlowHostSnapshot){value.retire_cold();}
 /// 🎛️ Retires a completed widget, including neural dictionary, tree and GUI payloads.

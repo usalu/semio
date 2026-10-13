@@ -8,11 +8,8 @@
 //! every field always present) rather than treating the body as an opaque, possibly-malformed byte
 //! string.
 
-use crate::EnergyModelSnapshot;
-use semio_framework_value::{DslValue, ToValue};
+#[cfg(test)] use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 
 //#region 🔖️Entries
 /// 🗃️ Census of the working-scene `Model` behind a snapshot's composed children.

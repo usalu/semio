@@ -71,7 +71,7 @@ pub struct ArtifactCanonicalJsonTextCursor<'a> {
 #[derive(Clone,Copy,Debug)]
 pub struct ArtifactCanonicalJsonTextStep {pub step:RetainedCloneStep,pub written_bytes:usize}
 impl<'a> ArtifactCanonicalJsonTextCursor<'a> {
-    pub fn constructor_demand()->RetirementDemand {RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),depth:1,..RetirementDemand::default()}}
+    pub fn constructor_demand()->RetirementDemand {RetirementDemand{copy_bytes:size_of::<Self>(),depth:1,..RetirementDemand::default()}}
     pub fn admit(text:ArtifactCanonicalJsonText<'a>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(&'static str,ArtifactCanonicalJsonText<'a>)> {
         let demand=Self::constructor_demand();
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_depth<demand.depth{return Err(("pack-json.text-birth-grant",text));}
@@ -81,7 +81,7 @@ impl<'a> ArtifactCanonicalJsonTextCursor<'a> {
     pub fn terminal_is_empty(&self)->bool {self.text.is_none()}
     pub fn next_demand(&self)->RetirementDemand {
         if self.terminal_is_empty(){return RetirementDemand::default();}
-        RetirementDemand{copy_bytes:if self.closing{std::mem::size_of::<Option<ArtifactCanonicalJsonText<'a>>>()}else if self.is_complete(){0}else{1},depth:1,..RetirementDemand::default()}
+        RetirementDemand{copy_bytes:if self.closing{size_of::<Option<ArtifactCanonicalJsonText<'a>>>()}else if self.is_complete(){0}else{1},depth:1,..RetirementDemand::default()}
     }
     pub fn advance(&mut self,output:&mut[u8],grant:RetainedCloneGrant)->Result<ArtifactCanonicalJsonTextStep,&'static str> {
         if self.closing{return Err("pack-json.text-closing");}

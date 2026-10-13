@@ -539,7 +539,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec ObjBuilderFacets {
         construction: ObjBuilderConstruction,
         analysis: ObjAnalyzerAnalysis,
-        composition: crate::standards::v3_0::subsets::any::io::derived_composition::ObjComposerComposition,
+        composition: ObjComposerComposition,
     }
     builder: ObjBuilder,
     analyzer: ObjAnalyzer,

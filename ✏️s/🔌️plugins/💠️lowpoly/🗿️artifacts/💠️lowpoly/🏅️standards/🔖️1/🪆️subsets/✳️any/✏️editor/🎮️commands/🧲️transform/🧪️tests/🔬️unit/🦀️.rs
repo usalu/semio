@@ -62,7 +62,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let moved = |offset: [f32; 3]| LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), offset });
     let log = [moved([1.0, 0.0, 0.0]), LowpolyMutation::ScaleSelection(ScaleSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), pivot: [0.0; 3], factor: [2.0, 1.0, 1.0] }), LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: vec![0], offset: [0.0, 0.5, 0.0] })];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = moved([0.0, 0.0, -2.0]);
@@ -76,7 +76,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let fresh = [edited, log[1].clone(), log[2].clone()].iter().fold(base.clone(), |state, mutation| protocol::apply_mutation(&state, mutation).expect("the edited log folds").0);
     assert_ne!(fresh, protocol::apply_mutation(&base, &log[0]).map(|(state, _)| state).expect("the original move applies"), "the edit changes the outcome");
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<LowpolySnapshot, LowpolyMutation>();
     for _ in 0..4_096 {
@@ -91,7 +91,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
 /// ⏪️ One `historyEdit*` verb from the Model window; a refused verb fails the law.
 async fn history_edit(app: &mut crate::editor::lowpoly::unit_tests::context::LowpolyApp, verb: &str, args: serde_json::Value) {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = app.0.handle_action(verb, Some(&args), &crate::editor::lowpoly::unit_tests::context::action_meta()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = app.0.handle_action(verb, Some(&args), &crate::editor::lowpoly::unit_tests::context::action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -102,7 +102,7 @@ async fn pump(app: &mut crate::editor::lowpoly::unit_tests::context::LowpolyApp,
         if done(stage) {
             return;
         }
-        app.0.advance_typed_operation_publication().await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
         while app.0.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled");

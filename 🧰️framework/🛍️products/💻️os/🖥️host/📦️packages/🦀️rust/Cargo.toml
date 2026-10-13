@@ -34,8 +34,8 @@ semio-framework-dsl = { path = "../../../../../🔨️modules/🗣️dsl/📦️
 semio-framework-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-workflow = { workspace = true }
-semio-framework-artifact-space-space = { workspace = true, optional = true }
-semio-framework-artifact-space-collection = { workspace = true, optional = true }
+semio-framework-artifact-space-space = { workspace = true }
+semio-framework-artifact-space-collection = { workspace = true }
 semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
@@ -64,17 +64,12 @@ semio-framework-pixels = { path = "../../../../../🔨️modules/🔲️pixels/�
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
-# 🗜️ `semio-framework-deflate` (its first-party `zip_archive`) is optional: its only production consumer is
-# `🔨️modules/🪐️space/🦀️.rs`'s `//#region 🔖️Zip` (`export_collection_zip`/`import_collection_zip`
-# and their `ZipStoreBridge`), which builds a portable `.zip` byte stream from caller-injected,
-# already-in-memory bytes — zero ambient filesystem access, but genuinely host-only: it has no
-# production caller anywhere in the repo today (its own docstring names its intended consumer as
-# "a live `store::SpaceHost`'s registered members, W4's storage wave", a native host construct),
-# and a WASI guest component has no reason to bundle its own export archive format. Same proof
-# shape as `os-kernel`'s `os_extension` module (`os-kernel-host-crates-split.md`): `target_arch =
-# "wasm32"` is TRUE for `wasm32-wasip2`, so this needs the full `not(all(...))` gate, not a bare
-# `not(target_arch = "wasm32")` one.
-semio-framework-deflate = { path = "../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust", optional = true }
+# 🗜️ `semio-framework-deflate` (its first-party `zip_archive`) backs `🔨️modules/🪐️space/🦀️.rs`'s `//#region 🔖️Zip`
+# (`export_collection_zip`/`import_collection_zip`), a host-only archive format a WASI guest never bundles.
+semio-framework-deflate = { path = "../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
+# 🔄️ The space backbone's folder storage (`store_sync`) needs the kernel's sync transport off the WASI guest. A target table
+# instead of a feature keeps `sync` out of every `wasm32-wasip2` component, so all hub components share one kernel unit.
+semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["sync"], default-features = false }
@@ -91,7 +86,3 @@ semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", pac
 png = "0.17.16"
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
-[features]
-default = []
-space-guest = ["dep:semio-framework-artifact-space-space", "dep:semio-framework-artifact-space-collection", "dep:semio-framework-deflate", "semio-framework-os-kernel/sync"]
-os-host-full = ["space-guest"]

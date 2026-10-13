@@ -23,7 +23,7 @@ pub struct SetActiveExample {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetActiveExample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "active-example", kind: "set-active-example", record: "SetActiveExample" };
 
-    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+    fn diff(&self, _base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
         protocol::MutationOutcome::new(Generation3dViewConfigPatch { active_example_id: Some(Generation3dActiveExampleChange { id: self.value.clone() }), ..Default::default() })
     }
 

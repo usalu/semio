@@ -751,6 +751,137 @@
                 }
               },
               {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
                 "id": "exportArtifactDocument",
                 "label": {
                   "native": {
@@ -1509,6 +1640,137 @@
                 }
               },
               {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
                 "id": "exportArtifactDocument",
                 "label": {
                   "native": {
@@ -2261,6 +2523,137 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
                   }
                 }
               },
@@ -4366,12 +4759,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 },
                 "reuse": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 }
               },
               "useWhen": [
@@ -4394,7 +4787,35 @@
             },
             "kind": "history",
             "iconId": "git-branch",
-            "args": [],
+            "args": [
+              {
+                "id": "alternativeId",
+                "label": {
+                  "native": {
+                    "en": "Alternative",
+                    "de": "Alternative"
+                  },
+                  "reuse": {
+                    "en": "Alternative",
+                    "de": "Alternative"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "Id of an existing alternative of this artifact, as the history lists it.",
+                    "de": "Kennung einer vorhandenen Alternative dieses Artefakts, wie der Verlauf sie auflistet."
+                  },
+                  "reuse": {
+                    "en": "Id of an existing alternative of this artifact, as the history lists it.",
+                    "de": "Kennung einer vorhandenen Alternative dieses Artefakts, wie der Verlauf sie auflistet."
+                  }
+                }
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -4421,16 +4842,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Moves the artifact head onto another existing alternative branch.",
-                  "de": "Setzt den Kopf des Artefakts auf einen anderen vorhandenen Alternativzweig."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 },
                 "reuse": {
-                  "en": "Moves the artifact head onto another existing alternative branch.",
-                  "de": "Setzt den Kopf des Artefakts auf einen anderen vorhandenen Alternativzweig."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 }
               },
               "useWhen": [
-                "switch to the other variant"
+                "switch to the other variant",
+                "go back to the original history",
+                "compare the edited history with the original"
               ]
             }
           },
@@ -4475,12 +4898,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 },
                 "reuse": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 }
               },
               "useWhen": [
@@ -4556,6 +4979,1271 @@
                   "de": "Setzt das Artefakt auf den Zustand direkt nach einem nummerierten Eintrag des Sitzungsprotokolls zurück."
                 }
               }
+            }
+          },
+          {
+            "id": "historyEditBegin",
+            "label": {
+              "native": {
+                "en": "Edit Mutation",
+                "de": "Mutation bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit Mutation",
+                "de": "Mutation bearbeiten"
+              }
+            },
+            "kind": "history",
+            "iconId": "pencil",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": true
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens history editing on one applied mutation: the artifact shows the state right before it with its inputs editable, and nothing downstream is applied until the draft is accepted.",
+                  "de": "Öffnet die Verlaufsbearbeitung für eine angewendete Mutation: Das Artefakt zeigt den Zustand direkt davor mit bearbeitbaren Eingaben, und nichts Späteres wird angewendet, bis der Entwurf übernommen ist."
+                },
+                "reuse": {
+                  "en": "Opens history editing on one applied mutation: the artifact shows the state right before it with its inputs editable, and nothing downstream is applied until the draft is accepted.",
+                  "de": "Öffnet die Verlaufsbearbeitung für eine angewendete Mutation: Das Artefakt zeigt den Zustand direkt davor mit bearbeitbaren Eingaben, und nichts Späteres wird angewendet, bis der Entwurf übernommen ist."
+                }
+              },
+              "useWhen": [
+                "edit an earlier step",
+                "change a past operation",
+                "fix a mutation in the history"
+              ]
+            }
+          },
+          {
+            "id": "historyEditInput",
+            "label": {
+              "native": {
+                "en": "Set Mutation Input",
+                "de": "Mutationseingabe setzen"
+              },
+              "reuse": {
+                "en": "Set Mutation Input",
+                "de": "Mutationseingabe setzen"
+              }
+            },
+            "kind": "history",
+            "iconId": "sliders-horizontal",
+            "args": [
+              {
+                "id": "path",
+                "label": {
+                  "native": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  },
+                  "reuse": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  },
+                  "reuse": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  }
+                }
+              },
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "reuse": {
+                    "en": "Value",
+                    "de": "Wert"
+                  }
+                },
+                "schema": {
+                  "kind": "any"
+                },
+                "required": false
+              },
+              {
+                "id": "edit",
+                "label": {
+                  "native": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  },
+                  "reuse": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "insert",
+                      "label": {
+                        "native": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        },
+                        "reuse": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "remove",
+                      "label": {
+                        "native": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        },
+                        "reuse": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                },
+                "reuse": {
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                }
+              },
+              "useWhen": [
+                "change this value in the edited step",
+                "set the input of the mutation",
+                "add or remove an item of a list input"
+              ]
+            }
+          },
+          {
+            "id": "historyEditUseSelection",
+            "label": {
+              "native": {
+                "en": "Use Selection",
+                "de": "Auswahl verwenden"
+              },
+              "reuse": {
+                "en": "Use Selection",
+                "de": "Auswahl verwenden"
+              }
+            },
+            "kind": "history",
+            "iconId": "mouse-pointer",
+            "args": [
+              {
+                "id": "path",
+                "label": {
+                  "native": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  },
+                  "reuse": {
+                    "en": "Input",
+                    "de": "Eingabe"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  },
+                  "reuse": {
+                    "en": "RFC 6901 pointer of the input inside the mutation payload, such as /dx.",
+                    "de": "RFC-6901-Zeiger der Eingabe in den Nutzdaten der Mutation, etwa /dx."
+                  }
+                }
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets a reference input of the mutation being edited to the entities currently selected in its domain.",
+                  "de": "Setzt eine Referenzeingabe der bearbeiteten Mutation auf die aktuell ausgewählten Elemente ihres Bereichs."
+                },
+                "reuse": {
+                  "en": "Sets a reference input of the mutation being edited to the entities currently selected in its domain.",
+                  "de": "Setzt eine Referenzeingabe der bearbeiteten Mutation auf die aktuell ausgewählten Elemente ihres Bereichs."
+                }
+              },
+              "useWhen": [
+                "use the current selection as targets"
+              ]
+            }
+          },
+          {
+            "id": "historyEditWithdraw",
+            "label": {
+              "native": {
+                "en": "Withdraw Mutation",
+                "de": "Mutation zurückziehen"
+              },
+              "reuse": {
+                "en": "Withdraw Mutation",
+                "de": "Mutation zurückziehen"
+              }
+            },
+            "kind": "history",
+            "iconId": "eye-off",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
+                },
+                "reuse": {
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
+                }
+              },
+              "useWhen": [
+                "drop this step",
+                "skip this operation",
+                "withdraw a mutation from the history"
+              ]
+            }
+          },
+          {
+            "id": "historyEditAccept",
+            "label": {
+              "native": {
+                "en": "Accept Draft",
+                "de": "Entwurf übernehmen"
+              },
+              "reuse": {
+                "en": "Accept Draft",
+                "de": "Entwurf übernehmen"
+              }
+            },
+            "kind": "history",
+            "iconId": "check",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Accepts the draft of the mutation being edited and replays every later mutation, reporting success, warnings and errors per mutation.",
+                  "de": "Übernimmt den Entwurf der bearbeiteten Mutation und wendet alle späteren Mutationen neu an; Erfolg, Warnungen und Fehler werden je Mutation gemeldet."
+                },
+                "reuse": {
+                  "en": "Accepts the draft of the mutation being edited and replays every later mutation, reporting success, warnings and errors per mutation.",
+                  "de": "Übernimmt den Entwurf der bearbeiteten Mutation und wendet alle späteren Mutationen neu an; Erfolg, Warnungen und Fehler werden je Mutation gemeldet."
+                }
+              },
+              "useWhen": [
+                "apply the edit",
+                "accept the change to the history"
+              ]
+            }
+          },
+          {
+            "id": "historyEditDiscard",
+            "label": {
+              "native": {
+                "en": "Discard Draft",
+                "de": "Entwurf verwerfen"
+              },
+              "reuse": {
+                "en": "Discard Draft",
+                "de": "Entwurf verwerfen"
+              }
+            },
+            "kind": "history",
+            "iconId": "x",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Drops the draft of the mutation being edited; accepted drafts stay.",
+                  "de": "Verwirft den Entwurf der bearbeiteten Mutation; übernommene Entwürfe bleiben erhalten."
+                },
+                "reuse": {
+                  "en": "Drops the draft of the mutation being edited; accepted drafts stay.",
+                  "de": "Verwirft den Entwurf der bearbeiteten Mutation; übernommene Entwürfe bleiben erhalten."
+                }
+              },
+              "useWhen": [
+                "discard this draft"
+              ]
+            }
+          },
+          {
+            "id": "historyEditRestore",
+            "label": {
+              "native": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              },
+              "reuse": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              }
+            },
+            "kind": "history",
+            "iconId": "undo-2",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": true
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                },
+                "reuse": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                }
+              },
+              "useWhen": [
+                "take this draft back",
+                "bring the withdrawn step back",
+                "undo one change of the history edit"
+              ]
+            }
+          },
+          {
+            "id": "historyEditFinalize",
+            "label": {
+              "native": {
+                "en": "Finalize History Edit",
+                "de": "Verlaufsbearbeitung abschließen"
+              },
+              "reuse": {
+                "en": "Finalize History Edit",
+                "de": "Verlaufsbearbeitung abschließen"
+              }
+            },
+            "kind": "history",
+            "iconId": "list-checks",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Asks how to keep the edited history once no replayed mutation has an error: as a new alternative or by overwriting the existing history.",
+                  "de": "Fragt, wie der bearbeitete Verlauf behalten wird, sobald keine neu angewendete Mutation einen Fehler hat: als neue Alternative oder durch Überschreiben des bestehenden Verlaufs."
+                },
+                "reuse": {
+                  "en": "Asks how to keep the edited history once no replayed mutation has an error: as a new alternative or by overwriting the existing history.",
+                  "de": "Fragt, wie der bearbeitete Verlauf behalten wird, sobald keine neu angewendete Mutation einen Fehler hat: als neue Alternative oder durch Überschreiben des bestehenden Verlaufs."
+                }
+              },
+              "useWhen": [
+                "finish editing the history",
+                "keep the edited history"
+              ]
+            }
+          },
+          {
+            "id": "historyEditCommit",
+            "label": {
+              "native": {
+                "en": "Commit History Edit",
+                "de": "Verlaufsbearbeitung festschreiben"
+              },
+              "reuse": {
+                "en": "Commit History Edit",
+                "de": "Verlaufsbearbeitung festschreiben"
+              }
+            },
+            "kind": "history",
+            "iconId": "git-commit",
+            "args": [
+              {
+                "id": "choice",
+                "label": {
+                  "native": {
+                    "en": "Choice",
+                    "de": "Auswahl"
+                  },
+                  "reuse": {
+                    "en": "Choice",
+                    "de": "Auswahl"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "overwrite",
+                      "label": {
+                        "native": {
+                          "en": "Overwrite",
+                          "de": "Überschreiben"
+                        },
+                        "reuse": {
+                          "en": "Overwrite",
+                          "de": "Überschreiben"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
+              },
+              {
+                "id": "name",
+                "label": {
+                  "native": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  },
+                  "reuse": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": true,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Commits the accepted drafts: as a new alternative named by name, keeping the original history, or with choice overwrite into every alternative that contains the edited mutations.",
+                  "de": "Schreibt die übernommenen Entwürfe fest: als neue Alternative mit dem Namen name, wobei der ursprüngliche Verlauf bleibt, oder mit choice overwrite in jede Alternative, die die bearbeiteten Mutationen enthält."
+                },
+                "reuse": {
+                  "en": "Commits the accepted drafts: as a new alternative named by name, keeping the original history, or with choice overwrite into every alternative that contains the edited mutations.",
+                  "de": "Schreibt die übernommenen Entwürfe fest: als neue Alternative mit dem Namen name, wobei der ursprüngliche Verlauf bleibt, oder mit choice overwrite in jede Alternative, die die bearbeiteten Mutationen enthält."
+                }
+              },
+              "useWhen": [
+                "save the edited history as a new alternative",
+                "overwrite the history with the edit"
+              ]
+            }
+          },
+          {
+            "id": "historyEditBack",
+            "label": {
+              "native": {
+                "en": "Back to Review",
+                "de": "Zurück zur Prüfung"
+              },
+              "reuse": {
+                "en": "Back to Review",
+                "de": "Zurück zur Prüfung"
+              }
+            },
+            "kind": "history",
+            "iconId": "arrow-left",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Closes the finalize prompt and returns to reviewing the edited history.",
+                  "de": "Schließt die Abschlussabfrage und kehrt zur Prüfung des bearbeiteten Verlaufs zurück."
+                },
+                "reuse": {
+                  "en": "Closes the finalize prompt and returns to reviewing the edited history.",
+                  "de": "Schließt die Abschlussabfrage und kehrt zur Prüfung des bearbeiteten Verlaufs zurück."
+                }
+              },
+              "useWhen": [
+                "go back to reviewing"
+              ]
+            }
+          },
+          {
+            "id": "historyEditExit",
+            "label": {
+              "native": {
+                "en": "Exit History Editing",
+                "de": "Verlaufsbearbeitung beenden"
+              },
+              "reuse": {
+                "en": "Exit History Editing",
+                "de": "Verlaufsbearbeitung beenden"
+              }
+            },
+            "kind": "history",
+            "iconId": "rotate-ccw",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Leaves history editing and discards every draft; the artifact is unchanged.",
+                  "de": "Beendet die Verlaufsbearbeitung und verwirft alle Entwürfe; das Artefakt bleibt unverändert."
+                },
+                "reuse": {
+                  "en": "Leaves history editing and discards every draft; the artifact is unchanged.",
+                  "de": "Beendet die Verlaufsbearbeitung und verwirft alle Entwürfe; das Artefakt bleibt unverändert."
+                }
+              },
+              "useWhen": [
+                "stop editing the history",
+                "cancel the history edit"
+              ]
+            }
+          },
+          {
+            "id": "historyEditCancelReplay",
+            "label": {
+              "native": {
+                "en": "Cancel Replay",
+                "de": "Neuanwendung abbrechen"
+              },
+              "reuse": {
+                "en": "Cancel Replay",
+                "de": "Neuanwendung abbrechen"
+              }
+            },
+            "kind": "history",
+            "iconId": "square",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Cancels the running replay of later mutations; the drafts stay and the replay can be started again by accepting.",
+                  "de": "Bricht die laufende Neuanwendung späterer Mutationen ab; die Entwürfe bleiben, und die Neuanwendung kann durch Übernehmen erneut gestartet werden."
+                },
+                "reuse": {
+                  "en": "Cancels the running replay of later mutations; the drafts stay and the replay can be started again by accepting.",
+                  "de": "Bricht die laufende Neuanwendung späterer Mutationen ab; die Entwürfe bleiben, und die Neuanwendung kann durch Übernehmen erneut gestartet werden."
+                }
+              },
+              "useWhen": [
+                "stop the replay"
+              ]
+            }
+          },
+          {
+            "id": "historyEditRerun",
+            "label": {
+              "native": {
+                "en": "Replay Again",
+                "de": "Erneut anwenden"
+              },
+              "reuse": {
+                "en": "Replay Again",
+                "de": "Erneut anwenden"
+              }
+            },
+            "kind": "history",
+            "iconId": "skip-forward",
+            "args": [
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replays every later mutation again with the accepted drafts after a cancelled or failed replay, so the history can be reviewed and finalized.",
+                  "de": "Wendet nach einer abgebrochenen oder fehlgeschlagenen Neuanwendung alle späteren Mutationen mit den übernommenen Entwürfen erneut an, damit der Verlauf geprüft und abgeschlossen werden kann."
+                },
+                "reuse": {
+                  "en": "Replays every later mutation again with the accepted drafts after a cancelled or failed replay, so the history can be reviewed and finalized.",
+                  "de": "Wendet nach einer abgebrochenen oder fehlgeschlagenen Neuanwendung alle späteren Mutationen mit den übernommenen Entwürfen erneut an, damit der Verlauf geprüft und abgeschlossen werden kann."
+                }
+              },
+              "useWhen": [
+                "replay the edited history again",
+                "retry the replay"
+              ]
             }
           },
           {
@@ -4801,7 +6489,8 @@
                   }
                 },
                 "schema": {
-                  "kind": "vec3"
+                  "kind": "vector",
+                  "dims": 3
                 },
                 "required": false
               }
@@ -4942,28 +6631,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -5003,12 +6692,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -5058,9 +6747,19 @@
                   }
                 },
                 "schema": {
-                  "kind": "string"
+                  "kind": "any"
                 },
-                "required": true
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  },
+                  "reuse": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  }
+                }
               },
               {
                 "id": "detail",
@@ -5470,7 +7169,100 @@
         "terminologies": [],
         "terminologyBreadcrumbs": {},
         "tutorials": [],
-        "dialogs": [],
+        "dialogs": [
+          {
+            "id": "finalizeHistoryEdit",
+            "title": {
+              "native": {
+                "en": "Finish editing history",
+                "de": "Verlaufsbearbeitung abschließen"
+              },
+              "reuse": {
+                "en": "Finish editing history",
+                "de": "Verlaufsbearbeitung abschließen"
+              }
+            },
+            "body": {
+              "native": {
+                "en": "Keep the edit as a new alternative or overwrite the existing history.",
+                "de": "Die Bearbeitung als neue Alternative behalten oder den bestehenden Verlauf überschreiben."
+              },
+              "reuse": {
+                "en": "Keep the edit as a new alternative or overwrite the existing history.",
+                "de": "Die Bearbeitung als neue Alternative behalten oder den bestehenden Verlauf überschreiben."
+              }
+            },
+            "args": [
+              {
+                "id": "name",
+                "label": {
+                  "native": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  },
+                  "reuse": {
+                    "en": "Alternative name",
+                    "de": "Name der Alternative"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              }
+            ],
+            "submitAction": "historyEditCommit",
+            "submitLabel": {
+              "native": {
+                "en": "New alternative",
+                "de": "Neue Alternative"
+              },
+              "reuse": {
+                "en": "New alternative",
+                "de": "Neue Alternative"
+              }
+            },
+            "cancelAction": "historyEditBack",
+            "cancelLabel": {
+              "native": {
+                "en": "Back",
+                "de": "Zurück"
+              },
+              "reuse": {
+                "en": "Back",
+                "de": "Zurück"
+              }
+            },
+            "choices": [
+              {
+                "id": "overwrite",
+                "label": {
+                  "native": {
+                    "en": "Overwrite",
+                    "de": "Überschreiben"
+                  },
+                  "reuse": {
+                    "en": "Overwrite",
+                    "de": "Überschreiben"
+                  }
+                },
+                "description": {
+                  "native": {
+                    "en": "Replaces the edited mutations in every alternative that contains them.",
+                    "de": "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält."
+                  },
+                  "reuse": {
+                    "en": "Replaces the edited mutations in every alternative that contains them.",
+                    "de": "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält."
+                  }
+                },
+                "action": "historyEditCommit",
+                "tone": "danger",
+                "destructive": true
+              }
+            ]
+          }
+        ],
         "mediaInputs": [],
         "mediaOutputs": [],
         "artifactKinds": [
@@ -5535,7 +7327,8 @@
             "dimension": "data",
             "componentKind": "forms"
           }
-        }
+        },
+        "faultNotices": []
       },
       {
         "id": "s.forms.forms@1/*#viewer",
@@ -5648,6 +7441,137 @@
                 }
               },
               {
+                "id": "hostEvent",
+                "label": {
+                  "native": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  },
+                  "reuse": {
+                    "en": "Window Event",
+                    "de": "Fensterereignis"
+                  }
+                },
+                "kind": "interaction",
+                "iconId": "hand",
+                "args": [
+                  {
+                    "id": "windowId",
+                    "label": {
+                      "native": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      },
+                      "reuse": {
+                        "en": "Window",
+                        "de": "Fenster"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "kind",
+                    "label": {
+                      "native": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      },
+                      "reuse": {
+                        "en": "Event",
+                        "de": "Ereignis"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string",
+                      "options": [
+                        {
+                          "value": "blur",
+                          "label": {
+                            "native": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            },
+                            "reuse": {
+                              "en": "Window lost focus",
+                              "de": "Fenster hat den Fokus verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "captureLost",
+                          "label": {
+                            "native": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            },
+                            "reuse": {
+                              "en": "Pointer capture lost",
+                              "de": "Zeigererfassung verloren"
+                            }
+                          }
+                        },
+                        {
+                          "value": "retiring",
+                          "label": {
+                            "native": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            },
+                            "reuse": {
+                              "en": "Window closing",
+                              "de": "Fenster wird geschlossen"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "required": true
+                  }
+                ],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    },
+                    "reuse": {
+                      "en": "Tells the program that a window lost focus, lost the pointer capture of a gesture or is about to close, so an open gesture there ends without a trace.",
+                      "de": "Teilt dem Programm mit, dass ein Fenster den Fokus oder die Zeigererfassung einer Geste verloren hat oder gleich geschlossen wird, damit eine offene Geste dort spurlos endet."
+                    }
+                  }
+                }
+              },
+              {
                 "id": "exportArtifactDocument",
                 "label": {
                   "native": {
@@ -5740,114 +7664,6 @@
           }
         ],
         "actions": [
-          {
-            "id": "switchAlternative",
-            "label": {
-              "native": {
-                "en": "Switch Alternative",
-                "de": "Alternative wechseln"
-              },
-              "reuse": {
-                "en": "Switch Alternative",
-                "de": "Alternative wechseln"
-              }
-            },
-            "kind": "history",
-            "iconId": "git-branch",
-            "args": [],
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Moves the artifact head onto another existing alternative branch.",
-                  "de": "Setzt den Kopf des Artefakts auf einen anderen vorhandenen Alternativzweig."
-                },
-                "reuse": {
-                  "en": "Moves the artifact head onto another existing alternative branch.",
-                  "de": "Setzt den Kopf des Artefakts auf einen anderen vorhandenen Alternativzweig."
-                }
-              },
-              "useWhen": [
-                "switch to the other variant"
-              ]
-            }
-          },
-          {
-            "id": "checkoutCheckpoint",
-            "label": {
-              "native": {
-                "en": "Checkout Checkpoint",
-                "de": "Checkpoint auschecken"
-              },
-              "reuse": {
-                "en": "Checkout Checkpoint",
-                "de": "Checkpoint auschecken"
-              }
-            },
-            "kind": "history",
-            "iconId": "git-branch",
-            "args": [],
-            "inPalette": true,
-            "semantics": {
-              "effects": {
-                "external": false,
-                "destructive": false,
-                "reversible": false
-              },
-              "policy": {
-                "scopes": [
-                  "artifacts.write"
-                ],
-                "approval": "never"
-              },
-              "execution": {
-                "preview": "none",
-                "undo": {
-                  "kind": "none"
-                },
-                "idempotency": "none",
-                "expectedRevision": false,
-                "cancellable": false,
-                "class": "interactive",
-                "interactiveJob": "migrated"
-              },
-              "description": {
-                "native": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
-                },
-                "reuse": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
-                }
-              },
-              "useWhen": [
-                "go back to that checkpoint"
-              ]
-            }
-          },
           {
             "id": "copy",
             "label": {
@@ -5999,28 +7815,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -6060,12 +7876,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -6115,9 +7931,19 @@
                   }
                 },
                 "schema": {
-                  "kind": "string"
+                  "kind": "any"
                 },
-                "required": true
+                "required": true,
+                "description": {
+                  "native": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  },
+                  "reuse": {
+                    "en": "The row's label in every locale: an object {en, de} (or a full localized label); plain text is kept as locale-invariant data, such as a file name.",
+                    "de": "Die Bezeichnung der Zeile in jeder Sprache: ein Objekt {en, de} (oder eine vollständige lokalisierte Bezeichnung); reiner Text bleibt sprachunabhängige Angabe, etwa ein Dateiname."
+                  }
+                }
               },
               {
                 "id": "detail",
@@ -6250,7 +8076,8 @@
             "dimension": "",
             "componentKind": ""
           }
-        }
+        },
+        "faultNotices": []
       }
     ],
     "examples": [
@@ -6267,7 +8094,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio forms.form.dsl v1\nschema=forms.form id=building-component version=\"1\" title=\"Building Component\" definition=steps=[ id=identity title=Identity description=\"Basic component metadata and material selection.\" blocks=[ id=name label=\"Component Name\" kind=text required=true placeholder=\"Column A\" default=\"Column A\"\ncondition {\n}\nid=description label=Description kind=longText placeholder=\"Describe the component role\" default=\"Primary structural column\"\ncondition {\n}\nid=material label=Material kind=single required=true default=\"concrete\" options=[ value=concrete label=Concrete value=steel label=Steel value=timber label=Timber ]\ncondition {\n}\nid=tags label=Tags kind=multi default=[ \"structural\" ] options=[ value=structural label=Structural value=facade label=Facade value=prefab label=Prefab ]\ncondition {\n}\nid=prefab label=Prefab kind=boolean default=true\ncondition {\n}\nid=install-date label=\"Install Date\" kind=date\ncondition {\n}\nid=accent-color label=\"Accent Color\" kind=color default=\"#336699\"\ncondition {\n}\n] id=geometry title=Geometry description=\"Parametric geometry and dimensional controls.\" blocks=[ id=info-note label=Note kind=note text=\"Adjust the procedural column parameters below.\"\ncondition {\n}\nid=count label=\"Instance Count\" kind=number min=1 max=20 step=1 default=4\ncondition {\n}\nid=height-factor label=\"Height Factor\" kind=slider min=0 max=10 step=0.5 unit=m default=6\ncondition {\n}\nid=offset label=Offset kind=vector step=0.1 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]\ncondition {\n}\nid=geometry label=\"Hexagonal Column\" kind=buildingComponent description=\"Parametric column geometry from procedural flow.\" required=true fixture-slug=hexagonal-mushroom-column params={\n  height=6 radius=0.5 sides=6\n}\ncondition {\n}\nid=reference-image label=Reference kind=image src=\"\"\ncondition {\n}\nid=spec-file label=\"Spec Sheet\" kind=file accept=\".pdf,.dwg\"\ncondition {\n}\n] ]\nresponses=[]\nstructure=child_id=building-component-structure target=\"building-component-structure!s.stdio.semio@v1/value\"\nresults=child_id=building-component-results target=\"building-component-results!s.stdio.semio@v1/table\"\n",
+        "artifactJson": "semio forms.form.dsl v1\nschema=forms.form id=building-component version=\"1\" title=\"Building Component\"\nstructure=child_id=building-component-structure target=artifact-id=building-component-structure artifact-kind=s.stdio.semio standard=v1 subset=value\nresults=child_id=building-component-results target=artifact-id=building-component-results artifact-kind=s.stdio.semio standard=v1 subset=table\nsteps=[\n { id=identity title=Identity description=\"Basic component metadata and material selection.\" questions=[\n  { id=name label=\"Component Name\" kind=text required=true placeholder=\"Column A\" default=0 }\n  { id=description label=Description kind=longText placeholder=\"Describe the component role\" default=1 }\n  { id=material label=Material kind=single required=true default=2 options=[ { value=concrete label=Concrete } { value=steel label=Steel } { value=timber label=Timber } ] }\n  { id=tags label=Tags kind=multi default=3 options=[ { value=structural label=Structural } { value=facade label=Facade } { value=prefab label=Prefab } ] }\n  { id=prefab label=Prefab kind=boolean default=4 }\n  { id=install-date label=\"Install Date\" kind=date }\n  { id=accent-color label=\"Accent Color\" kind=color default=5 }\n ] }\n { id=geometry title=Geometry description=\"Parametric geometry and dimensional controls.\" questions=[\n  { id=info-note label=Note kind=note text=\"Adjust the procedural column parameters below.\" }\n  { id=count label=\"Instance Count\" kind=number default=6 min=1 max=20 step=1 }\n  { id=height-factor label=\"Height Factor\" kind=slider default=7 min=0 max=10 step=0.5 unit=m }\n  { id=offset label=Offset kind=vector step=0.1 fields=[ { key=x label=X value=0 } { key=y label=Y value=0 } { key=z label=Z value=0 } ] schema=vec3 }\n  { id=geometry label=\"Hexagonal Column\" kind=buildingComponent description=\"Parametric column geometry from procedural flow.\" required=true fixture-slug=hexagonal-mushroom-column params=8 }\n  { id=reference-image label=Reference kind=image src=\"\" }\n  { id=spec-file label=\"Spec Sheet\" kind=file accept=\".pdf,.dwg\" }\n ] }\n]\nresponses=[]\nvalues=[\n { kind=text text=\"Column A\" items=[] members=[] }\n { kind=text text=\"Primary structural column\" items=[] members=[] }\n { kind=text text=concrete items=[] members=[] }\n { kind=array items=[9] members=[] }\n { kind=boolean boolean=true items=[] members=[] }\n { kind=text text=\"#336699\" items=[] members=[] }\n { kind=unsigned unsigned=4 items=[] members=[] }\n { kind=unsigned unsigned=6 items=[] members=[] }\n { kind=object items=[] members=[ { name=height value=10 } { name=radius value=11 } { name=sides value=12 } ] }\n { kind=text text=structural items=[] members=[] }\n { kind=unsigned unsigned=6 items=[] members=[] }\n { kind=float float-bits=4602678819172646912 items=[] members=[] }\n { kind=unsigned unsigned=6 items=[] members=[] }\n]\nconditions=[]\n",
         "dialect": {
           "artifactKind": "s.forms.forms",
           "standard": "1",
@@ -6308,7 +8135,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -6408,11 +8235,91 @@
         "bodyKey": "framework.body.history",
         "children": []
       }
+    ],
+    "ioEntries": [
+      {
+        "owner": {
+          "artifactKind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.csv",
+          "standard": "rfc4180",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.xlsx",
+          "standard": "ecma-376",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.forms.forms",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.zip",
+          "standard": "2.0",
+          "subset": "*"
+        },
+        "direction": "import"
+      }
     ]
   },
   "hashes": {
-    "wasmSha256": "5ba054c52816ec544dfa676b62a6180a0807ade7c259293259c94e8c930a7406",
-    "coreWasmSha256": "dfe0b06d4b45311a0008d0622eff8b28d2ecc54c6aa7f3cebc1f1447e050471c",
-    "descriptorSha256": "7ac53bd805599698a91dfc5d8611e2ff46582236a127b2318970f893cdef40c8"
+    "wasmSha256": "19180d0d9557b9b49c274a9dbaa8b7cbbc1c3be73436ffe79a07939acca7a1f7",
+    "coreWasmSha256": "ba39f735d60bf74f0312081f33cd8fc86d85214c4726b6130f6f42ebb6b8f23b",
+    "descriptorSha256": "a10db9aefff7ef22f0193e5f6af1bcc79cfda01b0b39480e750677c74a7eb1ad"
   }
 }

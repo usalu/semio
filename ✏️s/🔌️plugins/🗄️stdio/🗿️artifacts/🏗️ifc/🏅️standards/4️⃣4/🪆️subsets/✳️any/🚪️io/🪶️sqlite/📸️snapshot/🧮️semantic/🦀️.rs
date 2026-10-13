@@ -30,7 +30,7 @@ impl Census{
 fn identities(values:&[F],last:u16,limits:SqliteDatabaseLimits,native:&mut NativeDecodeControl<'_>)->Result<Vec<u64>>{
  if values.len()>limits.max_rows{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Part21 identity count exceeds caller rows"))}
  let mut identities=native.allocate_vec(values.len())?;for value in values{identities.push(uint(field(record(value,last)?,0)?)?);native.step()?;}
- super::sort_paid(&mut identities,|left,right|{native.step()?;Ok(left.cmp(right))})?;for pair in identities.windows(2){if pair[0]==pair[1]{return Err(invalid())}native.step()?;}Ok(identities)
+ sort_paid(&mut identities,|left,right|{native.step()?;Ok(left.cmp(right))})?;for pair in identities.windows(2){if pair[0]==pair[1]{return Err(invalid())}native.step()?;}Ok(identities)
 }
 fn nodes(values:&[F],identities:&[u64],owners:&mut[u8],census:&mut Census,native:&mut NativeDecodeControl<'_>)->Result<()>{
  for(index,value)in values.iter().enumerate(){let value=record(value,6)?;let kind=text(field(value,0)?,native)?;let integer=optional_int(value,1)?;let real=optional(value,2).map(|value|{let F::Float(value)=value else{return Err(invalid())};Ok(*value)}).transpose()?;let literal=optional_text(value,3,native)?;let reference=optional_uint(value,4)?;let name=optional_text(value,5,native)?;let children=list(field(value,6)?)?;

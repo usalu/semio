@@ -49,9 +49,29 @@ impl<M:Send+Sync+'static> ArtifactCanonicalEditAuthorityCursor<M>{
   if self.verifying{
    let authority=self.authority.as_ref().unwrap().borrow()?;let edit=self.edit.as_ref().unwrap().borrow()?;let authority=authority.get();let edit=edit.get();
    if self.scalar{self.scalar=false;let valid=!edit.id.is_empty()&&edit.id.len()<=128&&edit.sequence_number==authority.sequence_number()&&edit.forwards.len()==1&&edit.mutation_meta.len()==1&&edit.mutation_meta[0].timestamp==authority.clock();if !valid{self.verifying=false;self.result=Some(false);}}
-   else if self.field==4{self.verifying=false;self.result=Some(true);}
-   else{let(left,right)=Self::pair(self.field,authority,edit)?;let(done,equal)=match(left,right){(None,None)=>(true,true),(None,Some(_))|(Some(_),None)=>(true,false),(Some(left),Some(right))=>{if left.text_bytes()!=right.text_bytes(){(true,false)}else{let left=ArtifactCanonicalJsonText::Native(left).next_byte(&mut self.left_chunk,&mut self.left_offset).map_err(refusal)?;let right=ArtifactCanonicalJsonText::Native(right).next_byte(&mut self.right_chunk,&mut self.right_offset).map_err(refusal)?;(left.is_none()&&right.is_none(),left==right)}}};if !equal{self.verifying=false;self.result=Some(false);}else if done{self.field+=1;self.left_chunk=0;self.left_offset=0;self.right_chunk=0;self.right_offset=0;}}
-   progress.copied_bytes=demand.copy_bytes;
+   else{
+    let budget=(grant.maximum_copy_bytes/2).max(1);let mut compared=0usize;
+    while self.verifying&&compared<budget{
+     if self.field==4{self.verifying=false;self.result=Some(true);break;}
+     let(left,right)=Self::pair(self.field,authority,edit)?;
+     match(left,right){
+      (None,None)=>self.field+=1,
+      (None,Some(_))|(Some(_),None)=>{self.verifying=false;self.result=Some(false);}
+      (Some(left),Some(right))=>{
+       if left.text_bytes()!=right.text_bytes(){self.verifying=false;self.result=Some(false);}
+       else{
+        loop{
+         if compared==budget{break;}
+         let a=ArtifactCanonicalJsonText::Native(left).next_byte(&mut self.left_chunk,&mut self.left_offset).map_err(refusal)?;let b=ArtifactCanonicalJsonText::Native(right).next_byte(&mut self.right_chunk,&mut self.right_offset).map_err(refusal)?;compared+=1;
+         if a!=b{self.verifying=false;self.result=Some(false);break;}
+         if a.is_none(){self.field+=1;self.left_chunk=0;self.left_offset=0;self.right_chunk=0;self.right_offset=0;break;}
+        }
+       }
+      }
+     }
+    }
+    progress.copied_bytes=demand.copy_bytes.max(compared*2);
+   }
   }else if let Some(owner)=self.edit.as_mut(){if owner.terminal_is_empty(){self.edit=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;progress=owner.close_step(child)?.progress();}}
   else if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){self.authority=None;progress.copied_bytes=demand.copy_bytes;}else{let mut child=grant;child.maximum_depth-=1;progress=owner.close_step(child)?.progress();}}
   Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})

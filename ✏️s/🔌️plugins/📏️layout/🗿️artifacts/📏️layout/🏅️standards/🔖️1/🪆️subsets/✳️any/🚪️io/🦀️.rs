@@ -673,7 +673,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec LayoutBuilderFacets {
         construction: LayoutBuilderConstruction,
         analysis: LayoutAnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::LayoutComposerComposition,
+        composition: LayoutComposerComposition,
     }
     builder: LayoutBuilder,
     analyzer: LayoutAnalyzer,

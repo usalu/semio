@@ -6,7 +6,7 @@ pub fn diff(payload: &ChangeWallBaseWidth, base: &En1997Snapshot) -> protocol::M
     if !payload.new_base_width.is_finite() || payload.new_base_width <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "base width must be positive", vec![payload.id.clone()]);
     }
-    let Some(idx) = base.retaining_walls.iter().position(|f| f.id == payload.id) else {
+    let Some(_idx) = base.retaining_walls.iter().position(|f| f.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("wall {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {

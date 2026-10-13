@@ -166,7 +166,7 @@ fn indexed_gamma_edit_obeys_neutral_order_inverse_zero_and_pngjs_laws() {
     assert!(output.status.success(), "pngjs refused edited indexed PNG: {}", String::from_utf8_lossy(&output.stderr));
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap(), serde_json::json!(project_png(INDEXED_2).unwrap().pixels));
     for inverse in mutation.inverse(&snapshot).unwrap().into_iter().rev() {
-        edited = protocol::apply_diff(&inverse.diff(&edited).diff(), &edited).unwrap();
+        edited = protocol::apply_diff(inverse.diff(&edited).diff(), &edited).unwrap();
     }
     assert_eq!(edited, snapshot, "gamma inverse must restore the exact indexed source bytes");
     for value in law["rejectedValues"].as_array().unwrap() {
@@ -311,14 +311,14 @@ fn controlled_owned_paint_yields_and_cancels_during_copy_and_paint() {
  let snapshot=decode_png(MULTI_IDAT).unwrap();let region=PngRegion{x:0,y:0,width:2,height:1};let paint=PngNativePaint::rgba(9,8,7,6);
  for phase in [PngNativePaintPhase::Copy,PngNativePaintPhase::Paint] {
   let cancel=semio_framework_job::root_cancel_token();let mut operation=PngNativePaintWorkOperation::try_new(&snapshot,&png_revision(&snapshot),region,paint,MAXIMUM_NATIVE_PAINT_OWNED_BYTES).unwrap();let mut witnessed=false;
-  for _ in 0..100000 {let mut sequence=0;let mut context=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX),cancel.clone(),||Some(0),&mut sequence);
+  for _ in 0..100000 {let mut sequence=0;let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut context=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()),cancel.clone(),||Some(0),&mut sequence, &mut step_progress);
    match operation.advance(&mut context).unwrap() {PngNativePaintWorkStep::Yield(progress) if progress.phase==phase && progress.completed>0=>{witnessed=true;cancel.cancel_now();},PngNativePaintWorkStep::Cancelled=>break,PngNativePaintWorkStep::Yield(_)=>{},PngNativePaintWorkStep::Complete=>panic!("phase cancellation witness missing")}
   }
-  assert!(witnessed);operation.begin_close();assert!(matches!(operation.close_step(1,1),semio_framework_job::InteractiveJobCloseStep::Pending{released_items,released_bytes}if released_items<=1&&released_bytes<=1));
+  assert!(witnessed);operation.begin_close();assert!(matches!(operation.close_step(1,1),semio_framework_job::InteractiveJobCloseStep::Pending{progress}if progress.copied_items<=1&&progress.released_bytes<=1));
   for _ in 0..100000 {if operation.terminal_is_empty(){break;}operation.close_step(4096,1024*1024);}assert!(operation.terminal_is_empty());
  }
  let mut operation=PngNativePaintWorkOperation::try_new(&snapshot,&png_revision(&snapshot),region,paint,MAXIMUM_NATIVE_PAINT_OWNED_BYTES).unwrap();let mut copies=0;let mut paints=0;
- for _ in 0..100000 {let mut sequence=0;let mut context=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX),semio_framework_job::root_cancel_token(),||Some(0),&mut sequence);match operation.advance(&mut context).unwrap(){PngNativePaintWorkStep::Yield(p)=>match p.phase{PngNativePaintPhase::Copy=>copies+=1,PngNativePaintPhase::Paint=>paints+=1},PngNativePaintWorkStep::Complete=>break,PngNativePaintWorkStep::Cancelled=>panic!("uncancelled operation")}}
+ for _ in 0..100000 {let mut sequence=0;let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut context=semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(1,u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()),semio_framework_job::root_cancel_token(),||Some(0),&mut sequence, &mut step_progress);match operation.advance(&mut context).unwrap(){PngNativePaintWorkStep::Yield(p)=>match p.phase{PngNativePaintPhase::Copy=>copies+=1,PngNativePaintPhase::Paint=>paints+=1},PngNativePaintWorkStep::Complete=>break,PngNativePaintWorkStep::Cancelled=>panic!("uncancelled operation")}}
  let edited=operation.take_result().unwrap();assert!(copies>1&&paints>=1);assert_eq!(edited.image.samples,vec![9,8,7,6,9,8,7,6]);assert!(snapshot.image.same_metadata(&edited.image));assert_eq!(independent_native_samples(&encode_png(&edited).unwrap()).2,vec![9,8,7,6,9,8,7,6]);operation.begin_close();for _ in 0..100000{if operation.terminal_is_empty(){break;}operation.close_step(4096,1024*1024);}assert!(operation.terminal_is_empty());assert_eq!(snapshot,decode_png(MULTI_IDAT).unwrap());
  println!("[DEBUG] PNG owned copy and painting yielded, cancelled and retired within explicit close bounds");
 }
@@ -364,10 +364,21 @@ fn native_paint_mutation_roundtrips_and_inverse_restores_exact_source() {
     });
     assert_eq!(crate::PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     assert_eq!(crate::PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-    let edited = protocol::apply_diff(&mutation.diff(&base).diff(), &base).unwrap();
+    let edited = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
     assert_eq!(png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
     let inverse = mutation.inverse(&base).unwrap();
-    assert_eq!(protocol::apply_diff(&inverse[0].diff(&edited).diff(), &edited).unwrap(), base);
+    assert_eq!(protocol::apply_diff(inverse[0].diff(&edited).diff(), &edited).unwrap(), base);
+}
+
+#[test]
+fn every_mutation_kind_has_a_direct_binary_and_text_owner_that_roundtrips() {
+    use protocol::{OpBinary, OpText};
+    let cases = crate::schema::mutations::demo_mutation_cases();
+    assert_eq!(cases.len(), 6, "one demo case per mutation kind");
+    for mutation in cases {
+        assert_eq!(crate::PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation, "binary owner of {mutation:?}");
+        assert_eq!(crate::PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation, "text owner of {mutation:?}");
+    }
 }
 
 #[test]

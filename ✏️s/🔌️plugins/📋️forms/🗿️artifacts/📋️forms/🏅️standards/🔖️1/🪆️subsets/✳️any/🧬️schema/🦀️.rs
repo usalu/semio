@@ -48,7 +48,7 @@ pub struct FormsArtifact {
 
 impl semio_framework_value::FromValue for FormsArtifact {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        <crate::FormsSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
+        <FormsSnapshot as semio_framework_value::FromValue>::from_value(value).map(Self::from_snapshot)
     }
 }
 

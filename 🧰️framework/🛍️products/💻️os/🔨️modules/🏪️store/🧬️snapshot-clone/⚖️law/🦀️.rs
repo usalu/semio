@@ -11,6 +11,7 @@ pub struct OneItemPreparationLaw<P, M> {
     pub post: Arc<P>,
     pub inverse: Vec<M>,
     pub turns: usize,
+    pub close_turns: usize,
     pub retained_capacity_bytes: usize,
     pub peak_live_capacity_bytes: usize,
 }
@@ -69,12 +70,14 @@ where
             }
         }
     };
-    let report = OneItemPreparationLaw { post: Arc::clone(&prepared.post_snapshot), inverse: prepared.edit.inverse.iter().cloned().collect(), turns, retained_capacity_bytes: retained, peak_live_capacity_bytes: peak };
+    let report = OneItemPreparationLaw { post: Arc::clone(&prepared.post_snapshot), inverse: prepared.edit.inverse.iter().cloned().collect(), turns, close_turns: 0, retained_capacity_bytes: retained, peak_live_capacity_bytes: peak };
     drop(prepared);
     owner.begin_close();
-    for _ in 0..100_000 {
+    let mut report = report;
+    for close_turns in 0..100_000 {
         if owner.terminal_is_empty() {
             assert_eq!(observe(|| drop(owner)).1.requested_bytes, 0);
+            report.close_turns = close_turns;
             return report;
         }
         let copy = owner.next_close_copy_byte_demand().unwrap();

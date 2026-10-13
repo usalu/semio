@@ -187,7 +187,6 @@ impl protocol::OpBinary for MdMutation {
     }
 }
 }
-pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `MdMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

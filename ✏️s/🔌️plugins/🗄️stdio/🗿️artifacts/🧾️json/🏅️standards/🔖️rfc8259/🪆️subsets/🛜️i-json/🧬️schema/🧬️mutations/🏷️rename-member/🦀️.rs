@@ -36,7 +36,7 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for RenameMember {
         let renamed = JsonObjectDiff { removed: vec![from.clone()], modified: Vec::new(), added: vec![JsonObjectAdded { index: position, key: to.clone(), item: members[position].value.clone() }] };
         protocol::MutationOutcome::new(diff_at_path(path, Some(JsonValueDiff::Object { diff: renamed })))
     }
-    fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
         let Self { path, from, to } = self;
         Ok(vec![JsonIJsonMutation::RenameMember(Self { path: path.clone(), from: to.clone(), to: from.clone() })])
     }

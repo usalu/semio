@@ -347,7 +347,7 @@ impl En1999Snapshot {
     /// 📭 Empty subject shell (tests / set-snapshot baseline).
     pub fn empty() -> Self {
         Self {
-            annex: crate::document::AnnexChoice::En,
+            annex: AnnexChoice::En,
             materials: Vec::new(),
             sections: Vec::new(),
             members: Vec::new(),

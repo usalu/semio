@@ -31,12 +31,12 @@ pub struct IdentitySetting(pub Option<Identity>);
 /// adjacently-tagged enums only) — see the fan-out playbook's attribute-coverage table.
 impl ToValue for IdentitySetting {
     fn to_value(&self) -> semio_framework_value::DslValue {
-        semio_framework_value::ToValue::to_value(&self.0)
+        ToValue::to_value(&self.0)
     }
 }
 impl FromValue for IdentitySetting {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
+        Ok(Self(FromValue::from_value(value)?))
     }
 }
 

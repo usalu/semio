@@ -257,10 +257,10 @@ impl<T> Drop for Owned<T> {
     }
 }
 fn retire_tree(tree: Tree) {
-    crate::retained::FlowRetirement::from_owner(crate::retained::FlowOwner::Tree(tree)).retire_cold();
+    retained::FlowRetirement::from_owner(retained::FlowOwner::Tree(tree)).retire_cold();
 }
 fn retire_neuron(neuron: Neuron) {
-    neural::ColdRetire::retire_cold(neuron);
+    ColdRetire::retire_cold(neuron);
 }
 struct Trees(Slots<Tree>);
 enum TreeFrame<'a> {
@@ -301,7 +301,7 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
                         if let Some(SqliteValue::Integer(child)) = row.values.get(6) {
                             let child = Owned::new(trees.0.remove(child).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Flow child tree frontier missing"))?, retire_tree);
                             self.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, self.work, 0)?;
-                            self.control.admit_allocation_bytes(std::mem::size_of::<Tree>())?;
+                            self.control.admit_allocation_bytes(size_of::<Tree>())?;
                             neuron.tree = Some(Box::new(child.take()));
                         }
                         tree.neurons.push(neuron.take());
@@ -347,7 +347,7 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
             let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
             let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
             let result=(||->Result<(),ValueError>{
-                native.charge(std::mem::size_of::<String>()+std::mem::size_of::<V>()+4*std::mem::size_of::<usize>())?;
+                native.charge(size_of::<String>()+size_of::<V>()+4*size_of::<usize>())?;
                 let mut cursor=map.begin_set(key,value.take());
                 let result=(||->Result<(),ValueError>{while !cursor.is_complete(){let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:cursor.next_capacity_byte_demand()?,maximum_release_bytes:0,maximum_depth:cursor.next_depth_demand()};cursor.advance_insert_controlled(grant,&mut native)?;}let next=cursor.take_result().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Flow ordered result missing"))?;if next.len()<=map.len(){retire_ordered(next,retire);return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Flow ordered map key repeated"));}retire_ordered(std::mem::replace(map,next),retire);Ok(())})();
                 cursor.begin_close();loop{let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:cursor.next_close_byte_demand().expect("Flow ordered close release demand"),maximum_depth:cursor.next_close_depth_demand()};match cursor.close_step(grant){RetirementStep::OwnedValue(value)=>retire(value),RetirementStep::Complete=>break,RetirementStep::Failure(error)=>panic!("Flow ordered close refused: {error}"),_=>{}}}
@@ -357,10 +357,10 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
         })?
     }
     fn paths(&mut self, table: &'static str, owner: i64) -> Result<OrderedSet, ValueError> {
-        let mut map = Owned::new(OrderedMap::new(), |map| retire_ordered(map, std::mem::drop));
+        let mut map = Owned::new(OrderedMap::new(), |map| retire_ordered(map, drop));
         for row in self.ordered(table, 1, owner, 2)? {
             let key = self.text(row, 3)?;
-            self.insert_ordered(&mut map, key, (), std::mem::drop)?;
+            self.insert_ordered(&mut map, key, (), drop)?;
         }
         Ok(OrderedSet::from_map(map.take()))
     }
@@ -398,7 +398,7 @@ impl<'a, 'c, 'p> Read<'a, 'c, 'p> {
             let key = self.text(row, 3)?;
             let words = FloatRow::new(row, &[FloatColumn::Binary64(4), FloatColumn::Binary64(5)])?;
             let node = FlowNodeGui { layout: WidgetLayout { x: words.real(4)?, y: words.real(5)? }, chrome: self.chrome(row)? };
-            self.insert_ordered(&mut gui.nodes, key, node, std::mem::drop)?;
+            self.insert_ordered(&mut gui.nodes, key, node, drop)?;
         }
         let previews = self.ordered("flow_gui_preview", 1, id, 2)?;
         gui.previews = self.allocate(previews.len())?;
@@ -522,7 +522,7 @@ pub(super) fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapsho
     for row in read.ordered("flow_layout", 1, row.rowid, 2)? {
         let key = read.text(row, 3)?;
         let words = FloatRow::new(row, &[FloatColumn::Binary64(4), FloatColumn::Binary64(5)])?;
-        read.insert_ordered(&mut snapshot.layout, key, WidgetLayout { x: words.real(4)?, y: words.real(5)? }, std::mem::drop)?;
+        read.insert_ordered(&mut snapshot.layout, key, WidgetLayout { x: words.real(4)?, y: words.real(5)? }, drop)?;
     }
     read.finish()?;
     Ok(snapshot.take())

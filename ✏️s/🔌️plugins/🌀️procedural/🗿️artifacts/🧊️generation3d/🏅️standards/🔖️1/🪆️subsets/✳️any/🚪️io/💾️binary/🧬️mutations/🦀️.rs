@@ -7,34 +7,18 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::standards::v1::subsets::any::schema::mutations::change_generation_value::ChangeGenerationValue;
-use crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema;
-use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;
-use crate::standards::v1::subsets::any::schema::mutations::delete_generation::DeleteGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::delete_widget::DeleteWidget;
-use crate::standards::v1::subsets::any::schema::mutations::delete_widget_position::DeleteWidgetPosition;
-use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::DisconnectSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::move_widget::MoveWidget;
-use crate::standards::v1::subsets::any::schema::mutations::rename_generation::RenameGeneration;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::delete_widget::DeleteWidget;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::delete_widget_position::DeleteWidgetPosition;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::DisconnectSynapse;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::move_widget::MoveWidget;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::update_camera::UpdateCamera;
-use crate::standards::v1::subsets::any::schema::mutations::update_synapse::UpdateSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget;
-use crate::standards::v1::subsets::any::io::text::snapshot::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
-    WidgetLayoutDsl,
-};
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::ChangeSliderValue;
-use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::DragTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::RotateTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::ScaleTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{ChangeWidgetInput, WidgetInputValue};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::update_camera::UpdateCamera;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
 use protocol::OpBinary;
-use store::ErasedSnapshotRetirement;
 
 //#region 🔖️OpTextMirror
 

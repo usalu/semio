@@ -41,6 +41,11 @@ impl RetainedExtensionInvocation{
     fn begin_source_close(&mut self){let original=self.source.take().expect("original invocation retains caller fields until actual output");self.closing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original request fields declare complete typed retirement")));}
 }
 
+/// 🔌️ How many extension invocations still own their caller fields or output: a settled reactor holds none, and a thread must not end while one still owns a controlled retirement.
+pub fn retained_extension_invocation_occupancy()->usize{
+    RETAINED_EXTENSION_INVOCATIONS.with(|owners|owners.borrow().iter().filter(|owner|owner.is_some()).count())
+}
+
 thread_local!{
     static RETAINED_EXTENSION_INVOCATIONS:RefCell<[Option<RetainedExtensionInvocation>;requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};requests::REQUEST_SLOTS])};
     static RETAINED_EXTENSION_CURSOR:Cell<usize>=const{Cell::new(0)};
@@ -1379,12 +1384,12 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 },
                 Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: semio_framework_diagnostic::encode_fault_bytes(&fault) },
             }
-        } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = ({
+        } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = {
             match retained {
                 Some(CommandIngressOwner::GenericAssembly { .. }) => retained.take(),
                 _ => None,
             }
-        }) {
+        } {
             if cursor.page_index as usize != pages.len() {
                 command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-order".to_vec() };
             } else {

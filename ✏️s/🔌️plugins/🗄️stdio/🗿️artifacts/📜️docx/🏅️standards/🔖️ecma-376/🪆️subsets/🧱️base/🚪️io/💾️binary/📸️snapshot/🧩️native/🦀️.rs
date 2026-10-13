@@ -1,5 +1,6 @@
 //! 📜️ Complete DOCX literal schema, ordered OPC metadata and typed XML fields.
-use semio_framework_value::{NativeEncodeControl,NativeDecodeControl,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueError, ValueRefusalKind};
+#[cfg(test)] use semio_framework_value::{NativeEncodeControl, NativeDecodeControl};
 use semio_framework_value::DecodedValue;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{docx_xml_parts_from_iter_controlled,DocxSnapshot,DocxXmlPart};
 use semio_framework_os_kernel::{sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,SqliteDatabaseLimits},io_schema::IoPayload};
@@ -29,7 +30,7 @@ fn read(reader:&mut OpcNativeReader<'_, '_, '_>)->Result<DocxSnapshot,ValueError
  reader.delimiter(b']')?;reader.delimiter(b']')?;if reader.position!=reader.bytes.len(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX native input has trailing fields"));}reader.control.checkpoint()?;let xml_parts=docx_xml_parts_from_iter_controlled(std::mem::take(&mut parts.0),reader.control)?;Ok(DocxSnapshot{schema,opc,xml_parts})
 }
 
-pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocxSnapshot,ValueError>{match payload{IoPayload::Binary(bytes)=>input(bytes,true,control),IoPayload::Text(text)=>input(text.as_bytes(),false,control)}}
+pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,_native_control:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<DocxSnapshot,ValueError>{match payload{IoPayload::Binary(bytes)=>input(bytes,true,control),IoPayload::Text(text)=>input(text.as_bytes(),false,control)}}
 
 
 

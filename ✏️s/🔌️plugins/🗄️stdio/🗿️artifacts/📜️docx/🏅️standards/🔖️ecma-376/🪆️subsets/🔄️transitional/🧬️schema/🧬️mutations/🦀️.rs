@@ -22,8 +22,8 @@
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::DocxDiff;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
-use protocol::Mutation;
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+#[cfg(test)] use protocol::Mutation;
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypesDiff, OpcDiff, OpcOwnerModification, OpcOwnerPatch, OpcOwnersDelta, OpcPartsDelta, OpcRelationshipModification, OpcRelationshipPatch, OpcRelationshipsDelta};
 

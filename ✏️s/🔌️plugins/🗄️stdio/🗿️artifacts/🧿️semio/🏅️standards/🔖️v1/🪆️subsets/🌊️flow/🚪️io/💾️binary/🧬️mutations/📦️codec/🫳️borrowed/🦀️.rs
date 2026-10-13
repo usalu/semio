@@ -9,7 +9,7 @@ use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 use std::fmt::Write;
 
 struct Scalar{bytes:[u8;384],length:usize}
-impl std::fmt::Write for Scalar{
+impl Write for Scalar{
     fn write_str(&mut self,text:&str)->std::fmt::Result{let end=self.length.checked_add(text.len()).filter(|end|*end<=self.bytes.len()).ok_or(std::fmt::Error)?;self.bytes[self.length..end].copy_from_slice(text.as_bytes());self.length=end;Ok(())}
 }
 fn raw(output:&mut dyn OperationByteOutput,text:&str,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{output.write_bytes(text.as_bytes(),control)}

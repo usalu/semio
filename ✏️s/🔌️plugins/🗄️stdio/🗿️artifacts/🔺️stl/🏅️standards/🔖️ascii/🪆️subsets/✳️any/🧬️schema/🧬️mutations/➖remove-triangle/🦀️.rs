@@ -14,7 +14,7 @@ pub struct RemoveTriangle {
 impl protocol::MutationKind<StlSnapshot, StlMutation> for RemoveTriangle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "triangle", kind: "remove-triangle", record: "RemoveTriangle" };
 
-    fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
+    fn diff(&self, _base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
         let Self { index } = self;
         protocol::MutationOutcome::new(diff::diff_remove_triangle(*index))
     }

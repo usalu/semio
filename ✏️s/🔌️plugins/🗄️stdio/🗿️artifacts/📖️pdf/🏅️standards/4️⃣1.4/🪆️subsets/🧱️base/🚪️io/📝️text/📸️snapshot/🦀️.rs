@@ -39,7 +39,6 @@ impl store::ArtifactDsl for PdfSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 mod source_fixtures {
 use crate::STDIO_PDF_DOCUMENT_SCHEMA;

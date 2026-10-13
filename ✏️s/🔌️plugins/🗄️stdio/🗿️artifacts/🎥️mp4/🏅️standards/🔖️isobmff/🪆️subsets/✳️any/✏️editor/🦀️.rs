@@ -5,9 +5,10 @@
 
 use crate::editor::mp4::modes::edit;
 use crate::editor::mp4::modes::edit::windows::main;
-use crate::standards::isobmff::subsets::any::schema::mutations::{insert_sample,insert_track,remove_sample,remove_track,set_ftyp,set_sample_sync,set_track_codec,Mp4Mutation};
+use crate::standards::isobmff::subsets::any::schema::mutations::{insert_sample,remove_sample,Mp4Mutation};
 
-use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Snapshot, Mp4Track};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Snapshot};
+#[cfg(test)] use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Track};
 use crate::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -82,14 +83,14 @@ const STDIO_MP4_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.mp4.tool-command.v1";
 const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn mp4Editor_example_snapshot(example_id: &str) -> Mp4Snapshot {
+fn mp4_editor_example_snapshot(example_id: &str) -> Mp4Snapshot {
     if example_id == crate::examples::demo::ID {
         <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         Mp4Snapshot::default()
     }
 }
-fn mp4Editor_command_id(command: &Mp4EditCommand) -> &'static str {
+fn mp4_editor_command_id(command: &Mp4EditCommand) -> &'static str {
     if let Mp4EditCommand::EditSnapshot { event } = command {
         return event.action_id();
     }
@@ -98,7 +99,7 @@ fn mp4Editor_command_id(command: &Mp4EditCommand) -> &'static str {
         _ => "other",
     }
 }
-fn mp4Editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Mp4EditCommand, Fault> {
+fn mp4_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Mp4EditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) {
         return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| Mp4EditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit"))));
     }
@@ -107,10 +108,10 @@ fn mp4Editor_command_from_action(action: &str, args: Option<&semio_framework_val
         _ => Err(Fault::from(format!("action '{action}' is not setActiveExample"))),
     }
 }
-fn mp4Editor_retained_extent(command: &Mp4EditCommand, _snapshot: &Mp4Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn mp4_editor_retained_extent(command: &Mp4EditCommand, _snapshot: &Mp4Snapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, Mp4EditCommand::SetActiveExample { .. }).then_some(1)
 }
-fn mp4Editor_retained_reduce(
+fn mp4_editor_retained_reduce(
     command: &Mp4EditCommand,
     _snapshot: &Mp4Snapshot,
     _config: &NoConfig,
@@ -121,7 +122,7 @@ fn mp4Editor_retained_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<Mp4Mutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        Mp4EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp4Editor_example_snapshot(example_id), STDIO_MP4_DOCUMENT_SCHEMA)], ..Default::default() }),
+        Mp4EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp4_editor_example_snapshot(example_id), STDIO_MP4_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
@@ -244,7 +245,7 @@ impl ArtifactEditor for Mp4Editor {
         if !STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if mp4Editor_command_id(&request.command) != request.tool_id {
+        if mp4_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -268,10 +269,10 @@ impl ArtifactEditor for Mp4Editor {
                 operation,
                 completion: request.completion,
             },
-            mp4Editor_command_id,
+            mp4_editor_command_id,
             STDIO_MP4_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, mp4Editor_retained_reduce, mp4Editor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, mp4_editor_retained_reduce, mp4_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
@@ -287,10 +288,10 @@ impl ArtifactEditor for Mp4Editor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_MP4_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
-        mp4Editor_command_id(command)
+        mp4_editor_command_id(command)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        mp4Editor_command_from_action(action, args)
+        mp4_editor_command_from_action(action, args)
     }
 
     fn initial_snapshot() -> Self::Snapshot {
@@ -323,7 +324,7 @@ impl ArtifactEditor for Mp4Editor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             Mp4EditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
-            Mp4EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp4Editor_example_snapshot(example_id), STDIO_MP4_DOCUMENT_SCHEMA)], ..Default::default() }),
+            Mp4EditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&mp4_editor_example_snapshot(example_id), STDIO_MP4_DOCUMENT_SCHEMA)], ..Default::default() }),
         }
     }
 

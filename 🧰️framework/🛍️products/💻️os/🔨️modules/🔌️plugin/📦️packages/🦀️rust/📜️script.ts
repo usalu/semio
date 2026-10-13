@@ -405,6 +405,19 @@ class RetainedRawScript extends BundleScript {
  }
 }
 
+/** 🚨️ Checks that a mounted retained operation names the structural refusal it retains, from one corpus read by the Rust law and its TypeScript twin. */
+class RetainedStructuralRefusalScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-retained-structural-refusal requires source or native");
+  const {runBudgetedTestCommand}=await import("../../../../../../🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",resolve(this.root,"../../🧵️retained-command/🪟️mounted/🚨️structural-refusal/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:120_000,throwOnFailure:true});
+  if(segments[0]==="source")return;
+  if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
+  const receipts=await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd:this.root, env:process.env, groups:[{package:"semio-framework-plugin",target:{kind:"lib"},laws:["app::tool_run_tests::a_mounted_operation_reports_the_structural_refusal_it_retains"]}], artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event){console.log(`[TRACE] retained-structural-refusal ${event.stage}`);} });
+  console.log(`[TRACE] retained-structural-refusal receipts=${receipts.length}`);
+ }
+}
+
 /** 📬️ Verifies exact window mutation wrappers and their independently issued payload custody. */
 class WindowMutationScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
@@ -491,7 +504,7 @@ class WindowPreparationSourceScript extends BundleScript {
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
+const router = new ScriptRouter(import.meta.dir).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-structural-refusal",RetainedStructuralRefusalScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("test-window-registry",WindowRegistryScript)
   .register("test-window-preparation-source",WindowPreparationSourceScript)
   .register("canonical-architecture", CanonicalArchitectureScript)

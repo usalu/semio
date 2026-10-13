@@ -47,10 +47,10 @@ struct Call<'a> {
     mode: WireArtifactInferenceCacheMode,
 }
 
-fn call(host: &GeometryHost, call: Call<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
+fn call(host: &GeometryHost, call: Call<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1 << 24, work_units: call.work_units, recursion_depth: 8 };
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &budgets, cancellation_id: "geometry-test", previous_state: call.previous, requested_cache_mode: call.mode, canonical_payload: call.payload.as_bytes(), dependencies: &[] };
-    geometry_inference_service().infer_with_context(&request, host)
+    geometry_inference_service().infer_with_context(&request, host).map(|step| step.execution.expect("a geometry step carries its execution"))
 }
 
 fn once(host: &GeometryHost, payload: &str, work_units: u64) -> ArtifactInferenceExecution {
@@ -58,11 +58,11 @@ fn once(host: &GeometryHost, payload: &str, work_units: u64) -> ArtifactInferenc
 }
 
 fn json(execution: &ArtifactInferenceExecution) -> serde_json::Value {
-    serde_json::from_slice(&execution.canonical_payload).expect("the result payload is JSON")
+    serde_json::from_slice(execution.canonical_payload.as_deref().expect("the execution carries its payload")).expect("the result payload is JSON")
 }
 
 fn typed(execution: &ArtifactInferenceExecution) -> GeometryResult {
-    semio_framework_pack_json::from_json_str(std::str::from_utf8(&execution.canonical_payload).expect("UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes through its typed schema")
+    semio_framework_pack_json::from_json_str(std::str::from_utf8(execution.canonical_payload.as_deref().expect("the execution carries its payload")).expect("UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes through its typed schema")
 }
 //#endregion 🧸️Fixtures
 
@@ -70,7 +70,7 @@ fn typed(execution: &ArtifactInferenceExecution) -> GeometryResult {
 #[test]
 fn the_registered_metadata_publishes_the_widget_step_contract_and_both_schemas_parse() {
     let metadata = geometry_inference_service().metadata();
-    assert_eq!((metadata.artifact_kind, metadata.inference_schema), ("s.procedural.generation3d", "s.procedural.generation3d.geometry"));
+    assert_eq!((metadata.owner, metadata.artifact_kind, metadata.inference_schema), ("procedural", "s.procedural.generation3d", "s.procedural.generation3d.inference"));
     let contract = metadata.payload.expect("the service publishes a payload contract");
     assert_eq!(contract.progress_unit, "widget-step");
     for schema in [contract.input_schema, contract.output_schema] {
@@ -78,16 +78,16 @@ fn the_registered_metadata_publishes_the_widget_step_contract_and_both_schemas_p
         assert_eq!(parsed["type"], "object");
     }
     assert!(contract.artifact_binding.is_some_and(|binding| binding.field == "document" && !binding.required));
-    semio_framework_plugin::register_artifact_inference_services(vec![geometry_inference_service()]).expect("the service registers without conflict");
-    assert!(semio_framework_plugin::artifact_inference_service("s.procedural.generation3d", "s.procedural.generation3d.geometry").expect("registry reads").is_some());
+    semio_framework_plugin::register_artifact_inference_service(geometry_inference_service()).expect("the service registers without conflict");
+    assert!(semio_framework_plugin::artifact_inference_service("s.procedural.generation3d", "s.procedural.generation3d.inference").expect("registry reads").is_some());
 }
 
 #[test]
 fn a_service_without_its_geometry_host_refuses_by_name() {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 10, recursion_depth: 1 };
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &budgets, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: b"{}", dependencies: &[] };
-    assert_eq!(geometry_inference_service().infer(&request).unwrap_err().code, "artifact-inference.context-required");
-    assert_eq!(geometry_inference_service().infer_with_context(&request, &0u8).unwrap_err().code, "generation3d.geometry.context");
+    assert_eq!(geometry_inference_service().infer(&request).err().expect("the service refuses").code, "artifact-inference.context-required");
+    assert_eq!(geometry_inference_service().infer_with_context(&request, &0u8).err().expect("the service refuses").code, "generation3d.geometry.context");
 }
 
 #[test]
@@ -103,7 +103,7 @@ fn the_request_and_result_fixtures_hold_in_rust_and_the_result_decodes_through_i
     assert_eq!(json(&execution), fixture["complete"], "the committed result is what the service answers");
     let result = typed(&execution);
     assert!(result.complete && result.cursor.is_none() && result.progress.completed == result.progress.total);
-    assert_eq!(semio_framework_pack_json::to_json_string(&result), String::from_utf8(execution.canonical_payload.clone()).expect("UTF-8"), "the typed schema re-encodes byte for byte");
+    assert_eq!(semio_framework_pack_json::to_json_string(&result), String::from_utf8(execution.canonical_payload.clone().expect("the execution carries its payload")).expect("UTF-8"), "the typed schema re-encodes byte for byte");
     assert_eq!((execution.complete, execution.validity.as_str(), execution.quality.as_str()), (true, "valid", "exact-analytic"));
     assert!(execution.diagnostics.is_empty());
 }
@@ -127,7 +127,7 @@ fn a_run_resumes_from_its_own_result_and_equals_the_complete_run_for_every_work_
             }
             let partial = typed(&execution);
             assert!(partial.cursor.is_some() && !partial.complete && partial.progress.completed < partial.progress.total);
-            previous = Some(execution.canonical_payload);
+            previous = execution.canonical_payload;
         };
         assert_eq!(last.widgets, reference.widgets, "{units} units per call");
         assert_eq!(calls, 4usize.div_ceil(units as usize), "{units} units per call: one unit per computed widget");
@@ -142,7 +142,7 @@ fn stepped_results_match_the_committed_fixture_and_a_rebuilt_owner_restarts_inst
     let first = call(&host, Call { payload: &payload, work_units: 2, previous: None, mode: WireArtifactInferenceCacheMode::Incremental }).expect("first step");
     assert_eq!(json(&first), fixture["stepped"], "the first two-unit step");
     let rebuilt = GeometryHost::default();
-    let resumed = call(&rebuilt, Call { payload: &payload, work_units: 1000, previous: Some(&first.canonical_payload), mode: WireArtifactInferenceCacheMode::Incremental }).expect("a rebuilt owner restarts instead of resuming");
+    let resumed = call(&rebuilt, Call { payload: &payload, work_units: 1000, previous: first.canonical_payload.as_deref(), mode: WireArtifactInferenceCacheMode::Incremental }).expect("a rebuilt owner restarts instead of resuming");
     assert!(resumed.complete);
     assert_eq!(typed(&resumed).widgets, typed(&once(&GeometryHost::default(), &payload, 1000)).widgets);
     assert_eq!(typed(&resumed).computed, 4, "a rebuilt owner has no retained run, so it computes everything");
@@ -155,7 +155,7 @@ fn cancelling_stops_the_run_with_a_named_error_and_a_new_call_starts_over_from_t
     let first = call(&host, Call { payload: &payload, work_units: 2, previous: None, mode: WireArtifactInferenceCacheMode::Incremental }).expect("first step");
     assert!(!host.cancel_run("another-id").expect("idle"), "another cancellation id cancels nothing");
     assert!(host.cancel_run("geometry-test").expect("the host is idle between calls"));
-    let refused = call(&host, Call { payload: &payload, work_units: 2, previous: Some(&first.canonical_payload), mode: WireArtifactInferenceCacheMode::Incremental }).unwrap_err();
+    let refused = call(&host, Call { payload: &payload, work_units: 2, previous: first.canonical_payload.as_deref(), mode: WireArtifactInferenceCacheMode::Incremental }).err().expect("the service refuses");
     assert_eq!(refused.code, "generation3d.geometry.cancelled", "continuing a cancelled run reports the cancellation");
     let again = once(&host, &payload, 1000);
     assert!(again.complete);
@@ -207,16 +207,16 @@ fn faults_are_reported_as_diagnostics_in_both_languages_and_make_the_run_invalid
 fn invalid_requests_and_budgets_are_refused_by_name() {
     let host = GeometryHost::default();
     let payload = request_text(document(2.0, 1.5), None);
-    let refusal = |payload: &str, units: u64| call(&host, Call { payload, work_units: units, previous: None, mode: WireArtifactInferenceCacheMode::Incremental }).unwrap_err();
+    let refusal = |payload: &str, units: u64| call(&host, Call { payload, work_units: units, previous: None, mode: WireArtifactInferenceCacheMode::Incremental }).err().expect("the service refuses");
     assert_eq!(refusal(&payload, 0).code, "generation3d.geometry.invalid-request");
     assert_eq!(refusal("{}", 10).code, "generation3d.geometry.invalid-request");
     assert_eq!(refusal("{\"snapshot\": 3}", 10).code, "generation3d.geometry.invalid-request");
     assert_eq!(refusal("not json", 10).code, "generation3d.geometry.invalid-request");
     let tight = WireArtifactInferenceBudget { allocation_bytes: 8, work_units: 10, recursion_depth: 1 };
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &tight, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: payload.as_bytes(), dependencies: &[] };
-    assert_eq!(geometry_inference_service().infer_with_context(&request, &host).unwrap_err().code, "generation3d.geometry.invalid-request");
+    assert_eq!(geometry_inference_service().infer_with_context(&request, &host).err().expect("the service refuses").code, "generation3d.geometry.invalid-request");
     let garbage = ArtifactInferenceExecutionRequest { previous_state: Some(b"nope"), budgets: &WireArtifactInferenceBudget { allocation_bytes: 1 << 24, work_units: 10, recursion_depth: 1 }, ..request };
-    assert_eq!(geometry_inference_service().infer_with_context(&garbage, &host).unwrap_err().code, "generation3d.geometry.invalid-request");
+    assert_eq!(geometry_inference_service().infer_with_context(&garbage, &host).err().expect("the service refuses").code, "generation3d.geometry.invalid-request");
 }
 
 #[test]

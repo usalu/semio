@@ -11,7 +11,7 @@ impl<K, V> Drop for WindowRegistry<K, V> {
 
 impl<K: Ord + Borrow<str>, V> WindowRegistry<K, V> {
     pub(crate) fn new() -> Self {
-        Self { entries: PagedList::with_payload_page_bytes(4096.max(std::mem::size_of::<(K, V)>())).expect("registry page admits its original inline entry") }
+        Self { entries: PagedList::with_payload_page_bytes(4096.max(size_of::<(K, V)>())).expect("registry page admits its original inline entry") }
     }
     fn position(&self, key: &str) -> Result<usize, usize> {
         let (mut low, mut high) = (0, self.entries.len());
@@ -43,9 +43,10 @@ impl<K: Ord + Borrow<str>, V> WindowRegistry<K, V> {
             Ok(index) => return Some(std::mem::replace(&mut self.entries.get_mut(index).unwrap().1, value)),
             Err(index) => index,
         };
-        if !self.entries.has_reserved_slot() {
+        while !self.entries.has_reserved_slot() {
             let bytes = self.entries.next_allocation_bytes().expect("cold registry original page quote");
-            self.entries.reserve_one(bytes).expect("cold registry original page allocation");
+            let progress = self.entries.reserve_one(bytes).expect("cold registry original page allocation");
+            assert!(progress.progressed, "cold registry original page allocation advances");
         }
         self.entries.push_reserved((key, value)).unwrap_or_else(|_| panic!("reserved original registry entry remains admitted"));
         for current in (index..self.entries.len() - 1).rev() { self.entries.swap(current, current + 1); }
@@ -53,7 +54,7 @@ impl<K: Ord + Borrow<str>, V> WindowRegistry<K, V> {
     }
     pub(crate) fn pop_demand(&self) -> Result<RetirementDemand, ValueError> {
         if self.is_empty() { return self.backing_demand(); }
-        Ok(RetirementDemand { copy_bytes: std::mem::size_of::<(K, V)>(), depth: self.entries.next_pop_depth_demand().map_err(page_error)?, ..Default::default() })
+        Ok(RetirementDemand { copy_bytes: size_of::<(K, V)>(), depth: self.entries.next_pop_depth_demand().map_err(page_error)?, ..Default::default() })
     }
     pub(crate) fn pop_original(&mut self, grant: RetainedCloneGrant) -> Result<Option<((K, V), RetainedCloneProgress)>, ValueError> {
         if self.is_empty() { return Ok(None); }

@@ -10,12 +10,12 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<TiffMutation, semio_framework_diagnostic::TextError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v6_0::subsets::document::io::text::mutations::insert_ifd::CODEC,
-    crate::standards::v6_0::subsets::document::io::text::mutations::remove_ifd::CODEC,
-    crate::standards::v6_0::subsets::document::io::text::mutations::replace_tag::CODEC,
-    crate::standards::v6_0::subsets::document::io::text::mutations::remove_tag::CODEC,
-    crate::standards::v6_0::subsets::document::io::text::mutations::paint_region::CODEC,
-    crate::standards::v6_0::subsets::document::io::text::mutations::replace_samples::CODEC,
+    insert_ifd::CODEC,
+    remove_ifd::CODEC,
+    replace_tag::CODEC,
+    remove_tag::CODEC,
+    paint_region::CODEC,
+    replace_samples::CODEC,
 ];
 //#endregion Registry
 
@@ -63,7 +63,7 @@ pub(crate) fn remove_ifd_test_case() -> TiffMutation {
     semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📤️remove-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-ifd payload")
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;
 
 
 #[allow(unused_imports)]
@@ -78,7 +78,7 @@ pub(crate) fn replace_tag_test_case() -> TiffMutation {
     semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🏷️replace-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-tag payload")
 }
 }
-pub use mutations_wire_codec::*;
+#[cfg(test)] pub use mutations_wire_codec::*;
 
 
 #[allow(unused_imports)]
@@ -93,7 +93,7 @@ pub(crate) fn insert_ifd_test_case() -> TiffMutation {
     semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-ifd payload")
 }
 }
-pub use mutations_wire2_codec::*;
+#[cfg(test)] pub use mutations_wire2_codec::*;
 
 
 #[allow(unused_imports)]
@@ -108,7 +108,7 @@ pub(crate) fn remove_tag_test_case() -> TiffMutation {
     semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-tag payload")
 }
 }
-pub use mutations_wire3_codec::*;
+#[cfg(test)] pub use mutations_wire3_codec::*;
 
 
 #[cfg(test)]

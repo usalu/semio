@@ -25,7 +25,8 @@ pub use switch_space_alternative::SwitchSpaceAlternative;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = SpaceHistorySnapshot, diff = SpaceHistoryDiff, schema = "os.space.history")]
 pub enum SpaceHistoryMutation {
@@ -37,9 +38,6 @@ pub enum SpaceHistoryMutation {
     SetActiveSpaceAlternative(SetActiveSpaceAlternative),
 }
 //#endregion 🔖️Aggregate
-
-#[path = "🔏️canonical/🦀️.rs"]
-mod canonical;
 
 //#region 🧪️Tests
 #[cfg(test)]

@@ -42,8 +42,9 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use super::*;
-use crate::schema::mutations::{inverse_gis_map_mutation, GisMapMutation};
+#[cfg(test)] use super::*;
+use crate::schema::mutations::{GisMapMutation};
+#[cfg(test)] use crate::schema::mutations::{inverse_gis_map_mutation};
 
 impl protocol::OpBinary for GisMapMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

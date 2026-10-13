@@ -64,6 +64,32 @@
         "command": "bun ./📜️script.ts test-retained-metadata"
       }
     },
+    "test-retained-structural-refusal-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/🚨️structural-refusal/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-retained-structural-refusal source"
+      }
+    },
+    "test-retained-structural-refusal-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-retained-structural-refusal native"
+      }
+    },
     "test-output-retirement-native": {
       "executor": "nx:run-commands",
       "cache": false,

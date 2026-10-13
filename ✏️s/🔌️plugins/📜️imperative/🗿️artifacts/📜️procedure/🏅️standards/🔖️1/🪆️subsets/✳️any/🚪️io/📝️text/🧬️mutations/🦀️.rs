@@ -17,4 +17,3 @@ impl protocol::OpText for ProcedureMutation {
     }
 }
 }
-pub use mutations_codec::*;

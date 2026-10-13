@@ -33,4 +33,3 @@ impl store::ArtifactDsl for GifSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;

@@ -14,14 +14,14 @@ pub struct SetText {
 impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
         let Self { path, text } = self;
         protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Text { text: Some(text.clone()) }))
     }
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         Ok(match node_at(&base.doc, path) {
-            Ok(SvgNode::Text { text }) => vec![SvgTinyMutation::SetText(set_text::SetText { path: path.clone(), text: text.clone() })],
+            Ok(SvgNode::Text { text }) => vec![SvgTinyMutation::SetText(SetText { path: path.clone(), text: text.clone() })],
             _ => Vec::new(),
         })
     }

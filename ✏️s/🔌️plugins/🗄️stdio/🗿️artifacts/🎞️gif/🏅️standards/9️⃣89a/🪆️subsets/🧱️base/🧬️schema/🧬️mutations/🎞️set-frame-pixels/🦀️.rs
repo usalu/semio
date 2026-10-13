@@ -34,7 +34,7 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFramePixels {
     fn inverse(&self, base: &GifSnapshot) -> Result<Vec<GifMutation>, semio_framework_value::ValueError> {
         let Self { index, .. } = self;
         Ok(match base.frames.get(*index) {
-            Some(f) => vec![GifMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: *index, indices: f.indices.clone() })],
+            Some(f) => vec![GifMutation::SetFramePixels(SetFramePixels { index: *index, indices: f.indices.clone() })],
             None => Vec::new(),
         })
     }

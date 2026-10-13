@@ -29,11 +29,11 @@ impl crate::retirement::RetirementCursor for EncodeContinuationRetirement{
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.0.is_some()))}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
  fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl crate::retirement::RetireOwned for NativeEncodeContinuation{
  fn retirement(self)->Box<dyn crate::retirement::RetirementCursor>{Box::new(EncodeContinuationRetirement(Some(self)))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<EncodeContinuationRetirement>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EncodeContinuationRetirement>())}
  fn controlled_retirement_supported()->bool{true}
  fn retirement_element_copy_bytes()->usize{0}
 }
@@ -70,7 +70,7 @@ impl<'a> NativeEncodeControl<'a> {
         self.retirement=Some(recipient);Ok(())
     }
     /// 🪑️ Pre-admits the return slot and exact immediate wrapper allocations, preserving every refusal owner.
-    pub fn with_retirement_owner<T,E:From<ValueError>>(&mut self,wrapper_bytes:usize,operation:impl FnOnce(&mut Self)->(Result<T,E>,Option<Box<dyn crate::ErasedSnapshotRetirement>>))->Result<T,E>{
+    pub fn with_retirement_owner<T,E:From<ValueError>>(&mut self,wrapper_bytes:usize,operation:impl FnOnce(&mut Self)->(Result<T,E>,Option<Box<dyn ErasedSnapshotRetirement>>))->Result<T,E>{
         if self.retirement.as_ref().is_none_or(|recipient|recipient.reserved||recipient.owner.is_some()){return Err(E::from(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encode has no available explicit retirement slot")));}
         self.checkpoint()?;self.charge(wrapper_bytes)?;
         self.retirement.as_mut().unwrap().reserved=true;
@@ -115,7 +115,7 @@ impl<'a> NativeEncodeControl<'a> {
     /// 🧭️ Begins an exact workload without resetting admitted ownership.
     pub fn begin_stage(&mut self,total:usize)->Result<(),ValueError>{self.stage=self.stage.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "native encoding stage overflow"))?;self.completed=0;self.total=total;self.started=false;self.checkpoint()}
     /// 🪆️ Restores the enclosing workload while retaining child allocation charges.
-    pub fn scoped_stage<T,E>(&mut self,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{let parent=(self.completed,self.total,self.started,self.stage);let mut scope=StageScope{control:self,parent};operation(&mut *scope.control)}
+    pub fn scoped_stage<T,E>(&mut self,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{let parent=(self.completed,self.total,self.started,self.stage);let scope=StageScope{control:self,parent};operation(&mut *scope.control)}
     /// 🌲️ Bounds borrowed recursive projection independently of the input's depth.
     pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{if self.depth>=maximum{return Err(E::from(ValueError::literal(ValueRefusalKind::DepthLimit, "native encoding exceeds depth limit")))}self.depth+=1;let result=operation(self);self.depth-=1;result}
     /// 📍️ Publishes interior checkpoints at256-unit boundaries and stage completion.
@@ -125,7 +125,7 @@ impl<'a> NativeEncodeControl<'a> {
     /// 📦️ Admits storage before an allocation, preserving all previous charges.
     pub fn charge(&mut self,bytes:usize)->Result<(),ValueError>{let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding ownership exceeds caller limit"))?;if !self.started||bytes>65536{self.checkpoint()?;}if let allocation::Binding::Forwarded(port)=&mut self.allocation{port(NativeEncodeAllocation{bytes,owned_bytes:self.owned_bytes,next_owned_bytes:next,maximum_bytes:self.maximum_bytes})?;}self.owned_bytes=next;Ok(())}
     /// 🗂️ Reserves a known typed frontier before creating its slots.
-    pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native encoding collection allocation failed"))?;Ok(output)}
+    pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native encoding collection allocation failed"))?;Ok(output)}
     /// 🔤️ Owns exact UTF-8 through cancellable64KiB spans.
     pub fn copy_text(&mut self,text:&str)->Result<String,ValueError>{self.scoped_stage(|control|{control.begin_stage(text.len())?;control.charge(text.len())?;let mut output=String::new();output.try_reserve_exact(text.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native encoding text allocation failed"))?;let mut position=0;while position<text.len(){let mut end=position.saturating_add(65536).min(text.len());while !text.is_char_boundary(end){end-=1;}output.push_str(&text[position..end]);control.advance(end-position)?;position=end;}Ok(output)})}
     /// 🧬️ Owns intrinsic octets through cancellable64KiB spans.

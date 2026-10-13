@@ -13,7 +13,6 @@
 //! glue-mounted siblings.
 
 use crate::{LayoutDiff, LayoutSnapshot};
-use crate::standards::v1::subsets::any::schema::diff::{PagePatch};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{

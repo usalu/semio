@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 /// round-trip oracle over `SemioTransform` (and transitively this struct); no production call
 /// site needs it, `ToValue`/`FromValue` is the real production codec.
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -30,6 +31,7 @@ pub struct SemioPoint3 {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -40,6 +42,7 @@ pub struct SemioPoint2 {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -52,6 +55,7 @@ pub struct SemioUv {
 
 //#region 🔖️Color
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -68,6 +72,7 @@ pub struct SemioRgba {
 /// 🧭️ Rotation as a NAMED quaternion struct — never a bare `[f64;4]`/tuple (see module doc
 /// comment). Defaults to the identity rotation `(0,0,0,1)`.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -86,6 +91,7 @@ impl Default for SemioQuaternion {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]

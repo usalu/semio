@@ -35,6 +35,12 @@ const MUTATION_AUTHORITY_LOCATOR: &str = "🧰️framework/🛍️products/💻�
 /// 🪪️ Schema id the projection must declare (`MutationSourceAuthorityProjectionV1` in `🧬️schema/🔣️.json`).
 const MUTATION_AUTHORITY_SCHEMA: &str = "semio.dsl.mutation-source-authority/v1";
 
+/// 🗂️ Workspace-relative locator of the generated schema-document index (`bun nx run @semio-tech/dsl-derive-rs:generate-schema-index`).
+const MUTATION_SCHEMA_INDEX_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json";
+
+/// 🪪️ Schema id the index must declare (`MutationSchemaDocumentIndexV1` in `🧬️schema/🔣️.json`).
+const MUTATION_SCHEMA_INDEX_SCHEMA: &str = "semio.dsl.mutation-schema-document-index/v1";
+
 #[derive(Debug)]
 struct MutationAuthorityCommon {
     workspace_root: PathBuf,
@@ -715,12 +721,12 @@ fn mutation_leaf_payload_schema_path(authority: &MutationSourceAuthority, payloa
 }
 
 /// 🔗️ Every schema document the payload schema at `payload_schema` references by an absolute `$id` (fragment stripped),
-/// transitively, among the `🧬️schema` JSON documents of its search tree ([`mutation_schema_search_root`]) — what the runtime
-/// publishes beside the leaf (`MutationLeaf::PAYLOAD_SCHEMA_DOCUMENTS`), so an input that `$ref`s another facet of its scope
-/// resolves. A reference the tree does not hold is left to the OS-wide registry, which framework scopes publish themselves.
-/// Sorted, never the payload schema itself.
+/// transitively, among the `🧬️schema` JSON documents of its search tree ([`mutation_schema_search_root`]) recorded in the
+/// generated schema index — what the runtime publishes beside the leaf (`MutationLeaf::PAYLOAD_SCHEMA_DOCUMENTS`), so an input
+/// that `$ref`s another facet of its scope resolves. A reference the index does not hold is left to the OS-wide registry, which
+/// framework scopes publish themselves. Sorted, never the payload schema itself.
 fn mutation_leaf_referenced_documents(payload_schema: &Path) -> Result<Vec<PathBuf>, String> {
-    let index = mutation_schema_document_index(&mutation_schema_search_root(payload_schema));
+    let index = mutation_schema_document_index(&mutation_schema_search_root(payload_schema))?;
     let (own, mut pending) = mutation_schema_document_references(payload_schema)?;
     let mut seen: HashSet<String> = own.into_iter().collect();
     let mut found = Vec::new();
@@ -750,37 +756,51 @@ fn mutation_schema_example_collection(path: &Path) -> bool {
     path.ancestors().any(|directory| directory.file_name().is_some_and(|name| ["🧫️fixtures", "🧪️fixtures", "🧪️tests"].iter().any(|collection| name == *collection)) && !directory.parent().and_then(Path::file_name).is_some_and(|name| name == "🔨️modules"))
 }
 
-/// 🗂️ Indexes production `$id` documents within schema scopes, excluding example collections before any directory read.
-fn mutation_schema_document_index(root: &Path) -> std::rc::Rc<BTreeMap<String, PathBuf>> {
-    if mutation_schema_example_collection(root) {
-        return std::rc::Rc::new(BTreeMap::new());
-    }
-    thread_local! {
-        static INDEX: std::cell::RefCell<BTreeMap<PathBuf, std::rc::Rc<BTreeMap<String, PathBuf>>>> = const { std::cell::RefCell::new(BTreeMap::new()) };
-    }
-    fn walk(directory: &Path, schema: bool, index: &mut BTreeMap<String, PathBuf>) {
-        let Ok(entries) = crate::compiler_resources::read_dir(directory) else { return };
-        for entry in entries.flatten() {
-            let (path, name) = (entry.path(), entry.file_name().to_string_lossy().into_owned());
-            let Ok(kind) = entry.file_type() else { continue };
-            if kind.is_dir() && !name.starts_with('.') && !mutation_schema_example_collection(&path) && !["target", "node_modules", "dist", "🗑️generated", "📦️packages"].contains(&name.as_str()) {
-                walk(&path, schema || name == "🧬️schema", index);
-            } else if schema && kind.is_file() && name.ends_with(".json") {
-                let id = crate::compiler_resources::read(&path).ok().and_then(|raw| serde_json::from_slice::<serde_json::Value>(&raw).ok()).and_then(|value| value.get("$id").and_then(serde_json::Value::as_str).map(str::to_string));
-                if let Some(id) = id {
-                    index.entry(id).or_insert(path);
-                }
-            }
+/// 🗂️ The `$id` documents of `root` from the generated schema index. The index file is the only directory-freshness input:
+/// adding a schema rewrites it, and rustc tracks that one file instead of every walked directory.
+fn mutation_schema_document_index(root: &Path) -> Result<std::rc::Rc<BTreeMap<String, PathBuf>>, String> {
+    let workspace = mutation_authority_workspace_root(root)?;
+    let index = mutation_schema_index(&workspace)?;
+    if mutation_schema_example_collection(root) { return Ok(std::rc::Rc::new(BTreeMap::new())); }
+    let key = mutation_authority_relative(&workspace, root)?;
+    index.get(&key).cloned().ok_or_else(|| format!("schema document index has no root {key}; run bun nx run @semio-tech/dsl-derive-rs:generate-schema-index"))
+}
+
+type MutationSchemaIndex = BTreeMap<String, std::rc::Rc<BTreeMap<String, PathBuf>>>;
+type CachedSchemaIndex = Option<(PathBuf, std::rc::Rc<MutationSchemaIndex>)>;
+
+/// 📖️ Loads and caches the generated index, tracking the one file through the compiler resource observer.
+fn mutation_schema_index(workspace: &Path) -> Result<std::rc::Rc<MutationSchemaIndex>, String> {
+    thread_local! { static INDEX: std::cell::RefCell<CachedSchemaIndex> = const { std::cell::RefCell::new(None) }; }
+    if let Some(cached) = INDEX.with(|current| current.borrow().as_ref().filter(|(root, _)| root == workspace).map(|(_, index)| index.clone())) { return Ok(cached); }
+    let path = mutation_authority_locator(workspace, MUTATION_SCHEMA_INDEX_LOCATOR)?;
+    mutation_authority_no_follow(workspace, &path, false).map_err(|error| format!("schema document index {MUTATION_SCHEMA_INDEX_LOCATOR}: {error}; run bun nx run @semio-tech/dsl-derive-rs:generate-schema-index"))?;
+    let raw = crate::compiler_resources::read(&path).map_err(|error| error.to_string())?;
+    let parsed = std::rc::Rc::new(parse_mutation_schema_document_index(workspace, &raw)?);
+    INDEX.with(|current| *current.borrow_mut() = Some((workspace.to_path_buf(), parsed.clone())));
+    Ok(parsed)
+}
+
+/// 🧬️ Parses `MutationSchemaDocumentIndexV1` into absolute document paths keyed by search root and `$id`.
+fn parse_mutation_schema_document_index(workspace: &Path, raw: &[u8]) -> Result<MutationSchemaIndex, String> {
+    let value: serde_json::Value = serde_json::from_slice(raw).map_err(|error| error.to_string())?;
+    let object = value.as_object().filter(|object| object.len() == 2 && object.contains_key("schema") && object.contains_key("roots")).ok_or_else(|| "schema document index must contain schema and roots".to_string())?;
+    if object.get("schema").and_then(serde_json::Value::as_str) != Some(MUTATION_SCHEMA_INDEX_SCHEMA) { return Err("schema document index declares another schema".to_string()); }
+    let roots = object.get("roots").and_then(serde_json::Value::as_object).ok_or_else(|| "schema document index roots must be an object".to_string())?;
+    let mut parsed = BTreeMap::new();
+    for (root, documents) in roots {
+        if root.is_empty() || root.contains('\\') || root.starts_with('/') || root.split('/').any(|segment| segment.is_empty() || segment == "." || segment == "..") { return Err(format!("schema document index root {root} is not a relative path")); }
+        let documents = documents.as_object().ok_or_else(|| format!("schema document index root {root} must map documents"))?;
+        let mut resolved = BTreeMap::new();
+        for (id, path) in documents {
+            if id.is_empty() { return Err("schema document index $id must be nonempty".to_string()); }
+            let path = path.as_str().filter(|path| !path.is_empty()).ok_or_else(|| format!("schema document index path for {id} must be a string"))?;
+            if !path.starts_with(&format!("{root}/")) { return Err(format!("schema document index path {path} escapes root {root}")); }
+            resolved.insert(id.clone(), mutation_authority_locator(workspace, path)?);
         }
+        parsed.insert(root.clone(), std::rc::Rc::new(resolved));
     }
-    if let Some(index) = INDEX.with(|cache| cache.borrow().get(root).cloned()) {
-        return index;
-    }
-    let mut index = BTreeMap::new();
-    walk(root, root.components().any(|component| component.as_os_str() == "🧬️schema"), &mut index);
-    let index = std::rc::Rc::new(index);
-    INDEX.with(|cache| cache.borrow_mut().insert(root.to_path_buf(), index.clone()));
-    index
+    Ok(parsed)
 }
 
 /// 🔗️ A schema document's own `$id` and every absolute document id its `$ref`s name (fragments stripped).
@@ -854,11 +874,11 @@ pub fn expand_dsl_document(input: TokenStream) -> TokenStream {
 
 /// 📝️ Generates diff text I/O at its representation owner.
 pub fn expand_diff_text(input: TokenStream) -> TokenStream {
-    let name = parse_macro_input!(input as syn::Type);
+    let name = parse_macro_input!(input as Type);
     diff_text_tokens(&name).into()
 }
 
-fn diff_text_tokens(name: &syn::Type) -> proc_macro2::TokenStream {
+fn diff_text_tokens(name: &Type) -> proc_macro2::TokenStream {
     quote! {
         impl ::semio_framework_os_kernel::DiffText for #name {
             fn print_diff(&self) -> String {
@@ -874,11 +894,11 @@ fn diff_text_tokens(name: &syn::Type) -> proc_macro2::TokenStream {
 
 /// 💾️ Generates diff binary I/O at its representation owner.
 pub fn expand_diff_binary(input: TokenStream) -> TokenStream {
-    let name = parse_macro_input!(input as syn::Type);
+    let name = parse_macro_input!(input as Type);
     diff_binary_tokens(&name).into()
 }
 
-fn diff_binary_tokens(name: &syn::Type) -> proc_macro2::TokenStream {
+fn diff_binary_tokens(name: &Type) -> proc_macro2::TokenStream {
     quote! {
         impl ::semio_framework_os_kernel::DiffBinary for #name {
             fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
@@ -1226,7 +1246,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
 /// (`mutation_inverse_rows_failures`, design §20.5) — walked over every subset of the owner's standard, since a subset's
 /// fixtures replay through the aggregate too. Nothing is emitted when the owner directory cannot be addressed from the
 /// compiling crate.
-fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
+fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
     if !generics.params.is_empty() {
         return quote! {};
     }

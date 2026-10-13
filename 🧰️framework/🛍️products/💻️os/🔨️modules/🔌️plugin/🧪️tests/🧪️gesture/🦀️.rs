@@ -65,7 +65,7 @@ impl GestureTool for NudgeTool {
         let Some(leaf) = self.leaf.clone() else { return Ok(ToolStep::Idle) };
         let transaction = match self.transaction.clone() {
             Some(transaction) => transaction,
-            None => protocol::TransactionRef::mint(&ActorId(self.authoring_seed.clone()), &HybridLogicalTimestamp { actor: 0, physical_ms: 1, logical: 0 }, NUDGE_TOOL),
+            None => protocol::TransactionRef::mint(&ActorId(self.authoring_seed.as_str().into()), &HybridLogicalTimestamp { actor: 0, physical_ms: 1, logical: 0 }, NUDGE_TOOL),
         };
         if phase == GesturePhase::Stream {
             self.transaction = Some(transaction);
@@ -145,7 +145,8 @@ async fn a_history_edit_ends_every_open_gesture_with_zero_trace_for_an_app_witho
     assert!(app.tool_machines.gestures().is_empty(), "a tick on the frozen document opens no gesture");
     assert_eq!((app.store.generation(), head(&app), app.edit_transactions().len()), (generation, committed, edits), "zero trace: no edit, no store change");
     app.handle_action("historyEditExit", None, &in_window(&actor, "pane-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("exit");
-    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work()).await;
+    let mounted_policy = app.mounted_policy;
+    pump_until(&mut app, "retirement settles", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut crate::app::artifact_app_laws::fixture_identity()).await;
     close(&mut app);
 }
 

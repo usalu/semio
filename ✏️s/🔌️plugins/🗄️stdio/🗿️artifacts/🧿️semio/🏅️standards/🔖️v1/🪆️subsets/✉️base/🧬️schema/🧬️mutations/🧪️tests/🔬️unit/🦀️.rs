@@ -42,7 +42,7 @@ async fn mutation_diff_law_covers_a_wrapped_variant() {
 async fn mutation_diff_law_flow_insert_node() {
     let base = flow_base();
     let node = FlowNode { id: "n1".into(), kind: "task".into(), label: "N1".into(), params: vec![], position: SemioPoint2 { x: 1.0, y: 2.0 } };
-    let wrapped = SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(crate::standards::v1::subsets::flow::schema::mutations::insert_node::InsertNode { node: node.clone() }) });
+    let wrapped = SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(crate::standards::v1::subsets::flow::schema::mutations::insert_node::InsertNode { node: node.clone(), at: None }) });
     let mut applied = base.clone();
     let (__next, diff) = crate::applied(&applied, &wrapped);
     applied = __next;
@@ -162,7 +162,7 @@ async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
     let m = SemioMutation::ApplyBrep(apply_brep::ApplyBrep {
-        mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, tol: 1e-7 }),
+        mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, tol: 1e-7, at: None }),
     });
     let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Brep(_)));
@@ -297,7 +297,7 @@ async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
     use crate::standards::v1::subsets::kit::schema::mutations::add_type;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Kit(Default::default()) };
-    let m = SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::AddType(add_type::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }) });
+    let m = SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::AddType(add_type::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into(), at: None }) });
     let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Kit(_)));
     assert!(!diff.diff().is_empty());

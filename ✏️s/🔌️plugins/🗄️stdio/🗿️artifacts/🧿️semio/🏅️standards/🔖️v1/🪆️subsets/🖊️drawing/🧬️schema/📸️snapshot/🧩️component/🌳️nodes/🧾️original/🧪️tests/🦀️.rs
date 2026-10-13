@@ -56,7 +56,7 @@ fn drawing_original_exact_variants_reject_foreign_fields_and_missing_payload(){
 fn drawing_original_sqlite_reconstruction_keeps_all_partial_original_storage(){
  use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SqliteSnapshotPhase}};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️defaults.json")).unwrap();let snapshot=SemioDrawingSnapshot::from_value(DslValue::from(&corpus["defaults"][2]["input"])).unwrap();
- let database=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let mut denials=Vec::new();let mut interrupted=0;
+ let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();let mut denials=Vec::new();let mut interrupted=0;
  for stop in [0,1,3,7,13,21,34,55,89,144,233,377,usize::MAX]{
   let mut calls=0;let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase!=SqliteSnapshotPhase::ReconstructSnapshot{return true}let run=calls<stop;calls+=1;run};
   let mut recipient=NativeDecodeRetirementRecipient::new();let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());control.install_native_retirement_recipient(&mut recipient).unwrap();

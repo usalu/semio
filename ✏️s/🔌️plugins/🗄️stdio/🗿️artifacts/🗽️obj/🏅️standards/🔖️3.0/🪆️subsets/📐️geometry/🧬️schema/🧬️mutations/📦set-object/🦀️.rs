@@ -37,7 +37,7 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
         let Self { name, .. } = self;
         Ok({
             match base.objects.iter().find(|o| &o.name == name) {
-                Some(o) => vec![ObjMutation::SetObject(set_object::SetObject { name: name.clone(), faces: o.faces.clone(), index: None })],
+                Some(o) => vec![ObjMutation::SetObject(SetObject { name: name.clone(), faces: o.faces.clone(), index: None })],
                 None => vec![ObjMutation::RemoveObject(remove_object::RemoveObject { name: name.clone() })],
             }
         })

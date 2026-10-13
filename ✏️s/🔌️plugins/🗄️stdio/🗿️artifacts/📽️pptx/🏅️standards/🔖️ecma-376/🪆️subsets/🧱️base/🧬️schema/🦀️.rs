@@ -90,7 +90,7 @@ pub fn pptx_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 /// precedent) — the empty `Default` package saved as a materialized package and reopened as a different document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_pptx_snapshot() -> PptxSnapshot {
-    crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(PptxPresentation::default())
+    construction::minimal::build_minimal_pptx(PptxPresentation::default())
 }
 
 /// 📄️ FG-wave: the demo `stdio.pptx` presentation — a genuinely non-trivial `PptxSnapshot`

@@ -1,7 +1,7 @@
 //! 🔺️ `delete-step` sparse diff construction — removes an id-keyed [`ProcessStep`] from the durable `step_payloads` timeline;
 //! `apply` re-derives the `steps`/`tool_solids` handles. Error `target-missing` when the step is absent.
 
-use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
+use crate::diff::Process3dStepsDelta;
 use crate::diff::Process3dDiff;
 use crate::Process3dSnapshot;
 

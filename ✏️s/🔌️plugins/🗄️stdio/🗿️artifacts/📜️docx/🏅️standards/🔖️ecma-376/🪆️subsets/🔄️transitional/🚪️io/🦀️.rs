@@ -202,14 +202,14 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v_ecma_376::subsets::base::io::{DocxAnalyzer as DocxAnyAnalyzer, DocxParts};
-    use crate::{DocxSnapshot, schema::snapshot::DocxXmlPart};
-    use semio_framework_diagnostic::Diagnostic;
-use semio_framework_diagnostic::FaultCode;
-use semio_framework_diagnostic::FaultScope;
+    #[cfg(test)] use crate::{DocxSnapshot, schema::snapshot::DocxXmlPart};
+    #[cfg(test)] use semio_framework_diagnostic::Diagnostic;
+#[cfg(test)] use semio_framework_diagnostic::FaultCode;
+#[cfg(test)] use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
-use semio_framework_diagnostic::TextSpan;
+#[cfg(test)] use semio_framework_diagnostic::TextSpan;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
+    #[cfg(test)] use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("transitional") };
@@ -256,7 +256,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec DocxTransitionalBuilderFacets {
         construction: DocxTransitionalBuilderConstruction,
         analysis: DocxTransitionalAnalyzerAnalysis,
-        composition: super::io::derived_composition::DocxTransitionalComposerComposition,
+        composition: DocxTransitionalComposerComposition,
     }
     builder: DocxTransitionalBuilder,
     analyzer: DocxTransitionalAnalyzer,

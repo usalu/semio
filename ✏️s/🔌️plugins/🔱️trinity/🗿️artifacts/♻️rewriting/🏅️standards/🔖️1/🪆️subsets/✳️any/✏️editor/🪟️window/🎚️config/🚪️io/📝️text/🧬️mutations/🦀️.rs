@@ -26,4 +26,3 @@ impl protocol::OpText for RewritingWindowConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

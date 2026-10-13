@@ -24,7 +24,7 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetViewBox {
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
         let Self { path, .. } = self;
         let (value, index) = prior_attribute(base, path, "viewBox");
-        Ok(vec![SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: path.clone(), view_box: value.and_then(|value| if let SvgAttributeValue::ViewBox(view_box) = value { Some(view_box) } else { None }), index })])
+        Ok(vec![SvgTinyMutation::SetViewBox(SetViewBox { path: path.clone(), view_box: value.and_then(|value| if let SvgAttributeValue::ViewBox(view_box) = value { Some(view_box) } else { None }), index })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set view box", "ViewBox setzen")

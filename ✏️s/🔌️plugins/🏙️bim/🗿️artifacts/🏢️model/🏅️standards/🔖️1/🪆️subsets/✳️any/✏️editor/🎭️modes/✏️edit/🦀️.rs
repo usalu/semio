@@ -5,7 +5,6 @@ use crate::editor::bim::terminology::BimLabels;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
-use semio_framework_ui_locale::LocalizedLabel;
 
 pub const BIM_EDIT_MODE_EDIT: &str = "edit";
 

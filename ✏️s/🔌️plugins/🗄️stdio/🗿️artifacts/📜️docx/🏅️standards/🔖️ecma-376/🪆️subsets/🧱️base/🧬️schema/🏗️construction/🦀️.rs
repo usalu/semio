@@ -1,5 +1,5 @@
 //! 🏗️ Builds owned WordprocessingML nodes and authoritative DOCX parts.
-use crate::standards::v_ecma_376::subsets::base::schema::{snapshot::*,vocabulary::*,refusal::DocxError};
+use crate::standards::v_ecma_376::subsets::base::schema::{snapshot::*,vocabulary::*};
 use crate::DocxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr,XmlDocument,XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage,RELS_CONTENT_TYPE,REL_TYPE_OFFICE_DOCUMENT};

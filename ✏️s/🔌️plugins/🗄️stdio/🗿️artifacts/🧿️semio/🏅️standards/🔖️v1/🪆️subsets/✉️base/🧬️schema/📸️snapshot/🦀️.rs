@@ -31,7 +31,7 @@ use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 /// 17th/18th. Wrapped by `SemioSnapshot` below (a struct, not the enum
 /// directly — keeps `#[derive(ArtifactSchema)]` on a proven struct shape; see the W1b manifest for
 /// why).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(tag = "subset", rename_all = "camelCase")]
 pub enum SemioSubsetSnapshot {
     Brep(SemioBrepSnapshot),
@@ -67,7 +67,7 @@ pub const STDIO_SEMIO_DOCUMENT_SCHEMA: &str = "stdio.semio";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio")]
 pub struct SemioSnapshot {

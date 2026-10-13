@@ -1,16 +1,16 @@
 {
   "grant": {
     "maximumItems": 1,
-    "maximumBytes": 4096,
+    "maximumBytes": 65536,
     "maximumDepth": 64,
-    "combinedCapacityCopyAndReleaseMaximum": 4096,
+    "combinedCapacityCopyAndReleaseMaximum": 65536,
     "alternateCapacityPayloadAndRelease": true,
     "maximumCopyBytes": 4096,
-    "maximumCapacityBytes": 4096,
-    "maximumReleaseBytes": 4096
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 262144
   },
   "largeCapacity": {
-    "stringByteLength": 8192,
+    "stringByteLength": 262144,
     "expectedCode": "retained-clone.step-grant-too-small"
   },
   "handoff": {
@@ -18,10 +18,10 @@
     "copiedEntriesBeforeLoss": 3,
     "closeGrant": {
       "maximumItems": 1,
-      "maximumBytes": 4096,
+      "maximumBytes": 65536,
       "maximumCopyBytes": 4096,
-      "maximumCapacityBytes": 4096,
-      "maximumReleaseBytes": 4096,
+      "maximumCapacityBytes": 65536,
+      "maximumReleaseBytes": 65536,
       "maximumDepth": 64
     },
     "expected": {

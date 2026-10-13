@@ -37,7 +37,6 @@ impl store::ArtifactPack for DwgSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {

@@ -12,7 +12,6 @@ use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
 use semio_framework_plugin::ArtifactToolFactoryRegistry;
 use semio_framework_plugin::ArtifactToolPublicationContract;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -85,7 +84,7 @@ const SEMIO_DOCUMENT_DOCUMENT_SCHEMA_COMMAND_TOOL_IDS: &[&str] = &[
 const SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "s.stdio.semio.document.tool-command.v1";
 const SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
-fn semioDocumentEditor_example_snapshot(example_id: &str) -> SemioDocumentSnapshot {
+fn semio_document_editor_example_snapshot(example_id: &str) -> SemioDocumentSnapshot {
     if example_id == crate::examples::demo::ID {
         <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
@@ -93,7 +92,7 @@ fn semioDocumentEditor_example_snapshot(example_id: &str) -> SemioDocumentSnapsh
     }
 }
 
-fn semioDocumentEditor_command_id(command: &SemioDocumentEditCommand) -> &'static str {
+fn semio_document_editor_command_id(command: &SemioDocumentEditCommand) -> &'static str {
     if let SemioDocumentEditCommand::EditSnapshot { event } = command { return event.action_id(); }
     match command {
         SemioDocumentEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
@@ -101,7 +100,7 @@ fn semioDocumentEditor_command_id(command: &SemioDocumentEditCommand) -> &'stati
     }
 }
 
-fn semioDocumentEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SemioDocumentEditCommand, Fault> {
+fn semio_document_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SemioDocumentEditCommand, Fault> {
     if editing::is_snapshot_edit_action(action) { return editing::snapshot_edit_event_from_action(action, args).and_then(|event| event.map(|event| SemioDocumentEditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("action '{action}' is not a snapshot edit")))); }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(SemioDocumentEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
@@ -109,11 +108,11 @@ fn semioDocumentEditor_command_from_action(action: &str, args: Option<&semio_fra
     }
 }
 
-fn semioDocumentEditor_retained_extent(command: &SemioDocumentEditCommand, _snapshot: &SemioDocumentSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn semio_document_editor_retained_extent(command: &SemioDocumentEditCommand, _snapshot: &SemioDocumentSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, SemioDocumentEditCommand::SetActiveExample { .. }).then_some(1)
 }
 
-fn semioDocumentEditor_retained_reduce(
+fn semio_document_editor_retained_reduce(
     command: &SemioDocumentEditCommand,
     _snapshot: &SemioDocumentSnapshot,
     _config: &NoConfig,
@@ -125,7 +124,7 @@ fn semioDocumentEditor_retained_reduce(
 ) -> Result<Emit<SemioDocumentMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         SemioDocumentEditCommand::SetActiveExample { example_id } => Ok(Emit {
-            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semioDocumentEditor_example_snapshot(example_id), SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
+            effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_document_editor_example_snapshot(example_id), SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
             ..Default::default()
         }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -214,7 +213,7 @@ impl ArtifactEditor for SemioDocumentEditor {
         if !SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
-        if semioDocumentEditor_command_id(&request.command) != request.tool_id {
+        if semio_document_editor_command_id(&request.command) != request.tool_id {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch"));
         }
         let operation = AppOperationContext {
@@ -238,17 +237,19 @@ impl ArtifactEditor for SemioDocumentEditor {
                 operation,
                 completion: request.completion,
             },
-            semioDocumentEditor_command_id,
+            semio_document_editor_command_id,
             SEMIO_DOCUMENT_DOCUMENT_SCHEMA_EXAMPLE_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semioDocumentEditor_retained_reduce, semioDocumentEditor_retained_extent)),
+            Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_document_editor_retained_reduce, semio_document_editor_retained_extent)),
         );
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn command_id(command: &Self::Command) -> &'static str { semioDocumentEditor_command_id(command) }
+    semio_s_artifact_stdio_contract::snapshot_editing_publication_authority!();
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { semioDocumentEditor_command_from_action(action, args) }
+    fn command_id(command: &Self::Command) -> &'static str { semio_document_editor_command_id(command) }
+
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { semio_document_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> SemioDocumentSnapshot {
         SemioDocumentSnapshot::default()
@@ -266,7 +267,7 @@ impl ArtifactEditor for SemioDocumentEditor {
         match command {
             SemioDocumentEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             SemioDocumentEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semioDocumentEditor_example_snapshot(example_id), SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&semio_document_editor_example_snapshot(example_id), SEMIO_DOCUMENT_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
         }

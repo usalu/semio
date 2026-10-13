@@ -96,8 +96,9 @@ async fn an_id_less_gesture_moves_the_live_selection() {
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let before = origin(&app, &asset_id);
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).expect("targets");
-    app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local")).await.expect("interactionSelect");
-    artifact_app_laws::settle_registered_typed_operation(&mut *app, SHOOTING_TEST_INSTANCE).await.expect("the selection settles");
+    let admitted = app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("the selection admission settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut *app, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the selection settles");
     let captured = app.interaction_state().await;
     eprintln!("[DEBUG] Shooting idless before dispatch selection={:?}", captured.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| (&selection.granularity, &selection.ids)));
     let rows = dispatch_rows(&mut app, translate(Vec::new(), 3.0)).await;
@@ -141,11 +142,11 @@ async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
     let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<ShootingSnapshot, ShootingMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("the edit applies");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag(-2.0, 4.0);
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited drag");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
     assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
@@ -155,7 +156,7 @@ async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
     let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
     assert_ne!(fresh, fold(&log), "the edit changes the outcome");
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
-    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<ShootingSnapshot, ShootingMutation>();
     for _ in 0..65_536 {

@@ -61,10 +61,10 @@ plugin-root = ["semio-framework-plugin/component-guest"]
 
 [dependencies]
 # 🧩️ Composition Dependencies
-semio-s-artifact-stdio-mp4 = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-avi = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-mp3 = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-stdio-wav = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-mp4 = { workspace = true }
+semio-s-artifact-stdio-avi = { workspace = true }
+semio-s-artifact-stdio-mp3 = { workspace = true }
+semio-s-artifact-stdio-wav = { workspace = true }
 # /🧩️ Composition Dependencies
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-framework = { workspace = true }

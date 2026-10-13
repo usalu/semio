@@ -235,7 +235,7 @@ async fn exact_serialization_boundaries_survive_typed_edit_save_and_reopen() {
 
     expected.fmt.sample_rate = 16_000;
     expected.fmt.byte_rate = 16_000;
-    let outcome = apply_mutation(&mut edited, &WavMutation::SetFmt(set_fmt::SetFmt { fmt: expected.fmt.clone() }));
+    let outcome = apply_mutation(&mut edited, &WavMutation::SetFmt(crate::standards::riff_pcm::subsets::any::schema::mutations::set_fmt::SetFmt { fmt: expected.fmt.clone() }));
     assert!(outcome.messages().is_empty(), "second typed edit must remain exactly serializable");
     assert_eq!(decode_wav(&try_encode_wav(&edited).expect("edited boundary snapshot saves")).expect("edited boundary snapshot reopens"), expected);
 }

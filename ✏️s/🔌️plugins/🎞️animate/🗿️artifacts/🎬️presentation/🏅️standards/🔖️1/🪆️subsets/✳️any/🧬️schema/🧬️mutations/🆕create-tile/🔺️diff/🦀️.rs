@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `create-tile`.
 use super::CreateTile;
-use crate::diff::{PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
+use crate::diff::{PresentationDiff, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff

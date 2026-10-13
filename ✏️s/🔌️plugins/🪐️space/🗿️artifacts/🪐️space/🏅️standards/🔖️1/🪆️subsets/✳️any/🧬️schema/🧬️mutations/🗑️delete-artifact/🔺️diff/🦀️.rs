@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `DeleteArtifact` — a real filtered removal.
-use crate::standards::v1::subsets::any::schema::diff::{SSpaceArtifactPatch, SSpaceArtifactsDelta, SSpaceDiff};
+use crate::standards::v1::subsets::any::schema::diff::{SSpaceArtifactsDelta, SSpaceDiff};
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff

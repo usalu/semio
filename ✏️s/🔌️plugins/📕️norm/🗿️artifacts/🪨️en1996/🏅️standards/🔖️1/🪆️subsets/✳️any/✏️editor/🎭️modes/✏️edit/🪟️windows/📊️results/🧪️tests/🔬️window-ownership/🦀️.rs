@@ -29,7 +29,7 @@ impl<A: semio_framework_plugin::PluginApp> std::ops::DerefMut for ClosingFixture
 
 impl<A: semio_framework_plugin::PluginApp> Drop for ClosingFixtureApp<A> {
     fn drop(&mut self) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *self.0);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     }
 }
 
@@ -95,8 +95,8 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
 
             async fn dispatch(app: &mut NormApp, instance_id: u32, index: Option<u32>, view: &ViewModel) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
                 let meta = ActionMeta { instance_id, view_state: Some(view.clone()), ..artifact_app_laws::meta("norm-results-window-ownership") };
-                app.dispatch_typed(En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index }), &meta).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map_err(|error| format!("{error:?}"))
+                app.dispatch_typed(En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))
             }
 
             async fn render_inspection(app: &mut NormApp, view: &ViewModel) -> Result<String, String> {
@@ -119,7 +119,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
             let right = all.for_window_instance("norm-results-right").expect("right Results window");
             let left_panel = panel_view(&roster, "norm-results-left");
             let right_panel = panel_view(&roster, "norm-results-right");
-            let mut app = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await));
+            let mut app = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await));
             app.bind_instance_id(204).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -163,7 +163,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
                 }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                 if packs.len() != 2 { return Err(format!("Norm persisted {} Results packs instead of two", packs.len())); }
-                let mut reopened = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await));
+                let mut reopened = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await));
                 reopened.bind_instance_id(205).await;
                 let reopened_outcome: Result<(NormResultsWindowConfig, NormResultsWindowConfig), String> = async {
                     for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }

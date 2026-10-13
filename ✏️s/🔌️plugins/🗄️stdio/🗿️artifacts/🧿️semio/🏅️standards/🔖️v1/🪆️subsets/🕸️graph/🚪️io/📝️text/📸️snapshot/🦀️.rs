@@ -269,7 +269,6 @@ use framework_schema::ArtifactSchema;
 
 
 }
-pub use snapshot_wire_codec::*;
 
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {

@@ -16,7 +16,7 @@ pub struct SetCell {
 impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "cell", kind: "set-cell", record: "SetCell" };
 
-    fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
+    fn diff(&self, _base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
         let Self { row_index, field_index, value } = self;
         protocol::MutationOutcome::new({
             let mut fields = vec![None; field_index + 1];
@@ -28,7 +28,7 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
         let Self { row_index, field_index, .. } = self;
         Ok({
             match base.records.get(*row_index).and_then(|r| r.get(*field_index)) {
-                Some(cell) => vec![TsvMutation::SetCell(set_cell::SetCell { row_index: *row_index, field_index: *field_index, value: cell.clone() })],
+                Some(cell) => vec![TsvMutation::SetCell(SetCell { row_index: *row_index, field_index: *field_index, value: cell.clone() })],
                 None => Vec::new(),
             }
         })

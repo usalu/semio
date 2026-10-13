@@ -20,7 +20,7 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileSchema {
         protocol::MutationOutcome::new(StepDiff { file_schema: (base.header.file_schema != *file_schema).then(|| file_schema.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-        Ok(vec![StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: base.header.file_schema.clone() })])
+        Ok(vec![StepMutation::SetFileSchema(SetFileSchema { file_schema: base.header.file_schema.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set file schema", "Dateischema setzen")

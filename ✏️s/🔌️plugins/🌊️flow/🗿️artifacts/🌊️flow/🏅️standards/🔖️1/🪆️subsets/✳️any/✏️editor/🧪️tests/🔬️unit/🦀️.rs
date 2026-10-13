@@ -34,7 +34,7 @@ pub(crate) mod context {
             if std::thread::panicking() || self.0.close_terminal_is_empty() {
                 return;
             }
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
         }
     }
     
@@ -133,20 +133,20 @@ pub(crate) mod context {
     }
 
     pub async fn dispatch(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-        app.dispatch_typed(command, &flow_main_window_meta()).await.expect("dispatch")
+        app.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch")
     }
     
     pub async fn dispatch_with_registry(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-        app.dispatch_typed(command, &flow_main_window_meta()).await.expect("dispatch")
+        app.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch")
     }
 
     pub async fn settle(app: &mut FlowApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("retained Flow command publication");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained Flow command publication");
     }
 
     /// 🚫️ Settles a refused retained command while preserving its typed code and message.
     pub async fn settle_refusal(app: &mut FlowApp) -> semio_framework_plugin::Fault {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.err().expect("the handler refuses by name")
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.err().expect("the handler refuses by name")
     }
 
     /// 🪆️ The scene the window renders and every verb edits: the composed content child, decoded from its own store —
@@ -187,7 +187,7 @@ pub(crate) mod context {
         targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
         let targets_json = serde_json::to_string(&targets).expect("targets json");
         let args = semio_framework_value::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
-        let admitted = app.handle_action("interactionSelect", Some(&args), &flow_main_window_meta()).await.expect("interactionSelect admission");
+        let admitted = app.handle_action("interactionSelect", Some(&args), &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect admission");
         semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interactionSelect reserved-job commit");
     }
 }
@@ -242,7 +242,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     )
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
-    let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.expect("retained addWidget publication and exact ACK").lanes;
+    let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained addWidget publication and exact ACK").lanes;
     assert_eq!(
         lanes,
         [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
@@ -515,13 +515,13 @@ async fn undo_restores_fixture_after_add_widget() {
     let child_id = app.snapshot().expect("snapshot").content.child_id.clone();
     let before = flow_child_node_count(&app, &child_id).await;
     dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;
-    settle_registered_typed_operation(&mut *app, receiver).await.expect("addWidget child publication");
+    settle_registered_typed_operation(&mut *app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("addWidget child publication");
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "addWidget must land one node in the content child");
-    settle_history_verb(&mut *app, "undo", receiver).await;
+    settle_history_verb(&mut *app, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before, "undo must retire the child-lane group");
-    settle_history_verb(&mut *app, "redo", receiver).await;
+    settle_history_verb(&mut *app, "redo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "redo must reapply the child-lane group");
-    close_registered_fixture_app(&mut *app);
+    close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
 }
 
 /// 🚚️ An absolute authored drop publishes one relative child edit and replays undo exactly.
@@ -540,13 +540,13 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
     let node = before.nodes.first().expect("genesis content node");
     let (x, y) = (node.position.x + 37.0, node.position.y - 23.0);
     dispatch(&mut app, FlowCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node.id.clone(), x, y })).await;
-    let lanes = settle_registered_typed_operation(&mut *app, receiver).await.expect("moveMediaNode publication").lanes;
+    let lanes = settle_registered_typed_operation(&mut *app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("moveMediaNode publication").lanes;
     assert_eq!(lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     let after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("moved child").document_pack_bytes().await.expect("moved pack")).expect("moved snapshot");
     let moved = after.nodes.iter().find(|candidate| candidate.id == node.id).expect("addressed node");
     assert_eq!((moved.position.x, moved.position.y), (x, y));
     assert_eq!(app.snapshot().expect("parent after move").content, parent.content);
-    settle_history_verb(&mut *app, "undo", receiver).await;
+    settle_history_verb(&mut *app, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     let restored = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("restored child").document_pack_bytes().await.expect("restored pack")).expect("restored snapshot");
     assert_eq!(restored, before);
 }
@@ -632,19 +632,19 @@ async fn two_instances_converge_on_disjoint_edits() {
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
-    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0), label: None, action: None, format: None }), &metadata_b).await.expect("b applies its disjoint edit");
-    settle_registered_typed_operation(&mut *instance_b, metadata_b.instance_id).await.expect("b's edit publishes");
-    instance_a.tick_backbone().await.expect("a folds b's events");
-    instance_b.tick_backbone().await.expect("b folds a's events");
+    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0), label: None, action: None, format: None }), &metadata_b, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b applies its disjoint edit");
+    settle_registered_typed_operation(&mut *instance_b, metadata_b.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b's edit publishes");
+    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
     let converged = probe(&instance_a).await;
     assert_eq!(converged, probe(&instance_b).await, "both instances must converge on the same content child");
     assert_eq!(converged.len(), genesis.len() + 2, "each instance holds both disjoint notes");
-    let admitted = instance_a.handle_action("commitCheckpoint", None, &metadata_a).await.expect("a commits a checkpoint");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a commits a checkpoint");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id).await.expect("a's checkpoint publication settles");
-    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's checkpoint publication settles");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");

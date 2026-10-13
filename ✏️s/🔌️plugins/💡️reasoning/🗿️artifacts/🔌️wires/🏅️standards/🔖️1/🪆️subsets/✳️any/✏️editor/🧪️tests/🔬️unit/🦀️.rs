@@ -30,7 +30,7 @@ pub(crate) mod context {
     impl OwnedWiresApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
         }
     }
 
@@ -81,7 +81,7 @@ pub(crate) mod context {
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
         retire_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files).await.expect("load metabolism");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load metabolism");
         app
     }
     
@@ -98,7 +98,7 @@ pub(crate) mod context {
     /// straight afterwards would observe the pre-dispatch document, and the returned
     /// `InvocationResult` carries neither the mutations nor the effects the operation produces.
     pub async fn settle(app: &mut WiresApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation")
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation")
     }
 
     /// 🧪️ Reads the actual declared board member through its current Store lease.
@@ -135,7 +135,7 @@ pub(crate) mod context {
         let operation = semio_framework_plugin::artifact_app_laws::LAW_DOCUMENT_LOAD_OPERATION;
         app.begin_document_archive_load(operation, archive)?;
         for _ in 0..100_000 {
-            let status = app.poll_document_archive_load(operation).await?;
+            let status = app.poll_document_archive_load(operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await?;
             if matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 continue;
             }
@@ -148,7 +148,7 @@ pub(crate) mod context {
 
     /// 🎛️ Dispatches one typed command and settles its publication.
     pub async fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -159,7 +159,7 @@ pub(crate) mod context {
     /// settle finds `has_pending_typed_operations() == false` and answers an EMPTY receipt — no lanes,
     /// no effects — which reads exactly like a command that emitted nothing.
     pub async fn dispatch_receipt(app: &mut WiresApp, command: WiresCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
         let receipt = settle(app).await;
         (result, receipt)
     }
@@ -356,7 +356,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
         WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
         |app| crate::schema::board_snapshot_nodes(&context::board(app)).len(),
         0,
-        1,
+        1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -373,7 +373,7 @@ async fn a_redelivered_member_lane_is_idempotent() {
     let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
     sender.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local")).await.expect("apply command");
-    settle_registered_typed_operation(&mut *sender, meta("local").instance_id).await.expect("the edit publishes");
+    settle_registered_typed_operation(&mut *sender, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit publishes");
     let received = far.receive().await.expect("receive");
     assert!(!received.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a board edit never travels as a parent batch");
     let lanes: Vec<BackboneMessage> = received.into_iter().filter(|message| matches!(message, BackboneMessage::Member { .. })).collect();
@@ -385,13 +385,13 @@ async fn a_redelivered_member_lane_is_idempotent() {
     for message in &lanes {
         peer.send(message.clone()).await.expect("deliver the member lane");
     }
-    receiver.tick_backbone().await.expect("fold the member lane once");
+    receiver.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fold the member lane once");
     let once = nodes(&receiver);
     assert_eq!(once, genesis + 1, "folding the member lane materializes the edit");
     for message in &lanes {
         peer.send(message.clone()).await.expect("redeliver the member lane");
     }
-    receiver.tick_backbone().await.expect("fold the member lane twice");
+    receiver.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fold the member lane twice");
     assert_eq!(nodes(&receiver), once, "the same member lane redelivered must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
     receiver.detach_backbone().await.expect("receiver releases its backbone");
@@ -425,12 +425,12 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     // A adds node-3; B relates node-1 to node-2 — disjoint edits on the graph.
     let receiver = meta("local").instance_id;
     instance_a.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a")).await.expect("a adds node");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }), &meta("actor-b")).await.expect("b relates node-1 to node-2");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b relates node-1 to node-2");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_b, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b's edit publishes");
 
-    instance_a.tick_backbone().await.expect("a folds b's events");
-    instance_b.tick_backbone().await.expect("b folds a's events");
+    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
+    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
 
     let projection_a = context::board(&instance_a);
     let projection_b = context::board(&instance_b);
@@ -474,14 +474,14 @@ fn debug_child_seed_settles() {
         app.bind_instance_id(receiver).await;
         let args = semio_framework_value::DslValue::Object(vec![("kind".into(), semio_framework_value::DslValue::String("identity".into()))]);
         let meta = semio_framework_plugin::ActionMeta { view_state: Some(semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..semio_framework_plugin::artifact_app_laws::meta("acceptance") };
-        let result = app.handle_action("addNode", Some(&args), &meta).await;
+        let result = app.handle_action("addNode", Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         eprintln!("[DEBUG] addNode admitted {:?} pending={}", result.as_ref().map(|result| result.output.clone()), app.has_pending_typed_operations());
         for turn in 0..4000 {
             if !app.has_pending_typed_operations() {
                 eprintln!("[DEBUG] settled at turn {turn}");
                 break;
             }
-            app.advance_typed_operation_publication().await.expect("[DEBUG] advance");
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("[DEBUG] advance");
             while app.take_typed_operation_ui_progress().is_some() {}
             if turn == 1000 || turn == 3999 {
                 let page = app.take_typed_operation_result_page(receiver);
@@ -492,7 +492,7 @@ fn debug_child_seed_settles() {
             }
         }
         eprintln!("[DEBUG] final pending={}", app.has_pending_typed_operations());
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.map(|receipt| eprintln!("[DEBUG] settle receipt lanes {:?}", receipt.lanes)).unwrap_or_else(|fault| eprintln!("[DEBUG] settle fault {fault:?}"));
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map(|receipt| eprintln!("[DEBUG] settle receipt lanes {:?}", receipt.lanes)).unwrap_or_else(|fault| eprintln!("[DEBUG] settle fault {fault:?}"));
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     });
 }

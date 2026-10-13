@@ -12,7 +12,7 @@ use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_the
 /// carrier lands.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_architect_verb_honours_its_declaration() {
-    let probes = assert_declared_verbs_honour_their_declarations::<semio_framework_plugin::EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_architect_app, None).await;
+    let probes = assert_declared_verbs_honour_their_declarations::<semio_framework_plugin::EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(create_architect_app, None, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     assert_eq!(probes.len(), 23, "the architect editor declares twenty-three verbs");
     for verb in ["runAnalysis", "runReport"] {
         assert!(declared_verb_ever_wrote_document(declared_verb_probe(&probes, verb)), "{verb} stores its record in the program");

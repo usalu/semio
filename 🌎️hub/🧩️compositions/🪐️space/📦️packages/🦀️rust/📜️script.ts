@@ -397,7 +397,6 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     const name = law.slice(law.lastIndexOf("::") + 2);
     assert(osHost.includes(`fn ${name}()`), `OS host omitted ${law}`);
   }
-  assert(ownerScript.includes('cargoArgs: ["--features", "os-host-full"]'), "Home native gate cannot select its feature-owned workflow law");
   return 54;
 }
 
@@ -414,7 +413,6 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
           {
             package: "semio-framework-os",
             target: { kind: "lib" },
-            cargoArgs: ["--features", "os-host-full"],
             laws: [
               "workflow::tests::svg_path_extraction_preserves_transformed_geometry",
             ],

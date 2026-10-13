@@ -11,9 +11,9 @@ impl ArtifactSqliteSnapshot for SSpaceSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,"s.space",Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  let maximum=control.limits().max_rows;let value=store::decode_sqlite_snapshot_record_native(payload,"s.space",Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
-   let length=match record.get(2){Some(semio_framework_dsl_record::FieldValue::List(rows))=>rows.len(),_=>return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Space native occurrence list missing"))};
-   let rows=count(length)?;if rows>maximum{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit, "Space native occurrence rows exceed caller limit"))}
+  let maximum=control.limits().max_rows;let value=store::decode_sqlite_snapshot_record_native(payload,"s.space",Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+   let length=match record.get(2){Some(semio_framework_dsl_record::FieldValue::List(rows))=>rows.len(),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "Space native occurrence list missing"))};
+   let rows=count(length)?;if rows>maximum{return Err(ValueError::new(ValueRefusalKind::WorkLimit, "Space native occurrence rows exceed caller limit"))}
    Self::__dsl_from_record_controlled(record,native)
   })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;value.admit_sqlite_values(control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
  }

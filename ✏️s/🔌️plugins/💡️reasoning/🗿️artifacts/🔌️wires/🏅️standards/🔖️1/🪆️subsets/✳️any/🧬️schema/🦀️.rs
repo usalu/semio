@@ -3,8 +3,6 @@
 use semio_framework_value::DslValue;
 use framework_schema::ArtifactSchema;
 
-#[path = "♻️retirement/🦀️.rs"]
-pub mod retirement;
 
 //#region 🔖️Artifact
 /// 🧬️ Shared wires artifact content.
@@ -103,24 +101,24 @@ pub fn wires_artifact_schema_descriptor() -> semio_framework_schema_registry::Ar
 /// composed board they read comes from `crate::wires_composed`.
 pub fn array_mut<'a>(fixture: &'a mut DslValue, key: &str) -> &'a mut Vec<DslValue> {
     if !matches!(fixture, DslValue::Object(_)) {
-        *fixture = semio_framework_value::DslValue::Object(vec![]);
+        *fixture = DslValue::Object(vec![]);
     }
-    let semio_framework_value::DslValue::Object(entries) = fixture else {
+    let DslValue::Object(entries) = fixture else {
         unreachable!("fixture coerced to object above");
     };
     if let Some(idx) = entries.iter().position(|(entry_key, _)| entry_key == key) {
         let value = &mut entries[idx].1;
         if !matches!(value, DslValue::Array(_)) {
-            *value = semio_framework_value::DslValue::Array(vec![]);
+            *value = DslValue::Array(vec![]);
         }
         match value {
-            semio_framework_value::DslValue::Array(items) => items,
+            DslValue::Array(items) => items,
             _ => unreachable!("array coerced above"),
         }
     } else {
-        entries.push((key.to_string(), semio_framework_value::DslValue::Array(vec![])));
+        entries.push((key.to_string(), DslValue::Array(vec![])));
         match &mut entries.last_mut().expect("just pushed").1 {
-            semio_framework_value::DslValue::Array(items) => items,
+            DslValue::Array(items) => items,
             _ => unreachable!("just pushed array"),
         }
     }
@@ -238,22 +236,22 @@ pub fn wires_canvas_layers(board: &DslValue, wires: &DslValue) -> Vec<DslValue> 
             ("y1".to_string(), DslValue::float(target.1)),
         ];
         entries.extend(name.map(|name| ("name".to_string(), name)));
-        semio_framework_value::DslValue::Object(entries)
+        DslValue::Object(entries)
     };
     let mut layers: Vec<DslValue> = nodes
         .iter()
         .map(|node| {
             let (_, _, width, height) = node_box(node);
             let mut entries: Vec<(String, DslValue)> = match node {
-                semio_framework_value::DslValue::Object(entries) => entries.iter().filter(|(key, _)| !CANVAS_LAYER_RESERVED_KEYS.contains(&key.as_str())).cloned().collect(),
+                DslValue::Object(entries) => entries.iter().filter(|(key, _)| !CANVAS_LAYER_RESERVED_KEYS.contains(&key.as_str())).cloned().collect(),
                 _ => Vec::new(),
             };
             let kind = if node.get("shape").and_then(|value| value.as_str()) == Some("circle") { "circle" } else { "rect" };
-            entries.push(("kind".to_string(), semio_framework_value::DslValue::String(kind.into())));
-            entries.push(("width".to_string(), semio_framework_value::DslValue::float(width)));
-            entries.push(("height".to_string(), semio_framework_value::DslValue::float(height)));
+            entries.push(("kind".to_string(), DslValue::String(kind.into())));
+            entries.push(("width".to_string(), DslValue::float(width)));
+            entries.push(("height".to_string(), DslValue::float(height)));
             entries.extend(node.get("text").cloned().map(|text| ("name".to_string(), text)));
-            semio_framework_value::DslValue::Object(entries)
+            DslValue::Object(entries)
         })
         .collect();
     for edge in board_snapshot_edges(board) {

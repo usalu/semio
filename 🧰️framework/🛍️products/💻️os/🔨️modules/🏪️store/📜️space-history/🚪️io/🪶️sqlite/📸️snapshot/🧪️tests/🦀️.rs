@@ -165,6 +165,8 @@ fn sqlite_snapshot_framework_space_history_independent_surrogate_renumber_preser
 }
 use super::{S_SPACE_HISTORY_SCHEMA, SpaceHistoryMutation, SpaceHistorySnapshot};
 use store::ArtifactSqliteSnapshot;
+/// 🫴️ The full History caller wallet of a law that drives several native operations through one control: one copy turn spans a whole text span, so its copy credit equals its capacity credit.
+fn history_caller_grant()->semio_framework_value::RetainedCloneGrant{semio_framework_value::RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096}}
 fn caller_grant()->semio_framework_value::RetainedCloneGrant{serde_json::from_str(include_str!("../🧫️fixtures/🫴️grant/🔣️.json")).expect("original authored History caller policy")}
 /// 🫴️ Installs and drains one actual caller recipient for each independent decode fixture operation.
 fn with_original_decode<T>(operation:impl FnOnce(&mut store::NativeSnapshotDecodeOwner<'_,'_>)->T)->T{let mut recipient=semio_framework_value::native_decoding::NativeDecodeRetirementRecipient::new();let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|{assert!(event.owned_bytes<=1<<30&&(event.total==0||event.completed<=event.total));true};let mut native=semio_framework_value::NativeDecodeControl::new(1<<30,&mut progress);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=store::NativeSnapshotDecodeOwner::new(&mut native,caller_grant());let output=operation(&mut owner);drop(owner);close_native_history_recipient(&mut native);drop(native);assert!(!recipient.has_owner());output}
@@ -181,6 +183,8 @@ fn with_original_import<T>(database:SqliteDatabase,operation:impl FnOnce(&mut Op
  })
 }
 
+/// 🧹️ Drains the recipient of a control that already stands at its ceiling: a refused encode parks its frame, and retiring that frame needs capacity the exact ceiling no longer has, so the caller reports whether the cleanup fit and otherwise leaks the frame together with its recipient.
+fn settle_encode_history_recipient(native:&mut semio_framework_value::NativeEncodeControl<'_>)->bool{for _ in 0..100_000{if !native.has_retirement_owner(){return true}match native.close_retirement_recipient(caller_grant()){Ok(step)=>if step.progress()==Default::default()&&native.has_retirement_owner(){return false},Err(_)=>return false}}false}
 fn close_encode_history_recipient(native:&mut semio_framework_value::NativeEncodeControl<'_>){for _ in 0..100_000{if !native.has_retirement_owner(){return}let step=native.close_retirement_recipient(caller_grant()).unwrap();assert!(step.progress()!=Default::default()||!native.has_retirement_owner(),"original encoder close must advance actual custody");}assert!(!native.has_retirement_owner(),"original encoder return supervisor did not finish");}
 
 /// ♻️ Returns only original pending snapshot custody under the unchanged independent test policy.
@@ -198,25 +202,31 @@ fn sqlite_snapshot_framework_space_history_json_turns_preserve_original_ceiling_
     let source = fixture();
     let limits = SqliteDatabaseLimits::default();
     let mut accepted = |_| true;
+    let mut observed_recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
     let mut observed = semio_framework_value::NativeEncodeControl::new(1 << 30, &mut accepted);
+    observed.install_retirement_recipient(&mut observed_recipient).unwrap();
     let mut sql_accepted = |_| true;
     let mut sql = SqliteSnapshotControl::new(&mut sql_accepted, limits);
-    let output = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source, SnapshotEncoding::Text, &mut sql, &mut store::NativeSnapshotEncodeOwner::new(&mut observed,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})).unwrap();
+    let output = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source, SnapshotEncoding::Text, &mut sql, &mut store::NativeSnapshotEncodeOwner::new(&mut observed,history_caller_grant())).unwrap();
+    let observed_owned = observed.owned_bytes();
+    close_encode_history_recipient(&mut observed);
     let store::io::IoPayload::Text(text) = output else { panic!("declared text carrier") };
     assert_eq!(semio_framework_pack_json::from_json_str::<SpaceHistorySnapshot>(&text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), source);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&text).unwrap(),serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap());
     assert_eq!(observed.maximum_bytes(), 1 << 30);
-    let owned = observed.owned_bytes();
+    let owned = observed_owned;
     assert!(owned > text.len());
     assert_eq!(limits.max_allocation_bytes - sql.allocation_remaining_bytes(), owned);
     for deficit in [0, 1] {
         let maximum = owned + 3 - deficit;
         let mut accepted = |_| true;
+        let mut original_recipient = semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();
         let mut original = semio_framework_value::NativeEncodeControl::new(maximum, &mut accepted);
+        original.install_retirement_recipient(&mut original_recipient).unwrap();
         original.charge(3).unwrap();
         let mut sql_accepted = |_| true;
         let mut sql = SqliteSnapshotControl::new(&mut sql_accepted, limits);
-        let result = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source, SnapshotEncoding::Text, &mut sql, &mut store::NativeSnapshotEncodeOwner::new(&mut original,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096}));
+        let result = <SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source, SnapshotEncoding::Text, &mut sql, &mut store::NativeSnapshotEncodeOwner::new(&mut original,history_caller_grant()));
         assert_eq!(original.maximum_bytes(), maximum);
         assert_eq!(limits.max_allocation_bytes - sql.allocation_remaining_bytes(), original.owned_bytes() - 3);
         if deficit == 0 {
@@ -225,11 +235,15 @@ fn sqlite_snapshot_framework_space_history_json_turns_preserve_original_ceiling_
             assert_eq!(original.owned_bytes(), maximum);
             let mut fresh_sql_accepted = |_| true;
             let mut fresh_sql = SqliteSnapshotControl::new(&mut fresh_sql_accepted, limits);
-            assert!(<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source, SnapshotEncoding::Text, &mut fresh_sql, &mut store::NativeSnapshotEncodeOwner::new(&mut original,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})).is_err());
+            assert!(<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source, SnapshotEncoding::Text, &mut fresh_sql, &mut store::NativeSnapshotEncodeOwner::new(&mut original,history_caller_grant())).is_err());
             assert_eq!(original.owned_bytes(), maximum);
         } else {
             assert_eq!(result.unwrap_err().kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
             assert!(original.owned_bytes() <= maximum);
+        }
+        if !settle_encode_history_recipient(&mut original) {
+            drop(original);
+            std::mem::forget(original_recipient);
         }
     }
     println!("[DEBUG] SpaceHistory actual JSON turns: nativeBytes={owned} outputBytes={} original ceiling restored; cumulative and one-short checked; independent=Serde", text.len());
@@ -551,9 +565,10 @@ fn sqlite_snapshot_framework_space_history_native_output_full_requests_and_cumul
   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);
         let native_deadline=std::time::Instant::now()+std::time::Duration::from_secs(60);
         let mut native_progress=|event|{let semio_framework_value::native_encoding::NativeEncodeProgress{completed,total,owned_bytes}=event;assert!(owned_bytes<=1<<30&& (total==0||completed<=total));std::time::Instant::now()<native_deadline};
-        let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);
-  let (result,requested)=crate::test_allocation::observe(||<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})));
+        let mut native_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);native.install_retirement_recipient(&mut native_recipient).unwrap();
+  let (result,requested)=crate::test_allocation::observe(||<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,history_caller_grant())));
   let first=result.expect("valid full History native output");
+  close_encode_history_recipient(&mut native);
   let debit=limits.max_allocation_bytes-control.allocation_remaining_bytes();
   assert!(requested>0,"real History native output must own concrete requested backing");
   assert!(debit>=requested,"History {encoding:?} admitted {debit} bytes but made {requested} concrete allocator requests");
@@ -563,8 +578,9 @@ fn sqlite_snapshot_framework_space_history_native_output_full_requests_and_cumul
   let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);
         let native_deadline=std::time::Instant::now()+std::time::Duration::from_secs(60);
         let mut native_progress=|event|{let semio_framework_value::native_encoding::NativeEncodeProgress{completed,total,owned_bytes}=event;assert!(owned_bytes<=1<<30&& (total==0||completed<=total));std::time::Instant::now()<native_deadline};
-        let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);
-  let error=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})).unwrap_err();
+        let mut native_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);native.install_retirement_recipient(&mut native_recipient).unwrap();
+  let error=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,history_caller_grant())).unwrap_err();
+  close_encode_history_recipient(&mut native);
   assert_eq!(error.kind.as_str(),output["zeroPhysical"]["expectedKind"].as_str().unwrap());
   assert_eq!(zero-control.allocation_remaining_bytes(),usize::try_from(output["zeroPhysical"]["expectedCharge"].as_u64().unwrap()).unwrap());
   let numerator=usize::try_from(output["cumulative"]["ceilingNumerator"].as_u64().unwrap()).unwrap();let denominator=usize::try_from(output["cumulative"]["ceilingDenominator"].as_u64().unwrap()).unwrap();
@@ -573,12 +589,14 @@ fn sqlite_snapshot_framework_space_history_native_output_full_requests_and_cumul
    let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,limits);
         let native_deadline=std::time::Instant::now()+std::time::Duration::from_secs(60);
         let mut native_progress=|event|{let semio_framework_value::native_encoding::NativeEncodeProgress{completed,total,owned_bytes}=event;assert!(owned_bytes<=1<<30&& (total==0||completed<=total));std::time::Instant::now()<native_deadline};
-        let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);
-   let result=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096}));
+        let mut native_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);native.install_retirement_recipient(&mut native_recipient).unwrap();
+   let result=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,history_caller_grant()));
+   close_encode_history_recipient(&mut native);
    if allowance<debit{let error=result.unwrap_err();assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);continue;}
    let retained=result.expect("exact admitted History native output");
    assert_eq!(allowance-control.allocation_remaining_bytes(),debit);
-   let error=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})).unwrap_err();
+   let error=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,history_caller_grant())).unwrap_err();
+   close_encode_history_recipient(&mut native);
    assert_eq!(error.kind.as_str(),output["cumulative"]["expectedKind"].as_str().unwrap());
    assert!(allowance-control.allocation_remaining_bytes()>=debit);
    assert_eq!(decode(retained),source);
@@ -588,8 +606,9 @@ fn sqlite_snapshot_framework_space_history_native_output_full_requests_and_cumul
   let limits=SqliteDatabaseLimits::default();let mut control=SqliteSnapshotControl::new(&mut cancel,limits);
         let native_deadline=std::time::Instant::now()+std::time::Duration::from_secs(60);
         let mut native_progress=|event|{let semio_framework_value::native_encoding::NativeEncodeProgress{completed,total,owned_bytes}=event;assert!(owned_bytes<=1<<30&& (total==0||completed<=total));std::time::Instant::now()<native_deadline};
-        let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);
-  let error=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})).unwrap_err();
+        let mut native_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut native_progress);native.install_retirement_recipient(&mut native_recipient).unwrap();
+  let error=<SpaceHistorySnapshot as store::ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&source,encoding,&mut control,&mut store::NativeSnapshotEncodeOwner::new(&mut native,history_caller_grant())).unwrap_err();
+  close_encode_history_recipient(&mut native);
   assert_eq!(error.kind.as_str(),output["cancellation"]["expectedKind"].as_str().unwrap());
   assert!(limits.max_allocation_bytes-control.allocation_remaining_bytes()>0,"admitted canceled output must retain its caller debit");
   drop(control);assert!(reached);
@@ -674,7 +693,7 @@ fn sqlite_snapshot_framework_space_history_original_native_owner_cancels_and_kee
   let error=SpaceHistorySnapshot::decode_sqlite_snapshot_native(&input,&mut sql,&mut native_owner).unwrap_err();drop(native_owner);assert_eq!(error.kind.as_str(),contract["cancellation"]["expectedKind"].as_str().unwrap());let debit=native.owned_bytes()-7;assert_eq!(native.maximum_bytes(),1<<30);assert_eq!(debit,limits.max_allocation_bytes-sql.allocation_remaining_bytes());assert_eq!(debit,limits.max_value_bytes-sql.reconstruction_remaining_bytes().unwrap());armed.set(false);close_native_history_recipient(&mut native);drop(native);drop(observe);assert!(!original_recipient.has_owner());assert!(reached);
   let mut sql_progress=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_progress,limits);let armed=std::cell::Cell::new(false);let mut reached=false;let mut observe=|event:semio_framework_value::native_encoding::NativeEncodeProgress|{if armed.get()&&(!interior||(event.completed>=minimum&&event.completed<event.total)){reached=true;false}else{true}};
   let mut native=semio_framework_value::NativeEncodeControl::new(1<<30,&mut observe);native.charge(7).unwrap();armed.set(true);
-  let error=source.encode_sqlite_snapshot_native(encoding,&mut sql,&mut store::NativeSnapshotEncodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_items:256,maximum_copy_bytes:65536,maximum_capacity_bytes:16777216,maximum_release_bytes:16777216,maximum_depth:4096})).unwrap_err();assert_eq!(error.kind.as_str(),contract["cancellation"]["expectedKind"].as_str().unwrap());assert_eq!(native.maximum_bytes(),1<<30);assert_eq!(native.owned_bytes()-7,limits.max_allocation_bytes-sql.allocation_remaining_bytes());drop(native);drop(observe);assert!(reached);
+  let error=source.encode_sqlite_snapshot_native(encoding,&mut sql,&mut store::NativeSnapshotEncodeOwner::new(&mut native,history_caller_grant())).unwrap_err();assert_eq!(error.kind.as_str(),contract["cancellation"]["expectedKind"].as_str().unwrap());assert_eq!(native.maximum_bytes(),1<<30);assert_eq!(native.owned_bytes()-7,limits.max_allocation_bytes-sql.allocation_remaining_bytes());drop(native);drop(observe);assert!(reached);
   println!("[DEBUG] SpaceHistory {encoding:?} original native owner interior={interior} canceled and retained complete cumulative receipt");
  }}
 }

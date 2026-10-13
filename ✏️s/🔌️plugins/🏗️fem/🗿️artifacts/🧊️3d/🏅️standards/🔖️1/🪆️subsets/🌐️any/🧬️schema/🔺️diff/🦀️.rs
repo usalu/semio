@@ -127,7 +127,7 @@ impl Fem3dElementsDelta {
     }
 
     /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
-    pub fn commit_onto(&self, base: &Vec<FemElement>, capability: protocol::ApplyCapability) -> Result<Vec<FemElement>, protocol::list_delta::ApplyError> {
+    pub fn commit_onto(&self, base: &Vec<FemElement>, capability: ApplyCapability) -> Result<Vec<FemElement>, protocol::list_delta::ApplyError> {
         self.clone().into_parts().commit_onto(base, capability)
     }
 
@@ -145,7 +145,7 @@ impl Fem3dElementsDelta {
 
     /// 🕳️ Whether the delta changes nothing.
     pub fn is_empty(&self) -> bool {
-        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| protocol::list_delta::RowPatch::<FemElement>::is_empty(&entry.patch))
+        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| RowPatch::<FemElement>::is_empty(&entry.patch))
     }
 }
 
@@ -302,7 +302,7 @@ impl Fem3dLoadsDelta {
     }
 
     /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
-    pub fn commit_onto(&self, base: &Vec<FemLoad>, capability: protocol::ApplyCapability) -> Result<Vec<FemLoad>, protocol::list_delta::ApplyError> {
+    pub fn commit_onto(&self, base: &Vec<FemLoad>, capability: ApplyCapability) -> Result<Vec<FemLoad>, protocol::list_delta::ApplyError> {
         self.clone().into_parts().commit_onto(base, capability)
     }
 
@@ -320,7 +320,7 @@ impl Fem3dLoadsDelta {
 
     /// 🕳️ Whether the delta changes nothing.
     pub fn is_empty(&self) -> bool {
-        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| protocol::list_delta::RowPatch::<FemLoad>::is_empty(&entry.patch))
+        self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| RowPatch::<FemLoad>::is_empty(&entry.patch))
     }
 }
 

@@ -355,7 +355,7 @@ async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens() {
     for case in canonical_save_fixture()["cases"].as_array().unwrap() {
         let mut snapshot = decode_xlsx(&canonical_fixture_zip(case)).unwrap_or_else(|error| panic!("{} import: {error}", case["id"]));
         let address = xlsx_cell_address(&snapshot, "Data", 1, 0).unwrap_or_else(|error| panic!("{} A1 address: {error}", case["id"]));
-        apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetCell(SetCell { address, value: XlsxCellValue::Number(99.25) }));
+        apply_xlsx_mutation(&mut snapshot, &XlsxMutation::SetCell(SetCell { address, value: XlsxCellValue::Number(99.25), node: None }));
         let encoded = <XlsxEditor as ArtifactEditor>::encode_natural_file(&snapshot).unwrap_or_else(|error| panic!("{} natural export: {error}", case["id"]));
         assert_independent_canonical_package(&encoded, case, true);
         let independently_reopened = decode_xlsx(&encoded).unwrap_or_else(|error| panic!("{} independent reopen: {error}", case["id"]));

@@ -24,7 +24,7 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPoint {
         let Self { index, .. } = self;
         Ok({
             match base.points.get(*index) {
-                Some(p) => vec![LasMutation::SetPoint(set_point::SetPoint { index: *index, point: p.clone() })],
+                Some(p) => vec![LasMutation::SetPoint(SetPoint { index: *index, point: p.clone() })],
                 None => Vec::new(),
             }
         })

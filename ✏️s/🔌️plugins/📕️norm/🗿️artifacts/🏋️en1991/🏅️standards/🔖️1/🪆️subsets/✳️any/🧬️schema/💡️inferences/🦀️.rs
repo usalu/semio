@@ -61,7 +61,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use crate::document::{CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+#[cfg(test)] use crate::document::{AnnexChoice};
 use crate::standards::v1::subsets::any::schema::{
     assess_covers, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4,
     raise_energy_remedy, raise_force_remedy, raise_power_remedy, raise_pressure_remedy, raise_temp_remedy,
@@ -219,7 +220,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
             let o = if document.fire_opening_factor > 1e-9 { document.fire_opening_factor } else { o_geom };
             let path_o = "fireOpeningFactor";
             let remedy_o = if (document.fire_opening_factor - o_geom).abs() > 0.005 + 1e-9 {
-                Some(crate::document::Remedy::at_least(SubjectRef::new("", path_o, copy("Opening factor O", "Öffnungsfaktor O")), Quantity::new(QuantityKind::Dimensionless, document.fire_opening_factor.abs()), Quantity::new(QuantityKind::Dimensionless, o_geom.abs()), copy(&format!("Set O to geometry-derived {o_geom:.4} m½ from A_f={:.1} m², H={:.2} m.", document.fire_compartment_area, document.fire_compartment_height), &format!("O auf geometriebasierten Wert {o_geom:.4} m½ aus A_f={:.1} m², H={:.2} m setzen.", document.fire_compartment_area, document.fire_compartment_height))))
+                Some(Remedy::at_least(SubjectRef::new("", path_o, copy("Opening factor O", "Öffnungsfaktor O")), Quantity::new(QuantityKind::Dimensionless, document.fire_opening_factor.abs()), Quantity::new(QuantityKind::Dimensionless, o_geom.abs()), copy(&format!("Set O to geometry-derived {o_geom:.4} m½ from A_f={:.1} m², H={:.2} m.", document.fire_compartment_area, document.fire_compartment_height), &format!("O auf geometriebasierten Wert {o_geom:.4} m½ aus A_f={:.1} m², H={:.2} m setzen.", document.fire_compartment_area, document.fire_compartment_height))))
             } else { None };
             report.push(assess_covers("en1991.1-2.opening-factor", "DIN EN 1991-1-2", ClauseId::new("EN 1991-1-2", "Annex A", "A.2"), SubjectRef::new("", path_o, copy("Opening factor", "Öffnungsfaktor")), copy("Opening factor O from compartment geometry", "Öffnungsfaktor O aus Brandabschnittsgeometrie"), Quantity::new(QuantityKind::Dimensionless, 1.0 - (document.fire_opening_factor - o_geom).abs().min(1.0)), Quantity::new(QuantityKind::Dimensionless, 1.0), copy(&format!("Geometry O = {o_geom:.4} (A_f={:.1} m², H={:.2} m); entered {:.4}.", document.fire_compartment_area, document.fire_compartment_height, document.fire_opening_factor), &format!("Geometrie-O = {o_geom:.4} (A_f={:.1} m², H={:.2} m); eingegeben {:.4}.", document.fire_compartment_area, document.fire_compartment_height, document.fire_opening_factor)), annex, remedy_o));
             let theta_g = part_1_2::parametric_gas_temp_k(document.fire_duration, o, document.fire_thermal_inertia);
@@ -269,7 +270,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
         let cpe10_ok = (face.c_pe10 - tab_cpe10).abs() <= 0.05 + 1e-9;
         let cpe1_ok = (face.c_pe1 - tab_cpe1).abs() <= 0.05 + 1e-9;
         let remedy10 = if !cpe10_ok {
-            Some(crate::document::Remedy::at_least(
+            Some(Remedy::at_least(
                 SubjectRef::new(&face.id, &path_cpe10, copy("c_pe,10", "c_pe,10")),
                 Quantity::new(QuantityKind::Dimensionless, face.c_pe10.abs()),
                 Quantity::new(QuantityKind::Dimensionless, tab_cpe10.abs()),
@@ -295,7 +296,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
             remedy10,
         ));
         let remedy1 = if !cpe1_ok {
-            Some(crate::document::Remedy::at_least(
+            Some(Remedy::at_least(
                 SubjectRef::new(&face.id, &path_cpe1, copy("c_pe,1", "c_pe,1")),
                 Quantity::new(QuantityKind::Dimensionless, face.c_pe1.abs()),
                 Quantity::new(QuantityKind::Dimensionless, tab_cpe1.abs()),
@@ -367,7 +368,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
         let path_lane = "bridgeLane";
         let lane_ok = document.bridge_lane >= 1 && document.bridge_lane <= n_lanes;
         let remedy_lane = if !lane_ok {
-            Some(crate::document::Remedy::at_least(SubjectRef::new("", path_lane, copy("Notional lane", "Ideeller Fahrstreifen")), Quantity::new(QuantityKind::Dimensionless, f64::from(document.bridge_lane)), Quantity::new(QuantityKind::Dimensionless, 1.0), copy(&format!("Set bridgeLane to 1..{n_lanes} for carriageway width {:.2} m (Table 4.1 → n₁={n_lanes}, w_lane={w_lane:.2} m, remaining={w_rem:.2} m).", document.bridge_lane_width), &format!("bridgeLane auf 1..{n_lanes} setzen bei Fahrbahnbreite {:.2} m (Tabelle 4.1 → n₁={n_lanes}, w_lane={w_lane:.2} m, Rest={w_rem:.2} m).", document.bridge_lane_width))))
+            Some(Remedy::at_least(SubjectRef::new("", path_lane, copy("Notional lane", "Ideeller Fahrstreifen")), Quantity::new(QuantityKind::Dimensionless, f64::from(document.bridge_lane)), Quantity::new(QuantityKind::Dimensionless, 1.0), copy(&format!("Set bridgeLane to 1..{n_lanes} for carriageway width {:.2} m (Table 4.1 → n₁={n_lanes}, w_lane={w_lane:.2} m, remaining={w_rem:.2} m).", document.bridge_lane_width), &format!("bridgeLane auf 1..{n_lanes} setzen bei Fahrbahnbreite {:.2} m (Tabelle 4.1 → n₁={n_lanes}, w_lane={w_lane:.2} m, Rest={w_rem:.2} m).", document.bridge_lane_width))))
         } else { None };
         report.push(assess_covers("en1991.2.notional-lanes", "DIN EN 1991-2", ClauseId::new("EN 1991-2", "Table 4.1", "4.2.3"), SubjectRef::new("", "bridgeLaneWidth", copy("Carriageway width", "Fahrbahnbreite")), copy("Notional lane layout from carriageway width", "Ideelle Fahrstreifen aus Fahrbahnbreite"), Quantity::new(QuantityKind::Dimensionless, if lane_ok { 1.0 } else { 0.0 }), Quantity::new(QuantityKind::Dimensionless, 1.0), copy(&format!("w={:.2} m → n₁={n_lanes}, w_lane={w_lane:.2} m, remaining={w_rem:.2} m; selected lane {}.", document.bridge_lane_width, document.bridge_lane), &format!("w={:.2} m → n₁={n_lanes}, w_lane={w_lane:.2} m, Rest={w_rem:.2} m; gewählter Streifen {}.", document.bridge_lane_width, document.bridge_lane)), annex, remedy_lane));
         let span = document.bridge_span;
@@ -455,7 +456,7 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
                 _ => raise_pressure_remedy(path_u, "", "LM1 UDL", "LM1-Gleichlast", document.assumed_bridge_udl, req_u),
             })
         } else if !governs {
-            Some(crate::document::Remedy::at_least(SubjectRef::new("", "bridgeLoadGroup", copy("Load group", "Lastgruppe")), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), copy(&format!("Set bridgeLoadGroup to a governing group ({governing})."), &format!("bridgeLoadGroup auf eine maßgebende Gruppe ({governing}) setzen."))))
+            Some(Remedy::at_least(SubjectRef::new("", "bridgeLoadGroup", copy("Load group", "Lastgruppe")), Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0), copy(&format!("Set bridgeLoadGroup to a governing group ({governing})."), &format!("bridgeLoadGroup auf eine maßgebende Gruppe ({governing}) setzen."))))
         } else { None };
         let selected_demand = selected_row.map(|s| s.1).unwrap_or(0.0);
         // Utilization of selected Table 4.4a group; inflate when not covered / not governing so status fails.

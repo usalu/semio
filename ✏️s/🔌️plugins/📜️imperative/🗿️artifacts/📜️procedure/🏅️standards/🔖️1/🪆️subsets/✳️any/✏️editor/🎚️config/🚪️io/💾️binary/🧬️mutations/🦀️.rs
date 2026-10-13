@@ -18,4 +18,3 @@ impl protocol::OpBinary for ImperativeConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

@@ -973,7 +973,7 @@ async fn assert_linked_fixture_denied(fixture: &FixtureDirectory) {
 /// 🧪️ Loads real GIS assembly metadata and native receipts around synthetic component bytes; component execution is outside this fixture.
 #[cfg(feature = "native-artifact-execution")]
 async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> FixtureDirectory {
-    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().expect("GIS assembly"));
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = decode_package_descriptor(&emitted).expect("actual native GIS descriptor");
@@ -1908,7 +1908,7 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
 async fn guest_codec_tables_answer_like_the_linked_native_codecs() {
     macro_rules! compare_plugin {
         ($plugin:expr, $codecs:expr) => {{
-            let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_plugin::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+            let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
             semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, $plugin.expect("plugin assembles"));
             let document_id = format!("artifact-{}", "2".repeat(32));
             let (mut owned, mut unowned) = (Vec::new(), 0usize);

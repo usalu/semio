@@ -234,11 +234,11 @@ async fn a_board_drag_edited_in_history_replays_its_downstream() {
     let mut store = crate::host::owned::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_selection_2d(vec!["p1".into()], 1.0, 0.0), drag_selection_3d(vec!["p1".into()], [0.0, 0.0, 4.0]), drag_selection_2d(vec!["p1".into()], 0.0, 2.0)];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }).await.expect("a selection gesture applies");
+        semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut identity).await).expect("a selection gesture applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag_selection_2d(vec!["p1".into()], 7.0, 0.0);
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_5D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_5D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     let mut preview = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
     assert_eq!(preview.parts[0].part_2d.x, 0.0, "the preview base is the state right before the edited drag");
     apply_puzzle5d_mutation(&mut preview, &edited).expect("the draft applies to its base");
@@ -253,7 +253,7 @@ async fn a_board_drag_edited_in_history_replays_its_downstream() {
     }
     assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
     assert_eq!((fresh.parts[0].part_2d.x, fresh.parts[0].part_2d.y, fresh.parts[0].part_3d.origin), (7.0, 2.0, [0.0, 0.0, 4.0]));
-    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    semio_framework_plugin::with_authoring_identity!(|identity| store.commit_finished_replay(result, store::HistoryFinalization::Overwrite, &mut identity).await).expect("overwrite commits");
     assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
     crate::host::owned::close_puzzle5d_store(&mut store).expect("the standalone store retires to its terminal-empty shell");
 }
@@ -280,6 +280,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 
 #[test]
 fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
+    use crate::Puzzle5dPlaySnapshot;
     let spec = <Puzzle5dPlaySnapshot as store::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
     assert_eq!(store::os_pack::schema_hash(&spec), store::os_pack::schema_hash(&Puzzle5dSnapshot::__dsl_spec()));
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);

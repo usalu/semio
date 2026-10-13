@@ -1,7 +1,6 @@
 //! 🧬️ Generic record, scalar and tagged-variant compilation under explicit owned composition.
 use proc_macro::TokenStream;
 use quote::quote;
-use std::collections::HashSet;
 use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
 
 /// 🧬️ Derives the complete generic record construction contract.
@@ -30,7 +29,7 @@ pub fn variant_binding(input: TokenStream) -> TokenStream { emit_enum(parse_macr
 
 struct ProjectionInput { spec: syn::Ident, to: syn::Ident, from: syn::Ident, declaration: DeriveInput }
 impl syn::parse::Parse for ProjectionInput {
-    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+    fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
         let spec = input.parse()?; input.parse::<syn::Token![,]>()?;
         let to = input.parse()?; input.parse::<syn::Token![,]>()?;
         let from = input.parse()?; input.parse::<syn::Token![;]>()?;
@@ -1298,6 +1297,14 @@ fn borrowed_record_codegen(fields:&Fields,owner:&syn::Ident)->Vec<proc_macro2::T
     }).collect()
 }
 
+/// 🔠️ Names a generated static table in upper snake case: an underscore precedes every uppercase letter after the first, so distinct authored names stay distinct.
+/// See <https://doc.rust-lang.org/rustc/lints/listing/warn-by-default.html#non-upper-case-globals>.
+fn borrowed_table_ident(owner:&syn::Ident,role:&str)->syn::Ident{
+    let mut spelled=String::new();
+    for(index,character)in owner.to_string().chars().enumerate(){if character.is_uppercase()&&index>0{spelled.push('_')}spelled.extend(character.to_uppercase())}
+    syn::Ident::new(&format!("__DSL_BORROWED_{spelled}_{role}"),owner.span())
+}
+
 /// 🔁️ Resolves an authored Self edge to its concrete type in a uniquely named static table.
 fn borrowed_owner_type(ty:&Type,owner:&syn::Ident)->proc_macro2::TokenStream{
     fn resolve(tokens:proc_macro2::TokenStream,owner:&syn::Ident)->proc_macro2::TokenStream{tokens.into_iter().map(|token|match token{proc_macro2::TokenTree::Ident(ident)if ident=="Self"=>proc_macro2::TokenTree::Ident(owner.clone()),proc_macro2::TokenTree::Group(group)=>{let mut next=proc_macro2::Group::new(group.delimiter(),resolve(group.stream(),owner));next.set_span(group.span());proc_macro2::TokenTree::Group(next)},other=>other}).collect()}
@@ -1312,7 +1319,7 @@ fn borrowed_record_owner_codegen(input:&DeriveInput,field_role:bool)->proc_macro
     let keyword=match container.keyword{Some(keyword)=>quote!{Some(#keyword)},None=>quote!{None}};
     let layout=if container.lines_layout{quote!{::semio_framework_dsl_record::RecordLayout::Lines}}else{quote!{::semio_framework_dsl_record::RecordLayout::Inline}};
     let fields=borrowed_record_codegen(&data.fields,name);
-    let count=fields.len();let table=quote::format_ident!("__DSL_BORROWED_{}_FIELDS",name);
+    let count=fields.len();let table=borrowed_table_ident(name,"FIELDS");
     let field=if field_role{quote!{impl ::semio_framework_dsl_record::BorrowedDslField for #name{const SHAPE : ::semio_framework_dsl_record::BorrowedShape=::semio_framework_dsl_record::BorrowedShape::Record(::semio_framework_dsl_record::borrowed_record::<Self>);}}}else{quote!{}};
     quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;#count]=[#(#fields),*];impl ::semio_framework_dsl_record::BorrowedDslRecord for #name{const RECORD : ::semio_framework_dsl_record::BorrowedRecordSpec=::semio_framework_dsl_record::BorrowedRecordSpec{keyword:#keyword,layout:#layout,fields:&#table};}#field}
 }
@@ -1323,7 +1330,7 @@ fn borrowed_scalar_owner_codegen(input:&DeriveInput)->proc_macro2::TokenStream{
     let Data::Enum(data)=&input.data else{return syn::Error::new_spanned(input,"borrowed scalar metadata requires an enum").to_compile_error()};
     let mut labels=Vec::new();
     for(index,variant)in data.variants.iter().enumerate(){if !matches!(variant.fields,Fields::Unit){return syn::Error::new_spanned(variant,"borrowed scalar metadata requires unit variants").to_compile_error()}let ordinal=index as u32;let attrs=parse_field_attrs(&variant.attrs);let label=attrs.key.unwrap_or_else(||to_kebab(&variant.ident.to_string()));labels.push(quote!{(#label,#ordinal)});}
-    let count=labels.len();let table=quote::format_ident!("__DSL_BORROWED_{}_ENUM",name);
+    let count=labels.len();let table=borrowed_table_ident(name,"ENUM");
     quote!{static #table:[(&'static str,u32);#count]=[#(#labels),*];impl ::semio_framework_dsl_record::BorrowedDslField for #name{const SHAPE : ::semio_framework_dsl_record::BorrowedShape=::semio_framework_dsl_record::BorrowedShape::Enum(&#table);}}
 }
 
@@ -1334,12 +1341,12 @@ fn borrowed_variants_owner_codegen(name:&syn::Ident,data:&syn::DataEnum)->proc_m
         let tag=&variant.ident;let attrs=parse_field_attrs(&variant.attrs);let keyword=attrs.key.unwrap_or_else(||to_kebab(&tag.to_string()));let make=quote::format_ident!("__dsl_borrowed_variant_{}",index);let spec=quote::format_ident!("__DSL_BORROWED_VARIANT_SPEC_{}",index);
         let(body,pattern)=match &variant.fields{
             Fields::Unnamed(fields)if fields.unnamed.len()==1=>{let inner=borrowed_owner_type(&fields.unnamed[0].ty,name);(quote!{<#inner as ::semio_framework_dsl_record::BorrowedDslRecord>::RECORD},quote!{Self::#tag(_)})},
-            Fields::Named(_)=>{let fields=borrowed_record_codegen(&variant.fields,name);let count=fields.len();let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANT_{}_FIELDS",name,index);tables.push(quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;#count]=[#(#fields),*];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:&#table}},quote!{Self::#tag{..}})},
-            Fields::Unit=>{let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANT_{}_FIELDS",name,index);tables.push(quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;0]=[];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:&#table}},quote!{Self::#tag})},
+            Fields::Named(_)=>{let fields=borrowed_record_codegen(&variant.fields,name);let count=fields.len();let table=borrowed_table_ident(name,&format!("VARIANT_{index}_FIELDS"));tables.push(quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;#count]=[#(#fields),*];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:&#table}},quote!{Self::#tag{..}})},
+            Fields::Unit=>{let table=borrowed_table_ident(name,&format!("VARIANT_{index}_FIELDS"));tables.push(quote!{static #table:[::semio_framework_dsl_record::BorrowedFieldSpec;0]=[];});(quote!{::semio_framework_dsl_record::BorrowedRecordSpec{keyword:Some(#keyword),layout : ::semio_framework_dsl_record::RecordLayout::Inline,fields:&#table}},quote!{Self::#tag})},
             _=>return syn::Error::new_spanned(variant,"borrowed tagged metadata requires named, unit, or one record newtype variant").to_compile_error(),
         };
         methods.push(quote!{const #spec : ::semio_framework_dsl_record::BorrowedRecordSpec=#body;fn #make()->::semio_framework_dsl_record::BorrowedRecordSpec{Self::#spec}});entries.push(quote!{(#keyword,#name::#make as fn()->::semio_framework_dsl_record::BorrowedRecordSpec)});identities.push(quote!{#pattern=>(#keyword,#index,Self::#make())});
     }
-    let count=entries.len();let table=quote::format_ident!("__DSL_BORROWED_{}_VARIANTS",name);
+    let count=entries.len();let table=borrowed_table_ident(name,"VARIANTS");
     quote!{#(#tables)*impl #name{#(#methods)*}static #table:[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec);#count]=[#(#entries),*];impl ::semio_framework_dsl_record::BorrowedDslVariants for #name{const VARIANTS:&'static[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec)]=&#table;fn projected_borrowed_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::BorrowedRecordSpec){match self{#(#identities),*}}fn projected_borrowed_variant_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{<Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(self,path)}fn projected_borrowed_variant_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{<Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(self,path,index)}}}
 }

@@ -47,7 +47,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.wav", standard: semio_framework_artifact_reference::StandardId("riff-pcm"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.wav", standard: StandardId("riff-pcm"), subset: SubsetId("*") }, store::ArtifactCodec::bare::<WavSnapshot, crate::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(crate::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -71,7 +71,7 @@ pub use derived_composition::*;
 // `fmt `+`data` roles) is small enough that duplicating the ~15-line walk loop keeps each
 // artifact's engine self-contained without a cross-artifact dependency).
 
-use crate::apply_mutation;
+#[cfg(test)] use crate::apply_mutation;
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{validate_wav_serialization, RiffChunk, WavChunkRef, WavData, WavFmt, WavSnapshot, STDIO_WAV_DOCUMENT_SCHEMA};
 
 //#region 🔖️Sniff
@@ -434,7 +434,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec WavBuilderFacets {
         construction: WavBuilderConstruction,
         analysis: WavAnalyzerAnalysis,
-        composition: crate::standards::riff_pcm::subsets::any::io::derived_composition::WavComposerComposition,
+        composition: WavComposerComposition,
     }
     builder: WavBuilder,
     analyzer: WavAnalyzer,

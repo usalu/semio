@@ -13,12 +13,10 @@
 //! graph exactly as the artifacts require.
 
 /// 🧵️ Retained norm command output with empty application config and draft lanes.
-pub type NormRetainedCommandResult<M> = Result<Emit<M, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
+pub type NormRetainedCommandResult<M> = Result<Emit<M, NoConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
 
-use crate::document::{
-    cached_report_for, document_revision_key, invalidate_cached_report_for, store_cached_report_for, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, NormFamily, NormHost, Quantity,
-    QuantityKind, Remedy, RemedyBound,
-};
+use crate::document::{cached_report_for, document_revision_key, invalidate_cached_report_for, store_cached_report_for, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormHost, Quantity, QuantityKind, RemedyBound};
+#[cfg(test)] use crate::document::{LocalizedCopy, Remedy};
 use semio_framework::ToolExecutionContract;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_ui_contract as ui;
@@ -1639,7 +1637,7 @@ pub fn panel_definition(id: &str, label: LocalizedLabel, group: PanelGroup, body
 pub fn artifact_kind_spec(variant: &str, label: &str, artifact_schema: &str) -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: artifact_kind_id(variant),
-        label: semio_framework_ui_locale::LocalizedLabel::data(label),
+        label: LocalizedLabel::data(label),
         source_format: format!("norm.{variant}.document"),
         component_kind: "norm".into(),
         dimension: "data".into(),
@@ -2299,7 +2297,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
     }
     let tool_id = A::command_id(&request.command);
     if tool_id != request.tool_id {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "norm-command-tool-mismatch"));
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.tool-mismatch"), "norm-command-tool-mismatch"));
     }
     let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>>> = if tool_id == "evaluate" {
         Box::new(NormEvaluateCommandWork::<A>::new(tool_id))

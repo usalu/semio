@@ -8,7 +8,7 @@ pub(crate) fn encode_projected_checkpoint_frame(scope:&mut OriginalOperationHost
     scope.control().begin_stage(0)?;
     let mut actor_count=0usize;
     actor(&mut |bytes|{actor_count=actor_count.checked_add(bytes.len()).filter(|count|*count<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"projected actor extent exceeds address space"))?;scope.control().advance(bytes.len())})?;
-    let cursor_bytes=std::mem::size_of::<JsonBackingOwner>();
+    let cursor_bytes=size_of::<JsonBackingOwner>();
     let mut frame_count=20usize.checked_add(actor_count).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"projected frame extent overflow"))?;
     for _ in 0..usize::MAX.ilog10()+2{
         let charge=cursor_bytes.checked_add(frame_count).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"projected native admission overflow"))?;
@@ -47,7 +47,7 @@ pub(crate) fn encode_checkpoint_frame<I:serde::Serialize>(metadata:&I,actor:&mut
         let mut measure=JsonInputWriter{control,output:None,count:0};super::input::encode_borrowed(&mut measure,metadata)?;let metadata_count=measure.count;let metadata_length=u32::try_from(metadata_count).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"host checkpoint metadata extent exceeds framing"))?;
         let mut actor_count=0usize;actor(&mut |bytes|{actor_count=actor_count.checked_add(bytes.len()).filter(|count|*count<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"host checkpoint actor extent exceeds address space"))?;control.advance(bytes.len())})?;
         let count=20usize.checked_add(metadata_count).and_then(|count|count.checked_add(actor_count)).filter(|count|*count<=isize::MAX as usize).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"host checkpoint frame extent exceeds address space"))?;control.begin_stage(count)?;
-        control.with_retirement_owner(std::mem::size_of::<JsonBackingOwner>(),|control|{
+        control.with_retirement_owner(size_of::<JsonBackingOwner>(),|control|{
             let mut owner=Box::new(JsonBackingOwner{bytes:std::mem::ManuallyDrop::new(None)});
             let result=(||{
                 owner.bytes.replace(control.allocate_vec(count)?);let output=owner.bytes.as_mut().unwrap();

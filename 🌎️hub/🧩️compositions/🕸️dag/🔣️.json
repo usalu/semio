@@ -4117,12 +4117,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 },
                 "reuse": {
-                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.",
-                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."
+                  "en": "Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.",
+                  "de": "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."
                 }
               },
               "useWhen": [
@@ -4200,12 +4200,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 },
                 "reuse": {
-                  "en": "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                  "de": "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg."
+                  "en": "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                  "de": "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative."
                 }
               },
               "useWhen": [
@@ -4256,12 +4256,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 },
                 "reuse": {
-                  "en": "Restores the artifact to a previously committed checkpoint by id.",
-                  "de": "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."
+                  "en": "Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.",
+                  "de": "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."
                 }
               },
               "useWhen": [
@@ -4493,7 +4493,52 @@
                 "schema": {
                   "kind": "any"
                 },
-                "required": true
+                "required": false
+              },
+              {
+                "id": "edit",
+                "label": {
+                  "native": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  },
+                  "reuse": {
+                    "en": "List edit",
+                    "de": "Listenbearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "insert",
+                      "label": {
+                        "native": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        },
+                        "reuse": {
+                          "en": "Insert item",
+                          "de": "Element einfügen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "remove",
+                      "label": {
+                        "native": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        },
+                        "reuse": {
+                          "en": "Remove item",
+                          "de": "Element entfernen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
               },
               {
                 "id": "generation",
@@ -4545,17 +4590,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 },
                 "reuse": {
-                  "en": "Sets one input of the mutation being edited; the value is validated against the mutation's input schema and previewed immediately.",
-                  "de": "Setzt eine Eingabe der bearbeiteten Mutation; der Wert wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
+                  "en": "Sets one input of the mutation being edited, or inserts or removes one item of a list input; the result is validated against the mutation's input schema and previewed immediately.",
+                  "de": "Setzt eine Eingabe der bearbeiteten Mutation oder fügt ein Element einer Listeneingabe ein oder entfernt es; das Ergebnis wird gegen das Eingabeschema der Mutation geprüft und sofort in der Vorschau gezeigt."
                 }
               },
               "useWhen": [
                 "change this value in the edited step",
-                "set the input of the mutation"
+                "set the input of the mutation",
+                "add or remove an item of a list input"
               ]
             }
           },
@@ -4680,6 +4726,46 @@
             "iconId": "eye-off",
             "args": [
               {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
                 "id": "generation",
                 "label": {
                   "native": {
@@ -4729,17 +4815,18 @@
               },
               "description": {
                 "native": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 },
                 "reuse": {
-                  "en": "Drafts the mutation being edited as withdrawn, so it no longer changes the artifact; use it for a step whose inputs cannot fix its error.",
-                  "de": "Entwirft die bearbeitete Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt."
+                  "en": "Drafts a mutation as withdrawn, so it no longer changes the artifact: the one being edited, or the one named by mutationId, which opens history editing on it; use it for a step whose inputs cannot fix its error or cannot be edited at all.",
+                  "de": "Entwirft eine Mutation als zurückgezogen, sodass sie das Artefakt nicht mehr verändert: die bearbeitete oder die mit mutationId benannte, für die sich die Verlaufsbearbeitung öffnet; für einen Schritt, dessen Fehler sich über die Eingaben nicht beheben lässt oder dessen Eingaben gar nicht bearbeitbar sind."
                 }
               },
               "useWhen": [
                 "drop this step",
-                "skip this operation"
+                "skip this operation",
+                "withdraw a mutation from the history"
               ]
             }
           },
@@ -4897,6 +4984,126 @@
               },
               "useWhen": [
                 "discard this draft"
+              ]
+            }
+          },
+          {
+            "id": "historyEditRestore",
+            "label": {
+              "native": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              },
+              "reuse": {
+                "en": "Restore Mutation",
+                "de": "Mutation wiederherstellen"
+              }
+            },
+            "kind": "history",
+            "iconId": "undo-2",
+            "args": [
+              {
+                "id": "mutationId",
+                "label": {
+                  "native": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  },
+                  "reuse": {
+                    "en": "Mutation",
+                    "de": "Mutation"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": true
+              },
+              {
+                "id": "store",
+                "label": {
+                  "native": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  },
+                  "reuse": {
+                    "en": "Member store",
+                    "de": "Mitgliedsspeicher"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              },
+              {
+                "id": "generation",
+                "label": {
+                  "native": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  },
+                  "reuse": {
+                    "en": "Generation",
+                    "de": "Generation"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "min": 0.0,
+                  "step": 1.0,
+                  "integer": true
+                },
+                "presentation": {
+                  "kind": "hidden"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                },
+                "reuse": {
+                  "en": "Takes the accepted draft of one mutation back while reviewing, so it applies with its recorded input again, and replays every later mutation; taking the only accepted draft back leaves history editing with nothing changed.",
+                  "de": "Nimmt beim Prüfen den übernommenen Entwurf einer Mutation zurück, sodass sie wieder mit ihrer aufgezeichneten Eingabe angewendet wird, und wendet alle späteren Mutationen neu an; wird der einzige übernommene Entwurf zurückgenommen, endet die Verlaufsbearbeitung ohne Änderung."
+                }
+              },
+              "useWhen": [
+                "take this draft back",
+                "bring the withdrawn step back",
+                "undo one change of the history edit"
               ]
             }
           },
@@ -5845,28 +6052,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -5906,12 +6113,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -6483,7 +6690,8 @@
                 }
               ],
               "trace": "entity",
-              "runJob": "dag.dag.layoutRun"
+              "runJob": "dag.dag.layoutRun",
+              "member": "content"
             }
           }
         ],
@@ -6737,7 +6945,61 @@
             "dimension": "",
             "componentKind": ""
           }
-        }
+        },
+        "faultNotices": [
+          {
+            "code": "dag.layout-run.layered-load",
+            "label": {
+              "native": {
+                "en": "The graph could not be prepared for the layered layout.",
+                "de": "Der Graph konnte nicht für die Schichtanordnung vorbereitet werden."
+              },
+              "reuse": {
+                "en": "The graph could not be prepared for the layered layout.",
+                "de": "Der Graph konnte nicht für die Schichtanordnung vorbereitet werden."
+              }
+            }
+          },
+          {
+            "code": "dag.layout-run.layered-layout",
+            "label": {
+              "native": {
+                "en": "The layered layout could not be computed for this graph.",
+                "de": "Die Schichtanordnung konnte für diesen Graphen nicht berechnet werden."
+              },
+              "reuse": {
+                "en": "The layered layout could not be computed for this graph.",
+                "de": "Die Schichtanordnung konnte für diesen Graphen nicht berechnet werden."
+              }
+            }
+          },
+          {
+            "code": "dag.layout-run.layered-result",
+            "label": {
+              "native": {
+                "en": "The layered layout returned no usable positions.",
+                "de": "Die Schichtanordnung lieferte keine verwendbaren Positionen."
+              },
+              "reuse": {
+                "en": "The layered layout returned no usable positions.",
+                "de": "Die Schichtanordnung lieferte keine verwendbaren Positionen."
+              }
+            }
+          },
+          {
+            "code": "dag.layout-run.start",
+            "label": {
+              "native": {
+                "en": "The reorganize run could not start.",
+                "de": "Der Neuanordnungslauf konnte nicht starten."
+              },
+              "reuse": {
+                "en": "The reorganize run could not start.",
+                "de": "Der Neuanordnungslauf konnte nicht starten."
+              }
+            }
+          }
+        ]
       },
       {
         "id": "s.dag.dag@1/*#viewer",
@@ -7228,28 +7490,28 @@
                       }
                     },
                     {
-                      "value": "withoutOperations",
+                      "value": "withoutMutations",
                       "label": {
                         "native": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         },
                         "reuse": {
-                          "en": "Without Operations",
-                          "de": "Ohne Operationen"
+                          "en": "Without Mutations",
+                          "de": "Ohne Mutationen"
                         }
                       }
                     },
                     {
-                      "value": "onlyOperations",
+                      "value": "onlyMutations",
                       "label": {
                         "native": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         },
                         "reuse": {
-                          "en": "Only Operations",
-                          "de": "Nur Operationen"
+                          "en": "Only Mutations",
+                          "de": "Nur Mutationen"
                         }
                       }
                     }
@@ -7289,12 +7551,12 @@
               },
               "description": {
                 "native": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 },
                 "reuse": {
-                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
-                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                  "en": "Filters the history panel to all entries, only document mutations, or everything except document mutations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentmutationen oder alles außer Dokumentmutationen; das Dokument wird nicht verändert."
                 }
               }
             }
@@ -7489,7 +7751,8 @@
             "dimension": "",
             "componentKind": ""
           }
-        }
+        },
+        "faultNotices": []
       }
     ],
     "examples": [
@@ -7506,7 +7769,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio dag.dag.dsl v1\nschema=dag.dag nodes=[ id=slider name=Amount abbreviation=Amount icon=\"emoji:🎚️\" x=-400 y=-40 width=70 height=14 properties={\n}\nslider min=0 max=10 step=0.5 value=5 output=id=out label=value code=\"\" abbreviation=\"\" full-name=\"\" cardinality=\"!\" shape=semicircle visible=true id=mode name=Mode abbreviation=Mode icon=\"emoji:📋️\" x=-400 y=80 width=56 height=28 properties={\n}\nselect selected=0 options=[ Add Multiply Max ] output=id=out label=mode code=\"\" abbreviation=\"\" full-name=\"\" cardinality=\"!\" shape=semicircle visible=true id=scale name=Scale abbreviation=Scale icon=\"emoji:📐️\" x=-120 y=-40 width=104 height=14 properties={\n}\ncomputation variadic-inputs=false variadic-outputs=false\ninputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {\n  in value \"\" \"\" \"\" _ _ _ _ _ \"!\" semicircle true _\n}\noutputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {\n  out scaled \"\" \"\" \"\" _ _ _ _ _ \"!\" semicircle true _\n}\nid=combine name=Combine abbreviation=Combine icon=\"emoji:🔀️\" x=120 y=0 width=104 height=28 properties={\n}\ncomputation variadic-inputs=false variadic-outputs=false\ninputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {\n  a a \"\" \"\" \"\" _ _ _ _ _ \"!\" semicircle true _\n  b b \"\" \"\" \"\" _ _ _ _ _ \"!\" semicircle true _\n}\noutputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {\n  out merged \"\" \"\" \"\" _ _ _ _ _ \"!\" semicircle true _\n}\nid=screen name=Preview abbreviation=Preview icon=\"emoji:🖥️\" x=400 y=0 width=200 height=140 properties={\n}\nscreen media=kind=svg src=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect fill='%233c78d8' width='100' height='60'/%3E%3Ctext x='50' y='35' text-anchor='middle' fill='white' font-size='12'%3EDAG%3C/text%3E%3C/svg%3E\" input=id=in label=result code=\"\" abbreviation=\"\" full-name=\"\" cardinality=\"!\" shape=semicircle visible=true ]\nedges [id:TEXT source:TEXT target:TEXT route-style:ENUM properties:MAP] {\n  e1 \"slider@out\" \"scale@in\" bezier {\n  }\n  e2 \"scale@out\" \"combine@a\" bezier {\n  }\n  e3 \"mode@out\" \"combine@b\" bezier {\n  }\n  e4 \"combine@out\" \"screen@in\" bezier {\n  }\n}\n",
+        "artifactJson": "semio dag.dag.dsl v1\nschema=dag.dag\ncontent=child_id=demo target=artifact-id=demo-graph artifact-kind=s.stdio.semio standard=v1 subset=graph\n",
         "dialect": {
           "artifactKind": "s.dag.dag",
           "standard": "1",
@@ -7547,7 +7810,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 20
+    "appChannelVersion": 23
   },
   "quotas": {},
   "contributions": {
@@ -7666,11 +7929,65 @@
         "bodyKey": "framework.body.history",
         "children": []
       }
+    ],
+    "ioEntries": [
+      {
+        "owner": {
+          "artifactKind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "export"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        },
+        "direction": "import"
+      },
+      {
+        "owner": {
+          "artifactKind": "s.dag.dag",
+          "standard": "1",
+          "subset": "*"
+        },
+        "counterpart": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        },
+        "direction": "import"
+      }
     ]
   },
   "hashes": {
-    "wasmSha256": "83c151c54b3302d3e64f32051c2e4dd18939f17571b8c0028035c639a94bac19",
-    "coreWasmSha256": "37cbb1bb554f993bd64ebff6625b994eaa3a664630b4e9bbd7eaca1a0fa88577",
-    "descriptorSha256": "5b3b4bea0a5d2f4fa5f2a72b1d39264c6a90dc01192bc62c4a57eb49098b05a0"
+    "wasmSha256": "c141a509aacf44b8bfc4299bfdd3cde1f821086f835b4b73bb18e73d8bdf9680",
+    "coreWasmSha256": "0a3e9ca59e7e304fa26a2e54c3f784f739bc356f5f262bd634b6eb0990898f53",
+    "descriptorSha256": "25431b70caa59bf77dba2a9189b61e966298b121dd594503098cb16c374a97e9"
   }
 }

@@ -16,4 +16,3 @@ impl protocol::OpBinary for NotePresenceMutation {
     }
 }
 }
-pub use mutations_codec::*;

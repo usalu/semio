@@ -16,22 +16,10 @@ role = "framework"
 name = "semio_framework_2d"
 path = "🦀️.rs"
 
-[features]
-default = ["booleans", "trace"]
-booleans = []
-trace = []
-# 🪶 Off-by-default: only `semio-framework-os-flow` (outside the in-component crate set) needs
-# `Serialize`/`Deserialize` on `PathSegment`. No plugin wasm component enables this — see
-# `⚙️engine/🦀️.rs`'s `PathSegment` doc comment. `RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`, 26/09/02.
-serde = ["dep:serde"]
-
 [dependencies]
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 # 🔢️ Neutral compute owns content-addressed engine keys.
 semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-# 🪶 Optional — gated behind the `serde` feature above. See the `[features]` note and
-# `⚙️engine/🦀️.rs`'s `PathSegment` doc comment.
-serde = { workspace = true, optional = true }
 # 🧬️ `#[derive(ToValue, FromValue)]`, always on — the plugin-facing wire encoding for `PathSegment`.
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 

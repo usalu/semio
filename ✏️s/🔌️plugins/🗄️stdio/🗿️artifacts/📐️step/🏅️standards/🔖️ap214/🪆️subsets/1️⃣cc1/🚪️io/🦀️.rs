@@ -273,7 +273,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec StepCc1BuilderFacets {
         construction: StepCc1BuilderConstruction,
         analysis: StepCc1AnalyzerAnalysis,
-        composition: super::io::derived_composition::StepCc1ComposerComposition,
+        composition: StepCc1ComposerComposition,
     }
     builder: StepCc1Builder,
     analyzer: StepCc1Analyzer,

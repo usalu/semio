@@ -14,13 +14,13 @@ pub struct InsertStyle {
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "style", kind: "insert-style", record: "InsertStyle" };
 
-    fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
+    fn diff(&self, _base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
         let Self { index, style } = self;
         protocol::MutationOutcome::new(diff_insert_style(*index, style.clone()))
     }
-    fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, _base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
         let Self { style, .. } = self;
-        Ok({ vec![DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: style.name.clone() })] })
+        Ok(vec![DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: style.name.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert style", "Textstil einfügen")

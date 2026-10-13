@@ -14,7 +14,7 @@
 use super::library::{Library, Profile, ScheduleBook};
 use super::pairs::{self, Face, Part};
 use super::target::{AdjacencyPair, EnergyModel, EquipmentGain, Fenestration, IdealLoadsSystem, LightingGain, OutsideBoundary, PeopleGain, Site, Space, Surface, SurfaceClass, ThermalEnclosure, Thermostat, Zone};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{self, FarSide, HeatFlow};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::FarSide;
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{neighbour_storey, Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
@@ -187,7 +187,7 @@ fn same(left: f64, right: f64) -> bool {
 /// 🧱️ The layer stacks a floor (`up` false) or ceiling can lie on, in the order the inference prefers them: the slabs of a storey, the thickest first; for a ceiling the slabs of the storey above and then the roofs of the storey.
 fn candidates<'a>(snapshot: &'a ModelSnapshot, storey: &str, up: bool) -> Vec<(&'a str, &'a [Layer])> {
     let slabs = |storey: &str| {
-        let mut found: Vec<(&str, &[Layer], f64)> = snapshot.slabs.iter().filter(|(_, slab)| slab.storey == storey).filter_map(|(id, slab)| snapshot.slab_types.get(&slab.slab_type).map(|kind| (kind.name.as_str(), kind.layers.as_slice(), kind.layers.iter().map(|layer| layer.thickness).sum::<f64>()))).collect();
+        let mut found: Vec<(&str, &[Layer], f64)> = snapshot.slabs.iter().filter(|(_, slab)| slab.storey == storey).filter_map(|(_id, slab)| snapshot.slab_types.get(&slab.slab_type).map(|kind| (kind.name.as_str(), kind.layers.as_slice(), kind.layers.iter().map(|layer| layer.thickness).sum::<f64>()))).collect();
         found.sort_by(|a, b| b.2.total_cmp(&a.2));
         found.into_iter().map(|(name, layers, _)| (name, layers)).collect::<Vec<_>>()
     };
@@ -282,7 +282,7 @@ fn surfaces(build: &mut Build, snapshot: &ModelSnapshot, inferred: &ModelInferen
                 build.notes.push(format!("{}: a curtain wall behind a partition is not written: the engine exposes every fenestration to the weather", surface.id));
                 continue;
             }
-            let Some(u_value) = surface.u_value else {
+            let Some(_u_value) = surface.u_value else {
                 build.notes.push(format!("{}: the {} {} has no thermal data and is not written", surface.id, surface.kind.name(), surface.element));
                 continue;
             };

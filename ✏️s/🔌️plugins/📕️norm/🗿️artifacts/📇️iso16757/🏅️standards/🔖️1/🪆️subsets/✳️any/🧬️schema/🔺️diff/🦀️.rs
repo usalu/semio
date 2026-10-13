@@ -20,7 +20,7 @@ pub struct Iso16757ProductGroupsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::part_1::ProductGroup> for Iso16757ProductGroupsPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductGroup, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::part_1::ProductGroup, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.name {
             row.names.preferred.text = value.clone();
         }
@@ -65,7 +65,7 @@ pub struct Iso16757ProductClassesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::part_1::ProductClass> for Iso16757ProductClassesPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductClass, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::part_1::ProductClass, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.group_id {
             row.group_id = value.clone();
         }
@@ -137,7 +137,7 @@ pub struct Iso16757ProductSeriesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::part_1::ProductSeries> for Iso16757ProductSeriesPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductSeries, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::part_1::ProductSeries, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.class_id {
             row.class_id = value.clone();
         }
@@ -199,7 +199,7 @@ pub struct Iso16757ProductsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::part_1::Product> for Iso16757ProductsPatch {
-    fn commit_into(&self, row: &mut crate::part_1::Product, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::part_1::Product, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.name {
             row.names.preferred.text = value.clone();
         }
@@ -242,7 +242,7 @@ pub struct Iso16757ProductIndexesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::part_1::ProductIndex> for Iso16757ProductIndexesPatch {
-    fn commit_into(&self, row: &mut crate::part_1::ProductIndex, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::part_1::ProductIndex, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.product_id {
             row.product_id = value.clone();
         }
@@ -302,7 +302,7 @@ pub struct Iso16757PropertyDefinitionsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::part_1::PropertyDefinition> for Iso16757PropertyDefinitionsPatch {
-    fn commit_into(&self, row: &mut crate::part_1::PropertyDefinition, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::part_1::PropertyDefinition, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.names {
             row.names = value.clone();
         }
@@ -381,7 +381,7 @@ pub struct Iso16757SubjectsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::part_4::Subject> for Iso16757SubjectsPatch {
-    fn commit_into(&self, row: &mut crate::part_4::Subject, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::part_4::Subject, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.kind {
             row.kind = value.clone();
         }
@@ -554,7 +554,7 @@ impl Iso16757SelectionConstraintsRows {
     }
 
     fn inverse_rows(&self, base: &[crate::part_1::SelectionConstraint]) -> Self {
-        let final_index = |index: usize| {
+        let _final_index = |index: usize| {
             let mut position = index - self.removed.iter().filter(|removed| **removed < index).count();
             for inserted in &self.inserted {
                 if inserted.index <= position {

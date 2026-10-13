@@ -1,6 +1,5 @@
 //! 🌱 Puzzle2d mutation — `CreateNode`: brings a new id-keyed node into existence.
 
-use semio_framework_value::paged::PagedUtf8;
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff;
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;

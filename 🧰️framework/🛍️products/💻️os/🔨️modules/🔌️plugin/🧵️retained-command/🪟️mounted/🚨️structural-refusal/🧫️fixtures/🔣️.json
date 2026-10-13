@@ -1,0 +1,12 @@
+{
+  "schema": "framework.plugin.structural-refusal.v1",
+  "structuralRefusalKinds": ["UnsupportedOwner"],
+  "closeFaultPrefix": "retains its original close fault: ",
+  "refusedOwnerPrefix": "is refused by an owner without a retirement path: ",
+  "cases": [
+    { "name": "a clean operation retains nothing", "refusal": null, "closeFault": null, "expected": null },
+    { "name": "a recoverable footprint refusal is retried, never structural", "refusal": { "kind": "OwnershipLimit", "message": "a recoverable footprint refusal" }, "closeFault": null, "expected": null },
+    { "name": "an owner without controlled retirement can never retire", "refusal": { "kind": "UnsupportedOwner", "message": "structural clone originals require controlled typed retirement" }, "closeFault": null, "expected": "is refused by an owner without a retirement path: structural clone originals require controlled typed retirement" },
+    { "name": "a retained close fault is structural whatever its cause", "refusal": null, "closeFault": { "code": "plugin.internal", "message": "typed operation session retirement refused: UnsupportedOwner" }, "expected": "retains its original close fault: plugin.internal: typed operation session retirement refused: UnsupportedOwner" }
+  ]
+}

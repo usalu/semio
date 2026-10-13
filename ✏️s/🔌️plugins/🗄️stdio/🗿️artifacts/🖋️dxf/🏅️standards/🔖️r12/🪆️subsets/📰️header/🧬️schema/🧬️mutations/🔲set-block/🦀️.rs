@@ -25,7 +25,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetBlock {
         let Self { index, .. } = self;
         Ok({
             match base.blocks.get(*index) {
-                Some(b) => vec![DxfMutation::SetBlock(set_block::SetBlock { index: *index, block: b.clone() })],
+                Some(b) => vec![DxfMutation::SetBlock(SetBlock { index: *index, block: b.clone() })],
                 None => vec![DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: *index })],
             }
         })

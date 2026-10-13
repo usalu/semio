@@ -199,7 +199,7 @@
     {
       "artifactKind": "s.stdio.tiff",
       "artifactSchema": "stdio.tiff",
-      "packSchemaHash": "6f62cced77a5af979af1adc1a98c71c008d7223bc49a7e0551c5ed02ea298b09",
+      "packSchemaHash": "a03332233369d8b4fe73673352f9eed2c828468b800bec3ab54a47f0d29f5327",
       "factoryId": "stdio.native.tiff.v1",
       "extension": "tiff",
       "protocolSourceSha256": "a03332233369d8b4fe73673352f9eed2c828468b800bec3ab54a47f0d29f5327"
@@ -231,7 +231,7 @@
     {
       "artifactKind": "s.stdio.xml",
       "artifactSchema": "stdio.xml",
-      "packSchemaHash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
+      "packSchemaHash": "f49c2064c8186e50901760fc7be69d1ae1ad52978c53a084bceb38975809ceb5",
       "factoryId": "stdio.native.xml.v1",
       "extension": "xml",
       "protocolSourceSha256": "f49c2064c8186e50901760fc7be69d1ae1ad52978c53a084bceb38975809ceb5"

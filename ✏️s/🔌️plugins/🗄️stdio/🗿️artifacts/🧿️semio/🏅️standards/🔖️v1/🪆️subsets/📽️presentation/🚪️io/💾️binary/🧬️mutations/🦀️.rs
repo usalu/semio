@@ -95,7 +95,7 @@ impl OpBinary for SemioPresentationMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioPresentationMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

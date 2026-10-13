@@ -53,7 +53,7 @@ pub fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     // inspector flag read `locked true` and whose drag WAS refused). One notice, no edit, no fault.
     let locked = ctx.scene.scene_snapshot.objects.iter().any(|object| object_ids.contains(&object.id) && object.locked)
         || ctx.scene.scene_snapshot.objects.iter().any(|object| {
-            object.vortices.iter().any(|vortex| vortex.locked && vortex_ids.contains(&crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id)))
+            object.vortices.iter().any(|vortex| vortex.locked && vortex_ids.contains(&puzzle3d_vortex_full_id(&object.id, &vortex.id)))
         })
         || ctx.scene.scene_snapshot.target_volumes.iter().any(|volume| target_volume_ids.contains(&volume.id) && volume.locked)
         || ctx.scene.scene_snapshot.references.iter().any(|reference| reference_ids.contains(&reference.id) && reference.locked);

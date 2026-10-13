@@ -1123,7 +1123,7 @@ fn decode_png_image_controlled(data: &[u8],control:&mut NativeDecodeControl<'_>)
             control.charge(chunk.len().saturating_mul(2))?;
             let keyword = latin1_text(&chunk[..nul]);
             let value = latin1_text(&chunk[nul + 1..]);
-            let index = text_chunks.len();
+            let _index = text_chunks.len();
             text_chunks.push(PngTextChunk { keyword, value, compressed: false, kind: PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() });
 
         } else if ty == *b"zTXt" {
@@ -1138,7 +1138,7 @@ fn decode_png_image_controlled(data: &[u8],control:&mut NativeDecodeControl<'_>)
             }
             let value_bytes=semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::io::binary::snapshot::decompress_zlib(&chunk[nul+2..],control.maximum_bytes().saturating_sub(control.owned_bytes()),control)?;
             let value = latin1_text(&value_bytes);
-            let index = text_chunks.len();
+            let _index = text_chunks.len();
             text_chunks.push(PngTextChunk { keyword, value, compressed: true, kind: PngTextKind::ZText, language_tag: String::new(), translated_keyword: String::new() });
 
         } else if ty == *b"iTXt" {
@@ -1176,7 +1176,7 @@ fn decode_png_image_controlled(data: &[u8],control:&mut NativeDecodeControl<'_>)
                 control.copy_bytes(rest)?
             };
             let value = String::from_utf8(value_bytes).map_err(|_| "png iTXt: text must be UTF-8")?;
-            let index = text_chunks.len();
+            let _index = text_chunks.len();
             text_chunks.push(PngTextChunk { keyword, value, compressed: compressed_flag, kind: PngTextKind::IText, language_tag, translated_keyword });
 
         } else if ty == *b"IDAT" {
@@ -1438,7 +1438,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec PngBuilderFacets {
         construction: PngBuilderConstruction,
         analysis: PngAnalyzerAnalysis,
-        composition: crate::standards::v1_2::subsets::any::io::derived_composition::PngComposerComposition,
+        composition: PngComposerComposition,
     }
     builder: PngBuilder,
     analyzer: PngAnalyzer,

@@ -130,4 +130,3 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 
 use crate::standards::v1::subsets::animation::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, enc_list, dec_list, enc_property, dec_property, enc_target, dec_target, enc_interpolation, dec_interpolation, enc_value, dec_value, enc_keyframe, dec_keyframe, enc_channel, dec_channel, enc_timeline, dec_timeline, enc_keyframe_diff, dec_keyframe_diff, enc_channel_diff, dec_channel_diff, enc_timeline_diff, dec_timeline_diff};
 }
-pub use diff_codec::*;

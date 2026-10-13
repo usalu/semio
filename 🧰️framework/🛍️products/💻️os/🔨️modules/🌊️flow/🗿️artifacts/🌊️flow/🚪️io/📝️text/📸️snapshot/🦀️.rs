@@ -399,8 +399,8 @@ impl semio_framework_dsl_record::BorrowedDslField for FlowHostSnapshot {
 
 /// 📄️ Explicit import payloads share the artifact's intrinsic DSL schema.
 impl semio_framework_dsl_record::DslField for FlowHostSnapshot {
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> { crate::io::sqlite::snapshot::flow_native_carrier::encode_field(self, control) }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { crate::io::sqlite::snapshot::flow_native_carrier::decode_field(value, control) }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> { io::sqlite::snapshot::flow_native_carrier::encode_field(self, control) }
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { io::sqlite::snapshot::flow_native_carrier::decode_field(value, control) }
     fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()) }
     fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,semio_framework_value::ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Record(FlowHostSnapshotDsl::__dsl_spec_producer()))}
     fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Record(flow_host_snapshot_to_dsl(self).__dsl_to_record()) }

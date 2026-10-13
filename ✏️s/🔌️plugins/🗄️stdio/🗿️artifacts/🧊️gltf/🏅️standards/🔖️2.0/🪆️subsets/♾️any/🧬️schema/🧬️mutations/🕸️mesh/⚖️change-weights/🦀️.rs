@@ -36,7 +36,7 @@ pub fn inverse(p: &GltfChangeMeshMorphWeightsPayload, base: &GltfSnapshot) -> Ve
     if current == &p.weights {
         return Vec::new();
     }
-    vec![super::change_mesh_morph_weights::mutation(super::change_mesh_morph_weights::GltfChangeMeshMorphWeightsPayload { mesh: p.mesh, weights: current.clone() })]
+    vec![mutation(GltfChangeMeshMorphWeightsPayload { mesh: p.mesh, weights: current.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -56,7 +56,7 @@ pub fn mutation(payload: GltfChangeMeshMorphWeightsPayload) -> super::GltfMutati
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMeshMorphWeightsMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "mesh-morph-weights", kind: "change-mesh-morph-weights", record: "ChangedMeshMorphWeights" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

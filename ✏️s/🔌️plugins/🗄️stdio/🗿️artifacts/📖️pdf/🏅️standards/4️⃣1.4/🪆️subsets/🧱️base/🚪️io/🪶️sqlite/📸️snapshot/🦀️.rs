@@ -7,7 +7,7 @@ const PAGE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary6
 
 impl store::ArtifactSqliteSnapshot for PdfSnapshot {
     fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(||->Result<(),ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;control.check_rows(self.pages.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"PDF page count overflow"))?)?;Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {(||->Result<(),ValueError>{
         let mut bound = sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
@@ -89,13 +89,13 @@ mod tests {
     use semio_framework_value::FromValue;
     fn fixture()->PdfSnapshot{PdfSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap()}
     async fn erased_roundtrip(snapshot: &PdfSnapshot, encoding: sqlite_snapshot::SnapshotEncoding) -> PdfSnapshot {
-        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route,semio_framework_os_kernel::io::io_mechanism::io_run};
+        use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route};
         crate::register_sqlite_test_declaration();
         let dialect = ArtifactDialect { artifact_kind: "s.stdio.pdf".into(), standard: "1.4".into(), subset: "*".into() };
         let sqlite = semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();
         let payload = match encoding { sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)), sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot)) };
-        let bytes = io_run(&io_route(&dialect, &sqlite, 1).await.unwrap().value, payload).await.unwrap().value;
-        let payload = io_run(&io_route(&sqlite, &dialect, 1).await.unwrap().value, bytes).await.unwrap().value;
+        let bytes = semio_s_artifact_stdio_contract::testing::io_run(&io_route(&dialect, &sqlite, 1).await.unwrap().value, payload, Default::default(), &mut |_| true).await.unwrap().value;
+        let payload = semio_s_artifact_stdio_contract::testing::io_run(&io_route(&sqlite, &dialect, 1).await.unwrap().value, bytes, Default::default(), &mut |_| true).await.unwrap().value;
         match payload { IoPayload::Binary(bytes) => store::ArtifactPack::decode_pack(&bytes).unwrap(), IoPayload::Text(text) => store::ArtifactDsl::parse_dsl(&text).unwrap() }
     }
     #[semio_framework_async_macros::async_test]

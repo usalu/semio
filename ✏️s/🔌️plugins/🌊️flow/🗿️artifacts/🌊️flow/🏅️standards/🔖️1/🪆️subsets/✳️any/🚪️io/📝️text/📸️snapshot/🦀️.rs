@@ -51,4 +51,4 @@ impl store::ArtifactDsl for FlowSnapshot {
  }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

@@ -73,7 +73,7 @@ pub mod set_textbox_blocks;
 /// same JSON object the tag lives in, so every committed fixture under `📸️set-snapshot/🧪️tests/`
 /// and the `📽️mutate-semio-presentation` test adapter's `{"mutation":"insertSlide",...}` vectors keep
 /// decoding byte-for-byte unchanged after this migration.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioPresentationSnapshot, diff = SemioPresentationDiff, schema = "SemioPresentationMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -118,7 +118,7 @@ pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "set-slide-layout",
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_presentation_mutation(mutation: &SemioPresentationMutation, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<SemioPresentationDiff> {
-    <SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::diff(mutation, base)
+    <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::diff(mutation, base)
 }
 
 

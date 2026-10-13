@@ -231,10 +231,19 @@ fn main() {
 async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
     let envelope = protocol::create_document_envelope::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>(semio_framework_artifact_workflow_run::S_RUN_SCHEMA, RUN_ID, semio_framework_artifact_workflow_run::empty_run_document().await, None);
     let mut document_store = protocol::ArtifactStore::new(envelope, protocol::os_spr::ActorId(protocol::os_spr::LOCAL_ACTOR_ID.into())).await.map_err(|error| error.to_string())?;
-    if !sink.mutations.is_empty() {
-        document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), transaction: None }).await.map_err(|error| error.to_string())?;
-    }
-    let snapshot = document_store.snapshot_pack().await.map_err(|error| error.to_string())?;
+    protocol::install_unscheduled_catalog(&mut document_store, protocol::funded_bounded_artifact_store_owners::<semio_framework_artifact_workflow_run::RunArtifact, semio_framework_artifact_workflow_run::RunMutation>()).map_err(|error| error.to_string())?;
+    let applied = async {
+        if !sink.mutations.is_empty() {
+            let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
+            let mut identity = protocol::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1usize << 24, &mut observer).map_err(|error| error.to_string())?;
+            document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), transaction: None }, &mut identity).await.map_err(|error| error.to_string())?;
+            drop(identity.pause().map_err(|error| error.to_string())?);
+        }
+        document_store.snapshot_pack().await.map_err(|error| error.to_string())
+    }.await;
+    let closed = document_store.close_owned_unscheduled().map_err(|error| error.to_string());
+    let snapshot = applied?;
+    closed?;
     bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;
     bundle.write_run_nodes(RUN_ID, sink)?;
     Ok(())

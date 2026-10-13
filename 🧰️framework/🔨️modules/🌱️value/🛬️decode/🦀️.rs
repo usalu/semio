@@ -27,7 +27,7 @@ pub struct NativeDecodeProgress { pub completed:usize, pub total:usize, pub owne
 pub struct NativeDecodeContinuation { receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
 
 static LEDGERS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
-fn next_ledger()->u64{LEDGERS.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|ledger|ledger.checked_add(1)).expect("native decode ledger identity space exhausted")}
+fn next_ledger()->u64{LEDGERS.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|ledger|ledger.checked_add(1)).expect("native decode ledger identity space exhausted")}
 
 /// 🧮️ One caller-owned budget persists from input scanning through final typed construction.
 pub struct NativeDecodeControl<'a> { ledger:u64, scope_maximum:Option<usize>, allocation:allocation::Binding<'a>, receiving:bool, retirement:Option<&'a mut NativeDecodeRetirementRecipient>, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool }
@@ -68,7 +68,7 @@ impl<'a> NativeDecodeControl<'a> {
         self.retirement=Some(recipient);Ok(())
     }
     /// 🪑️ Pre-admits the return slot and exact immediate wrapper allocations, preserving every refusal owner.
-    pub fn with_retirement_owner<T,E:From<ValueError>>(&mut self,wrapper_bytes:usize,operation:impl FnOnce(&mut Self)->(Result<T,E>,Option<Box<dyn crate::ErasedSnapshotRetirement>>))->Result<T,E>{
+    pub fn with_retirement_owner<T,E:From<ValueError>>(&mut self,wrapper_bytes:usize,operation:impl FnOnce(&mut Self)->(Result<T,E>,Option<Box<dyn ErasedSnapshotRetirement>>))->Result<T,E>{
         if self.retirement.as_ref().is_none_or(|recipient|recipient.reserved||recipient.owner.is_some()){return Err(E::from(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native decode has no available explicit retirement slot")));}
         self.charge(wrapper_bytes)?;self.checkpoint()?;
         self.retirement.as_mut().unwrap().reserved=true;
@@ -115,7 +115,7 @@ impl<'a> NativeDecodeControl<'a> {
     pub fn begin_stage(&mut self,total:usize)->Result<(),ValueError>{self.stage=self.stage.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "native decoding stage overflow"))?;self.completed=0;self.total=total;self.started=false;self.checkpoint()}
     /// 🪆️ Restores a parent workload after a child begins its own stage, preserving cumulative ownership.
     pub fn scoped_stage<T,E>(&mut self,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
-        let parent=(self.completed,self.total,self.started,self.stage);let mut scope=StageScope{control:self,parent};operation(&mut *scope.control)
+        let parent=(self.completed,self.total,self.started,self.stage);let scope=StageScope{control:self,parent};operation(&mut *scope.control)
     }
     /// 📐️ Restricts one owned decoder stage to its domain ceiling, retaining cumulative charges afterward.
     pub fn scoped_maximum<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{maximum::run(self,maximum,operation)}
@@ -126,7 +126,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 📦️ Admits cumulative storage before a caller copies or reserves it.
     pub fn charge(&mut self,bytes:usize)->Result<(),ValueError> { let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native decoding ownership exceeds caller limit"))?;if !self.started||bytes>65536 {self.checkpoint()?;}if let allocation::Binding::Forwarded(port)=&mut self.allocation{port(NativeDecodeAllocation{bytes,owned_bytes:self.owned_bytes,next_owned_bytes:next,maximum_bytes:self.maximum_bytes})?;}self.owned_bytes=next;Ok(()) }
     /// 🗂️ Reserves typed collection slots after overflow and caller-bound admission.
-    pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError> { let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native decoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;Ok(output) }
+    pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError> { let bytes=count.checked_mul(size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native decoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;Ok(output) }
     fn copy_checkpoint(&mut self,completed:usize,total:usize)->Result<(),ValueError>{let owned_bytes=self.owned_bytes();if(self.callback)(NativeDecodeProgress{completed,total,owned_bytes}){Ok(())}else{Err(ValueError::literal(ValueRefusalKind::Canceled, "native decoding canceled"))}}
     /// 🔎️ Validates borrowed UTF-8 in bounded spans without owning a second text buffer.
     pub fn borrow_text<'text>(&mut self,bytes:&'text[u8])->Result<&'text str,ValueError>{

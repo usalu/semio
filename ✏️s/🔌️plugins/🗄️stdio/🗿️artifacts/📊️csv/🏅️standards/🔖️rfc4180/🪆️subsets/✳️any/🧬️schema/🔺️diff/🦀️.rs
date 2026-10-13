@@ -11,7 +11,6 @@ use crate::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 // via the same crate's directly-mounted `command` module instead of editing the shared facade.
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
 

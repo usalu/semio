@@ -10,11 +10,11 @@ const TABLES: [&str; 8] = ["html_document", "html_node", "html_element", "html_t
 struct OwnedNodeMap(BTreeMap<i64,HtmlNode>);
 impl std::ops::Deref for OwnedNodeMap{type Target=BTreeMap<i64,HtmlNode>;fn deref(&self)->&Self::Target{&self.0}}
 impl std::ops::DerefMut for OwnedNodeMap{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
-impl Drop for OwnedNodeMap{fn drop(&mut self){for node in std::mem::take(&mut self.0).into_values(){crate::standards::v5::subsets::any::io::sqlite::snapshot::native::retire_node(node)}}}
+impl Drop for OwnedNodeMap{fn drop(&mut self){for node in std::mem::take(&mut self.0).into_values(){native::retire_node(node)}}}
 struct OwnedChildren(Vec<HtmlNode>);
 impl std::ops::Deref for OwnedChildren{type Target=Vec<HtmlNode>;fn deref(&self)->&Self::Target{&self.0}}
 impl std::ops::DerefMut for OwnedChildren{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
-impl Drop for OwnedChildren{fn drop(&mut self){while let Some(node)=self.0.pop(){crate::standards::v5::subsets::any::io::sqlite::snapshot::native::retire_node(node)}}}
+impl Drop for OwnedChildren{fn drop(&mut self){while let Some(node)=self.0.pop(){native::retire_node(node)}}}
 fn integer(value: usize) -> Result<i64, ValueError> { i64::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"HTML ordinal exceeds SQLite integer range")) }
 fn index(value: i64) -> Result<usize, ValueError> { usize::try_from(value).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"HTML ordinal must be nonnegative")) }
 fn add(value: &mut usize, amount: usize) -> Result<(), ValueError> { *value = value.checked_add(amount).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"HTML relational size overflow"))?; Ok(()) }
@@ -49,15 +49,15 @@ fn measure(snapshot: &HtmlSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 impl ArtifactSqliteSnapshot for HtmlSnapshot {
     fn decode_sqlite_snapshot_native(payload:&semio_framework_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
         native_owner.receive::<Self,Self>(|slot,native_control,body|{
-            let value=crate::standards::v5::subsets::any::io::sqlite::snapshot::native::decode(payload,control,native_control)?;
-            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: std::mem::size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
+            let value=native::decode(payload,control,native_control)?;
+            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
             *slot = Some(value);
-            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<Self>(), ..Default::default() })?;
+            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() })?;
             Ok(slot.take().expect("received snapshot slot"))
         })
     }
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{crate::standards::v5::subsets::any::io::sqlite::snapshot::native::encode(self,encoding,control,native_owner)}
-    fn retire_sqlite_snapshot(self){crate::standards::v5::subsets::any::io::sqlite::snapshot::native::retire(self)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
+    fn retire_sqlite_snapshot(self){native::retire(self)}
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         use semio_framework_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
         let mut bound = NativeEncodingBound::new(control)?; bound.add(1024)?;

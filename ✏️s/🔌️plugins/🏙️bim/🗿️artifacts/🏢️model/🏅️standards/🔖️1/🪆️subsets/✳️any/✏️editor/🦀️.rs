@@ -18,6 +18,7 @@ use semio_framework_artifact_reference::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_plugin::ActionDefinition;
 use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::AppIo;
@@ -1108,6 +1109,11 @@ pub fn all_keybindings() -> Vec<(&'static str, &'static str)> {
     COMMAND_KEYBINDINGS.iter().copied().chain(crate::editor::bim::utilities::keybindings()).chain(crate::editor::bim::gestures::GESTURE_KEYBINDINGS.iter().copied()).chain(gesture_keys::KEYBINDINGS.iter().copied()).collect()
 }
 
+/// 🗂️ One framework-predefined panel tab whose nested tabs carry the editor's unique panel ids.
+fn framework_panel_tab(id: &str, label: LocalizedLabel, group: PanelGroup, children: Vec<PanelTabDefinition>) -> PanelTabDefinition {
+    PanelTabDefinition { kind: PanelTabKind::App(id.into()), label, group, body_key: None, children }
+}
+
 /// 🧱️ The editor manifest: one definition per taxonomy node.
 pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
     let mut builder = Editor::builder(BIM_MODEL_DIALECT)
@@ -1125,15 +1131,25 @@ pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(sheet::definition())
         .default_layout(edit::layout())
         .panel_tab_def(outliner_panel::definition())
-        .panel_tab_def(properties_panel::definition())
-        .panel_tab_def(library_panel::definition())
-        .panel_tab_def(families_panel::definition())
-        .panel_tab_def(classification_panel::definition())
-        .panel_tab_def(diagnostics_panel::definition())
-        .panel_tab_def(crate::editor::bim::panels::options::definition())
-        .panel_tab_def(coordination_panel::clashes_definition())
-        .panel_tab_def(coordination_panel::rules_definition())
-        .panel_tab_def(coordination_panel::issues_definition())
+        .panel_tab_def(framework_panel_tab(
+            FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+            LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
+            PanelGroup::Workbench,
+            vec![library_panel::definition(), families_panel::definition(), classification_panel::definition()],
+        ))
+        .panel_tab_def(framework_panel_tab(
+            FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+            LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
+            PanelGroup::Details,
+            vec![
+                properties_panel::definition(),
+                diagnostics_panel::definition(),
+                crate::editor::bim::panels::options::definition(),
+                coordination_panel::clashes_definition(),
+                coordination_panel::rules_definition(),
+                coordination_panel::issues_definition(),
+            ],
+        ))
         .io(bim_io());
     for definition in crate::editor::bim::interaction::definitions() {
         builder = builder.interaction(definition);

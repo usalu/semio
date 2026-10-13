@@ -19,10 +19,10 @@ impl DagInputCursor{
         if self.raw.is_none(){return self.grammar.normal_step_demands(source).map_err(|error|error.into_value_error())}
         let raw=self.raw.as_ref().unwrap();if self.phase==0{match self.kind{DagInputKind::Progress=>super::closed(raw,&["active","stale"] )?,DagInputKind::Selection=>super::closed(raw,&["nodes","edges","handles"] )?,_=>{}}}let mut demand=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
         let vector=|value:&DslValue,size:usize|->Result<usize,ValueError>{value.as_array().ok_or_else(super::refuse)?.len().checked_mul(size).ok_or_else(super::refuse)};
-        demand.capacity_bytes=if self.phase==0{match self.kind{DagInputKind::Progress=>vector(raw.get("stale").ok_or_else(super::refuse)?,std::mem::size_of::<String>())?,DagInputKind::Channels=>vector(raw,std::mem::size_of::<DagChannelRef>())?,_=>0}}else{match self.facts.as_ref().unwrap(){
-            DagInputFacts::Selection(_)if self.phase==1=>vector(raw.get(["nodes","edges","handles"][self.field]).ok_or_else(super::refuse)?,std::mem::size_of::<String>())?,
+        demand.capacity_bytes=if self.phase==0{match self.kind{DagInputKind::Progress=>vector(raw.get("stale").ok_or_else(super::refuse)?,size_of::<String>())?,DagInputKind::Channels=>vector(raw,size_of::<DagChannelRef>())?,_=>0}}else{match self.facts.as_ref().unwrap(){
+            DagInputFacts::Selection(_)if self.phase==1=>vector(raw.get(["nodes","edges","handles"][self.field]).ok_or_else(super::refuse)?,size_of::<String>())?,
             DagInputFacts::Statuses(_)if self.field<raw.as_object().ok_or_else(super::refuse)?.len()=>{let row=&raw.as_object().unwrap()[self.field].1;if self.phase==1&&row.as_object().ok_or_else(super::refuse)?.len()>2{return Err(super::refuse())}match self.phase{
-                1 if row.get("status").and_then(DslValue::as_str)==Some("blocked")=>vector(row.get("ports").ok_or_else(super::refuse)?,std::mem::size_of::<String>())?,
+                1 if row.get("status").and_then(DslValue::as_str)==Some("blocked")=>vector(row.get("ports").ok_or_else(super::refuse)?,size_of::<String>())?,
                 3=>SharedOwner::<String>::allocation_bytes(),4=>SharedOwner::<DagNodeEvaluationStatus>::allocation_bytes(),
                 6=>{let update=self.pending_update.as_ref().unwrap();demand.copy_bytes=update.next_copy_byte_demand();demand.depth=update.next_depth_demand();update.next_capacity_byte_demand()?},_=>0}},_=>0}};Ok(demand)
     }

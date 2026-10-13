@@ -34,7 +34,7 @@ pub(crate) mod context {
 
     /// 🪪️ A registry-backed app with an exact runtime identity for parallel ownership laws.
     pub async fn note_app_with_registry_id(instance_id: u32) -> OwnedNoteApp {
-        let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(instance_id).await;
         OwnedNoteApp(app)
     }
@@ -50,7 +50,7 @@ pub(crate) mod context {
     impl OwnedNoteApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
         }
     }
 
@@ -102,7 +102,7 @@ pub(crate) mod context {
             let demand = PluginApp::maintenance_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.to_string()))?;
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             PluginApp::maintenance_step(app, grant)?;
-            app.advance_typed_operation_publication().await?;
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await?;
             if let Some(page) = app.take_typed_operation_result_page(receiver) {
                 if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
                     return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
@@ -128,7 +128,7 @@ pub(crate) mod context {
     }
 
     pub async fn dispatch_with_view_for_instance(app: &mut NoteApp, command: NoteCommand, instance_id: u32, view_state: ViewModel) -> InvocationResult {
-        let result = app.dispatch_typed(command, &action_meta("local", instance_id, view_state)).await;
+        let result = app.dispatch_typed(command, &action_meta("local", instance_id, view_state), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         settle(app, instance_id, result).await.expect("dispatch")
     }
 
@@ -150,7 +150,7 @@ pub(crate) mod context {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
         let args = Some(semio_framework_plugin::dsl_value!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" }));
-        let result = app.handle_action("interactionSelect", args.as_ref(), &action_meta("test", 1, composite_view(NOTE_PLAY_WINDOW_COMPOSITE))).await;
+        let result = app.handle_action("interactionSelect", args.as_ref(), &action_meta("test", 1, composite_view(NOTE_PLAY_WINDOW_COMPOSITE)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         settle(app, 1, result).await.expect("interactionSelect");
     }
 
@@ -579,7 +579,7 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
         drop((transient_a, transient_b));
 
         let document = app.document_pack().await.expect("document pack before reset");
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document).await.expect("reload document and reset window transient");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("reload document and reset window transient");
         let reset_a = app.window_transient_snapshot(&view_a).expect("reset window a transient").expect("reset window a owner");
         assert_eq!(reset_a.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         assert_eq!(app.window_transient_generation(&view_a).expect("reset window a generation"), Some(0));
@@ -588,13 +588,13 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
         let pending = app
             .dispatch_typed(
                 NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }),
-                &semio_framework_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") },
+                &semio_framework_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
             )
             .await
             .expect("start retained transient command");
         assert!(pending.mutations.is_empty());
         assert!(app.has_pending_typed_operations(), "retained transient command must remain owned before publication advances");
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document).await.expect("replacement cancels captured transient publication authority");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("replacement cancels captured transient publication authority");
         let cancelled = app.window_transient_snapshot(&view_a).expect("cancelled window a transient").expect("cancelled window a owner");
         assert_eq!(cancelled.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         drop(cancelled);
@@ -608,7 +608,7 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = note_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -625,7 +625,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         |app| {
             let projection = app.snapshot().expect("snapshot");
             (projection.blocks.len(), projection.grid_visible)
-        },
+        },semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }
@@ -635,7 +635,7 @@ async fn ingest_operations_is_idempotent_for_note() {
     artifact_app_laws::assert_registered_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64, _, _>(
         || async { crate::editor::note::unit_tests::context::note_manifest_for_tests() },
         NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }),
-        |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default(),
+        |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default(),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
     )
     .await;
 }

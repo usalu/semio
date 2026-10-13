@@ -3,7 +3,6 @@
 use super::{ WindowConfigOwner, WindowConfigPack, WindowConfigPartition, WindowRegistry};
 use crate::{protocol, store};
 use std::any::Any;
-use std::collections::HashMap;
 use std::mem::ManuallyDrop;
 use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand, retirement::{RetireOwned, RetirementCursor, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use super::PluginLifecycleStep;
@@ -221,7 +220,7 @@ impl WindowConfigPackLoad {
     pub fn terminal_is_empty(&self)->bool{self.inner.is_none()}
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let Some(inner)=self.inner.as_ref()else{return Ok(Default::default());};
-        if inner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:std::mem::size_of_val(inner.as_ref()),depth:1,..Default::default()});}
+        if inner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:size_of_val(inner.as_ref()),depth:1,..Default::default()});}
         let mut demand=inner.retirement_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"window load frame depth overflow"))?;Ok(demand)
     }
 
@@ -339,7 +338,7 @@ impl RetireOwned for ValueFrame {
         }
     }
     fn controlled_retirement_supported() -> bool { true }
-    fn retirement_element_copy_bytes() -> usize { std::mem::size_of::<Self>() }
+    fn retirement_element_copy_bytes() -> usize { size_of::<Self>() }
 }
 
 #[derive(semio_framework_value::RetireOwned)]
@@ -743,7 +742,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        self.retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: std::mem::size_of::<RetainedTypedOwners<O>>(), depth: 1, ..Default::default() }), |owner| Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }))
+        self.retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: size_of::<RetainedTypedOwners<O>>(), depth: 1, ..Default::default() }), |owner| Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }))
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -765,8 +764,8 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     }
 }
 
-impl<O:WindowConfigOwner> semio_framework_value::retirement::RetireOwned for RetainedWindowConfigTypedState<O>{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
+impl<O:WindowConfigOwner> RetireOwned for RetainedWindowConfigTypedState<O>{
+ fn retirement(self)->Box<dyn RetirementCursor>{
   use semio_framework_value::retirement::{sequence,deferred};let original=ManuallyDrop::new(self);
   unsafe{sequence(vec![deferred(std::ptr::read(&original.spec)),deferred(std::ptr::read(&original.stack)),deferred(std::ptr::read(&original.wrappers)),deferred(std::ptr::read(&original.string)),deferred(original.tag),deferred(std::ptr::read(&original.root)),deferred(original.complete),deferred(original.handed_back)])}
  }
@@ -848,7 +847,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         let envelope_id = <O::State as store::ArtifactDsl>::envelope_id();
         let expected_token_bytes = envelope_id.len().checked_add(".pack v1".len()).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
         let header_bytes = 12usize.checked_add(expected_token_bytes).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < header_bytes.saturating_add(std::mem::size_of::<RetainedWindowConfigTypedState<O>>()) {
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < header_bytes.saturating_add(size_of::<RetainedWindowConfigTypedState<O>>()) {
             return Ok(false);
         }
         if pack.len() <= header_bytes || pack.get(..8) != Some(store::semio_format::BINARY_MAGIC.as_slice()) || pack.get(8..12).and_then(|bytes| <[u8; 4]>::try_from(bytes).ok()).map(u32::from_le_bytes) != Some(expected_token_bytes as u32) {
@@ -1079,16 +1078,16 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
         if self.terminal_is_empty() { return Ok(Default::default()); }
-        if self.document_byte.is_some() { return frame(std::mem::size_of::<(u64, u8)>()); }
-        if self.catalog_value.is_some() { return frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackCatalog>()); }
-        if self.state.is_some() { return frame(std::mem::size_of::<O::State>()); }
+        if self.document_byte.is_some() { return frame(size_of::<(u64, u8)>()); }
+        if self.catalog_value.is_some() { return frame(size_of::<store::mounted_pack_rt::RetainedPackCatalog>()); }
+        if self.state.is_some() { return frame(size_of::<O::State>()); }
         if let Some(owner) = self.state_retirement.as_ref() { return controlled_demands(owner, body); }
-        if let Some(typed) = self.typed.as_ref() { return if typed.terminal_is_empty() { frame(std::mem::size_of::<RetainedWindowConfigTypedState<O>>()) } else { typed.retirement_demands(body) }; }
-        if let Some(owner) = self.value.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedValueCursor>()) } else { Ok(owner.retirement_demands()) }; }
-        if let Some(owner) = self.catalog.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackCatalogCursor>()) } else { owner.retirement_demands() }; }
-        if let Some(owner) = self.segment.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackSegmentCursor>()) } else { Ok(owner.retirement_demands()) }; }
-        if self.anchor.is_some() { return frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackAnchorCursor>()); }
-        if let Some(owner) = self.source.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<store::mounted_pack_rt::RetainedPackSourceCursor>()) } else { owner.retirement_demands() }; }
+        if let Some(typed) = self.typed.as_ref() { return if typed.terminal_is_empty() { frame(size_of::<RetainedWindowConfigTypedState<O>>()) } else { typed.retirement_demands(body) }; }
+        if let Some(owner) = self.value.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<store::mounted_pack_rt::RetainedValueCursor>()) } else { Ok(owner.retirement_demands()) }; }
+        if let Some(owner) = self.catalog.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<store::mounted_pack_rt::RetainedPackCatalogCursor>()) } else { owner.retirement_demands() }; }
+        if let Some(owner) = self.segment.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<store::mounted_pack_rt::RetainedPackSegmentCursor>()) } else { Ok(owner.retirement_demands()) }; }
+        if self.anchor.is_some() { return frame(size_of::<store::mounted_pack_rt::RetainedPackAnchorCursor>()); }
+        if let Some(owner) = self.source.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<store::mounted_pack_rt::RetainedPackSourceCursor>()) } else { owner.retirement_demands() }; }
         frame(0)
     }
 
@@ -1404,7 +1403,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         Ok(Some(RetainedCloneStep::Progress(step.progress())))
     }
 
-    fn original_demand() -> RetirementDemand { RetirementDemand { copy_bytes: std::mem::size_of::<LoadOriginal<O>>(), depth: 1, ..Default::default() } }
+    fn original_demand() -> RetirementDemand { RetirementDemand { copy_bytes: size_of::<LoadOriginal<O>>(), depth: 1, ..Default::default() } }
 
     fn retire_files(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, ValueError> {
         if self.files.is_none() { return Ok(None); }
@@ -1510,8 +1509,8 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
     fn partition_demands(partition: &WindowConfigPartition<O>, body: usize) -> Result<RetirementDemand, ValueError> {
         if partition.preview_retirement_pending() { return partition.preview_retirement_demand(); }
         if partition.returned_read_pending() { return partition.returned_read_demands(body); }
-        partition.disposer.as_ref().map_or(Ok(RetirementDemand { copy_bytes: std::mem::size_of::<WindowConfigPartition<O>>(), depth: 1, ..Default::default() }), |owner| {
-            if owner.terminal_is_empty(&partition.store) { Ok(RetirementDemand { release_bytes: std::mem::size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) }
+        partition.disposer.as_ref().map_or(Ok(RetirementDemand { copy_bytes: size_of::<WindowConfigPartition<O>>(), depth: 1, ..Default::default() }), |owner| {
+            if owner.terminal_is_empty(&partition.store) { Ok(RetirementDemand { release_bytes: size_of_val(owner.as_ref()), depth: 1, ..Default::default() }) }
             else { owner.retirement_demands(&partition.store, body) }
         })
     }
@@ -1534,15 +1533,15 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         if self.terminal { return Ok(Default::default()); }
         if self.original.is_some() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained original window input has no controlled authority")); }
         if let Some(owner) = self.active.as_ref() { return controlled_demands(owner, body); }
-        if let Some(owner) = self.state_decode.as_ref() { return if owner.terminal_is_empty() { frame(std::mem::size_of::<RetainedWindowConfigStateDecode<O>>()) } else { owner.retirement_demands(body) }; }
-        if self.history_decode.is_some() { return frame(std::mem::size_of::<store::RetainedHistoryDecode>().checked_add(Self::original_demand().copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "window history handoff size overflow"))?); }
+        if let Some(owner) = self.state_decode.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<RetainedWindowConfigStateDecode<O>>()) } else { owner.retirement_demands(body) }; }
+        if self.history_decode.is_some() { return frame(size_of::<store::RetainedHistoryDecode>().checked_add(Self::original_demand().copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "window history handoff size overflow"))?); }
         if let Some(owner) = self.hydration.as_ref() {
-            return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(std::mem::size_of::<store::RetainedConfigStoreHydration<O::State, O::Mutation>>()) }
+            return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(size_of::<store::RetainedConfigStoreHydration<O::State, O::Mutation>>()) }
             else { Ok(RetirementDemand { copy_bytes: store::ErasedSnapshotRetirement::next_copy_byte_demand(owner)?, capacity_bytes: store::ErasedSnapshotRetirement::next_capacity_byte_demand(owner, body)?, release_bytes: store::ErasedSnapshotRetirement::next_release_byte_demand(owner)?, depth: store::ErasedSnapshotRetirement::next_depth_demand(owner)? }) };
         }
         if let Some(partition) = self.displaced.as_ref().or(self.candidate.as_ref()) { return Self::partition_demands(partition, body); }
         if self.current.is_some() || self.validation.is_some() || self.initial.is_some() || self.history.is_some() || self.files.is_some() { return Ok(Self::original_demand()); }
-        if let Some(owner) = self.owners.as_ref() { return if owner.uninstalled_owners_terminal_is_empty() { frame(std::mem::size_of::<store::DocumentStoreOwners<O::State, O::Mutation>>()) } else { owner.uninstalled_owners_demands(body) }; }
+        if let Some(owner) = self.owners.as_ref() { return if owner.uninstalled_owners_terminal_is_empty() { frame(size_of::<store::DocumentStoreOwners<O::State, O::Mutation>>()) } else { owner.uninstalled_owners_demands(body) }; }
         if self.opened_actor.is_some() || self.expected_id.is_some() || self.window_kind_id.is_some() || self.window_id.is_some() { return Ok(Self::original_demand()); }
         Ok(RetirementDemand { depth: 1, ..Default::default() })
     }
@@ -1661,7 +1660,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
 
     fn demand_bytes(&self) -> usize {
         let envelope_id = <O::State as store::ArtifactDsl>::envelope_id();
-        12usize.saturating_add(envelope_id.len()).saturating_add(".pack v1".len()).saturating_add(std::mem::size_of::<RetainedWindowConfigTypedState<O>>())
+        12usize.saturating_add(envelope_id.len()).saturating_add(".pack v1".len()).saturating_add(size_of::<RetainedWindowConfigTypedState<O>>())
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { TypedWindowConfigPackLoad::retirement_demands(self, body) }

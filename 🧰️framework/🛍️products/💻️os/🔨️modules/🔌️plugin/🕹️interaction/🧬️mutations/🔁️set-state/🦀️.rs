@@ -4,26 +4,15 @@ use super::{DomainEdit, InteractionConfigMutation, InteractionStateDiff};
 use protocol::InteractionState;
 
 //#region 🔖️Payload
-// 🌱️ `InteractionState` (defined in `📡️replication/📡️wire/🦀️.rs`) carries only the hand-written
-// `ToValue`/`FromValue` codec — its `serde` derive is gone, so this wrapper cannot derive `serde`
-// either. The transparent passthrough it used to get from `#[serde(transparent)]` is supplied by
-// the hand-written impls below, which forward straight to the inner state.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, serde::Serialize, serde::Deserialize)]
+// 🌱️ The wire of this leaf is its inner `InteractionState` alone (`#[value(transparent)]`): its plain, controlled and canonical-tree codecs are derived and forward to the state.
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(transparent)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetInteractionState {
     pub state: InteractionState,
 }
 
-impl semio_framework_value::ToValue for SetInteractionState {
-    fn to_value(&self) -> semio_framework_value::DslValue {
-        semio_framework_value::ToValue::to_value(&self.state)
-    }
-}
-impl semio_framework_value::FromValue for SetInteractionState {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        Ok(Self { state: semio_framework_value::FromValue::from_value(value)? })
-    }
-}
 //#endregion 🔖️Payload
 
 //#region ⚙️ColdSemantics

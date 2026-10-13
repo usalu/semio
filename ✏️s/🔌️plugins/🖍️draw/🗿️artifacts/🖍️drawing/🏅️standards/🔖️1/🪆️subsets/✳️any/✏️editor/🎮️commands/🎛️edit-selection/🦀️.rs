@@ -4,7 +4,8 @@ mod stack;
 #[path="🧩️ungroup/🦀️.rs"]
 mod ungroup;
 use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
-use crate::schema::{drawing_layer_is_locked, find_drawing_layer, find_drawing_layer_location, layer_base, layer_base_mut, selected_drawing_layers};
+use crate::schema::{drawing_layer_is_locked, find_drawing_layer, find_drawing_layer_location, layer_base, selected_drawing_layers};
+#[cfg(test)] use crate::schema::{layer_base_mut};
 use crate::{DrawingLayerNode, DrawingSnapshot};
 use crate::op::DrawingMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
@@ -68,7 +69,7 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str,admissio
             for layer in &selected{facts.push(control.copy_text(&layer_base(layer).id.to_string_owner()).map_err(|error|Fault::from(error.to_string()))?);}
             let mut parts=control.allocate_vec(facts.len()).map_err(|error|Fault::from(error.to_string()))?;parts.extend(facts.iter().map(|fact|fact.as_bytes()));
             let identity=crate::standards::v1::subsets::any::io::text::identity::publication::admit_identity(crate::schema::identity::DrawingIdentityKind::Group,&parts,control).map_err(|error|Fault::from(error.to_string()))?;
-            let mut group=crate::schema::create_drawing_group_layer(identity,"Group");
+            let group=crate::schema::create_drawing_group_layer(identity,"Group");
             let group_id = layer_base(&group).id.clone();
             if find_drawing_layer(document, &group_id).is_some() { return Err(Fault::from("This group already exists")); }
             operations.push(crate::mutations::create_layer(parent, Some(locations[0].index), group));

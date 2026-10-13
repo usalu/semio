@@ -52,7 +52,7 @@ pub mod set_sample_rate;
 pub mod set_tag_value;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioAudioSnapshot, diff = SemioAudioDiff, schema = "SemioAudioMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -78,7 +78,7 @@ pub const KINDS: &[&str] = &["set-sample-rate", "set-format", "insert-channel", 
 /// `extern crate` alias, so an owner-root test adapter cannot bring the `Mutation` trait into scope).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
-    <SemioAudioMutation as protocol::Mutation<SemioAudioSnapshot>>::diff(mutation, base)
+    <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, base)
 }
 
 

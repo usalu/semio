@@ -10,7 +10,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 use crate::op::DrawingMutation;
 use protocol::OpBinary;
 
-impl protocol::OpBinary for DrawingMutation {
+impl OpBinary for DrawingMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

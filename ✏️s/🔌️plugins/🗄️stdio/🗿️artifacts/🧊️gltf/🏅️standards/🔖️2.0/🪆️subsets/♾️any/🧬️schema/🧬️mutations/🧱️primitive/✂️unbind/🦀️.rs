@@ -56,7 +56,7 @@ pub fn mutation(payload: GltfUnbindPrimitiveMaterialPayload) -> super::GltfMutat
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimitiveMaterialMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "unbind", entity: "primitive-material", kind: "unbind-primitive-material", record: "UnboundPrimitiveMaterial" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

@@ -2,7 +2,8 @@
 /// 🧱 Vertex positions with outer and inner vertex loops for each face.
 pub type SolidFaceLoops = (Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>);
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{HashMap};
+#[cfg(test)] use std::collections::{BTreeMap};
 
 #[path = "📦️mesh-io/🦀️.rs"]
 mod mesh_io;
@@ -30,7 +31,8 @@ use crate::brep::operations::sew::{convert_to_nurbs, heal_solid, sew_faces};
 use crate::brep::operations::transform::{copy_solid, transform_face, transform_solid, transform_wire};
 use crate::brep::queries::classification::point_in_solid;
 use crate::brep::queries::mass_properties::{closest_point_on_face, closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
-use crate::brep::queries::tessellation::{tessellate_face, tessellate_solid, tessellate_wire, TessellationJob};
+use crate::brep::queries::tessellation::{TessellationJob};
+#[cfg(test)] use crate::brep::queries::tessellation::{tessellate_solid};
 use crate::brep::queries::validation::{issue_reaches, validate_body};
 use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
 use crate::brep::representation::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};

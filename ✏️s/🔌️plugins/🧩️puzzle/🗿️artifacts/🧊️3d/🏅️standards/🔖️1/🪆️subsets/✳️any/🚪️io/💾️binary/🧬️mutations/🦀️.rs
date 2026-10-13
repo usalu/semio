@@ -11,7 +11,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-use crate::Puzzle3dSnapshot;
+#[cfg(test)] use crate::Puzzle3dSnapshot;
 use protocol::OpBinary;
 
 
@@ -46,7 +46,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Puzzle3dMutation, protocol::ProtocolErr
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — the stateful session that dispatches this
 /// envelope now lives app-side, at `crate::editor::puzzle3d::precompute`, but the envelope itself is
 /// pure data and stays schema-side.
-use crate::standards::v1::subsets::any::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+use crate::standards::v1::subsets::any::schema::Puzzle3dEngineCommand;
 
 /// 📦️ Encodes a `Puzzle3dEngineCommand` to its binary command form.
 pub fn encode_engine_command(command: &Puzzle3dEngineCommand) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -137,15 +137,16 @@ impl store::ArtifactPack for Puzzle3dPlaySnapshot {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;
 
 mod native_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation,Puzzle3dMutation};
-use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
-pub use mutations_codec::*;
+use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dMutation};
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
+#[cfg(test)] use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
+#[cfg(test)] pub use mutations_codec::*;
 
-impl protocol::OpBinary for Puzzle3dMutation {
+impl OpBinary for Puzzle3dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
     }

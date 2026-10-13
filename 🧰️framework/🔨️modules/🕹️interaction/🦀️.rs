@@ -16,8 +16,6 @@
 //! unchanged. Handcrafted TS parity lives in `🟦️.ts` (unmoved — TypeScript has no crate
 //! graph); schema leaves live in `🧬️schema/`.
 
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 use semio_framework_ui_locale::LocalizedLabel;
 

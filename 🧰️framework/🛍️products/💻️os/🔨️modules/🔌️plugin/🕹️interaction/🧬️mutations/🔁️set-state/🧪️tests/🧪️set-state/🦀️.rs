@@ -31,3 +31,20 @@ fn local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned() {
     let inverse = mutation.inverse(&InteractionState::default()).expect("valid retained mutation inverse fixture");
     assert_eq!(protocol::apply_diff(inverse[0].diff(&state).diff(), &state).unwrap(), InteractionState::default());
 }
+
+#[test]
+fn the_interaction_mutation_round_trips_its_serde_json_document_through_the_plain_and_the_controlled_decoder() {
+    use semio_framework_value::{FromValue, ToValue};
+    let source: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    let state: InteractionState = serde_json::from_value(source).unwrap();
+    for mutation in [InteractionConfigMutation::set_state(InteractionState::default()), InteractionConfigMutation::set_state(state)] {
+        let document = serde_json::to_string(&mutation.to_value()).expect("independent serde_json document");
+        let parsed: semio_framework_value::DslValue = serde_json::from_str(&document).expect("the document parses back through an independent parser");
+        assert_eq!(InteractionConfigMutation::from_value(parsed.clone()).expect("plain decode"), mutation);
+        let mut allow = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
+        let mut control = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut allow);
+        let decoded = InteractionConfigMutation::from_value_controlled(&parsed, &mut control).expect("controlled decode");
+        assert_eq!(decoded, mutation);
+        decoded.retire_decoded();
+    }
+}

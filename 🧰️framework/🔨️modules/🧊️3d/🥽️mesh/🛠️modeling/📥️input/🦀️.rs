@@ -26,7 +26,7 @@ impl MeshTranslationInput {
     pub fn terminal_is_empty(&self)->bool {self.source.is_none()}
     /// 🧮️ Quotes the defining original Transform frame and its structural handoff.
     pub fn start_demands(&self)->Option<RetirementDemand> {
-        (self.source.is_some()&&!self.cancelled).then_some(RetirementDemand {capacity_bytes:std::mem::size_of::<Transform>(),depth:2,..Default::default()})
+        (self.source.is_some()&&!self.cancelled).then_some(RetirementDemand {capacity_bytes:size_of::<Transform>(),depth:2,..Default::default()})
     }
     /// 🛬️ Starts one original Work frame under the same caller authority and preserves denied or faulted input.
     pub fn start(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<Option<MeshModelingJob>,ValueError> {

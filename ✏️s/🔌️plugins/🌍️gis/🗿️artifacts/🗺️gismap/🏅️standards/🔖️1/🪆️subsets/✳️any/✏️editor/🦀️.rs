@@ -427,10 +427,10 @@ impl GisMapWindowWork {
 
 impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        self.terminal_is_empty().then_some(std::mem::size_of::<Self>())
+        self.terminal_is_empty().then_some(size_of::<Self>())
     }
     fn tool_id(&self) -> &'static str { self.tool_id }
 
@@ -692,7 +692,7 @@ where P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         if self.stamp.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.stamp)?); }
         if self.base.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.base)?); }
         if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
-        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
     }
 }
@@ -723,7 +723,7 @@ where
     }
 
     fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        let capacity_bytes = std::mem::size_of::<Gis2dOneItemPreparation<P, M>>().checked_add(self.stamp.0.as_ref().map_or(0, |stamp| stamp.mutation_id.0.len())).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp birth extent overflow"))?;
+        let capacity_bytes = size_of::<Gis2dOneItemPreparation<P, M>>().checked_add(self.stamp.0.as_ref().map_or(0, |stamp| stamp.mutation_id.0.len())).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp birth extent overflow"))?;
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
     }
 
@@ -781,7 +781,7 @@ where
         }
         match self.phase {
             0 => {
-                let authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its Store authority"))?;
+                let _authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its Store authority"))?;
                 let base = self.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its exact base root"))?;
                 let mutation = self.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its mutation owner"))?;
                 let inverse = match mutation.inverse(base.get()) {

@@ -132,27 +132,27 @@ fn sheet_mandatory_keys(sheet: u16, profile: EditionProfileChoice) -> &'static [
 /// Citations: DN series DIN EN ISO 6708 / Blatt tables; airflow/pressure VDI 3805-16/19 §4; COP VDI 3805-53 §4.2.
 fn sheet_numeric_bounds(sheet: u16) -> &'static [(&'static str, f64, f64)] {
     const BOUNDS_AIR: &[(&str, f64, f64)] = &[
-        ("airflow_m3_s", crate::SHEET_NUMERIC_BOUNDS_19_AIRFLOW.0, crate::SHEET_NUMERIC_BOUNDS_19_AIRFLOW.1),
-        ("pressure_drop_pa", crate::SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.0, crate::SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.1),
+        ("airflow_m3_s", SHEET_NUMERIC_BOUNDS_19_AIRFLOW.0, SHEET_NUMERIC_BOUNDS_19_AIRFLOW.1),
+        ("pressure_drop_pa", SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.0, SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.1),
     ];
     const BOUNDS_53: &[(&str, f64, f64)] = &[
-        ("dn", crate::SHEET_NUMERIC_BOUNDS_53_DN.0, crate::SHEET_NUMERIC_BOUNDS_53_DN.1),
-        ("nominal_heat_output_w", crate::SHEET_NUMERIC_BOUNDS_53_HEAT_W.0, crate::SHEET_NUMERIC_BOUNDS_53_HEAT_W.1),
-        ("cop", crate::SHEET_NUMERIC_BOUNDS_53_COP.0, crate::SHEET_NUMERIC_BOUNDS_53_COP.1),
+        ("dn", SHEET_NUMERIC_BOUNDS_53_DN.0, SHEET_NUMERIC_BOUNDS_53_DN.1),
+        ("nominal_heat_output_w", SHEET_NUMERIC_BOUNDS_53_HEAT_W.0, SHEET_NUMERIC_BOUNDS_53_HEAT_W.1),
+        ("cop", SHEET_NUMERIC_BOUNDS_53_COP.0, SHEET_NUMERIC_BOUNDS_53_COP.1),
     ];
-    const BOUNDS_DN: &[(&str, f64, f64)] = &[("dn", crate::SHEET_NUMERIC_BOUNDS_DN.0, crate::SHEET_NUMERIC_BOUNDS_DN.1)];
+    const BOUNDS_DN: &[(&str, f64, f64)] = &[("dn", SHEET_NUMERIC_BOUNDS_DN.0, SHEET_NUMERIC_BOUNDS_DN.1)];
     const BOUNDS_4: &[(&str, f64, f64)] = &[
-        ("dn", crate::SHEET_NUMERIC_BOUNDS_DN_PIPE.0, crate::SHEET_NUMERIC_BOUNDS_DN_PIPE.1),
-        ("outer_diameter_m", crate::SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.0, crate::SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.1),
-        ("wall_thickness_m", crate::SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.0, crate::SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.1),
+        ("dn", SHEET_NUMERIC_BOUNDS_DN_PIPE.0, SHEET_NUMERIC_BOUNDS_DN_PIPE.1),
+        ("outer_diameter_m", SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.0, SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.1),
+        ("wall_thickness_m", SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.0, SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.1),
     ];
     const BOUNDS_7: &[(&str, f64, f64)] = &[
-        ("dn", crate::SHEET_NUMERIC_BOUNDS_DN.0, crate::SHEET_NUMERIC_BOUNDS_DN.1),
-        ("volume_m3", crate::SHEET_NUMERIC_BOUNDS_VOLUME_M3.0, crate::SHEET_NUMERIC_BOUNDS_VOLUME_M3.1),
+        ("dn", SHEET_NUMERIC_BOUNDS_DN.0, SHEET_NUMERIC_BOUNDS_DN.1),
+        ("volume_m3", SHEET_NUMERIC_BOUNDS_VOLUME_M3.0, SHEET_NUMERIC_BOUNDS_VOLUME_M3.1),
     ];
     const BOUNDS_60: &[(&str, f64, f64)] = &[
-        ("dn", crate::SHEET_NUMERIC_BOUNDS_DN.0, crate::SHEET_NUMERIC_BOUNDS_DN.1),
-        ("axial_force_n", crate::SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.0, crate::SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.1),
+        ("dn", SHEET_NUMERIC_BOUNDS_DN.0, SHEET_NUMERIC_BOUNDS_DN.1),
+        ("axial_force_n", SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.0, SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.1),
     ];
     match sheet {
         4 => BOUNDS_4,
@@ -173,10 +173,10 @@ const CONNECTION_MEDIUM_CODES: &[&str] = &["water", "air", "glycol", "steam", "r
 
 fn code_list_for_key(sheet: u16, key: &str) -> Option<&'static [&'static str]> {
     match key {
-        "connection_type" => Some(crate::CONNECTION_TYPE_CODES),
-        "pressure_class" => Some(crate::PRESSURE_CLASS_CODES),
-        "filter_class" if sheet == 19 => Some(crate::FILTER_CLASS_CODES),
-        "type_code" => Some(crate::TYPE_CODE_CODES),
+        "connection_type" => Some(CONNECTION_TYPE_CODES),
+        "pressure_class" => Some(PRESSURE_CLASS_CODES),
+        "filter_class" if sheet == 19 => Some(FILTER_CLASS_CODES),
+        "type_code" => Some(TYPE_CODE_CODES),
         "fuel_type" => Some(&["gas", "oil", "electric", "biomass", "district"]),
         _ => None,
     }
@@ -644,7 +644,7 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
     out.push(pc.build());
 
     let ct = attrs.connection_type.as_str();
-    let ct_ord = crate::CONNECTION_TYPE_CODES.iter().position(|c| *c == ct).map(|i| (i + 1) as f64).unwrap_or(0.0);
+    let ct_ord = CONNECTION_TYPE_CODES.iter().position(|c| *c == ct).map(|i| (i + 1) as f64).unwrap_or(0.0);
     let ct_ok = ct_ord > 0.0;
     let mut ct_check = CheckResult::assess(format!("vdi3805.2.connectionType.{article}"), part.clone(), clause("2", "4.2.5"), subject.clone(), copy("Connection type", "Anschlussart"))
         .annex(ANNEX)
@@ -660,14 +660,14 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
             ))
             .remedy(Remedy::one_of(
                 SubjectRef::new(article, product_path(article, "configuration.attributes.connectionType"), copy("Connection type", "Anschlussart")),
-                crate::CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
+                CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
                 copy("Set connectionType to a Blatt code-list value (e.g. flange).", "connectionType auf einen Blatt-Codelistenwert setzen (z. B. flange)."),
             ));
     }
     out.push(ct_check.build());
 
     // PN domain (not just presence) — VDI 3805-2 §4.2.3 / DIN EN 1092.
-    if !attrs.pressure_class.is_empty() && !crate::PRESSURE_CLASS_CODES.iter().any(|c| *c == attrs.pressure_class.as_str()) {
+    if !attrs.pressure_class.is_empty() && !PRESSURE_CLASS_CODES.iter().any(|c| *c == attrs.pressure_class.as_str()) {
         out.push(
             CheckResult::assess(format!("vdi3805.2.pn.domain.{article}"), part.clone(), clause("2", "4.2.3"), subject.clone(), copy("Pressure class domain", "Druckstufen-Wertebereich"))
                 .annex(ANNEX)
@@ -675,7 +675,7 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
                 .explanation(copy(format!("pressureClass `{}` is not an admitted PN code.", attrs.pressure_class), format!("pressureClass `{}` ist kein zugelassener PN-Code.", attrs.pressure_class)))
                 .remedy(Remedy::one_of(
                     SubjectRef::new(article, product_path(article, "configuration.attributes.pressureClass"), copy("Pressure class", "Druckstufe")),
-                    crate::PRESSURE_CLASS_CODES.iter().map(|s| (*s).to_string()).collect(),
+                    PRESSURE_CLASS_CODES.iter().map(|s| (*s).to_string()).collect(),
                     copy("Choose an admitted PN class (PN6…PN40).", "Zugelassene PN-Klasse wählen (PN6…PN40)."),
                 ))
                 .build(),
@@ -884,7 +884,7 @@ fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttributes) -> Vec
         out.push(dim.build());
     }
     let ct = attrs.connection_type.as_str();
-    let ct_ord = crate::CONNECTION_TYPE_CODES.iter().position(|c| *c == ct).map(|i| (i + 1) as f64).unwrap_or(0.0);
+    let ct_ord = CONNECTION_TYPE_CODES.iter().position(|c| *c == ct).map(|i| (i + 1) as f64).unwrap_or(0.0);
     let ct_ok = ct_ord > 0.0;
     let mut ct_check = CheckResult::assess(format!("vdi3805.3.connectionType.{article}"), part_label(3), clause("3", "4.4"), subject.clone(), copy("Connection type", "Anschlussart"))
         .annex(ANNEX)
@@ -897,7 +897,7 @@ fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttributes) -> Vec
             .explanation(copy("connectionType missing or not in Blatt code list.", "connectionType fehlt oder nicht in der Blatt-Codeliste."))
             .remedy(Remedy::one_of(
                 SubjectRef::new(article, product_path(article, "configuration.attributes.connectionType"), copy("Connection type", "Anschlussart")),
-                crate::CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
+                CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
                 copy("Set connectionType to a Blatt code-list value.", "connectionType auf einen Blatt-Codelistenwert setzen."),
             ));
     }

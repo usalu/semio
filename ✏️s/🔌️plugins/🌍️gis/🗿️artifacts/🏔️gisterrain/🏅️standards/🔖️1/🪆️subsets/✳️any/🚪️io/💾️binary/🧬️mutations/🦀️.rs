@@ -38,8 +38,9 @@ pub mod change_imported_features;
 pub mod change_exaggeration;
 
 mod native_codec {
-use super::*;
-use crate::schema::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation, GisTerrainMutation};
+#[cfg(test)] use super::*;
+use crate::schema::mutations::{GisTerrainMutation};
+#[cfg(test)] use crate::schema::mutations::{apply_gis_terrain_mutation, inverse_gis_terrain_mutation};
 
 impl protocol::OpBinary for GisTerrainMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

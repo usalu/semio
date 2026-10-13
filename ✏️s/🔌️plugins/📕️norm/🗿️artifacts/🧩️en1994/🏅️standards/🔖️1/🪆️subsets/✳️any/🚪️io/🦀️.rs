@@ -175,7 +175,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec En1994BuilderFacets {
         construction: En1994BuilderConstruction,
         analysis: En1994AnalyzerAnalysis,
-        composition: crate::standards::v1::subsets::any::io::derived_composition::En1994ComposerComposition,
+        composition: En1994ComposerComposition,
     }
     builder: En1994Builder,
     analyzer: En1994Analyzer,

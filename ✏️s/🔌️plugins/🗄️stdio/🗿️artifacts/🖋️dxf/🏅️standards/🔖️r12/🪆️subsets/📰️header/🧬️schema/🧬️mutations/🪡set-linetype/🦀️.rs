@@ -25,7 +25,7 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLinetype {
         let Self { name, .. } = self;
         Ok({
             match base.tables.linetypes.iter().find(|l| &l.name == name) {
-                Some(l) => vec![DxfMutation::SetLinetype(set_linetype::SetLinetype { name: name.clone(), linetype: l.clone() })],
+                Some(l) => vec![DxfMutation::SetLinetype(SetLinetype { name: name.clone(), linetype: l.clone() })],
                 None => vec![DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: name.clone() })],
             }
         })

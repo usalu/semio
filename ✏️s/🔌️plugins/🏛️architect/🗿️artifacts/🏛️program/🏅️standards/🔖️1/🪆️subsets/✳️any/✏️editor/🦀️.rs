@@ -191,7 +191,7 @@ pub mod behavior {
     use crate::ProgramSnapshot;
     use semio_s_artifact_stdio_csv as stdio_csv;
     use semio_s_artifact_stdio_tsv as stdio_tsv;
-    use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
+    
     use std::collections::HashMap;
     use std::collections::HashSet;
     use std::collections::VecDeque;
@@ -938,8 +938,8 @@ pub mod behavior {
             header: EntityHeader::new(row.id, row.name),
             topic: String::new(),
             category: String::new(),
-            summary: crate::kernel::TextField::plain(""),
-            content: crate::kernel::TextField::plain(""),
+            summary: TextField::plain(""),
+            content: TextField::plain(""),
             sources: Vec::new(),
             references: Vec::new(),
             lessons_learned: Vec::new(),

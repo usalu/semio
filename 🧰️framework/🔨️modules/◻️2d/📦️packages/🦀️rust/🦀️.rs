@@ -12,15 +12,12 @@ pub use engine::*;
 #[path = "../../🧮️compute/🦀️.rs"]
 pub mod compute;
 
-#[cfg(feature = "booleans")]
 #[path = "../../🔀️booleans/🦀️.rs"]
 pub mod booleans;
 
-#[cfg(feature = "booleans")]
 #[path = "../../🧱️regions/🦀️.rs"]
 pub mod regions;
 
-#[cfg(feature = "trace")]
 #[path = "../../🔍️trace/🦀️.rs"]
 pub mod trace;
 

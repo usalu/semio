@@ -232,7 +232,7 @@ fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_f
 
 
 impl RowPatch<Puzzle5dPart2d> for Puzzle5dPart2dPatch {
-    fn commit_into(&self, item: &mut Puzzle5dPart2d, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dPart2d, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.x {
             item.x = *value;
         }
@@ -317,7 +317,7 @@ impl RowPatch<Puzzle5dPart2d> for Puzzle5dPart2dPatch {
 }
 
 impl RowPatch<Puzzle5dPart3d> for Puzzle5dPart3dPatch {
-    fn commit_into(&self, item: &mut Puzzle5dPart3d, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dPart3d, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.origin {
             item.origin = *value;
         }
@@ -367,7 +367,7 @@ impl RowPatch<Puzzle5dPart3d> for Puzzle5dPart3dPatch {
 }
 
 impl RowPatch<Puzzle5dGrip2d> for Puzzle5dGrip2dPatch {
-    fn commit_into(&self, item: &mut Puzzle5dGrip2d, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dGrip2d, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.angle {
             item.angle = *value;
         }
@@ -403,7 +403,7 @@ impl RowPatch<Puzzle5dGrip2d> for Puzzle5dGrip2dPatch {
 }
 
 impl RowPatch<Puzzle5dGrip3d> for Puzzle5dGrip3dPatch {
-    fn commit_into(&self, item: &mut Puzzle5dGrip3d, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dGrip3d, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.position {
             item.position = *value;
         }
@@ -542,7 +542,7 @@ impl RowPatch<Puzzle5dPart> for Puzzle5dPartPatch {
 }
 
 impl RowPatch<Puzzle5dFastener> for Puzzle5dFastenerPatch {
-    fn commit_into(&self, item: &mut Puzzle5dFastener, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dFastener, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.source {
             item.source = value.clone();
         }
@@ -634,7 +634,7 @@ impl RowPatch<Puzzle5dFastener> for Puzzle5dFastenerPatch {
 }
 
 impl RowPatch<Puzzle5dTargetVolume> for Puzzle5dTargetVolumePatch {
-    fn commit_into(&self, item: &mut Puzzle5dTargetVolume, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dTargetVolume, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.origin {
             item.origin = *value;
         }
@@ -684,7 +684,7 @@ impl RowPatch<Puzzle5dTargetVolume> for Puzzle5dTargetVolumePatch {
 }
 
 impl RowPatch<Puzzle5dKindCompatibility> for Puzzle5dKindCompatibilityPatch {
-    fn commit_into(&self, item: &mut Puzzle5dKindCompatibility, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dKindCompatibility, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.bidirectional {
             item.bidirectional = *value;
         }
@@ -720,7 +720,7 @@ impl RowPatch<Puzzle5dKindCompatibility> for Puzzle5dKindCompatibilityPatch {
 }
 
 impl RowPatch<Puzzle5dMeta> for Puzzle5dMetaPatch {
-    fn commit_into(&self, item: &mut Puzzle5dMeta, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
+    fn commit_into(&self, item: &mut Puzzle5dMeta, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         if let Some(value) = &self.description {
             item.description = value.clone();
         }

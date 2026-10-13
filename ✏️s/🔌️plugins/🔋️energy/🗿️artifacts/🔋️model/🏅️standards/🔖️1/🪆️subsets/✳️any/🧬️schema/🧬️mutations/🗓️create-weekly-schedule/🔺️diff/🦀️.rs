@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateWeeklySchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ScheduleSetPatch, WeeklySchedulePatch};
+use crate::diff::{EnergyModelDiff, ModelPatch, Rows, ScheduleSetPatch};
 use crate::EnergyModelSnapshot;
 
 //#region 🔖️Diff

@@ -8,7 +8,7 @@
 //! begin_report_replay, replay_report, commit_finished_replay}`.
 
 use super::*;
-use semio_framework_os_kernel::HistoryPageStack;
+#[cfg(test)] use semio_framework_os_kernel::HistoryPageStack;
 use semio_framework::kernel::{HistoryMutationEntry, HistoryMutationMessage, HistoryReprojection, HistoryReprojectionKind, HistoryTimeTravel, HistoryTimeTravelProblem, HistoryTimeTravelReview, HistoryTimeTravelStage, RequestId};
 use semio_framework::{input_label_glossary, mutation_input_defs, mutation_input_instance, reference_id_text, registered_input_schema_document, ActionArgControl, ActionArgOption, ArgPresentation, ArgSchema, InputSchemaError, OptionSource, SnapSource, DIALOG_CHOICE_ARG, HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ACTION_IDS, HISTORY_EDIT_ARG_EDIT, HISTORY_EDIT_ARG_GENERATION, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_NAME, HISTORY_EDIT_ARG_PATH, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_ARG_VALUE, HISTORY_EDIT_BACK_ACTION_ID, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, HISTORY_EDIT_CHOICE_OVERWRITE, HISTORY_EDIT_COMMIT_ACTION_ID, HISTORY_EDIT_DISCARD_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_FINALIZE_DIALOG_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_INPUT_INSERT, HISTORY_EDIT_INPUT_REMOVE, HISTORY_EDIT_RERUN_ACTION_ID, HISTORY_EDIT_RESTORE_ACTION_ID, HISTORY_EDIT_USE_SELECTION_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
 use semio_framework_time_travel::{
@@ -60,12 +60,12 @@ pub const TIME_TRAVEL_SHORT_ID_CHARS: usize = 12;
 /// 🗳️ The request id the finalize prompt opens under; nothing awaits a dialog.
 const TIME_TRAVEL_FINALIZE_REQUEST: RequestId = RequestId(0x7417_0001);
 
-fn history_planning_retirement_grant(demand:semio_framework_value::RetirementDemand)->semio_framework_value::retained_clone::RetainedCloneGrant {
-    semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
+fn history_planning_retirement_grant(demand:RetirementDemand)->RetainedCloneGrant {
+    RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
 }
 
-fn history_retirement_frame_grant(bytes:usize)->semio_framework_value::retained_clone::RetainedCloneGrant {
-    semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1}
+fn history_retirement_frame_grant(bytes:usize)->RetainedCloneGrant {
+    RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1}
 }
 //#endregion 🔖️Limits
 
@@ -162,7 +162,7 @@ pub(crate) struct TimeTravelMemberSubject {
     pub owners: Option<Box<dyn TimeTravelOwners>>,
     pub children: Option<ChildContentView>,
     pub review_children: Option<TimeTravelReviewChildren>,
-    metadata_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<TimeTravelMemberMetadata>>,
+    metadata_close: Option<ControlledRetirement<TimeTravelMemberMetadata>>,
     metadata_retired: bool,
 }
 
@@ -177,7 +177,7 @@ pub(crate) struct TimeTravelReviewChildren {
 
 impl TimeTravelReviewChildren {
     pub(crate) fn capture(view:&ChildContentView,base:TimeTravelBase,generation:u32,grant:RetainedCloneGrant)->Option<(Self,RetainedCloneProgress)>{
-        let copied_bytes=std::mem::size_of::<Self>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return None}
+        let copied_bytes=size_of::<Self>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return None}
         Some((Self{view:view.clone(),base,generation},RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))
     }
 }
@@ -200,7 +200,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     discard_cursor: Option<Box<semio_framework_time_travel::TimeTravelDiscardCursor>>,
     command_retirements: semio_framework_value::retirement::queue::RetirementQueue,
     command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
-    session_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<TimeTravelSession>>,
+    session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
     session_retired: bool,
     editor: Option<TimeTravelEditor>,
     document: TimeTravelStoreState<A::Snapshot, A::Mutation>,
@@ -398,7 +398,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     fn stage_time_travel_command(&mut self,original:&mut Option<TimeTravelEvent>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
         if self.command_receipt.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"actor original command receipt awaits its caller"))}
         if self.closing||self.pending_command.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"actor already retains an original pending command"))}
-        let parent_copy=std::mem::size_of::<Option<semio_framework_time_travel::TimeTravelCommandCustody>>();
+        let parent_copy=size_of::<Option<semio_framework_time_travel::TimeTravelCommandCustody>>();
         if grant.maximum_copy_bytes<parent_copy||grant.maximum_depth<2{return Ok(None)}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};
         let Some((owner,mut receipt))=semio_framework_time_travel::TimeTravelCommandCustody::admit_original(original,child)?else{return Ok(None)};
@@ -471,8 +471,8 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         let demand=self.document.retirement_demands(body)?;
         if demand!=RetirementDemand::default(){return Ok(demand);}
         if let Some(owners)=self.member.as_ref().and_then(|member|member.owners.as_ref()){let demand=owners.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}}
-        if let Some(owners)=self.retiring.last(){return if owners.terminal_is_empty(){Ok(RetirementDemand{release_bytes:std::mem::size_of_val(owners.as_ref()),depth:1,..Default::default()})}else{owners.retirement_demands(body)};}
-        if self.retiring.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.retiring.capacity()*std::mem::size_of::<Box<dyn TimeTravelOwners>>(),depth:1,..Default::default()});}
+        if let Some(owners)=self.retiring.last(){return if owners.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(owners.as_ref()),depth:1,..Default::default()})}else{owners.retirement_demands(body)};}
+        if self.retiring.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.retiring.capacity()*size_of::<Box<dyn TimeTravelOwners>>(),depth:1,..Default::default()});}
         Ok(Default::default())
     }
     fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault> {
@@ -487,7 +487,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
             if grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
             drop(self.retiring.pop());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})));
         }
-        if self.retiring.capacity()!=0{let bytes=self.retiring.capacity()*std::mem::size_of::<Box<dyn TimeTravelOwners>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}drop(std::mem::take(&mut self.retiring));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})));}
+        if self.retiring.capacity()!=0{let bytes=self.retiring.capacity()*size_of::<Box<dyn TimeTravelOwners>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}drop(std::mem::take(&mut self.retiring));return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})));}
         Ok(None)
     }
 
@@ -634,9 +634,9 @@ pub(crate) struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>> {
     replay: Option<store::ArtifactDerivedReplay<P, Mu>>,
     finished: Option<store::EditReplayResult<P, Mu>>,
     head: Option<store::ArtifactDerivedSnapshot<P>>,
-    snapshot_aliases: std::mem::ManuallyDrop<[Option<store::ArtifactDerivedSnapshot<P>>; 8]>,
-    snapshot_issuers: std::mem::ManuallyDrop<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>,
-    snapshot_close: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    snapshot_aliases: ManuallyDrop<[Option<store::ArtifactDerivedSnapshot<P>>; 8]>,
+    snapshot_issuers: ManuallyDrop<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>,
+    snapshot_close: ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     snapshot_issuer_close: [Option<semio_framework_value::FactoryAuthority>; 2],
     retirements: VecDeque<Box<dyn store::ErasedSnapshotRetirement>>,
     discarded: Vec<Mu>,
@@ -646,11 +646,11 @@ pub(crate) struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>> {
     discarded_factory_close: Option<semio_framework_value::FactoryAuthority>,
 }
 
-impl<P,Mu:protocol::Mutation<P>> Drop for TimeTravelStoreState<P,Mu>{
+impl<P,Mu:Mutation<P>> Drop for TimeTravelStoreState<P,Mu>{
     fn drop(&mut self){
         let empty=self.snapshot_aliases.iter().all(Option::is_none)&&self.snapshot_close.is_none()&&self.snapshot_issuers.is_none()&&self.snapshot_issuer_close.iter().all(Option::is_none);
         assert!(std::thread::panicking()||empty,"original derived snapshot custody requires granted retirement");
-        if empty{unsafe{std::mem::ManuallyDrop::drop(&mut self.snapshot_aliases);std::mem::ManuallyDrop::drop(&mut self.snapshot_close);std::mem::ManuallyDrop::drop(&mut self.snapshot_issuers)}}
+        if empty{unsafe{ManuallyDrop::drop(&mut self.snapshot_aliases);ManuallyDrop::drop(&mut self.snapshot_close);ManuallyDrop::drop(&mut self.snapshot_issuers)}}
     }
 }
 
@@ -722,7 +722,7 @@ where
 {
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub(crate) fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
-        Self { discard_effects:None,label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, snapshot_aliases: std::mem::ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: std::mem::ManuallyDrop::new(None), snapshot_close: std::mem::ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
+        Self { discard_effects:None,label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, replay: None, finished: None, head: None, snapshot_aliases: ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: ManuallyDrop::new(None), snapshot_close: ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
     }
 
     /// 🪞️ The snapshot the session shows at `stage`: the draft preview while editing; while replaying that preview — or,
@@ -2157,7 +2157,7 @@ where
     Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
 {
     let envelope = store.envelope();
-    let tail = |stack: &crate::dsl::HistoryPageStack<String>| stack.iter_from(stack.len().saturating_sub(HISTORY_STAMP_TAIL)).cloned().collect::<Vec<_>>();
+    let tail = |stack: &dsl::HistoryPageStack<String>| stack.iter_from(stack.len().saturating_sub(HISTORY_STAMP_TAIL)).cloned().collect::<Vec<_>>();
     let (applied, redo) = (store.applied_edit_ids(), store.redo_edit_ids());
     HistoryStoreStamp {
         generation: store.generation(),
@@ -2198,7 +2198,7 @@ fn history_stamp_moved(moved: usize, from: &[String], from_after: &[String], to:
 /// top (its row may have grown, and a composed member row reads its member's top); an undone tail of at most
 /// [`HISTORY_STAMP_TAIL`] edits with the top it uncovered. `None` for anything else — a replay, a checkout, a history edit, a
 /// checkpoint, a load — and the history view rebuilds (design §20.14).
-pub(crate) fn history_store_change(previous: &HistoryStoreStamp, current: &HistoryStoreStamp, applied: &crate::dsl::HistoryPageStack<String>) -> Option<Vec<(String, Option<usize>)>> {
+pub(crate) fn history_store_change(previous: &HistoryStoreStamp, current: &HistoryStoreStamp, applied: &dsl::HistoryPageStack<String>) -> Option<Vec<(String, Option<usize>)>> {
     if (previous.generation, previous.revision) == (current.generation, current.revision) {
         return Some(Vec::new());
     }
@@ -2431,10 +2431,10 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     fn member_subject_retirement_demands(&self,body:usize)->Result<Option<RetirementDemand>,ValueError>{
         if !self.time_travel.closing&&self.time_travel.session.stage!=TimeTravelStage::Inactive{return Ok(None)}
         let Some(member)=self.time_travel.member.as_ref()else{return Ok(None)};
-        if member.review_children.is_some()||member.children.is_some(){return Ok(Some(RetirementDemand{copy_bytes:std::mem::size_of::<TimeTravelReviewChildren>()+std::mem::size_of::<ChildContentRetirement>()+std::mem::size_of::<u64>(),depth:1,..Default::default()}))}
-        if let Some(owners)=member.owners.as_ref(){if !owners.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inactive original member retains live typed sources"))}return Ok(Some(RetirementDemand{copy_bytes:std::mem::size_of_val(&member.owners),release_bytes:std::mem::size_of_val(owners.as_ref()),depth:1,..Default::default()}))}
-        if let Some(owner)=member.metadata_close.as_ref(){return if owner.terminal_is_empty(){Ok(Some(RetirementDemand{copy_bytes:std::mem::size_of_val(&member.metadata_close),depth:1,..Default::default()}))}else{Ok(Some(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original member metadata depth overflow"))?}))}}
-        Ok(Some(RetirementDemand{copy_bytes:if member.metadata_retired{std::mem::size_of::<TimeTravelMemberSubject>()}else{std::mem::size_of::<TimeTravelMemberMetadata>()},depth:1,..Default::default()}))
+        if member.review_children.is_some()||member.children.is_some(){return Ok(Some(RetirementDemand{copy_bytes:size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>(),depth:1,..Default::default()}))}
+        if let Some(owners)=member.owners.as_ref(){if !owners.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"inactive original member retains live typed sources"))}return Ok(Some(RetirementDemand{copy_bytes:size_of_val(&member.owners),release_bytes:size_of_val(owners.as_ref()),depth:1,..Default::default()}))}
+        if let Some(owner)=member.metadata_close.as_ref(){return if owner.terminal_is_empty(){Ok(Some(RetirementDemand{copy_bytes:size_of_val(&member.metadata_close),depth:1,..Default::default()}))}else{Ok(Some(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original member metadata depth overflow"))?}))}}
+        Ok(Some(RetirementDemand{copy_bytes:if member.metadata_retired{size_of::<TimeTravelMemberSubject>()}else{size_of::<TimeTravelMemberMetadata>()},depth:1,..Default::default()}))
     }
 
     fn member_subject_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{
@@ -2447,7 +2447,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if let Some(owner)=member.metadata_close.as_mut(){if owner.terminal_is_empty(){drop(member.metadata_close.take());member.metadata_retired=true;return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child).map_err(ValueError::into_fault)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original composed member metadata").map_err(ValueError::into_fault)?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}
         if member.metadata_retired{drop(self.time_travel.member.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
         if !<TimeTravelMemberMetadata as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(Fault::from("original member metadata producer is unsupported"))}
-        let original=TimeTravelMemberMetadata{key:std::mem::take(&mut member.key),path:member.path.take_original(),dialect:std::mem::replace(&mut member.dialect,ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()})};match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>member.metadata_close=Some(owner),Err((error,original))=>{member.key=original.key;member.path=original.path;member.dialect=original.dialect;return Err(error.into_fault())}}
+        let original=TimeTravelMemberMetadata{key:std::mem::take(&mut member.key),path:member.path.take_original(),dialect:std::mem::replace(&mut member.dialect,ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()})};match ControlledRetirement::new(original){Ok(owner)=>member.metadata_close=Some(owner),Err((error,original))=>{member.key=original.key;member.path=original.path;member.dialect=original.dialect;return Err(error.into_fault())}}
         Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
     }
 
@@ -3336,7 +3336,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if !self.time_travel.review_children_pending(){return Ok(false)}
         let member=self.time_travel.member.as_mut().expect("original review member remains present");
         let receipt=if member.review_children.is_some(){
-            let copied_bytes=std::mem::size_of::<TimeTravelReviewChildren>()+std::mem::size_of::<ChildContentRetirement>()+std::mem::size_of::<u64>();
+            let copied_bytes=size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>();
             let generation=self.child_content_generation.checked_add(1).filter(|generation|self.child_content_retirements.can_insert(*generation));
             if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes||generation.is_none(){Default::default()}else{let review=member.review_children.take().unwrap();let generation=generation.unwrap();self.child_content_retirements.insert_admitted(generation,ChildContentRetirement::new(review.view,false));self.child_content_generation=generation;RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}}
         }else{
@@ -3354,7 +3354,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 if time_travel.closing{cursor.begin_close()}
                 if cursor.is_validating(){return cursor.validate(&time_travel.session,grant).map(|step|Some(step.progress()))}
                 if cursor.prepared_stage().is_some(){
-                    let receipt=match time_travel.member.as_mut(){None=>time_travel.document.publish_discard(store,cursor,&mut time_travel.session,&mut time_travel.editor,grant)?,Some(member)=>{let entry=children.member(member.key.borrowed()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"Discard original member is absent"))?;let owners=member.owners.as_deref_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Discard original member owners are absent"))?;entry.member.visit_member(discard_decision::DiscardMemberPublication{owners,cursor,session:&mut time_travel.session,editor:&mut time_travel.editor,review_children:&mut member.review_children,children:&mut member.children,retirements:child_content_retirements,child_generation:child_content_generation,view_copy_bytes:std::mem::size_of::<TimeTravelReviewChildren>()+std::mem::size_of::<ChildContentRetirement>()+std::mem::size_of::<u64>(),grant})?}};
+                    let receipt=match time_travel.member.as_mut(){None=>time_travel.document.publish_discard(store,cursor,&mut time_travel.session,&mut time_travel.editor,grant)?,Some(member)=>{let entry=children.member(member.key.borrowed()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"Discard original member is absent"))?;let owners=member.owners.as_deref_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Discard original member owners are absent"))?;entry.member.visit_member(discard_decision::DiscardMemberPublication{owners,cursor,session:&mut time_travel.session,editor:&mut time_travel.editor,review_children:&mut member.review_children,children:&mut member.children,retirements:child_content_retirements,child_generation:child_content_generation,view_copy_bytes:size_of::<TimeTravelReviewChildren>()+size_of::<ChildContentRetirement>()+size_of::<u64>(),grant})?}};
                     if time_travel.session.stage!=TimeTravelStage::Editing{time_travel.ui_dirty=true;time_travel.document_dirty=true;time_travel.patch_due=true}return Ok(Some(receipt))
                 }
                 if grant.maximum_depth<time_travel.command_retirements.len()+1{return Ok(Some(Default::default()))}

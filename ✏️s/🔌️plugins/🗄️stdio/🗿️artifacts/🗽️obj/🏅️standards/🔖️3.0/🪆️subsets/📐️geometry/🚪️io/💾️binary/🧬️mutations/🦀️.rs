@@ -29,4 +29,4 @@ impl OpBinary for ObjMutation {
     }
 }
 }
-pub use mutations_codec::*;
+#[cfg(test)] pub use mutations_codec::*;

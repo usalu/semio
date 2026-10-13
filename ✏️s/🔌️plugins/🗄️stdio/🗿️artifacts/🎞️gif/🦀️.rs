@@ -11,7 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
-#[cfg(feature = "component-app-assembly")]
 pub(crate) use semio_s_artifact_stdio_contract::base64_standard;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -84,8 +83,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
         .inferences([standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor(), standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor()])
         .composers(standards::v87a::subsets::any::io::io_registry::entries())
         .composers(standards::v89a::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<standards::v87a::subsets::any::schema::snapshot::GifSnapshot, standards::v87a::subsets::any::schema::mutations::GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_artifact_reference::StandardId("87a"), subset: semio_framework_artifact_reference::SubsetId("*") })
-        .document_codec_bare::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.gif", standard: semio_framework_artifact_reference::StandardId("89a"), subset: semio_framework_artifact_reference::SubsetId("*") })
+        .document_codec_bare::<standards::v87a::subsets::any::schema::snapshot::GifSnapshot, standards::v87a::subsets::any::schema::mutations::GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") })
+        .document_codec_bare::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("89a"), subset: SubsetId("*") })
         .try_build()
 }
 
@@ -361,7 +360,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -434,7 +432,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

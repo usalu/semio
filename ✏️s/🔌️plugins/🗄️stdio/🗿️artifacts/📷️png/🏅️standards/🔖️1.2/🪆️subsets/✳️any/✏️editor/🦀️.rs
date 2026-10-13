@@ -100,20 +100,20 @@ const STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS: &[&str] = &[semio_s_artifact_s
 const STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.png.tool-command.v1";
 const STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 const STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] };
-fn pngEditor_example_snapshot(example_id: &str) -> PngSnapshot {
+fn png_editor_example_snapshot(example_id: &str) -> PngSnapshot {
     if example_id == crate::examples::demo::ID { <PngSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default() } else { PngSnapshot::default() }
 }
-fn pngEditor_native_command_id(command: &PngNativeEditCommand) -> &'static str {
+fn png_editor_native_command_id(command: &PngNativeEditCommand) -> &'static str {
     match command {
         PngNativeEditCommand::PatchPixelRegion(_) => patch_pixel_region::ACTION_ID,
         PngNativeEditCommand::PaintNativeRegion(command) => paint_native_region::action_id(command.paint.profile),
         PngNativeEditCommand::SetActiveExample { .. } => semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID,
     }
 }
-fn pngEditor_command_id(command: &PngEditCommand) -> &'static str {
-    editing::snapshot_editing_command_id(command, pngEditor_native_command_id)
+fn png_editor_command_id(command: &PngEditCommand) -> &'static str {
+    editing::snapshot_editing_command_id(command, png_editor_native_command_id)
 }
-fn pngEditor_native_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PngNativeEditCommand, Fault> {
+fn png_editor_native_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PngNativeEditCommand, Fault> {
     match action {
         patch_pixel_region::ACTION_ID => Ok(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion::from_action(args)?)),
         action if paint_native_region::ACTION_IDS.contains(&action) => Ok(PngNativeEditCommand::PaintNativeRegion(paint_native_region::PaintNativeRegion::from_action(action, args)?)),
@@ -121,19 +121,19 @@ fn pngEditor_native_command_from_action(action: &str, args: Option<&semio_framew
         _ => Err(Fault::from(format!("action '{action}' is not a PNG editor action"))),
     }
 }
-fn pngEditor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PngEditCommand, Fault> {
-    editing::snapshot_editing_command_from_action(action, args, pngEditor_native_command_from_action)
+fn png_editor_command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PngEditCommand, Fault> {
+    editing::snapshot_editing_command_from_action(action, args, png_editor_native_command_from_action)
 }
-fn pngEditor_retained_extent(command: &PngEditCommand, _snapshot: &PngSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+fn png_editor_retained_extent(command: &PngEditCommand, _snapshot: &PngSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command, PngEditCommand::Native(PngNativeEditCommand::SetActiveExample { .. })).then_some(1)
 }
-fn pngEditor_retained_reduce(command: &PngEditCommand, _snapshot: &PngSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>, _operation: &AppOperationContext) -> Result<Emit<PngMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn png_editor_retained_reduce(command: &PngEditCommand, _snapshot: &PngSnapshot, _config: &NoConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>, _operation: &AppOperationContext) -> Result<Emit<PngMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        PngEditCommand::Native(PngNativeEditCommand::SetActiveExample { example_id }) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&pngEditor_example_snapshot(example_id), STDIO_PNG_DOCUMENT_SCHEMA)], ..Default::default() }),
+        PngEditCommand::Native(PngNativeEditCommand::SetActiveExample { example_id }) => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&png_editor_example_snapshot(example_id), STDIO_PNG_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
 }
-fn pngEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
+fn png_editor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
 }
 type PngDetailsProvider = editing::DslSnapshotDetailsProvider<'static, PngSnapshot>;
@@ -160,7 +160,7 @@ impl ArtifactOwnedToolJobFactory for PngEditorExampleFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 const STDIO_PNG_PIXEL_REGION_CONTRACT: ArtifactToolPublicationContract = ArtifactToolPublicationContract { tool_id: patch_pixel_region::ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] };
-const fn pngEditor_pixel_region_execution_contract() -> ToolExecutionContract {
+const fn png_editor_pixel_region_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(patch_pixel_region::MAXIMUM_RAW_BYTES, 64, patch_pixel_region::CAPACITY.work_items() as u64, 65_536, 7_500)
 }
 struct PngPixelRegionFactory { keys: Vec<ToolFactoryKey> }
@@ -173,7 +173,7 @@ impl ToolJobFactory for PngPixelRegionFactory {
     fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
     fn payload_schema_id(&self) -> &str { patch_pixel_region::PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { pngEditor_pixel_region_execution_contract() }
+    fn execution_contract(&self) -> ToolExecutionContract { png_editor_pixel_region_execution_contract() }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
     fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_plugin::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > patch_pixel_region::MAXIMUM_RAW_BYTES || checkpoint.is_some() { return Err((ToolJobFactoryError::new("PNG pixel region rejects oversized wire or checkpoint owner"), input, checkpoint)); }
@@ -193,7 +193,7 @@ const STDIO_PNG_NATIVE_REGION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: paint_native_region::RGB_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: paint_native_region::RGBA_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
-const fn pngEditor_native_region_execution_contract() -> ToolExecutionContract {
+const fn png_editor_native_region_execution_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(paint_native_region::MAXIMUM_RAW_BYTES, 64, paint_native_region::CAPACITY.work_items() as u64, 65_536, 7_500)
 }
 struct PngNativeRegionFactory { keys: Vec<ToolFactoryKey> }
@@ -206,7 +206,7 @@ impl ToolJobFactory for PngNativeRegionFactory {
     fn keys(&self) -> &[ToolFactoryKey] { &self.keys }
     fn payload_schema_id(&self) -> &str { paint_native_region::PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
-    fn execution_contract(&self) -> ToolExecutionContract { pngEditor_native_region_execution_contract() }
+    fn execution_contract(&self) -> ToolExecutionContract { png_editor_native_region_execution_contract() }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> { Ok(ArtifactRetainedCommandJob::new(payload)) }
     fn create_job_from_wire_pages_with_payload(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload, input: semio_framework_plugin::action_bus::RetainedToolWireInput, checkpoint: Option<semio_framework_plugin::action_bus::RetainedToolWireInput>) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_plugin::action_bus::RetainedToolWireInput, Option<semio_framework_plugin::action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > paint_native_region::MAXIMUM_RAW_BYTES || checkpoint.is_some() { return Err((ToolJobFactoryError::new("PNG native region rejects oversized wire or checkpoint owner"), input, checkpoint)); }
@@ -259,9 +259,9 @@ impl ArtifactEditor for PngEditor {
         const OWNER_FILE: &str = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🦀️.rs";
         const CONTROLLER: &str = "s.stdio.png@1.2/*#editor";
         let mut proofs = vec![ArtifactBoundedFirstStepProof::new::<EditorApp<PngEditor>>(OWNER_FILE, CONTROLLER, "PngEditorExampleFactory", semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, "stdio.png", ToolExecutionContract::bounded_first_step(STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)).with_factory_type::<EditorApp<PngEditor>, PngEditorExampleFactory>()];
-        proofs.push(ArtifactBoundedFirstStepProof::new::<EditorApp<PngEditor>>(OWNER_FILE, CONTROLLER, "PngPixelRegionFactory", patch_pixel_region::ACTION_ID, "stdio.png", pngEditor_pixel_region_execution_contract()).with_factory_type::<EditorApp<PngEditor>, PngPixelRegionFactory>());
+        proofs.push(ArtifactBoundedFirstStepProof::new::<EditorApp<PngEditor>>(OWNER_FILE, CONTROLLER, "PngPixelRegionFactory", patch_pixel_region::ACTION_ID, "stdio.png", png_editor_pixel_region_execution_contract()).with_factory_type::<EditorApp<PngEditor>, PngPixelRegionFactory>());
         for action_id in paint_native_region::ACTION_IDS {
-            proofs.push(ArtifactBoundedFirstStepProof::new::<EditorApp<PngEditor>>(OWNER_FILE, CONTROLLER, "PngNativeRegionFactory", *action_id, "stdio.png", pngEditor_native_region_execution_contract()).with_factory_type::<EditorApp<PngEditor>, PngNativeRegionFactory>());
+            proofs.push(ArtifactBoundedFirstStepProof::new::<EditorApp<PngEditor>>(OWNER_FILE, CONTROLLER, "PngNativeRegionFactory", *action_id, "stdio.png", png_editor_native_region_execution_contract()).with_factory_type::<EditorApp<PngEditor>, PngNativeRegionFactory>());
         }
         proofs.extend(editing::snapshot_edit_bounded_first_step_proofs::<Self>(OWNER_FILE, CONTROLLER, "stdio.png"));
         proofs
@@ -275,13 +275,13 @@ impl ArtifactEditor for PngEditor {
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
         if editing::is_snapshot_edit_action(&request.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request); }
         if request.tool_id == patch_pixel_region::ACTION_ID {
-            if pngEditor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-png-pixel-region-tool-mismatch")); }
+            if png_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-png-pixel-region-tool-mismatch")); }
             let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
-            let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, pngEditor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
+            let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, png_editor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
             return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
         }
         if paint_native_region::ACTION_IDS.contains(&request.tool_id.as_str()) {
-            if pngEditor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-png-native-region-tool-mismatch")); }
+            if png_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-png-native-region-tool-mismatch")); }
             let tool_id = match request.tool_id.as_str() {
                 paint_native_region::INDEXED_ACTION_ID => paint_native_region::INDEXED_ACTION_ID,
                 paint_native_region::GRAYSCALE_ACTION_ID => paint_native_region::GRAYSCALE_ACTION_ID,
@@ -291,13 +291,13 @@ impl ArtifactEditor for PngEditor {
                 _ => unreachable!("checked native PNG action roster"),
             };
             let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
-            let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, pngEditor_command_id, paint_native_region::MAXIMUM_RAW_BYTES, paint_native_region::CAPACITY.work_items(), Box::new(paint_native_region::PaintNativeRegionWork::new(tool_id)));
+            let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, png_editor_command_id, paint_native_region::MAXIMUM_RAW_BYTES, paint_native_region::CAPACITY.work_items(), Box::new(paint_native_region::PaintNativeRegionWork::new(tool_id)));
             return Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)));
         }
         if !STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
-        if pngEditor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
+        if png_editor_command_id(&request.command) != request.tool_id { return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "stdio-example-tool-mismatch")); }
         let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, authoring_seed: request.authoring_seed.clone(), retained: request.retained };
-        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, pngEditor_command_id, STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, pngEditor_retained_reduce, pngEditor_retained_extent)));
+        let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command: *request.command, snapshot: request.snapshot, config: request.config, history: request.history, interaction_state: request.interaction_state, interaction_hover: request.interaction_hover, context: Some(request.context), operation, completion: request.completion }, png_editor_command_id, STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, Box::new(BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, png_editor_retained_reduce, png_editor_retained_extent)));
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
     fn build_document_store_initialization_job(envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
@@ -306,8 +306,8 @@ impl ArtifactEditor for PngEditor {
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(publication::factory())
     }
-    fn command_id(command: &Self::Command) -> &'static str { pngEditor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { pngEditor_command_from_action(action, args) }
+    fn command_id(command: &Self::Command) -> &'static str { png_editor_command_id(command) }
+    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { png_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
         crate::standards::v1_2::subsets::any::schema::blank_png_snapshot()
@@ -324,7 +324,7 @@ impl ArtifactEditor for PngEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             PngEditCommand::Native(PngNativeEditCommand::SetActiveExample { example_id }) => Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&pngEditor_example_snapshot(example_id), STDIO_PNG_DOCUMENT_SCHEMA)],
+                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&png_editor_example_snapshot(example_id), STDIO_PNG_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),
             PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(_)) => Err(Fault::from("PNG pixel-region editing requires the cancellable retained route")),

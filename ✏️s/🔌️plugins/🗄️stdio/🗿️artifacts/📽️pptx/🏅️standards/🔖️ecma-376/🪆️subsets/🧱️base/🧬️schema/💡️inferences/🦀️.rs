@@ -20,7 +20,7 @@ pub struct PptxInference {
 
 impl protocol::Inference<PptxSnapshot> for PptxInference {
     fn infer(snapshot: &PptxSnapshot) -> Result<Self, semio_framework_value::ValueError> {
-        Ok({ Self { outline: PptxOutline::compute(snapshot)? } })
+        Ok(Self { outline: PptxOutline::compute(snapshot)? })
     }
 }
 

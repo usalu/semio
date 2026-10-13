@@ -63,7 +63,7 @@ impl store::ArtifactDsl for RemodelingSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod mutations_codec {

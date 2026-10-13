@@ -569,7 +569,7 @@ use crate::RasterSnapshot;
 /// ⚡️ Convenience wrapper kept for existing in-plugin callers (`RasterBuilderConstruction::mutate`,
 /// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
 /// `Mutation`/`MutationDiff` impls instead of a hand-written match.
-pub fn apply_raster_mutation(snapshot: &crate::RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<crate::RasterSnapshot> {
+pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<RasterSnapshot> {
     protocol::apply_diff(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
@@ -577,14 +577,14 @@ pub fn apply_raster_mutation(snapshot: &crate::RasterSnapshot, mutation: &Raster
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn bridge_step(snapshot: &crate::RasterSnapshot, mutation: &RasterMutation) -> Result<(crate::RasterSnapshot, Vec<String>), String> {
+pub(crate) fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
     use protocol::Mutation;
     // 🧹️ The outcome's diff is an owner too (a whole replacement artifact, or the layers an
     // insertion carries), so it is cold-retired here rather than dropped.
-    let (diff, raised) = <RasterMutation as Mutation<crate::RasterSnapshot>>::diff(mutation, snapshot).into_parts();
+    let (diff, raised) = <RasterMutation as Mutation<RasterSnapshot>>::diff(mutation, snapshot).into_parts();
     let messages: Vec<String> = raised.iter().map(|message| message.code.0.clone()).collect();
     let applied = protocol::apply_diff(&diff, snapshot);
-    <crate::diff::RasterDiff as protocol::MutationDiff<crate::RasterSnapshot>>::retire_cold(diff);
+    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(diff);
     match applied {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),

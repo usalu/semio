@@ -23,7 +23,7 @@ impl Census{
 }
 /// 🫳️ Traverses the original literal roles without a Snapshot, SQL database or copied native record.
 pub(super)fn admit_record(value:&R,limits:SqliteDatabaseLimits,native:&mut NativeDecodeControl<'_>)->Result<()>{
- super::extent(limits)?;native.scoped_stage(|native|{
+ extent(limits)?;native.scoped_stage(|native|{
   native.begin_stage(0)?;exact(value,11)?;let vertices=list(field(value,1)?)?;let coordinates=list(field(value,2)?)?;let normals=list(field(value,3)?)?;let faces=list(field(value,4)?)?;let boundaries=faces.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"OBJ boundary count overflow"))?;
   let mut census=Census{limits,rows:0,bytes:0};let schema=text(field(value,0)?,native)?;let library=optional_text(field(value,7)?,native)?;census.row(sum(sum(8,schema)?,library)?,native)?;
   for value in vertices{let value=record(value,4)?;let bytes=sum(sum(sum(sum(24,real(field(value,0)?)?)?,real(field(value,1)?)?)?,real(field(value,2)?)?)?,optional_real(field(value,3)?)?)?;census.row(bytes,native)?;}

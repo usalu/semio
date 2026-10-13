@@ -1814,7 +1814,7 @@ impl RasterUploadPixels<'_> {
         }
     }
 
-    fn content_identity(&self, width: u32, height: u32) -> Option<RasterContentIdentity> {
+    fn content_identity(&self, _width: u32, _height: u32) -> Option<RasterContentIdentity> {
         match self {
             #[cfg(test)]
             Self::Contiguous(pixels) => RasterContentIdentity::test_pixels(width, height, pixels),
@@ -1823,7 +1823,7 @@ impl RasterUploadPixels<'_> {
         }
     }
 
-    fn with_rows<R>(&self, row: u32, start: usize, end: usize, rows: u32, read: impl FnOnce(&[u8], u32) -> R) -> Option<R> {
+    fn with_rows<R>(&self, row: u32, _start: usize, _end: usize, _rows: u32, read: impl FnOnce(&[u8], u32) -> R) -> Option<R> {
         match self {
             #[cfg(test)]
             Self::Contiguous(pixels) => pixels.get(start..end).map(|page| read(page, rows)),

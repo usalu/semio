@@ -2,7 +2,7 @@
 //! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
 //! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
 //! 📤️export/🧵️serializers.
-use crate::apply_mutation;
+#[cfg(test)] use crate::apply_mutation;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
@@ -48,7 +48,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_snapshot_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.html", standard: semio_framework_artifact_reference::StandardId("5"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::of::<HtmlSnapshot, crate::standards::v5::subsets::any::schema::mutations::HtmlMutation>(crate::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }, store::ArtifactCodec::of::<HtmlSnapshot, crate::standards::v5::subsets::any::schema::mutations::HtmlMutation>(crate::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -221,7 +221,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec HtmlBuilderFacets {
         construction: HtmlBuilderConstruction,
         analysis: HtmlAnalyzerAnalysis,
-        composition: crate::standards::v5::subsets::any::io::derived_composition::HtmlComposerComposition,
+        composition: HtmlComposerComposition,
     }
     builder: HtmlBuilder,
     analyzer: HtmlAnalyzer,

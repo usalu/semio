@@ -1,3 +1,4 @@
+use crate::Generation3dSnapshot;
 use super::*;
 use protocol::Inference;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, SynapseSpec, Widget};

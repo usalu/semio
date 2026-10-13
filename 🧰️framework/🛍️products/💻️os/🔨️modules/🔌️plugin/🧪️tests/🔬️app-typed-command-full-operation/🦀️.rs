@@ -504,7 +504,8 @@ mod typed_command_full_operation_tests {
         let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let page = plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
-        let (mut copy, _) = ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32, parts, page).unwrap().unwrap();
+        let birth = RetainedCloneGrant { maximum_capacity_bytes: parts.iter().map(|part| part.len() * 2).sum::<usize>() + 72, ..page };
+        let (mut copy, _) = ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32, parts, birth).unwrap().unwrap();
         assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_items: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         assert_eq!(copy.advance(parts, RetainedCloneGrant { maximum_copy_bytes: 0, ..page }).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         for _ in 0..100_000 {
@@ -526,7 +527,8 @@ mod typed_command_full_operation_tests {
         let scope=&fixture["first"];
         let parts=[scope["document"].as_str().unwrap(),scope["controller"].as_str().unwrap(),scope["tool"].as_str().unwrap(),scope["target"].as_str().unwrap()];
         let page=plugin_page_grant(TYPED_OPERATION_RESULT_PAGE_BYTES);
-        let (mut copy,_)=ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32,parts,page).unwrap().unwrap();
+        let birth=RetainedCloneGrant{maximum_capacity_bytes:parts.iter().map(|part|part.len()*2).sum::<usize>()+72,..page};
+        let (mut copy,_)=ToolLatestWinsKeyCopy::admit_original(scope["instance"].as_u64().unwrap() as u32,parts,birth).unwrap().unwrap();
         for turn in 0..100_000 {if matches!(copy.advance(parts,page).unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {break;}assert!(turn<99_999);}
         let pointer=copy.key.as_ref().unwrap().as_ptr();
         let expected=copy.key.as_ref().unwrap().clone();
@@ -1650,8 +1652,10 @@ mod child_complete_group_candidate_tests{
             match field{"owner"=>child.owner=large,"slot"=>child.slot=large,"child_id"=>child.child_id=large,"op_schema"=>child.op_schema.0=large,_=>{let keys:Vec<&str>=field.split('.').collect();assert_eq!(keys.len(),3);let label=semio_framework_ui_locale::LocalizedLabel::from_fn(|terminology,locale|if terminology.as_str()==keys[1]&&locale.as_str()==keys[2]{large.clone()}else{String::new()});child.labels.push(label);}}
             use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};let page=super::plugin_page_grant(4096);
             assert_eq!(child.close_one(RetainedCloneGrant{maximum_items:0,..page}).unwrap(),RetainedCloneStep::Progress(RetainedCloneProgress::default()));let mut complete=false;let mut physical=0;
-            for _ in 0..8194+128{match child.close_one(page).unwrap(){RetainedCloneStep::Progress(progress)=>{assert!(progress.fits(page));physical+=progress.released_bytes;},RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(page));complete=true;break}}}
-            assert!(complete,"actual ChildEmit full8194 semantic owner remained held at original1/4096: {field}");assert!(physical>=8194);assert!(child.ops.is_empty());assert!(child.labels.is_empty());assert!(child.owner.is_empty());assert!(child.slot.is_empty());assert!(child.child_id.is_empty());assert!(child.op_schema.0.is_empty());
+            if matches!(field,"owner"|"slot"|"child_id"|"op_schema"){for _ in 0..64{if matches!(child.close_one(page).unwrap(),RetainedCloneStep::Complete(_)){panic!("a String backing releases whole: a 4096-byte release grant can never retire the 8194-byte owner: {field}")}}}
+            let whole=RetainedCloneGrant{maximum_release_bytes:8194+4096,..page};
+            for _ in 0..8194+128{match child.close_one(whole).unwrap(){RetainedCloneStep::Progress(progress)=>{assert!(progress.fits(whole));physical+=progress.released_bytes;},RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(whole));physical+=progress.released_bytes;complete=true;break}}}
+            assert!(complete,"actual ChildEmit full8194 semantic owner remained held under the whole-backing release grant: {field}");assert!(physical>=8194);assert!(child.ops.is_empty());assert!(child.labels.is_empty());assert!(child.owner.is_empty());assert!(child.slot.is_empty());assert!(child.child_id.is_empty());assert!(child.op_schema.0.is_empty());
         }
     }
     fn drain_retained(owner:&mut dyn semio_framework_value::ErasedSnapshotRetirement)->usize{
@@ -1863,29 +1867,25 @@ mod child_complete_group_candidate_tests{
         assert_eq!(pointer,source_pointer);assert_eq!(construction.released_bytes,0);assert!(!construction.overflowed);
         let (step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(Default::default()));
         assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));assert!(!cursor.terminal_is_empty());
-        let mut processed=0;
-        while cursor.next_work_byte_demand().unwrap()!=0{
-            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work_bytes,..Default::default()}));
-            assert!(!observed.overflowed);assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));
-            let RetirementStep::ProcessedBytes(bytes)=step else{panic!("logical source drain must preserve the exact backing")};
-            assert!(bytes>0&&bytes<=work_bytes);processed+=bytes;assert!(processed<=backing_bytes);
-            eprintln!("[DEBUG] actual typed String logical processed={bytes} total={processed} physicalRelease=0 originalBacking={backing}");
-        }
-        assert_eq!(processed,backing_bytes);
+        assert_eq!(cursor.next_work_byte_demand().unwrap(),0,"a String retires release-only: its bytes are never logically drained");
+        let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work_bytes,maximum_depth:1,..Default::default()}));
+        assert!(matches!(step,RetirementStep::Advanced),"one unit truncates the logical text without copying or touching the backing");
+        assert!(!observed.overflowed);assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));
+        eprintln!("[DEBUG] actual typed String logical truncate copy=0 physicalRelease=0 originalBacking={backing}");
         for grant in fixture["physicalRelease"]["deniedBytes"].as_array().unwrap(){
             let bytes=grant.as_u64().unwrap() as usize;assert_eq!(cursor.next_close_byte_demand(),Some(backing));
-            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:bytes,..Default::default()}));
+            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_depth:1,maximum_release_bytes:bytes,..Default::default()}));
             assert!(matches!(step,RetirementStep::BudgetExhausted));assert!(!cursor.terminal_is_empty());
             assert_eq!(cursor.next_close_byte_demand(),Some(backing));assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));assert!(!observed.overflowed);
             eprintln!("[DEBUG] actual typed String physical denied grant={bytes} retainedDemand={backing} released=0");
         }
         let demand=cursor.next_close_byte_demand().expect("retained physical source demand");
         assert_eq!(demand,fixture["physicalRelease"]["demandBytes"].as_u64().unwrap() as usize);assert!(demand<=admission);
-        let (step,released)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand,..Default::default()}));
+        let (step,released)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_depth:1,maximum_release_bytes:demand,..Default::default()}));
         let RetirementStep::Bytes(reported)=step else{panic!("whole funded source release must publish its exact physical receipt")};
         assert_eq!(reported,fixture["physicalRelease"]["reportedBytes"].as_u64().unwrap() as usize);
         assert_eq!((released.requested_bytes,released.released_bytes,released.largest_release_bytes),(0,reported,reported));assert!(!released.overflowed);assert_eq!(reported,backing);
-        let (step,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work_bytes,..Default::default()}));
+        let (step,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work_bytes,maximum_depth:1,..Default::default()}));
         assert!(matches!(step,RetirementStep::Complete));assert!(cursor.terminal_is_empty());assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));assert!(!terminal.overflowed);
         let frame=cursor.terminal_release_bytes().expect("separate terminal cursor extent");
         assert_eq!(frame,std::mem::size_of_val(cursor.as_ref()));assert_eq!(frame,construction.requested_bytes);assert!(frame<=admission);assert_eq!(fixture["physicalRelease"]["terminalFrameSeparate"],true);

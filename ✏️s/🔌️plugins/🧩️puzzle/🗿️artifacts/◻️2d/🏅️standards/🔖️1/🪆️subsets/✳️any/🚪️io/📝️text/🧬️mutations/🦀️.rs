@@ -1,6 +1,6 @@
 //! ⚡️ Puzzle2d artifact — OpText/OpBinary codecs + grammar for `Puzzle2dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle2d_mutation,Puzzle2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::editor::puzzle2d::snapshot::Puzzle2dPlaySnapshot;
 
 
@@ -95,7 +95,6 @@ impl store::ArtifactDsl for Puzzle2dPlaySnapshot {
     }
 }
 }
-pub use mutations_codec::*;
 
 #[allow(unused_imports)]
 mod mutations_wire_codec {

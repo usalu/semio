@@ -1,6 +1,6 @@
 //! 🧬️ Sequence artifact schema — every field of the artifact with its state class.
 
-use crate::{default_snapshot, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
+use crate::{SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 
 

@@ -38,4 +38,4 @@ impl store::ArtifactPack for LowpolySnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

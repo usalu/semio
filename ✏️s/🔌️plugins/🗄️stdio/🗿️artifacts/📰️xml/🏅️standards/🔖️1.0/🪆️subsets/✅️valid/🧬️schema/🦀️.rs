@@ -18,12 +18,13 @@ pub use crate::standards::v1_0::subsets::base::schema::*;
 pub mod valid_mutations;
 pub use valid_mutations::{XmlValidMutation, KINDS as VALID_MUTATION_KINDS};
 
-/// 🆕️ A new valid xml document: `<!DOCTYPE root><root/>` as the real parser reads it — XML 1.0 §5.1 validity needs a DOCTYPE
+/// 🆕️ A new valid xml document: `<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE root><root/>` as the real parser reads it — XML 1.0 §5.1 validity needs a DOCTYPE
 /// whose Name is the document element's; the empty document has neither, and this subset refuses every edit (and every
 /// undo) that would land on an invalid document, so an empty new document could never be edited.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn blank_valid_xml_snapshot() -> crate::XmlSnapshot {
-    let doc = crate::schema::snapshot::XmlDocument { root: Some(crate::schema::snapshot::XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), doctype: Some(crate::schema::snapshot::XmlDoctype { name: "root".into(), ..Default::default() }), ..Default::default() };
+    let declaration = snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(false), ..Default::default() };
+    let doc = snapshot::XmlDocument { root: Some(snapshot::XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: Vec::new() }), declaration: Some(declaration), doctype: Some(snapshot::XmlDoctype { name: "root".into(), ..Default::default() }), ..Default::default() };
     crate::XmlSnapshot { doc, ..crate::XmlSnapshot::default() }
 }
 //#endregion 🧬️Mutations

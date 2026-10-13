@@ -63,7 +63,7 @@ pub fn inverse(p: &GltfTransformNodePayload, base: &GltfSnapshot) -> Vec<super::
         Some(matrix) => GltfNodeTransform::Matrix { matrix },
         None => GltfNodeTransform::Trs { translation: node.translation, rotation: node.rotation, scale: node.scale },
     };
-    vec![super::change_node_transform::mutation(super::change_node_transform::GltfTransformNodePayload { node: p.node, transform })]
+    vec![mutation(GltfTransformNodePayload { node: p.node, transform })]
 }
 
 //#region 🧬️DirectMutation
@@ -83,7 +83,7 @@ pub fn mutation(payload: GltfTransformNodePayload) -> super::GltfMutation {
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeTransformMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node-transform", kind: "change-node-transform", record: "ChangedNodeTransform" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

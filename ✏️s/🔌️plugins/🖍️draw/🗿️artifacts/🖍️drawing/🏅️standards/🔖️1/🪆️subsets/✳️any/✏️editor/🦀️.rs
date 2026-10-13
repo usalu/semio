@@ -1320,11 +1320,11 @@ impl DrawingWindowCommandWork {
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>> for DrawingWindowCommandWork {
-    fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+    fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<Self>(), depth: 1, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
 
     fn extent(
@@ -1522,7 +1522,7 @@ impl DrawingArtifactStorePreparation {
         if self.apply_refusal.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.apply_refusal)?); }
         if self.base.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.base)?); }
         if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
-        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
+        if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
     }
 }
@@ -1540,7 +1540,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<DrawingSnapshot, DrawingMutat
     }
 
     fn begin_demand(&self, _mutation: &DrawingMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: std::mem::size_of::<DrawingArtifactStorePreparation>(), depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<DrawingArtifactStorePreparation>(), depth: 1 })
     }
 
     fn begin(
@@ -1827,7 +1827,7 @@ impl ArtifactEditor for DrawingPlayApp {
     fn completion_retirement_birth_bytes(value:&semio_framework_plugin::ArtifactToolCompletionValue<semio_framework_plugin::EditorApp<Self>>)->Option<usize>{completion::birth(value)}
     fn admit_completion_retirement(value:&mut Option<semio_framework_plugin::ArtifactToolCompletionValue<semio_framework_plugin::EditorApp<Self>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{completion::admit(value,grant)}
     /// 📢️ The localized notices of the retained gesture owner's refusals (design §20.12).
-    fn fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         drawing_fault_notices()
     }
 
@@ -2022,7 +2022,7 @@ impl ArtifactEditor for DrawingPlayApp {
     // `set_active_example` commands, which now emit `Effect::LoadDocument` (the sanctioned
     // non-history reset path) instead.
 
-    fn clipboard_media_type()->Option<semio_framework_plugin::MediaType>{Some(clipboard::media_type())}
+    fn clipboard_media_type()->Option<MediaType>{Some(clipboard::media_type())}
 
     fn copy_fragment(doc:&ArtifactView<'_,DrawingSnapshot>,_cfg:&ConfigView<'_,NoConfig>,interaction:&InteractionView<'_>)->Result<semio_framework_plugin::kernel::ClipboardFragment,semio_framework_plugin::kernel::ClipboardError>{
         clipboard::copy(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids)
@@ -2117,7 +2117,7 @@ impl ArtifactEditor for DrawingPlayApp {
         _cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         status::engagements(doc.snapshot.layers.len(),interaction.selection(DRAWING_INTERACTION_DOMAIN).ids.len(),canvas_window::transient::current(transient).engagement_input,view_state)
     }
@@ -2575,18 +2575,18 @@ pub mod geometry_session;
 mod completion;
 
 /// 📣️ The en/de notices of every `drawing.gesture.*` refusal code (design §20.12).
-pub fn drawing_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
-    static NOTICES: std::sync::LazyLock<[(&str, semio_framework_ui_locale::LocalizedLabel); 9]> = std::sync::LazyLock::new(|| {
+pub fn drawing_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 9]> = std::sync::LazyLock::new(|| {
         [
-            ("drawing.gesture.retained-route", semio_framework_ui_locale::LocalizedLabel::native("This drawing gesture can only run in an open drawing window.", "Diese Zeichengeste läuft nur in einem geöffneten Zeichenfenster.")),
-            ("drawing.gesture.closing", semio_framework_ui_locale::LocalizedLabel::native("The drawing is closing; the gesture was not applied.", "Die Zeichnung wird geschlossen; die Geste wurde nicht angewendet.")),
-            ("drawing.gesture.saturated", semio_framework_ui_locale::LocalizedLabel::native("Too many drawing gestures are running at once.", "Zu viele Zeichengesten laufen gleichzeitig.")),
-            ("drawing.gesture.owner", semio_framework_ui_locale::LocalizedLabel::native("The drawing gesture ended before it could continue.", "Die Zeichengeste endete, bevor sie fortgesetzt werden konnte.")),
-            ("drawing.gesture.point-capacity", semio_framework_ui_locale::LocalizedLabel::native("The stroke has too many points.", "Der Strich hat zu viele Punkte.")),
-            ("drawing.gesture.query-owner", semio_framework_ui_locale::LocalizedLabel::native("Another drawing gesture owns this query.", "Eine andere Zeichengeste besitzt diese Abfrage.")),
-            ("drawing.gesture.query-capacity", semio_framework_ui_locale::LocalizedLabel::native("Too many shapes match this point.", "Zu viele Formen treffen diesen Punkt.")),
-            ("drawing.gesture.query-output-capacity", semio_framework_ui_locale::LocalizedLabel::native("The interaction produced too many results.", "Die Interaktion erzeugte zu viele Ergebnisse.")),
-            ("drawing.gesture.command", semio_framework_ui_locale::LocalizedLabel::native("This action cannot run during a drawing gesture.", "Diese Aktion kann während einer Zeichengeste nicht ausgeführt werden.")),
+            ("drawing.gesture.retained-route", LocalizedLabel::native("This drawing gesture can only run in an open drawing window.", "Diese Zeichengeste läuft nur in einem geöffneten Zeichenfenster.")),
+            ("drawing.gesture.closing", LocalizedLabel::native("The drawing is closing; the gesture was not applied.", "Die Zeichnung wird geschlossen; die Geste wurde nicht angewendet.")),
+            ("drawing.gesture.saturated", LocalizedLabel::native("Too many drawing gestures are running at once.", "Zu viele Zeichengesten laufen gleichzeitig.")),
+            ("drawing.gesture.owner", LocalizedLabel::native("The drawing gesture ended before it could continue.", "Die Zeichengeste endete, bevor sie fortgesetzt werden konnte.")),
+            ("drawing.gesture.point-capacity", LocalizedLabel::native("The stroke has too many points.", "Der Strich hat zu viele Punkte.")),
+            ("drawing.gesture.query-owner", LocalizedLabel::native("Another drawing gesture owns this query.", "Eine andere Zeichengeste besitzt diese Abfrage.")),
+            ("drawing.gesture.query-capacity", LocalizedLabel::native("Too many shapes match this point.", "Zu viele Formen treffen diesen Punkt.")),
+            ("drawing.gesture.query-output-capacity", LocalizedLabel::native("The interaction produced too many results.", "Die Interaktion erzeugte zu viele Ergebnisse.")),
+            ("drawing.gesture.command", LocalizedLabel::native("This action cannot run during a drawing gesture.", "Diese Aktion kann während einer Zeichengeste nicht ausgeführt werden.")),
         ]
     });
     &*NOTICES

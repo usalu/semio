@@ -15,14 +15,14 @@ pub struct ReplaceBlock {
 impl protocol::MutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplaceBlock" };
 
-    fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
+    fn diff(&self, _base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
         let Self { path, index, block } = self;
         protocol::MutationOutcome::new(diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() })))
     }
     fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
         let Self { path, index, .. } = self;
         Ok(match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
-            Some(block) => vec![MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: path.clone(), index: *index, block })],
+            Some(block) => vec![MdMutation::ReplaceBlock(ReplaceBlock { path: path.clone(), index: *index, block })],
             None => Vec::new(),
         })
     }

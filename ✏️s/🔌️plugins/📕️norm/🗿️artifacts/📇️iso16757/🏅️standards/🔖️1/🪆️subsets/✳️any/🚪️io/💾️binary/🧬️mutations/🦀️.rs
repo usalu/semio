@@ -20,7 +20,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<Iso16757Mutation, protocol::ProtocolErr
 }
 
 mod native_codec {
-use super::*;
 use crate::artifact_schema::mutations::Iso16757Mutation;
 use crate::artifact_schema::mutations::{
     add_selection_constraint::mutation::AddSelectionConstraint, change_exchange_process::mutation::ChangeExchangeProcess, change_part_number_input::mutation::ChangePartNumberInput, change_selection_class::mutation::ChangeSelectionClass,

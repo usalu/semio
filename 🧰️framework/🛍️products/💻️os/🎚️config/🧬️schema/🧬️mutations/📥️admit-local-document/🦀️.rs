@@ -4,8 +4,7 @@ use super::super::{absorb_keyed_rows, KeyedEdit};
 use super::retire_local_document::RetireLocalDocument;
 use super::LocalCatalogConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
+#[cfg(test)] use semio_framework_value::ToValue;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Schema

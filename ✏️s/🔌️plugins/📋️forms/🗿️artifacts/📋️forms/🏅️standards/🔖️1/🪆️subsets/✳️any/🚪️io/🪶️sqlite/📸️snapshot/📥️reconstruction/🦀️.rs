@@ -13,7 +13,7 @@ const WIDTHS:[usize;30]=[5,6,6,6,29,5,8,7,7,2,2,2,3,1,1,2,4,2,1,2,3,2,4,2,1,4,1,
 struct Relation{table:usize,parent:i64,ordinal:i64,index:usize}
 pub fn retire_value(value:DslValue){<DslValue as semio_framework_value::FromValue>::retire_decoded(value)}
 pub fn retire_condition(root:FormExpr){let mut pending=vec![root];while let Some(value)=pending.pop(){match value{FormExpr::Const{value}=>retire_value(value),FormExpr::Var{..}=>{},FormExpr::Eq{left,right}=>{pending.push(*left);pending.push(*right);},FormExpr::And{mut items}|FormExpr::Or{mut items}=>pending.append(&mut items),FormExpr::Truthy{expr}=>pending.push(*expr)}}}
-pub fn retire_snapshot(mut snapshot:FormsSnapshot){for step in &mut snapshot.definition.steps{for q in &mut step.blocks{if let Some(v)=q.default.take(){retire_value(v)}if let Some(v)=q.params.take(){retire_value(v)}if let Some(v)=q.condition.take(){retire_condition(v)}}}for r in &mut snapshot.responses{for a in &mut r.answers{retire_value(std::mem::replace(&mut a.value,semio_framework_value::DslValue::Null))}}}
+pub fn retire_snapshot(mut snapshot:FormsSnapshot){for step in &mut snapshot.definition.steps{for q in &mut step.blocks{if let Some(v)=q.default.take(){retire_value(v)}if let Some(v)=q.params.take(){retire_value(v)}if let Some(v)=q.condition.take(){retire_condition(v)}}}for r in &mut snapshot.responses{for a in &mut r.answers{retire_value(std::mem::replace(&mut a.value,DslValue::Null))}}}
 struct SnapshotOwner(Option<FormsSnapshot>);
 impl Drop for SnapshotOwner{fn drop(&mut self){if let Some(value)=self.0.take(){retire_snapshot(value)}}}
 struct Pool{values:Vec<Option<DslValue>>,conditions:Vec<Option<FormExpr>>}
@@ -79,11 +79,11 @@ impl<'d,'n,'p>Reader<'d,'n,'p>{
     continue
    }
    let value=match kind{
-    "null"=>semio_framework_value::DslValue::Null,"boolean"=>semio_framework_value::DslValue::Bool(boolean(self.get(19,id)?,1)?),"unsigned"=>semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(unsigned(self.get(20,id)?,1)?)),"signed"=>semio_framework_value::DslValue::Number(semio_framework_value::Number::Int(integer(self.get(21,id)?,1)?)),
-    "float"=>semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(float(self.get(22,id)?,1)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Forms float is absent"))?)),"text"=>{let row=self.get(23,id)?;semio_framework_value::DslValue::String(self.text(row,1)?)},
-    "bytes"=>{let range=self.range(25,id);let mut bytes=self.native.allocate_vec(range.len())?;for index in range{let row=self.relation(index);self.take(25,row.rowid)?;bytes.push(u8::try_from(row.integer(3)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"Forms octet differs"))?);}semio_framework_value::DslValue::Bytes(bytes)},
-    "array"=>{let range=self.range(27,id);let mut owner=ValuesOwner(self.native.allocate_vec(range.len())?);for index in range{let row=self.relation(index);owner.0.push(self.pop_value(row.integer(3)?)?);self.native.step()?;}semio_framework_value::DslValue::Array(std::mem::take(&mut owner.0))},
-    "object"=>{let range=self.range(29,id);let mut owner=MembersOwner(self.native.allocate_vec(range.len())?);for index in range{let row=self.relation(index);let name=self.text(row,3)?;let value=self.pop_value(row.integer(4)?)?;owner.0.push((name,value));self.native.step()?;}semio_framework_value::DslValue::Object(std::mem::take(&mut owner.0))},
+    "null"=>DslValue::Null,"boolean"=>DslValue::Bool(boolean(self.get(19,id)?,1)?),"unsigned"=>DslValue::Number(semio_framework_value::Number::UInt(unsigned(self.get(20,id)?,1)?)),"signed"=>DslValue::Number(semio_framework_value::Number::Int(integer(self.get(21,id)?,1)?)),
+    "float"=>DslValue::Number(semio_framework_value::Number::Float(float(self.get(22,id)?,1)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Forms float is absent"))?)),"text"=>{let row=self.get(23,id)?;DslValue::String(self.text(row,1)?)},
+    "bytes"=>{let range=self.range(25,id);let mut bytes=self.native.allocate_vec(range.len())?;for index in range{let row=self.relation(index);self.take(25,row.rowid)?;bytes.push(u8::try_from(row.integer(3)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"Forms octet differs"))?);}DslValue::Bytes(bytes)},
+    "array"=>{let range=self.range(27,id);let mut owner=ValuesOwner(self.native.allocate_vec(range.len())?);for index in range{let row=self.relation(index);owner.0.push(self.pop_value(row.integer(3)?)?);self.native.step()?;}DslValue::Array(std::mem::take(&mut owner.0))},
+    "object"=>{let range=self.range(29,id);let mut owner=MembersOwner(self.native.allocate_vec(range.len())?);for index in range{let row=self.relation(index);let name=self.text(row,3)?;let value=self.pop_value(row.integer(4)?)?;owner.0.push((name,value));self.native.step()?;}DslValue::Object(std::mem::take(&mut owner.0))},
     _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms intrinsic kind differs"))};
    let index=self.index(17,id)?;self.pool.values[index]=Some(value);
   }self.pop_value(root)
@@ -95,8 +95,8 @@ impl<'d,'n,'p>Reader<'d,'n,'p>{
    let value=match kind{
     "const"=>{let value_id=self.get(10,id)?.integer(1)?;FormExpr::Const{value:self.value(value_id)?}},
     "var"=>{let row=self.get(11,id)?;FormExpr::Var{name:self.text(row,1)?}},
-    "eq"=>{let row=self.get(12,id)?;self.native.charge(2*std::mem::size_of::<FormExpr>())?;let mut left=ConditionOwner(Some(self.pop_condition(row.integer(1)?)?));let right=self.pop_condition(row.integer(2)?)?;FormExpr::Eq{left:Box::new(left.0.take().unwrap()),right:Box::new(right)}},
-    "truthy"=>{let row=self.get(15,id)?;self.native.charge(std::mem::size_of::<FormExpr>())?;FormExpr::Truthy{expr:Box::new(self.pop_condition(row.integer(1)?)?)}},
+    "eq"=>{let row=self.get(12,id)?;self.native.charge(2*size_of::<FormExpr>())?;let mut left=ConditionOwner(Some(self.pop_condition(row.integer(1)?)?));let right=self.pop_condition(row.integer(2)?)?;FormExpr::Eq{left:Box::new(left.0.take().unwrap()),right:Box::new(right)}},
+    "truthy"=>{let row=self.get(15,id)?;self.native.charge(size_of::<FormExpr>())?;FormExpr::Truthy{expr:Box::new(self.pop_condition(row.integer(1)?)?)}},
     "and"|"or"=>{let range=self.range(16,id);let mut owner=ConditionsOwner(self.native.allocate_vec(range.len())?);for index in range{let row=self.relation(index);owner.0.push(self.pop_condition(row.integer(3)?)?);self.native.step()?;}let items=std::mem::take(&mut owner.0);if kind=="and"{FormExpr::And{items}}else{FormExpr::Or{items}}},
     _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms condition kind differs"))};
    let index=self.index(9,id)?;self.pool.conditions[index]=Some(value);
@@ -127,6 +127,6 @@ fn sort(rows:&mut[Relation],control:&mut NativeDecodeControl<'_>)->Result<(),Val
 }
 pub fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<FormsSnapshot,ValueError>{
  control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;validate_sqlite_database_schema_controlled(database,SQL,SqliteSnapshotPhase::ReconstructSnapshot,control)?;let maximum=control.limits().max_value_bytes;
- let result=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,progress,allocation|{let mut callback=|p:semio_framework_value::native_decoding::NativeDecodeProgress|progress(p.completed,p.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining.min(maximum),&mut callback,&mut native_allocation);let result=(||{let mut reader=Reader::new(database,&mut native)?;reader.snapshot()})();(result,native.owned_bytes())})??;
+ let result=control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,progress,allocation|{let mut callback=|p:semio_framework_value::native_decoding::NativeDecodeProgress|progress(p.completed,p.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining.min(maximum),&mut callback,&mut native_allocation);let result=(||{let mut reader=Reader::new(database,&mut native)?;reader.snapshot()})();(result,native.owned_bytes())})??;
  let mut owner=SnapshotOwner(Some(result));super::admission::forecast(owner.0.as_ref().unwrap(),control,SqliteSnapshotPhase::ReconstructSnapshot)?;Ok(owner.0.take().unwrap())
 }

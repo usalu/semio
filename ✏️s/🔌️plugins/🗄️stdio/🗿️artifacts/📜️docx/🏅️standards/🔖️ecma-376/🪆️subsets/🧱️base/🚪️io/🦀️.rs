@@ -6,7 +6,6 @@
 //! (used by both `📥️import/🧩️deserializers` and `📤️export/🧵️serializers`); `io_registry` moved
 //! here from `⚙️engine`, live (`docx::declaration()`'s `.composers(...)` and this artifact's own
 //! root `io_registry` both reach it).
-use crate::standards::v_ecma_376::subsets::base::schema::{vocabulary::*,refusal::*};
 
 
 //#endregion 🔖️Constants
@@ -241,7 +240,7 @@ semio_framework_plugin::derive_artifact_facets!(
     pub spec DocxBuilderFacets {
         construction: DocxBuilderConstruction,
         analysis: DocxAnalyzerAnalysis,
-        composition: crate::standards::v_ecma_376::subsets::base::io::derived_composition::DocxComposerComposition,
+        composition: DocxComposerComposition,
     }
     builder: DocxBuilder,
     analyzer: DocxAnalyzer,

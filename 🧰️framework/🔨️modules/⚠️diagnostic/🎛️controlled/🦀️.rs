@@ -6,22 +6,22 @@ type Fields = DecodedValue<Vec<(String, DslValue)>>;
 fn fields<'a, const N: usize>(value: &'a DslValue, names: [&str; N], c: &mut NativeDecodeControl<'_>) -> Result<[Option<&'a DslValue>; N], ValueError> {
     c.scoped_stage(|c| {
         c.checkpoint()?;
-        let DslValue::Object(entries) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected diagnostic object")) };
-        if entries.len() > N { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown or duplicate diagnostic field")) }
+        let DslValue::Object(entries) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected diagnostic object")) };
+        if entries.len() > N { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown or duplicate diagnostic field")) }
         c.begin_stage(entries.len())?;
         let mut output = [None; N];
         for (name, value) in entries {
-            let index = names.iter().position(|candidate| *candidate == name).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown diagnostic field"))?;
-            if output[index].replace(value).is_some() { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "duplicate diagnostic field")) }
+            let index = names.iter().position(|candidate| *candidate == name).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "unknown diagnostic field"))?;
+            if output[index].replace(value).is_some() { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "duplicate diagnostic field")) }
             c.step()?;
         }
         Ok(output)
     })
 }
-fn required<'a>(value: Option<&'a DslValue>, message: &'static str) -> Result<&'a DslValue, ValueError> { value.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)) }
+fn required<'a>(value: Option<&'a DslValue>, message: &'static str) -> Result<&'a DslValue, ValueError> { value.ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, message)) }
 fn text(value: &DslValue, message: &'static str, c: &mut NativeDecodeControl<'_>) -> Result<String, ValueError> {
     c.checkpoint()?;
-    let DslValue::String(value) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)) };
+    let DslValue::String(value) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, message)) };
     c.copy_text(value)
 }
 fn optional_text(value: Option<&DslValue>, message: &'static str, c: &mut NativeDecodeControl<'_>) -> Result<Option<String>, ValueError> {
@@ -31,7 +31,7 @@ fn optional<T: FromValue>(value: Option<&DslValue>, c: &mut NativeDecodeControl<
     match value { None | Some(DslValue::Null) => { c.checkpoint()?; Ok(None) }, Some(value) => T::from_value_controlled(value, c).map(Some) }
 }
 fn strings(value: Option<&DslValue>, message: &'static str, c: &mut NativeDecodeControl<'_>) -> Result<Vec<String>, ValueError> {
-    match value { None | Some(DslValue::Null) => { c.checkpoint()?; Ok(Vec::new()) }, Some(DslValue::Array(_)) => Vec::<String>::from_value_controlled(value.unwrap(), c), Some(_) => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message)) }
+    match value { None | Some(DslValue::Null) => { c.checkpoint()?; Ok(Vec::new()) }, Some(DslValue::Array(_)) => Vec::<String>::from_value_controlled(value.unwrap(), c), Some(_) => Err(ValueError::new(ValueRefusalKind::InvalidValue, message)) }
 }
 fn scalar(c: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> { c.scoped_stage(|c| { c.begin_stage(1)?; c.step() }) }
 fn record(c: &mut NativeEncodeControl<'_>, count: usize, build: impl FnOnce(&mut Fields, &mut NativeEncodeControl<'_>) -> Result<(), ValueError>) -> Result<DslValue, ValueError> {
@@ -67,8 +67,8 @@ pub(crate) fn decode_span(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> 
         scalar(c)?;
         match required(value, message)? {
             DslValue::Number(Number::Float(value)) if value.is_finite() && value.fract() == 0.0 && *value >= 0.0 && *value <= u32::MAX as f64 => Ok(*value as u32),
-            DslValue::Number(value) => value.as_u64().and_then(|value| u32::try_from(value).ok()).ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an exact u32 for TextSpan")),
-            _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a number for TextSpan")),
+            DslValue::Number(value) => value.as_u64().and_then(|value| u32::try_from(value).ok()).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "expected an exact u32 for TextSpan")),
+            _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected a number for TextSpan")),
         }
     };
     Ok(TextSpan { line: number(line, "missing TextSpan.line", c)?, column: number(column, "missing TextSpan.column", c)?, length: number(length, "missing TextSpan.length", c)? })
@@ -93,12 +93,12 @@ pub(super) fn decode_code(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> 
 pub(super) fn encode_severity(value: &Severity, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { match value { Severity::Info => "info", Severity::Warning => "warning", Severity::Error => "error", Severity::Fatal => "fatal" }.to_value_controlled(c) }
 pub(super) fn decode_severity(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<Severity, ValueError> {
     scalar(c)?;
-    match value { DslValue::String(value) => match value.as_str() { "info" => Ok(Severity::Info), "warning" => Ok(Severity::Warning), "error" => Ok(Severity::Error), "fatal" => Ok(Severity::Fatal), _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown Severity variant")) }, _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a string for Severity")) }
+    match value { DslValue::String(value) => match value.as_str() { "info" => Ok(Severity::Info), "warning" => Ok(Severity::Warning), "error" => Ok(Severity::Error), "fatal" => Ok(Severity::Fatal), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown Severity variant")) }, _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected a string for Severity")) }
 }
 pub(super) fn encode_origin(value: &FaultOrigin, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { match value { FaultOrigin::Edge => "edge", FaultOrigin::Renderer => "renderer", FaultOrigin::Os => "os", FaultOrigin::Module => "module", FaultOrigin::Plugin => "plugin", FaultOrigin::App => "app", FaultOrigin::Extension => "extension", FaultOrigin::Framework => "framework" }.to_value_controlled(c) }
 pub(super) fn decode_origin(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<FaultOrigin, ValueError> {
     scalar(c)?;
-    match value { DslValue::String(value) => match value.as_str() { "edge" => Ok(FaultOrigin::Edge), "renderer" => Ok(FaultOrigin::Renderer), "os" => Ok(FaultOrigin::Os), "module" => Ok(FaultOrigin::Module), "plugin" => Ok(FaultOrigin::Plugin), "app" => Ok(FaultOrigin::App), "extension" => Ok(FaultOrigin::Extension), "framework" => Ok(FaultOrigin::Framework), _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown FaultOrigin variant")) }, _ => Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a string for FaultOrigin")) }
+    match value { DslValue::String(value) => match value.as_str() { "edge" => Ok(FaultOrigin::Edge), "renderer" => Ok(FaultOrigin::Renderer), "os" => Ok(FaultOrigin::Os), "module" => Ok(FaultOrigin::Module), "plugin" => Ok(FaultOrigin::Plugin), "app" => Ok(FaultOrigin::App), "extension" => Ok(FaultOrigin::Extension), "framework" => Ok(FaultOrigin::Framework), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown FaultOrigin variant")) }, _ => Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected a string for FaultOrigin")) }
 }
 pub(super) fn encode_expected(value: &ExpectedSet, c: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { record(c, 3, |fields, c| { push(fields, "tokens", &value.tokens, c)?; push(fields, "keywords", &value.keywords, c)?; push(fields, "keys", &value.keys, c) }) }
 pub(super) fn decode_expected(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<ExpectedSet, ValueError> {
@@ -140,13 +140,13 @@ pub(super) fn encode_params(value: &FaultParams, c: &mut NativeEncodeControl<'_>
 pub(super) fn decode_params(value: &DslValue, c: &mut NativeDecodeControl<'_>) -> Result<FaultParams, ValueError> {
     c.scoped_stage(|c| {
         c.checkpoint()?;
-        let DslValue::Object(entries) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected an object for FaultParams")) };
+        let DslValue::Object(entries) = value else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected an object for FaultParams")) };
         c.begin_stage(entries.len())?;
         let mut params = DecodedValue::new(c.allocate_vec::<(String, String)>(entries.len())?, retire::<Vec<(String, String)>>);
         for (name, text) in entries {
-            if !is_fault_param_name(name) { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "invalid FaultParams name")) }
-            if params.get().iter().any(|(known, _)| known == name) { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "duplicate FaultParams name")) }
-            let DslValue::String(text) = text else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a string for a FaultParams value")) };
+            if !is_fault_param_name(name) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "invalid FaultParams name")) }
+            if params.get().iter().any(|(known, _)| known == name) { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "duplicate FaultParams name")) }
+            let DslValue::String(text) = text else { return Err(ValueError::new(ValueRefusalKind::InvalidValue, "expected a string for a FaultParams value")) };
             let name = c.copy_text(name)?;
             let text = c.copy_text(text)?;
             params.get_mut().push((name, text));

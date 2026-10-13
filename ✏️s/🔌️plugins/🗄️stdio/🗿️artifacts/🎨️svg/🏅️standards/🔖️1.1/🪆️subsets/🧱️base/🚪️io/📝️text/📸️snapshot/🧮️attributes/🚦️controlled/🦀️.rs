@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{XmlNode,XmlAttr,XmlDocument};
 use std::fmt::Write;
 fn grow<T,C:NativeSchemaControl>(values:&mut Vec<T>,count:usize,control:&mut C)->Result<(),ValueError>{
     let total=values.len().checked_add(count).filter(|count|*count<=isize::MAX as usize).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"SVG native frontier overflow"))?;
-    if total>values.capacity(){let total=total.max(values.capacity().saturating_mul(2));control.charge(total.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"SVG native frontier size overflow"))?)?;values.try_reserve_exact(total-values.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"SVG native frontier allocation failed"))?;}Ok(())
+    if total>values.capacity(){let total=total.max(values.capacity().saturating_mul(2));control.charge(total.checked_mul(size_of::<T>()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"SVG native frontier size overflow"))?)?;values.try_reserve_exact(total-values.len()).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"SVG native frontier allocation failed"))?;}Ok(())
 }
 struct Text<'a,C>{bytes:Vec<u8>,control:&'a mut C,failure:Option<ValueError>}
 impl<C:NativeSchemaControl>Write for Text<'_,C>{

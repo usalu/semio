@@ -929,7 +929,7 @@ fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
 }
 
 impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
-    fn apply(&self, base: &SemioDocumentSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
+    fn apply(&self, base: &SemioDocumentSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
         let mut out = base.clone();
         if let Some(sd) = &self.styles {
             crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |added| added.item.id.clone(), ["styles"])?;

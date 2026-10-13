@@ -182,7 +182,7 @@ where
     fn work_demands(&self, input: &ArtifactCommandInputs<'_, EditorApp<E>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let (node_id, value, revision) = (self.arguments)(input.command).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.zip.command-mismatch"))?;
         let bytes = node_id.len().saturating_add(revision.len()).saturating_add(value.len().saturating_mul(2)).saturating_add(super::MAXIMUM_TEXT_BYTES);
-        Ok(semio_framework_value::RetirementDemand { copy_bytes: bytes, capacity_bytes: bytes.saturating_add(std::mem::size_of::<ZipMutation>()), release_bytes: 0, depth: 1 })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: bytes, capacity_bytes: bytes.saturating_add(size_of::<ZipMutation>()), release_bytes: 0, depth: 1 })
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {

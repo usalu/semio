@@ -20,12 +20,12 @@ pub struct SetMtllib {
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetMtllib {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "mtllib", kind: "set-mtllib", record: "SetMtllib" };
 
-    fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
+    fn diff(&self, _base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
         let Self { mtllib } = self;
         protocol::MutationOutcome::new(diff_set_mtllib(mtllib.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-        Ok(vec![ObjMutation::SetMtllib(set_mtllib::SetMtllib { mtllib: base.mtllib.clone() })])
+        Ok(vec![ObjMutation::SetMtllib(SetMtllib { mtllib: base.mtllib.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set mtllib", "mtllib setzen")

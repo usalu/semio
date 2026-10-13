@@ -33,14 +33,14 @@ async fn patch(app: &mut FormsApp, id: &str, field: &str, value: f64, press: Opt
     if let Some((gesture, commit)) = press {
         args.extend([("gesture", DslValue::String(gesture.into())), ("commit", DslValue::Bool(commit))]);
     }
-    app.handle_action("patchQuestions", Some(&object(args)), &meta("local")).await.expect("the field dispatch is admitted");
-    settle_registered_typed_operation(app, meta("local").instance_id).await.expect("the field dispatch settles");
+    app.handle_action("patchQuestions", Some(&object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the field dispatch is admitted");
+    settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the field dispatch settles");
 }
 
 /// 🧯️ The host cancel of a press (`blur`): it carries no value and is settled by the runtime itself.
 async fn cancel(app: &mut FormsApp, gesture: &str) {
     let args = object(vec![("questionIds", DslValue::Array(Vec::new())), ("field", DslValue::String("max".into())), ("gesture", DslValue::String(gesture.into())), ("abort", DslValue::String("blur".into()))]);
-    app.handle_action("patchQuestions", Some(&args), &meta("local")).await.expect("the cancel is admitted");
+    app.handle_action("patchQuestions", Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the cancel is admitted");
 }
 
 /// 🧾️ The history rows that carry a document edit, oldest first.
@@ -51,7 +51,7 @@ async fn edit_rows(app: &mut FormsApp) -> Vec<HistoryEntry> {
 }
 
 async fn history_edit(app: &mut FormsApp, verb: &str, args: Vec<(&str, DslValue)>) -> DslValue {
-    app.handle_action(verb, Some(&object(args)), &meta("local")).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
+    app.handle_action(verb, Some(&object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
 }
 
 async fn accepted(app: &mut FormsApp, verb: &str, args: Vec<(&str, DslValue)>) {
@@ -68,7 +68,7 @@ async fn pump_time_travel(app: &mut FormsApp, done: impl Fn(Option<HistoryTimeTr
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.advance_typed_operation_publication().await.expect("a driver turn");
+        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
@@ -120,7 +120,7 @@ async fn a_history_edit_freezes_an_open_press_with_zero_trace() {
     patch(&mut app, &id, "max", 90.0, Some(("q.max:6", false))).await;
     accepted(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(target))]).await;
     let args = object(vec![("questionIds", DslValue::Array(vec![DslValue::String(id.clone())])), ("field", DslValue::String("max".into())), ("value", DslValue::float(80.0)), ("gesture", DslValue::String("q.max:6".into())), ("commit", DslValue::Bool(false))]);
-    let Err(refused) = app.handle_action("patchQuestions", Some(&args), &meta("local")).await else { panic!("the frozen press keeps moving: its ticks are refused") };
+    let Err(refused) = app.handle_action("patchQuestions", Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await else { panic!("the frozen press keeps moving: its ticks are refused") };
     assert_eq!(refused.code.0.as_str(), "timeTravel.frozen");
     accepted(&mut app, "historyEditExit", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;

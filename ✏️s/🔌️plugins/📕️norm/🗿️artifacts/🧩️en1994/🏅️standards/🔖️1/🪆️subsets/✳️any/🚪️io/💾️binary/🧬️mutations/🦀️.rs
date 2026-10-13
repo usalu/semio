@@ -20,7 +20,6 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1994Mutation, protocol::ProtocolError
 }
 
 mod native_codec {
-use super::*;
 use crate::artifact_schema::mutations::En1994Mutation;
 use protocol::OpText;
 

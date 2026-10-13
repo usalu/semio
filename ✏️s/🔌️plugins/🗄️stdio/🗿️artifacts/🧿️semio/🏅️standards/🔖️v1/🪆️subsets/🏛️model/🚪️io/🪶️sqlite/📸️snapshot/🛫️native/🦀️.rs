@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform,SemioPoint3};
 use crate::standards::v1::subsets::model::schema::snapshot::{SemioModelSnapshot,SpatialNode,SpatialKind,SemioModelElement,ElementClass,GeometryRef,PropertySet,Property,PsetValue,ModelRelation,RelationKind};
 use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(snapshot:&SemioModelSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.model.dsl v1\n","stdio.semio.model.pack v1",control,|control|crate::standards::v1::subsets::model::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn point(value:&SemioPoint3,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;for(index,value)in [value.x,value.y,value.z].into_iter().enumerate(){if index!=0{writer.delimiter(b",",encoding)?;}writer.number(value,encoding)?;}writer.delimiter(b"]",encoding)}

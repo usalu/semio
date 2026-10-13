@@ -9,7 +9,7 @@ pub use super::create_artifact::{create_artifact, create_artifact_at, CreateArti
 pub use super::delete_artifact::{delete_artifact, DeleteArtifact};
 pub use super::rename_artifact::{rename_artifact, RenameArtifact};
 pub use super::touch_artifact::{touch_artifact, TouchArtifact};
-pub use crate::standards::v1::subsets::any::schema::operations::*;
+#[cfg(test)] pub use crate::standards::v1::subsets::any::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Semantic S Space index mutation vocabulary.

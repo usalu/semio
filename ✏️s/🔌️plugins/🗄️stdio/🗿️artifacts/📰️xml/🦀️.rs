@@ -390,7 +390,6 @@ pub mod schema {
 
 pub use standards::v1_0::subsets::base::examples;
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -467,7 +466,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

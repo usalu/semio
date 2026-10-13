@@ -6,7 +6,7 @@ pub fn diff(payload: &ChangeFootingEmbedment, base: &En1997Snapshot) -> protocol
     if !payload.new_embedment.is_finite() || payload.new_embedment < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "embedment must be non-negative", vec![payload.id.clone()]);
     }
-    let Some(idx) = base.footings.iter().position(|f| f.id == payload.id) else {
+    let Some(_idx) = base.footings.iter().position(|f| f.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("footing {} missing", payload.id), vec![payload.id.clone()]);
     };
     protocol::MutationOutcome::new(En1997Diff {

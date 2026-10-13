@@ -16,4 +16,3 @@ impl protocol::OpBinary for PresentationConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;

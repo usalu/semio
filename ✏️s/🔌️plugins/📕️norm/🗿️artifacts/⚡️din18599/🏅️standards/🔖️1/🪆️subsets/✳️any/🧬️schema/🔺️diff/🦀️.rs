@@ -27,7 +27,7 @@ pub struct Din18599ZonesPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::ThermalZone> for Din18599ZonesPatch {
-    fn commit_into(&self, row: &mut crate::ThermalZone, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::ThermalZone, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.label_en {
             row.label_en = value.clone();
         }
@@ -153,7 +153,7 @@ pub struct Din18599ElementsPatch {
 }
 
 impl protocol::list_delta::RowPatch<crate::EnvelopeElement> for Din18599ElementsPatch {
-    fn commit_into(&self, row: &mut crate::EnvelopeElement, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+    fn commit_into(&self, row: &mut crate::EnvelopeElement, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
         if let Some(value) = &self.label_en {
             row.label_en = value.clone();
         }

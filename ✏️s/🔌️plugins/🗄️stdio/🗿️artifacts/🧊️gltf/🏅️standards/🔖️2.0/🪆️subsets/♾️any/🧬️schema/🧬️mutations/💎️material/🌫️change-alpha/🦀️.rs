@@ -54,7 +54,7 @@ pub fn inverse(p: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> V
     if current == p.alpha_mode {
         return Vec::new();
     }
-    vec![super::change_material_alpha_mode::mutation(super::change_material_alpha_mode::GltfChangeMaterialAlphaModePayload { material: p.material, alpha_mode: current })]
+    vec![mutation(GltfChangeMaterialAlphaModePayload { material: p.material, alpha_mode: current })]
 }
 
 //#region 🧬️DirectMutation
@@ -74,7 +74,7 @@ pub fn mutation(payload: GltfChangeMaterialAlphaModePayload) -> super::GltfMutat
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMaterialAlphaModeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-alpha-mode", kind: "change-material-alpha-mode", record: "ChangedMaterialAlphaMode" };
 
-    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+    fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<GltfDiff> {
         match self {
             Self::Apply(payload) => match plan(payload, base) {
                 Ok(diff) => protocol::MutationOutcome::new(diff),

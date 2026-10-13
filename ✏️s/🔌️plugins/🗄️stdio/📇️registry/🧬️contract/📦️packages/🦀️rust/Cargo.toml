@@ -15,6 +15,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+default = []
+testing = []
+
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }

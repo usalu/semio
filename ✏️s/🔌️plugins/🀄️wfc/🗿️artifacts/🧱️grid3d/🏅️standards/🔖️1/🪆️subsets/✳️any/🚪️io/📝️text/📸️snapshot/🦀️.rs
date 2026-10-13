@@ -71,4 +71,4 @@ impl store::ArtifactDsl for Grid3dSnapshot {
     }
 }
 }
-pub use snapshot_codec::*;
+#[cfg(test)] pub use snapshot_codec::*;

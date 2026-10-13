@@ -2815,7 +2815,7 @@ impl Generation3dSnapshotCopyCursor {
         store::artifact_retirement_owned_birth_demands(&*self.target)
     }
 
-    fn abandon(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn abandon(&mut self, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         if self.target.is_none() {
             self.handed_back = true;
             return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
@@ -3009,7 +3009,7 @@ impl Generation3dStoreInitializationAuthority {
             return nested(factory.demands(body)?);
         }
         if self.snapshot_factory.is_some() {
-            return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() });
         }
         Ok(Default::default())
     }
@@ -3336,7 +3336,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
                     return Ok(None);
                 }
                 let operation = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).and_then(|entry| entry.forwards.get(mutation));
-                let Some(operation) = operation else {
+                let Some(_operation) = operation else {
                     self.phase = Generation3dStoreInitializationPhase::CommitApplied { position, edit };
                     return Ok(None);
                 };

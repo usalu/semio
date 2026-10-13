@@ -817,15 +817,15 @@ impl Drop for WipeDslValue<'_> {
 
 fn wipe_dsl_value(value: &mut DslValue) -> usize {
     match value {
-        semio_framework_value::DslValue::String(value) => wipe_string(value),
-        semio_framework_value::DslValue::Bytes(value) => {
+        DslValue::String(value) => wipe_string(value),
+        DslValue::Bytes(value) => {
             let len = value.len();
             value.fill(0);
             len
         }
-        semio_framework_value::DslValue::Array(values) => values.iter_mut().map(wipe_dsl_value).sum(),
-        semio_framework_value::DslValue::Object(entries) => entries.iter_mut().map(|(key, value)| wipe_string(key) + wipe_dsl_value(value)).sum(),
-        semio_framework_value::DslValue::Null | semio_framework_value::DslValue::Bool(_) | semio_framework_value::DslValue::Number(_) => 0,
+        DslValue::Array(values) => values.iter_mut().map(wipe_dsl_value).sum(),
+        DslValue::Object(entries) => entries.iter_mut().map(|(key, value)| wipe_string(key) + wipe_dsl_value(value)).sum(),
+        DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => 0,
     }
 }
 
@@ -846,12 +846,12 @@ fn decode_local_hub_credential(bytes: &[u8], expected_class: &str, observer: Opt
         return Err(DirectoryClientError::Unauthorized);
     }
     let hub_origin = hub_origin.to_string();
-    let semio_framework_value::DslValue::Object(entries) = &mut decoded.value else { return Err(DirectoryClientError::Unauthorized) };
+    let DslValue::Object(entries) = &mut decoded.value else { return Err(DirectoryClientError::Unauthorized) };
     let capability = entries
         .iter_mut()
         .find_map(|(key, value)| (key == "capability").then_some(value))
         .and_then(|value| match value {
-            semio_framework_value::DslValue::String(value) => Some(std::mem::take(value).into_bytes().into_boxed_slice()),
+            DslValue::String(value) => Some(std::mem::take(value).into_bytes().into_boxed_slice()),
             _ => None,
         })
         .ok_or(DirectoryClientError::Unauthorized)?;

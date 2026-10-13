@@ -452,8 +452,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 PersistedDocumentHydrationStep::Pending(self.progress())
             }
             Phase::Fold => {
-                let fold_grant = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
+                let mut fold_grant = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
                 let job = self.fold_job.as_mut().expect("history fold job remains retained");
+                let required_copy = match job.next_step_grant(1, fold_grant.maximum_copy_bytes) { Ok(required) => required.maximum_copy_bytes, Err(_) => return self.reject(MemberOpenDiagnostic::Replay) };
+                fold_grant.maximum_copy_bytes = fold_grant.maximum_copy_bytes.max(required_copy.min(grant.maximum_copy_bytes));
                 let result = job.step(fold_grant, &mut || cx.should_yield());
                 self.fold_completed = job.completed();
                 match result {
@@ -1059,10 +1061,10 @@ where
         original!(replay_order);
         if let Some(catalog) = self.initialization_catalog.as_ref() { return nested(catalog.close_demands()?); }
         if let Some(runtime) = self.runtime.as_ref() { return nested(runtime.initialization_retirement_demands(body)?); }
-        if self.pending_edit.is_some() { return Ok(frame(std::mem::size_of::<super::ArtifactStoreDecodedEditRetirement<M>>())); }
-        if self.pending_messages.is_some() { return Ok(frame(std::mem::size_of::<super::ArtifactStoreMessageLedgerRetirement>())); }
-        if self.replay.is_some() || self.loaded_result.is_some() { return Ok(frame(std::mem::size_of::<super::ArtifactHistoryReadRetirement<P, M>>())); }
-        if self.envelope.is_some() { return Ok(frame(std::mem::size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>())); }
+        if self.pending_edit.is_some() { return Ok(frame(size_of::<super::ArtifactStoreDecodedEditRetirement<M>>())); }
+        if self.pending_messages.is_some() { return Ok(frame(size_of::<super::ArtifactStoreMessageLedgerRetirement>())); }
+        if self.replay.is_some() || self.loaded_result.is_some() { return Ok(frame(size_of::<super::ArtifactHistoryReadRetirement<P, M>>())); }
+        if self.envelope.is_some() { return Ok(frame(size_of::<super::ArtifactStoreEnvelopeRetirement<P, M>>())); }
         if let Some(initial) = self.initial.as_ref() {
             let owners = self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration original projection lost its declared factory"))?;
             return Ok(frame(owners.initial_snapshot_retirement.retirement_birth_bytes(initial)));
@@ -1212,36 +1214,42 @@ where
     P: Clone + ToValue + FromValue,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
+    /// 🔎️ Names the first original owner this hydration still retains, or `None` once every currency is terminal.
+    pub(crate) fn remaining_owner(&self) -> Option<&'static str> {
+        if !self.terminal { return Some("terminal"); }
+        if self.actor.0.has_owner() { return Some("actor"); }
+        if self.pack.is_some() { return Some("pack"); }
+        if self.initial.is_some() { return Some("initial"); }
+        if self.replay.is_some() { return Some("replay"); }
+        if self.loaded_result.is_some() { return Some("loaded_result"); }
+        if self.pin_refs.is_some() { return Some("pin_refs"); }
+        if self.edit_lookup.is_some() { return Some("edit_lookup"); }
+        if self.mutation_lookup.is_some() { return Some("mutation_lookup"); }
+        if self.target_source.is_some() { return Some("target_source"); }
+        if self.target_decoder.is_some() { return Some("target_decoder"); }
+        if self.pending_target.is_some() { return Some("pending_target"); }
+        if self.target_address.is_some() { return Some("target_address"); }
+        if self.history.is_some() { return Some("history"); }
+        if self.fold_job.is_some() { return Some("fold_job"); }
+        if self.replay_ids.is_some() { return Some("replay_ids"); }
+        if self.replay_order.is_some() { return Some("replay_order"); }
+        if self.normalized_transitions.is_some() { return Some("normalized_transitions"); }
+        if self.normalized_conflicts.is_some() { return Some("normalized_conflicts"); }
+        if self.fold.is_some() { return Some("fold"); }
+        if self.expected.is_some() { return Some("expected"); }
+        if self.owner.is_some() { return Some("owner"); }
+        if self.schema.is_some() { return Some("schema"); }
+        if self.envelope.is_some() { return Some("envelope"); }
+        if self.runtime.is_some() { return Some("runtime"); }
+        if self.initialization_catalog.is_some() { return Some("initialization_catalog"); }
+        if self.owners.is_some() { return Some("owners"); }
+        if self.pending_edit.is_some() { return Some("pending_edit"); }
+        if self.pending_messages.is_some() { return Some("pending_messages"); }
+        if self.active.is_some() { return Some("active"); }
+        None
+    }
+
     fn terminal_is_empty_unbounded(&self) -> bool {
-        self.terminal
-            && !self.actor.0.has_owner()
-            && self.pack.is_none()
-            && self.initial.is_none()
-            && self.replay.is_none()
-            && self.loaded_result.is_none()
-            && self.pin_refs.is_none()
-            && self.edit_lookup.is_none()
-            && self.mutation_lookup.is_none()
-            && self.target_source.is_none()
-            && self.target_decoder.is_none()
-            && self.pending_target.is_none()
-            && self.target_address.is_none()
-            && self.history.is_none()
-            && self.fold_job.is_none()
-            && self.replay_ids.is_none()
-            && self.replay_order.is_none()
-            && self.normalized_transitions.is_none()
-            && self.normalized_conflicts.is_none()
-            && self.fold.is_none()
-            && self.expected.is_none()
-            && self.owner.is_none()
-            && self.schema.is_none()
-            && self.envelope.is_none()
-            && self.runtime.is_none()
-            && self.initialization_catalog.is_none()
-            && self.owners.is_none()
-            && self.pending_edit.is_none()
-            && self.pending_messages.is_none()
-            && self.active.is_none()
+        self.remaining_owner().is_none()
     }
 }

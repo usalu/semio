@@ -8,7 +8,7 @@
 //! tag-triple's `modified`/`added` payload carries the whole new tag, never a nested diff.
 
 
-use crate::schema::snapshot::{TiffFieldType, TiffIfd, TiffSampleBlock, TiffWord64, TiffTag, TiffValues};
+use crate::schema::snapshot::{TiffIfd, TiffSampleBlock, TiffWord64, TiffTag, TiffValues};
 use crate::TiffSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -493,7 +493,7 @@ impl MutationDiff<TiffSnapshot> for TiffDiff {
         if let Some(d) = &self.ifds {
             next.ifds = apply_ifds(&next.ifds, d);
         }
-        next.validate().map_err(|message| protocol::MutationApplyError::new("mutation.apply.invalid-samples", message).at(["ifds"]))?;
+        next.validate().map_err(|message| MutationApplyError::new("mutation.apply.invalid-samples", message).at(["ifds"]))?;
         Ok(next)
     }
 

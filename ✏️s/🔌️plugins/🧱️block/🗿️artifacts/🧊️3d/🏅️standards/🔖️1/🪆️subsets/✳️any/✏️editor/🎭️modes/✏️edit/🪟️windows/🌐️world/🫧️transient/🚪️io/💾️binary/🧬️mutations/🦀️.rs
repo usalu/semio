@@ -17,4 +17,3 @@ impl protocol::OpBinary for Block3dWorldWindowTransientMutation {
     }
 }
 }
-pub use mutations_codec::*;

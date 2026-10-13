@@ -585,7 +585,7 @@ pub mod history {
         /// 🧱️ Includes a newly created shell or solid in this operation's retirement authority.
         pub fn own_entity(&mut self, entity: super::EntityRef) { self.owned.push(entity); }
         /// 🎟️ Bytes of POD provenance and owned-ID allocations retained through final publication.
-        pub fn retirement_bytes(&self)->usize {self.owned.capacity()*std::mem::size_of::<super::EntityRef>()+self.delta.generated.capacity()*std::mem::size_of::<PersistentLabel>()}
+        pub fn retirement_bytes(&self)->usize {self.owned.capacity()*size_of::<super::EntityRef>()+self.delta.generated.capacity()*size_of::<PersistentLabel>()}
         /// 🎟️ Borrows the original rollback tail without removing its ownership.
         pub(crate) fn last_owned(&self)->Option<super::EntityRef> {self.owned.last().copied()}
         /// 🎟️ Removes the original rollback authority only after its entity transfer is admitted.

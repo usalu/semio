@@ -299,7 +299,7 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
         }
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
-        Some(std::mem::size_of::<Self>())
+        Some(size_of::<Self>())
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
         let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
@@ -375,10 +375,10 @@ impl JackQueryWork {
             return store::artifact_retirement_box_demands(owner, body);
         }
         if let Some(execution) = self.execution.as_ref() {
-            return if execution.terminal_is_empty() { Ok(RetirementDemand { release_bytes: std::mem::size_of::<crate::executor::QueryExecution>(), depth: 1, ..Default::default() }) } else { execution.close_demands(body) };
+            return if execution.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of::<crate::executor::QueryExecution>(), depth: 1, ..Default::default() }) } else { execution.close_demands(body) };
         }
         if let Some(preparation) = self.preparation.as_ref() {
-            return if preparation.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Option<crate::executor::QueryExecutionPreparation>>(), depth: 1, ..Default::default() }) } else { preparation.close_demands(body) };
+            return if preparation.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: size_of::<Option<crate::executor::QueryExecutionPreparation>>(), depth: 1, ..Default::default() }) } else { preparation.close_demands(body) };
         }
         if self.source.is_some() {
             return store::artifact_retirement_owned_birth_demands(&self.source);

@@ -1,6 +1,5 @@
 //! 📊️ Native JSON inference table projection.
 use std::collections::BTreeMap;
-use crate::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairRun};
 
 /// 🧾️ The table the third-party oracle reproduces: the whole run of every stair.

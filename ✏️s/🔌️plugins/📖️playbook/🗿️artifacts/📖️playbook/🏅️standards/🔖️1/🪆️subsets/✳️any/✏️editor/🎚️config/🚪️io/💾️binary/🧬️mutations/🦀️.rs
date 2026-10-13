@@ -17,4 +17,3 @@ impl protocol::OpBinary for PlaybookConfigMutation {
     }
 }
 }
-pub use mutations_codec::*;
