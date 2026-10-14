@@ -424,7 +424,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// code on the row — a local step whose replay would leave errors reads [`HISTORY_STEP_BLOCKED_CODE`] — until the next
     /// dispatch dismisses it ([`Self::dismiss_refused_reprojection`]). Nothing left waiting lifts a pause (audit W2A-8): the
     /// next remote change is driven again.
-    async fn step_reprojection_turn(&mut self, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    async fn step_reprojection_turn(&mut self, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         let generation = self.store.generation();
         let local = self.store.local_step_pending();
         let stepped = self.store.step_reprojection(Some(deadline_us)).await;
@@ -447,7 +447,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.time_travel.reprojection_paused = false;
                 if self.store.generation() != generation {
                     self.cache = None;
-                    self.deliver_base_moved(identity).await?;
+                    self.deliver_base_moved(identity, cx).await?;
                 }
                 self.note_time_travel_changed(true, true);
             }
@@ -581,9 +581,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// (its stage and generation) is prepared at once as the history patch of the unsolicited UI progress frame of this
     /// same turn, so every dispatch route — a command's reply, a retained-surface intent's reply that carries no patch —
     /// publishes the new generation with the stage flip and a verb stamped with it is never stale.
-    pub(crate) async fn dispatch_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    pub(crate) async fn dispatch_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         let mut effects = Vec::new();
-        let outcome = self.apply_time_travel_action(action, args, meta, &mut effects, identity).await?;
+        let outcome = self.apply_time_travel_action(action, args, meta, &mut effects, identity, cx).await?;
         let output = match outcome {
             TimeTravelActionOutcome::Pending => DslValue::Object(vec![("timeTravel".into(),DslValue::String("pending".into()))]),
             TimeTravelActionOutcome::Applied(stage) => DslValue::Object(vec![("timeTravel".into(), DslValue::String(stage.as_str().into()))]),
@@ -599,7 +599,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// ⚖️ Applies one history-edit verb: delivers a pending base change first, then the verb's event with its effects.
-    pub async fn apply_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelActionOutcome, Fault> {
+    pub async fn apply_time_travel_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
         if self.time_travel.owners().any(TimeTravelOwners::command_pending)||self.time_travel.command_receipt.is_some()||self.time_travel.pending_command.is_some()||self.time_travel.discard_cursor.is_some()||!self.time_travel.command_retirements.terminal_is_empty(){return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy))}
         self.watch_time_travel_base(identity).await?;
         if !self.time_travel.is_active() {
@@ -611,13 +611,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         let generation = time_travel_arg_generation(args).unwrap_or(self.time_travel.session.generation);
         let event = match action {
-            HISTORY_EDIT_BEGIN_ACTION_ID => return self.begin_time_travel(args, false, meta, effects, identity).await,
+            HISTORY_EDIT_BEGIN_ACTION_ID => return self.begin_time_travel(args, false, meta, effects, identity, cx).await,
             HISTORY_EDIT_INPUT_ACTION_ID => {
                 let value = args.and_then(|args| args.get(HISTORY_EDIT_ARG_VALUE)).cloned();
                 return self.draft_time_travel_input(time_travel_arg_text(args, HISTORY_EDIT_ARG_PATH), value, time_travel_arg_text(args, HISTORY_EDIT_ARG_EDIT), generation, meta, effects, identity).await;
             }
             HISTORY_EDIT_USE_SELECTION_ACTION_ID => return self.draft_time_travel_selection(time_travel_arg_text(args, HISTORY_EDIT_ARG_PATH), generation, meta, effects, identity).await,
-            HISTORY_EDIT_WITHDRAW_ACTION_ID if time_travel_arg_text(args, HISTORY_EDIT_ARG_MUTATION_ID).is_some() => return self.begin_time_travel(args, true, meta, effects, identity).await,
+            HISTORY_EDIT_WITHDRAW_ACTION_ID if time_travel_arg_text(args, HISTORY_EDIT_ARG_MUTATION_ID).is_some() => return self.begin_time_travel(args, true, meta, effects, identity, cx).await,
             HISTORY_EDIT_WITHDRAW_ACTION_ID => TimeTravelEvent::Withdraw { generation },
             HISTORY_EDIT_ACCEPT_ACTION_ID => TimeTravelEvent::Accept { generation },
             HISTORY_EDIT_DISCARD_ACTION_ID => TimeTravelEvent::Discard { generation },
@@ -806,7 +806,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// every open window, so an open gesture there ends first. With `withdraw` (a history row's Withdraw, design §22.1)
     /// the session opens on a withdrawn draft and needs no editable inputs — refused only where the store's supersede law
     /// lets no withdrawal through; on the mutation already being edited it is the editor's own Withdraw.
-    async fn begin_time_travel(&mut self, args: Option<&DslValue>, withdraw: bool, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelActionOutcome, Fault> {
+    async fn begin_time_travel(&mut self, args: Option<&DslValue>, withdraw: bool, meta: &ActionMeta, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<TimeTravelActionOutcome, Fault> {
         let Some(mutation) = time_travel_arg_text(args, HISTORY_EDIT_ARG_MUTATION_ID) else { return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::UnknownMutation)) };
         let store = time_travel_arg_text(args, HISTORY_EDIT_ARG_STORE).filter(|store| !store.is_empty());
         let session = &self.time_travel.session;
@@ -864,7 +864,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.note_time_travel_changed(true, true);
                 self.perform_time_travel_effects(session_effects, Some(meta), effects, identity).await?;
                 if opening {
-                    self.deliver_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta, identity).await?;
+                    self.deliver_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta, identity,cx).await?;
                 }
                 Ok(TimeTravelActionOutcome::Applied(self.time_travel.session.stage))
             }
@@ -1024,7 +1024,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// replay slice, one authoring slice and one deferred-reprojection slice, all against ONE wall deadline taken when the
     /// turn begins on the ledger's turn clock (audit W2A-3) — a slow operation ends the turn, never an operation count; a
     /// session change prepares the history patch that rides the next unsolicited UI progress frame.
-    pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         if grant.maximum_items==0{return Ok(());}
         if self.drive_original_discard_command(grant)?{return Ok(())}
         if self.drive_original_review_children(grant)?{return Ok(())}
@@ -1060,7 +1060,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             self.note_time_travel_changed(true, true);
         }
         if self.reprojection_drives() {
-            self.step_reprojection_turn(deadline_us, identity).await?;
+            self.step_reprojection_turn(deadline_us, identity, cx).await?;
         }
         self.prepare_time_travel_patch().await?;
         self.flush_time_travel_ui_dirty();

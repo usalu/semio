@@ -385,7 +385,7 @@ export async function installWorkspaceExtension(host: LifecycleHost, context: Li
   }
   try {
     host.log("📦️ Resolving the extension package through Nx...");
-    if (host.run("bun", ["nx", "run", WORKSPACE_EXTENSION.target], { cwd: context.workspace }).status !== 0) {
+    if (host.run("bun", ["repo", "run", WORKSPACE_EXTENSION.target], { cwd: context.workspace }).status !== 0) {
       host.log("⚠️  Extension packaging failed; skipping installation for this attach.");
       return null;
     }

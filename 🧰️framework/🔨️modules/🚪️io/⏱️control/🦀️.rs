@@ -14,7 +14,7 @@ macro_rules! original_sqlite_receiving{
    let result=(||{self.native().checkpoint()?;let before=self.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original SQLite receiving extent overflow"))?;let settlement=crate::sqlite_snapshot::artifact::receiving::ReceivingSettlement::new(control,before,crate::sqlite_snapshot::SqliteSnapshotPhase::$phase);let mut observer=|event:$progress|settlement.observe(event.owned_bytes,event.completed,event.total);
     let result=self.scoped_native(maximum,&mut observer,|owner|owner.receive::<F,O>(|slot,native,body|{
      let owned=settlement.with_control(|control|{let mut port=crate::sqlite_snapshot::artifact::receiving::Port{control,native:crate::sqlite_snapshot::artifact::receiving::Direction::$direction(native),body};port.work(1,std::mem::size_of::<F>())?;*slot=Some(construct());let frame=slot.as_mut().unwrap();port.work(1,std::mem::size_of::<O>())?;let status=operation(frame,&mut port);*frame.receiving_status()=Some(status);Ok::<_,ValueError>(port.owned())})?;
-     settlement.finish_body(owned)?;native.checkpoint()?;let frame=slot.as_mut().unwrap();frame.receiving_status().take().unwrap()?;publish(frame)
+     settlement.finish_body(owned)?;let frame=slot.as_mut().unwrap();if frame.receiving_status().as_ref().is_some_and(Result::is_ok){native.checkpoint()?;}frame.receiving_status().take().unwrap()?;publish(frame)
     }));match result{Ok(output)=>Ok(output),Err(error)=>Err(settlement.refused(self.native().owned_bytes(),error))}
    })();result.map_err(|error|error.with_retained_progress(self.progress()))
   }

@@ -2,7 +2,7 @@
 import type {SemioBrepSnapshot,BrepCurve,BrepCurve2,BrepSurface,SemioPoint3,SemioPoint2} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Cell,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export const SEMIO_BREP_SQLITE_SCHEMA=`CREATE TABLE semio_brep_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, next_label TEXT NOT NULL);
 CREATE TABLE semio_brep_vertex (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_brep_document(id), ordinal INTEGER NOT NULL, native_id TEXT NOT NULL, x REAL, y REAL, z REAL, tolerance REAL, x_ieee754_bits INTEGER, x_numeric_class TEXT, y_ieee754_bits INTEGER, y_numeric_class TEXT, z_ieee754_bits INTEGER, z_numeric_class TEXT, tolerance_ieee754_bits INTEGER, tolerance_numeric_class TEXT);

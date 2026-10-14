@@ -14,7 +14,7 @@
     "content": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
+      "x-semio-child-capability": "s.trinity.jack.graph"
     },
     "rootNodeId": { "type": "string", "x-semio-state": "artifact" },
     "query": { "type": "string", "x-semio-state": "artifact" }

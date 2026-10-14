@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-os-mcp",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
@@ -18,7 +18,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [
         {
@@ -36,7 +36,7 @@
       "outputs": []
     },
     "client-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -54,7 +54,7 @@
       "outputs": []
     },
     "test-approval-request-fixture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [

@@ -24,7 +24,7 @@ use crate::standards::v1::subsets::any::schema::catalogue::{Catalogue, Kind, Por
 use crate::{widget_id, Generation3dSnapshot};
 use compute::{WidgetJob, WidgetStep};
 use inputs::resolve_inputs;
-use protocol::{ComputeStep, InferenceFault, InferencePending, InferenceStep, InferredField};
+use protocol::{ComputeStep, InferenceWorkFailure, InferenceFault, InferencePending, InferenceStep, InferredField};
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, SynapseSpec, Widget};
 use semio_framework_artifact_flow_flow::neural::Dictionary;
 use std::any::Any;
@@ -213,7 +213,7 @@ pub(crate) fn contract_checked(kind: &Kind, evaluation: WidgetEvaluation) -> Wid
     if let Some(fault) = evaluation.fault {
         return WidgetEvaluation::faulted(fault, evaluation.quality);
     }
-    let violation = kind.outputs.iter().find(|port| evaluation.outputs.get(&port.name).is_none_or(|found| !matches_port(port, found))).map(|port| port.name.clone()).or_else(|| evaluation.outputs.keys().find(|name| kind.output(name).is_none()).cloned());
+    let violation = kind.outputs.iter().find(|port| evaluation.outputs.get(&port.name).is_none_or(|found| !matches_port(port, found))).map(|port| port.name.clone()).or_else(|| evaluation.outputs.iter().map(|(port, _)| port).find(|name| kind.output(name).is_none()).cloned());
     match violation {
         None => evaluation,
         Some(port) => WidgetEvaluation::faulted(
@@ -248,13 +248,13 @@ pub struct Generation3dGeometry;
 /// 🧩️ The admitted semantic inputs of one inference run.
 pub struct GeometryInput<'a> {
     pub snapshot: &'a Generation3dSnapshot,
-    pub catalogue: Arc<Catalogue>,
-    pub computes: Arc<dyn compute::GeometryComputeContext>,
+    pub catalogue: &'a Arc<Catalogue>,
+    pub computes: &'a dyn compute::GeometryComputeContext,
 }
 
 impl<'a> GeometryInput<'a> {
     /// 🏗️ Binds a snapshot to an explicitly admitted immutable catalogue.
-    pub fn new(snapshot: &'a Generation3dSnapshot, catalogue: Arc<Catalogue>, computes:Arc<dyn compute::GeometryComputeContext>) -> Self { Self { snapshot, catalogue, computes } }
+    pub fn new(snapshot: &'a Generation3dSnapshot, catalogue: &'a Arc<Catalogue>, computes:&'a dyn compute::GeometryComputeContext) -> Self { Self { snapshot, catalogue, computes } }
 }
 
 impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
@@ -280,7 +280,7 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
     fn compute(snapshot: &GeometryInput<'_>, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let mut pending = None;
         loop {
-            match Self::compute_step(snapshot, key, parents, &mut pending, usize::MAX) {
+            match Self::compute_cold_step(snapshot, key, parents, &mut pending, usize::MAX) {
                 Ok(ComputeStep::Done { value, .. }) => return value,
                 Ok(ComputeStep::Working { .. }) => continue,
                 Err(fault) => return Arc::new(WidgetEvaluation::faulted(WidgetFault::new(fault.code, fault.message.clone(), fault.message), Quality::ExactAnalytic)),
@@ -292,7 +292,19 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
         value.byte_len()
     }
 
-    fn compute_step(snapshot: &GeometryInput<'_>, key: &Self::Key, parents: &[Self::Value], pending: &mut Option<Box<dyn InferencePending>>, fuel: usize) -> Result<ComputeStep<Self::Value>, InferenceFault> {
+    fn plan_source_extent(snapshot:&GeometryInput<'_>)->Option<(usize,usize)>{Some((snapshot.snapshot.host_snapshot.widgets.len(),snapshot.snapshot.host_snapshot.synapses.len()))}
+    fn plan_source_node(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<&str>{snapshot.snapshot.host_snapshot.widgets.get(ordinal).map(widget_id)}
+    fn plan_source_link(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<(&str,&str)>{snapshot.snapshot.host_snapshot.synapses.get(ordinal).map(|link|(link.from.as_str(),link.to.as_str()))}
+
+    fn source_identity(snapshot:&GeometryInput<'_>)->usize{snapshot.snapshot as*const Generation3dSnapshot as usize}
+
+    fn compute_step(_snapshot:&GeometryInput<'_>,_key:&Self::Key,_parents:&[Self::Value],_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original geometry widget input and job admission have no funded producer").into())
+    }
+}
+
+impl Generation3dGeometry{
+    fn compute_cold_step(snapshot: &GeometryInput<'_>, key: &String, parents: &[Arc<WidgetEvaluation>], pending: &mut Option<Box<dyn InferencePending>>, fuel: usize) -> Result<ComputeStep<Arc<WidgetEvaluation>>, InferenceFault> {
         if pending.is_none() {
             match begin(snapshot, key, parents) {
                 Started::Ready(evaluation) => return Ok(ComputeStep::Done { value: Arc::new(evaluation), fuel_used: 1 }),

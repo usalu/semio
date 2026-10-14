@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Actor Ready Transfer Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "inputBytes",
+    "cuts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "inputBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cuts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "copyBytes",
+          "ready",
+          "issued",
+          "guest",
+          "refused",
+          "expectedTaken"
+        ],
+        "properties": {
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "issued": {
+            "type": "boolean"
+          },
+          "guest": {
+            "type": "boolean"
+          },
+          "refused": {
+            "type": "boolean"
+          },
+          "expectedTaken": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

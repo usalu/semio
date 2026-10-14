@@ -1,6 +1,9 @@
 //! 🧾️ Original Host turn currency has one exclusive checked-out wake and no implicit renewal.
 use super::{GuestRelayWakeReceipt,GuestRelayWakeReceiptReceiver};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::RetainedOwnerGate};
+#[path="🎟️root/🦀️.rs"]
+mod original_root;
+pub use original_root::{GuestRelayRootPolicy,GuestRelayOriginalRoot};
 #[path="📃️policy/🦀️.rs"]
 mod driver_policy;
 pub use driver_policy::{GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver};

@@ -113,7 +113,7 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
     assert!(crate::shell::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
     assert!(!crate::shell::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
     let mut interaction = keyboard_interaction();
-    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true } }));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true } }));
     assert!(interaction.shell.fullscreen_toggle_requested, "the real host ingress reaches apply_os_command");
     assert!(interaction.shell.deferred_actions.is_empty(), "an OS command never enters the guest action lane");
 
@@ -135,19 +135,19 @@ fn normalized_pointer_and_wheel_snapshots_replace_stale_keyboard_modifiers() {
     interaction.input.modifiers = interaction.modifiers.clone();
     let pointer = PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None };
     let ctrl = EventModifiers { shift: false, ctrl: true, alt: false, meta: false };
-    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::PointerMove { pointer, x: -10.0, y: -10.0, modifiers: ctrl }));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::PointerMove { pointer, x: -10.0, y: -10.0, modifiers: ctrl }));
     assert!(interaction.modifiers.ctrl && !interaction.modifiers.shift && !interaction.modifiers.alt && !interaction.modifiers.meta);
     assert!(interaction.input.modifiers.ctrl && !interaction.input.modifiers.shift, "retained dispatch state uses the pointer event snapshot");
 
     let shift_meta = EventModifiers { shift: true, ctrl: false, alt: false, meta: true };
-    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::PointerDown { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: shift_meta }));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::PointerDown { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: shift_meta }));
     assert!(interaction.modifiers.shift && interaction.modifiers.meta && !interaction.modifiers.ctrl);
     let alt = EventModifiers { shift: false, ctrl: false, alt: true, meta: false };
-    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::PointerUp { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: alt }));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::PointerUp { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: alt }));
     assert!(interaction.modifiers.alt && !interaction.modifiers.shift && !interaction.modifiers.meta);
 
     let none = EventModifiers::default();
-    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::Scroll { x: -10.0, y: -10.0, delta_x: 0.0, delta_y: 1.0, modifiers: none }));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, &mut DispatchEvent::Scroll { x: -10.0, y: -10.0, delta_x: 0.0, delta_y: 1.0, modifiers: none }));
     assert!(!interaction.modifiers.shift && !interaction.modifiers.ctrl && !interaction.modifiers.alt && !interaction.modifiers.meta, "a pointer snapshot clears stale positive keyboard state");
     assert!(!interaction.input.modifiers.shift && !interaction.input.modifiers.ctrl && !interaction.input.modifiers.alt && !interaction.input.modifiers.meta);
 }

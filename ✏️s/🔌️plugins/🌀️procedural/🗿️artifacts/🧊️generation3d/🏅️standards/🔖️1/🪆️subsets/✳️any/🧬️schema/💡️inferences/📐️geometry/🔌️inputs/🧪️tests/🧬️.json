@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Widget Inputs Construction Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "widget",
+    "ports",
+    "expectedOrder",
+    "valuesDonation",
+    "maximumComparisonBytesPerEvent",
+    "originalCaller"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "widget": {
+      "const": "Widget Ü"
+    },
+    "ports": {
+      "const": [
+        {
+          "name": "zeta",
+          "en": "Late Ω",
+          "de": "Spät Ä"
+        },
+        {
+          "name": "alpha",
+          "en": "First",
+          "de": "Erste"
+        }
+      ]
+    },
+    "expectedOrder": {
+      "const": [
+        "alpha",
+        "zeta"
+      ]
+    },
+    "valuesDonation": {
+      "const": {
+        "headerOnly": true,
+        "payloadCopies": 0
+      }
+    },
+    "maximumComparisonBytesPerEvent": {
+      "const": 1
+    },
+    "originalCaller": {
+      "const": {
+        "operation": 745,
+        "generation": 3,
+        "items": 50000,
+        "copyBytes": 4194304,
+        "capacityBytes": 4194304,
+        "releaseBytes": 4194304,
+        "depth": 128,
+        "fuel": 1000000,
+        "deadlineMicros": 1000000000
+      }
+    }
+  }
+}

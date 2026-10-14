@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "nodeHashLiteral",
+    "copyGrants",
+    "terminalDrop",
+    "earlyTerminalPayload",
+    "wholeRequest",
+    "canonicalDomains"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodeHashLiteral": {
+      "const": "18446744073709551613"
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDrop": {
+      "const": 0
+    },
+    "earlyTerminalPayload": {
+      "const": false
+    },
+    "wholeRequest": {
+      "const": true
+    },
+    "canonicalDomains": {
+      "const": 16
+    }
+  }
+}

@@ -1,0 +1,191 @@
+[
+  {
+    "action": "flowEvalResolve",
+    "source": {
+      "windowId": "preview-源",
+      "windowKindId": "world3d",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": {
+        "done": false,
+        "cancellable": true,
+        "phase": "meshingFaces",
+        "unitsDone": 0,
+        "unitsTotal": 17
+      }
+    },
+    "valid": true,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowEvalResolve",
+    "source": {
+      "windowId": false,
+      "windowKindId": "world3d",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": {
+        "done": false,
+        "cancellable": true,
+        "phase": "meshingFaces",
+        "unitsDone": 0,
+        "unitsTotal": 17
+      }
+    },
+    "valid": false,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowEvalResolve",
+    "source": {
+      "windowId": "preview-源",
+      "windowKindId": "",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": null
+    },
+    "valid": false,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowTessellateResolve",
+    "source": {
+      "windowId": "preview-源",
+      "windowKindId": "world3d",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": {
+        "done": false,
+        "cancellable": true,
+        "phase": "meshingFaces",
+        "unitsDone": 0,
+        "unitsTotal": 17
+      }
+    },
+    "valid": true,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowTessellateResolve",
+    "source": {
+      "windowId": false,
+      "windowKindId": "world3d",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": {
+        "done": false,
+        "cancellable": true,
+        "phase": "meshingFaces",
+        "unitsDone": 0,
+        "unitsTotal": 17
+      }
+    },
+    "valid": false,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowTessellateResolve",
+    "source": {
+      "windowId": "preview-源",
+      "windowKindId": "",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": null
+    },
+    "valid": false,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowTessellateCancelResolve",
+    "source": {
+      "windowId": "preview-源",
+      "windowKindId": "world3d",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": {
+        "done": false,
+        "cancellable": true,
+        "phase": "meshingFaces",
+        "unitsDone": 0,
+        "unitsTotal": 17
+      }
+    },
+    "valid": true,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowTessellateCancelResolve",
+    "source": {
+      "windowId": false,
+      "windowKindId": "world3d",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": {
+        "done": false,
+        "cancellable": true,
+        "phase": "meshingFaces",
+        "unitsDone": 0,
+        "unitsTotal": 17
+      }
+    },
+    "valid": false,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  },
+  {
+    "action": "flowTessellateCancelResolve",
+    "source": {
+      "windowId": "preview-源",
+      "windowKindId": "",
+      "nodeHash": 4294967297,
+      "extensionId": "brep",
+      "handle": "brep:s源",
+      "tolerance": 0.01,
+      "output": null
+    },
+    "valid": false,
+    "faultFirst": true,
+    "sourceHeldOnDenial": true,
+    "sourceClosedOnFailure": true,
+    "terminalDropBytes": 0
+  }
+]

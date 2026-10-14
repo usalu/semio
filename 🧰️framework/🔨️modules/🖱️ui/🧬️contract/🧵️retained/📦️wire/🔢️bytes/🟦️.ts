@@ -1,5 +1,5 @@
 //#region 📦️SurfaceByteContract
-import type { NumericIndexGrant } from "../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 
 const PAGE_BYTES = 256;
 const MAXIMUM_BYTES = 32768;

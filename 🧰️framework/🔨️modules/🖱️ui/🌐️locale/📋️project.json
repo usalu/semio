@@ -2,7 +2,7 @@
   "name": "@semio-tech/ui-locale",
   "targets": {
     "test-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test contract",
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale",
@@ -19,7 +19,7 @@
       "outputs": []
     },
     "check-types": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts check types",
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale",

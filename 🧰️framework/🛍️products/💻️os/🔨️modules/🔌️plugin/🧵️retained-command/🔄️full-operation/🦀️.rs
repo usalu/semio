@@ -116,6 +116,7 @@ pub(crate) struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub(crate) verb: String,
     pub(crate) meta: ActionMeta,
     pub(crate) operation: semio_framework_job::Operation,
+    pub(crate) source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),
     pub(crate) canonical_revision: [u8; 32],
     pub(crate) artifact_generation: u64,
     pub(crate) config_generation: u64,
@@ -241,6 +242,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// keeps advancing it. The operation is terminal the moment its session is refused —
     /// cancel the lease so the next publication unit mints the exact fault page.
     pub(crate) fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        if self.source_identity!=(cx.operation(),cx.generation()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted worker requires its original source identity independently of its registry record").into())}
         let grant=cx.retained_grant();let demand=if cx.is_cancelled()&&self.session_rejected.as_ref().is_some_and(|source|source.admission_pending()){self.worker_retirement_demands(grant.maximum_copy_bytes)?}else{self.worker_step_demands(grant.maximum_copy_bytes)?};
         crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
@@ -574,7 +576,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if self.worker_retirement_pending() { return self.retire_worker_step(cx); }
         if self.pending_window_config_receipt.take().is_some(){return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<store::os_store::presence::LaneItemReceipt>(),..item}));}
         if self.granted_retirement_ready() && self.granted_retirement_pending() {
-            let step = self.granted_retirement_step(grant)?;
+            let step = self.granted_retirement_step(cx,grant)?;
             semio_framework_value::retained_clone::admit_retained_clone_progress(grant, step.progress(), "typed operation granted retirement")?;
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }

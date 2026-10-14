@@ -82,7 +82,9 @@
     "bin",
     "obj",
     "⚡️cache",
-    "🗑️generated"
+    "🗑️generated",
+    ".lake",
+    "pkg"
   ],
   "toolchains": {
     "javascript": {
@@ -463,6 +465,13 @@
     }
   },
   "storage": {
+    "pressure": {
+      "version": 1,
+      "minimumAvailableBytes": 8589934592,
+      "targetAvailableBytes": 17179869184,
+      "guardAgeMs": 86400000,
+      "maximumDeletionBytes": 34359738368
+    },
     "guardAgeMs": 172800000,
     "cargo": {
       "budgetBytes": 85899345920,

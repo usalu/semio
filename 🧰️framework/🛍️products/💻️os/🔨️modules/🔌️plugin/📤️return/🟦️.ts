@@ -1,6 +1,6 @@
 //#region 🧬️WitReturnContract
 import { encodeActorReturnDrive, encodeActorReturnResult, type ActorReturnControl, type ActorReturnDrive, type ActorReturnFault, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts";
-import type { ActorBytePage } from "../../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts";
+import type { ActorBytePage } from "../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts";
 type WitOrigin = { readonly activationGeneration: bigint; readonly requestSequence: bigint };
 type WitIdentity = { readonly origin: WitOrigin; readonly returnSequence: bigint };
 type WitPageReceipt = { readonly identity: WitIdentity; readonly pageSequence: bigint; readonly length: number; readonly final: boolean };

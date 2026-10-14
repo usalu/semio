@@ -2,10 +2,10 @@
   "name": "@semio-tech/schema-state-rs",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache",
-    "test-quick": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache -- quick",
-    "test-long": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache -- long",
-    "test-exhaustive": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache -- exhaustive"
+    "test": "bun repo run @semio-tech/schema-state-rs:test --skip-cache",
+    "test-quick": "bun repo run @semio-tech/schema-state-rs:test --skip-cache -- quick",
+    "test-long": "bun repo run @semio-tech/schema-state-rs:test --skip-cache -- long",
+    "test-exhaustive": "bun repo run @semio-tech/schema-state-rs:test --skip-cache -- exhaustive"
   },
   "nx": {
     "includedScripts": []

@@ -4,7 +4,7 @@ use crate::{Camera, Manifest, Port, PortDirection, PropertyBag, Node, Edge, Prop
 
 //#region 🧸️Fixtures
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -52,7 +52,7 @@ async fn flat_position_bfs_walks_from_root() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_covers_disconnected_components() {
-    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "disconnected".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "disconnected".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root-a".into(),
                 kind: "Piece".into(),
@@ -130,7 +130,7 @@ async fn flat_position_covers_disconnected_components() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_handles_cycles_without_looping() {
-    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "cycle".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "cycle".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "a".into(),
                 kind: "Piece".into(),
@@ -175,6 +175,6 @@ async fn flat_position_handles_cycles_without_looping() {
 
 #[semio_framework_async_macros::async_test]
 async fn flat_position_empty_snapshot_yields_default() {
-    assert_eq!(compute_flat_position(&JackSnapshot::default()).expect("valid retained child inference fixture"), JackFlatPosition::default());
+    assert_eq!(compute_flat_position(&<crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot()).expect("valid retained child inference fixture"), JackFlatPosition::default());
 }
 //#endregion 🧪️FlatPositionLaws

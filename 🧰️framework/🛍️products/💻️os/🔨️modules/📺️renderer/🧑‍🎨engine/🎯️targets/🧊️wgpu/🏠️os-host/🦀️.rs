@@ -100,6 +100,7 @@ pub struct OsHost {
     /// artifact. Worker-built prepared packets and UI-only presentation share its generation and
     /// revision vocabulary; the retained dispatch-tree field remains an explicit follow-up.
     pub snapshot_sink: RenderSnapshotSink,
+    pub(crate) original_snapshot: Option<RenderSnapshot>,
     /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the non-blocking poll/resubmit
     /// handle for the deadline-scan job plus worker-owned `AppRuntime::frame` transaction.
     pub(crate) frame_build: crate::frame_job::FrameBuildHandle,
@@ -110,7 +111,7 @@ pub struct OsHost {
 #[cfg(target_arch = "wasm32")]
 pub(crate) struct BrowserRedrawOutcome {
     pub cursor_css: &'static str,
-    pub media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
+    pub media_slots:crate::render_snapshot::RenderSnapshotOutputLoan,
 }
 
 struct OsHostRetirementState {
@@ -124,6 +125,8 @@ struct OsHostRetirementState {
     events: Option<ui_host::EventQueue>,
     ui_token: Option<ui_host::UiThreadToken>,
     snapshot_sink: Option<RenderSnapshotSink>,
+    original_snapshot:Option<RenderSnapshot>,
+    original_snapshot_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<RenderSnapshot>>,
     frame_build: Option<crate::frame_job::FrameBuildHandle>,
     surface_resize: Option<crate::surface_lane::SurfaceResizeAuthority>,
     engine_surfaces: PairedEngineSurfaceClose,
@@ -644,6 +647,7 @@ impl OsHost {
             present_fault: None,
             events: ui_host::EventQueue::new(),
             ui_token: ui_host::UiThreadToken::mint_for_host(),
+            original_snapshot:None,
             snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, ui_wgpu::wgpu::SemioCursor::Default, false, None)),
             frame_build: crate::frame_job::FrameBuildHandle::new(retained),
             surface_resize: crate::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
@@ -657,13 +661,21 @@ impl OsHost {
         self.clock.now_seconds()
     }
 
-    pub(crate) fn try_into_retirement(self) -> Result<OsHostRetirement, Self> {
-        if self.component_surface_close.is_some() || component_surface_close_occupied() {
-            return Err(self);
+    /// 🎒️ Transfers the original host only after its caller funds retirement storage.
+    pub(crate) fn try_into_retirement(owner:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<OsHostRetirement>,semio_framework_job::OriginalTurnFailure> {
+        let Some(host)=owner.as_ref()else{return Ok(None)};
+        let grant=cx.retained_grant();let capacity=std::mem::size_of::<OsHostRetirementState>();
+        if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity||host.component_surface_close.is_some()||component_surface_close_occupied(){
+            return Ok(None);
         }
         let Some(abandonment) = reserve_os_host_retirement_abandonment() else {
-            return Err(self);
+            return Ok(None);
         };
+        cx.consume_fuel(1);
+        if let Err(error)=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}){
+            if !release_os_host_retirement_abandonment(abandonment){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original retirement storage admission lost its reservation").into())}
+            return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx));
+        }
         let Self {
             retained,
             animation_clock: _,
@@ -680,10 +692,11 @@ impl OsHost {
             events,
             ui_token,
             snapshot_sink,
+            original_snapshot,
             frame_build,
             surface_resize,
             component_surface_close: _,
-        } = self;
+        } = owner.take().expect("original retirement host admitted");
         let state = OsHostRetirementState {
             retained,
             camera_progress: Default::default(),
@@ -695,6 +708,8 @@ impl OsHost {
             events: Some(events),
             ui_token: Some(ui_token),
             snapshot_sink: Some(snapshot_sink),
+            original_snapshot,
+            original_snapshot_close:None,
             frame_build: Some(frame_build),
             surface_resize: Some(surface_resize),
             engine_surfaces: PairedEngineSurfaceClose::new(),
@@ -703,7 +718,7 @@ impl OsHost {
             #[cfg(not(target_arch = "wasm32"))]
             kernel_progress_close: crate::kernel_runtime::KernelClient::get().begin_close_realm().ok(),
         };
-        Ok(OsHostRetirement { state: Some(Box::new(state)), abandonment: Some(abandonment) })
+        Ok(Some(OsHostRetirement { state: Some(Box::new(state)), abandonment: Some(abandonment) }))
     }
 
     pub(crate) fn retain_cursor_wake_directive(&mut self, token: infinite_world::world::WorldCursorWakeToken) {
@@ -744,98 +759,102 @@ impl OsHost {
 }
 
 impl OsHostRetirementState {
-    fn close_step(&mut self) -> bool {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
+        if let Some(owner)=self.original_snapshot_close.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.original_snapshot_close=None;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+        if self.original_snapshot.is_some(){let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let source=self.original_snapshot.take().unwrap();match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>self.original_snapshot_close=Some(owner),Err((original,source))=>{self.original_snapshot=Some(source);return Err(original.into())}}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+        if let Some(presenter)=self.presenter.as_mut(){if !presenter.close_original_media_step(cx)?{return Ok(false)}}
         if !crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step() {
-            return false;
+            return Ok(false);
         }
         if let Some(surface_resize) = self.surface_resize.as_mut() {
             surface_resize.begin_close();
             if !surface_resize.close_step() || !surface_resize.terminal_is_empty() {
-                return false;
+                return Ok(false);
             }
             self.surface_resize = None;
-            return false;
+            return Ok(false);
         }
         if let Some(presenter) = self.presenter.as_mut() {
             if !presenter.close_surface_resize_step() {
-                return false;
+                return Ok(false);
             }
         }
         if let Some(frame_build) = self.frame_build.as_mut() {
-            if !frame_build.close_step() {
-                return false;
+            if !frame_build.close_original_frame_step(cx)? {
+                return Ok(false);
             }
             if !frame_build.terminal_is_empty() {
-                return false;
+                return Ok(false);
             }
             self.frame_build = None;
-            return false;
+            return Ok(false);
         }
         if !crate::scenes::scene_camera_storage_is_empty() {
-            let step = match crate::scenes::close_scene_camera_storage(self.retained) { Ok(step) => step, Err(_) => return false };
+            let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+            let step = crate::scenes::close_scene_camera_storage(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
             let receipt = step.progress();
-            assert!(receipt.fits(self.retained));
+            assert!(receipt.fits(grant));cx.consume_fuel(receipt.copied_items as u64);cx.consume_retained(receipt)?;
             self.camera_progress.copied_items = self.camera_progress.copied_items.checked_add(receipt.copied_items).expect("host camera item receipt overflow");
             self.camera_progress.copied_bytes = self.camera_progress.copied_bytes.checked_add(receipt.copied_bytes).expect("host camera copy receipt overflow");
             self.camera_progress.retained_capacity_bytes = self.camera_progress.retained_capacity_bytes.checked_add(receipt.retained_capacity_bytes).expect("host camera birth receipt overflow");
             self.camera_progress.released_bytes = self.camera_progress.released_bytes.checked_add(receipt.released_bytes).expect("host camera release receipt overflow");
-            return false;
+            return Ok(false);
         }
         if let Some(raster_uploads) = self.raster_uploads.as_mut() {
             if !raster_uploads.close_step() {
-                return false;
+                return Ok(false);
             }
             if !raster_uploads.terminal_is_empty() {
-                return false;
+                return Ok(false);
             }
             self.raster_uploads = None;
-            return false;
+            return Ok(false);
         }
         if let Some(events) = self.events.as_mut() {
             if !events.close_step() {
-                return false;
+                return Ok(false);
             }
             self.events = None;
-            return false;
+            return Ok(false);
         }
         if self.cursor_wake_requested.take().is_some() {
-            return false;
+            return Ok(false);
         }
         if let Some(presenter) = self.presenter.as_mut() {
             if !presenter.close_cursor_wake_step() {
-                return false;
+                return Ok(false);
             }
             if !matches!(presenter.close_frame_owners_step(), Ok(true)) {
-                return false;
+                return Ok(false);
             }
         }
         if !self.engine_surfaces.terminal_is_empty() {
             let (Some(runtime), Some(presenter)) = (self.runtime.as_ref(), self.presenter.as_mut()) else {
-                return false;
+                return Ok(false);
             };
             if !self.engine_surfaces.close_step(runtime, presenter) {
-                return false;
+                return Ok(false);
             }
             if !self.engine_surfaces.terminal_is_empty() {
-                return false;
+                return Ok(false);
             }
         }
         if let Some(runtime) = self.runtime.as_ref() {
-            if !runtime.close_input_step() {
-                return false;
+            if !runtime.close_input_step(cx)? {
+                return Ok(false);
             }
         }
         if let Some(presenter) = self.presenter.as_mut() {
             if !matches!(presenter.close_world_owners_step(), Ok(true)) {
-                return false;
+                return Ok(false);
             }
             if !presenter.world_owners_terminal_is_empty() || !presenter.engine_surfaces_terminal_is_empty() {
-                return false;
+                return Ok(false);
             }
         }
         if let Some(runtime) = self.runtime.as_ref() {
-            if !runtime.close_world3d_dynamic_step() {
-                return false;
+            if !runtime.close_world3d_dynamic_step(cx)? {
+                return Ok(false);
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -843,18 +862,18 @@ impl OsHostRetirementState {
             match close.poll() {
                 crate::kernel_runtime::KernelCloseStatus::Complete => {
                     self.kernel_progress_close = None;
-                    return false;
+                    return Ok(false);
                 }
-                crate::kernel_runtime::KernelCloseStatus::Pending | crate::kernel_runtime::KernelCloseStatus::AdmissionBlocked => return false,
-                crate::kernel_runtime::KernelCloseStatus::Fault => return false,
+                crate::kernel_runtime::KernelCloseStatus::Pending | crate::kernel_runtime::KernelCloseStatus::AdmissionBlocked => return Ok(false),
+                crate::kernel_runtime::KernelCloseStatus::Fault => return Ok(false),
             }
         }
         for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.clock, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
             if owner.retire() {
-                return false;
+                return Ok(false);
             }
         }
-        self.terminal_is_empty()
+        Ok(self.terminal_is_empty())
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -865,6 +884,8 @@ impl OsHostRetirementState {
             && self.hot_swap.is_none()
             && self.events.is_none()
             && self.ui_token.is_none()
+            && self.original_snapshot.is_none()
+            && self.original_snapshot_close.is_none()
             && self.snapshot_sink.is_none()
             && self.frame_build.is_none()
             && self.surface_resize.is_none()
@@ -892,51 +913,21 @@ impl Drop for OsHostRetirementState {
 }
 
 impl OsHostRetirement {
-    pub(crate) fn close_abandoned_step() -> bool {
-        if OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.load(Ordering::Acquire) == 0 {
-            return true;
-        }
-        let index = match OS_HOST_RETIREMENT_ABANDONMENT_SCAN.try_update(Ordering::AcqRel, Ordering::Acquire, |index| Some(index.checked_add(1).map_or(0, |next| next % OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY))) {
-            Ok(index) | Err(index) => index % OS_HOST_RETIREMENT_ABANDONMENT_CAPACITY,
-        };
-        let slot = &OS_HOST_RETIREMENT_ABANDONMENTS[index];
-        let pointer = slot.owner.load(Ordering::Acquire);
-        if pointer.is_null() || pointer == os_host_retirement_reservation_marker() {
-            return false;
-        }
-        if slot.owner.compare_exchange(pointer, os_host_retirement_reservation_marker(), Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return false;
-        }
-        let mut state = unsafe { Box::from_raw(pointer) };
-        if state.close_step() && state.terminal_is_empty() {
-            drop(state);
-            slot.owner.store(std::ptr::null_mut(), Ordering::Release);
-            OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.fetch_sub(1, Ordering::AcqRel);
-        } else {
-            slot.owner.store(Box::into_raw(state), Ordering::Release);
-        }
-        false
+    pub(crate) fn close_abandoned_step(_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if OS_HOST_RETIREMENT_ABANDONMENT_OCCUPIED.load(Ordering::Acquire)==0{return Ok(true)}
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"abandoned host requires its original supplied lifecycle context").into())
     }
 
-    pub(crate) fn close_step(&mut self) -> bool {
-        if !Self::close_abandoned_step() {
-            return false;
+    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        if let Some(state)=self.state.as_mut(){
+            if !state.close_step(cx)?||!state.terminal_is_empty(){return Ok(false)}
+            let grant=cx.retained_grant();let release=std::mem::size_of::<OsHostRetirementState>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<release{return Ok(false)}
+            drop(self.state.take());cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;return Ok(false)
         }
-        let Some(state) = self.state.as_mut() else {
-            return self.terminal_is_empty();
-        };
-        if !state.close_step() || !state.terminal_is_empty() {
-            return false;
-        }
-        let state = self.state.take();
-        drop(state);
-        let Some(token) = self.abandonment.take() else {
-            return false;
-        };
-        if !release_os_host_retirement_abandonment(token) {
-            std::process::abort();
-        }
-        true
+        let Some(token)=self.abandonment else{return Ok(true)};
+        if !release_os_host_retirement_abandonment(token){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original host retirement abandonment token changed before release").into())}
+        self.abandonment=None;cx.consume_fuel(1);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {

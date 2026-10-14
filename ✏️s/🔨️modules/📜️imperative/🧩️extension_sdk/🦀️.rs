@@ -96,10 +96,10 @@ impl ImperativeEvaluationResources {
 }
 
 impl semio_framework_plugin::ExtensionResourceOwner for ImperativeEvaluationResources {
-    fn invoke(&self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::ExtensionInvokeStep, semio_framework::Fault> {
+    fn invoke(&mut self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::ExtensionInvokeStep, semio_framework::Fault> {
         use semio_framework_plugin::ExtensionInvokeStep;
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
-        let refused = |error: ValueError| ExtensionInvokeStep { payload: None, retained_progress: RetainedCloneProgress::default(), refusal: Some(error) };
+        let refused = |error: ValueError| ExtensionInvokeStep { payload: None, retained_progress: RetainedCloneProgress::default(), refusal: Some(error.into()) };
         let grant = cx.retained_grant();
         if self.closing {
             return Ok(refused(ValueError::literal(ValueRefusalKind::InvariantViolated, "imperative evaluation resource is closing")));
@@ -115,7 +115,7 @@ impl semio_framework_plugin::ExtensionResourceOwner for ImperativeEvaluationReso
         }
         let mut refusal = None;
         if let Err(error) = cx.consume_retained(receipt) {
-            refusal = Some(error);
+            refusal = Some(error.into());
         }
         cx.consume_fuel(1);
         Ok(ExtensionInvokeStep { payload: Some(bytes), retained_progress: receipt, refusal })
@@ -125,7 +125,7 @@ impl semio_framework_plugin::ExtensionResourceOwner for ImperativeEvaluationReso
         self.closing = true;
     }
 
-    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework::Fault> {
+    fn close_step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
         Ok(semio_framework_plugin::PluginLifecycleStep::Complete(Default::default()))
     }
 

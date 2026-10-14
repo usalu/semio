@@ -20,9 +20,9 @@ for(const row of fixture.paths)test(`source-fact cache path authority: ${row.id}
   const previous=process.env.NX_WORKSPACE_DATA_DIRECTORY,base=parse(resolve("/")).root,remaining=row.prefix.length+row.segment.length*row.count-base.length,directory=base+row.segment.repeat(Math.floor(remaining/row.segment.length))+"a".repeat(remaining%row.segment.length)+row.suffix;
   process.env.NX_WORKSPACE_DATA_DIRECTORY=directory;
   try{
-    const root=cacheInternals.moduleSourceFactCacheRoot("/unused");
-    expect(root,row.id).toBe(row.admitted?join(directory,"mf"):undefined);
-    const path=join(directory,"mf","0".repeat(64)+".json");
+    const root=cacheInternals.moduleSourceRecordCacheRootV1("/unused");
+    expect(root,row.id).toBe(row.admitted?join(directory,"mr"):undefined);
+    const path=join(directory,"mr","0".repeat(64)+".json");
     expect(Buffer.byteLength(path,"utf16le")/2,row.id).toBe(row.utf16);
     expect(path.length<=256,row.id).toBe(row.admitted);
   }finally{
@@ -43,7 +43,7 @@ test("oversized cache authority still parses current source without creating cac
   writeFileSync(join(root,file),source);
   process.env.NX_WORKSPACE_DATA_DIRECTORY=join(root,"a".repeat(180));
   try{
-    expect(cacheInternals.moduleSourceFactCacheRoot(root)).toBeUndefined();
+    expect(cacheInternals.moduleSourceRecordCacheRootV1(root)).toBeUndefined();
     for(const temperature of ["cold","warm"]){
       const targets=new Set<string>();
       await cacheInternals.collectImportEdges(root,{caller:[{file,hash}]},{caller:{root:""},leaf:{root:"leaf.ts"}},new Map(),undefined,(_from:string,target:string)=>targets.add(target));

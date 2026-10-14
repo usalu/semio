@@ -31,18 +31,18 @@ impl semio_framework_value::retirement::RetireOwned for FieldProjectionFrame{
 struct FieldProjectionMeasureFrame{kind:u8,length:usize,next:usize,key:bool}
 
 /// 🛫️ Projects one immutable source into its admitted field candidate across caller grants.
-pub struct RetainedFieldProjection<T:FieldProjectionSource>{source_identity:usize,frames:Vec<FieldProjectionFrame>,path:Vec<usize>,complete:Option<FieldValue>,fault_value:Option<FieldValue>,phase:u8,enter:bool,position:usize,measure_frames:[FieldProjectionMeasureFrame;65],measure_path:[usize;64],measure_depth:usize,measure_enter:bool,measure_started:bool,measure_limit:Option<usize>,measure_complete:Option<usize>,measure_bytes:usize,source:std::marker::PhantomData<fn()->T>}
-impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
+pub struct RetainedFieldProjection{source_identity:usize,frames:Vec<FieldProjectionFrame>,path:Vec<usize>,complete:Option<FieldValue>,fault_value:Option<FieldValue>,phase:u8,enter:bool,position:usize,measure_frames:[FieldProjectionMeasureFrame;65],measure_path:[usize;64],measure_depth:usize,measure_enter:bool,measure_started:bool,measure_limit:Option<usize>,measure_complete:Option<usize>,measure_bytes:usize}
+impl RetainedFieldProjection{
     /// 🪪️ Captures the retained primary source identity without visiting or cloning its payload.
-    pub fn new(source:&T)->Self{Self{source_identity:source as*const T as usize,frames:Vec::new(),path:Vec::new(),complete:None,fault_value:None,phase:0,enter:true,position:0,measure_frames:[FieldProjectionMeasureFrame::default();65],measure_path:[0;64],measure_depth:0,measure_enter:true,measure_started:false,measure_limit:None,measure_complete:None,measure_bytes:0,source:std::marker::PhantomData}}
+    pub fn new<T:FieldProjectionSource+?Sized>(source:&T)->Self{Self{source_identity:source.projection_identity(),frames:Vec::new(),path:Vec::new(),complete:None,fault_value:None,phase:0,enter:true,position:0,measure_frames:[FieldProjectionMeasureFrame::default();65],measure_path:[0;64],measure_depth:0,measure_enter:true,measure_started:false,measure_limit:None,measure_complete:None,measure_bytes:0}}
     /// 📊️ Reports completed scalar and structural projection units.
     pub fn position(&self)->usize{self.position}
     /// 📏️ Measures exact candidate payload and slot demand from the immutable source before allocation.
-    pub fn measure_step(&mut self,source:&T,maximum_units:usize,maximum_source_bytes:usize,control:&mut NativeEncodeControl<'_>)->Result<Option<usize>,ValueError>{
+    pub fn measure_step<T:FieldProjectionSource+?Sized>(&mut self,source:&T,maximum_units:usize,maximum_source_bytes:usize,control:&mut NativeEncodeControl<'_>)->Result<Option<usize>,ValueError>{
         use FieldProjectionView as V;
         use semio_framework_value::ValueRefusalKind as K;
         if maximum_units==0{return Ok(None)}
-        if self.source_identity!=source as*const T as usize||self.phase!=0||self.measure_limit.is_some_and(|limit|limit!=maximum_source_bytes){return Err(projection_path_error())}
+        if self.source_identity!=source.projection_identity()||self.phase!=0||self.measure_limit.is_some_and(|limit|limit!=maximum_source_bytes){return Err(projection_path_error())}
         if let Some(bytes)=self.measure_complete{return Ok(Some(bytes))}
         self.measure_limit=Some(maximum_source_bytes);
         for _ in 0..maximum_units{
@@ -103,9 +103,9 @@ impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
         };Ok(frame)
     }
     /// ⛽️ Uses the same cumulative control while moving at most one UTF-8 scalar or field per unit.
-    pub fn step(&mut self,source:&T,maximum_units:usize,control:&mut NativeEncodeControl<'_>)->Result<Option<FieldValue>,ValueError>{
+    pub fn step<T:FieldProjectionSource+?Sized>(&mut self,source:&T,maximum_units:usize,control:&mut NativeEncodeControl<'_>)->Result<Option<FieldValue>,ValueError>{
         if maximum_units==0{return Ok(None)}
-        if self.source_identity!=source as*const T as usize{return Err(projection_path_error())}
+        if self.source_identity!=source.projection_identity(){return Err(projection_path_error())}
         if self.phase==2{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained field projection was already transferred"))}
         for _ in 0..maximum_units{
             control.checkpoint()?;
@@ -146,7 +146,7 @@ impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
         }Ok(None)
     }
 }
-impl<T:FieldProjectionSource+'static> semio_framework_value::retirement::RetireOwned for RetainedFieldProjection<T>{
+impl semio_framework_value::retirement::RetireOwned for RetainedFieldProjection{
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.frames),crate::retirement::RecordPlanningRetirement::new(self.path),deferred(self.complete),deferred(self.fault_value)])}
     fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.frames),crate::retirement::RecordPlanningRetirement::<usize>::birth_bytes(),deferred_birth_bytes_for(&self.complete),deferred_birth_bytes_for(&self.fault_value)])}
     fn controlled_retirement_supported()->bool{true}

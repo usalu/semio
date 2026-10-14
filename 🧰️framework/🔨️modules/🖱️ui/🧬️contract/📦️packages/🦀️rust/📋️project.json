@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/ui-contract-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "built-tree-retirement-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
@@ -13,7 +13,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -28,7 +28,7 @@
       ]
     },
     "conformance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts conformance",
@@ -37,21 +37,21 @@
       "outputs": []
     },
     "check-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-wasm"
       }
     },
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"
       }
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -59,7 +59,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"

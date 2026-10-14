@@ -1,7 +1,7 @@
 /** 🖐️ Complete Block5d persisted parent with the actual shared Block record authority. */
 import * as shared from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 import * as p from "../../../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export * from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 export interface Block5dPart2d{shape:string|null;radius:Binary64|null;width:Binary64|null;height:Binary64|null;color:string|null;iconKind:string|null}
 export interface Block5dPart3d{orientation:p.BlockVector4|null;scale:p.BlockVector3|null}

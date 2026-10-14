@@ -3,15 +3,14 @@
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
-use {semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
-use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
+use crate::{JackGraphQuery,JackContentRead};
 
 /// 🩹️ Renames the named nodes — or, when `node_ids` is empty, the nodes selected in the `ast` domain, which is what a
 /// rail press means — as ONE edit of the composed `content` child: one `change-node-label` leaf per node (design
 /// §20.15). Every request that cannot move the document is refused by name instead of answering an empty emit:
 /// `app.command.targets-required` when neither `nodeIds` nor a selection names a node, `mutation.target-missing`,
 /// `app.command.invalid-args`.
-pub(crate) fn patch_nodes(snapshot: &JackSnapshot, children: &semio_framework_plugin::app::ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
+pub(crate) fn patch_nodes<C:crate::JackComposition>(snapshot: &JackSnapshot, children: &semio_framework_plugin::app::ChildContentView, node_ids: &[String], selection: &[String], field: &str, value: &str) -> Result<Emit<TrinityGraphMutation, NoConfigMutation>, Fault> {
     let invalid = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), detail);
     if field != "name" {
         return Err(invalid(format!("jack nodes have no patchable field '{field}' (only 'name')")));
@@ -24,11 +23,12 @@ pub(crate) fn patch_nodes(snapshot: &JackSnapshot, children: &semio_framework_pl
     if targets.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.targets-required"), "patchNodes needs the nodes it renames: name them in nodeIds, or select them in the graph"));
     }
-    let content = crate::jack_content_from_children(snapshot, children)?;
-    let missing: Vec<&str> = targets.iter().filter(|id| !content.nodes.iter().any(|node| &node.id.value == *id)).map(String::as_str).collect();
+    let content = C::bind(snapshot, children)?;
+    let missing: Vec<&str> = targets.iter().filter(|id| !(0..content.node_count()).filter_map(|index|content.node_id(index)).any(|node|node==id.as_str())).map(String::as_str).collect();
     if !missing.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the jack graph has no node {}", missing.join(", "))));
     }
-    let leaves: Vec<SemioGraphMutation> = targets.iter().map(|id| SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: GraphNodeId::new(id.clone()), new_label: value.into() })).collect();
-    Ok(crate::jack_child_emit(snapshot, leaves))
+    let effects:Vec<_>=targets.iter().map(|id|crate::GraphEffect::RenameNode{id:id.clone(),name:value.into()}).collect();
+    let preparations=content.prepare_effects(&effects).map_err(|error|Fault::from(error.into_message()))?;
+    Ok(Emit{child_preparations:preparations.into(),..Default::default()})
 }

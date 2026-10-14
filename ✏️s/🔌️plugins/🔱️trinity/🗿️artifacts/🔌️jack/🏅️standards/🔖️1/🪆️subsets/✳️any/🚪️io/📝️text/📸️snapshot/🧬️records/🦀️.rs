@@ -1,52 +1,52 @@
 //! 🔌️ Literal native Jack manifest records and iterative property type chains.
 use crate::{Camera, EdgeKindDef, JackContentChild, JackSnapshot, Manifest, NodeKindDef, PortDirection, PortKindDef, PropertyDef, PropertyKind};
 use semio_framework_value::{DecodedValue, NativeDecodeControl, NativeEncodeControl, ValueType, ValueError, ValueRefusalKind};
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
 #[dsl(id = "trinity.jack", layout = "lines")]
 pub(crate) struct JackPackRecord {
-    schema: String,
-    name: String,
-    manifest_id: Option<String>,
-    node_kinds: Vec<NodeKindRecord>,
-    edge_kinds: Vec<EdgeKindRecord>,
-    port_kinds: Vec<PortKindRecord>,
-    camera: Camera,
-    content: ContentRecord,
-    root_node_id: Option<String>,
-    query: String,
+    pub(crate) schema: String,
+    pub(crate) name: String,
+    pub(crate) manifest_id: Option<String>,
+    pub(crate) node_kinds: Vec<NodeKindRecord>,
+    pub(crate) edge_kinds: Vec<EdgeKindRecord>,
+    pub(crate) port_kinds: Vec<PortKindRecord>,
+    pub(crate) camera: Camera,
+    pub(crate) content: ContentRecord,
+    pub(crate) root_node_id: Option<String>,
+    pub(crate) query: String,
 }
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct NodeKindRecord {
-    name: String,
-    properties: Vec<PropertyRecord>,
-    port_kinds: Vec<String>,
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+pub(crate) struct NodeKindRecord {
+    pub(crate) name: String,
+    pub(crate) properties: Vec<PropertyRecord>,
+    pub(crate) port_kinds: Vec<String>,
 }
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct EdgeKindRecord {
-    name: String,
-    properties: Vec<PropertyRecord>,
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+pub(crate) struct EdgeKindRecord {
+    pub(crate) name: String,
+    pub(crate) properties: Vec<PropertyRecord>,
 }
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct PortKindRecord {
-    name: String,
-    direction: String,
-    properties: Vec<PropertyRecord>,
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+pub(crate) struct PortKindRecord {
+    pub(crate) name: String,
+    pub(crate) direction: String,
+    pub(crate) properties: Vec<PropertyRecord>,
 }
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct PropertyRecord {
-    name: String,
-    kind: String,
-    type_path: Vec<String>,
-    type_schema: Option<String>,
-    expression: Option<String>,
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+pub(crate) struct PropertyRecord {
+    pub(crate) name: String,
+    pub(crate) kind: String,
+    pub(crate) type_path: Vec<String>,
+    pub(crate) type_schema: Option<String>,
+    pub(crate) expression: Option<String>,
 }
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct ContentRecord {
-    child_id: String,
-    artifact_id: String,
-    artifact_kind: String,
-    standard: String,
-    subset: String,
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::RetireOwned)]
+pub(crate) struct ContentRecord {
+    pub(crate) child_id: String,
+    pub(crate) artifact_id: String,
+    pub(crate) artifact_kind: String,
+    pub(crate) standard: String,
+    pub(crate) subset: String,
 }
 trait Copies {
     fn text(&mut self, value: &str) -> Result<String, ValueError>;

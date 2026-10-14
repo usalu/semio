@@ -25,7 +25,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(() => parseBrowserActorUiPatchOfferV1({ ...fixture.offer, patches: [{ ...windowPatch, ops: [{ type: "remove", id: 1, extra: true }] }] })).toThrow(/invalid fields/u);
     expect(() => parseBrowserActorUiPatchOfferV1({ ...fixture.offer, patches: [{ ...windowPatch, ops: [{ type: "unknown", id: 1 }] }] })).toThrow(/type: invalid/u);
     expect(() => parseBrowserActorUiPatchResultV1({ ...fixture.rejected, verdicts: [{ surface: "map", outcome: "rejected", revision: 0 }] })).toThrow(/invalid fields/u);
-    const { decodeActorUiPatchReceipt } = await import("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
+    const { decodeActorUiPatchReceipt } = await import("../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
     const receipt = decodeActorUiPatchReceipt(Uint8Array.from(fixture.offer.receipt));
     const port = { decodePack: () => { throw new Error("no pack in a set-children op"); }, natural: (value: unknown) => Number(value as bigint) };
     const { lift, surface, node, children } = fixture.wireSetChildren;

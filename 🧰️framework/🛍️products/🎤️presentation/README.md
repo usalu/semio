@@ -28,8 +28,8 @@ bun ./📜️script.ts test quick                # the core model
 cd "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react"
 bun ./📜️script.ts test quick                # the reveal.js renderer
 
-bun nx run @semio-tech/mit-bestand-praesentation-projektetage:dev     # the projektetage deck
-bun nx run @semio-tech/mit-bestand-praesentation-projektetage:build   # its static site
+bun repo run @semio-tech/mit-bestand-praesentation-projektetage:dev     # the projektetage deck
+bun repo run @semio-tech/mit-bestand-praesentation-projektetage:build   # its static site
 ```
 
 ## Domain model

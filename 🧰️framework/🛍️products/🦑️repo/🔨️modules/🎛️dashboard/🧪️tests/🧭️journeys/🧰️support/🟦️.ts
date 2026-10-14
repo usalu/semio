@@ -8,6 +8,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, 
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { installedDashboard } from "../../../📦️installation/🟦️.ts";
 
 export const dashboard = resolve(import.meta.dir, "../../..");
@@ -15,7 +16,7 @@ export const repository = resolve(dashboard, "../../../../..");
 
 /** 🔎️ The explicitly selected test executable or the canonical installed dashboard. */
 export function binary(): string {
-  return process.env.SEMIO_TEST_CLI ?? installedDashboard(repository);
+  return process.env.SEMIO_TEST_CLI ?? installedDashboard(repository,readBuildMode(process.env.SEMIO_BUILD_MODE));
 }
 
 export type Run = { code: number; stdout: string; stderr: string };

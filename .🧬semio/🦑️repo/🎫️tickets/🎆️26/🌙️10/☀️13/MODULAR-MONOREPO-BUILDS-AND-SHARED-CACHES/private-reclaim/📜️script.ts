@@ -5,7 +5,7 @@ import {spawnSync} from "node:child_process";
 import {receiveScriptProcessInvocation} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {acquireQueuedResourceLease} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {acquireCargoBuildLeaseV1} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import {acquireCargoProfileMaintenanceLeaseV1} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 const secondary=process.argv[2]==="secondary",tertiary=process.argv[2]==="tertiary";
 if(process.argv[2]&&!secondary&&!tertiary)throw Error("Select secondary or the original inactive private output plan");
 const workspace=resolve(import.meta.dir,"../../../../../../../.."),cache=join(workspace,".🧬semio/🦑️repo/⚡️cache"),roots=(tertiary?["e1b"]:secondary?["e4","tc","ort"]:["l1","at"]).map(name=>join(cache,name));
@@ -20,7 +20,7 @@ await receiveScriptProcessInvocation(process.env,async invocation=>{
   if(secondary)for(const input of ["e4-3d-architect-bim","trusted-catalog-receipts","owned-runtime-crate"]){const retained=join(workspace,".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT",input,"🏗️cargo.sh");if(!readFileSync(retained,"utf8").includes("CARGO_TARGET_DIR"))throw Error("Private compiler input custody refused");}
   for(const root of [...roots,...stores,...outputs])if(existsSync(root)&&((await lstat(root)).isSymbolicLink()||Date.now()-(await lstat(root)).mtimeMs<3600000))throw Error("Private output age/identity refused");
   held.push(await acquireQueuedResourceLease({directory:leases,resource:"cache-prune",mode:"exclusive",signal:control.signal,control}));
-  for(const store of stores)for(const profile of ["debug","release","prototype","wasm-prototype","wasm-release","host-tool"])held.push(await acquireCargoBuildLeaseV1({directory:leases,buildDirectory:store,args:["--profile",profile],signal:control.signal,control}));
+  for(const store of stores)for(const profile of ["debug","release","prototype","wasm-prototype","wasm-release","host-tool"])held.push(await acquireCargoProfileMaintenanceLeaseV1({directory:leases,buildDirectory:store,args:["--profile",profile],signal:control.signal,control}));
   const verify=()=>{compilerAdmissionBudgetV1(control);const processes=spawnSync("ps",["eww","-axo","pid,command"],{encoding:"utf8"});if(processes.status!==0||processes.stdout.split("\n").some(line=>roots.some(root=>line.includes(root))))throw Error("Private output has a live process/environment reference");};
   verify();
   for(const root of roots){const opened=spawnSync("lsof",["-nP","+D",root],{encoding:"utf8"});if(opened.status!==1||opened.stdout.trim())throw Error("Private output has open descriptors or inspection failed");}

@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "original",
+    "diagnostic",
+    "phases",
+    "perTurnItems",
+    "copyBytes",
+    "expected",
+    "sourceMoves"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "original": {
+      "type": "object"
+    },
+    "diagnostic": {
+      "type": "object"
+    },
+    "phases": {
+      "type": "array",
+      "items": [
+        {
+          "const": "metadata"
+        },
+        {
+          "const": "alias"
+        },
+        {
+          "const": "publish"
+        }
+      ],
+      "minItems": 3,
+      "maxItems": 3,
+      "additionalItems": false
+    },
+    "perTurnItems": {
+      "const": 1
+    },
+    "copyBytes": {
+      "const": 4096
+    },
+    "expected": {
+      "type": "object"
+    },
+    "sourceMoves": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wrapper",
+          "source"
+        ],
+        "properties": {
+          "wrapper": {
+            "enum": [
+              "first",
+              "second"
+            ]
+          },
+          "source": {
+            "const": "paid-original"
+          }
+        }
+      }
+    }
+  }
+}

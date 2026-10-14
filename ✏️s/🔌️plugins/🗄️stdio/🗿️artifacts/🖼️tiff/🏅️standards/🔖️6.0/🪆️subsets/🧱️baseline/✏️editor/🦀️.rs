@@ -175,7 +175,9 @@ impl ArtifactEditor for TiffBaselineEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, STDIO_TIFF_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str { tiff_baseline_editor_command_id(command) }
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { tiff_baseline_editor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref(); tiff_baseline_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Self::Snapshot {
         crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()

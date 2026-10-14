@@ -7,11 +7,11 @@
         "name": "fixture",
         "scripts": {
           "nx": "bun bootstrap nx",
-          "dashboard": "bun nx run @fixture/dashboard:run",
-          "dashboard:start": "bun nx run @fixture/dashboard:daemon -- start",
-          "dev": "bun nx run workspace:dev",
-          "test:quiz": "bun nx run @fixture/quiz:test",
-          "test:quiz:e2e": "bun nx run @fixture/quiz:test-e2e",
+          "dashboard": "bun repo run @fixture/dashboard:run",
+          "dashboard:start": "bun repo run @fixture/dashboard:daemon -- start",
+          "dev": "bun repo run workspace:dev",
+          "test:quiz": "bun repo run @fixture/quiz:test",
+          "test:quiz:e2e": "bun repo run @fixture/quiz:test-e2e",
           "build:docs": "nx run-many -t build",
           "lint": "eslint ."
         }
@@ -37,8 +37,8 @@
                   "default": "use",
                   "values": [
                     { "id": "use" },
-                    { "id": "skip-local", "nxFlags": ["--skip-nx-cache"] },
-                    { "id": "skip-all", "nxFlags": ["--skip-nx-cache", "--skip-remote-cache"] }
+                    { "id": "skip-local", "buildFlags": ["--skip-cache"] },
+                    { "id": "skip-all", "buildFlags": ["--skip-cache", "--skip-remote-cache"] }
                   ]
                 },
                 {
@@ -50,12 +50,12 @@
                     { "id": "long", "env": { "SEMIO_TEST_LEVEL": "long" } }
                   ]
                 },
-                { "id": "dependencies", "kind": "flag", "appliesTo": { "verbs": ["build", "test"] }, "nxFlags": ["--excludeTaskDependencies"] },
+                { "id": "dependencies", "kind": "flag", "appliesTo": { "verbs": ["build", "test"] }, "buildFlags": ["--exclude-dependencies"] },
                 {
                   "id": "build-mode",
                   "kind": "choice",
                   "appliesTo": { "verbs": ["build", "test"] },
-                  "values": [{ "id": "ship", "env": { "SEMIO_BUILD_MODE": "release" }, "nxFlags": ["--skip-nx-cache", "--skip-remote-cache"] }]
+                  "values": [{ "id": "ship", "env": { "SEMIO_BUILD_MODE": "release" }, "buildFlags": ["--skip-cache", "--skip-remote-cache"] }]
                 },
                 { "id": "cargo-jobs", "kind": "text", "appliesTo": { "verbs": ["test"] }, "valueEnv": "CARGO_BUILD_JOBS" },
                 { "id": "trace", "kind": "flag", "env": { "SEMIO_TRACE": "1" } }
@@ -74,7 +74,7 @@
                 {
                   "id": "bun-test",
                   "verb": "test",
-                  "command": ["bun", "nx", "exec", "--projects={project}", "--", "bun", "test"],
+                  "command": ["bun", "repo", "exec", "--projects={project}", "--", "bun", "test"],
                   "parameters": [
                     { "id": "project", "kind": "text", "default": "workspace" },
                     { "id": "file", "kind": "text", "required": true, "valuePositional": true },
@@ -246,77 +246,146 @@
       "text": "the owner of the playground targets"
     },
     {
-      "path": ".nx/workspace-data/project-graph.json",
+      "path": ".🧬semio/🦑️repo/⚡️cache/build/graph.json",
       "json": {
-        "version": "6.0",
-        "nodes": {
+        "version": 1,
+        "projects": {
           "workspace": {
             "name": "workspace",
-            "type": "lib",
-            "data": {
-              "root": ".",
-              "targets": {
-                "dev": { "executor": "nx:run-commands", "continuous": true },
-                "build": { "executor": "nx:run-commands" },
-                "test": { "executor": "nx:run-commands" },
-                "verify": { "executor": "nx:run-commands" }
+            "root": ".",
+            "targets": {
+              "dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "build": {
+                "executor": "nx:run-commands"
+              },
+              "test": {
+                "executor": "nx:run-commands"
+              },
+              "verify": {
+                "executor": "nx:run-commands"
               }
             }
           },
           "hub": {
             "name": "hub",
-            "type": "lib",
-            "data": {
-              "root": "🌎️hub/📦️packages/🟦️typescript",
-              "targets": {
-                "dev": { "executor": "nx:run-commands", "continuous": true },
-                "build": { "executor": "nx:run-commands", "configurations": { "production": {}, "staging": {} } },
-                "erase": { "executor": "nx:run-commands" },
-                "serve-docs": { "executor": "nx:run-commands", "continuous": true }
+            "root": "🌎️hub/📦️packages/🟦️typescript",
+            "targets": {
+              "dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "build": {
+                "executor": "nx:run-commands",
+                "configurations": {
+                  "production": {},
+                  "staging": {}
+                }
+              },
+              "erase": {
+                "executor": "nx:run-commands"
+              },
+              "serve-docs": {
+                "executor": "nx:run-commands",
+                "continuous": true
               }
             }
           },
           "@fixture/quiz": {
             "name": "@fixture/quiz",
-            "type": "lib",
-            "data": {
-              "root": "🎓️teaching/❓️quiz/📦️packages/🟦️typescript",
-              "targets": {
-                "dev": { "executor": "nx:run-commands", "continuous": true },
-                "build": { "executor": "nx:run-commands" },
-                "test": { "executor": "nx:run-commands" },
-                "test:native": { "executor": "nx:run-commands" },
-                "materialize": { "executor": "nx:run-commands" }
+            "root": "🎓️teaching/❓️quiz/📦️packages/🟦️typescript",
+            "targets": {
+              "dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "build": {
+                "executor": "nx:run-commands"
+              },
+              "test": {
+                "executor": "nx:run-commands"
+              },
+              "test:native": {
+                "executor": "nx:run-commands"
+              },
+              "materialize": {
+                "executor": "nx:run-commands"
               }
             }
           },
           "@fixture/artifact-pdf": {
             "name": "@fixture/artifact-pdf",
-            "type": "lib",
-            "data": { "root": "✏️s/🔌️plugins/📄️pdf/📦️packages/🦀️rust", "targets": { "test": { "executor": "nx:run-commands" } } }
+            "root": "✏️s/🔌️plugins/📄️pdf/📦️packages/🦀️rust",
+            "targets": {
+              "test": {
+                "executor": "nx:run-commands"
+              }
+            }
           },
           "@fixture/artifact-wav": {
             "name": "@fixture/artifact-wav",
-            "type": "lib",
-            "data": { "root": "✏️s/🔌️plugins/🔊️wav/📦️packages/🦀️rust", "targets": { "test": { "executor": "nx:run-commands" }, "check": { "executor": "nx:run-commands" } } }
+            "root": "✏️s/🔌️plugins/🔊️wav/📦️packages/🦀️rust",
+            "targets": {
+              "test": {
+                "executor": "nx:run-commands"
+              },
+              "check": {
+                "executor": "nx:run-commands"
+              }
+            }
           },
           "@fixture/artifact-contract": {
             "name": "@fixture/artifact-contract",
-            "type": "lib",
-            "data": { "root": "✏️s/🔌️plugins/📜️contract/📦️packages/🦀️rust", "targets": { "test": { "executor": "nx:run-commands" } } }
+            "root": "✏️s/🔌️plugins/📜️contract/📦️packages/🦀️rust",
+            "targets": {
+              "test": {
+                "executor": "nx:run-commands"
+              }
+            }
           },
           "@semio-tech/framework-os-dev": {
             "name": "@semio-tech/framework-os-dev",
-            "type": "lib",
-            "data": { "root": "💻️os/🧑‍💻dev", "targets": { "dev-shell-react-dev": { "executor": "nx:run-commands", "continuous": true }, "dev-shell-wgpu-dev": { "executor": "nx:run-commands", "continuous": true }, "run-shell-native-dev": { "executor": "nx:run-commands", "continuous": true }, "dev-cad-react-dev": { "executor": "nx:run-commands", "continuous": true }, "dev-cad-wgpu-dev": { "executor": "nx:run-commands", "continuous": true }, "run-cad-native-dev": { "executor": "nx:run-commands", "continuous": true } } }
+            "root": "💻️os/🧑‍💻dev",
+            "targets": {
+              "dev-shell-react-dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "dev-shell-wgpu-dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "run-shell-native-dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "dev-cad-react-dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "dev-cad-wgpu-dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              },
+              "run-cad-native-dev": {
+                "executor": "nx:run-commands",
+                "continuous": true
+              }
+            }
           },
           "@fixture/vanished": {
             "name": "@fixture/vanished",
-            "type": "lib",
-            "data": { "root": "gone", "targets": { "build": { "executor": "nx:run-commands" } } }
+            "root": "gone",
+            "targets": {
+              "build": {
+                "executor": "nx:run-commands"
+              }
+            }
           }
         },
-        "dependencies": {}
+        "dependencies": []
       }
     },
     {

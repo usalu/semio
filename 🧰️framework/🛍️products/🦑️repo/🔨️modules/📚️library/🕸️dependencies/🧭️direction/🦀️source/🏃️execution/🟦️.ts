@@ -5,7 +5,7 @@ import { dirname, join, posix, resolve } from "node:path";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { mkdir, stat as followedStat, writeFile } from "node:fs/promises";
 import { rustSourceDirectionEdges, rustSourceTargets, rustSourceTargetProblem, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem, type RustSourceTarget } from "../🟦️.ts";
-import type { DependencyDirectionRule } from "../../🟦️.ts";
+import { dependencyDirectionLayerRules } from "../../🟦️.ts";
 import { inspectRustModuleGraph, inspectRustModuleGraphFacts, projectCargoProviderManifest } from "../../../../🔍️discovery/🟦️.ts";
 import { type RustCompileExpansion } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { loadDependencyDirectionPolicy } from "../../🚀️bootstrap/🟦️.ts";
@@ -82,14 +82,7 @@ export async function inspectRustSourceInputs(root: string, targets: readonly Ru
 
 /** 🧾️ Inventories every present authored Rust owner and returns the complete typed layer verdict. */
 export async function inspectRustSourceDirection(root: string): Promise<RustSourceDirectionReport> {
-  const { taxonomy, policy } = loadDependencyDirectionPolicy(root);
-  const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", ...Object.keys(taxonomy.dependencyDirections.rules)];
-  const patterns = (value: string | readonly string[]): readonly string[] => typeof value === "string" ? [value] : value;
-  const rules: DependencyDirectionRule[] = policy.forbidden.filter((rule) => names.includes(rule.name) || rule.name.startsWith("plugin-no-extension-or-artifact-")).map((rule) => {
-    if (!rule.from.path || !rule.to.path) throw new Error(`Rust source direction requires authored selectors: ${rule.name}`);
-    return { name: rule.name, severity: rule.severity, from: { path: patterns(rule.from.path), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } };
-  });
-  if (names.some((name) => !rules.some((rule) => rule.name === name)) || new Set(rules.map((rule) => rule.name)).size !== rules.length || rules.some((rule) => rule.severity !== "error")) throw new Error("Rust source direction requires every declared strict layer rule");
+  const snapshot = loadDependencyDirectionPolicy(root), {taxonomy} = snapshot, rules = dependencyDirectionLayerRules(snapshot);
   const ignore: string[] = taxonomy.implementationLeafPolicy.ignoredPathPatterns.map((path: string) => path.replace(/^\*\*\//u, ""));
   const excluded: string[] = Object.values(taxonomy.pathExclusions).map((value) => value.path.replace(/\/$/u, ""));
   const edges: RustSourceDirectionEdge[] = [];

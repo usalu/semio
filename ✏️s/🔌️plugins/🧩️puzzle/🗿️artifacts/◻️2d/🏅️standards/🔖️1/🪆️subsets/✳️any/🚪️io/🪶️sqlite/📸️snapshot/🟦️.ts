@@ -2,7 +2,7 @@
 import sql from"./🗄️.sql" with{type:"text"};
 import type{Puzzle2dSnapshot,Puzzle2dHandle,Puzzle2dNode,Puzzle2dEdge,Puzzle2dTargetRegion,Puzzle2dHandleTemplate,Puzzle2dCatalogNodeKind,Puzzle2dKindCatalogs,Puzzle2dMeta}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,artifactSqliteTextBytes,artifactSqliteValueBudget,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 /** 🔘️ Literal node port scalars retain their complete binary64 identity. */

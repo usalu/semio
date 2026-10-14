@@ -2,7 +2,7 @@
 import type * as m from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {ValueError,sqliteOperation,sqliteValueByteLength,type SqliteDatabase,type SqliteValue,type SqliteOperation} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import * as p from "../../../../../../../../../🧬️schema/🧱️shared/🪶️sqlite/🟦️.ts";
 import {BLOCK5D_SQLITE_SCHEMA as SQL} from "./🗄️schema/🟦️.ts";
 type Cells=readonly SqliteValue[];

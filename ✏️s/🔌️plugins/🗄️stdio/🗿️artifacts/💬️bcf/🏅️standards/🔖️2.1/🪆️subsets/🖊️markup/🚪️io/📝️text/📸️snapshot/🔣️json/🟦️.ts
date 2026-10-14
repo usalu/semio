@@ -1,6 +1,6 @@
 /** 🔣️ BCF native numeric JSON. */
-import { binary64, type Binary64 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary64, type Binary64 } from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseBcfSnapshot,type BcfSnapshot,type BcfCamera,type BcfPoint3} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 const object=(value:unknown):Record<string,unknown>=>{if(value===null||typeof value!=="object"||Array.isArray(value))throw Error("BCF JSON requires object");return value as Record<string,unknown>};
 const jsonNumber=(value:unknown):Binary64=>{if(typeof value!=="number"||!Number.isFinite(value))throw Error("BCF JSON requires a finite numeric scalar");return binary64(value)};

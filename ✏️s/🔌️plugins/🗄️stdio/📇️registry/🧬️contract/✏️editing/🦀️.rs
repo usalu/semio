@@ -1,7 +1,8 @@
 //! ✏️ Schema-erased, typed snapshot editing shared by every stdio artifact editor.
 
 use crate::{kernel, value_derive};
-use kernel::{pack::snapshot::ArtifactDsl, Mutation, MutationDiff, OpBinary};
+use pack::snapshot::ArtifactDsl;
+use kernel::{Mutation, MutationDiff, OpBinary};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;

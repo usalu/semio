@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Widget Output Custody Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ports",
+    "expectedPorts",
+    "text",
+    "handoff",
+    "originalCaller",
+    "cancellation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "ports": {
+      "const": [
+        "zeta",
+        "alpha",
+        "mu"
+      ]
+    },
+    "expectedPorts": {
+      "const": [
+        "alpha",
+        "mu",
+        "zeta"
+      ]
+    },
+    "text": {
+      "const": "Original Geometry Ütf8"
+    },
+    "handoff": {
+      "const": {
+        "items": 1,
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0
+      }
+    },
+    "originalCaller": {
+      "const": {
+        "operation": 741,
+        "generation": 3,
+        "items": 10000,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 128,
+        "fuel": 100000,
+        "deadlineMicros": 1000000000
+      }
+    },
+    "cancellation": {
+      "const": {
+        "text": "Retained Through Cancellation Ä",
+        "selectionIds": [
+          3,
+          7,
+          11
+        ],
+        "wirePoint": [
+          1,
+          2,
+          3
+        ]
+      }
+    }
+  }
+}

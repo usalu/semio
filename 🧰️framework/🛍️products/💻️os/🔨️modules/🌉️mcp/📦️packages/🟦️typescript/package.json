@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-os-mcp",
   "version": "0.1.0",
   "description": "framework · os-mcp — real-client conformance suite for the semio-os-mcp gateway: drives the compiled stdio binary with the installed @modelcontextprotocol/sdk (legacy era) and a hand-rolled raw JSON-RPC client (modern era, D1 dual-era)",

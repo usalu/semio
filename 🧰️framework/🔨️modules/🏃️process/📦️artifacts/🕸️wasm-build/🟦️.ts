@@ -102,7 +102,7 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     const activeDirectory = wasmOutputDirectory(rsDir, outputDirectory), pkgDir = packageOutput;
     const profile = buildModePolicy(policy.mode).wasmProfile;
     capacity = await acquireCompilerCapacityLeaseV1({ directory: policy.leaseDirectory, control });
-    lease = await acquireCargoBuildLeaseV1({ directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, args: ["--profile",profile], signal, control });
+    lease = await acquireCargoBuildLeaseV1({ directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, targetDirectory: cargoOutput, args: ["--profile",profile], signal, control });
     signal.throwIfAborted();
     const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
     const { pack: packProfileArgs, cargo: cargoProfileArgs } = wasmBuildArguments(profile);

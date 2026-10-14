@@ -23,16 +23,17 @@ mod extension_retirement_tests {
     }
 
     impl ExtensionResourceOwner for Resource {
-        fn invoke(&self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(request.to_vec(), cx) }
+        fn invoke(&mut self, _capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(request.to_vec(), cx) }
         fn begin_close(&mut self) { self.sealed.store(true, Ordering::SeqCst); }
-        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-            let refusal = |error: ValueError| Fault::new(semio_framework::FaultOrigin::Framework, error.kind.as_str(), error.into_message());
-            if let Some(step) = self.close.begin_granted(&mut self.value, grant).map_err(refusal)? { self.born_bytes += step.progress().retained_capacity_bytes; return Ok(PluginLifecycleStep::Progress(step.progress())); }
-            let step = self.close.step_granted(grant).map_err(refusal)?;
+        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+            let grant=cx.retained_grant();
+            
+            if let Some(step) = self.close.begin_granted(&mut self.value, grant) .map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { self.born_bytes += step.progress().retained_capacity_bytes;cx.consume_retained(step.progress())?;cx.consume_fuel(1);return Ok(PluginLifecycleStep::Progress(step.progress())); }
+            let step = self.close.step_granted(grant) .map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
             self.released_bytes += step.progress().released_bytes;
             self.born_bytes += step.progress().retained_capacity_bytes;
             if matches!(step, RetainedCloneStep::Complete(_)) { assert_eq!(self.released_bytes, self.expected_bytes + self.born_bytes); self.terminal.store(true, Ordering::SeqCst); }
-            Ok(PluginLifecycleStep::retained(step, self.close.is_empty()))
+            cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(PluginLifecycleStep::retained(step, self.close.is_empty()))
         }
         fn terminal_is_empty(&self) -> bool { self.terminal.load(Ordering::SeqCst) }
         fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
@@ -68,6 +69,9 @@ mod extension_retirement_tests {
         oracle
     }
 
+    fn close_bundle(bundle:&mut ExtensionBundle,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{cx.with_retained_loan(grant,|same|bundle.close_step(same))}
+    fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{cx.with_retained_loan(grant,|same|registry.close_step(same))}
+
     const QUOTED_BODY_BYTES: usize = 4096;
 
     fn bundle_grant(bundle: &ExtensionBundle) -> RetainedCloneGrant {
@@ -75,10 +79,10 @@ mod extension_retirement_tests {
         RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(QUOTED_BODY_BYTES), ..quoted_grant(demand) }
     }
 
-    fn drain_bundle(bundle: &mut ExtensionBundle) {
+    fn drain_bundle(bundle: &mut ExtensionBundle,cx:&mut semio_framework_job::StepContext<'_>) {
         for _ in 0..10000 {
             let grant = bundle_grant(bundle);
-            match bundle.close_step(grant).unwrap() {
+            match close_bundle(bundle,cx,grant).unwrap() {
                 PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
                 PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(bundle.terminal_is_empty()); return; }
                 step => panic!("unexpected close status {step:?}"),
@@ -89,29 +93,33 @@ mod extension_retirement_tests {
 
     #[test]
     fn extension_bundle_resource_retirement_preserves_zero_cancel_progress_and_terminal_owner() {
+        let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
         let fixture = extension_fixture();
         let (mut bundle,sealed,terminal) = fixture_bundle("old", &fixture);
-        assert_eq!(invoked(bundle.invoke("echo", b"owned request", &mut crate::app_testing::artifact_app_laws::fixture_step_context())).unwrap(),b"owned request");
+        assert_eq!(invoked(bundle.invoke("echo", b"owned request", cx)).unwrap(),b"owned request");
         for grant in fixture["zeroGrants"].as_array().unwrap() {
-            assert!(yielded(bundle.close_step(grant_of(grant[0].as_u64().unwrap() as usize,grant[1].as_u64().unwrap() as usize)).unwrap()));
+            assert!(yielded(close_bundle(&mut bundle,cx,grant_of(grant[0].as_u64().unwrap() as usize,grant[1].as_u64().unwrap() as usize)).unwrap()));
             assert!(!sealed.load(Ordering::SeqCst));
         }
         bundle.begin_close();
         assert!(sealed.load(Ordering::SeqCst));
-        assert_eq!(invoked(bundle.invoke("echo", b"request", &mut crate::app_testing::artifact_app_laws::fixture_step_context())).unwrap_err().code.0.as_str(),fixture["faults"]["sealed"].as_str().unwrap());
+        assert_eq!(invoked(bundle.invoke("echo", b"request", cx)).unwrap_err().code.0.as_str(),fixture["faults"]["sealed"].as_str().unwrap());
         bundle.cancel_close();
-        assert!(matches!(bundle.close_step(bundle_grant(&bundle)).unwrap(),PluginLifecycleStep::Blocked { .. }));
+        let grant=bundle_grant(&bundle);assert!(matches!(close_bundle(&mut bundle,cx,grant).unwrap(),PluginLifecycleStep::Blocked { .. }));
         assert!(!terminal.load(Ordering::SeqCst));
         bundle.resume_close();
         let grant = bundle_grant(&bundle);
-        assert!(matches!(bundle.close_step(grant).unwrap(),PluginLifecycleStep::Progress(progress) if progress.copied_items == 1 && progress.released_bytes == 0 && progress.fits(grant)));
-        drain_bundle(&mut bundle);
+        assert!(matches!(close_bundle(&mut bundle,cx,grant).unwrap(),PluginLifecycleStep::Progress(progress) if progress.copied_items == 1 && progress.released_bytes == 0 && progress.fits(grant)));
+        drain_bundle(&mut bundle,cx);
         assert!(terminal.load(Ordering::SeqCst));
-        assert_eq!(bundle.close_step(grant_of(0,0)).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
+        assert_eq!(close_bundle(&mut bundle,cx,grant_of(0,0)).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress::default()));
+
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
     }
 
     #[test]
     fn extension_bundle_resource_retirement_replacement_retains_old_and_backpressured_candidates() {
+        let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
         let fixture = extension_fixture();
         let (old,_,old_terminal) = fixture_bundle("old",&fixture);
         let (new,_,new_terminal) = fixture_bundle("new",&fixture);
@@ -130,19 +138,21 @@ mod extension_retirement_tests {
         assert!(!third_terminal.load(Ordering::SeqCst));
         registry.activate().unwrap();
         for _ in 0..10000 {
-            registry.close_step(registry_grant(&registry)).unwrap();
+            let grant=registry_grant(&registry);close_registry(&mut registry,cx,grant).unwrap();
             if registry.current().is_some_and(|bundle| bundle.manifest.extension_id == "new") { break; }
         }
         assert!(old_terminal.load(Ordering::SeqCst));
         assert!(!new_terminal.load(Ordering::SeqCst));
-        assert_eq!(invoked(registry.invoke("echo", b"new", &mut crate::app_testing::artifact_app_laws::fixture_step_context())).unwrap(),b"new");
+        assert_eq!(invoked(registry.invoke("echo", b"new", cx)).unwrap(),b"new");
         registry.begin_close();
-        for _ in 0..10000 { registry.close_step(registry_grant(&registry)).unwrap(); if registry.terminal_is_empty() { break; } }
+        for _ in 0..10000 { let grant=registry_grant(&registry);close_registry(&mut registry,cx,grant).unwrap(); if registry.terminal_is_empty() { break; } }
         assert!(registry.terminal_is_empty());
         assert!(new_terminal.load(Ordering::SeqCst));
         let mut third = refused.take().unwrap();
         third.begin_close();
-        drain_bundle(&mut third);
+        drain_bundle(&mut third,cx);
+
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
     }
 
     fn registry_grant(registry: &ExtensionBundleRegistry) -> RetainedCloneGrant {
@@ -152,9 +162,10 @@ mod extension_retirement_tests {
 
     struct HostileResource { complete: bool, recover: Arc<AtomicBool> }
     impl ExtensionResourceOwner for HostileResource {
-        fn invoke(&self, _capability: &str, _request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(Vec::new(), cx) }
+        fn invoke(&mut self, _capability: &str, _request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(Vec::new(), cx) }
         fn begin_close(&mut self) {}
-        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+            let grant=cx.retained_grant();
             Ok(if self.complete || self.recover.load(Ordering::SeqCst) { PluginLifecycleStep::Complete(RetainedCloneProgress::default()) } else { PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items + 1, ..Default::default() }) })
         }
         fn terminal_is_empty(&self) -> bool { self.recover.load(Ordering::SeqCst) }
@@ -163,11 +174,12 @@ mod extension_retirement_tests {
 
     struct TerminalOnStep { terminal: bool, dropped: Arc<AtomicBool>, exact_grant: bool }
     impl ExtensionResourceOwner for TerminalOnStep {
-        fn invoke(&self, _capability: &str, _request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(Vec::new(), cx) }
+        fn invoke(&mut self, _capability: &str, _request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(Vec::new(), cx) }
         fn begin_close(&mut self) {}
-        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+            let grant=cx.retained_grant();
             self.terminal = true;
-            Ok(if self.exact_grant { PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items, copied_bytes: grant.maximum_copy_bytes, retained_capacity_bytes: grant.maximum_capacity_bytes, released_bytes: grant.maximum_release_bytes }) } else { PluginLifecycleStep::Complete(RetainedCloneProgress::default()) })
+            let step=if self.exact_grant { PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: grant.maximum_items, copied_bytes: grant.maximum_copy_bytes, retained_capacity_bytes: grant.maximum_capacity_bytes, released_bytes: grant.maximum_release_bytes }) } else { PluginLifecycleStep::Complete(RetainedCloneProgress::default()) };cx.consume_retained(step.progress().unwrap_or_default())?;cx.consume_fuel(1);Ok(step)
         }
         fn terminal_is_empty(&self) -> bool { self.terminal }
         fn retirement_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand::default()) }
@@ -178,35 +190,39 @@ mod extension_retirement_tests {
 
     #[test]
     fn extension_bundle_resource_retirement_rejects_false_terminal_and_exceeded_grants() {
+        let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
         let fixture = extension_fixture();
         for (complete, key) in [(false, "exceeded"), (true, "falseComplete")] {
             let recover = Arc::new(AtomicBool::new(false));
             let mut bundle = ExtensionBundle::new("hostile", "Hostile", "1").resource_owner(HostileResource { complete, recover: recover.clone() });
-            assert_eq!(bundle.close_step(grant_of(1,4)).unwrap_err().code.0.as_str(),fixture["faults"][key].as_str().unwrap());
+            assert_eq!(close_bundle(&mut bundle,cx,grant_of(1,4)).unwrap_err().primary_value().unwrap().kind.as_str(),fixture["faults"][key].as_str().unwrap());
             assert!(bundle.resource_owner.is_some());
             assert!(!bundle.terminal_is_empty());
             recover.store(true,Ordering::SeqCst);
-            drain_bundle(&mut bundle);
+            drain_bundle(&mut bundle,cx);
         }
         for exact_grant in [false,true] {
             let dropped = Arc::new(AtomicBool::new(false));
             let mut bundle = ExtensionBundle::new("exact-grant", "Exact Grant", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant });
-            let step = bundle.close_step(grant_of(1,4)).unwrap();
+            let step = close_bundle(&mut bundle,cx,grant_of(1,4)).unwrap();
             assert_eq!(step,PluginLifecycleStep::Progress(if exact_grant { RetainedCloneProgress { copied_items: 1, copied_bytes: 4, retained_capacity_bytes: 4, released_bytes: 4 } } else { RetainedCloneProgress::default() }));
             assert!(bundle.resource_owner.is_some());
             assert!(!dropped.load(Ordering::SeqCst));
-            assert!(yielded(bundle.close_step(grant_of(1,4)).unwrap()));
+            assert!(yielded(close_bundle(&mut bundle,cx,grant_of(1,4)).unwrap()));
             assert!(!dropped.load(Ordering::SeqCst));
             let shell_bytes = std::alloc::Layout::new::<TerminalOnStep>().size();
             assert_eq!(bundle.retirement_demands(0).unwrap(),RetirementDemand { release_bytes: shell_bytes, depth: 1, ..Default::default() });
-            assert_eq!(bundle.close_step(RetainedCloneGrant { maximum_release_bytes: shell_bytes, ..grant_of(1,4) }).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() }));
+            assert_eq!(close_bundle(&mut bundle,cx,RetainedCloneGrant { maximum_release_bytes: shell_bytes, ..grant_of(1,4) }).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() }));
             assert!(dropped.load(Ordering::SeqCst));
-            drain_bundle(&mut bundle);
+            drain_bundle(&mut bundle,cx);
         }
+
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
     }
 
     #[test]
     fn extension_bundle_resource_retirement_refuses_implicit_live_drop_and_disposes_cold_explicitly() {
+        let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
         let fixture = extension_fixture();
         let dropped = Arc::new(AtomicBool::new(false));
         let mut bundle = ExtensionBundle::new("drop-boundary", "Drop Boundary", "1").resource_owner(TerminalOnStep { terminal: false, dropped: dropped.clone(), exact_grant: false }).owned_handler("echo").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
@@ -216,26 +232,29 @@ mod extension_retirement_tests {
         assert_eq!(panic.downcast_ref::<String>().map(String::as_str).or_else(|| panic.downcast_ref::<&str>().copied()), fixture["dropBoundary"]["fault"].as_str());
         assert_eq!(usize::from(dropped.load(Ordering::SeqCst)), fixture["dropBoundary"]["liveOwnerDrops"].as_u64().unwrap() as usize);
         assert!(!bundle.manifest.topic_contributions.is_empty());
-        assert_eq!(invoked(bundle.invoke("echo", b"retained", &mut crate::app_testing::artifact_app_laws::fixture_step_context())).unwrap(), Vec::<u8>::new());
+        assert_eq!(invoked(bundle.invoke("echo", b"retained", cx)).unwrap(), Vec::<u8>::new());
         bundle.begin_close();
-        drain_bundle(&mut bundle);
+        drain_bundle(&mut bundle,cx);
         assert_eq!(usize::from(dropped.load(Ordering::SeqCst)), fixture["dropBoundary"]["terminalOwnerDrops"].as_u64().unwrap() as usize);
         drop(bundle);
         let mut cold = ExtensionBundle::new("cold", "Cold", "1").contributes_topic("metadata", semio_framework_value::DslValue::from(&fixture["metadata"]));
-        cold.dispose_cold().unwrap();
+        cold.dispose_cold(cx).unwrap();
         assert!(cold.terminal_is_empty());
         drop(cold);
-        let manifest = ExtensionBundle::new("inspection", "Inspection", "1").into_manifest_cold().unwrap();
+        let manifest = ExtensionBundle::new("inspection", "Inspection", "1").into_manifest_cold(cx).unwrap();
         assert_eq!(manifest.extension_id,"inspection");
+
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
     }
 
     #[test]
     fn extension_bundle_resource_retirement_admits_exact_backing_and_boxed_shell_allocations() {
+        let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
         struct LargeOwner { padding: [u8;4096], dropped: Arc<AtomicBool> }
         impl ExtensionResourceOwner for LargeOwner {
-            fn invoke(&self, _: &str, _: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(Vec::new(), cx) }
+            fn invoke(&mut self, _: &str, _: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> { echo_step(Vec::new(), cx) }
             fn begin_close(&mut self) {}
-            fn close_step(&mut self, _: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default())) }
+            fn close_step(&mut self,_:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure> { Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default())) }
             fn terminal_is_empty(&self) -> bool { true }
             fn retirement_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand::default()) }
         }
@@ -250,11 +269,11 @@ mod extension_retirement_tests {
         let mut bundle = ExtensionBundle::new("allocation", "Allocation", "1").resource_owner(owner);
         bundle.begin_close();
         assert_eq!(bundle.retirement_demands(0).unwrap(),RetirementDemand { release_bytes: shell_bytes, depth: 1, ..Default::default() });
-        assert!(yielded(bundle.close_step(grant_of(1,tiny)).unwrap()));
+        assert!(yielded(close_bundle(&mut bundle,cx,grant_of(1,tiny)).unwrap()));
         assert!(!dropped.load(Ordering::SeqCst));
-        assert_eq!(bundle.close_step(RetainedCloneGrant { maximum_release_bytes: shell_bytes, ..grant_of(1,tiny) }).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() }));
+        assert_eq!(close_bundle(&mut bundle,cx,RetainedCloneGrant { maximum_release_bytes: shell_bytes, ..grant_of(1,tiny) }).unwrap(),PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() }));
         assert!(dropped.load(Ordering::SeqCst));
-        drain_bundle(&mut bundle);
+        drain_bundle(&mut bundle,cx);
         use super::extension_retirement::{MetadataOwner, MetadataRetirement, PendingMetadata};
         struct Pod(u64);
         impl MetadataOwner for Pod { fn expand(self: Box<Self>, _: &mut MetadataRetirement) -> Result<(), String> { let _ = self.0; Ok(()) } }
@@ -292,22 +311,24 @@ mod extension_retirement_tests {
         assert_eq!(metadata.step(quoted_grant(metadata.retirement_demands())).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: vector_bytes, ..Default::default() }));
         assert!(metadata.is_empty());
         let mut cold = ExtensionBundle::new("inline", "Inline", "1").handler("echo", |bytes, cx| echo_step(bytes.to_vec(), cx));
-        assert_eq!(invoked(cold.invoke("echo", b"unchanged", &mut crate::app_testing::artifact_app_laws::fixture_step_context())).unwrap(),b"unchanged");
-        cold.dispose_cold().unwrap();
+        assert_eq!(invoked(cold.invoke("echo", b"unchanged", cx)).unwrap(),b"unchanged");
+        cold.dispose_cold(cx).unwrap();
         assert_eq!(cold.handlers.capacity(),0);
         assert!(cold.metadata_retirement.is_empty());
         assert!(cold.resource_owner.is_none());
         let mut registry = ExtensionBundleRegistry::new();
         assert!(registry.install(&mut Some(cold)).unwrap());
         assert!(registry.current().unwrap().terminal_is_empty());
-        assert_eq!(registry.close_step(grant_of(1,tiny)).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        assert_eq!(close_registry(&mut registry,cx,grant_of(1,tiny)).unwrap(),PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(registry.terminal_is_empty());
+
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
     }
 
-    async fn poll_extension_response(runtime: &PluginRuntime<crate::plugin_app::NoPluginApp>, mut events: Vec<semio_framework::kernel::Event>, request: u64) -> bool {
+    async fn poll_extension_response(runtime: &PluginRuntime<crate::plugin_app::NoPluginApp>, mut events: Vec<semio_framework::kernel::Event>, request: u64,cx:&mut semio_framework_job::StepContext<'_>) -> bool {
         let budget = semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
         for _ in 0..64 {
-            let turn = crate::reactor::poll_kernel(runtime, std::mem::take(&mut events), None, None, budget, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+            let turn = crate::reactor::poll_kernel(runtime, std::mem::take(&mut events), None, None, budget, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             if turn.effects.iter().any(|effect| matches!(effect, semio_framework::kernel::Effect::Respond { req, result: semio_framework::kernel::RequestOutcome::Ok(bytes) } if req.0 == request && bytes.is_empty())) { return true; }
         }
         false
@@ -315,6 +336,7 @@ mod extension_retirement_tests {
 
     #[test]
     fn extension_bundle_resource_retirement_runs_through_suspend_and_exported_poll() {
+        let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
         ::semio_framework_async::poll::resolve_ready(async {
             let fixture = extension_fixture();
             let (bundle, sealed, terminal) = fixture_bundle("poll", &fixture);
@@ -333,21 +355,21 @@ mod extension_retirement_tests {
                     "quotaChanged" => Event::QuotaChanged { quotas: QuotaSchema::default() },
                     value => panic!("unknown non-closing fixture change {value}"),
                 };
-                crate::reactor::poll_kernel(&runtime, vec![event], None, None, budget, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+                crate::reactor::poll_kernel(&runtime, vec![event], None, None, budget, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
                 assert!(!sealed.load(Ordering::SeqCst));
-                assert_eq!(invoked(extension_invoke("echo",b"open", &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await).unwrap(),b"open");
+                assert_eq!(invoked(extension_invoke("echo",b"open", cx).await).unwrap(),b"open");
             }
-            let first = crate::reactor::poll_kernel(&runtime, vec![semio_framework::kernel::Event::SuspendRequest], None, None, budget, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+            let first = crate::reactor::poll_kernel(&runtime, vec![semio_framework::kernel::Event::SuspendRequest], None, None, budget, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             assert!(sealed.load(Ordering::SeqCst));
             assert!(!terminal.load(Ordering::SeqCst));
             assert_eq!(first.status, semio_framework::kernel::TurnStatus::MoreWork);
-            assert!(invoked(extension_invoke("echo", b"sealed", &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await).is_err());
+            assert!(invoked(extension_invoke("echo", b"sealed", cx).await).is_err());
             let control = |req, capability: &str| semio_framework::kernel::Event::Request { req: semio_framework::kernel::RequestId(req), from: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId("0".into()) }, capability: capability.into(), payload: Vec::new() };
-            assert!(poll_extension_response(&runtime, vec![control(1,fixture["controls"]["cancel"].as_str().unwrap())], 1).await, "the retained invocation answers the paused control request within its bounded turns");
+            assert!(poll_extension_response(&runtime, vec![control(1,fixture["controls"]["cancel"].as_str().unwrap())], 1,cx).await, "the retained invocation answers the paused control request within its bounded turns");
             assert!(!terminal.load(Ordering::SeqCst));
-            assert!(poll_extension_response(&runtime, vec![control(2,fixture["controls"]["resume"].as_str().unwrap())], 2).await, "the retained invocation answers the resumed control request within its bounded turns");
+            assert!(poll_extension_response(&runtime, vec![control(2,fixture["controls"]["resume"].as_str().unwrap())], 2,cx).await, "the retained invocation answers the resumed control request within its bounded turns");
             for _ in 0..10000 {
-                let turn = crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+                let turn = crate::reactor::poll_kernel(&runtime, &mut None, None, None, semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 1, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
                 if extension_terminal_is_empty() { assert_eq!(turn.status, semio_framework::kernel::TurnStatus::Idle); assert!(terminal.load(Ordering::SeqCst)); break; }
             }
             assert!(extension_terminal_is_empty(),"exported polling did not retire extension resources");
@@ -357,41 +379,43 @@ mod extension_retirement_tests {
             let oversized = ExtensionBundle::new("oversized","x".repeat(allocation["stringBytes"].as_u64().unwrap() as usize),"1");
             assert!(install_extension_bundle(&mut Some(oversized)).await.unwrap());
             let small = semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 1, max_patch_bytes: small_bytes, ..budget };
-            crate::reactor::poll_kernel(&runtime,vec![semio_framework::kernel::Event::SuspendRequest],None,None,small, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+            crate::reactor::poll_kernel(&runtime,vec![semio_framework::kernel::Event::SuspendRequest],None,None,small, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             for _ in 0..1000 {
-                crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,small, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+                crate::reactor::poll_kernel(&runtime,&mut None,None,None,small, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
                 if extension_retirement_demands(small_bytes as usize).unwrap().release_bytes > small_bytes as usize { break; }
             }
             let demand = extension_retirement_demands(small_bytes as usize).unwrap();
             let lifecycle = crate::plugin_runtime::runtime_lifecycle_grant();
             assert!(demand.release_bytes > small_bytes as usize && demand.release_bytes <= adequate_bytes as usize && demand.release_bytes <= lifecycle.maximum_release_bytes);
-            assert!(yielded(extension_close_step(RetainedCloneGrant { maximum_release_bytes: small_bytes as usize, ..lifecycle }).unwrap()));
+            assert!(yielded(cx.with_retained_loan(RetainedCloneGrant { maximum_release_bytes: small_bytes as usize, ..lifecycle },|same|extension_close_step(same)).unwrap()));
             assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             assert!(!extension_terminal_is_empty());
             let unfunded = semio_framework::kernel::RetainedTurnInput { grant: RetainedCloneGrant { maximum_items: 0, ..crate::app_testing::artifact_app_laws::fixture_retained_turn().grant }, ..crate::app_testing::artifact_app_laws::fixture_retained_turn() };
             let zero = semio_framework::kernel::Budget { retained: unfunded, fuel: 0, max_patch_bytes: adequate_bytes, ..budget };
-            crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,zero, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context_for(unfunded)).await.unwrap();
+            crate::reactor::poll_kernel(&runtime,&mut None,None,None,zero, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             let adequate = semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 1, max_patch_bytes: adequate_bytes, ..budget };
             extension_cancel_close();
-            crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,adequate, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+            crate::reactor::poll_kernel(&runtime,&mut None,None,None,adequate, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);
             assert!(!extension_terminal_is_empty());
             extension_resume_close();
-            crate::reactor::poll_kernel(&runtime,vec![semio_framework::kernel::Event::QuotaChanged { quotas: semio_framework::kernel::QuotaSchema::default() }],None,None,adequate, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+            crate::reactor::poll_kernel(&runtime,vec![semio_framework::kernel::Event::QuotaChanged { quotas: semio_framework::kernel::QuotaSchema::default() }],None,None,adequate, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             assert!(extension_retirement_demands(small_bytes as usize).unwrap().release_bytes < demand.release_bytes);
-            assert!(invoked(extension_invoke("echo",b"sealed", &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await).is_err());
+            assert!(invoked(extension_invoke("echo",b"sealed", cx).await).is_err());
             let mut retired = false;
             for _ in 0..1000 {
-                crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,small, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+                crate::reactor::poll_kernel(&runtime,&mut None,None,None,small, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
                 if extension_terminal_is_empty() { retired = true; break; }
             }
             assert!(retired, "the lifecycle release ceiling does not retire the retained allocation under the small actor patch budget");
             for _ in 0..1000 {
                 if crate::reactor::retained_extension_invocation_occupancy() == 0 { return; }
-                crate::reactor::poll_kernel(&runtime,Vec::new(),None,None,adequate, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
+                crate::reactor::poll_kernel(&runtime,&mut None,None,None,adequate, &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             }
             panic!("the exported polls do not retire every extension invocation owner");
         });
+
+        let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).unwrap();
     }
 }

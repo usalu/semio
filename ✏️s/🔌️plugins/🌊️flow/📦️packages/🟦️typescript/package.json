@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/flow-js",
   "version": "0.1.0",
@@ -10,12 +10,12 @@
     "id": "flow-js"
   },
   "dependencies": {
-    "@semio-tech/ui-react": "workspace:*"
+    "@semio-tech/ui-react": "workspace:*",
+    "@semio-tech/framework": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17",
-    "@semio-tech/framework": "workspace:*"
+    "vitest": "^4.0.17"
   },
   "author": {
     "name": "Ueli Saluz",
@@ -31,6 +31,6 @@
   "bundleKind": "repo",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/flow-js:test"
+    "test": "bun repo run @semio-tech/flow-js:test"
   }
 }

@@ -26,7 +26,7 @@ pub(crate) static OBSERVED_RELEASE_BYTES: std::sync::atomic::AtomicUsize = std::
 static TESSELLATION_ALLOCATOR: TessellationAllocationObserver = TessellationAllocationObserver;
 unsafe impl std::alloc::GlobalAlloc for TessellationAllocationObserver {
     unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
-        let pointer = unsafe { std::alloc::GlobalAlloc::alloc(&std::alloc::System, layout) };
+        let pointer = unsafe { std::alloc::GlobalAlloc::alloc(&semio_framework_trace::HeapWitness, layout) };
         if !pointer.is_null() && SYSTEM_OBSERVING.with(std::cell::Cell::get) { SYSTEM_CAPACITY.with(|value| value.set(value.get() + layout.size())); }
         pointer
     }
@@ -35,6 +35,6 @@ unsafe impl std::alloc::GlobalAlloc for TessellationAllocationObserver {
         if SYSTEM_OBSERVING.with(std::cell::Cell::get) { SYSTEM_RELEASE.with(|value| value.set(value.get() + layout.size())); }
         if OBSERVED_SAMPLE.compare_exchange(pointer as usize,0,SeqCst,SeqCst).is_ok() { SAMPLE_RELEASES.fetch_add(1,SeqCst);OBSERVED_RELEASE_BYTES.fetch_add(layout.size(),SeqCst); }
         if OBSERVED_MESH.compare_exchange(pointer as usize,0,SeqCst,SeqCst).is_ok() { MESH_RELEASES.fetch_add(1,SeqCst);OBSERVED_RELEASE_BYTES.fetch_add(layout.size(),SeqCst); }
-        unsafe { std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout); }
+        unsafe { std::alloc::GlobalAlloc::dealloc(&semio_framework_trace::HeapWitness,pointer,layout); }
     }
 }

@@ -60,7 +60,7 @@ async fn every_generation_row_verb_is_reachable_from_the_rendered_tree() {
 #[test]
 fn an_inline_rename_commit_carries_its_typed_text_as_value() {
     let args: semio_framework_value::DslValue = serde_json::json!({ "id": "generation-1", "value": "Balcony Study" }).into();
-    let command = <semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some(&args)).expect("renameGeneration bridges");
+    let command = <semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("renameGeneration", Some((args).clone()), None).expect("renameGeneration bridges");
     let Generation3dCommand::RenameGeneration(payload) = command else { panic!("renameGeneration must bridge to its own command row") };
     assert_eq!(payload, rename_generation::RenameGeneration { id: "generation-1".into(), name: "Balcony Study".into() });
 }

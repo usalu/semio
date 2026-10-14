@@ -1,4 +1,4 @@
-import { ValueError, type ValueRefusalKind } from "../../🌱️value/⚠️refusal/🟦️.ts";
+import { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import type { TextSpan } from "../📍️span/🟦️.ts";
 /** 🧾️ Closed wire projection of a typed source-positioned error. */
 export interface TextErrorWire { readonly kind: ValueRefusalKind; readonly message: string; readonly span: TextSpan; readonly expected?: string }

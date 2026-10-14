@@ -13,11 +13,11 @@ mod transport_capture;
 pub use transport_capture::{OwnedTransportError,TransportAdmission,TransportCaptureRefusal,TransportCaptureStage,TransportReservation,reserve_transport,PackTransportContext,PackTransportPolicy,PackTransportPhase,PackTransportProgress,TransportContextRefusal,TransportContextRefusalCause,SharedTransportReservation};
 
 /// 🔁️ The transport owner explicitly chooses whether one failure may be retried.
-#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+#[derive(Debug,Clone,Copy,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub enum PackRetryDisposition{Never,Transient}
 
 /// 🔌️ The actual provider operation owns the external failure category.
-#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+#[derive(Debug,Clone,Copy,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub enum PackTransportCategory{NativeIo,HttpRequest,HttpBody}
 
 /// 🪪️ External transport never invents a semantic Value refusal.

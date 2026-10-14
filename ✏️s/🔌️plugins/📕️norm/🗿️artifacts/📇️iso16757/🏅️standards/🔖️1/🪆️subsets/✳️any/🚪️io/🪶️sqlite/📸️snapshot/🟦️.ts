@@ -2,7 +2,7 @@
 import sql from"./🗄️.sql"with{type:"text"};
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteText,artifactSqliteInteger,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{SqliteDatabase,SqliteRow,SqliteValue}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export const ISO16757_SQLITE_SCHEMA:string=sql;
 export type Iso16757SqliteText={locale:string;text:string};

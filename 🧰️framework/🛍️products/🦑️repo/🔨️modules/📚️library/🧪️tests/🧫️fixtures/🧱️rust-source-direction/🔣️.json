@@ -833,6 +833,52 @@
           "line": 1
         }
       ]
+    },
+    {
+      "id": "sibling-plugin-native-fixture",
+      "source": "✏️s/🔌️plugins/🧪️probe/🦀️.rs",
+      "files": {
+        "✏️s/🔌️plugins/🧪️probe/🦀️.rs": "const TEXT: &str = include_str!(\"../🌊️flow/fixture.txt\");\n",
+        "✏️s/🔌️plugins/🌊️flow/fixture.txt": "retained-owner",
+        "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/package.json": "{\"name\":\"@semio-tech/native-layer-flow\",\"type\":\"module\",\"exports\":{\".\":\"./🟦️.ts\"}}",
+        "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/🟦️.ts": "export const value=1;\n",
+        "package.json": "{\"workspaces\":[\"✏️s/🔌️plugins/🧪️probe/📦️packages/🟦️typescript\",\"✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript\"],\"semio\":{\"workspace\":{\"schemaVersion\":1,\"members\":[\"✏️s/🔌️plugins/🧪️probe/📦️packages/🟦️typescript\",\"✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript\"],\"owners\":[]}}}"
+      },
+      "sources": [
+        "✏️s/🔌️plugins/🧪️probe/🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "no-cross-plugin-🧪️probe-to-🌊️flow",
+          "from": "✏️s/🔌️plugins/🧪️probe/🦀️.rs",
+          "to": "✏️s/🔌️plugins/🌊️flow/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
+    },
+    {
+      "id": "sibling-plugin-test-native-fixture",
+      "source": "✏️s/🔌️plugins/🧪️probe/🧪️tests/🦀️.rs",
+      "files": {
+        "✏️s/🔌️plugins/🧪️probe/🧪️tests/🦀️.rs": "const TEXT: &str = include_str!(\"../../🌊️flow/fixture.txt\");\n",
+        "✏️s/🔌️plugins/🌊️flow/fixture.txt": "retained-owner",
+        "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/package.json": "{\"name\":\"@semio-tech/native-layer-flow\",\"type\":\"module\",\"exports\":{\".\":\"./🟦️.ts\"}}",
+        "✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript/🟦️.ts": "export const value=1;\n",
+        "package.json": "{\"workspaces\":[\"✏️s/🔌️plugins/🧪️probe/📦️packages/🟦️typescript\",\"✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript\"],\"semio\":{\"workspace\":{\"schemaVersion\":1,\"members\":[\"✏️s/🔌️plugins/🧪️probe/📦️packages/🟦️typescript\",\"✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript\"],\"owners\":[]}}}"
+      },
+      "sources": [
+        "✏️s/🔌️plugins/🧪️probe/🧪️tests/🦀️.rs"
+      ],
+      "violations": [
+        {
+          "rule": "no-cross-plugin-🧪️probe-to-🌊️flow",
+          "from": "✏️s/🔌️plugins/🧪️probe/🧪️tests/🦀️.rs",
+          "to": "✏️s/🔌️plugins/🌊️flow/fixture.txt",
+          "kind": "include_str",
+          "line": 1
+        }
+      ]
     }
   ],
   "contribution": {

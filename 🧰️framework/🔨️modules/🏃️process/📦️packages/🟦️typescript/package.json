@@ -37,7 +37,7 @@
     "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "scripts": {
-    "test-cargo-build-lease": "nx run @semio-tech/framework-process:test-cargo-build-lease",
-    "test-native-artifact-publication": "nx run @semio-tech/framework-process:test-native-artifact-publication"
+    "test-cargo-build-lease": "bun repo run @semio-tech/framework-process:test-cargo-build-lease",
+    "test-native-artifact-publication": "bun repo run @semio-tech/framework-process:test-native-artifact-publication"
   }
 }

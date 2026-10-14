@@ -1,0 +1,22 @@
+"""🎟️ Original action parser source retained by the receiving instance, never cloned by the bridge."""
+type ActionIngressSource { action: String arguments: IntrinsicValue preparedArguments: IntrinsicValue assembledArguments: IntrinsicValue fault: DiagnosticFault }
+"""🫴️ Mutable optional receiving slots; a parser may transfer fields and leaves all unused source with its caller."""
+interface ActionIngressParser { receive(action: String!, source: ActionIngressSource!): TypedCommand }
+"""♻️ Pending original source retires under the initiating caller's paid maintenance or terminal close."""
+interface ActionIngressRetirement { terminal: Boolean! }
+
+"""📨️ An app-owned continuation receives original mutable sources without reconstructing an invocation map."""
+interface ActionContinuationReceiver { receive(action: String!, source: ActionIngressSource!): TypedCommand }
+
+"""🧭️ Closed raw command source category supplied by the admitted command issuer."""
+enum OriginalParsedCommandKind { COMMAND ARTIFACT }
+"""📦️ Original decoded sources and typed projections survive preparation and dispatch in fixed receiving slots."""
+type OriginalParsedCommandSource { kind: OriginalParsedCommandKind! envelope: IntrinsicValue arguments: IntrinsicValue viewSource: IntrinsicValue view: ViewModel actionAddress: ActionAddress commandAddress: CommandAddress failure: OriginalTurnFailure argumentsExtracted: Boolean! }
+"""🔗️ The actual native decode controller remains with its original issuer and recipient across pending preparation."""
+interface OriginalParsedCommandReceiver { prepare(source: OriginalParsedCommandSource!, control: OriginalNativeDecodeControl!, grant: RetainedCloneGrant!, maximumWork: UInt64!): OriginalNativeDecodeIssued! }
+
+"""🪪️ The exact preview operation key survives every deferred original lease admission before parser donation."""
+type OriginalPreviewAdmission { key: ToolOperationKey! lease: ToolCancellationLease admitted: Boolean! }
+
+"""⏳️ An original parser source remains unavailable to maintenance while its exact dispatch is pending."""
+type ActionIngressSettlement { terminal: Boolean! retired: Boolean! closeCalls: UInt64! }

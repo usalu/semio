@@ -19,9 +19,9 @@ fn pass_through(wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<Widg
             return WidgetEvaluation::faulted(fault.clone(), source.quality);
         }
         if wire.from_port.is_empty() {
-            merged.extend(source.outputs.iter().map(|(port, value)| (port.clone(), value.clone())));
+            for (port, value) in source.outputs.iter() { merged.cold_insert(port.clone(), value.clone()); }
         } else if let Some(value) = source.outputs.get(&wire.from_port) {
-            merged.insert(wire.from_port.clone(), value.clone());
+            merged.cold_insert(wire.from_port.clone(), value.clone());
         } else {
             let (from, from_port) = (wire.from.clone(), wire.from_port.clone());
             return WidgetEvaluation::faulted(WidgetFault::new(format!("{FAULT_PREFIX}input-missing"), format!("Widget \u{201c}{from}\u{201d} has no output \u{201c}{from_port}\u{201d}."), format!("Widget \u{201c}{from}\u{201d} hat keinen Ausgang \u{201c}{from_port}\u{201d}.")), source.quality);

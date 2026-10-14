@@ -1,0 +1,18 @@
+{
+  "done": true,
+  "cancellable": false,
+  "phase": "complete",
+  "unitsDone": 17,
+  "unitsTotal": 17,
+  "output": {
+    "solid": {
+      "$schema": "brep",
+      "handle": "brep:original-s源"
+    },
+    "integer": 17,
+    "decimal": 0.375,
+    "text": "源",
+    "boolean": true,
+    "empty": null
+  }
+}

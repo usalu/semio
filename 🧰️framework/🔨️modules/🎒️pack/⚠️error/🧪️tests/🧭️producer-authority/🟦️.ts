@@ -22,7 +22,7 @@ import causeKindSchema from "../../🧬️schema/🧭️cause/🪪️kind/🔣�
 import causeKindFixture from "../../🧪️tests/🧫️fixtures/🧭️cause/🪪️kind/🔣️.json";
 import fixture from "../../🧪️tests/🧫️fixtures/🧭️cause/🔣️.json";
 import {PackError,type PackErrorData} from "../../🟦️.ts";
-import {ValueError,type ValueRefusalKind} from "../../../../🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError,type ValueRefusalKind} from "../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import {TextError} from "../../../../⚠️diagnostic/🚧️text-error/🟦️.ts";
 
 const kinds=["invalidValue","canceled","ownershipLimit","allocationFailed","workLimit","depthLimit","unsupportedOwner","invariantViolated"] as const;

@@ -1,7 +1,7 @@
-import {readFileSync} from "node:fs";
-import {resolve,relative,join,sep} from "node:path";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {readFileSync,statSync,accessSync,constants} from "node:fs";
+import {resolve,relative,join,sep,delimiter} from "node:path";
 import {availableParallelism,tmpdir} from "node:os";
-import {spawnSync} from "node:child_process";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 import {cargoWorkspaceForManifest,cargoNextestConfiguration} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {cargoDirectories,cargoTargetDirectory} from "../../../⚡️caching/🦀️cargo/🟦️.ts";
@@ -21,11 +21,13 @@ export function repositoryCargoTestPolicyV1(manifestPath:string,cwd:string,env:R
   const repository=getWorkspaceRoot(env), path=resolve(repository,manifestPath), relativePath=relative(repository,path).split(sep).join("/"), scope=cargoWorkspaceForManifest(repository,relativePath), cargo=Bun.TOML.parse(readFileSync(path,"utf8")) as {package?:{name?:string}};
   if(!cargo.package?.name)throw Error(`Cargo test policy requires a package manifest: ${manifestPath}`);
   const level=isTestLevel(env.SEMIO_TEST_LEVEL)?env.SEMIO_TEST_LEVEL:activeTestLevel(), configPath=cargoNextestConfiguration(repository,scope.directory), artifact=nextestArtifactLocation(cwd,env);
-  return {version:1,manifestPath:path,targetDirectory:cargoTargetDirectory(repository,env),buildDirectory:cargoDirectories(repository,env).build,leaseDirectory:join(repository,".cache","framework","leases"),nextest:cargoNextestAvailable(),configPath,level,assertionBudgets:Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs([cargo.package!.name!],value,env)])) as Record<TestLevel,number>,buildBudgetMs:buildBudgetMs(env),assertionThreads:Math.max(1,availableParallelism()-Math.max(1,Math.ceil(availableParallelism()/4))),artifactDirectory:artifact.directory,retainArtifacts:artifact.retain,coverageEnabled:env.SEMIO_COVERAGE==="1",coveragePath:join(coverageDir(repository,"rust"),`${coverageSlug(cargo.package.name)}.lcov`),rustMinStack:env.RUST_MIN_STACK??"134217728"};
+  return {version:1,mode:readBuildMode(env.SEMIO_BUILD_MODE),manifestPath:path,targetDirectory:cargoTargetDirectory(repository,env),buildDirectory:cargoDirectories(repository,env).build,leaseDirectory:join(repository,".cache","framework","leases"),nextest:cargoNextestAvailable(env),configPath,level,assertionBudgets:Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs([cargo.package!.name!],value,env)])) as Record<TestLevel,number>,buildBudgetMs:buildBudgetMs(env),assertionThreads:Math.max(1,availableParallelism()-Math.max(1,Math.ceil(availableParallelism()/4))),artifactDirectory:artifact.directory,retainArtifacts:artifact.retain,coverageEnabled:env.SEMIO_COVERAGE==="1",coveragePath:join(coverageDir(repository,"rust"),`${coverageSlug(cargo.package.name)}.lcov`),rustMinStack:env.RUST_MIN_STACK??"134217728"};
 }
 
 /** 🧪️ Reads availability of the explicitly provisioned Cargo test runner. */
-function cargoNextestAvailable(): boolean {
-  const result = spawnSync("cargo", ["nextest", "--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  return result.status === 0;
+function cargoNextestAvailable(environment:Readonly<Record<string,string|undefined>>):boolean{
+ const filename=process.platform==="win32"?"cargo-nextest.exe":"cargo-nextest";
+ const pathValue=process.platform==="win32"?Object.entries(environment).find(([key])=>key.toUpperCase()==="PATH")?.[1]:environment.PATH;
+ for(const directory of (pathValue??"").split(delimiter)){if(!directory)continue;const path=resolve(directory,filename);try{if(!statSync(path).isFile())continue;accessSync(path,constants.X_OK);return true;}catch{}}
+ return false;
 }

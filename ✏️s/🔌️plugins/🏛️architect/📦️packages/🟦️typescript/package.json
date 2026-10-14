@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/architect-js",
   "version": "0.1.0",
@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/architect-js:test"
+    "test": "bun repo run @semio-tech/architect-js:test"
   },
   "dependencies": {
     "@semio-tech/framework-3d-js": "workspace:*",

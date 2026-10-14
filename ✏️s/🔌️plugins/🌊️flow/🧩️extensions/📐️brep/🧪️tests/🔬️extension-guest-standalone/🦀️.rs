@@ -19,7 +19,7 @@
 
     #[test]
     fn extension_guest_retires_actual_session_geometry_and_inflight_tessellation() {
-        let imports=semio_framework_pack_json::parse(include_str!("../../🥽️mesh/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let imports=semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         for (index,phase) in ["mesh-to-brep-tessellate","mesh-to-brep-retire-source","mesh-to-brep-admit","mesh-to-brep-triangles","mesh-to-brep-shell","mesh-to-brep-ready"].into_iter().enumerate() {
             let (mut owner,scope)=scoped_bundle();let input=semio_framework_pack_json::object([
                 ("mesh".into(),semio_framework_pack_json::object([("$schema".into(),semio_framework_pack_json::Value::from("mesh")),("data".into(),semio_framework_pack_json::Value::from(semio_framework_pack_json::to_string(imports.get("toBrep").unwrap().get("mesh").unwrap())))])),
@@ -435,7 +435,7 @@ async fn named_geometry_inference_standard_gateway_uses_registered_extension_con
     assert_eq!(schema_result.quality, "SchemaValue");
     assert_eq!(schema_result.validity, "valid");
     assert!(schema_result.complete);
-    let mesh_fixture = semio_framework_pack_json::parse(include_str!("../../🥽️mesh/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mesh_fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh = semio_framework_pack_json::to_string(mesh_fixture.get("cases").unwrap().as_array().unwrap()[0].get("mesh").unwrap());
     let mesh_input = neural_engine::ColdOwner::new(super::Dictionary::new().insert("data", super::Value::Dictionary(super::text_dictionary(mesh))));
     let mut mesh_request = request.clone();

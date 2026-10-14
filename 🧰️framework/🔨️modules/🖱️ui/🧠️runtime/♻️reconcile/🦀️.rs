@@ -221,7 +221,7 @@ fn identity_of(parent: Option<ui_contract::UiNodeId>, node: &crate::TreeNode) ->
 
 /// 🚨️ Panics naming the first duplicate sibling key found in `children`. [`crate::ComponentTree`]'s
 /// own constructor already asserts this on every level of a tree built through `TreeNode::with_children`
-/// / `ComponentTree::new`, but `ComponentTree { root }`'s field is `pub`, so a caller can hand this
+/// / `ComponentTree::new`, but `ComponentTree::new(root)`'s field is `pub`, so a caller can hand this
 /// reconciler a tree that skipped that constructor entirely — this is therefore genuine defense in
 /// depth, not a redundant re-check, and it is what makes a duplicate key a loud authoring-bug panic
 /// here too rather than one key silently shadowing the other during matching.
@@ -248,6 +248,8 @@ pub struct SurfaceReconciler {
     revision: ui_contract::UiRevision,
     allocator: ui_contract::UiNodeIdAllocator,
     document: Option<ui_contract::UiDocumentLease>,
+    native_resources: Option<crate::UiNativeResources>,
+    native_resource_loans: crate::UiNativeResourceLoans,
     assembly: ui_contract::UiDocumentAssembly,
     ordinals: SurfaceLinearMap<ui_contract::UiNodeId, usize, SURFACE_RECONCILE_FIXED_NODES>,
     key_index: SurfaceLinearMap<NodeIdentity, ui_contract::UiNodeId, SURFACE_RECONCILE_FIXED_NODES>,
@@ -280,6 +282,8 @@ impl SurfaceReconciler {
             revision: ui_contract::UiRevision::default(),
             allocator: ui_contract::UiNodeIdAllocator::default(),
             document: None,
+            native_resources: None,
+            native_resource_loans: Default::default(),
             assembly: ui_contract::UiDocumentAssembly::default(),
             ordinals: SurfaceLinearMap::default(),
             key_index: SurfaceLinearMap::default(),
@@ -401,7 +405,27 @@ impl SurfaceReconciler {
         self.revision = ui_contract::UiRevision::default();
     }
 
+    pub fn native_resources(&self) -> Option<&crate::UiNativeResources> { self.native_resources.as_ref() }
+
+    pub fn native_resource_loans_terminal_is_empty(&self)->bool{self.native_resource_loans.terminal_is_empty()}
+
+
+    pub fn with_native_resource_loans_on_original<R>(&mut self,cx:&mut semio_framework_job::StepContext<'_>,receive:impl FnOnce(&mut crate::UiNativeResourceLoans,&mut semio_framework_job::StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
+        let Some(resources)=self.native_resources.as_ref() else{return Ok(None)};
+        if !self.native_resource_loans.capture_complete(){if self.native_resource_loans.capture_step_on_original(resources,cx)?!=Some(true){return Ok(None)}}
+        receive(&mut self.native_resource_loans,cx).map(Some)
+    }
+
+    pub fn close_native_resources_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
+        if !self.native_resource_loans.terminal_is_empty(){if self.native_resource_loans.close_step_on_original(cx)?!=Some(true){return Ok(None)}return Ok(Some(false));}
+        let Some(resources) = self.native_resources.as_mut() else { return Ok(Some(true)); };
+        if resources.close_step_on_original(cx)? != Some(true) { return Ok(None); }
+        self.native_resources = None;
+        Ok(Some(false))
+    }
+
     fn retire_one(&mut self) -> bool {
+        if self.native_resources.is_some() || !self.native_resource_loans.terminal_is_empty() { return false; }
         if let Some(document) = self.document.as_mut() {
             if document.close_read_step_with_grant(1, SURFACE_COMPONENT_COPY_WORK_BYTES).expect("canonical read retirement preserves exact fault authority").complete { self.document = None; }
             return false;
@@ -442,7 +466,7 @@ impl Drop for SurfaceReconciler {
             return;
         }
         self.retirement_armed = false;
-        if self.document.is_none() && self.assembly.terminal_is_empty() && self.ordinals.is_empty() && self.key_index.is_empty() {
+        if self.document.is_none() && self.native_resources.is_none() && self.native_resource_loans.terminal_is_empty() && self.assembly.terminal_is_empty() && self.ordinals.is_empty() && self.key_index.is_empty() {
             if let Some(handback) = self.handback.take() {
                 release_surface_reconcile_handback(handback);
             }
@@ -454,6 +478,8 @@ impl Drop for SurfaceReconciler {
             revision: take(&mut self.revision),
             allocator: take(&mut self.allocator),
             document: self.document.take(),
+            native_resources: self.native_resources.take(),
+            native_resource_loans: take(&mut self.native_resource_loans),
             assembly: take(&mut self.assembly),
             ordinals: self.ordinals.take_all(),
             key_index: self.key_index.take_all(),
@@ -1363,6 +1389,7 @@ pub(crate) struct SurfaceReconcileCursor {
     allocator: ui_contract::UiNodeIdAllocator,
     old_root: Option<ui_contract::UiNodeId>,
     pending_root: Option<crate::TreeNode>,
+    native_resources: Option<crate::UiNativeResources>,
     traversal: SurfaceFixedVec<PresentationFrame, SURFACE_RECONCILE_VALUE_DEPTH>,
     overflow_frame: Option<PresentationFrame>,
     flat: SurfaceFixedVec<FlatPresentedNode, SURFACE_RECONCILE_FIXED_NODES>,
@@ -1419,6 +1446,7 @@ impl SurfaceReconcileCursor {
             allocator: current.allocator.clone(),
             old_root: current.root,
             pending_root: Some(tree.root),
+            native_resources: tree.native_resources,
             traversal: SurfaceFixedVec::default(),
             overflow_frame: None,
             flat: SurfaceFixedVec::default(),
@@ -1920,6 +1948,8 @@ impl SurfaceReconcileCursor {
                     revision,
                     allocator: self.allocator.clone(),
                     document: None,
+                    native_resources: self.native_resources.take(),
+                    native_resource_loans: Default::default(),
                     assembly: take(&mut self.assembly),
                     ordinals: self.new_ordinals.take_all(),
                     key_index: self.new_key_index.take_all(),
@@ -2281,7 +2311,17 @@ impl SurfaceReconcileCursor {
         SurfaceReconcileStep::Yield { nodes: 0, bytes: allocated }
     }
 
+    pub fn native_resources(&self) -> Option<&crate::UiNativeResources> { self.native_resources.as_ref() }
+
+    pub fn close_native_resources_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
+        let Some(resources) = self.native_resources.as_mut() else { return Ok(Some(true)); };
+        if resources.close_step_on_original(cx)? != Some(true) { return Ok(None); }
+        self.native_resources = None;
+        Ok(Some(false))
+    }
+
     fn retire_one(&mut self) -> bool {
+        if self.native_resources.is_some() { return false; }
         if !self.retire_tree.step() {
             return false;
         }
@@ -2695,6 +2735,20 @@ struct SurfaceReconcileRetained {
 }
 
 impl SurfaceReconcileRetained {
+    fn close_native_resources_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
+        if let Some(owner) = self.candidate.as_mut() { if owner.close_native_resources_on_original(cx)? != Some(true) { return Ok(None); } }
+        if let Some(owner) = self.cursor.as_mut() { if owner.close_native_resources_on_original(cx)? != Some(true) { return Ok(None); } }
+        if let Some(owner) = self.current.as_mut() { if owner.close_native_resources_on_original(cx)? != Some(true) { return Ok(None); } }
+        if let Some(tree) = self.source.as_mut() {
+            if let Some(resources) = tree.native_resources.as_mut() {
+                if resources.close_step_on_original(cx)? != Some(true) { return Ok(None); }
+                tree.native_resources = None;
+                return Ok(None);
+            }
+        }
+        self.retire_tree.close_native_resources_on_original(cx)
+    }
+
     fn refuse_publication(&mut self, reason: &'static str) -> Result<bool, &'static str> {
         self.fault = Some(SurfaceReconcileFault::PublicationAuthority(reason));
         self.phase = SurfaceReconcileJobPhase::Fault;
@@ -3281,36 +3335,36 @@ impl SurfaceReconcileJob {
         self.state.as_ref().map_or_else(SurfaceReconcileUsage::default, |state| state.cursor.as_ref().map_or(state.usage, |cursor| cursor.usage))
     }
 
-    pub fn drive_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> SurfaceReconcileJobStep {
-        let Some(state) = self.state.as_mut() else { return SurfaceReconcileJobStep::Fault };
+    pub fn drive_one(&mut self, generation: u64, cx: &mut semio_framework_job::StepContext<'_>) -> Result<SurfaceReconcileJobStep, semio_framework_job::OriginalTurnFailure> {
+        let Some(state) = self.state.as_mut() else { return Ok(SurfaceReconcileJobStep::Fault) };
         if state.phase == SurfaceReconcileJobPhase::Fault || state.phase == SurfaceReconcileJobPhase::Closing {
-            return SurfaceReconcileJobStep::Fault;
+            return Ok(SurfaceReconcileJobStep::Fault);
         }
-        if cx.generation().0 != state.generation {
-            state.fault = Some(SurfaceReconcileFault::StaleGeneration { expected: state.generation, actual: cx.generation().0 });
+        if generation != state.generation {
+            state.fault = Some(SurfaceReconcileFault::StaleGeneration { expected: state.generation, actual: generation });
             state.phase = SurfaceReconcileJobPhase::Fault;
-            return SurfaceReconcileJobStep::Fault;
+            return Ok(SurfaceReconcileJobStep::Fault);
         }
         if cx.is_cancelled() {
             state.fault = Some(SurfaceReconcileFault::Cancelled);
             state.phase = SurfaceReconcileJobPhase::Fault;
-            return SurfaceReconcileJobStep::Fault;
+            return Ok(SurfaceReconcileJobStep::Fault);
         }
         if cx.should_yield() {
-            return SurfaceReconcileJobStep::MoreWork;
+            return Ok(SurfaceReconcileJobStep::MoreWork);
         }
         if state.phase == SurfaceReconcileJobPhase::Ready {
-            return SurfaceReconcileJobStep::Ready;
+            return Ok(SurfaceReconcileJobStep::Ready);
         }
         let outcome = match state.phase {
             SurfaceReconcileJobPhase::Drive => {
                 let Some(current) = state.current.as_ref() else {
                     state.phase = SurfaceReconcileJobPhase::Fault;
-                    return SurfaceReconcileJobStep::Fault;
+                    return Ok(SurfaceReconcileJobStep::Fault);
                 };
                 let Some(cursor) = state.cursor.as_mut() else {
                     state.phase = SurfaceReconcileJobPhase::Fault;
-                    return SurfaceReconcileJobStep::Fault;
+                    return Ok(SurfaceReconcileJobStep::Fault);
                 };
                 match cursor.step(current) {
                     SurfaceReconcileStep::Yield { .. } => SurfaceReconcileJobStep::MoreWork,
@@ -3329,6 +3383,7 @@ impl SurfaceReconcileJob {
                 }
             }
             SurfaceReconcileJobPhase::RetireCursor => {
+                if let Some(cursor) = state.cursor.as_mut() { if cursor.close_native_resources_on_original(cx)? != Some(true) { return Ok(SurfaceReconcileJobStep::MoreWork); } }
                 if state.cursor.as_mut().is_some_and(|cursor| cursor.retire_one()) {
                     state.cursor = None;
                     state.phase = SurfaceReconcileJobPhase::RetirePrevious;
@@ -3336,6 +3391,7 @@ impl SurfaceReconcileJob {
                 SurfaceReconcileJobStep::MoreWork
             }
             SurfaceReconcileJobPhase::RetirePrevious => {
+                if let Some(current) = state.current.as_mut() { if current.close_native_resources_on_original(cx)? != Some(true) { return Ok(SurfaceReconcileJobStep::MoreWork); } }
                 if state.current.as_mut().is_some_and(|current| current.retire_one()) {
                     state.current = None;
                     state.phase = SurfaceReconcileJobPhase::SealCandidate;
@@ -3360,9 +3416,9 @@ impl SurfaceReconcileJob {
         if cx.is_cancelled() {
             state.fault = Some(SurfaceReconcileFault::Cancelled);
             state.phase = SurfaceReconcileJobPhase::Fault;
-            return SurfaceReconcileJobStep::Fault;
+            return Ok(SurfaceReconcileJobStep::Fault);
         }
-        outcome
+        Ok(outcome)
     }
 
     pub fn fault(&self) -> Option<&SurfaceReconcileFault> {
@@ -3583,6 +3639,17 @@ impl SurfaceReconcileTerminal {
     /// take. A terminal holding a document-scaled retained surface keeps the reactor turn in
     /// `MoreWork`, and the host answers every `MoreWork` with one more round trip, so one owner per
     /// call is one host round trip per retained value (ticket 26/09/02, W-B2).
+    pub fn close_step_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let Some(state) = self.state.as_mut() else { return Ok(true); };
+        if state.close_native_resources_on_original(cx)? != Some(true) { return Ok(false); }
+        if cx.should_yield() { return Ok(false); }
+        let grant = cx.retained_grant();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(false); }
+        let complete = state.close_admitted_run(1, grant.maximum_release_bytes.min(grant.maximum_copy_bytes));
+        cx.consume_fuel(1);
+        Ok(complete)
+    }
+
     pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> bool {
         self.state.as_mut().is_none_or(|state| state.close_admitted_run(items, bytes))
     }

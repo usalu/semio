@@ -8,44 +8,31 @@ pub(crate) fn test_mounted_private_child_frame<A:ArtifactApp,M:SpaceMember+Membe
         assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_eq!(app.private_child_groups.get(operation).is_some(),row["admitted"].as_bool().unwrap());
         if !row["admitted"].as_bool().unwrap(){assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));continue;}
         assert_eq!(heap.requested_bytes,frame);let original=app.private_child_groups.get(operation).unwrap().as_ref()as *const _;
-        let context_extent=semio_framework_job::StepContextOwner::birth_bytes();
-        let(context,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::StepContextOwner::new(semio_framework_job::OperationId(operation),semio_framework_job::Generation(1),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:context_extent,maximum_depth:1,..Default::default()}));
-        assert_eq!((heap.requested_bytes,heap.released_bytes),(context_extent,0));
-        let(context,progress)=context.unwrap();assert_eq!(progress.retained_capacity_bytes,context_extent);app.private_child_groups.get_mut(operation).unwrap().context=Some(context);
-        let mut sequence=0;
-        let mut actual_retained_progress=Default::default();let context=app.private_child_groups.get(operation).unwrap().context.as_ref().unwrap().context(semio_framework_job::StepBudget::new(1,semio_framework_job::default_now_us().unwrap().saturating_add(INTERACTIVE_TURN_WORKER_WALL_US),app.mounted_policy.maintenance),semio_framework_job::root_cancel_token(),semio_framework_job::default_now_us,&mut sequence,&mut actual_retained_progress).unwrap();
-        let demand=app.private_child_group_operation_close_demands(operation,64).unwrap();assert_eq!(demand.release_bytes,context_extent);
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_operation_step(operation,grant).unwrap());
-        assert_eq!(step,semio_framework_job::InteractiveJobCloseStep::Blocked);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-        assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
-        drop(context);
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_operation_step(operation,grant).unwrap());
-        assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,context_extent);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,context_extent));
-        assert!(app.private_child_groups.get(operation).unwrap().context.is_none());
-        assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
+        let source:RetainedCloneGrant=serde_json::from_value(law["caller"]["source"].clone()).unwrap();
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(operation),semio_framework_job::Generation(law["caller"]["generation"].as_u64().unwrap()),source,||Some(1),law["caller"]["deadline"].as_u64().unwrap(),law["caller"]["fuel"].as_u64().unwrap());
         for _ in 0..100000{
             if app.private_child_groups.get(operation).is_none(){break;}
             assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
             let demand=app.private_child_group_close_demands(64).unwrap();assert!(demand.capacity_bytes<=262_144&&demand.release_bytes<=262_144&&demand.copy_bytes<=64&&demand.depth<=64);
-            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,..source};
             let mut denied=vec![RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}];
             if demand.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant});}
             if demand.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}
             if demand.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}
             for denied in denied{
-                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(denied).unwrap());
+                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(denied,|cx|app.close_private_child_group_step(cx,denied).map_err(Into::into)).unwrap());
                 assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
                 assert_eq!(app.private_child_groups.get(operation).unwrap().as_ref()as *const _,original);
             }
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(grant).unwrap());
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|app.close_private_child_group_step(cx,grant).map_err(Into::into)).unwrap());
             assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             if step.progress().released_bytes>0{assert_eq!(step.progress().released_bytes,frame);}
         }
-        assert!(app.private_child_groups.get(operation).is_none());println!("[DEBUG] Mounted private frame={} originalStablePointer/fundedbirth; bothinlineissuers terminal beforewholeframefree; zero/onebelow retain",frame);
+        assert!(app.private_child_groups.get(operation).is_none());caller.retire(source);println!("[DEBUG] Mounted private frame={} originalStablePointer/fundedbirth; bothinlineissuers terminal beforewholeframefree; zero/onebelow retain",frame);
     }
     assert!(app.private_child_groups.is_empty());assert_eq!(app.private_child_group_close_demands(64).unwrap().release_bytes,backing);
-    let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:backing,maximum_depth:1};
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(RetainedCloneGrant{maximum_release_bytes:backing-1,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.close_private_child_group_step(grant).unwrap());assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,backing);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,backing));assert!(app.private_child_groups_terminal_is_empty());
+    let source:RetainedCloneGrant=serde_json::from_value(law["caller"]["source"].clone()).unwrap();let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(7390),semio_framework_job::Generation(1),source,||Some(1),1_000_000,1);
+    let grant=source;
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(RetainedCloneGrant{maximum_release_bytes:backing-1,..grant},|cx|app.close_private_child_group_step(cx,cx.retained_grant()).map_err(Into::into)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|app.close_private_child_group_step(cx,grant).map_err(Into::into)).unwrap());assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,backing);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,backing));assert!(app.private_child_groups_terminal_is_empty());caller.retire(source);
 }

@@ -1,5 +1,5 @@
 use super::*;
-use std::alloc::{GlobalAlloc, Layout, System};
+use std::alloc::{GlobalAlloc, Layout};
 
 struct ObservedDslAllocator;
 std::thread_local! {
@@ -17,10 +17,10 @@ fn record_allocation(bytes: usize,alignment:usize) {
     if ALLOCATION_ENABLED.try_with(|enabled| enabled.get()).unwrap_or(false) { let _ = ALLOCATED_BYTES.try_with(|count| count.set(count.get().saturating_add(bytes)));let _=REQUESTS.try_with(|requests|{let mut value=requests.get();value.push(bytes,alignment);requests.set(value);}); }
 }
 unsafe impl GlobalAlloc for ObservedDslAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 { record_allocation(layout.size(),layout.align()); unsafe { System.alloc(layout) } }
-    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 { record_allocation(layout.size(),layout.align()); unsafe { System.alloc_zeroed(layout) } }
-    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, size: usize) -> *mut u8 { record_allocation(size,layout.align()); unsafe { System.realloc(pointer, layout, size) } }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) { record_rejected_payload_deallocation(pointer); unsafe { System.dealloc(pointer, layout) } }
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 { record_allocation(layout.size(),layout.align()); unsafe { semio_framework_trace::HeapWitness.alloc(layout) } }
+    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 { record_allocation(layout.size(),layout.align()); unsafe { semio_framework_trace::HeapWitness.alloc_zeroed(layout) } }
+    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, size: usize) -> *mut u8 { record_allocation(size,layout.align()); unsafe { semio_framework_trace::HeapWitness.realloc(pointer, layout, size) } }
+    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) { record_rejected_payload_deallocation(pointer); unsafe { semio_framework_trace::HeapWitness.dealloc(pointer, layout) } }
 }
 #[global_allocator]
 static DSL_TEST_ALLOCATOR: ObservedDslAllocator = ObservedDslAllocator;

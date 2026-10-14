@@ -1,0 +1,8 @@
+{
+  "type":"object","additionalProperties":false,"required":["version","tasks","selected"],
+  "properties":{
+    "version":{"const":1},
+    "selected":{"type":"array","items":{"type":"string"}},
+    "tasks":{"type":"object","additionalProperties":{"type":"object","required":["id","project","target","label","dependencies","args"],"properties":{"id":{"type":"string"},"project":{"type":"string"},"target":{"type":"string"},"configuration":{"type":"string"},"label":{"type":"string","pattern":"^t_[a-f0-9]{16}$"},"dependencies":{"type":"array","items":{"type":"string"}},"args":{"type":"array","items":{"type":"string"}}},"additionalProperties":true}}
+  }
+}

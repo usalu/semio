@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "now",
+          "deadline"
+        ],
+        "properties": {
+          "now": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "deadline": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remaining": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "wakeMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "error": {
+            "enum": [
+              "expired",
+              "missing-clock"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "remaining",
+              "wakeMs"
+            ],
+            "properties": {
+              "remaining": {},
+              "wakeMs": {},
+              "error": false
+            }
+          },
+          {
+            "required": [
+              "error"
+            ],
+            "properties": {
+              "error": {},
+              "remaining": false,
+              "wakeMs": false
+            }
+          }
+        ]
+      }
+    }
+  }
+}

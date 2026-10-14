@@ -1,23 +1,105 @@
 {
   "schema": "semio.plugin-registry.rebuild-chain/v1",
   "steps": [
-    { "id": "provenance", "stage": "inputs", "command": ["nx", "run", "repo:cargo-provenance-check"] },
-    { "id": "mutation-authority", "stage": "inputs", "command": ["nx", "run", "@semio-tech/dsl-derive-rs:check-generated"] },
-    { "id": "schema-index", "stage": "inputs", "command": ["nx", "run", "@semio-tech/dsl-derive-rs:check-schema-index"] },
-    { "id": "guest-framework", "stage": "inputs", "command": ["nx", "run", "@semio-tech/plugin-registry:guest-framework-check"] },
-    { "id": "describe", "stage": "descriptors", "command": ["nx", "run", "workspace:components", "describe", "--all"] },
-    { "id": "generate", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:generate"] },
-    { "id": "check", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:check"] },
-    { "id": "activate-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-prototype"] },
-    { "id": "verify-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/plugin-registry:verify-staged", "--variant", "s"] },
-    { "id": "flow-core-bindings", "stage": "guests", "command": ["nx", "run", "semio-framework-os-flow-core:wasm"] },
-    { "id": "preflight-catalog", "stage": "catalog", "command": ["nx", "run", "os-hub:trusted-catalog-preflight", "--packages", "all"] },
-    { "id": "publish-catalog", "stage": "catalog", "command": ["nx", "run", "os-hub:trusted-catalog-bootstrap", "--packages", "all"] }
+    {
+      "id": "provenance",
+      "stage": "inputs",
+      "command": [
+        "nx",
+        "run",
+        "repo:cargo-provenance-check"
+      ]
+    },
+    {
+      "id": "mutation-authority",
+      "stage": "inputs",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/dsl-derive-rs:check-generated"
+      ]
+    },
+    {
+      "id": "schema-index",
+      "stage": "inputs",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/dsl-derive-rs:check-schema-index"
+      ]
+    },
+    {
+      "id": "guest-framework",
+      "stage": "inputs",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/plugin-registry:guest-framework-check"
+      ]
+    },
+    {
+      "id": "describe",
+      "stage": "descriptors",
+      "command": [
+        "nx",
+        "run",
+        "workspace:components",
+        "describe",
+        "--all"
+      ]
+    },
+    {
+      "id": "generate",
+      "stage": "registry",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/plugin-registry:generate"
+      ]
+    },
+    {
+      "id": "check",
+      "stage": "registry",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/plugin-registry:check"
+      ]
+    }
   ],
   "guestFrameworkChecks": [
-    { "target": "wasm32-wasip2", "workspace": "Cargo.toml", "packages": ["semio-framework", "semio-framework-replication", "semio-framework-os-kernel", "semio-framework-os", "semio-framework-plugin"], "features": ["semio-framework-os-kernel/deflate", "semio-framework-replication/deflate"] },
-    { "target": "wasm32-unknown-unknown", "workspace": "Cargo.toml", "packages": ["semio-framework-os-kernel"], "features": ["semio-framework-os-kernel/sync"] },
-    { "target": "wasm32-unknown-unknown", "workspace": "Cargo.toml", "packages": ["semio-framework-os-renderer-wgpu"], "features": [] },
-    { "target": "wasm32-wasip2", "workspace": "✏️s/Cargo.toml", "packages": ["semio-s-plugin-stdio"], "features": [] }
+    {
+      "target": "wasm32-wasip2",
+      "workspace": "Cargo.toml",
+      "packages": [
+        "semio-framework",
+        "semio-framework-replication",
+        "semio-framework-os-kernel",
+        "semio-framework-os",
+        "semio-framework-plugin"
+      ],
+      "features": [
+        "semio-framework-os-kernel/deflate",
+        "semio-framework-replication/deflate"
+      ]
+    },
+    {
+      "target": "wasm32-unknown-unknown",
+      "workspace": "Cargo.toml",
+      "packages": [
+        "semio-framework-os-kernel"
+      ],
+      "features": [
+        "semio-framework-os-kernel/sync"
+      ]
+    },
+    {
+      "target": "wasm32-unknown-unknown",
+      "workspace": "Cargo.toml",
+      "packages": [
+        "semio-framework-os-renderer-wgpu"
+      ],
+      "features": []
+    }
   ]
 }

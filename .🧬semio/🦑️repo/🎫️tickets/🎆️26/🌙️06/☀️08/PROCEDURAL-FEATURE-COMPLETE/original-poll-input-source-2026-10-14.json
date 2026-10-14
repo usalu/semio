@@ -1,0 +1,24 @@
+{
+  "name": "🧪️test🔌️plugin📥️original-poll-inputsource",
+  "type": "node-terminal",
+  "request": "launch",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "NX_TUI": "false",
+    "NX_DAEMON": "false",
+    "NX_CACHE_PROJECT_GRAPH": "true",
+    "NX_ISOLATE_PLUGINS": "false",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"procedural:Enduser:original-poll-input-source\",\"maximumElapsedMilliseconds\":3600000}",
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"/Users/ueli/Documents/semio\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/framework-plugin-interpreter:test-poll-input-source\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--parallel=1\",\"--configuration=prototype\"],\"native\":{\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":1800000},\"network\":{\"offline\":true}},\"selection\":[\"nx\",\"run\",\"@semio-tech/framework-plugin-interpreter:test-poll-input-source\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--parallel=1\",\"--configuration=prototype\"],\"launches\":[[\"nx\",\"run\",\"@semio-tech/framework-plugin-interpreter:test-poll-input-source\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--parallel=1\",\"--configuration=prototype\"]],\"buildMode\":\"prototype\"}",
+    "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "CARGO_BUILD_JOBS": "2",
+    "CARGO_NET_OFFLINE": "true"
+  },
+  "presentation": {
+    "group": "9_gates",
+    "order": 900.05818
+  },
+  "command": "bun nx run @semio-tech/framework-plugin-interpreter:test-poll-input-source --skip-nx-cache --excludeTaskDependencies --parallel=1 --configuration=prototype"
+}

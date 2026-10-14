@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 import {DRAW_SQLITE_SCHEMA,drawSnapshotToSqliteDatabase,drawSnapshotFromSqliteDatabase} from "../🟦️.ts";
-import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,parseBinary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseDrawingSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import type {DrawingSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";

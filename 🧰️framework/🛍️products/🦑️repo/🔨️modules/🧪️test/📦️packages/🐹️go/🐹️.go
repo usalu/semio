@@ -313,22 +313,29 @@ func flagValue(argv []string, flag string) string {
 	return ""
 }
 
-func repoRootFrom(start string) string {
-	dir := start
-	for i := 0; i < 32; i++ {
-		if _, err := os.Stat(filepath.Join(dir, "nx.json")); err == nil {
-			if _, err := os.Stat(filepath.Join(dir, "package.json")); err == nil {
-				return dir
-			}
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			break
-		}
-		dir = parent
-	}
-	working, _ := os.Getwd()
-	return working
+func repoRootFrom(start string) (string, error) {
+    dir, err := filepath.Abs(start)
+    if err != nil { return "", err }
+    for i := 0; i < 32; i++ {
+        regular := true
+        for _, name := range []string{"📋️project.json", "package.json"} {
+            info, err := os.Lstat(filepath.Join(dir, name))
+            if err != nil || !info.Mode().IsRegular() { regular = false; break }
+        }
+        if regular {
+            source, err := os.ReadFile(filepath.Join(dir, "package.json"))
+            if err != nil { return "", err }
+            var manifest map[string]any
+            if err := json.Unmarshal(source, &manifest); err != nil { return "", err }
+            switch manifest["workspaces"].(type) {
+            case []any, map[string]any: return dir, nil
+            }
+        }
+        parent := filepath.Dir(dir)
+        if parent == dir { break }
+        dir = parent
+    }
+    return "", fmt.Errorf("workspace root with paired build and package markers was not found")
 }
 
 // RunMain is the Go host entry: load the plan, execute every planned scenario, emit JSONL.
@@ -351,7 +358,8 @@ func RunMain(adapter *Adapter) {
 		fmt.Fprintf(os.Stderr, "malformed plan %s: %v\n", planPath, err)
 		os.Exit(2)
 	}
-	repoRoot := repoRootFrom(plan.WorkDir)
+	repoRoot, err := repoRootFrom(plan.WorkDir)
+    if err != nil { fmt.Fprintln(os.Stderr, err); os.Exit(2) }
 	_ = os.MkdirAll(plan.WorkDir, 0o755)
 	_ = os.MkdirAll(plan.OutputDir, 0o755)
 

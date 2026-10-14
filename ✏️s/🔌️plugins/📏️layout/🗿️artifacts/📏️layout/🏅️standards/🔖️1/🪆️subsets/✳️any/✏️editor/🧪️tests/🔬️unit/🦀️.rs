@@ -536,11 +536,11 @@ fn command_from_action_round_trips_every_command_id() {
                 entries.push(("types".into(), DslValue::Array(vec![DslValue::String("application/x-semio-catalogue-item".into()), DslValue::String(format!("application/x-semio-catalogue-kind.{kind}"))])));
             }
         }
-        let bridged = LayoutPlayApp::command_from_action(id, Some(&camel)).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = LayoutPlayApp::command_from_action(id, Some((camel).clone()), None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
         assert_eq!(bridged, command, "payload drifted through the bridge for action {id}");
     }
-    assert!(LayoutPlayApp::command_from_action("nonsense", None).is_err());
+    assert!(LayoutPlayApp::command_from_action("nonsense", None, None).is_err());
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
@@ -570,36 +570,36 @@ fn command_from_action_bridges_host_control_contracts() {
     use crate::LayoutCamera;
     let args = |json: serde_json::Value| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
     assert_eq!(
-        LayoutPlayApp::command_from_action("addFrame", Some(&args(serde_json::json!({ "kind": "text", "x": 12, "y": 24.5 })))).expect("addFrame bridge"),
+        LayoutPlayApp::command_from_action("addFrame", Some((args(serde_json::json!({ "kind": "text", "x": 12, "y": 24.5 }))).clone()), None).expect("addFrame bridge"),
         LayoutCommand::AddFrame(add_frame::AddFrame { kind: "text".into(), x: Some(12.0), y: Some(24.5) })
     );
-    assert_eq!(LayoutPlayApp::command_from_action("addFrame", None).expect("addFrame default kind"), LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
-    assert_eq!(LayoutPlayApp::command_from_action("addPage", Some(&args(serde_json::json!({ "windowId": "layout-blueprint" })))).expect("addPage ignores window keys"), LayoutCommand::AddPage(add_page::AddPage {}));
+    assert_eq!(LayoutPlayApp::command_from_action("addFrame", None, None).expect("addFrame default kind"), LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
+    assert_eq!(LayoutPlayApp::command_from_action("addPage", Some((args(serde_json::json!({ "windowId": "layout-blueprint" }))).clone()), None).expect("addPage ignores window keys"), LayoutCommand::AddPage(add_page::AddPage {}));
     assert_eq!(
-        LayoutPlayApp::command_from_action("patchFrame", Some(&args(serde_json::json!({ "frameId": "frame-1", "field": "columns", "value": 2 })))).expect("patchFrame bridge"),
+        LayoutPlayApp::command_from_action("patchFrame", Some((args(serde_json::json!({ "frameId": "frame-1", "field": "columns", "value": 2 }))).clone()), None).expect("patchFrame bridge"),
         LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: None, field: "columns".into(), value: "2".into() })
     );
     assert_eq!(
-        LayoutPlayApp::command_from_action("patchPage", Some(&args(serde_json::json!({ "pageId": "page-1", "field": "width", "value": "300" })))).expect("patchPage bridge"),
+        LayoutPlayApp::command_from_action("patchPage", Some((args(serde_json::json!({ "pageId": "page-1", "field": "width", "value": "300" }))).clone()), None).expect("patchPage bridge"),
         LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() })
     );
     assert_eq!(
-        LayoutPlayApp::command_from_action("setActivePage", Some(&args(serde_json::json!({ "pageId": "page-2" })))).expect("setActivePage bridge"),
+        LayoutPlayApp::command_from_action("setActivePage", Some((args(serde_json::json!({ "pageId": "page-2" }))).clone()), None).expect("setActivePage bridge"),
         LayoutCommand::SetActivePage(set_active_page::SetActivePage { page_id: "page-2".into() })
     );
     assert_eq!(
-        LayoutPlayApp::command_from_action("setCamera", Some(&args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "x": 1, "y": 2, "zoom": 1.5 })))).expect("flat camera bridge"),
+        LayoutPlayApp::command_from_action("setCamera", Some((args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "x": 1, "y": 2, "zoom": 1.5 }))).clone()), None).expect("flat camera bridge"),
         LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some("layout.play.blueprint".into()), camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } })
     );
     assert_eq!(
-        LayoutPlayApp::command_from_action("canvasPointerDown", Some(&args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "button": 0, "shiftKey": true, "x": 10, "y": 20, "width": 800, "height": 600 })))).expect("pointer down bridge"),
+        LayoutPlayApp::command_from_action("canvasPointerDown", Some((args(serde_json::json!({ "surfaceId": "layout.play.blueprint", "button": 0, "shiftKey": true, "x": 10, "y": 20, "width": 800, "height": 600 }))).clone()), None).expect("pointer down bridge"),
         LayoutCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { surface_id: Some("layout.play.blueprint".into()), button: 0, extend: true, x: 10.0, y: 20.0, width: 800.0, height: 600.0 })
     );
     assert_eq!(
-        LayoutPlayApp::command_from_action("engagementSubmit", Some(&args(serde_json::json!({ "value": "export png" })))).expect("engagement bridge"),
+        LayoutPlayApp::command_from_action("engagementSubmit", Some((args(serde_json::json!({ "value": "export png" }))).clone()), None).expect("engagement bridge"),
         LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() })
     );
-    assert!(LayoutPlayApp::command_from_action("patchFrame", Some(&args(serde_json::json!({ "field": "fill" })))).is_err(), "a required field must not be defaulted silently");
+    assert!(LayoutPlayApp::command_from_action("patchFrame", Some((args(serde_json::json!({ "field": "fill" }))).clone()), None).is_err(), "a required field must not be defaulted silently");
 }
 //#endregion 🔖️ActionBridge
 
@@ -757,7 +757,7 @@ fn canvas_catalogue_actions_consume_the_neutral_renderer_envelope() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue actions");
     for case in fixture["cases"].as_array().unwrap() {
         let args: semio_framework_value::DslValue = case["args"].clone().into();
-        let result = LayoutPlayApp::command_from_action(case["action"].as_str().unwrap(), Some(&args));
+        let result = LayoutPlayApp::command_from_action(case["action"].as_str().unwrap(), Some((args).clone()), None);
         let Some(kind) = case["kind"].as_str() else {
             assert!(result.is_err(), "{} must refuse malformed or ambiguous catalogue input", case["id"]);
             continue;
@@ -794,7 +794,7 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
             for action in ["canvasDragOver", "canvasDrop"] {
                 let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["action"] == action && case["kind"] == kind).unwrap();
                 let args: DslValue = case["args"].clone().into();
-                let command = LayoutPlayApp::command_from_action(action, Some(&args)).map_err(|error| error.message)?;
+                let command = LayoutPlayApp::command_from_action(action, Some((args).clone()), None).map_err(|error| error.message)?;
                 app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
                 let transient = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("addressed transient missing")?;

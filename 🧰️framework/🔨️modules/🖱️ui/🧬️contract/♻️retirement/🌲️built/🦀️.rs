@@ -129,3 +129,7 @@ impl Drop for BuiltTreeRetirement {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="🎟️original/🦀️.rs"]
+mod original;
+pub use original::OriginalBuiltTreeRetirement;

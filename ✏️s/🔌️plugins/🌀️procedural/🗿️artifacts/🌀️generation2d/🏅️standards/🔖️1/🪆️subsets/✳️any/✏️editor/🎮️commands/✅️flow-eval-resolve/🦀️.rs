@@ -1,24 +1,9 @@
-//! 🧮️ Generation2d play app commands command — `flow-eval-resolve`: the editor's binding of the
-//! `previewEval` run's answer fold in `🧵️preview-eval`, which owns the payload shape and the fold itself.
-
-use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
-use crate::preview_eval;
+//! 📥️ Original replies execute through the retained command receiver and its initiating caller.
+use crate::editor::generation2d::config::{Generation2dConfig,Generation2dConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-
+use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault};
 pub use crate::preview_eval::FlowEvalResolve;
-
-/// ✅️ Folds the answer into the session it is handed; it arms nothing, because the run job schedules
-/// the next hop off the window's latch.
-pub fn handle(payload: &FlowEvalResolve, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    let extension_invocations = preview_eval::resolve_eval(payload, session, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
-    Ok(Emit { extension_invocations, ..Default::default() })
-}
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+/// 🪪️ A direct synchronous dispatch has no original retained source or receiver authority.
+pub fn handle(_payload:&FlowEvalResolve,_doc:&ArtifactView<'_,Generation2dSnapshot>,_cfg:&ConfigView<'_,Generation2dConfig>,_session:&mut FlowEvalSession)->Result<Emit<Generation2dMutation,Generation2dConfigMutation>,Fault>{Err(Fault::from("original reply requires its retained command work"))}

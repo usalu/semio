@@ -384,7 +384,9 @@ impl ArtifactViewer for BimModelViewer {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         command_from_action(action, args)
     }
 
@@ -479,9 +481,14 @@ impl ArtifactViewer for BimModelViewer {
         view_state: &ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         render_body(body_key, Some(owner), doc.snapshot, cfg, &marks_of(interaction), terminology::bim_viewer_labels(view_state))
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     /// 🎚️ The chrome of the addressed window: the projection tree and storey toggles of a world window, the storey picker of a plan window.
     fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {

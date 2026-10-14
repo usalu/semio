@@ -73,7 +73,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     for action in TOOL_RUN_ACTION_IDS {
         assert!(injected.iter().any(|definition| definition.id == action), "{action} is injected");
     }
-    assert!(<DagPlayApp as ArtifactEditor>::command_from_action(TOOL_ID, None).is_err(), "reorganize no longer resolves to a synchronous command");
+    assert!(<DagPlayApp as ArtifactEditor>::command_from_action(TOOL_ID, None, None).is_err(), "reorganize no longer resolves to a synchronous command");
 }
 
 /// 🕸️ First-seen node ids at their committed positions repel by half their diagonal (at least 8) and anchor to their

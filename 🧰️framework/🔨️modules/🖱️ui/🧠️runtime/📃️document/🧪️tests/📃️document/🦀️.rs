@@ -18,7 +18,7 @@ fn complete_document_job(current: SurfaceReconciler, name: &str, generation: u64
             semio_framework_job::default_now_us,
             &mut sequence,
         &mut actual_retained_progress);
-        match job.drive_one(&mut cx) {
+        match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
             SurfaceReconcileJobStep::MoreWork => {}
             SurfaceReconcileJobStep::Ready => {
                 let (current, output) = job.take_ready().unwrap_or_else(|_| panic!("completed job retains its exact ready output"));

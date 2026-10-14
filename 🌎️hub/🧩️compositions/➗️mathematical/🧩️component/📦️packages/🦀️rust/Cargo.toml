@@ -21,7 +21,7 @@ component-kind = "plugin"
 variant = "mathematical"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 app = "s.mathematical.equation@1/*#editor"
-aliases = ["mathematical", "math"]
+aliases = ["math"]
 ports = { react = 6084, wgpu = 6184 }
 
 [package.metadata.semio.sources]
@@ -37,4 +37,5 @@ semio-hub-mathematical = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async = { workspace = true }

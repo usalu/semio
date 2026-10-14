@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "deferred-then-accepted",
+      "input": {
+        "path": "/名称",
+        "value": "öffnen"
+      },
+      "turns": [
+        "deferred",
+        "deferred",
+        "accepted"
+      ],
+      "expected": "accepted"
+    },
+    {
+      "id": "deferred-then-fault",
+      "input": {
+        "path": "/名称",
+        "value": "öffnen"
+      },
+      "turns": [
+        "deferred",
+        "fault"
+      ],
+      "expected": "fault"
+    },
+    {
+      "id": "only-deferred",
+      "input": {
+        "path": "/名称",
+        "value": "öffnen"
+      },
+      "turns": [
+        "deferred",
+        "deferred"
+      ],
+      "expected": "pending"
+    },
+    {
+      "id": "accepted-first",
+      "input": {
+        "path": "/名称",
+        "value": "öffnen"
+      },
+      "turns": [
+        "accepted"
+      ],
+      "expected": "accepted"
+    }
+  ]
+}

@@ -82,8 +82,8 @@ enum ReleasedBytes {
 //#endregion 🧬️CommandCloseVectors
 
 //#region 🧪️CommandCloseLaws
-fn turn(job: &mut TxnFixtureJob, grant: RetainedCloneGrant, released: &mut usize) -> InteractiveJobCloseStep {
-    let step = job.close_step(grant);
+fn turn(job:&mut TxnFixtureJob,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,released:&mut usize) -> InteractiveJobCloseStep {
+    let step=cx.with_retained_loan(grant,|same|job.close_step(same)).expect("original command close");
     assert!(step.progress().fits(grant), "a close receipt never exceeds its grant on any axis");
     *released += step.progress().released_bytes;
     step
@@ -94,23 +94,23 @@ fn label(step: InteractiveJobCloseStep) -> &'static str {
         InteractiveJobCloseStep::Blocked => "blocked",
         InteractiveJobCloseStep::Pending { .. } => "pending",
         InteractiveJobCloseStep::Complete { .. } => "complete",
-        InteractiveJobCloseStep::Refused{..} => "refused",
     }
 }
 
-fn drain(job: &mut TxnFixtureJob, original: RetainedCloneGrant) {
+fn drain(job:&mut TxnFixtureJob,cx:&mut semio_framework_job::StepContext<'_>,original:RetainedCloneGrant) {
     job.begin_close();
     for _ in 0..256 {
         if job.terminal_is_empty() {
             return;
         }
         let mut released = 0;
-        turn(job, original, &mut released);
+        turn(job,cx,original,&mut released);
     }
     panic!("the fixture job did not reach its terminal empty shell");
 }
 
-fn check(id: &str) {
+fn check(id:&str){
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();let recipient=cx.original_recipient_identity();
     let document: Cases = serde_json::from_str(include_str!("../🧫️fixtures/🧾️transaction-command-close/🔣️.json")).expect("command-close neutral vectors");
     assert_eq!(document.schema_version, 2);
     assert_eq!(document.layout_policy, "command-value-layout-excludes-allocator-overhead");
@@ -149,7 +149,7 @@ fn check(id: &str) {
         if !advanced {
             break;
         }
-        step = Some(turn(&mut job, original, &mut released));
+        step = Some(turn(&mut job,&mut cx,original,&mut released));
     }
     if let Some(probe) = case.probe {
         let demand = job_quote(&job);
@@ -160,7 +160,7 @@ fn check(id: &str) {
             Axis::ReleaseMinusOne => denied.maximum_release_bytes = demand.release_bytes - 1,
         }
         let before = job_quote(&job);
-        let probed = turn(&mut job, denied, &mut released);
+        let probed = turn(&mut job,&mut cx,denied,&mut released);
         assert_eq!(probed.progress(), Default::default(), "{id}: an unfunded, refused or blocked probe moves nothing");
         step = Some(probed);
         assert_eq!(job_quote(&job), before, "{id}: an unfunded probe leaves the exact quote unchanged");
@@ -200,10 +200,11 @@ fn check(id: &str) {
     if external.is_some() {
         assert_eq!(external_still_shared, Some(true), "{id}: external completion clone retains its exact shared cell");
     }
-    drain(&mut job, original);
+    drain(&mut job,&mut cx,original);
     if let Some(external) = external {
-        retire_completion(external, original);
+        retire_completion(external,&mut cx,original);
     }
+    assert_eq!(cx.original_recipient_identity(),recipient);let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).unwrap();
 }
 
 #[test]
@@ -215,7 +216,7 @@ fn txn_command_close_zero_items_preserves_owners() {
     check("zero-items");
 }
 #[test]
-fn txn_command_close_short_depth_is_refused_and_preserves_owners() {
+fn txn_command_close_short_depth_yields_and_preserves_owners() {
     check("short-depth");
 }
 #[test]
@@ -231,3 +232,35 @@ fn txn_command_close_exact_grant_retains_pending_completion() {
     check("exact-pending-completion");
 }
 //#endregion 🧪️CommandCloseLaws
+
+#[test]
+fn original_fixture_completion_same_source_denials_whole_rejection_and_paid_close(){
+    use crate::app_testing::mutation_fixture::job_close::FixtureJobOwners;
+    use semio_framework_job::{close_original_retained_step,OriginalTurnFailure,RetainedCloneProgress};
+    use semio_framework_value::retirement::controlled::ControlledRetirement;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧬️mutation-fixtures-job-close/🧫️fixtures/🔣️.json")).unwrap();let loan=fixture["loan"].as_array().unwrap();let policy=RetainedCloneGrant{maximum_items:loan[0].as_u64().unwrap()as usize,maximum_copy_bytes:loan[1].as_u64().unwrap()as usize,maximum_capacity_bytes:loan[2].as_u64().unwrap()as usize,maximum_release_bytes:loan[3].as_u64().unwrap()as usize,maximum_depth:loan[4].as_u64().unwrap()as usize};
+    for row in fixture["cases"].as_array().unwrap(){
+        let mut caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();let recipient=cx.original_recipient_identity();let mut owners=FixtureJobOwners::<TxnApp>::new(Box::new(TxnCommand::Increment),ArtifactToolCompletion::new());
+        assert!(cx.with_retained_loan(policy,|same|owners.prepare_emission(same,std::mem::size_of::<i32>(),0,||Ok(Emit::mutations(vec![SetTransactionCount{value:7}.into()])))).unwrap());
+        let pending_pointer=owners.pending_emission().unwrap().0.as_ref().unwrap().artifact_mutations.as_ptr();
+        if row["occupied"].as_bool().unwrap(){owners.completion.as_ref().unwrap().complete(Ok(Emit::default()),Default::default()).unwrap()}
+        let mut busy_witness=Some(owners.completion.as_ref().unwrap().clone());let mut busy_active=None;cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}).unwrap();let demand=FixtureJobOwners::<TxnApp>::completion_demand();
+        for denied in [RetainedCloneGrant{maximum_items:0,..policy},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..policy},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..policy},RetainedCloneGrant{maximum_depth:demand.depth-1,..policy}]{
+            let before=cx.retained_progress();let fuel=cx.fuel_remaining();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(denied,|same|owners.complete(same)));assert!(!result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert_eq!(cx.fuel_remaining(),fuel);assert_eq!(owners.pending_emission().unwrap().0.as_ref().unwrap().artifact_mutations.as_ptr(),pending_pointer);
+        }
+        let before=cx.retained_progress();let fuel=cx.fuel_remaining();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(policy,|same|if row["busy"].as_bool().unwrap(){busy_witness.as_ref().unwrap().with_busy_test_lock(||owners.complete(same))}else{owners.complete(same)}));
+        let after=cx.retained_progress();let actual=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};assert_eq!((heap.requested_bytes,heap.released_bytes),(actual.retained_capacity_bytes,actual.released_bytes));assert_eq!(cx.fuel_remaining(),fuel-1);
+        let mut failure:Option<OriginalTurnFailure>=None;match result{Ok(true)=>{assert!(row["faultCode"].is_null());assert!(owners.pending_is_empty());assert!(owners.completion_is_delivered())},Err(original)=>{let fault=original.primary_fault().unwrap();assert_eq!(fault.code.0,row["faultCode"].as_str().unwrap());assert_eq!(fault.retained_progress(),actual);assert_eq!(owners.pending_emission().unwrap().0.as_ref().unwrap().artifact_mutations.as_ptr(),pending_pointer);failure=Some(original)},other=>panic!("original completion did not hand off: {other:?}")}
+        let mut emitted=owners.completion.as_ref().unwrap().take_emit().unwrap();let mut emitted_active=None;let mut failure_active:Option<ControlledRetirement<OriginalTurnFailure>>=None;cx.original_cancel_token().cancel_now();owners.begin_close();
+        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
+            if owners.terminal_is_empty()&&emitted.is_none()&&emitted_active.is_none()&&failure.is_none()&&failure_active.is_none()&&busy_witness.is_none()&&busy_active.is_none(){break}
+            let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(policy,|same|{
+                if emitted.is_some()||emitted_active.is_some(){let demand=crate::bounded_ownership::plugin_typed_owner_demand(&emitted,&emitted_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|crate::bounded_ownership::plugin_typed_owner_step(&mut emitted,&mut emitted_active,grant))}
+                if failure.is_some()||failure_active.is_some(){let demand=crate::bounded_ownership::plugin_typed_owner_demand(&failure,&failure_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|crate::bounded_ownership::plugin_typed_owner_step(&mut failure,&mut failure_active,grant))}
+                if busy_witness.is_some()||busy_active.is_some(){let demand=crate::bounded_ownership::plugin_typed_owner_demand(&busy_witness,&busy_active,policy.maximum_copy_bytes)?;return close_original_retained_step(same,demand,|grant|crate::bounded_ownership::plugin_typed_owner_step(&mut busy_witness,&mut busy_active,grant))}
+                owners.close_step(same)
+            }));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert!(progress.fits(policy));
+        }
+        assert!(owners.terminal_is_empty()&&emitted.is_none()&&emitted_active.is_none()&&failure.is_none()&&failure_active.is_none()&&busy_witness.is_none()&&busy_active.is_none());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop((owners,emitted,emitted_active,failure,failure_active,busy_witness,busy_active)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.original_recipient_identity(),recipient);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();eprintln!("[DEBUG] original fixture completion case={} samePendingSource=true wholeNativeFault=true sameRecipient=true rejectedSystem0=true paidClose=true terminalDrop0=true",row["id"]);
+    }
+}

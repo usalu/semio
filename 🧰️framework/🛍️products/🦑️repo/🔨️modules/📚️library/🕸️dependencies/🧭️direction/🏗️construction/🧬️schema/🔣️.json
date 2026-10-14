@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cross Plugin Direction Matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "plugins",
+    "contexts",
+    "dependencyTypes",
+    "paths",
+    "distinctForbidden",
+    "sameForbidden",
+    "sourcePaths"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "plugins": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "package"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "package": {
+            "type": "string",
+            "pattern": "^@[^/]+/[^/]+$"
+          }
+        }
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependencyTypes": {
+      "const": [
+        "local",
+        "npm"
+      ]
+    },
+    "paths": {
+      "const": [
+        "physical",
+        "package",
+        "subpath",
+        "nested-package"
+      ]
+    },
+    "sourcePaths": {
+      "const": [
+        "physical",
+        "package",
+        "subpath",
+        "nested-package"
+      ]
+    },
+    "distinctForbidden": {
+      "const": true
+    },
+    "sameForbidden": {
+      "const": false
+    }
+  }
+}

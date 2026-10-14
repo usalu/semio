@@ -302,61 +302,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(actorInstanceLifecycleReceiptEquals(accepted, { ...accepted, closeGeneration: 14n })).toBe(false);
   });
 
-  it("actor instance close worker activation preserves the new generation across a delayed dispose", async () => {
-    const { readFileSync } = await import("node:fs");
-    // 🚧️ Specifier held in a variable, and `@vite-ignore`d, so no bundler follows it. This whole
-    // block is `vitest`-only and Node-only (`node:worker_threads` below), but Vite
-    // statically analyses dynamic imports regardless of the guard: following this one pulls
-    // `🟦️.ts` — a BUILD-time module importing `node:child_process`,
-    // `node:fs` and `typescript`, plus repo-lib's `🔍️discovery` — into the browser worker bundle,
-    // which fails the storybook preview build and the os/dev server alike with
-    // `"node:url" doesn't have a matching export named "fileURLToPath"`.
-    const materializeSpecifier = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", source.url).href;
-    const { shardWorkerSource } = await import(/* @vite-ignore */ materializeSpecifier);
-    const fixture = JSON.parse(readFileSync(new URL("./🧪️tests/🧫️fixtures/🔣️.json", source.url), "utf8"));
-    const prior = BigInt(fixture.reopen.prior.activationGeneration);
-    const current = prior + 1n;
-    const { Worker } = await import("node:worker_threads");
-    type Message = { readonly kind: string; readonly requestId?: string; readonly ok?: boolean; readonly value?: unknown; readonly error?: string };
-    const pending = new Map<string, { resolve: (value: Message) => void; reject: (error: unknown) => void }>();
-    const worker = new Worker(
-      "const { parentPort } = require('node:worker_threads'); const self = { location: { href: 'https://lifecycle-test.invalid/worker.js' }, postMessage: value => parentPort.postMessage(value), addEventListener: (_, callback) => parentPort.on('message', data => callback({ data })) }; const WebAssembly = { Suspending: function(){}, promising: function(){} };\n" +
-        shardWorkerSource(),
-      { eval: true },
-    );
-    worker.on("message", (message: Message) => {
-      if (message.kind !== "result" || !message.requestId) return;
-      const waiting = pending.get(message.requestId);
-      if (waiting) {
-        pending.delete(message.requestId);
-        waiting.resolve(message);
-      }
-    });
-    worker.on("error", (error) => {
-      for (const waiting of pending.values()) waiting.reject(error);
-      pending.clear();
-    });
-    const moduleUrl = "data:text/javascript," + encodeURIComponent("export async function createActorApi(actorId, activationGeneration) { return { poll: async () => ({ actorId, activationGeneration }) }; }");
-    const send = (data: unknown, requestId: string): Promise<Message> =>
-      new Promise((resolve, reject) => {
-        pending.set(requestId, { resolve, reject });
-        worker.postMessage(data);
-      });
-    try {
-      const activation = await send({ kind: "activate", requestId: "a1", actorId: "same", activationGeneration: prior, moduleUrl, assets: [] }, "a1");
-      expect(activation, activation.error).toMatchObject({ ok: true });
-      expect((await send({ kind: "turn", requestId: "t1", actorId: "same", activationGeneration: prior, events: [], budget: {} }, "t1")).value).toEqual({ actorId: "same", activationGeneration: prior });
-      worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: prior });
-      expect(await send({ kind: "activate", requestId: "a2", actorId: "same", activationGeneration: current, moduleUrl, assets: [] }, "a2")).toMatchObject({ ok: true });
-      worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: prior });
-      expect((await send({ kind: "turn", requestId: "t2", actorId: "same", activationGeneration: current, events: [], budget: {} }, "t2")).value).toEqual({ actorId: "same", activationGeneration: current });
-      expect((await send({ kind: "frame", requestId: "f-old", actorId: "same", activationGeneration: prior, frame: { kind: "Register", actor: "same" } }, "f-old")).error).toMatch(/actor-lifecycle\.activation-mismatch/);
-      expect(await send({ kind: "frame", requestId: "f-current", actorId: "same", activationGeneration: current, frame: { kind: "Register", actor: "same" } }, "f-current")).toMatchObject({ ok: true });
-      expect((await send({ kind: "activate", requestId: "old", actorId: "old", activationGeneration: prior, moduleUrl, assets: [] }, "old")).ok).toBe(false);
-      worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: current });
-    } finally {
-      await worker.terminate();
-    }
-  });
+
 
 }

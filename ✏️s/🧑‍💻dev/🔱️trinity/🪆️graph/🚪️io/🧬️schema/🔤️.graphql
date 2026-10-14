@@ -1,0 +1,3 @@
+"""📦️ Closed exact native archive carrier; bytes retain parent, history and all members."""
+scalar JackArchiveLowerHex
+type JackArchiveCarrier { schema: String! archive: JackArchiveLowerHex! }

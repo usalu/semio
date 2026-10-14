@@ -253,7 +253,9 @@ impl ArtifactEditor for StepCc4Editor {
 
     fn command_id(command: &Self::Command) -> &'static str { step_cc4_editor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { step_cc4_editor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref(); step_cc4_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> StepSnapshot {
         <crate::standards::v_ap214::subsets::cc4::io::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v_ap214::subsets::cc4::io::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(crate::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc4 initial owner")

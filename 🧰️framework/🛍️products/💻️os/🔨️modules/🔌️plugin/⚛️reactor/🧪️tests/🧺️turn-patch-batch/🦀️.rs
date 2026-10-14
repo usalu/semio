@@ -9,22 +9,18 @@ use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 fn tree(text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded fixture text");
     let root = TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).expect("bounded fixture tree");
-    ComponentTree { root }
+    ComponentTree::new(root)
 }
 
 fn budget() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🧺️turn-patch-batch.json")).expect("turn patch batch budget fixture")
 }
 
-fn far_deadline() -> std::time::Instant {
-    std::time::Instant::now() + std::time::Duration::from_secs(60)
-}
-
 fn generous_budget() -> usize {
     turn_patch_budget_bytes(semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: u64::MAX, deadline_ms: 1_000, max_effects: 64, max_patch_bytes: u32::MAX, max_frames: 8 })
 }
 
-fn retire_pending_authority() {
+fn retire_pending_authority(cx:&mut semio_framework_job::StepContext<'_>) {
     with_pending(|pending| {
         let mut pending = pending.borrow_mut();
         for _ in 0..1_000_000 {
@@ -37,7 +33,7 @@ fn retire_pending_authority() {
 }
 
 /// 🧹️ Retires one patch the way the HOST does once it has admitted it.
-fn retire_host_patch(patch: ui_contract::UiPatch) {
+fn retire_host_patch(patch: ui_contract::UiPatch,cx:&mut semio_framework_job::StepContext<'_>) {
     let mut owner = ui_contract::UiPendingPatch::default();
     *owner.source_mut().expect("writable payload") = Some(patch);
     for _ in 0..1_000_000 {
@@ -49,7 +45,7 @@ fn retire_host_patch(patch: ui_contract::UiPatch) {
 }
 
 /// 📤️ Drains a turn page the way the host does, reporting what it carried in publication order.
-fn drain_page(page: &mut UiTurnPatches) -> Vec<(String, u64)> {
+fn drain_page(page: &mut UiTurnPatches,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<(String, u64)> {
     let mut carried = Vec::new();
     loop {
         let mut named = None;
@@ -59,7 +55,7 @@ fn drain_page(page: &mut UiTurnPatches) -> Vec<(String, u64)> {
         }) {
             UiTurnPatchTransfer::Transferred(patch) => {
                 carried.push(named.expect("named publication"));
-                retire_host_patch(patch);
+                retire_host_patch(patch,cx);
             }
             UiTurnPatchTransfer::Empty => break,
             UiTurnPatchTransfer::Refused => panic!("a host drain of an owned turn page is never refused"),
@@ -79,7 +75,7 @@ struct CrossingLedger {
 /// 🔁️ The browser loop as `PluginRuntime.settlePluginTurn` drives it AFTER this lane: post the
 /// acknowledgements the previous crossing earned — all of them, in one event list — run the guest's
 /// publication ladder, and take the whole page the turn may carry instead of one patch.
-fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: usize) -> (CrossingLedger, Vec<(String, u64)>) {
+fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: usize,cx:&mut semio_framework_job::StepContext<'_>) -> (CrossingLedger, Vec<(String, u64)>) {
     let mut ledger = CrossingLedger::default();
     let mut acknowledgements: Vec<(ActorUiPatchReceipt, String, u64)> = Vec::new();
     let mut delivered: Vec<(String, u64)> = Vec::new();
@@ -91,15 +87,15 @@ fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: 
         if carried_events {
             ledger.with_events += 1;
         }
-        retire_pending_authority();
+        retire_pending_authority(cx);
         for (receipt, surface, revision) in acknowledgements.drain(..) {
             assert!(
                 with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"),
                 "the host's acknowledgement of {surface}@{revision} must be admitted"
             );
         }
-        retire_pending_authority();
-        drive_reconcile_within(tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        retire_pending_authority(cx);
+        drive_reconcile_within(tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
         let mut page = take_turn_patch_page(budget_bytes).expect("turn patch page");
         let carried_patch = !page.is_empty();
         if carried_patch {
@@ -108,7 +104,7 @@ fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: 
             let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: instance, guest_lifetime: 1 }, patch_sequence: sequence };
             with_pending(|pending| pending.borrow_mut().stage_emission(receipt, page.iter())).expect("staged emission");
             with_pending(|pending| pending.borrow_mut().commit_emission());
-            for carried in drain_page(&mut page) {
+            for carried in drain_page(&mut page,cx) {
                 acknowledgements.push((receipt, carried.0.clone(), carried.1));
                 delivered.push(carried);
             }
@@ -120,7 +116,7 @@ fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: 
             break;
         }
     }
-    retire_pending_authority();
+    retire_pending_authority(cx);
     (ledger, delivered)
 }
 
@@ -132,6 +128,9 @@ fn settle_batched(tracker: &patches::PatchTracker, instance: u32, budget_bytes: 
 /// procedural 3d React door (`📓️ui-turn-patch-batching-2026-09-15.md` §5).
 #[test]
 fn n_ready_surfaces_converge_in_two_crossings_when_their_patches_fit_the_budget() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let fixture = budget();
     let ceiling = fixture["crossingsPerBatch"].as_u64().expect("declared crossing budget") as usize;
     for count in fixture["surfaceCounts"].as_array().expect("declared surface counts").iter().map(|value| value.as_u64().expect("surface count") as usize) {
@@ -141,12 +140,15 @@ fn n_ready_surfaces_converge_in_two_crossings_when_their_patches_fit_the_budget(
         for index in 0..count {
             tracker.begin(format!("{instance}:surface-{index}"), tree("body")).expect("mounted admission");
         }
-        let (ledger, delivered) = settle_batched(&tracker, instance, generous_budget());
+        let (ledger, delivered) = settle_batched(&tracker, instance, generous_budget(),cx);
         assert_eq!(delivered.len(), count, "every mounted surface must publish exactly once");
         assert!(ledger.crossings <= ceiling, "{count} surfaces cost {} crossings against the declared {ceiling}", ledger.crossings);
         assert_eq!(ledger.with_patch, 1, "{count} surfaces that fit the budget must travel in ONE patch-carrying crossing");
         assert!(ledger.idle <= fixture["idleCrossingsAllowed"].as_u64().expect("declared idle allowance") as usize, "{count} surfaces cost {} crossings that carried neither an event nor a patch", ledger.idle);
     }
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🧾️ The publication ORDER of one instance's queued patches is the page's order, and a page the
@@ -154,6 +156,9 @@ fn n_ready_surfaces_converge_in_two_crossings_when_their_patches_fit_the_budget(
 /// byte-identically, in the same order, exactly once.
 #[test]
 fn a_refused_turn_page_returns_every_patch_to_its_own_slot_in_publication_order() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let count = fixture["batchSurfaces"].as_u64().expect("declared batch surfaces") as usize;
@@ -170,8 +175,11 @@ fn a_refused_turn_page_returns_every_patch_to_its_own_slot_in_publication_order(
     }
     let mut again = take_turn_patch_page(generous_budget()).expect("turn patch page");
     assert_eq!(again.iter().map(|patch| (patch.surface.0.to_string(), patch.revision.0)).collect::<Vec<_>>(), expected, "a returned page reads back in the same publication order");
-    drain_page(&mut again);
-    retire_pending_authority();
+    drain_page(&mut again,cx);
+    retire_pending_authority(cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 📏️ The BYTE budget, not a count, is the admission rule: a page cut by the budget carries what fit,
@@ -179,6 +187,9 @@ fn a_refused_turn_page_returns_every_patch_to_its_own_slot_in_publication_order(
 /// publication exactly once and in order.
 #[test]
 fn a_patch_over_the_turn_byte_budget_travels_on_the_next_turn_and_still_applies_exactly() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let count = fixture["batchSurfaces"].as_u64().expect("declared batch surfaces") as usize;
@@ -193,29 +204,38 @@ fn a_patch_over_the_turn_byte_budget_travels_on_the_next_turn_and_still_applies_
         let mut page = take_turn_patch_page(cost * fit).expect("turn patch page");
         assert!(!page.is_empty(), "turn {turn} of a queued batch must still make progress");
         assert!(page.len() <= fit, "the byte budget admitted {} patches against the declared {fit}", page.len());
-        delivered.extend(drain_page(&mut page));
+        delivered.extend(drain_page(&mut page,cx));
         if delivered.len() == count {
             break;
         }
     }
     assert_eq!(delivered, expected, "a batch the budget cut still delivers every publication exactly once, in order");
-    retire_pending_authority();
+    retire_pending_authority(cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🚦️ The FIRST ready patch is admitted whatever the budget says — otherwise a publication larger
 /// than the whole budget could never leave the guest and its surface would never converge.
 #[test]
 fn the_first_ready_patch_is_admitted_whatever_the_budget_says() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let instance = 81u32;
     let expected = queue_external(instance, 3);
     let mut page = take_turn_patch_page(fixture["overBudgetBytes"].as_u64().expect("declared over-budget grant") as usize).expect("turn patch page");
     assert_eq!(page.len(), 1, "a budget no publication fits still admits the first one");
-    assert_eq!(drain_page(&mut page), expected[..1], "and it is the oldest queued publication");
+    assert_eq!(drain_page(&mut page,cx), expected[..1], "and it is the oldest queued publication");
     let mut rest = take_turn_patch_page(generous_budget()).expect("turn patch page");
-    assert_eq!(drain_page(&mut rest), expected[1..], "the rest follow in order");
-    retire_pending_authority();
+    assert_eq!(drain_page(&mut rest,cx), expected[1..], "the rest follow in order");
+    retire_pending_authority(cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🧨️ A turn never becomes a contiguous guest request past the declared ceiling: the page is parked
@@ -223,6 +243,9 @@ fn the_first_ready_patch_is_admitted_whatever_the_budget_says() {
 /// `dlmalloc` granularity has to fund — and the capacity is READ OFF that ceiling, never chosen.
 #[test]
 fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     assert_eq!(UI_TURN_PATCHES_MAXIMUM, semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES);
     assert!(UI_TURN_PATCHES_MAXIMUM > 1, "a page that carries one patch is the floor this lane removed");
     assert!(
@@ -239,6 +262,9 @@ fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling()
     }
     assert_eq!(window(0), semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "a lane below the floor is lifted to one contiguous ceiling");
     assert_eq!(window(u32::MAX as usize), UI_TURN_PATCH_BUDGET_BYTES, "a lane above the ceiling is cut to the declared budget");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🔒️ THE per-surface law: two queued publications of the SAME surface are a chain, never a batch, so
@@ -254,6 +280,9 @@ fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling()
 /// 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS, `abort-finalize-midrun-*.txt`, :6013 2026-09-15 17:58).
 #[test]
 fn two_queued_patches_of_one_surface_never_travel_in_the_same_turn_page() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 82u32;
     let name = format!("{instance}:framework.panel.toolRun");
@@ -273,11 +302,14 @@ fn two_queued_patches_of_one_surface_never_travel_in_the_same_turn_page() {
     let receipt = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id: instance, guest_lifetime: 1 }, patch_sequence: 1 };
     with_pending(|pending| pending.borrow_mut().stage_emission(receipt, first.iter())).expect("staged emission");
     with_pending(|pending| pending.borrow_mut().commit_emission());
-    drain_page(&mut first);
+    drain_page(&mut first,cx);
     let mut second = take_turn_patch_page(generous_budget()).expect("turn patch page");
     assert_eq!(second.iter().map(|patch| (patch.surface.0.to_string(), patch.revision.0)).collect::<Vec<_>>(), vec![(name.clone(), 2)], "the deferred publication rides the very next turn, in order");
-    drain_page(&mut second);
-    retire_pending_authority();
+    drain_page(&mut second,cx);
+    retire_pending_authority(cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 📥️ Queues `count` external publications on one instance and reports the order they must come back.

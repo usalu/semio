@@ -6,7 +6,8 @@ use semio_s_artifact_cad_cad::CadNode;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_building_import_profile() {
-    let manifest = bundle().into_manifest_cold().unwrap();
+    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     let topic_contribution = &manifest.topic_contributions[0];
     assert_eq!(topic_contribution.topic, "cad.computer");
     assert_eq!(topic_contribution.payload["moduleId"].as_str(), Some(MODULE_ID));
@@ -14,6 +15,8 @@ async fn bundle_contributes_building_import_profile() {
     let parsed = json::parse(computers_json, json::JsonMemberPolicy::Reject).expect("parse");
     let beam_typology = parsed.get("importProfiles").and_then(JsonValue::as_array).and_then(|profiles| profiles.first()).and_then(|profile| profile.get("layerTypology")).and_then(|typology| typology.get("beam"));
     assert!(beam_typology.and_then(JsonValue::as_str).is_some());
+
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");
 }
 
 /// ✅️ Task requirement: "the contribution registers successfully against the declared
@@ -21,7 +24,8 @@ async fn bundle_contributes_building_import_profile() {
 /// registration gate accepted it; this test additionally pins the exact ids landed.
 #[semio_framework_async_macros::async_test]
 async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_contribution() {
-    let manifest = bundle().into_manifest_cold().unwrap();
+    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     assert_eq!(manifest.extends, "cad");
     assert_eq!(manifest.dependencies[0].plugin_id, "cad");
 
@@ -43,6 +47,8 @@ async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_co
     assert_eq!(inference.owner, EXTENSION_ID);
     assert_eq!(inference.contributor, EXTENSION_ID);
     assert_eq!(inference.artifact_kind, CAD_ARTIFACT_KIND);
+
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");
 }
 
 /// ✅️ Task requirement: "removing/mismatching the dependency makes registration fail with the
@@ -71,7 +77,8 @@ async fn contribution_onto_cad_requires_a_declared_dependency() {
 /// `CadMutation::kinds()` roster.
 #[semio_framework_async_macros::async_test]
 async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_kind() {
-    let mutation_id = bundle().into_manifest_cold().unwrap().contributions[0].mutations[0].mutation_id.clone();
+    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let mutation_id = bundle().into_manifest_cold(&mut cx).unwrap().contributions[0].mutations[0].mutation_id.clone();
     let hash_at = mutation_id.rfind('#').expect("contributed id has a #");
     assert!(mutation_id[hash_at + 1..].contains(':'), "contributed id must carry the contributor ':' segment");
 
@@ -80,6 +87,8 @@ async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_
         assert_ne!(owner_id, mutation_id, "contributed id must never equal an owner mutation id");
         assert!(!owner_id.contains(':'), "owner-mutation-id grammar never carries a ':' segment — the invariant the collision proof relies on");
     }
+
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");
 }
 
 /// ✅️ Task requirement: "the plan folds to the same snapshot as applying cad's leaf mutations by

@@ -3,7 +3,7 @@ import type { NoteSnapshot, NoteBlockNode, NoteImageAsset, ArtifactLink } from "
 import type { NoteTextParagraph, NoteTextRun } from "../../../🧬️schema/🟦️.ts";
 import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteTables, artifactSqliteInteger as integer, artifactSqliteText as text, artifactSqliteBoolean as boolean, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Cell,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type { SqliteDatabase, SqliteRow, SqliteValue } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 /** 🏛️ Language-neutral authored Note schema, shared with its native implementation. */

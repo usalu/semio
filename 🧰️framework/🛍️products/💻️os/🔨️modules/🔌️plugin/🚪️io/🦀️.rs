@@ -284,7 +284,7 @@ pub trait ArtifactChildren {
     fn slots() -> &'static [::semio_framework_schema_composition::ChildSlotSpec];
     /// 🏗️ Assembles `Self::Snapshot` from resolver-supplied child packs, one `(dialect, pack
     /// bytes)` pair per slot instance (`many` slots contribute more than one pair for the SAME
-    /// `ChildSlotSpec.kind`) — the composition-side counterpart to `decompose_to_children`.
+    /// `ChildSlotSpec.selection`) — the composition-side counterpart to `decompose_to_children`.
     fn compose_from_children(parts: &[(ArtifactDialect, Vec<u8>)]) -> Result<Self::Snapshot, ComposeError>;
     /// 📤️ Inverse of `compose_from_children`: the child packs `Self::Snapshot` currently owns,
     /// keyed by their own dialect — the seam `ArtifactChildren`'s own decompose side of the
@@ -448,7 +448,7 @@ impl<Spec: DerivedArtifactSpec> ArtifactComposer for DerivedArtifactComposer<Spe
 
     /// 🪆️ `Spec::Composition`'s own native/foreign reads, UNION each child slot's kind as an
     /// unconstrained-standard/unconstrained-subset `Dialect` (`StandardId("*")`/`SubsetId::ANY`
-    /// — a child slot names only a `kind`, per `ChildSlotSpec.kind: &'static str`, never a
+    /// — a concrete child selection names a kind, while capability routing belongs to composition; never a
     /// specific standard/subset, so "any standard, any subset of this kind" is the literal
     /// reading of "this slot accepts the kind's dialect family").
     ///
@@ -480,7 +480,9 @@ impl<Spec: DerivedArtifactSpec> ArtifactComposer for DerivedArtifactComposer<Spe
         unions.entry(key).or_insert_with(|| {
             let mut reads: Vec<Dialect> = composition_reads.to_vec();
             for slot in child_slots {
-                reads.push(Dialect { artifact_kind: slot.kind, standard: StandardId("*"), subset: SubsetId::ANY });
+                if let Some(kind) = slot.selection.artifact_kind() {
+                    reads.push(Dialect { artifact_kind: kind, standard: StandardId("*"), subset: SubsetId::ANY });
+                }
             }
             Box::leak(reads.into_boxed_slice()) as &'static [Dialect]
         })
@@ -497,7 +499,7 @@ impl<Spec: DerivedArtifactSpec> ArtifactComposer for DerivedArtifactComposer<Spe
     /// stays synchronous by design (see the framework io module's `resolve_ready` doc comment).
     fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
         let slots = <Spec::Children as ArtifactChildren>::slots();
-        let all_child_sources = !slots.is_empty() && !sources.is_empty() && sources.iter().all(|source| slots.iter().any(|slot| slot.kind == source.dialect.artifact_kind));
+        let all_child_sources = !slots.is_empty() && !sources.is_empty() && sources.iter().all(|source| slots.iter().any(|slot| slot.selection.artifact_kind() == Some(source.dialect.artifact_kind)));
         if all_child_sources {
             let parts: Vec<(ArtifactDialect, Vec<u8>)> = sources
                 .iter()

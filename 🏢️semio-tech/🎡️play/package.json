@@ -1,5 +1,5 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/semio-tech-play",
   "version": "0.1.0",
   "description": "semio-tech · Play: every semio app live in one grid",
@@ -17,11 +17,11 @@
     "@semio-tech/puzzle-2d": "workspace:*"
   },
   "scripts": {
-    "build": "bun nx run @semio-tech/semio-tech-play:build",
-    "test": "bun nx run @semio-tech/semio-tech-play:test",
-    "test:e2e": "bun nx run @semio-tech/semio-tech-play:test-e2e",
-    "test:release": "bun nx run @semio-tech/semio-tech-play:test-release",
-    "test:release:routing": "bun nx run @semio-tech/semio-tech-play:test-release-routing"
+    "build": "bun repo run @semio-tech/semio-tech-play:build",
+    "test": "bun repo run @semio-tech/semio-tech-play:test",
+    "test:e2e": "bun repo run @semio-tech/semio-tech-play:test-e2e",
+    "test:release": "bun repo run @semio-tech/semio-tech-play:test-release",
+    "test:release:routing": "bun repo run @semio-tech/semio-tech-play:test-release-routing"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

@@ -8,7 +8,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-presentation-document-contract": "bun nx run @semio-tech/animate-presentation-rs:verify-presentation-document-contract"
+    "verify-presentation-document-contract": "bun repo run @semio-tech/animate-presentation-rs:verify-presentation-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

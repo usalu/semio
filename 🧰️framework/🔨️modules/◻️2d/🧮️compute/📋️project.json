@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/2d-compute",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test-neutral-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -18,7 +18,7 @@
       }
     },
     "test-schema": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -38,7 +38,7 @@
       }
     },
     "check-types": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -58,7 +58,7 @@
       }
     },
     "test-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

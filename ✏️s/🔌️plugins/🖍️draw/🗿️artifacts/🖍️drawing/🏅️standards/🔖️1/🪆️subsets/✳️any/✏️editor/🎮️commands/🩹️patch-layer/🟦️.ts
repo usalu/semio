@@ -2,7 +2,7 @@
 import type {DrawingArtifact,DrawingLayerNode} from "../../../🧬️schema/🟦️.ts";
 import type {DrawingMutation} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 import {shapeCoordinate} from "../../../🧬️schema/🔷️shape/✏️coordinates/🟦️.ts";
-import {binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 
 function equivalent(current:unknown,proposed:unknown):boolean {
  if(current===proposed||current==null&&proposed==null)return true;

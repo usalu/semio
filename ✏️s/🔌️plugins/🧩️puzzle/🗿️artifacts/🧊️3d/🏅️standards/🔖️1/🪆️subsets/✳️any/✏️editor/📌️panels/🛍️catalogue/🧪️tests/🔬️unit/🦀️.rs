@@ -53,7 +53,7 @@ fn built(envelope: &Puzzle3dScene, view: &ViewModel) -> BuiltNode {
 
 fn json_of(envelope: &Puzzle3dScene, view: &ViewModel) -> String {
     let node = built(envelope, view);
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("catalogue projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("catalogue projection");
     drain();
     json
 }

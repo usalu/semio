@@ -2112,29 +2112,18 @@ impl PreparedRenderInputRejected {
         self.overlay.take()
     }
 
-    pub fn close_step(&mut self) -> bool {
-        if let Some(draw) = self.draw.as_mut() {
-            if !draw.retire_step() {
-                return false;
-            }
-            self.draw = None;
-            return false;
-        }
-        if let Some(overlay) = self.overlay.as_mut() {
-            if !overlay.retire_step() {
-                return false;
-            }
-            self.overlay = None;
-            return false;
-        }
-        if let Some(permit) = self.permit.as_mut() {
-            if !permit.release_step() {
-                return false;
-            }
-            self.permit = None;
-            return false;
-        }
-        true
+    pub fn next_close_demands(&self,_copy:usize)->Result<RetainedCloneGrant,ValueError>{
+        let release=if let Some(draw)=self.draw.as_ref(){draw.next_retirement_release_byte_demand()?}else if let Some(draw)=self.overlay.as_ref(){draw.next_retirement_release_byte_demand()?}else{0};
+        prepared_owner_demands(self.terminal_is_empty(),Ok(release))
+    }
+
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<CloseStep,ValueError>{
+        let release=self.next_close_demands(grant.maximum_copy_bytes)?.maximum_release_bytes;
+        if let Some(step)=prepared_close_gate(grant,self.terminal_is_empty(),Ok(release)){return step}
+        if let Some(draw)=self.draw.as_mut(){if !draw.retirement_is_empty(){return prepared_close_child(draw.retire_granted(grant))}self.draw=None;return prepared_close_progress(0)}
+        if let Some(draw)=self.overlay.as_mut(){if !draw.retirement_is_empty(){return prepared_close_child(draw.retire_granted(grant))}self.overlay=None;return prepared_close_progress(0)}
+        if let Some(permit)=self.permit.as_mut(){let phase=permit.release_phase;if permit.release_step(){self.permit=None}else if permit.release_phase==phase{return Ok(CloseStep::Blocked)}return prepared_close_progress(0)}
+        Ok(CloseStep::Complete{progress:Default::default()})
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -2673,6 +2662,8 @@ impl PreparedRenderJobRejected {
     pub fn take_rejected(&mut self) -> Option<PreparedRenderInput> {
         self.input.take()
     }
+
+    pub fn next_close_demands(&self,copy:usize)->Result<RetainedCloneGrant,ValueError>{match self.input.as_ref(){Some(input)if !input.terminal_is_empty()=>input.next_close_demands(copy),_=>prepared_owner_demands(self.terminal_is_empty(),Ok(0))}}
 
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<CloseStep,ValueError>{
         let Some(input)=self.input.as_mut()else{return Ok(CloseStep::Complete{progress:Default::default()})};

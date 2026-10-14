@@ -40,14 +40,14 @@ fn hosted(requests: Vec<TreeWindowRequest>) -> ViewModel {
 /// returns its credit, which would starve the panels assembled by the tests running beside this one.
 fn panel(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale, view: &ViewModel) -> String {
     let built = render(snapshot, interaction, locale, &TreeWindows::for_body(view, BODY_KEY)).expect("energy artifact tree assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("energy artifact tree projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("energy artifact tree projection")
 }
 
 /// 🏠️ The first paint: no host state at all, so every container opens at its author default and the
 /// shared first-paint budget decides how much of each is materialised.
 fn unhosted(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, locale: Locale) -> String {
     let built = render(snapshot, interaction, locale, &TreeWindows::unhosted()).expect("energy artifact tree assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("energy artifact tree projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("energy artifact tree projection")
 }
 
 fn english(snapshot: &EnergyModelSnapshot) -> String {

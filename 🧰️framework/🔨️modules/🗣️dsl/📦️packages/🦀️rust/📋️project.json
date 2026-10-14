@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-dsl-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🗣️dsl",
   "namedInputs": {
     "default": [
@@ -12,7 +12,7 @@
   },
   "targets": {
     "test-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -23,7 +23,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -34,7 +34,7 @@
       }
     },
     "test-reference": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

@@ -15,13 +15,13 @@ pub(super) fn erased_demand<T: store::ErasedSnapshotRetirement + ?Sized>(owner: 
     Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()?.max(1) })
 }
 
-pub(super) fn erased_step<T: store::ErasedSnapshotRetirement + ?Sized>(owner: &mut T, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+pub(super) fn erased_step<T: store::ErasedSnapshotRetirement + ?Sized>(owner: &mut T, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::PluginLifecycleFailure> {
     let empty = RetainedCloneProgress::default();
     if owner.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-    let demand = erased_demand(owner, grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
+    let demand = erased_demand(owner, grant.maximum_copy_bytes).map_err(crate::PluginLifecycleFailure::from)?;
     if !plugin_turn_admitted(demand, grant)? { return Ok(RetainedCloneStep::Progress(empty)); }
-    let step = owner.close_step(grant).map_err(plugin_retirement_fault)?;
-    admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "envelope returned owner").map_err(plugin_retirement_fault)?;
+    let step = owner.close_step(grant).map_err(crate::PluginLifecycleFailure::from)?;
+    admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "envelope returned owner").map_err(crate::PluginLifecycleFailure::from)?;
     Ok(step)
 }
 
@@ -29,13 +29,13 @@ fn completed_demand<P, Mutation>(record: &dyn store::os_store::owned_schema_deco
     Ok(RetirementDemand { copy_bytes: record.next_close_copy_byte_demand()?, capacity_bytes: record.next_close_capacity_byte_demand(body)?, release_bytes: record.next_close_release_byte_demand()?, depth: record.next_close_depth_demand()?.max(1) })
 }
 
-fn completed_step<P, Mutation>(record: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+fn completed_step<P, Mutation>(record: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::PluginLifecycleFailure> {
     let empty = RetainedCloneProgress::default();
     if record.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-    let demand = completed_demand(record, grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
+    let demand = completed_demand(record, grant.maximum_copy_bytes).map_err(crate::PluginLifecycleFailure::from)?;
     if !plugin_turn_admitted(demand, grant)? { return Ok(RetainedCloneStep::Progress(empty)); }
-    let step = record.close_step(grant).map_err(plugin_retirement_fault)?;
-    admit_retained_clone_close(grant, step, record.terminal_is_empty(), "envelope completed record").map_err(plugin_retirement_fault)?;
+    let step = record.close_step(grant).map_err(crate::PluginLifecycleFailure::from)?;
+    admit_retained_clone_close(grant, step, record.terminal_is_empty(), "envelope completed record").map_err(crate::PluginLifecycleFailure::from)?;
     Ok(step)
 }
 
@@ -48,7 +48,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🎟️ One granted returned field-decoder turn; `Complete` means no returned decoder is left to hand off.
-    pub(crate) fn drive_envelope_field_decoder_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_envelope_field_decoder_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if grant.maximum_items == 0 {
@@ -65,7 +65,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return Ok(PluginLifecycleStep::Progress(empty));
             };
             if !store::ErasedSnapshotRetirement::terminal_is_empty(retirement) {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-false-terminal"), "returned envelope field decoder reported Complete without terminal-empty ownership"));
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-retirement-false-terminal"), "returned envelope field decoder reported Complete without terminal-empty ownership").into());
             }
             let retirement = self
                 .envelope_field_decoder_retirements
@@ -95,7 +95,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return Ok(PluginLifecycleStep::Progress(empty));
             }
             Err(_) => {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-return-invalid"), "returned envelope field decoder lost its exact registry generation before bounded handoff"));
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.field-return-invalid"), "returned envelope field decoder lost its exact registry generation before bounded handoff").into());
             }
         };
         self.envelope_field_decoder_retirements.insert_admitted(id, retirement);
@@ -111,7 +111,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🎟️ One granted completed-record turn; `Complete` means no completed record is left to hand off.
-    pub(crate) fn drive_envelope_completed_record_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_envelope_completed_record_returns(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..empty };
         if grant.maximum_items == 0 {
@@ -128,7 +128,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return Ok(PluginLifecycleStep::Progress(empty));
             };
             if !retirement.terminal_is_empty() {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-false-terminal"), "completed envelope reported Complete without terminal-empty ownership"));
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-retirement-false-terminal"), "completed envelope reported Complete without terminal-empty ownership").into());
             }
             let retirement = self
                 .envelope_completed_record_retirements
@@ -142,7 +142,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             Ok(ticket) => ticket,
             Err(store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordFault::Contended) => return Ok(PluginLifecycleStep::Progress(empty)),
             Err(_) => {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-registry-invalid"), "completed envelope registry lost its exact generation authority"));
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-registry-invalid"), "completed envelope registry lost its exact generation authority").into());
             }
         };
         let Some(ticket) = ticket else {
@@ -169,7 +169,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 return Ok(PluginLifecycleStep::Progress(empty));
             }
             Err(_) => {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-detach-invalid"), "completed envelope could not transfer its exact owner into bounded retirement"));
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-detach-invalid"), "completed envelope could not transfer its exact owner into bounded retirement").into());
             }
         };
         self.envelope_completed_record_retirements.insert_admitted(id, retirement);
@@ -184,7 +184,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🎟️ One granted turn of the cursor's live envelope decode; a terminal decode leaves its fixed slot in the same turn.
-    pub(crate) fn drive_envelope_decode_jobs(&mut self, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_envelope_decode_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, closing: bool) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let cursor = if closing { &mut self.close_envelope_decode_cursor } else { &mut self.maintenance_envelope_decode_cursor };
         let Some((index, operation_id)) = self.envelope_decode_jobs.next_id_from(*cursor) else {
@@ -206,7 +206,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             .envelope_decode_jobs
             .get_mut(operation_id)
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed before worker advancement"))?
-            .drive(&pool, live_generation, &self.envelope_completed_records, grant)?;
+            .drive(cx, live_generation, &self.envelope_completed_records, grant)?;
         #[cfg(target_arch = "wasm32")]
         if let Some(now_ms) = semio_framework_job::default_now_ms() {
             pool.pump(now_ms);
@@ -238,14 +238,14 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// 🎟️ Advances exactly one envelope owner under the caller's unchanged grant: completed records first, then returned field decoders, then the next live decode.
-    pub(crate) fn envelope_decode_close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn envelope_decode_close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let mut blocked = None;
         for unit in 0..3 {
             let step = match unit {
                 0 => self.drive_envelope_completed_record_returns(grant, true)?,
                 1 => self.drive_envelope_field_decoder_returns(grant, true)?,
-                _ => self.drive_envelope_decode_jobs(grant, true)?,
+                _ => self.drive_envelope_decode_jobs(cx,grant, true)?,
             };
             match step {
                 PluginLifecycleStep::Progress(progress) if progress != empty => return Ok(step),

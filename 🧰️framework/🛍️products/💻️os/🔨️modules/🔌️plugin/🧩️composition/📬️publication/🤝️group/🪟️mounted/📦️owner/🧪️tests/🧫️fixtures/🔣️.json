@@ -1,1 +1,38 @@
-{"schema":"semio.mounted-private-group.frame/v1","maximumChildren":64,"copyBytes":64,"cases":[{"id":"zero-items","items":0,"capacity":"frame","admitted":false},{"id":"one-below-frame","items":1,"capacity":"frame-1","admitted":false},{"id":"exact-frame","items":1,"capacity":"frame","admitted":true}]}
+{
+  "schema": "semio.mounted-private-group.frame/v1",
+  "maximumChildren": 64,
+  "copyBytes": 64,
+  "cases": [
+    {
+      "id": "zero-items",
+      "items": 0,
+      "capacity": "frame",
+      "admitted": false
+    },
+    {
+      "id": "one-below-frame",
+      "items": 1,
+      "capacity": "frame-1",
+      "admitted": false
+    },
+    {
+      "id": "exact-frame",
+      "items": 1,
+      "capacity": "frame",
+      "admitted": true
+    }
+  ],
+  "caller": {
+    "generation": 1,
+    "clock": 1,
+    "deadline": 1000000,
+    "fuel": 1,
+    "source": {
+      "maximumItems": 1,
+      "maximumCopyBytes": 64,
+      "maximumCapacityBytes": 262144,
+      "maximumReleaseBytes": 262144,
+      "maximumDepth": 64
+    }
+  }
+}

@@ -731,9 +731,13 @@ impl MeshOperatorJob {
 }
 
 impl neural_engine::OperatorJob for MeshOperatorJob {
-    fn step(&mut self,budget:usize,grant:RetainedCloneGrant)->Result<(neural_engine::OperatorJobStep,RetainedCloneProgress),EvalError> {
-        self.receipt=Default::default();
-        let step=self.advance(budget,grant)?;
+    fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(neural_engine::OperatorJobStep,RetainedCloneProgress),neural_engine::OperatorWorkFailure>{
+        self.receipt=Default::default();let grant=cx.retained_grant();
+        if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok((neural_engine::OperatorJobStep::Working(self.progress),Default::default()))}
+        if cx.is_cancelled(){self.cancel();}
+        let result=self.advance(1,grant);cx.consume_fuel(1);
+        let step=result.map_err(|primary|neural_engine::OperatorWorkFailure::debit_evaluation(primary,self.receipt,cx))?;
+        cx.consume_retained(self.receipt).map_err(|primary|neural_engine::OperatorWorkFailure::Original(primary.into()))?;
         Ok((step,self.receipt))
     }
     fn normal_step_progress(&self)->RetainedCloneProgress {self.receipt}

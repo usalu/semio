@@ -104,7 +104,7 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
     assert.equal(installed, row.installedVia, row.id);
     assert.equal(host.calls.filter((call) => call[1] === "--install-extension").length, row.installCalls, row.id);
     assert.equal(host.calls.filter((call) => call[1] === "--list-extensions").length, row.listCalls, `${row.id}: an unreachable editor is not asked for its extensions`);
-    assert.deepEqual(host.calls.filter((call) => call[0] === "bun"), [["bun", "nx", "run", WORKSPACE_EXTENSION.target]], `${row.id}: packaging goes through Nx exactly once`);
+    assert.deepEqual(host.calls.filter((call) => call[0] === "bun"), [["bun", "repo", "run", WORKSPACE_EXTENSION.target]], `${row.id}: packaging goes through Nx exactly once`);
     assert.equal(existsSync(join(root, "install.lock")), false, `${row.id}: the install lock is released`);
   }
   assert.ok(existsSync(join(workspace, WORKSPACE_EXTENSION.packageRoot, "package.json")), "the workspace extension package exists where the lifecycle packages it");

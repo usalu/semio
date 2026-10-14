@@ -1,0 +1,1 @@
+{"text":"original mutation 漢 🌱️","items":["first α","second β","最後"],"turn":{"items":1,"copyBytes":4096,"capacityBytes":65536,"releaseBytes":65536,"depth":128},"source":{"prefix":[73,11],"suffix":[99,7]},"laws":["sameOriginalSource","oneItemContinuation","sameOriginalNative","ownedTypedFieldsMove","independentSerdeOutput","paidPartialRetirement"]}

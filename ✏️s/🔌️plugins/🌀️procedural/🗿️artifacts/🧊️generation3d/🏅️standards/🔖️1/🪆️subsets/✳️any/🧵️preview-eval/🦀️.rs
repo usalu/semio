@@ -43,6 +43,9 @@ use semio_framework_tool_run::{
 };
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::{BTreeMap, HashSet};
+#[path="📥️tessellation/🦀️.rs"]
+mod tessellation_receiving;
+pub use tessellation_receiving::{PreviewTessellateReceive,PreviewEvalReceive};
 
 //#region 🪟️Addressing
 /// 🪟️ The evaluation tick names the preview window that OWNS the evaluation it advances.
@@ -69,7 +72,9 @@ pub struct FlowEvalResolve {
     pub window_id: String,
     pub window_kind_id: String,
     pub node_hash: u64,
-    pub output_json: String,
+    pub output: semio_framework_value::DslValue,
+    #[value(default)]
+    pub fault: Option<semio_framework::Fault>,
     /// 🪪️ Which extension this answer came from, echoed back off the request's own correlation.
     #[value(default)]
     pub extension_id: String,
@@ -78,11 +83,9 @@ pub struct FlowEvalResolve {
     /// cares about.
     #[value(default)]
     pub ok: bool,
-    /// 💥 The decoded fault of a refused answer, verbatim from the host completion the SDK unpacked.
     #[value(default)]
-    pub fault_code: String,
-    #[value(default)]
-    pub fault_message: String,
+    pub original_input:Option<semio_framework_value::DslValue>,
+    pub input_valid:bool,
 }
 
 /// 🔺️ One budgeted `tessellate` round trip's answer, carrying the same echoed window address so a
@@ -93,7 +96,14 @@ pub struct FlowTessellateResolve {
     pub window_id: String,
     pub window_kind_id: String,
     pub node_hash: u64,
-    pub output_json: String,
+    pub handle: String,
+    pub tolerance: f64,
+    pub output: semio_framework_value::DslValue,
+    #[value(default)]
+    pub fault: Option<semio_framework::Fault>,
+    #[value(default)]
+    pub original_input:Option<semio_framework_value::DslValue>,
+    pub input_valid:bool,
 }
 
 /// 🧯️ The geometry extension's `tessellateCancel` answer, echoed back onto the cancel's own response
@@ -107,9 +117,14 @@ pub struct FlowTessellateCancelResolve {
     pub window_id: String,
     pub window_kind_id: String,
     #[value(default)]
-    pub output_json: String,
+    pub output:semio_framework_value::DslValue,
+    #[value(default)]
+    pub fault:Option<semio_framework::Fault>,
     #[value(default)]
     pub ok: bool,
+    #[value(default)]
+    pub original_input:Option<semio_framework_value::DslValue>,
+    pub input_valid:bool,
 }
 
 /// 🧯️ The hop an aborted or restarted run hands the host to release the kernel work it left behind in
@@ -844,7 +859,6 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
             request_object.insert("nodeHash", semio_framework_pack_json::Value::from(node_hash));
             request_object.insert("budget", semio_framework_pack_json::Value::from(u64::from(PREVIEW_TESSELLATE_STEP_BUDGET)));
             request_object.insert("wallMicros", semio_framework_pack_json::Value::from(PREVIEW_TESSELLATE_STEP_WALL_MICROS));
-            request_object.insert("chunk", semio_framework_pack_json::Value::from(u64::from(session.next_tessellate_chunk(node_hash))));
             request_object.insert("windowId", semio_framework_pack_json::Value::String(window_id.to_string()));
             request_object.insert("windowKindId", semio_framework_pack_json::Value::String(window_kind_id.to_string()));
             let request_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(request_object));
@@ -1071,38 +1085,11 @@ pub fn census_chrome_marks(status_json: &str) -> String {
 /// ⏱️ A budgeted `evaluate` answers an ENVELOPE: a step that spent its wall allowance without
 /// finishing says `done: false` and parks its job under this same `nodeHash`, so the window stays
 /// unfinished and owes one more identical hop (`📓️extension-evaluate-budget-2026-09-12.md`).
-pub fn resolve_eval(payload: &FlowEvalResolve, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<ExtensionInvocation>, semio_framework_value::ValueError> {
-    let outcome = session.resolve_preview_eval_cold(payload.node_hash, &payload.output_json)?;
-    note_eval_answer_fault(payload, session, grant)?;
-    if let semio_framework_os_flow::PreviewEvalOutcome::Pending(pending) = outcome {
-        return Ok(vec![evaluate_invocation(pending, true, String::new(), &payload.window_id, &payload.window_kind_id)]);
-    }
-    let given_up = match &outcome {
-        semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => semio_framework_os_flow::host::io::evaluation_response::decode_flow_node_output_json(output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),
-        semio_framework_os_flow::PreviewEvalOutcome::Cancelled => true,
-        semio_framework_os_flow::PreviewEvalOutcome::Working | semio_framework_os_flow::PreviewEvalOutcome::Pending(_) => false,
-    };
-    if given_up {
-        session.abandon_window_tick(&payload.window_id, grant)?;
-    }
-    session.settle_window_extension(&payload.window_id, grant)?;
-    Ok(Vec::new())
+pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_framework_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};receiver.step(session,&address,cx)
 }
 
 /// 💥 Retains (or forgets) the evaluate fault one answer carried. Publication only — no arming.
-fn note_eval_answer_fault(payload: &FlowEvalResolve, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
-    if payload.ok || payload.fault_code.is_empty() {
-        session.clear_extension_evaluate_fault(grant)?;
-        return Ok(());
-    }
-    session.note_extension_evaluate_fault(semio_framework_os_flow::ExtensionEvaluateFault {
-        extension_id: payload.extension_id.clone(),
-        capability: "evaluate".to_string(),
-        code: payload.fault_code.clone(),
-        message: payload.fault_message.clone(),
-    }, grant).map_err(|(error, _)| error)?;
-    Ok(())
-}
 
 /// 🧯️ A closed run reaches the geometry extension's owned Session jobs and parked evaluations through
 /// the extension's own `evaluateCancel` and `tessellateCancel` capabilities — two doors, because
@@ -1133,7 +1120,7 @@ pub fn resolve_tessellate_cancel(payload: &FlowTessellateCancelResolve, session:
 pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, session: &mut FlowEvalSession, address: Result<String, semio_framework_os_flow::FlowExtensionAddressMiss>) -> Vec<ExtensionInvocation> {
     let _ = session;
     if !payload.ok { eprintln!("flowTessellateCancelResolve: geometry extension refused the cancel for window {}", payload.window_id); return Vec::new(); }
-    let pending = semio_framework_pack_json::parse(&payload.output_json, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().filter(|reply| reply.get("ok").and_then(semio_framework_pack_json::Value::as_bool) == Some(true)).and_then(|reply| reply.get("pending").and_then(semio_framework_pack_json::Value::as_bool)).unwrap_or(false);
+    let pending=payload.output.get("ok").and_then(semio_framework_value::DslValue::as_bool)==Some(true)&&payload.output.get("pending").and_then(semio_framework_value::DslValue::as_bool)==Some(true);
     let Ok(address) = address else { return Vec::new() };
     if !pending { return Vec::new(); }
     vec![ExtensionInvocation::new(address, "evaluateCancel", FlowEvalSession::preview_eval_cancel_invocation_request_json(&payload.window_id, &payload.window_kind_id), "flowTessellateCancelResolve")]
@@ -1148,11 +1135,10 @@ pub fn resolve_tessellate_cancel_for(payload: &FlowTessellateCancelResolve, sess
 /// [`resolve_eval`] now runs inline and for the same reason: this route is window-addressed too, and
 /// the surface continues the chain here whenever
 /// [`FlowEvalSession::inline_continuation_admitted`] says the turn still has room.
-pub fn resolve_tessellate(payload: &FlowTessellateResolve, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
-    session.resolve_preview_tessellate(payload.node_hash, &payload.output_json);
-    session.settle_window_extension(&payload.window_id, grant)?;
-    Ok(())
+pub fn resolve_tessellate(payload:&FlowTessellateResolve,receiver:&mut semio_framework_os_flow::FlowPreviewCompletedReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_framework_os_flow::FlowPreviewCompletedAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id,handle:&payload.handle,tolerance:payload.tolerance};session.resolve_preview_tessellate(receiver,&address,cx)
 }
+
 //#endregion ⏱️Tick
 
 //#region 📈️Status
@@ -1321,7 +1307,7 @@ pub fn preview_progress_status_json_for(session: Option<&FlowEvalSession>, run: 
     // available. A working chain may never publish `ratio: 1.0`, census or not: `Computing 0/0
     // (100%)` is the same lie as `idle`.
     let chain_progress = chain.working && status.in_flight == 0 && matches!(phase, semio_framework_os_flow::PreviewTessellatePhase::Idle) && (chain.nodes_total > 0 || eval_status.in_flight == 0);
-    let (units_done, units_total) = if chain_progress { chain.units() } else { (status.units_done, status.units_total) };
+    let (units_done, units_total) = if chain_progress {let(done,total)=chain.units();(u64::from(done),u64::from(total))} else { (status.units_done, status.units_total) };
     progress.insert("unitsDone", semio_framework_pack_json::Value::from(u64::from(units_done)));
     progress.insert("unitsTotal", semio_framework_pack_json::Value::from(u64::from(units_total)));
     progress.insert("facesDone", semio_framework_pack_json::Value::from(u64::from(status.faces_done)));

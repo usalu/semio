@@ -112,6 +112,27 @@
           }
         }
       }
+    },
+    "Reconciliation": {
+      "description": "The source receives the original affected membership before reconciling an observed change. Structural deletion may discover newly renamed siblings under the same physical parent. Every actual addition and deletion receives its own selection witness.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "change",
+        "priorAffected"
+      ],
+      "properties": {
+        "change": {
+          "$ref": "#/$defs/Change"
+        },
+        "priorAffected": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        }
+      }
     }
   }
 }

@@ -19,6 +19,9 @@ use std::collections::{HashMap, HashSet};
 #[path="🛬️decode/📖️source/🦀️.rs"]
 mod original_record_source;
 pub use original_record_source::{RetainedRecordBodySourceDecode,RetainedRecordBodyReadLimits,RetainedRecordBodySourceStep};
+#[path="🛬️decode/🫴️receiving/🦀️.rs"]
+mod original_record_receiving;
+pub use original_record_receiving::RetainedRecordReceiving;
 
 #[path = "🎟️storage/🦀️.rs"]
 mod original_storage;
@@ -31,6 +34,7 @@ mod original_storage_tests;
 mod controlled_encoding;
 pub use controlled_encoding::{ProjectedSymbolScratch,SourceTextLocator,SourceTextKind};
 pub use controlled_encoding::{BorrowedProjectedPackOperation,BorrowedPackSource,OwnedVariantPackSource,BorrowedProjectedPackCursor,BorrowedProjectedPackProgress,BorrowedProjectedPackFailure};
+pub use controlled_encoding::{OwnedProjectedPackWireCursor,OwnedProjectedPackWireReady,OwnedProjectedPackWireStep};
 
 #[cfg(test)]
 #[path = "🧪️tests/📦️operation-pages/🦀️.rs"]

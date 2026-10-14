@@ -1,9 +1,9 @@
 import { availableParallelism } from "node:os";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 
-/** 🧵️ Resolves how many Nx task slots and bounded worker pools should use on this machine. */
-export function semioNxParallel(): number {
-  const override = process.env.SEMIO_NX_PARALLEL?.trim();
+/** 🧵️ Resolves the shared build task and worker capacity for this machine. */
+export function semioBuildParallel(): number {
+  const override = process.env.SEMIO_BUILD_PARALLEL?.trim();
   if (override) {
     const parsed = Number.parseInt(override, 10);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
@@ -11,29 +11,20 @@ export function semioNxParallel(): number {
   return Math.max(1, availableParallelism());
 }
 
-/** 🧵️ Nx `run-many`/`affected` flag pair sized for this machine. */
-export function semioNxParallelFlag(): readonly [parallel: string, count: string] {
-  return ["--parallel", String(semioNxParallel())];
+/** 🧵️ Neutral task parallelism sized for this machine. */
+export function semioBuildParallelFlag(): readonly [parallel: string, count: string] {
+  return ["--parallel", String(semioBuildParallel())];
 }
 
-/** 🧰️Dev tooling env without IDE-injected node options. Plugin isolation is deliberately left at Nx's
- * own default: this workspace's inference plugin
- * (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs`) is an async ES module — it top-level
- * `await import()`s the runtime-component closure under a revision query — so `NX_ISOLATE_PLUGINS=false`
- * makes Nx's in-process `require()` path (`runPreTasksExecution` → `getPluginsSeparated`) reject it with
- * "require() async module … is unsupported", which fails every `nx run` spawned with this env even
- * though the daemon-served project graph itself resolves. */
+/** 🧰️ Carries neutral build policy without IDE-injected node options. */
 export function devToolingEnv(extra: Partial<NodeJS.ProcessEnv> = {}): NodeJS.ProcessEnv {
   const env = { ...process.env, ...extra };
   delete env.NODE_OPTIONS;
   delete env.VSCODE_INSPECTOR_OPTIONS;
-  env.NX_NATIVE_COMMAND_RUNNER ??= "false";
-  env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT ??= "false";
-  env.NX_TUI ??= "false";
-  env.NX_VERBOSE_LOGGING ??= "false";
-  env.NX_PERF_LOGGING ??= "false";
-  env.NX_NATIVE_LOGGING ??= "nx=warn";
-  env.NX_PARALLEL ??= String(semioNxParallel());
+  env.SEMIO_BUILD_TERMINAL ??= "false";
+  env.SEMIO_BUILD_DYNAMIC_OUTPUT ??= "false";
+  env.SEMIO_BUILD_VERBOSE ??= "false";
+  env.SEMIO_BUILD_PARALLEL ??= String(semioBuildParallel());
   return env;
 }
 

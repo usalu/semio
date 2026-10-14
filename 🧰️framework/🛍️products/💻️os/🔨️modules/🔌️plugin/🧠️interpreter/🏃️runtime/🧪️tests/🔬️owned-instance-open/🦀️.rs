@@ -17,12 +17,12 @@ fn fixture_component() -> std::path::PathBuf {
 }
 
 fn open_budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: u64::MAX, deadline_ms: 8, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: u64::MAX, deadline_us: semio_framework_job::default_now_us().unwrap() + 8000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
 }
 
 
 fn codec_budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 8_000_000_000, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 8_000_000_000, deadline_us: semio_framework_job::default_now_us().unwrap() + 120000000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
 
@@ -34,7 +34,7 @@ fn a_trapped_owned_instance_refuses_every_later_turn() {
 
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
     let mut instance = runtime.instantiate_actor(&compiled).expect("instantiate plugin actor");
     instance.poisoned = true;
@@ -51,7 +51,7 @@ const SECOND_MINTED_DOCUMENT_ID: &str = "artifact-fedcba9876543210fedcba98765432
 fn fresh_codec_answer<T: serde::de::DeserializeOwned>(runtime: &OwnedRuntime, compiled: &OwnedCompiledGuest, operation: OwnedOperation, input: &OwnedCodecInput<'_>) -> (T, u64) {
     let state = &mut runtime.instantiate_actor(compiled).expect("fresh owned instance");
     begin_owned_operation(state, operation, Some(serde_json::to_vec(input).expect("encode codec input"))).expect("begin fresh codec call");
-    let invocation = resume_owned_operation_observed(state, operation, codec_budget().fuel, codec_budget().deadline_ms, OwnedDeadline::NoFuelProgress, |_, _| {}, None).expect("fresh codec call completes");
+    let invocation = resume_owned_operation_observed(state, operation, codec_budget().fuel, codec_budget().deadline_us, OwnedDeadline::Original, |_, _| {}, None).expect("fresh codec call completes");
     (decode_owned_result(&invocation.output).expect("fresh codec call answers"), invocation.fuel_used)
 }
 
@@ -63,7 +63,7 @@ async fn codec_calls_answer_from_the_assembled_origin_exactly_what_a_fresh_insta
 
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile plugin component");
     assert_eq!(compiled.codec_origin_bytes(), 0, "a compiled guest holds no origin before its first codec call");
     let genesis_input = |document_id: &'static str| OwnedCodecInput { artifact_schema: FIXTURE_DOCUMENT_SCHEMA, document_id, pack: &[], spr: &[], ops: &[] };
@@ -106,7 +106,7 @@ async fn codec_calls_answer_from_the_assembled_origin_exactly_what_a_fresh_insta
 fn a_call_waiting_for_another_calls_assembly_relays_its_fuel_honours_its_cancellation_and_takes_over() {
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let owned = &runtime.compile_component(&bytes).expect("compile plugin component");
     let cell: &OwnedCodecOriginCell = &owned.codec_origin;
     *cell.lock() = OwnedCodecOriginState::Assembling { fuel: 7 };

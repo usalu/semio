@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "ports": [
+    { "source": "pub trait Runtime { async fn step(&self, input: semio_framework_actor::RetainedTurnInput) -> Result<Reply, Fault>; }", "foreign": [] },
+    { "source": "pub struct Task { pub reply: tokio::sync::oneshot::Sender<Result<Reply, Fault>> }", "foreign": ["tokio::sync::oneshot::Sender"] },
+    { "source": "pub struct Task { pub engine: std::sync::Arc<wasmtime::Engine> }", "foreign": ["wasmtime::Engine"] },
+    { "source": "pub trait Runtime { fn start(&self) -> wasmtime::Result<()>; }", "foreign": ["wasmtime::Result"] },
+    { "source": "struct Internal { engine: wasmtime::Engine } pub trait Runtime { fn step(&self) -> Reply; }", "foreign": [] },
+    { "source": "pub struct Reply { value: OwnedValue } impl Reply { pub fn len(&self) -> usize { let _ = \"tokio::sync::oneshot::Sender\"; 0 } }", "foreign": [] },
+    { "source": "pub struct Runtime { engine: wasmtime::Engine }", "foreign": [] },
+    { "source": "pub fn run() -> Reply { let engine: wasmtime::Engine = loop {}; loop {} }", "foreign": [] },
+    { "source": "use wasmtime::Engine; pub fn build() -> Engine { loop {} }", "foreign": ["wasmtime::Engine"] },
+    { "source": "use wasmtime::{component::{Store as VmStore}}; pub struct Task { pub store: VmStore<State> }", "foreign": ["wasmtime::component::Store"] },
+    { "source": "use wasmtime::Engine; struct Internal; impl Internal { pub fn build() -> Engine { loop {} } }", "foreign": [] },
+    { "source": "use wasmtime as backend; pub fn build() -> backend::Engine { loop {} }", "foreign": ["wasmtime::Engine"] },
+    { "source": "pub use wasmtime::Engine as ExternalEngine;", "foreign": ["wasmtime::Engine"] },
+    { "source": "use wasmtime as backend; pub use backend::Engine;", "foreign": ["wasmtime::Engine"] }
+  ]
+}

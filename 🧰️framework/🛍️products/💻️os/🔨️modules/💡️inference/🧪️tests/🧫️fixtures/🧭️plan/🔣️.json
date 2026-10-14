@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "policy": {
+    "source": "borrowed-original-graph-ordinals",
+    "comparison": "one-utf8-byte-per-original-turn",
+    "storage": "fixed-page-scalar-indices",
+    "queue": "document-order-kahn",
+    "cycles": "document-order-parentless-tail",
+    "scalarBodyBytes": 8,
+    "receipt": [
+      "items",
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes"
+    ],
+    "caller": "same-operation-generation-source-clock-deadline-recipient"
+  },
+  "nodes": [
+    "root",
+    "a",
+    "b",
+    "both",
+    "root",
+    "orphan",
+    "cycle0",
+    "cycle1",
+    "tail"
+  ],
+  "links": [
+    [
+      "root",
+      "a"
+    ],
+    [
+      "root",
+      "b"
+    ],
+    [
+      "a",
+      "both"
+    ],
+    [
+      "b",
+      "both"
+    ],
+    [
+      "root",
+      "a"
+    ],
+    [
+      "missing",
+      "a"
+    ],
+    [
+      "cycle0",
+      "cycle1"
+    ],
+    [
+      "cycle1",
+      "cycle0"
+    ],
+    [
+      "cycle1",
+      "tail"
+    ]
+  ],
+  "expected": [
+    "root",
+    "orphan",
+    "a",
+    "b",
+    "both",
+    "cycle0",
+    "cycle1",
+    "tail"
+  ],
+  "expectedDistinctEdges": 7
+}

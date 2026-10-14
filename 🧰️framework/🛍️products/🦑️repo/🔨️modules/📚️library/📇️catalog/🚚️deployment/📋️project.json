@@ -3,7 +3,7 @@
   "projectType": "library",
   "targets": {
     "contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment",

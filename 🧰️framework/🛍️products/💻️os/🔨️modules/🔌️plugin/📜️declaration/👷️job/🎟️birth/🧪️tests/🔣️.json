@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "contract": "framework.os.original-reserved-producer-birth",
+  "ports": [
+    "typed-body",
+    "admitted-box"
+  ],
+  "retainsOriginalOnDenial": true,
+  "inlineLock": true,
+  "sharedFrameReleaseBeforeTerminal": true,
+  "cases": [
+    {
+      "port": "typed-body",
+      "items": 2,
+      "copy": 256,
+      "capacity": 160,
+      "depth": 1,
+      "fuel": 1,
+      "admitted": false,
+      "source": true
+    },
+    {
+      "port": "typed-body",
+      "items": 0,
+      "copy": 256,
+      "capacity": 160,
+      "depth": 1,
+      "admitted": false,
+      "source": true,
+      "fuel": 2
+    },
+    {
+      "port": "typed-body",
+      "items": 2,
+      "copy": 256,
+      "capacity": 159,
+      "depth": 1,
+      "admitted": false,
+      "source": true,
+      "fuel": 2
+    },
+    {
+      "port": "typed-body",
+      "items": 2,
+      "copy": 256,
+      "capacity": 160,
+      "depth": 0,
+      "admitted": false,
+      "source": true,
+      "fuel": 2
+    },
+    {
+      "port": "typed-body",
+      "items": 2,
+      "copy": 256,
+      "capacity": 160,
+      "depth": 1,
+      "admitted": true,
+      "source": false,
+      "fuel": 2
+    },
+    {
+      "port": "admitted-box",
+      "items": 1,
+      "copy": 256,
+      "capacity": 95,
+      "depth": 1,
+      "admitted": false,
+      "source": true,
+      "fuel": 1
+    },
+    {
+      "port": "admitted-box",
+      "items": 1,
+      "copy": 256,
+      "capacity": 96,
+      "depth": 1,
+      "admitted": true,
+      "source": false,
+      "fuel": 1
+    }
+  ],
+  "model": {
+    "bodyBytes": 64,
+    "sharedBytes": 96,
+    "headerCopyBytes": 256
+  },
+  "closure": [
+    "inner-job",
+    "body-box",
+    "operation",
+    "shared-frame",
+    "empty-header"
+  ],
+  "receiverRetainsPostedOwner": true
+}

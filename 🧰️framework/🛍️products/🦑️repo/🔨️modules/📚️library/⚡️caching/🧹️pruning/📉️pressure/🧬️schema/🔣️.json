@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "DescriptorCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "reason", "stderr", "records", "admitted"],
+      "properties": {
+        "name": {"type": "string"},
+        "status": {"type": "integer"},
+        "reason": {"enum": ["exit", "output-limit"]},
+        "stderr": {"type": "string"},
+        "records": {"type": "array", "items": {"type": "string"}},
+        "admitted": {"type": "boolean"}
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "minimumAvailableBytes", "targetAvailableBytes", "guardAgeMs", "maximumDeletionBytes"],
+      "properties": {
+        "version": {"const": 1},
+        "minimumAvailableBytes": {"type": "integer", "minimum": 1},
+        "targetAvailableBytes": {"type": "integer", "minimum": 1},
+        "guardAgeMs": {"type": "integer", "minimum": 1},
+        "maximumDeletionBytes": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

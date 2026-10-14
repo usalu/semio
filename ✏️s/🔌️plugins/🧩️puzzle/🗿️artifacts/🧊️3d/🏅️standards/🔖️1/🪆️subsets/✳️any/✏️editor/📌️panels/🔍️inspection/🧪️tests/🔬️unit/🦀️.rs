@@ -66,7 +66,7 @@
     }
 
     fn json_of(node: BuiltNode) -> String {
-        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("inspector projection");
+        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("inspector projection");
         drain();
         json
     }

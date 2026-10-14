@@ -63,7 +63,8 @@ async fn catalog_has_wood_identity() {
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_wood_machines_for_process3d_play() {
-    let manifest = bundle().into_manifest_cold().unwrap();
+    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     assert_eq!(manifest.extension_id, "process-extension-wood");
     assert_eq!(manifest.extends, "process");
     assert_eq!(manifest.topic_contributions.len(), 1);
@@ -74,4 +75,6 @@ async fn bundle_contributes_wood_machines_for_process3d_play() {
     assert_eq!(payload["moduleId"].as_str(), Some("wood"));
     assert_eq!(payload["label"].as_str(), Some("Wood"));
     assert!(semio_framework_pack_json::from_json_str::<Vec<WorkshopMachine>>(payload["machinesJson"].as_str().expect("string"), semio_framework_pack_json::JsonMemberPolicy::Reject).is_ok());
+
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");
 }

@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repository Build Graph V1",
+  "type": "object",
+  "required": [
+    "version",
+    "projects",
+    "dependencies"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "projects": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "name",
+          "root",
+          "targets"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1
+          },
+          "targets": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "execution"
+              ],
+              "properties": {
+                "execution": {
+                  "type": "object",
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "command",
+                        "noop"
+                      ]
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "commands": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "command"
+                            ],
+                            "properties": {
+                              "command": {
+                                "type": "string"
+                              },
+                              "forwardAllArgs": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "cwd": {
+                      "type": "string"
+                    },
+                    "env": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "parallel": {
+                      "type": "boolean"
+                    },
+                    "forwardAllArgs": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "configurations": {
+                  "type": "object"
+                },
+                "dependsOn": {
+                  "type": "array"
+                },
+                "inputs": {
+                  "type": "array"
+                },
+                "outputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "cache": {
+                  "type": "boolean"
+                },
+                "continuous": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "target"
+        ],
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "sourceFile": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "namedInputs": {
+      "type": "object"
+    },
+    "externalNodes": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

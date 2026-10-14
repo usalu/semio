@@ -24,6 +24,9 @@ pub mod notation;
 #[path = "🪆️binding/🦀️.rs"]
 mod binding;
 pub use binding::*;
+#[path="🫴️receiving/🦀️.rs"]
+pub mod receiving;
+pub use receiving::{DslReceivingField,DslReceivingRecord,DslReceivingVariants,DslOwnedReceivingField,DslOwnedReceivingRecord,DslOwnedReceivingVariants,OwnedFieldReceiving};
 #[path = "🛫️encode/🦀️.rs"]
 pub mod native_encoding;
 use semio_framework_value::NativeDecodeControl;

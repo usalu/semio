@@ -1,0 +1,1 @@
+{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["cancelled","loanPresent","dispatchAllowed","admissionNeeded","closeAllowed"],"properties":{"cancelled":{"type":"boolean"},"loanPresent":{"type":"boolean"},"dispatchAllowed":{"type":"boolean"},"admissionNeeded":{"type":"boolean"},"closeAllowed":{"type":"boolean"}}}}

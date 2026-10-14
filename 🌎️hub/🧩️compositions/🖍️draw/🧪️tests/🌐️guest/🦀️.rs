@@ -64,7 +64,7 @@ use super::*;
 async fn wasmtime_runtime_instance_open_settles_against_the_draw_component() {
     let path=plugin_wasm("semio_hub_draw_component.wasm");
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let compiled = runtime.compile(&package_ref("semio:draw", &bytes), &bytes).await.expect("compile plugin component");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &jit_budget()).await.expect("instantiate plugin actor");
     let turn = open_to_settle(&runtime, &mut instance, DRAW_EDITOR_APP, jit_budget, |_| false).await;

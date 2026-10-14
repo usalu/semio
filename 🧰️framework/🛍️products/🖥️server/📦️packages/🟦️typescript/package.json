@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-server",
   "version": "0.1.0",
   "description": "framework · server — typed client for the authoritative server: command submit, projection queries, live subscriptions",
@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework-server:test"
+    "test": "bun repo run @semio-tech/framework-server:test"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

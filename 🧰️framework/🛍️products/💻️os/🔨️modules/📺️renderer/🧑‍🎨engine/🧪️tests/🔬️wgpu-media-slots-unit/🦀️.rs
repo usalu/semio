@@ -7,16 +7,16 @@ fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🎬️presented-media-slots/🔣️.json")).unwrap()
 }
 
-fn props() -> serde_json::Value {
+pub(super) fn props() -> serde_json::Value {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎬️media-transport-reservation/🔣️.json")).unwrap();
     fixture["cases"][0]["props"].clone()
 }
 
-fn owner() -> PresentedMediaOwner {
+pub(super) fn owner() -> PresentedMediaOwner {
     PresentedMediaOwner { plugin_id: "media".into(), controller_id: "video.viewer".into(), app_instance_id: 17, parent_document_id: "document-7".into() }
 }
 
-fn tree(props: serde_json::Value, vector: &serde_json::Value) -> UiTree {
+pub(super) fn tree(props: serde_json::Value, vector: &serde_json::Value) -> UiTree {
     let rect = &vector["localRect"];
     let parent = vector.get("parentRect");
     let generation = vector.get("documentGeneration").and_then(serde_json::Value::as_u64).unwrap_or(3);
@@ -61,7 +61,7 @@ fn tree(props: serde_json::Value, vector: &serde_json::Value) -> UiTree {
     tree
 }
 
-fn retire(mut tree: UiTree) {
+pub(super) fn retire(mut tree: UiTree) {
     if let Some(mut document) = tree.take_document() {
         while !document.close_step() {}
     }

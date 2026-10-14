@@ -1,0 +1,6 @@
+{
+  "cli": { "packageManager": "bun" },
+  "useDaemonProcess": false,
+  "plugins": [],
+  "cacheDirectory": "../🗑️generated/v/nx-cache"
+}

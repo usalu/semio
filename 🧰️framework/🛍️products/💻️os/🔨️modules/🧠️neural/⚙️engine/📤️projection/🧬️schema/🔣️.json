@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "rootKeys",
+    "textPath",
+    "sameRootOnHeaderMove",
+    "projectionHeapBytes",
+    "replyWire"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flag",
+        "negative",
+        "nested",
+        "null",
+        "number"
+      ],
+      "properties": {
+        "flag": {
+          "const": true
+        },
+        "negative": {
+          "const": -2
+        },
+        "nested": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        "null": {
+          "type": "null"
+        },
+        "number": {
+          "const": 3.5
+        }
+      }
+    },
+    "rootKeys": {
+      "const": [
+        "flag",
+        "negative",
+        "nested",
+        "null",
+        "number"
+      ]
+    },
+    "textPath": {
+      "const": [
+        2,
+        0
+      ]
+    },
+    "sameRootOnHeaderMove": {
+      "const": true
+    },
+    "projectionHeapBytes": {
+      "const": 0
+    },
+    "replyWire": {
+      "const": "Pack"
+    }
+  }
+}

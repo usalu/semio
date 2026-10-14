@@ -23,7 +23,7 @@ function terminateProcessTree(pid: number | undefined): void {
 export function devHubCatalogBootstrapPublisherV1(repoRoot: string): DevHubCatalogPublisherV1 {
   return (dataDir, packages, signal, onLine) =>
     new Promise<void>((resolvePublished, rejectPublished) => {
-      const child = spawn("bun", ["nx", "run", "os-hub:trusted-catalog-bootstrap", "--packages", packages, "--outputStyle=stream"], { cwd: repoRoot, env: { ...process.env, OS_HUB_DATA: dataDir }, stdio: ["ignore", "pipe", "pipe"], shell: false, detached: process.platform !== "win32" });
+      const child = spawn("bun", ["repo", "run", "os-hub:trusted-catalog-bootstrap", "--packages", packages, "--outputStyle=stream"], { cwd: repoRoot, env: { ...process.env, OS_HUB_DATA: dataDir }, stdio: ["ignore", "pipe", "pipe"], shell: false, detached: process.platform !== "win32" });
       const abort = (): void => terminateProcessTree(child.pid);
       signal.addEventListener("abort", abort, { once: true });
       let pending = "";

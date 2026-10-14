@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "builders",
+    "profiles",
+    "value",
+    "workers",
+    "maximumMilliseconds",
+    "maximumBytes",
+    "readinessMilliseconds",
+    "lockObservations",
+    "librarySource",
+    "buildSource",
+    "lockSource"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "builders": {
+      "const": [
+        "cohort_a",
+        "cohort_b"
+      ]
+    },
+    "profiles": {
+      "const": [
+        "prototype",
+        "release"
+      ]
+    },
+    "value": {
+      "const": 137
+    },
+    "workers": {
+      "const": 1
+    },
+    "maximumMilliseconds": {
+      "const": 180000
+    },
+    "maximumBytes": {
+      "const": 100000000
+    },
+    "readinessMilliseconds": {
+      "const": 30000
+    },
+    "lockObservations": {
+      "const": [
+        "blocked",
+        "acquired"
+      ]
+    },
+    "librarySource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "buildSource": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lockSource": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

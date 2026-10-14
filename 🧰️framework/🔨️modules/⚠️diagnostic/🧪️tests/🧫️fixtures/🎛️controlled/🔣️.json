@@ -791,6 +791,223 @@
         "retainedProgress": null
       },
       "accepted": false
+    },
+    {
+      "id": "fault-complete-domain-projection",
+      "owner": "Fault",
+      "input": {
+        "origin": "framework",
+        "code": "framework.test",
+        "severity": "fatal",
+        "message": "message",
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        },
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "causes": [
+          {
+            "message": "cause",
+            "code": "module.cause"
+          },
+          {
+            "message": "second"
+          }
+        ],
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "domain": {
+          "operation": 18446744073709551615,
+          "signed": -9223372036854775808,
+          "payload": {
+            "mesh": [
+              1.25,
+              true,
+              null,
+              "Über 🧩"
+            ]
+          }
+        }
+      },
+      "accepted": true,
+      "expected": {
+        "origin": "framework",
+        "code": "framework.test",
+        "severity": "fatal",
+        "message": "message",
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        },
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "causes": [
+          {
+            "message": "cause",
+            "code": "module.cause"
+          },
+          {
+            "message": "second"
+          }
+        ],
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "domain": {
+          "operation": 18446744073709551615,
+          "signed": -9223372036854775808,
+          "payload": {
+            "mesh": [
+              1.25,
+              true,
+              null,
+              "Über 🧩"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fault-domain-reject-null",
+      "owner": "Fault",
+      "input": {
+        "origin": "framework",
+        "code": "framework.test",
+        "severity": "fatal",
+        "message": "message",
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        },
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "causes": [
+          {
+            "message": "cause",
+            "code": "module.cause"
+          },
+          {
+            "message": "second"
+          }
+        ],
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "domain": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "fault-domain-reject-array",
+      "owner": "Fault",
+      "input": {
+        "origin": "framework",
+        "code": "framework.test",
+        "severity": "fatal",
+        "message": "message",
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        },
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "causes": [
+          {
+            "message": "cause",
+            "code": "module.cause"
+          },
+          {
+            "message": "second"
+          }
+        ],
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "domain": []
+      },
+      "accepted": false
+    },
+    {
+      "id": "fault-domain-reject-text",
+      "owner": "Fault",
+      "input": {
+        "origin": "framework",
+        "code": "framework.test",
+        "severity": "fatal",
+        "message": "message",
+        "scope": {
+          "pluginId": "plugin",
+          "appId": "app",
+          "instanceId": "instance",
+          "module": "module",
+          "bodyKey": "body"
+        },
+        "span": {
+          "line": 1,
+          "column": 2,
+          "length": 3
+        },
+        "causes": [
+          {
+            "message": "cause",
+            "code": "module.cause"
+          },
+          {
+            "message": "second"
+          }
+        ],
+        "retryable": true,
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "domain": "unowned json text"
+      },
+      "accepted": false
     }
   ],
   "stress": {

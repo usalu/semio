@@ -7,12 +7,13 @@ import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { build } from "esbuild";
 import ts from "typescript";
+import Ajv from "ajv";
 
 type Phase = { file: string; projects: Record<string, string>; packages: Record<string, string>; locked: Record<string, string>; targets: string[] };
 type Vector = { id: string; source: string; phases: Phase[] };
 type ModuleProvider = { moduleSourceImports(path: string, source: string): readonly string[]; commandSourceImports(path: string, source: string): readonly string[] };
 const caching = resolve(import.meta.dir, "../../.."), require = createRequire(import.meta.url);
-const fixture = JSON.parse(readFileSync(join(caching, "🧪️tests/🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { version: number; imports: { id: string; path: string; source: string; imports: string[] }[]; contexts: Vector[] };
+const fixture = JSON.parse(readFileSync(join(caching, "🧪️tests/🧫️fixtures/import-edges/🔁️context/🔣️.json"), "utf8")) as { version: number; imports: { id: string; path: string; source: string; imports: string[]; moduleImports:string[] }[]; contexts: Vector[] };
 
 /** 🔍️ Obtains runtime strings from independent esbuild resolution and TypeScript emission/scanning. */
 async function oracle(path: string, source: string): Promise<string[]> {
@@ -29,6 +30,7 @@ async function oracle(path: string, source: string): Promise<string[]> {
 }
 
 test("module source and resolution examples have unique identities", () => {
+  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(caching,"🧬️schema/🔗️import-edges/🔁️context/🔣️.json"),"utf8")))(fixture)).toBe(true);
   for (const rows of [fixture.imports, fixture.contexts]) expect(new Set(rows.map(row => row.id)).size).toBe(rows.length);
   console.log(`[DEBUG] import edge corpus: ${fixture.imports.length} source vectors, ${fixture.contexts.length} context replay laws`);
 });
@@ -40,7 +42,8 @@ test("canonical module facts agree with independent runtime import oracles", asy
   expect(typeof provider.moduleSourceImports).toBe("function");
   for (const [index, row] of fixture.imports.entries()) {
     const facts = provider.moduleSourceImports(row.path, row.source);
-    expect([...facts].sort(), row.id).toEqual(expected[index]!);
+    expect([...facts].sort(),row.id).toEqual(row.moduleImports);
+    expect([...new Set(ts.preProcessFile(row.source,true,true).importedFiles.map(file=>file.fileName))].sort(),row.id+": original TypeScript scanner").toEqual(row.moduleImports);
     expect([...provider.commandSourceImports(row.path, row.source)].sort(), row.id).toEqual(expected[index]!.filter(value => value.startsWith(".")));
     const mutated = [...facts, "unowned"];
     expect(provider.moduleSourceImports(row.path, row.source)).toEqual(facts);
@@ -80,14 +83,14 @@ for (const vector of fixture.contexts) test(`immutable source facts resolve curr
         writeFileSync(manifest, JSON.stringify({ name, version, main: "index.js" }));
         writeFileSync(join(dirname(manifest), "index.js"), "module.exports = {};\n");
       }
-      const imported = await oracle(phase.file, vector.source);
-      const resolved = spawnSync("node", ["-e", 'const fs=require("node:fs"),{TargetProjectLocator}=require(process.argv[1]),x=JSON.parse(fs.readFileSync(0,"utf8")),l=new TargetProjectLocator(x.nodes,x.externalNodes,new Map(),new Map()); const core=x.imported.filter(require("node:module").isBuiltin);console.log(JSON.stringify({core,targets:[...new Set(x.imported.map(s=>l.findProjectFromImport(s,s.startsWith(".")?x.file:x.absolute)).filter(Boolean))].sort()}));', require.resolve("nx/src/plugins/js/project-graph/build-dependencies/target-project-locator")], { input: JSON.stringify({ nodes, externalNodes, imported, file: phase.file, absolute }), env:{...process.env,NX_WORKSPACE_ROOT_PATH:root}, encoding: "utf8", timeout: 10000 });
+      const imported=[...new Set(ts.preProcessFile(vector.source,true,true).importedFiles.map(file=>file.fileName))].sort();
+      const resolved = spawnSync("node", ["-e", 'const fs=require("node:fs"),{TargetProjectLocator}=require(process.argv[1]),x=JSON.parse(fs.readFileSync(0,"utf8")),l=new TargetProjectLocator(x.nodes,x.externalNodes,new Map(),new Map()); const core=x.imported.filter(require("node:module").isBuiltin);console.log(JSON.stringify({core,targets:[...new Set(x.imported.map(s=>l.findProjectFromImport(s,s.startsWith(".")?x.file:x.absolute)).filter(Boolean))].sort()}));', require.resolve("nx/src/plugins/js/project-graph/build-dependencies/target-project-locator")], { input: JSON.stringify({ nodes, externalNodes, imported, file: phase.file, absolute }), env:{...process.env,SEMIO_WORKSPACE_ROOT_PATH:root}, encoding: "utf8", timeout: 10000 });
       expect(resolved.status, resolved.stderr).toBe(0);
       const { targets: expected, core } = JSON.parse(resolved.stdout) as { targets: string[]; core: string[] };
       expect(expected, `${vector.id}: installed Nx resolution`).toEqual(phase.targets);
       const projectFiles = { caller: [{ file: phase.file, hash }] }, byPackage = new Map(Object.entries(phase.packages)), locked = { resolveImport: resolver, externalNodes };
       for (const temperature of ["cold", "warm"]) {
-        expect(join(cacheInternals.moduleSourceFactCacheRoot(root),"0".repeat(64)+".json").length, `${vector.id}: cache output path admission`).toBeLessThanOrEqual(256);
+        expect(join(cacheInternals.moduleSourceRecordCacheRootV1(root),"0".repeat(64)+".json").length, `${vector.id}: cache output path admission`).toBeLessThanOrEqual(256);
         calls = [];
         const targets = new Set<string>();
         await cacheInternals.collectImportEdges(root, projectFiles, projects, byPackage, locked, (_source: string, target: string) => { targets.add(target); });

@@ -6,7 +6,7 @@ import type { AssetDeliveryProviderV1 } from "../../../../../../🔨️modules/�
 import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
 import type { ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly PlaygroundEntry[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string };
+export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly PlaygroundEntry[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string;readonly browserHost?:()=>Readonly<{moduleRoot:string;activationRoot:string;extensionsRoot:string}>|undefined };
 import { createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
@@ -23,7 +23,6 @@ import { devStreamMuxServer, semioAgentBridgeRendezvousVitePlugin, semioAgentCre
 import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 
 import { developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt } from "../../♻️activation/🟦️.ts";
-import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
 import { DISTRIBUTION_LAYOUT, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
 
@@ -48,11 +47,11 @@ const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.
 const buildMode = readBuildMode(mode), profile = buildMode;
 const rendererModulesDir = path.resolve(playDir, `../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-${buildMode}`);
 const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile, "react");
-const testBrowserHost = command === "serve" ? resolveTestBrowserHostRootsV1(process.env) : undefined;
+const testBrowserHost = command === "serve" ? options.inventory.browserHost?.() : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
 const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
 const pluginModulesDir = testBrowserHost?.moduleRoot ?? builtPluginModulesRootIn(repoRoot, buildMode);
-const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? path.join(testBrowserHost.browserHostRoot, "extensions") : path.join(runtimeRoot, "extensions");
+const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? testBrowserHost.extensionsRoot : path.join(runtimeRoot, "extensions");
 const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
 const sessionRoot = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions");
 const sessionAlias = playgroundSessionViteAlias(sessionRoot, plugin);

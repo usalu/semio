@@ -32,7 +32,7 @@ fn round_always_answers_an_integer_and_every_other_kind_a_number() {
 fn an_integer_input_is_accepted_where_a_number_is_declared() {
     let kind = support::kind_of("math.add");
     let values = BTreeMap::from([("a".to_string(), GeometryValue::Integer(2)), ("b".to_string(), GeometryValue::Number(0.5))]);
-    let evaluation = support::drive(registry_entry("math.add")(kind, WidgetInputs::new("w", kind, values)), 1);
+    let evaluation = support::drive(registry_entry("math.add")(kind, WidgetInputs::new_cold("w", kind, values)), 1);
     assert_eq!(evaluation.outputs.get("result"), Some(&GeometryValue::Number(2.5)));
 }
 
@@ -40,7 +40,7 @@ fn an_integer_input_is_accepted_where_a_number_is_declared() {
 fn a_missing_input_is_a_localized_fault_at_that_port_and_never_a_panic() {
     let kind = support::kind_of("math.divide");
     let values = BTreeMap::from([("a".to_string(), GeometryValue::Number(1.0))]);
-    let evaluation = support::drive(registry_entry("math.divide")(kind, WidgetInputs::new("w", kind, values)), 1);
+    let evaluation = support::drive(registry_entry("math.divide")(kind, WidgetInputs::new_cold("w", kind, values)), 1);
     let fault = evaluation.fault.expect("a fault");
     assert_eq!((fault.code.as_str(), fault.port.as_deref()), ("generation3d.geometry.input-missing", Some("b")));
     assert!(evaluation.outputs.is_empty());

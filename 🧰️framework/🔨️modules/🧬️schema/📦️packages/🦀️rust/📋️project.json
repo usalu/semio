@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/framework-schema",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate",
@@ -12,7 +12,7 @@
       "cache": true
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -20,7 +20,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -28,7 +28,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -36,7 +36,7 @@
       }
     },
     "test-subset-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -46,7 +46,7 @@
       }
     },
     "test-entity-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -58,7 +58,7 @@
       }
     },
     "test-mutation-leaf-registration": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -72,7 +72,7 @@
       }
     },
     "test-neutrality": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [

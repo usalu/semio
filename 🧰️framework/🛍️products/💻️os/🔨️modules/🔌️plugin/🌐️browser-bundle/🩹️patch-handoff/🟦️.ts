@@ -1,8 +1,8 @@
 /// <reference types="vitest/importMeta" />
 /** 🩹️ Strict private browser-actor UI patch handoff. */
 import type { UiNodeRecord, UiPatch, UiPatchOp } from "@semio-tech/framework";
-import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
-import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import { actorInstanceLifetimeEquals, type ActorInstanceLifetime } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
+import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing, type ActorUiPatchReceipt } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 
 export type BrowserActorUiPatchScopeV1 = { readonly spaceId: string; readonly documentId: string };
 

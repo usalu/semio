@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "operation": 71,
+  "generation": 3,
+  "export": "ChannelVersion",
+  "sourceRetained": true,
+  "copyCuts": [
+    0,
+    4096
+  ],
+  "expectedVm": 2,
+  "noBudgetContext": true
+}

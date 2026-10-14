@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-sqlite-snapshot-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot",
   "namedInputs": {
     "default": [
@@ -11,7 +11,7 @@
   },
   "targets": {
     "test-refusal": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -22,7 +22,7 @@
       }
     },
     "test-receiving-schema-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -33,7 +33,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -44,7 +44,7 @@
       }
     },
     "test-operation": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -55,7 +55,7 @@
       }
     },
     "test-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -66,7 +66,7 @@
       }
     },
     "test-original-fixed-limits-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -77,7 +77,7 @@
       }
     },
     "test-original-fixed-limits-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -88,7 +88,7 @@
       }
     },
     "test-original-physical-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -100,7 +100,7 @@
       }
     },
     "test-original-physical-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [

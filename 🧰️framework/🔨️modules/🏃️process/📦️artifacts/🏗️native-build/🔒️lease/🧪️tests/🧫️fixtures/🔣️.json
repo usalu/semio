@@ -61,34 +61,103 @@
   ],
   "cases": [
     {
-      "name": "same-profile-serialized",
-      "first": "wasm-prototype",
-      "second": "wasm-prototype",
+      "name": "same-profile-builders-parallel",
+      "first": "prototype",
+      "second": "prototype",
+      "action": "parallel",
+      "firstAccess": "compile",
+      "secondAccess": "compile"
+    },
+    {
+      "name": "same-profile-maintenance-exclusion",
+      "first": "prototype",
+      "second": "prototype",
+      "firstAccess": "maintain",
+      "secondAccess": "compile",
       "action": "release-first"
     },
     {
       "name": "native-profile-independent",
       "first": "wasm-prototype",
       "second": "dev",
-      "action": "parallel"
+      "action": "parallel",
+      "firstAccess": "compile",
+      "secondAccess": "compile"
     },
     {
       "name": "release-profile-independent",
       "first": "wasm-prototype",
       "second": "wasm-release",
-      "action": "parallel"
+      "action": "parallel",
+      "firstAccess": "compile",
+      "secondAccess": "compile"
     },
     {
       "name": "cancelled-waiter",
       "first": "wasm-prototype",
       "second": "wasm-prototype",
-      "action": "cancel-second"
+      "action": "cancel-second",
+      "firstAccess": "maintain",
+      "secondAccess": "compile"
     },
     {
       "name": "crashed-holder",
       "first": "wasm-prototype",
       "second": "wasm-prototype",
-      "action": "kill-first"
+      "action": "kill-first",
+      "firstAccess": "maintain",
+      "secondAccess": "compile"
+    }
+  ],
+  "maximumWaitMilliseconds": 3000,
+  "fairness": [
+    {
+      "name": "profile-writer-barrier",
+      "profile": "prototype",
+      "writerAccess": "maintain"
+    },
+    {
+      "name": "store-writer-barrier",
+      "profile": "prototype",
+      "writerAccess": "store-maintain"
+    }
+  ],
+  "targets": [
+    {
+      "name": "same-store-distinct-directories",
+      "firstBuild": "b",
+      "firstTarget": "t",
+      "secondBuild": "b",
+      "secondTarget": "t",
+      "secondAccess": "compile",
+      "action": "parallel"
+    },
+    {
+      "name": "target-profile-maintenance",
+      "firstBuild": "b",
+      "firstTarget": "t",
+      "secondBuild": "t",
+      "secondTarget": "t",
+      "secondAccess": "maintain",
+      "action": "release-first"
+    },
+    {
+      "name": "target-store-maintenance",
+      "firstBuild": "b",
+      "firstTarget": "t",
+      "secondBuild": "t",
+      "secondTarget": "t",
+      "secondAccess": "store-maintain",
+      "action": "release-first"
+    },
+    {
+      "name": "target-maintenance-cancellation",
+      "firstBuild": "b",
+      "firstTarget": "t",
+      "secondBuild": "t",
+      "secondTarget": "t",
+      "secondAccess": "store-maintain",
+      "action": "cancel-second"
     }
   ]
 }

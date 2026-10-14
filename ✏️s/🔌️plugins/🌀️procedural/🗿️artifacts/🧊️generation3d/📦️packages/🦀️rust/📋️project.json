@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/procedural-generation3d-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -9,7 +9,7 @@
   ],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -25,7 +25,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -33,7 +33,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -41,7 +41,7 @@
       }
     },
     "verify-generation3d-widget-inputs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
@@ -58,7 +58,7 @@
       }
     },
     "verify-document-restoration-oracle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
@@ -67,7 +67,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
@@ -76,7 +76,7 @@
       }
     },
     "verify-generation3d-document-io": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
@@ -93,7 +93,7 @@
       }
     },
     "verify-generation3d-preview-window-transient": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
@@ -125,7 +125,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify semantic-wire",
@@ -133,7 +133,7 @@
       }
     },
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -151,7 +151,7 @@
       }
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -169,7 +169,7 @@
       }
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -187,7 +187,7 @@
       }
     },
     "verify-geometry-context": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -206,6 +206,42 @@
             "geometry-context"
           ]
         }
+      }
+    },
+    "verify-generation3d-widget-inputs-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify generation3d-widget-inputs native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "generation3d-widget-inputs",
+            "native"
+          ]
+        }
+      }
+    }
+,
+    "verify-original-widget-output-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify original-widget-output",
+        "forwardAllArgs": true
+      }
+    },    "verify-original-widget-output-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify original-widget-output native",
+        "forwardAllArgs": true
       }
     }
   }

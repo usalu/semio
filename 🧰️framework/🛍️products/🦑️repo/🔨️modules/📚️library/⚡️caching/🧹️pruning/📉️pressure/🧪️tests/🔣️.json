@@ -1,0 +1,17 @@
+{
+  "policy": {"version": 1, "minimumAvailableBytes": 20, "targetAvailableBytes": 60, "guardAgeMs": 100, "maximumDeletionBytes": 45},
+  "nowMs": 1000,
+  "units": [
+    {"path": "old", "bytes": 20, "recencyMs": 100, "lockHeld": false, "kind": "cargo-build"},
+    {"path": "locked", "bytes": 100, "recencyMs": 50, "lockHeld": true, "kind": "cargo-build"},
+    {"path": "second", "bytes": 20, "recencyMs": 200, "lockHeld": false, "kind": "cargo-build"},
+    {"path": "larger", "bytes": 60, "recencyMs": 300, "lockHeld": false, "kind": "cargo-build"},
+    {"path": "hot", "bytes": 100, "recencyMs": 950, "lockHeld": false, "kind": "cargo-build"},
+    {"path": "boundary", "bytes": 5, "recencyMs": 900, "lockHeld": false, "kind": "cargo-build"}
+  ],
+  "cases": [
+    {"availableBytes": 19, "selected": ["old", "second", "boundary"], "bytes": 45, "targetUnmetBytes": 0},
+    {"availableBytes": 20, "selected": [], "bytes": 0, "targetUnmetBytes": 0},
+    {"availableBytes": 0, "selected": ["old", "second", "boundary"], "bytes": 45, "targetUnmetBytes": 15}
+  ]
+}

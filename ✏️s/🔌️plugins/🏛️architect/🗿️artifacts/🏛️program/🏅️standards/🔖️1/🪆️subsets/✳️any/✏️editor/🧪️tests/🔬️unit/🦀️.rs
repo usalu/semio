@@ -224,17 +224,17 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<ArchitectPlayApp>>(context::architect_app_manifest_for_tests).await;
-    assert!(ArchitectPlayApp::command_from_action("notARealAction", None).is_err());
+    assert!(ArchitectPlayApp::command_from_action("notARealAction", None, None).is_err());
 }
 
 /// 🎯️ Spot-check a representative sample of action ids round-tripping into the expected typed
 /// `ArchitectCommand` variant.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_declared_actions() {
-    assert!(matches!(ArchitectPlayApp::command_from_action("runValidation", None), Ok(ArchitectCommand::RunValidation(_))));
-    assert!(matches!(ArchitectPlayApp::command_from_action("search", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "query": "hall" })))), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
+    assert!(matches!(ArchitectPlayApp::command_from_action("runValidation", None, None), Ok(ArchitectCommand::RunValidation(_))));
+    assert!(matches!(ArchitectPlayApp::command_from_action("search", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "query": "hall" }))).clone()), None), Ok(ArchitectCommand::Search(query::Search { query })) if query == "hall"));
     assert!(matches!(
-        ArchitectPlayApp::command_from_action("selectRegister", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "registerId": "risks" })))),
+        ArchitectPlayApp::command_from_action("selectRegister", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "registerId": "risks" }))).clone()), None),
         Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id })) if register_id == "risks"
     ));
 }
@@ -254,7 +254,7 @@ async fn set_active_example_is_declared_bridged_and_loads_the_document() {
         definition.actions.iter().any(|action| action.id == "setActiveExample"),
         "setActiveExample must sit in the app-level action roster, else the shell drops the navbar's boot dispatch"
     );
-    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "demo" })))).expect("setActiveExample bridges");
+    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "demo" }))).clone()), None).expect("setActiveExample bridges");
     assert!(matches!(&command, ArchitectCommand::SetActiveExample(payload) if payload.example_id == "demo"));
     assert_eq!(ArchitectPlayApp::command_id(&command), "setActiveExample");
     let emit = context::drive(&command, &sample_plugin());
@@ -266,7 +266,7 @@ async fn set_active_example_is_declared_bridged_and_loads_the_document() {
 /// whatever its combobox holds, including ids belonging to a sibling plugin.
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_example_id_loads_nothing() {
-    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "not-an-architect-example" })))).expect("setActiveExample bridges");
+    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "not-an-architect-example" }))).clone()), None).expect("setActiveExample bridges");
     let emit = context::drive(&command, &sample_plugin());
     assert!(emit.effects.is_empty() && emit.artifact_mutations.is_empty());
 }

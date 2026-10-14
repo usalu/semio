@@ -73,7 +73,7 @@ export function parseLowpolyBounds(value: unknown, at = "$"): LowpolyBounds {
 }
 
 import type { LowpolyTransform } from "../🟦️.ts";
-import { binary32Value, type Binary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { binary32Value, type Binary32 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 
 /** 🔄️ Semantic XYZ Euler degrees to a unit quaternion [x,y,z,w]. */
 export function eulerDegreesToQuaternion(rotation: readonly [Binary32, Binary32, Binary32]): [number, number, number, number] {

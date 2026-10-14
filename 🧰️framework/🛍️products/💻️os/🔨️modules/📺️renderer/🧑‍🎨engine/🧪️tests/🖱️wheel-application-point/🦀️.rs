@@ -27,13 +27,14 @@ fn every_admitted_wheel_reaches_dispatch_at_its_original_point() {
         let mut actual = Vec::new();
         while !queue.is_empty() {
             let page = queue.drain_page(ui_host::WorkerContext::new(queue.current_generation()));
-            let mut cursor = super::RuntimeDispatchCursor::new_for_generation(page, 1);
+            let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+            let mut cursor = super::RuntimeDispatchCursor::new_for_generation(page, 1,original);
             while let Some(event) = cursor.take_next() {
                 if let DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } = event {
                     actual.push((x, y, delta_x, delta_y, modifiers));
                 }
             }
-            assert!(cursor.terminal_is_empty());
+            assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());assert!(cursor.terminal_is_empty());caller.finish();
         }
         let expected: Vec<_> = case["applications"].as_array().unwrap().iter().map(|event| (number(&event["x"]), number(&event["y"]), event["deltaX"].as_f64().unwrap_or(0.0) as f32, number(&event["delta"]), modifiers(&event["modifiers"]))).collect();
         assert_eq!(actual, expected, "{}", case["name"]);

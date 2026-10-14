@@ -480,7 +480,7 @@ function assertInfrastructure(row:InfrastructureCase):void {
  expect(manifest.name,row.id).toBe(row.name);expect(manifest.private,row.id).toBe(true);
  for(const field of ["exports","main","module","types"]) expect(manifest[field],row.id+":"+field).toBeUndefined();
  expect(row.entrySourcePresent,row.id).toBe(false);
- expect(manifest.scripts,row.id).toEqual(Object.fromEntries(row.commands.map(command=>[command,"bun nx run "+row.name+":"+command])));
+ expect(manifest.scripts,row.id).toEqual(Object.fromEntries(row.commands.map(command=>[command,"bun repo run "+row.name+":"+command])));
  const source=ts.createSourceFile("📜️script.ts",row.scriptSource,ts.ScriptTarget.Latest,true),registered=new Set<string>();
  const visit=(node:ts.Node):void=>{if(ts.isCallExpression(node)&&ts.isPropertyAccessExpression(node.expression)&&node.expression.name.text==="register"&&node.arguments[0]&&ts.isStringLiteral(node.arguments[0]))registered.add(node.arguments[0].text);ts.forEachChild(node,visit);};visit(source);
  expect([...registered].sort(),row.id).toEqual([...row.commands].sort());expect(Object.keys(row.project.targets).sort(),row.id).toEqual([...row.commands].sort());

@@ -14,6 +14,18 @@ import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️ty
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "original-fixture-caller-source" || segments[0] === "original-fixture-caller-native") {
+      if (segments.length !== 1) throw Error("Original fixture caller gate takes one exact cohort");
+      const remaining = this.invocation.control.remainingMilliseconds();
+      if (remaining === null || remaining <= 0) throw Error("Original fixture caller requires its finite original deadline");
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../⏱️context/🧪️testing/🎟️caller/🧪️tests/🟦️.ts")], this.repoRoot, "job:original-fixture-caller-source", remaining, { env: process.env });
+      if (segments[0] === "original-fixture-caller-native") {
+        const left = this.invocation.control.remainingMilliseconds();
+        if (left === null || left <= 0) throw Error("Original fixture caller exhausted before native admission");
+        await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left }, manifestPaths: { "semio-framework-job": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-job", cargoArgs: ["--features", "testkit"], target: { kind: "test", name: "original-fixture-caller" }, laws: ["original_fixture_caller_keeps_one_stock_recipient_fuel_and_paid_root_close", "original_fixture_caller_restores_narrowed_loan_after_unwind_and_deadline", "original_fixture_caller_keeps_monotonic_clock_observation_across_turns_and_root_close", "original_fixture_caller_work_loan_preserves_actual_fuel_deadline_clock_and_recipient"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR });
+      }
+      return;
+    }
     const { rest } = resolveTestLevel(segments);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-job"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
@@ -58,21 +70,21 @@ class OriginalTurnFailureScript extends BundleScript {
   const source=resolve(this.root,"../../⚠️failure/🧪️tests/🟦️.ts");
   await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"job:original-failure-types",remaining,{env:process.env});
   await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"job:original-failure-source",this.invocation.control.remainingMilliseconds()??0,{env:process.env});
-  if(segments[0]==="native"){const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original native failure qualification exhausted its caller");await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:remaining,listMilliseconds:remaining,lawMilliseconds:remaining},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-turn-failure"},laws:["original_turn_failure_debit_preserves_both_owned_causes","original_turn_failure_paid_retirement_preserves_denied_sources","original_turn_failure_preserves_full_diagnostic_custody","original_turn_failure_preserves_three_complete_owned_causes"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});}
+  if(segments[0]==="native"){const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original native failure qualification exhausted its caller");await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:remaining,listMilliseconds:remaining,lawMilliseconds:remaining},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-turn-failure"},cargoArgs:["--features","testkit"],laws:["original_turn_failure_debit_preserves_both_owned_causes","original_turn_failure_paid_retirement_preserves_denied_sources","original_turn_failure_preserves_full_diagnostic_custody","original_turn_failure_preserves_three_complete_owned_causes","original_turn_failure_domain_admission_preserves_full_source_and_paid_close","original_closure_tests::original_source_closure_full_pair_same_caller_denials_and_paid_close"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});}
  }
 }
 
 /** 🎟️ Verifies the mandatory original-context close contract against its neutral oracle. */
 class OriginalCloseContextScript extends BundleScript {
  async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("Original close context source takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original close context requires finite original caller authority");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🎟️context/🧪️tests/🟦️.ts")],this.repoRoot,"job:original-close-context-source",remaining,{env:process.env,signal:this.invocation.control.signal});
+  if(args.length)throw Error("Original close context source takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original close context requires finite original caller authority");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../⏱️context/📦️return/🪶️weak/🧪️tests/🟦️.ts")],this.repoRoot,"job:original-close-context-source",remaining,{env:process.env,signal:this.invocation.control.signal});
  }
 }
 
 /** 🧪️ Executes the actual close source custody law under the finite original native caller. */
 class OriginalCloseContextNativeScript extends BundleScript {
  async run(args:string[]):Promise<void>{
-  if(args.length)throw Error("Original close context native takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original close native requires finite original caller authority");await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:remaining,listMilliseconds:remaining,lawMilliseconds:remaining},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-close-context"},laws:["original_close_context_denied_work_and_deadline_preserve_owned_source"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});
+  if(args.length)throw Error("Original close context native takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original close native requires finite original caller authority");await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:remaining,listMilliseconds:remaining,lawMilliseconds:remaining},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"test",name:"original-close-context"},laws:["original_close_context_denied_work_and_deadline_preserve_owned_source"]},{package:"semio-framework-job",target:{kind:"test",name:"original-weak-return"},laws:["original_native_weak_return_preserves_denied_source_and_posts_exact_metadata","original_native_weak_nested_unwind_and_context_swap_expire_scope"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});
  }
 }
 
@@ -80,7 +92,7 @@ class OriginalCloseContextNativeScript extends BundleScript {
 class OriginalRetainedLoanNativeScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Original retained loan native takes no filters");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original retained loan requires finite original caller authority");
-  await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🎟️context/🧪️tests/🟦️.ts")],this.repoRoot,"job:original-retained-loan-source",remaining,{env:process.env,signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../⏱️context/📦️return/🪶️weak/🧪️tests/🟦️.ts")],this.repoRoot,"job:original-retained-loan-source",remaining,{env:process.env,signal:this.invocation.control.signal});
   const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original retained loan caller exhausted before native admission");
   await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-job":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-job",target:{kind:"lib"},laws:["component::original_retained_loan_tests::original_retained_loan_matches_neutral_inputs_and_nested_ceiling","component::original_retained_loan_tests::original_retained_loan_physical_failure_preserves_owned_cause_and_paid_close","component::original_retained_loan_tests::original_retained_loan_unwind_restores_parent_without_new_context","component::original_retained_loan_tests::original_retained_loan_swap_and_replace_preserve_both_original_causes","component::original_retained_loan_tests::original_retained_loan_swap_unwind_never_promotes_replacement"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});
  }

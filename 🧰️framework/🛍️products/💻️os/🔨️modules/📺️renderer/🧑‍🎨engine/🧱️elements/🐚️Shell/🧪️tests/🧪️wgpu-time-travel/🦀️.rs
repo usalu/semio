@@ -128,6 +128,7 @@ fn dispatched() -> Vec<String> {
 /// 🎨️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
 /// publishes its hits, so the surface's accessibility projection is the one the mirror reads; answers the staged input.
 fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
     let mut input = InputState::<ActionDescriptor>::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
@@ -138,7 +139,7 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
     let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
         let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts)
+        caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx))
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
     if surface == FRAMEWORK_PANEL_TAB_HISTORY_ID {
@@ -147,19 +148,23 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
     shell.register_retained_body_hits(surface, body, &mut input);
     shell.world3d_states = world3d_states;
     shell.publish_retained_hit_registry(&mut input);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     input
 }
 
 /// 🧹️ Closes a law's retained surface and retires every document it published there.
 fn close_retained_body(surface: &str, documents: Vec<UiDocumentLease>) {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     if crate::interpreter::request_ui_document_close(surface) {
         while crate::interpreter::ui_document_close_pending_for(surface) {
-            assert!(crate::interpreter::close_ui_document_one(), "each admitted close opportunity advances");
+            assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances");
         }
     }
     for mut document in documents {
         while !document.close_read_step_with_grant(1, 4096).expect("the law releases its captured document reader").complete {}
     }
+    caller.finish();
 }
 //#endregion 🧰️Harness
 
@@ -1458,7 +1463,7 @@ const HISTORY_BODY_PROJECTED: u32 = 3;
 fn publish_history_body(current: &mut Option<semio_framework_ui_runtime::SurfaceReconciler>, built: ui_contract::BuiltNode, generation: u64) -> UiDocumentLease {
     use semio_framework_ui_runtime::{ComponentTree, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconciler};
     let surface = SurfaceId::try_from(FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("History surface");
-    let mut job = SurfaceReconcileJob::try_new(current.take().unwrap_or_else(|| SurfaceReconciler::new(surface)), ComponentTree { root: built }, generation).expect("history producer admission");
+    let mut job = SurfaceReconcileJob::try_new(current.take().unwrap_or_else(|| SurfaceReconciler::new(surface)), ComponentTree::new(built), generation).expect("history producer admission");
     let mut sequence = 0;
     for _ in 0..100_000 {
         let mut context = semio_framework_job::StepContext::new(

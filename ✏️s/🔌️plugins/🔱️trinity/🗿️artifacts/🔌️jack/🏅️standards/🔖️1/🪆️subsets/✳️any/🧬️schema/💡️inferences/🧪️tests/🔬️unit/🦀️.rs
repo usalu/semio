@@ -23,7 +23,7 @@ fn edge(id: &str, source: &str, target: &str) -> Edge {
 }
 
 fn chain_snapshot() -> JackSnapshot {
-    JackSnapshot::with_content("trinity.graph".into(), "chain".into(), None, Default::default(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
+    JackSnapshot::with_content::<crate::test_support::FixtureComposition>("trinity.graph".into(), "chain".into(), None, Default::default(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
 }
 //#endregion 🧸️Fixtures
 
@@ -36,7 +36,7 @@ async fn inference_determinism_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn inference_default_law() {
-    assert_eq!(JackInference::infer(&JackSnapshot::default()).expect("valid materialized inference fixture"), JackInference::default());
+    assert_eq!(JackInference::infer(&<crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot()).expect("valid materialized inference fixture"), JackInference::default());
 }
 
 #[semio_framework_async_macros::async_test]

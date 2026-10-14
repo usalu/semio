@@ -8,7 +8,7 @@
   ],
   "targets": {
     "contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts contract-check",

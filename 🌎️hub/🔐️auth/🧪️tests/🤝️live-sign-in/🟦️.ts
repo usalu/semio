@@ -39,7 +39,7 @@ const hold = process.argv.includes("--hold");
 const stagedBinary = join(hubRustRoot, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
 const cachedBinary = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
 const binaryPath = existsSync(stagedBinary) ? stagedBinary : cachedBinary;
-if (!existsSync(binaryPath)) throw new Error(`stage the hub first (\`bun nx run os-hub:build-dev\`) or build it (\`cargo build -p semio-hub --bin os-hub\`); neither ${stagedBinary} nor ${cachedBinary} exists`);
+if (!existsSync(binaryPath)) throw new Error(`stage the hub first (\`bun repo run os-hub:build-dev\`) or build it (\`cargo build -p semio-hub --bin os-hub\`); neither ${stagedBinary} nor ${cachedBinary} exists`);
 const port = Number(process.env.HUB_LIVE_SIGN_IN_PORT ?? 8831);
 const origin = `http://127.0.0.1:${port}`;
 /** 🌱️ A canonical (non-symlinked) parent: a data root under macOS's `/var/folders` `TMPDIR` is

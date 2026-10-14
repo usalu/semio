@@ -63,7 +63,7 @@ pub fn inputs_of(kind: &Kind, case: &Value) -> WidgetInputs {
         };
         values.insert(port.name.clone(), decoded);
     }
-    WidgetInputs::new(case["name"].as_str().unwrap_or("case"), kind, values)
+    WidgetInputs::new_cold(case["name"].as_str().unwrap_or("case"), kind, values)
 }
 //#endregion 🔖️Inputs
 
@@ -280,7 +280,7 @@ pub fn run_fixture(text: &str, entries: &[ComputeEntry]) -> usize {
 
 //#region 🔖️Laws
 fn shape_bytes(evaluation: &WidgetEvaluation) -> Vec<String> {
-    evaluation.outputs.values().filter_map(|value| if let GeometryValue::Shape(shape) = value { Some(semio_framework_pack_json::to_json_string(&**shape)) } else { None }).collect()
+    evaluation.outputs.iter().map(|(_, value)| value).filter_map(|value| if let GeometryValue::Shape(shape) = value { Some(semio_framework_pack_json::to_json_string(&**shape)) } else { None }).collect()
 }
 
 /// 🎲️ Equal inputs give equal value bytes: every successful case is computed twice from scratch and its shape outputs must encode to the same JSON.
@@ -329,7 +329,7 @@ pub fn first_shape(text: &str, entries: &[ComputeEntry], name: &str) -> Arc<Shap
     let (_, cases) = cases(text);
     let case = cases.iter().find(|case| case["name"] == name).unwrap_or_else(|| panic!("case {name}"));
     let kind = kind_of(case["kind"].as_str().expect("case kind"));
-    match oracle::evaluate(kind, inputs_of(kind, case), entries, usize::MAX).outputs.remove("shape") {
+    match oracle::evaluate(kind, inputs_of(kind, case), entries, usize::MAX).outputs.cold_remove("shape") {
         Some(GeometryValue::Shape(shape)) => shape,
         other => panic!("{name} has a shape output, found {other:?}"),
     }

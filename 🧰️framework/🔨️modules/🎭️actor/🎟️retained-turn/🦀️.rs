@@ -55,6 +55,8 @@ impl<T> OriginalActorInput<T>{
  pub fn spent(&self)->RetainedCloneProgress{self.spent}
  /// 🎟️ Lends the unchanged identity and the five-axis minimum from the original remaining currencies.
  pub fn checkout_guest(&mut self,policy:RetainedCloneGrant)->Result<Option<RetainedTurnInput>,ValueError>{if self.guest.is_some()||self.refused.is_some(){return Err(refusal("original guest checkout is still held"))}let original=self.issued.ok_or_else(||refusal("original Actor turn has already returned"))?;let remaining=original.return_original(self.spent)?.remaining;let grant=RetainedCloneGrant{maximum_items:remaining.maximum_items.min(policy.maximum_items),maximum_copy_bytes:remaining.maximum_copy_bytes.min(policy.maximum_copy_bytes),maximum_capacity_bytes:remaining.maximum_capacity_bytes.min(policy.maximum_capacity_bytes),maximum_release_bytes:remaining.maximum_release_bytes.min(policy.maximum_release_bytes),maximum_depth:remaining.maximum_depth.min(policy.maximum_depth)};if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let guest=RetainedTurnInput{grant,..original};self.guest=Some(guest);Ok(Some(guest))}
+ /// 💳️ Borrows the retained input only for its exact currently checked-out guest call.
+ pub fn original_mut_for_guest(&mut self,input:RetainedTurnInput)->Result<&mut T,ValueError>{if self.guest!=Some(input)||self.refused.is_some(){return Err(refusal("original input mutation has no exact held guest checkout"))}self.input.as_mut().ok_or_else(||refusal("original guest checkout has no retained input"))}
  /// 🧾️ Collects the exact original child delta once before publishing readiness or dispatch.
  pub fn receive_guest(&mut self,receipt:RetainedTurnReceipt,phase:ActorGuestPhase)->Result<(),ValueError>{self.receive_guest_return(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,claimed_remaining:Some(receipt.remaining)},phase)}
  /// 📥️ Actual guest spending reaches the original receiving owner before any conservation or readiness decision.
@@ -64,6 +66,15 @@ impl<T> OriginalActorInput<T>{
  pub fn return_actor_turn(&mut self)->Result<RetainedTurnReceipt,ValueError>{if self.guest.is_some()||self.refused.is_some(){return Err(refusal("original guest receipt remains held"))}let issued=self.issued.ok_or_else(||refusal("original Actor turn has already returned"))?;let receipt=issued.return_original(self.spent)?;self.issued=None;self.returned=Some(receipt);Ok(receipt)}
  /// 🫴️ Accepts only the scheduler's exact next epoch and the previous original conserved remaining grant.
  pub fn receive_next_issued(&mut self,issued:RetainedTurnInput)->Result<(),ValueError>{issued.validate()?;if self.issued.is_some()||self.guest.is_some()||self.refused.is_some(){return Err(refusal("original Actor turn still has a receiving owner"))}let previous=self.returned.ok_or_else(||refusal("original Actor turn has no prior return"))?;if issued.operation!=previous.input.operation||issued.generation!=previous.input.generation||Some(issued.epoch)!=previous.input.epoch.checked_add(1)||issued.grant!=previous.remaining{return Err(refusal("next issued Actor input does not preserve original remaining authority"))}self.issued=Some(issued);self.returned=None;self.spent=Default::default();Ok(())}
+ /// 📤️ Transfers a paid admitted input only after its original guest receipt returned.
+ pub fn take_admitted_input_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<T>,semio_framework_job::OriginalTurnFailure>{
+  if self.phase!=ActorGuestPhase::Ready||self.issued.is_some()||self.guest.is_some()||self.refused.is_some(){return Err(refusal("original admitted input still requires its receiving owner").into())}
+  let original=self.returned.ok_or_else(||refusal("original admitted input has no returned admission receipt"))?;cx.original_source_parent()?;
+  if (cx.operation().0,cx.generation().0)!=(original.input.operation,original.input.generation)||cx.original_source_epoch().is_none_or(|epoch|epoch<original.input.epoch){return Err(refusal("original admitted input belongs to another source or causal epoch").into())}
+  if self.input.is_none(){return Err(refusal("original admitted input was already transferred").into())}
+  let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<T>()||grant.maximum_depth==0||cx.should_yield(){return Ok(None)}
+  cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()})?;cx.consume_fuel(1);Ok(self.input.take())
+ }
  /// 📬️ Transfers the original input only after paid readiness and successful semantic dispatch.
  pub fn take_dispatched_input(&mut self)->Result<Option<T>,ValueError>{if self.phase!=ActorGuestPhase::Dispatched||self.guest.is_some()||self.refused.is_some(){return Err(refusal("original Host input still requires its receiving owner"))}Ok(self.input.take())}
 }
@@ -72,6 +83,9 @@ impl<T> Drop for OriginalActorInput<T>{fn drop(&mut self){assert!(std::thread::p
 #[path="💼️job/📥️source/🦀️.rs"]
 mod original_job_source;
 pub use original_job_source::{OriginalJobSource,OriginalJobSourceCursor,OriginalJobTurnLoan,OriginalJobBudget,OriginalJobCallFailure,OriginalJobStartReply,OriginalJobStepReply,OriginalJobCancelReply};
+#[path="💼️job/🖥️execution/🦀️.rs"]
+mod original_job_execution;
+pub use original_job_execution::{OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt};
 
 #[path="💼️job/🤝️provider/🦀️.rs"]
 mod original_job_provider;
@@ -86,3 +100,17 @@ impl OriginalActorGuestReturn{
  pub async fn pack_encode(&self,out:&mut Vec<u8>){for value in[self.input.operation,self.input.generation,self.input.epoch]{crate::pack::write_u64(out,value).await}write_grant(out,self.input.grant).await;for value in[self.spent.copied_items,self.spent.copied_bytes,self.spent.retained_capacity_bytes,self.spent.released_bytes]{crate::pack::write_u64(out,value as u64).await}crate::pack::write_bool(out,self.claimed_remaining.is_some()).await;if let Some(grant)=self.claimed_remaining{write_grant(out,grant).await}}
  pub async fn pack_decode(bytes:&[u8],pos:&mut usize)->Result<Self,crate::pack::PackError>{let input=RetainedTurnInput{operation:crate::pack::read_u64(bytes,pos,"OriginalGuestReturn::operation").await?,generation:crate::pack::read_u64(bytes,pos,"OriginalGuestReturn::generation").await?,epoch:crate::pack::read_u64(bytes,pos,"OriginalGuestReturn::epoch").await?,grant:read_grant(bytes,pos).await?};let spent=RetainedCloneProgress{copied_items:read_extent(bytes,pos).await?,copied_bytes:read_extent(bytes,pos).await?,retained_capacity_bytes:read_extent(bytes,pos).await?,released_bytes:read_extent(bytes,pos).await?};let claimed_remaining=if crate::pack::read_bool(bytes,pos,"OriginalGuestReturn::remaining").await?{Some(read_grant(bytes,pos).await?)}else{None};Ok(Self{input,spent,claimed_remaining})}
 }
+
+#[path="💼️job/📋️arguments/🦀️.rs"]
+mod original_job_arguments;
+
+#[path="💼️job/📦️transport/📥️source/🦀️.rs"]
+mod original_job_source_wire;
+pub use original_job_source_wire::{OriginalJobSourceWireCursor,OriginalJobSourceWireHeader};
+
+#[path="💼️job/⏸️park/🦀️.rs"]
+mod original_actor_park;
+pub use original_actor_park::{OriginalActorParkRefusal,OriginalActorParkedTurn,OriginalActorParkedOutcome,OriginalActorParkedReturn};
+
+#[path="🎟️context/🦀️.rs"]
+pub mod context;

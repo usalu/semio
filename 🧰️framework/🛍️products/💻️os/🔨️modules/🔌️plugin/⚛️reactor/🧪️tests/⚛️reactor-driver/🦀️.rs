@@ -128,7 +128,7 @@ pub(super) async fn patches_revision(surface: &str) -> ui_contract::UiRevision {
 }
 
 /// 🩹️ Test-only completion driver over the same retained mounted authority.
-pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree) -> Option<UiPatch> {
+pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime::ComponentTree,cx:&mut semio_framework_job::StepContext<'_>) -> Option<UiPatch> {
     PATCHES.with(|patches| {
         if !patches.can_begin(surface) {
             return None;
@@ -138,7 +138,7 @@ pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime
             return None;
         }
         for _ in 0..512 {
-            patches.drive_one();
+            patches.drive_one(cx).expect("same original patch driver context");
             if let Some(mut owner) = patches.take_ready_patch() {
                 let mut payload = ui_contract::UiPendingPatch::default();
                 let mut published = None;
@@ -163,8 +163,8 @@ pub(super) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime
                     if patches.can_begin(surface) {
                         break;
                     }
-                    patches.drive_one();
-                    patches.close_step(1, 4096);
+                    patches.drive_one(cx).expect("same original patch driver context");
+                    patches.close_step(cx).expect("same original patch driver close context");
                 }
                 return patch;
             }

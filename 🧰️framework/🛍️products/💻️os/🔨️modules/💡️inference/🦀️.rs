@@ -10,6 +10,10 @@
 //! 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING; dependency-hash design
 //! from the closed ticket 26/04/17/OPTIMIZE-FLATTEN-DESIGN-WITH-MERKLE-HASH-CACHE).
 
+#[path="🧭️plan/🦀️.rs"]
+mod original_plan;
+pub use original_plan::OriginalInferencePlan;
+
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -88,6 +92,56 @@ impl InferenceFault {
     }
 }
 
+/// 🪢️ Keeps each original field, driver or native turn refusal as its complete retained owner.
+#[derive(Debug,semio_framework_value::RetireOwned)]
+pub enum InferenceWorkFailure{Field(InferenceFault),Driver(InferenceError),Original(semio_framework_job::OriginalTurnFailure)}
+impl From<semio_framework_diagnostic::Fault> for InferenceWorkFailure{fn from(primary:semio_framework_diagnostic::Fault)->Self{Self::Original(primary.into())}}
+impl From<InferenceFault> for InferenceWorkFailure{fn from(primary:InferenceFault)->Self{Self::Field(primary)}}
+impl From<InferenceError> for InferenceWorkFailure{fn from(primary:InferenceError)->Self{Self::Driver(primary)}}
+impl From<semio_framework_value::ValueError> for InferenceWorkFailure{fn from(primary:semio_framework_value::ValueError)->Self{Self::Original(primary.into())}}
+impl From<semio_framework_job::OriginalTurnFailure> for InferenceWorkFailure{fn from(primary:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(primary)}}
+
+/// 🎟️ Moves an already admitted native envelope unchanged, or admits its entire defining inference source once.
+pub fn admit_inference_failure(original:&mut Option<InferenceWorkFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
+ if original.as_ref().is_some_and(|original|matches!(original,InferenceWorkFailure::Original(_))){let Some(InferenceWorkFailure::Original(original))=original.take()else{unreachable!()};return Ok(Some(original))}
+ semio_framework_job::admit_original_domain_failure(original,cx)
+}
+
+impl semio_framework_job::OriginalDomainProjection for InferenceWorkFailure{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,semio_framework_value::ValueError>{
+  use semio_framework_job::OriginalDomainView as V;
+  if path.is_empty(){return Ok(V::IntrinsicObject(2))}
+  match path[0]{
+   0 if path.len()==1=>Ok(V::Text(match self{Self::Field(_)=>"field",Self::Driver(_)=>"driver",Self::Original(_)=>"original"})),
+   1=>match self{
+    Self::Original(original)=>semio_framework_job::project_original_turn_failure(original,&path[1..]),
+    Self::Field(original)=>match &path[1..]{[]=>Ok(V::IntrinsicObject(2)),[0]=>Ok(V::Text(&original.code)),[1]=>Ok(V::Text(&original.message)),_=>Err(inference_projection_refusal())},
+    Self::Driver(original)=>match (original,&path[1..]){
+     (InferenceError::MissingParent{..},[])=>Ok(V::IntrinsicObject(3)),(InferenceError::Compute{..},[])=>Ok(V::IntrinsicObject(3)),(InferenceError::Cancelled,[])=>Ok(V::IntrinsicObject(1)),
+     (InferenceError::MissingParent{..},[0])=>Ok(V::Text("missingParent")),(InferenceError::Compute{..},[0])=>Ok(V::Text("compute")),(InferenceError::Cancelled,[0])=>Ok(V::Text("cancelled")),
+     (InferenceError::MissingParent{key,..}|InferenceError::Compute{key,..},[1])=>Ok(V::Text(key)),(InferenceError::MissingParent{parent,..},[2])=>Ok(V::Text(parent)),
+     (InferenceError::Compute{..},[2])=>Ok(V::IntrinsicObject(2)),(InferenceError::Compute{fault,..},[2,0])=>Ok(V::Text(&fault.code)),(InferenceError::Compute{fault,..},[2,1])=>Ok(V::Text(&fault.message)),_=>Err(inference_projection_refusal()),
+    },
+   },_=>Err(inference_projection_refusal()),
+  }
+ }
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{
+  if path.is_empty(){return ["kind","primary"].get(index).copied().ok_or_else(inference_projection_refusal)}
+  if path[0]!=1{return Err(inference_projection_refusal())}
+  match self{
+   Self::Original(original)=>semio_framework_job::key_original_turn_failure(original,&path[1..],index),
+   Self::Field(_)=>if path.len()==1{["code","message"].get(index).copied().ok_or_else(inference_projection_refusal)}else{Err(inference_projection_refusal())},
+   Self::Driver(original)=>match (original,&path[1..]){(InferenceError::MissingParent{..},[])=>["kind","key","parent"].get(index).copied().ok_or_else(inference_projection_refusal),(InferenceError::Compute{..},[])=>["kind","key","fault"].get(index).copied().ok_or_else(inference_projection_refusal),(InferenceError::Cancelled,[]) if index==0=>Ok("kind"),(InferenceError::Compute{..},[2])=>["code","message"].get(index).copied().ok_or_else(inference_projection_refusal),_=>Err(inference_projection_refusal())},
+  }
+ }
+}
+impl semio_framework_job::OriginalDomainFailure for InferenceWorkFailure{
+ fn domain_code(&self)->&str{match self{Self::Field(original)=>&original.code,Self::Driver(_)=>"inference.driver",Self::Original(_)=>"inference.original"}}
+ fn domain_message(&self)->&str{match self{Self::Field(original)=>&original.message,Self::Driver(InferenceError::MissingParent{..})=>"inference plan parent is missing",Self::Driver(InferenceError::Compute{fault,..})=>&fault.message,Self::Driver(InferenceError::Cancelled)=>"inference cancelled",Self::Original(original)=>original.primary.message()}}
+ fn domain_retained_progress(&self)->semio_framework_value::RetainedCloneProgress{match self{Self::Original(original)=>original.primary.retained_progress(),_=>Default::default()}}
+}
+fn inference_projection_refusal()->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference failure projection ordinal changed")}
+
 /// 🛑 Why a driver call could not finish: a plan that names a parent before computing it, a compute that failed, or a cancelled run.
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[derive(semio_framework_value::RetireOwned)]
@@ -146,6 +200,14 @@ pub trait InferredField<P>: Send + Sync + 'static {
     /// 🧭 Deterministic topological plan over `snapshot`'s entities (roots first — entries with no
     /// parents come before anything that depends on them).
     fn plan(snapshot: &P) -> Vec<InferenceStep<Self::Key>>;
+    /// 🪪️ Borrows the original semantic snapshot identity across temporary host input views.
+    fn source_identity(snapshot:&P)->usize{snapshot as*const P as usize}
+    /// 📋️ Borrows the admitted graph's source extents without constructing an owned plan.
+    fn plan_source_extent(_snapshot:&P)->Option<(usize,usize)>{None}
+    /// 🪪️ Borrows one original node identity by its document ordinal.
+    fn plan_source_node(_snapshot:&P,_ordinal:usize)->Option<&str>{None}
+    /// 🔗️ Borrows one original directed link by its document ordinal.
+    fn plan_source_link(_snapshot:&P,_ordinal:usize)->Option<(&str,&str)>{None}
 
     /// 🔑 Owned dependency values for `key` — EXACTLY the snapshot fields `compute` may
     /// read for this key (excluding parents' OWN upstream values, which are folded in separately
@@ -169,9 +231,8 @@ pub trait InferredField<P>: Send + Sync + 'static {
 
     /// 🪜 Resumable, fallible variant of [`compute`](Self::compute): consumes at most `fuel` units and either finishes or parks its progress in `pending`
     /// for the next call. The default finishes in one slice at the cost of one unit, so `compute` stays the single semantic source of every field that does not override this.
-    fn compute_step(snapshot: &P, key: &Self::Key, parents: &[Self::Value], pending: &mut Option<Box<dyn InferencePending>>, fuel: usize) -> Result<ComputeStep<Self::Value>, InferenceFault> {
-        let _ = (pending, fuel);
-        Ok(ComputeStep::Done { value: Self::compute(snapshot, key, parents), fuel_used: 1 })
+    fn compute_step(_snapshot:&P,_key:&Self::Key,_parents:&[Self::Value],_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original inferred field has no funded compute producer").into())
     }
 }
 //#endregion 🔖️InferredField
@@ -428,6 +489,17 @@ impl InferenceSession {
         }
     }
 
+    /// 🎟️ Admits the original first field run before any keyed entry, diff or retained graph exists.
+    pub fn begin_update_funded<P,F:InferredField<P>>(&mut self,reuse:bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<FieldUpdate<F::Key,F::Value>>,InferenceWorkFailure>{
+        cx.original_source_parent()?;
+        if !self.entries.is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original inference session entry lookup and diff donation require their funded producer").into())}
+        let grant=cx.retained_grant();
+        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()})?;
+        let stored=Stored::empty();
+        Ok(Some(FieldUpdate{field:F::FIELD_ID,values:stored.values,track:Track{links:stored.links,digest:stored.digest,epoch:1,touched:None,reuse,moved:HashSet::new(),changes:Vec::new(),carried:0,confirmed:0,swept:false},cursor:InferenceCursor::new(),gated:false,computed:0,hits:0}))
+    }
+
     /// 🏁 Ends an update, finished or not: the values stay in the session and are trusted by the next update only when this one ran to its end.
     pub fn finish_update<K: RetireOwned + Clone + Eq + std::hash::Hash + Ord + Send + Sync + 'static, V: RetireOwned + Send + Sync + 'static>(&mut self, update: FieldUpdate<K, V>) -> FieldDelta<K, V> {
         let done = update.gated || update.cursor.is_done();
@@ -602,6 +674,11 @@ impl<K: Eq + std::hash::Hash, V> FieldUpdate<K, V> {
     }
 
     /// 🛑 Whether [`cancel`](Self::cancel) was called.
+    /// 🧭️ Borrows the funded order retained by this update's actual cursor.
+    pub fn original_plan(&self)->Option<&OriginalInferencePlan>{self.cursor.original_plan()}
+    /// ♻️ Advances the actual cursor's plan retirement under its original caller.
+    pub fn close_original_plan_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{self.cursor.close_original_plan_step(cx)}
+
     pub fn is_cancelled(&self) -> bool {
         self.cursor.is_cancelled()
     }
@@ -623,11 +700,13 @@ pub struct InferenceCursor<K> {
     pending: Option<Box<dyn InferencePending>>,
     progress: f32,
     cancelled: bool,
+    original_caller:Option<(u64,u64,usize)>,
+    original_plan:Option<OriginalInferencePlan>,
 }
 
 impl<K> Default for InferenceCursor<K> {
     fn default() -> Self {
-        Self { plan: None, next: 0, hashes: HashMap::new(), pending: None, progress: 0.0, cancelled: false }
+        Self { plan: None, next: 0, hashes: HashMap::new(), pending: None, progress: 0.0, cancelled: false, original_caller:None,original_plan:None }
     }
 }
 
@@ -638,10 +717,20 @@ impl<K: Eq + std::hash::Hash> InferenceCursor<K> {
 
     /// 🛑 Cancels the in-flight compute and makes every later step refuse with [`InferenceError::Cancelled`]; finished values stay valid.
     pub fn cancel(&mut self) {
-        if let Some(mut pending) = self.pending.take() {
+        if let Some(pending) = self.pending.as_mut() {
             pending.cancel();
         }
         self.cancelled = true;
+    }
+
+    /// 🧭️ Borrows the funded order and original source ordinals retained by this run.
+    pub fn original_plan(&self)->Option<&OriginalInferencePlan>{self.original_plan.as_ref()}
+    /// ♻️ Closes the original planned graph without replacing its caller or dropping paid source pages.
+    pub fn close_original_plan_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        if self.original_caller.is_some_and(|source|source.0!=cx.operation().0||source.1!=cx.generation().0){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference plan retirement caller changed").into())}
+        if let Some(plan)=self.original_plan.as_mut(){if !plan.close_step(cx)?{return Ok(false)}if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_plan=None;return Ok(false)}
+        if self.original_caller.is_some(){if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_caller=None;return Ok(false)}
+        Ok(true)
     }
 
     pub fn is_cancelled(&self) -> bool {
@@ -655,7 +744,7 @@ impl<K: Eq + std::hash::Hash> InferenceCursor<K> {
 
     /// 🧮 Entities in the plan; zero until the first step has planned.
     pub fn total(&self) -> usize {
-        self.plan.as_ref().map_or(0, Vec::len)
+        self.original_plan.as_ref().map_or_else(||self.plan.as_ref().map_or(0,Vec::len),OriginalInferencePlan::len)
     }
 
     /// 📈 Finished entities plus the in-flight compute's own progress, as a fraction of the plan.
@@ -667,7 +756,7 @@ impl<K: Eq + std::hash::Hash> InferenceCursor<K> {
     }
 
     pub fn is_done(&self) -> bool {
-        self.plan.as_ref().is_some_and(|plan| self.next >= plan.len())
+        self.original_plan.as_ref().map_or_else(||self.plan.as_ref().is_some_and(|plan|self.next>=plan.len()),|plan|plan.complete()&&self.next>=plan.len())
     }
 
     /// 🔗 The dependency hash of a finished entity.
@@ -700,9 +789,9 @@ fn key_text<K: ToValue>(key: &K) -> String {
 /// (cache-transparency law, proven in tests below). The snapshot must not change between calls of one cursor.
 /// Dependency hashes exist to address the cache, so they are computed (and [`InferenceCursor::hash`] answers) only when `cache` is enabled;
 /// without one `dep_input` is never evaluated.
-pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize) -> Result<InferenceStepReport, InferenceError> {
+pub fn infer_field_step<P, F: InferredField<P>>(snapshot: &P, cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values:&mut BTreeMap<F::Key,F::Value>,cx:&mut semio_framework_job::StepContext<'_>)->Result<InferenceStepReport,InferenceWorkFailure>{
     let hashing = cache.as_deref().is_some_and(InferenceCache::enabled);
-    drive::<P, F>(snapshot, cache, cursor, values, fuel, hashing, None)
+    drive::<P,F>(snapshot,cache,cursor,values,Some(cx),hashing,None)
 }
 
 fn missing<K: ToValue>(key: &K, parent: &K) -> InferenceError {
@@ -720,19 +809,30 @@ fn commit<K: Clone + Eq + std::hash::Hash + Ord + ToValue, V>(values: &mut BTree
     }
 }
 
-fn drive<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values: &mut BTreeMap<F::Key, F::Value>, fuel: usize, hashing: bool, mut track: Option<&mut Track<F::Key, F::Value>>) -> Result<InferenceStepReport, InferenceError> {
+fn drive<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>, cursor: &mut InferenceCursor<F::Key>, values:&mut BTreeMap<F::Key,F::Value>,mut original:Option<&mut semio_framework_job::StepContext<'_>>,hashing:bool,mut track:Option<&mut Track<F::Key,F::Value>>)->Result<InferenceStepReport,InferenceWorkFailure> {
     if cursor.cancelled {
-        return Err(InferenceError::Cancelled);
+        return Err(InferenceError::Cancelled.into());
     }
-    if cursor.plan.is_none() {
-        cursor.plan = Some(F::plan(snapshot));
+    if let Some(cx)=original.as_deref_mut(){
+        if cx.is_cancelled(){return Err(InferenceError::Cancelled.into())}
+        if cx.should_yield(){return Ok(InferenceStepReport{progress:cursor.fraction(),..Default::default()})}
+        let identity=(cx.operation().0,cx.generation().0,F::source_identity(snapshot));
+        if let Some(source)=cursor.original_caller{if source!=identity{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inferred field caller or snapshot changed").into())}}
+        else{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(InferenceStepReport::default())}let receipt=semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_retained(receipt)?;cx.consume_fuel(1);cursor.original_caller=Some(identity);if F::plan_source_extent(snapshot).is_some(){cursor.original_plan=Some(OriginalInferencePlan::default())}return Ok(InferenceStepReport{fuel_used:1,..Default::default()})}
+        if let Some(plan)=cursor.original_plan.as_mut(){
+            if !plan.complete(){let before=cx.fuel_remaining();plan.step::<P,F>(snapshot,cx)?;return Ok(InferenceStepReport{fuel_used:usize::try_from(before.checked_sub(cx.fuel_remaining()).expect("original inferred planning CPU")).unwrap_or(usize::MAX),progress:cursor.fraction(),..Default::default()})}
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original inferred field dependency hashing and value publication have no funded producer").into())
+        }
+        if cursor.plan.is_none(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original inferred field plan has no funded producer").into())}
     }
+    if cursor.plan.is_none(){cursor.plan=Some(F::plan(snapshot));}
     let InferenceCursor { plan, next, hashes, pending, progress, .. } = &mut *cursor;
     let plan = plan.as_deref().expect("the plan is set above");
-    let mut remaining = fuel.max(1);
+
     let mut report = InferenceStepReport::default();
 
     while *next < plan.len() {
+        if original.as_deref().is_some_and(|cx|cx.should_yield()){break;}
         let step = &plan[*next];
         if pending.is_none() && track.as_deref_mut().is_some_and(|track| track.carries::<P, F>(snapshot, step, values)) {
             *next += 1;
@@ -772,16 +872,16 @@ fn drive<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceC
         for parent in &step.parents {
             parent_values.push(values.get(parent).cloned().ok_or_else(|| missing(&step.key, parent))?);
         }
-        match F::compute_step(snapshot, &step.key, &parent_values, pending, remaining) {
+        let before=original.as_deref().map(|cx|cx.fuel_remaining());
+        let outcome=match original.as_deref_mut(){Some(cx)=>F::compute_step(snapshot,&step.key,&parent_values,pending,cx),None=>Ok(ComputeStep::Done{value:F::compute(snapshot,&step.key,&parent_values),fuel_used:1})};
+        let spent=before.zip(original.as_deref()).map_or(1,|(before,cx)|usize::try_from(before.saturating_sub(cx.fuel_remaining())).unwrap_or(usize::MAX));
+        match outcome {
             Err(fault) => {
-                if let Some(mut stale) = pending.take() {
-                    stale.cancel();
-                }
-                return Err(InferenceError::Compute { key: key_text(&step.key), fault });
+                return Err(fault);
             }
             Ok(ComputeStep::Working { fuel_used, progress: partial }) => {
                 *progress = partial;
-                report.fuel_used += fuel_used.max(1);
+                let _=fuel_used;report.fuel_used+=spent;
                 break;
             }
             Ok(ComputeStep::Done { value, fuel_used }) => {
@@ -793,10 +893,9 @@ fn drive<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceC
                 commit(values, hashes, track.as_deref_mut(), step, dep_hash, value);
                 *next += 1;
                 report.computed += 1;
-                let spent = fuel_used.max(1);
+                let _=fuel_used;
                 report.fuel_used += spent;
-                remaining = remaining.saturating_sub(spent);
-                if remaining == 0 {
+                if original.as_deref().is_some_and(|cx|cx.should_yield()) {
                     break;
                 }
             }
@@ -817,7 +916,7 @@ pub fn try_infer_field<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&
     let mut values = BTreeMap::new();
     let hashing = cache.as_deref().is_some_and(InferenceCache::enabled);
     loop {
-        if drive::<P, F>(snapshot, cache.as_deref_mut(), &mut cursor, &mut values, usize::MAX, hashing, None)?.done {
+        if drive::<P,F>(snapshot,cache.as_deref_mut(),&mut cursor,&mut values,None,hashing,None).map_err(|original|match original{InferenceWorkFailure::Driver(primary)=>primary,_=>unreachable!("explicit pure inference does not invoke an original caller producer")})?.done {
             return Ok(values);
         }
     }
@@ -831,11 +930,11 @@ pub fn infer_field<P, F: InferredField<P>>(snapshot: &P, cache: Option<&mut Infe
 /// ⏭️ One slice of an [`InferenceSession::begin_update`]: walks the plan of the new snapshot with the same fuel and cancellation as [`infer_field_step`], but an entity that neither the diff
 /// ([`InferredField::touched_by`]) nor a moved parent reaches is carried with its previous value and hash (no dependency evaluation, no hashing), and an entity whose dependency hash did not move keeps its previous value
 /// (no compute); only the rest is looked up in `cache` or computed. Entities that left the plan are removed when the plan is done.
-pub fn step_field_update<P, F: InferredField<P>>(snapshot: &P, cache: &mut InferenceCache, update: &mut FieldUpdate<F::Key, F::Value>, fuel: usize) -> Result<InferenceStepReport, InferenceError> {
+pub fn step_field_update<P, F: InferredField<P>>(snapshot: &P, cache: &mut InferenceCache, update:&mut FieldUpdate<F::Key,F::Value>,cx:&mut semio_framework_job::StepContext<'_>)->Result<InferenceStepReport,InferenceWorkFailure> {
     if update.gated {
         return Ok(InferenceStepReport { done: true, progress: 1.0, ..InferenceStepReport::default() });
     }
-    let report = drive::<P, F>(snapshot, Some(cache), &mut update.cursor, &mut update.values, fuel, true, Some(&mut update.track))?;
+    let report = drive::<P,F>(snapshot,Some(cache),&mut update.cursor,&mut update.values,Some(cx),true,Some(&mut update.track))?;
     update.computed += report.computed;
     update.hits += report.hits;
     Ok(report)
@@ -850,7 +949,7 @@ where
 {
     let mut update = session.begin_update::<P, F, D>(diff, cache.enabled());
     let outcome = loop {
-        match step_field_update::<P, F>(snapshot, cache, &mut update, usize::MAX) {
+        match drive::<P,F>(snapshot,Some(cache),&mut update.cursor,&mut update.values,None,true,Some(&mut update.track)).map_err(|original|match original{InferenceWorkFailure::Driver(primary)=>primary,_=>unreachable!("explicit pure inference update does not invoke an original caller producer")}) {
             Ok(report) if report.done => break Ok(()),
             Ok(_) => {}
             Err(error) => break Err(error),

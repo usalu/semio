@@ -838,7 +838,7 @@ pub(super) fn every_command() -> Vec<Process3dCommand> {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Process3dPlayApp>>(process3d_app_manifest_for_tests).await;
-    assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
+    assert!(Process3dPlayApp::command_from_action("nonsense", None, None).is_err());
 }
 
 /// 🧾️ What the lane RETAINS is the distilled roster, never the host's whole contribution pack: an
@@ -879,7 +879,7 @@ fn host_contributions_resolve_to_the_event_sourced_config_lane() {
 #[semio_framework_async_macros::async_test]
 async fn interaction_actions_decode_into_typed_commands() {
     assert_eq!(
-        Process3dPlayApp::command_from_action("setActiveExample", Some(&DslValue::from(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE })))).expect("example bridge"),
+        Process3dPlayApp::command_from_action("setActiveExample", Some((DslValue::from(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).clone()), None).expect("example bridge"),
         Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() })
     );
 }
@@ -1194,7 +1194,7 @@ async fn set_step_enabled_is_idempotent_by_value_and_refuses_a_missing_value() {
     settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
     let step = app.snapshot().expect("snapshot with the added step").step_payloads.last().cloned().expect("the added step");
     let bare = DslValue::object([("id".to_string(), DslValue::String(step.id.clone()))]);
-    assert!(<Process3dPlayApp as ArtifactEditor>::command_from_action("setStepEnabled", Some(&bare)).is_err(), "setStepEnabled without its value must be refused");
+    assert!(<Process3dPlayApp as ArtifactEditor>::command_from_action("setStepEnabled", Some((bare).clone()), None).is_err(), "setStepEnabled without its value must be refused");
     let command = || Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: step.id.clone(), enabled: !step.enabled });
     let (_, first) = settled_dispatch(&mut app, command());
     assert!(published_a_document_mutation(&first), "setStepEnabled with the inverse value is one document edit");

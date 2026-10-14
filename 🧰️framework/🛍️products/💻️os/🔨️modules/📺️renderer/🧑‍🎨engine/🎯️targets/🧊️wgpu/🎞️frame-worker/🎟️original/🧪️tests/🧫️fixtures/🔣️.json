@@ -1,0 +1,118 @@
+{
+  "operation": 71,
+  "generation": 3,
+  "presentation": [
+    19,
+    20
+  ],
+  "deadlineUs": "12345",
+  "fuel": 17,
+  "grant": {
+    "maximumItems": 40,
+    "maximumCopyBytes": 128,
+    "maximumCapacityBytes": 256,
+    "maximumReleaseBytes": 256,
+    "maximumDepth": 8
+  },
+  "deltas": [
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 8,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 8,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 0,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 3,
+      "retainedCapacityBytes": 5,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 5
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 3,
+      "retainedCapacityBytes": 5,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 5
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 0
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 8
+    },
+    {
+      "copiedItems": 1,
+      "copiedBytes": 0,
+      "retainedCapacityBytes": 0,
+      "releasedBytes": 8
+    }
+  ],
+  "closeStages": [
+    "frame",
+    "assets",
+    "world",
+    "hostTerminal",
+    "context",
+    "contextTerminal"
+  ],
+  "failure": {
+    "format": "pack",
+    "nativeStatus": 2,
+    "bytes": [
+      240,
+      0,
+      195,
+      40,
+      255
+    ],
+    "acknowledgement": "originalDescriptor",
+    "publication": "afterNativeFullClose"
+  }
+}

@@ -524,7 +524,7 @@ async fn a_value_decoded_document_carries_its_graph_and_admits_its_document_verb
 #[semio_framework_async_macros::async_test]
 async fn a_staged_json_text_operations_argument_survives_command_from_action() {
     let staged = semio_framework_value::DslValue::Object(vec![("operations".to_string(), semio_framework_value::DslValue::String(EQUATION_DEFAULT_EDIT_OPERATIONS.to_string()))]);
-    let command = <EquationPlayApp as ArtifactEditor>::command_from_action("nodeGraphEdit", Some(&staged)).expect("staged operations");
+    let command = <EquationPlayApp as ArtifactEditor>::command_from_action("nodeGraphEdit", Some((staged).clone()), None).expect("staged operations");
     let EquationCommand::NodeGraphEdit(payload) = &command else { panic!("nodeGraphEdit routes to its own command") };
     assert_eq!(payload.operations_json, EQUATION_DEFAULT_EDIT_OPERATIONS);
     assert_eq!(equation_edit_preflight(payload), Some(1), "the staged default is exactly one admitted operation");

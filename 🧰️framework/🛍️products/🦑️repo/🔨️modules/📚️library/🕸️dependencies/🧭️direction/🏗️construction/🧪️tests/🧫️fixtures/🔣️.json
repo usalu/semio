@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "id": "🌊️flow",
+      "package": "@test/flow"
+    },
+    {
+      "id": "🌀️procedural",
+      "package": "@test/procedural"
+    },
+    {
+      "id": "📐️cad",
+      "package": "@test/cad"
+    }
+  ],
+  "contexts": [
+    "🟦️.ts",
+    "🧪️tests/🟦️.ts",
+    "📜️script.ts"
+  ],
+  "dependencyTypes": [
+    "local",
+    "npm"
+  ],
+  "paths": [
+    "physical",
+    "package",
+    "subpath",
+    "nested-package"
+  ],
+  "distinctForbidden": true,
+  "sameForbidden": false,
+  "sourcePaths": [
+    "physical",
+    "package",
+    "subpath",
+    "nested-package"
+  ]
+}

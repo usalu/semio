@@ -1,35 +1,30 @@
 {
   "graph": {
-    "nodes": {
+    "version": 1,
+    "projects": {
       "@semio-tech/owner": {
         "name": "@semio-tech/owner",
-        "type": "lib",
-        "data": {
-          "root": "owner/📦️packages/🦀️rust",
-          "targets": {
-            "materialize": {
-              "executor": "nx:run-commands"
-            },
-            "component": {
-              "executor": "nx:run-commands"
-            }
+        "root": "owner/📦️packages/🦀️rust",
+        "targets": {
+          "materialize": {
+            "executor": "nx:run-commands"
+          },
+          "component": {
+            "executor": "nx:run-commands"
           }
         }
       },
       "workspace": {
         "name": "workspace",
-        "type": "lib",
-        "data": {
-          "root": ".",
-          "targets": {
-            "build": {
-              "executor": "nx:run-commands"
-            }
+        "root": ".",
+        "targets": {
+          "build": {
+            "executor": "nx:run-commands"
           }
         }
       }
     },
-    "dependencies": {}
+    "dependencies": []
   },
   "expected": [
     "@semio-tech/owner:component",

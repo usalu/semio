@@ -238,7 +238,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 				`.🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🐹️go/🚀️bin`,
-				"bun nx run workspace:setup",
+				"bun repo run workspace:setup",
 			},
 			forbiddenFragments: []string{
 				"repo/client/client",
@@ -254,7 +254,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 				`.🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🐹️go/🚀️bin`,
-				"bun nx run workspace:setup",
+				"bun repo run workspace:setup",
 			},
 			forbiddenFragments: []string{
 				"repo/client/client",
@@ -271,7 +271,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 				`.🧬semio/🦑️repo/⚡️cache/🗃️bin`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin`,
 				`./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🐹️go/🚀️bin`,
-				`@("nx", "run", "workspace:setup")`,
+				`@("repo", "run", "workspace:setup")`,
 			},
 			forbiddenFragments: []string{
 				"repo/client/client.exe",

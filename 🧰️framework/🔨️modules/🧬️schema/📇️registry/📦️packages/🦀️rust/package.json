@@ -2,11 +2,11 @@
   "name": "@semio-tech/schema-registry-rs",
   "private": true,
   "scripts": {
-    "test": "nx run @semio-tech/schema-registry-rs:test",
-    "test-quick": "nx run @semio-tech/schema-registry-rs:test -- quick",
-    "test-long": "nx run @semio-tech/schema-registry-rs:test -- long",
-    "test-exhaustive": "nx run @semio-tech/schema-registry-rs:test -- exhaustive",
-    "test-neutrality": "nx run @semio-tech/schema-registry-rs:test-neutrality"
+    "test": "bun repo run @semio-tech/schema-registry-rs:test",
+    "test-quick": "bun repo run @semio-tech/schema-registry-rs:test -- quick",
+    "test-long": "bun repo run @semio-tech/schema-registry-rs:test -- long",
+    "test-exhaustive": "bun repo run @semio-tech/schema-registry-rs:test -- exhaustive",
+    "test-neutrality": "bun repo run @semio-tech/schema-registry-rs:test-neutrality"
   },
   "nx": {
     "includedScripts": []

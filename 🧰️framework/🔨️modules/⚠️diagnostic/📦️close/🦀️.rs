@@ -19,7 +19,7 @@ impl FaultCloseOwner{
     pub fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->FaultCloseStep{
         if maximum_items==0||maximum_bytes==0{return FaultCloseStep::Pending{released_items:0,released_bytes:0};}
         let Some(fault)=self.fault.as_mut()else{return FaultCloseStep::Complete};
-        let Fault{retained_progress:_,origin:_,code,severity:_,message,scope,span:_,source:_,causes,params,retryable:_}=fault;
+        let Fault{retained_progress:_,origin:_,code,severity:_,message,scope,span:_,source:_,domain,causes,params,retryable:_}=fault;
         let crate::FaultCode(code)=code;
         for text in [message,code]{if let Some(step)=close_text(text,maximum_bytes){return step;}}
         let FaultScope{plugin_id,app_id,instance_id,module,body_key}=scope.as_mut();
@@ -38,6 +38,7 @@ impl FaultCloseOwner{
             if let Some(step)=close_empty_vec(values,maximum_bytes){return step;}
             let bytes=size_of_val(owner.as_ref());if bytes>maximum_bytes{return pending_blocked();}*params=None;return pending(bytes);
         }
+        if let Some(original)=domain.as_mut(){if let Some(step)=close_domain(original,maximum_bytes){return step}*domain=None;return pending(0)}
         let bytes=size_of::<FaultScope>();if bytes>maximum_bytes{return pending_blocked();}
         drop(self.fault.take());pending(bytes)
     }
@@ -47,6 +48,17 @@ fn pending(bytes:usize)->FaultCloseStep{FaultCloseStep::Pending{released_items:1
 fn pending_blocked()->FaultCloseStep{FaultCloseStep::Pending{released_items:0,released_bytes:0}}
 fn close_text(text:&mut String,maximum_bytes:usize)->Option<FaultCloseStep>{let bytes=text.capacity();if bytes==0{return None;}if bytes>maximum_bytes{return Some(pending_blocked());}*text=String::new();Some(pending(bytes))}
 fn close_empty_vec<T>(values:&mut Vec<T>,maximum_bytes:usize)->Option<FaultCloseStep>{let bytes=values.capacity().checked_mul(size_of::<T>()).expect("actual empty diagnostic vector layout");if bytes==0{return None;}if bytes>maximum_bytes{return Some(pending_blocked());}*values=Vec::new();Some(pending(bytes))}
+
+fn close_domain(value:&mut semio_framework_value::DslValue,maximum_bytes:usize)->Option<FaultCloseStep>{
+    use semio_framework_value::DslValue;
+    match value{
+        DslValue::String(text)=>close_text(text,maximum_bytes),
+        DslValue::Bytes(bytes)=>{if !bytes.is_empty(){bytes.clear();return Some(pending(0))}close_empty_vec(bytes,maximum_bytes)},
+        DslValue::Array(items)=>{if let Some(original)=items.last_mut(){if let Some(step)=close_domain(original,maximum_bytes){return Some(step)}items.pop();return Some(pending(0))}close_empty_vec(items,maximum_bytes)},
+        DslValue::Object(entries)=>{if let Some((key,original))=entries.last_mut(){if let Some(step)=close_text(key,maximum_bytes){return Some(step)}if let Some(step)=close_domain(original,maximum_bytes){return Some(step)}entries.pop();return Some(pending(0))}close_empty_vec(entries,maximum_bytes)},
+        _=>None,
+    }
+}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

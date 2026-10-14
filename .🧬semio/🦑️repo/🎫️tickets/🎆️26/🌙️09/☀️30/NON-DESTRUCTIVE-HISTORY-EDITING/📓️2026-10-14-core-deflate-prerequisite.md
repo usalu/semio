@@ -20,3 +20,13 @@ D74134 actually passed2/2,28 assertions411ms with Node/SQLite plus current produ
 Member C67168 failed PREassertion because mounting the new Deflate module raced creation of its native test file. Core authored the missing exact file immediately; no selected law ran. This avoidable sequencing error does not change original inputs/resources. Unchanged Member D74127 is active and has reached Cargo. Pack quote b59495 failed PREassertion NoCachedProjectGraph; c74571 is current source successor. No native/editor/browser completion is inferred.
 
 Native source law was strengthened before its first dispatch to check raw and original two-byte pages, all five denied grant axes, actual compressed root authority43/7, input pending-byte copies1 and distinct window/output writes2 per produced byte. Codec closure quotes zero payload copy at every phase, while actual window release and paid derived output pages remain independently conserved. Getter source c74571 actually passed2/2,39 assertions483ms; getter native selector remains unexecuted.
+
+
+### 02:11 UTC Original Retained Deflate Native Green
+
+Deflate native A73691 genuinely passed1/1,1470 skipped36ms (selected law35ms). Original9 raw bytes, original2-byte paged source,4 cancellation cuts0/1/5/9, all5 denied grant axes, fixed1/2/65536/262144/64, independent8MiB control and2097152 predeclared close bound remain unchanged. Actual console confirms same original compressed root, measured paid output/window birth and release equality, actual output backing retained beyond codec closure and terminal Drop0. Source D74134 remains actual2/2,28 assertions411ms. This qualifies the retained paid codec owner only; whole History compressed dictionary/record child sources are still unimplemented and receive no acceptance credit.
+
+Current Pack getter native successor B74001 is dispatched after actual Deflate terminal and Cargo-free inventory under its exact original existing selector/control/resources. Getter source c74571 is actual2/2,39 assertions483ms. No getter native outcome is claimed while pending.
+
+
+Pack getter B74001 genuinely passed1/1,180 skipped13ms (selected12ms). Actual console confirms original independently fixed17/full5 paged/contiguous source and ranged tokens, unchanged sealed authority and native cursor/symbol/stack birth-release/Drop0. This selects and qualifies the exact existing standalone native SourceDecode law, unlike earlier PRE-Cargo A9487. Deflate1 and standalone getter1 are now genuinely runtime-qualified in their narrow original controls.

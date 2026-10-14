@@ -1,0 +1,33 @@
+{
+  "maximumWorkPerStep": 1,
+  "source": {
+    "schema": "trinity.graph",
+    "name": "Owned original",
+    "query": "return nodes"
+  },
+  "turns": [
+    {
+      "work": 0,
+      "moved": 0
+    },
+    {
+      "work": 1,
+      "moved": 1
+    },
+    {
+      "work": 1,
+      "moved": 2
+    },
+    {
+      "work": 1,
+      "moved": 3
+    }
+  ],
+  "retireOriginalRemainder": true,
+  "moveOriginalTextBacking": true,
+  "retainCandidateBeforeRenewal": true,
+  "nativePolicy": {
+    "maximumRows": 4096,
+    "maximumTypeDepth": 32
+  }
+}

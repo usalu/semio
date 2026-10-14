@@ -250,7 +250,9 @@ impl ArtifactEditor for DwgAc1024Editor {
 
     fn command_id(command: &Self::Command) -> &'static str { dwg_ac1024_editor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { dwg_ac1024_editor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref(); dwg_ac1024_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> DwgSnapshot {
         DwgSnapshot { version: "AC1024".into(), ..DwgSnapshot::default() }

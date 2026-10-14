@@ -8,6 +8,9 @@ pub(crate) mod test_native_authority;
 #[path="🚪️io/🪶️snapshot/🦀️.rs"]
 mod snapshot_call;
 pub use snapshot_call::{SnapshotCall,SnapshotCallOutput,SnapshotCallStatus,SnapshotComponentReceipt};
+#[path="⏱️deadline/🦀️.rs"]
+mod original_deadline;
+use original_deadline::{OriginalDeadlineError,remaining_original_deadline_us};
 
 #[path = "🧵️shard/🦀️.rs"]
 pub mod shard;
@@ -36,11 +39,6 @@ mod ui_patch;
 #[cfg(test)]
 #[path = "📥️ui-patch/🧪️tests/🧪️component/🦀️.rs"]
 mod ui_patch_component_tests;
-// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `WasmtimeAsyncRuntime` — one
-// pooled `tokio::spawn`ed task per actor, driving `📥️imports/🦀️.rs`'s host-async import layer against a
-// real `Store<AsyncActorHostState>` under `component-model-async`. See that module's own doc.
-#[path = "⏳️runtime/🦀️.rs"]
-pub mod runtime;
 #[path = "🧬️component-codec/🦀️.rs"]
 mod component_codec;
 pub use component_codec::{OwnedComponentDocumentCodec, GUEST_CODEC_BUDGET};
@@ -56,7 +54,8 @@ use semio_framework_plugin_interpreter::{decode_guest_fault_bytes, identity_turn
 pub use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
+use semio_framework_actor::{OriginalJobBudget,OriginalJobSource,OriginalJobStartReply,OriginalJobStepReply,OriginalJobOutcome,OriginalJobOutputReply,OriginalJobOutputAckReply,OriginalJobCancelReply,OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt};
+use semio_framework_plugin_interpreter::OriginalGuestJobCall;
 use std::collections::VecDeque;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -152,7 +151,7 @@ impl Default for SharedEngineConfig {
 /// let the bench run far enough to hit it ("maximum concurrent GC heap limit of 1000
 /// reached"). Every one of these caps is invisible until the scale exceeds it, so they
 /// surface one run at a time; sized off the same component budget as the rest.
-pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
+async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
     let build = |pooling: bool| -> wasmtime::Result<Engine> {
         let mut config = Config::new();
         config.wasm_component_model(true);
@@ -267,7 +266,7 @@ impl Drop for PeriodicPoolTimer {
 /// (ticket 26/09/23 slice G6) at ~8 % of a core in an idle semio MCP gateway, and 1 000 wake-ups a
 /// second in every guest call even though a deadline is reached once or never.
 #[derive(Clone)]
-pub struct EpochDeadlines {
+pub(crate) struct EpochDeadlines {
     inner: Arc<EpochDeadlinesInner>,
 }
 
@@ -291,16 +290,16 @@ struct EpochDemands {
 
 /// 🎚️ A store's current wall deadline on the pool clock, read by its epoch callback.
 #[derive(Debug)]
-pub struct EpochDeadlineCell(std::sync::atomic::AtomicU64);
+pub(crate) struct EpochDeadlineCell(std::sync::atomic::AtomicU64,std::sync::atomic::AtomicU64,Option<fn()->Option<u64>>);
 
 impl Default for EpochDeadlineCell {
     fn default() -> Self {
-        Self(std::sync::atomic::AtomicU64::new(u64::MAX))
+        Self(std::sync::atomic::AtomicU64::new(u64::MAX),std::sync::atomic::AtomicU64::new(u64::MAX),None)
     }
 }
 
 /// 🔒️ One armed guest call's demand on the epoch; dropping it withdraws the demand.
-pub struct EpochDemand {
+pub(crate) struct EpochDemand {
     inner: Arc<EpochDeadlinesInner>,
     kind: EpochDemandKind,
 }
@@ -320,13 +319,14 @@ impl EpochDeadlines {
     /// holds exactly one callback, and it reads `cell` fresh on every advance.
     pub fn install<T: 'static>(&self, store: &mut Store<T>, cell: Arc<EpochDeadlineCell>) {
         let pool = self.inner.pool.clone();
-        store.epoch_deadline_callback(move |_| Ok(if pool.now_ms() >= cell.0.load(std::sync::atomic::Ordering::Acquire) { wasmtime::UpdateDeadline::Interrupt } else { wasmtime::UpdateDeadline::Continue(1) }));
+        store.epoch_deadline_callback(move |_| Ok(if pool.now_ms() >= cell.0.load(std::sync::atomic::Ordering::Acquire)||cell.2.is_some_and(|clock|clock().is_none_or(|now|now>=cell.1.load(std::sync::atomic::Ordering::Acquire))) { wasmtime::UpdateDeadline::Interrupt } else { wasmtime::UpdateDeadline::Continue(1) }));
         store.set_epoch_deadline(1);
     }
 
     /// ⏰️ Arms one guest call: `store` is interrupted once `after_ms` of wall time have passed, for
     /// as long as the returned demand lives.
     pub fn arm<T>(&self, store: &mut Store<T>, cell: &EpochDeadlineCell, after_ms: u64) -> EpochDemand {
+        cell.1.store(u64::MAX,std::sync::atomic::Ordering::Release);
         let deadline = self.inner.pool.now_ms().saturating_add(after_ms);
         cell.0.store(deadline, std::sync::atomic::Ordering::Release);
         store.set_epoch_deadline(1);
@@ -336,6 +336,15 @@ impl EpochDeadlines {
         demands.deadlines.insert(key);
         EpochDeadlinesInner::rearm(&self.inner, &mut demands);
         EpochDemand { inner: Arc::clone(&self.inner), kind: EpochDemandKind::Deadline(key) }
+    }
+
+    /// 🕰️ Arms the unchanged absolute caller deadline while translating its wake to the pool clock.
+    pub fn arm_original<T>(&self,store:&mut Store<T>,cell:&EpochDeadlineCell,deadline_us:u64)->Result<EpochDemand,TurnFault>{
+        let clock=cell.2.ok_or_else(||identity_turn_fault(crate::operation_authority::refusal(4)))?;
+        let remaining=remaining_original_deadline_us(clock(),deadline_us).map_err(|error|match error{OriginalDeadlineError::MissingClock=>identity_turn_fault(crate::operation_authority::refusal(4)),OriginalDeadlineError::Expired=>TurnFault::DeadlineExceeded})?;
+        let demand=self.arm(store,cell,remaining.div_ceil(1_000));
+        cell.1.store(deadline_us,std::sync::atomic::Ordering::Release);
+        Ok(demand)
     }
 
     /// 🔁️ Arms a timesliced call: the epoch advances every millisecond while the demand lives, for a
@@ -413,7 +422,7 @@ mod retained_turn_wire;
 /// memory/tables/instances against the budget"). Plain numeric bounds rather than a `Budget`-typed
 /// constructor — `Budget` is A3's type, not yet landed — so `WasmtimeRuntime` builds one from
 /// `budget.memory_bytes` etc. with a one-line call once it lands.
-pub struct BudgetLimiter {
+pub(crate) struct BudgetLimiter {
     pub max_memory_bytes: usize,
     /// 📈️ High-water mark of the guest's linear memory, in bytes — the host-side twin of the
     /// guest's own `semio_framework_trace::guest_linear_memory_bytes` (`memory.size`). Wasm memory
@@ -499,7 +508,7 @@ pub async fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32
 /// [`SharedEngineConfig::to_isolated_arg`] — a hostile or stale `.cwasm` is a sandbox escape, not a
 /// cache-miss. Any I/O or deserialize error is treated as a cache miss (`None`), never surfaced as a
 /// fault: recompiling from the original component bytes is always the safe fallback.
-pub async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Component> {
+async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Component> {
     if !path.exists() {
         return None;
     }
@@ -509,7 +518,7 @@ pub async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Com
 /// 💾️ Writes the compiled code under a scratch name owned by this process and renames it into
 /// place, so a reader never sees a partial `.cwasm` and a writer killed midway leaves only its own
 /// [`compiled_cache_scratch_path`] behind.
-pub async fn store_compiled_component(component: &Component, path: &Path) -> std::io::Result<()> {
+async fn store_compiled_component(component: &Component, path: &Path) -> std::io::Result<()> {
     write_compiled_cache_entry(&component.serialize().map_err(|error| std::io::Error::other(error.to_string()))?, path)
 }
 
@@ -644,7 +653,17 @@ pub struct GuestInstance {
     state: GuestInstanceState,
 }
 
+#[path="🏗️instance/🦀️.rs"]
+mod original_instance_opening;
+pub use original_instance_opening::GuestActorOpening;
+
 impl GuestInstance {
+    /// 🎟️ The paid Core retains the exact supplied startup input without inferring it from the actor identifier.
+    /// 👁️ Borrows funded original memory while the complete instance remains owned.
+    pub fn original_memory(&self,index:u32)->Option<&[u8]>{match &self.state{GuestInstanceState::Owned(owner)=>owner.original_memory(index),_=>None}}
+    /// 🚪️ Reports the actual terminal state reached only by paid complete instance destruction.
+    pub fn is_closed(&self)->bool{matches!(self.state,GuestInstanceState::Closed)}
+    pub fn original_startup_input(&self)->Option<semio_framework_actor::RetainedTurnInput>{match &self.state{GuestInstanceState::Owned(state)=>state.original_startup_input(),_=>None}}
     /// 🔁️ True while an owned `poll` has not completed — the guest yielded on its fuel or deadline
     /// and owns the host's next call. A host that wants to submit NEW events must first resume with
     /// none until this is false; `execute_actor_turn` refuses the alternative rather than dropping
@@ -659,7 +678,7 @@ impl GuestInstance {
     pub fn guest_linear_memory_bytes(&self) -> Option<usize> {
         match &self.state {
             GuestInstanceState::Wasmtime(state) => Some(state.store.data().limiter.peak_memory_bytes),
-            GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) => None,
+            GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) | GuestInstanceState::Closed => None,
         }
     }
 
@@ -673,7 +692,7 @@ impl GuestInstance {
         match &self.state {
             GuestInstanceState::Wasmtime(state) => state.store.data().diagnostics.as_ref().map(|pipe| String::from_utf8_lossy(&pipe.contents()).into_owned()),
             GuestInstanceState::Owned(state) => Some(String::from_utf8_lossy(state.diagnostics()).into_owned()),
-            GuestInstanceState::Mock(_) => None,
+            GuestInstanceState::Mock(_) | GuestInstanceState::Closed => None,
         }
     }
 }
@@ -690,6 +709,7 @@ impl std::fmt::Debug for GuestInstance {
 }
 
 enum GuestInstanceState {
+    Closed,
     /// 🧪️ Only `MockGuestRuntime` (`#[cfg(test)]`) ever constructs this variant — `#[allow(dead_code)]`
     /// rather than `#[cfg(test)]` on the variant itself, so `GuestInstanceState` stays a REFUTABLE
     /// match target (`Wasmtime` is not the only variant) in every build config; a `#[cfg(test)]`
@@ -754,20 +774,21 @@ use cold_pair::{kernel_cold_page_to_wit, wit_cold_ingress_to_kernel};
 pub trait GuestRuntime: Send + Sync {
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorAdmissionReply,TurnFault>;
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorCloseReply,TurnFault>;
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>;
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>;
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TurnResult, TurnFault>;
-    /// 🧬️ `jobs.wit`'s `start-job` export — added past `design-runtime.md` §2's literal trait listing
-    /// because that listing omits it even though `jobs.wit` declares three functions
-    /// (`start-job`/`step-job`/`cancel-job`), not one: a job cannot be stepped before it exists.
-    /// `PluginInstanceHandle::run_job_on_worker` (`//#region 🔀️PostTurnRelay`) is the only caller.
-    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault>;
-    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault>;
-    /// 🛑️ `jobs.wit`'s `cancel-job` export — added past `design-runtime.md` §2's literal trait
-    /// listing for the SAME reason `start_job` was (that listing names only `execute_turn`/
-    /// `step_job`, but `jobs.wit` declares three functions, and a generic `Effect::CancelJob`
-    /// admission path — `🧵️shard/🦀️.rs`'s `ShardLoop::pump` — needs somewhere to call).
-    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault>;
+    /// 📥️ A prepared original job source returns intact when guest admission refuses it.
+    async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>;
+    /// ▶️ The actual guest reply retains its descriptor and complete original spending tuple.
+    async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>;
+    /// 📦️ Bounded original output pages precede their paid source closure acknowledgement.
+    async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>;
+    /// 🤝️ Only the actual offered output identity can acknowledge its guest owner.
+    async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>;
+    /// 🛑️ Original cancellation admission returns all actual work and retained effects.
+    async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>;
+    /// ♻️ Jobs and retained outputs close before their parent actor context.
+    async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>;
     async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError>;
     async fn restore(&self, inst: &mut GuestInstance, state: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), PluginHostError>;
     async fn drop_instance(&self, inst: GuestInstance);
@@ -1045,8 +1066,8 @@ impl MockGuestRuntime {
 
 #[cfg(test)]
 impl GuestRuntime for MockGuestRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorAdmissionReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(crate::original_actor_context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input)))}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorCloseReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(crate::original_actor_context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input)))}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input)))}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{let _=(budget,identity);let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_turn::context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input)))}
 
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: None })
@@ -1191,8 +1212,8 @@ fn snapshot_component_transport<O:FnMut(semio_framework_value::native_encoding::
 }
 
 impl GuestRuntime for OwnedRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorAdmissionReply,TurnFault>{self.admit_context(owned_instance_mut(inst)?,input,budget,identity)}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorCloseReply,TurnFault>{self.close_context(owned_instance_mut(inst)?,input,budget,identity)}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{self.admit_context(owned_instance_mut(inst)?,input,budget,identity)}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{self.close_context(owned_instance_mut(inst)?,input,budget,identity)}
 
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: Some(self.compile_component(bytes)?) })
@@ -1613,6 +1634,7 @@ struct WasmtimeInstanceState {
 /// actor (`instantiate`). Wraps the type-independent primitives in `//#region 🔧️SharedWasmtimeEngine`
 /// above — this is where they get consumed.
 pub struct WasmtimeRuntime {
+    original_clock:fn()->Option<u64>,
     engine: Engine,
     epoch: EpochDeadlines,
     linker: Linker<ActorHostState>,
@@ -1631,7 +1653,7 @@ impl WasmtimeRuntime {
     ///
     /// 🌐️ `add_to_linker_async`, not `_sync`: the Store is component-model-async now, and the
     /// sync WASI shim installs host functions that cannot be called from an async-lifted guest.
-    pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
+    pub async fn new(cfg: SharedEngineConfig,original_clock:fn()->Option<u64>) -> Result<Self, PluginHostError> {
         let (engine, pooling_active) = build_shared_engine(cfg).await?;
         let epoch = EpochDeadlines::new(&engine, &plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
@@ -1640,8 +1662,11 @@ impl WasmtimeRuntime {
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active).await;
         let isolated_engine = SharedEngineConfig { force_on_demand: !pooling_active, ..cfg }.to_isolated_arg();
-        Ok(Self { engine, epoch, linker, cache_root: default_compiled_cache_root().await, engine_config_hash, fuel_metering: cfg.fuel_metering, isolated_engine, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
+        Ok(Self { original_clock,engine, epoch, linker, cache_root: default_compiled_cache_root().await, engine_config_hash, fuel_metering: cfg.fuel_metering, isolated_engine, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
     }
+
+    /// 🕰️ Returns the clock supplied by the original runtime embedding.
+    pub fn clock_source(&self)->fn()->Option<u64>{self.original_clock}
 }
 
 impl WasmtimeRuntime {
@@ -1669,7 +1694,7 @@ impl WasmtimeRuntime {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite schema requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         store.run_concurrent(async |accessor| bindings.semio_framework_codec().call_sqlite_schema(accessor, dialect.to_string()).await).await.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(decode_guest_plugin_error)
     }
 
@@ -1678,7 +1703,7 @@ impl WasmtimeRuntime {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite export requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let encoding = match encoding { "binary" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Binary, "text" => actor_bindings::exports::semio::framework::codec::SnapshotEncoding::Text, _ => return Err(TurnFault::Trapped("invalid snapshot encoding".into())) };
         let limits = wit_snapshot_limits(limits);
         let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
@@ -1692,7 +1717,7 @@ impl WasmtimeRuntime {
         let mut instance = self.codec_instance(compiled, budget).await?;
         let GuestInstanceState::Wasmtime(state) = &mut instance.state else { return Err(TurnFault::Trapped("SQLite import requires Wasmtime instance".into())); };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let limits = wit_snapshot_limits(limits);
         let (coordinate,bytes)=snapshot_component_transport(dialect,payload,identity)?;
         let mut receiver=operation::OriginalOperationReceiver::new(identity);
@@ -1718,7 +1743,7 @@ impl WasmtimeRuntime {
             return Err(TurnFault::Trapped("codec.pack-schema-hash called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
         let bytes = store
             .run_concurrent(async |accessor| bindings.semio_framework_codec().call_pack_schema_hash(accessor, artifact_schema).await)
@@ -1736,7 +1761,7 @@ impl WasmtimeRuntime {
             return Err(TurnFault::Trapped("codec.genesis called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
         let document_id = document_id.to_string();
         let pair = store
@@ -1757,7 +1782,7 @@ impl WasmtimeRuntime {
             return Err(TurnFault::Trapped("codec.print-mirror called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
         let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let mirror = store
@@ -1777,7 +1802,7 @@ impl WasmtimeRuntime {
             return Err(TurnFault::Trapped("codec.apply-ops called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
         let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let ops = ops.to_vec();
@@ -1798,7 +1823,7 @@ impl WasmtimeRuntime {
             return Err(TurnFault::Trapped("codec.replay-envelopes called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
         let artifact_schema = artifact_schema.to_string();
         let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
         let envelopes = envelopes.to_vec();
@@ -1951,8 +1976,8 @@ impl GuestRuntimes {
 //#endregion 🗂️GuestCodecDispatch
 
 impl GuestRuntime for WasmtimeRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorAdmissionReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm(store,deadline,u64::from(budget.deadline_ms));let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::admission_from_wit(original)}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorCloseReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm(store,deadline,u64::from(budget.deadline_ms));let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_close_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::close_from_wit(original)}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::admission_from_wit(original)}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_close_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::close_from_wit(original)}
 
     /// 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
     /// silently dropping this call's future: the on-disk compilation cache write never ran, so
@@ -1985,7 +2010,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let (wasi, diagnostics) = guest_wasi_ctx();
         let host_state = ActorHostState {
-            original_job_clock:None,
+            original_job_clock:Some(self.original_clock),
             operation_slot:operation::slot::OperationSlot::new(),
             plugin_id: format!("actor-{}", actor.0),
             actor,
@@ -2001,9 +2026,11 @@ impl GuestRuntime for WasmtimeRuntime {
         let mut store = Store::new(&self.engine, host_state);
         store.limiter(|state| &mut state.limiter as &mut dyn ResourceLimiter);
         arm_store_fuel(&mut store, self.fuel_metering, budget.fuel).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let deadline = Arc::new(EpochDeadlineCell::default());
+        let deadline = Arc::new(EpochDeadlineCell(std::sync::atomic::AtomicU64::new(u64::MAX),std::sync::atomic::AtomicU64::new(u64::MAX),Some(self.original_clock)));
         self.epoch.install(&mut store, Arc::clone(&deadline));
-        let _epoch = self.epoch.arm(&mut store, &deadline, budget.deadline_ms as u64);
+        let remaining=remaining_original_deadline_us((self.original_clock)(),budget.deadline_us).map_err(|error|PluginHostError::NativeIo(semio_framework_value::ValueError::literal(match error{OriginalDeadlineError::MissingClock=>semio_framework_value::ValueRefusalKind::UnsupportedOwner,OriginalDeadlineError::Expired=>semio_framework_value::ValueRefusalKind::WorkLimit},"original guest admission requires its live caller deadline")))?;
+        let _epoch = self.epoch.arm(&mut store, &deadline, remaining.div_ceil(1_000));
+        deadline.1.store(budget.deadline_us,std::sync::atomic::Ordering::Release);
         let bindings = actor_bindings::Actor::instantiate_async(&mut store, component, &self.linker).await.map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let guest = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_channel_version(accessor).await).await.and_then(|inner| inner).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         protocol::admit_guest_channel_version(guest, protocol::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault)))?;
@@ -2041,8 +2068,8 @@ impl GuestRuntime for WasmtimeRuntime {
         };
         let WasmtimeInstanceState { store, bindings, instance_id, deadline } = state;
         arm_store_fuel(store, self.fuel_metering, budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-        let _epoch = self.epoch.arm(store, deadline, budget.deadline_ms as u64);
-        let wit_budget = wit_reactor::Budget { retained:retained_turn_wire::input_to_wit(budget.retained), fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
+        let wit_budget = wit_reactor::Budget { retained:retained_turn_wire::input_to_wit(budget.retained), fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let (wit_events, wit_command_page, wit_cold_pair_page) = kernel_turn_inputs_to_wit(events, *instance_id).await?;
         let call_result = store
             .run_concurrent(async |accessor| {
@@ -2107,56 +2134,82 @@ impl GuestRuntime for WasmtimeRuntime {
     /// HERE because `start-job` armed nothing at all and inherited whatever the preceding
     /// `execute_turn`/`step-job` left in the store: a start after a fully spent turn began with
     /// an already-passed epoch and no fuel.
-    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
-        };
-        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
-        let kind = kind.to_string();
-        store
-            .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_start_job(accessor, job, kind, input).await)
-            .await
-            .map_err(|error| classify_guest_trap(&error))?
-            .map_err(|error| classify_guest_trap(&error))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
+    async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(error))}
+        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
+        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,source,identity_turn_fault(crate::operation_authority::refusal(4)))};
+        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
+        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,source,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
+        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,source,error.into())};
+        let wit_budget=retained_turn_wire::jobs::budget_to_wit(budget);
+        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_start_job(accessor,source.map(retained_turn_wire::jobs::source_to_wit),wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
+        OriginalGuestJobCall{original:returned.and_then(retained_turn_wire::jobs::start_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
     }
 
-    /// ⏱️ …and the guest still receives its own cooperative grant, unchanged, on `wit_budget`.
-    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
-        };
-        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
-        let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
-        let step = store
-            .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_step_job(accessor, job, wit_budget).await)
-            .await
-            .map_err(|error| classify_guest_trap(&error))?
-            .map_err(|error| classify_guest_trap(&error))?
-            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
-        Ok(match step {
-            wit_jobs::JobStep::Running(bytes) => JobStep::Running { progress: bytes },
-            wit_jobs::JobStep::Done(bytes) => JobStep::Done { output: bytes },
-            wit_jobs::JobStep::Failed(bytes) => JobStep::Failed { error: bytes },
-        })
+    async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
+        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
+        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(crate::operation_authority::refusal(4)))};
+        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
+        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
+        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
+        let wit_budget=retained_turn_wire::jobs::budget_to_wit(budget);
+        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_step_job(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
+        OriginalGuestJobCall{original:returned.and_then(retained_turn_wire::jobs::step_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
     }
 
-    /// ⏱️ A cancellation may arrive long after the step that preceded it, and an epoch deadline
-    /// is ABSOLUTE — an unarmed `cancel-job` ran against the previous crossing's spent deadline
-    /// and trapped the instance it was trying to wind down. See [`GUEST_JOB_WATCHDOG_MS`].
-    ///
-    /// 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
-    /// wrapper (unlike `start-job`/`step-job`), so only the trap-level results can fail: one
-    /// from `run_concurrent` itself, one from the call.
-    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
-        let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
-            return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
-        };
-        let WasmtimeInstanceState { store, bindings, deadline, .. } = state;
-        let _epoch = self.arm_guest_watchdog(store, deadline).map_err(TurnFault::Host)?;
-        store.run_concurrent(async |accessor| bindings.semio_framework_jobs().call_cancel_job(accessor, job).await).await.map_err(|error| classify_guest_trap(&error))?.map_err(|error| classify_guest_trap(&error))
+    async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
+        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
+        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(crate::operation_authority::refusal(4)))};
+        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
+        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
+        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
+        let wit_budget=retained_turn_wire::jobs::budget_to_wit(budget);
+        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_read_job_output(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
+        OriginalGuestJobCall{original:returned.and_then(retained_turn_wire::jobs::output_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+    }
+
+    async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
+        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
+        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(crate::operation_authority::refusal(4)))};
+        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
+        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
+        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
+        let wit_budget=retained_turn_wire::jobs::budget_to_wit(budget);
+        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_acknowledge_job_output(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
+        OriginalGuestJobCall{original:returned.and_then(retained_turn_wire::jobs::ack_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+    }
+
+    async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
+        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
+        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(crate::operation_authority::refusal(4)))};
+        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
+        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
+        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
+        let wit_budget=retained_turn_wire::jobs::budget_to_wit(budget);
+        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_cancel_job(accessor,job,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
+        OriginalGuestJobCall{original:returned.and_then(retained_turn_wire::jobs::cancel_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
+    }
+
+    async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{
+        if let Err(error)=execution.validate_for(budget){return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(error))}
+        if !self.fuel_metering{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original job execution requires actual instruction metering")))}
+        let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return OriginalGuestJobCall::unsubmitted(execution,None,identity_turn_fault(crate::operation_authority::refusal(4)))};
+        let WasmtimeInstanceState{store,bindings,deadline,..}=state;
+        if let Err(error)=arm_store_fuel(store,true,execution.fuel){return OriginalGuestJobCall::unsubmitted(execution,None,TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))}
+        let _epoch=match self.epoch.arm_original(store,deadline,execution.deadline_us){Ok(epoch)=>epoch,Err(error)=>return OriginalGuestJobCall::unsubmitted(execution,None,error.into())};
+        let wit_budget=retained_turn_wire::jobs::budget_to_wit(budget);
+        let returned=store.run_concurrent(async|accessor|bindings.semio_framework_jobs().call_close_jobs(accessor,wit_budget).await).await.and_then(|result|result).map_err(|error|classify_guest_trap(&error));
+        let spent_fuel=store.get_fuel().ok().and_then(|remaining|execution.fuel.checked_sub(remaining));
+        OriginalGuestJobCall{original:returned.and_then(retained_turn_wire::jobs::cancel_from_wit),execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel,submitted:true},returned_unsubmitted_source:None}
     }
 
     async fn checkpoint(&self, inst: &mut GuestInstance, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
@@ -2226,8 +2279,8 @@ pub enum GuestRuntimes {
 }
 
 impl GuestRuntime for GuestRuntimes {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorAdmissionReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Mock(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Recording(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await}}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<crate::original_actor_context::OriginalActorCloseReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Mock(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Recording(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await}}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Mock(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Recording(runtime)=>runtime.admit_actor_context(inst,input,budget,identity).await}}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{match self{Self::Owned(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,Self::Wasmtime(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Mock(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await,#[cfg(test)]Self::Recording(runtime)=>runtime.close_actor_context(inst,input,budget,identity).await}}
 
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         match self {
@@ -2262,38 +2315,12 @@ impl GuestRuntime for GuestRuntimes {
         }
     }
 
-    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
-        match self {
-            Self::Owned(r) => r.start_job(inst, job, kind, input).await,
-            Self::Wasmtime(r) => r.start_job(inst, job, kind, input).await,
-            #[cfg(test)]
-            Self::Mock(r) => r.start_job(inst, job, kind, input).await,
-            #[cfg(test)]
-            Self::Recording(r) => r.start_job(inst, job, kind, input).await,
-        }
-    }
-
-    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
-        match self {
-            Self::Owned(r) => r.step_job(inst, job, budget).await,
-            Self::Wasmtime(r) => r.step_job(inst, job, budget).await,
-            #[cfg(test)]
-            Self::Mock(r) => r.step_job(inst, job, budget).await,
-            #[cfg(test)]
-            Self::Recording(r) => r.step_job(inst, job, budget).await,
-        }
-    }
-
-    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
-        match self {
-            Self::Owned(r) => r.cancel_job(inst, job).await,
-            Self::Wasmtime(r) => r.cancel_job(inst, job).await,
-            #[cfg(test)]
-            Self::Mock(r) => r.cancel_job(inst, job).await,
-            #[cfg(test)]
-            Self::Recording(r) => r.cancel_job(inst, job).await,
-        }
-    }
+    async fn start_job(&self,inst:&mut GuestInstance,source:Option<OriginalJobSource>,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStartReply>{match self{Self::Owned(runtime)=>runtime.start_job(inst,source,budget,execution).await,Self::Wasmtime(runtime)=>runtime.start_job(inst,source,budget,execution).await,#[cfg(test)]Self::Mock(runtime)=>runtime.start_job(inst,source,budget,execution).await,#[cfg(test)]Self::Recording(runtime)=>runtime.start_job(inst,source,budget,execution).await}}
+    async fn step_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobStepReply<OriginalJobOutcome>>{match self{Self::Owned(runtime)=>runtime.step_job(inst,job,budget,execution).await,Self::Wasmtime(runtime)=>runtime.step_job(inst,job,budget,execution).await,#[cfg(test)]Self::Mock(runtime)=>runtime.step_job(inst,job,budget,execution).await,#[cfg(test)]Self::Recording(runtime)=>runtime.step_job(inst,job,budget,execution).await}}
+    async fn read_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputReply>{match self{Self::Owned(runtime)=>runtime.read_job_output(inst,job,budget,execution).await,Self::Wasmtime(runtime)=>runtime.read_job_output(inst,job,budget,execution).await,#[cfg(test)]Self::Mock(runtime)=>runtime.read_job_output(inst,job,budget,execution).await,#[cfg(test)]Self::Recording(runtime)=>runtime.read_job_output(inst,job,budget,execution).await}}
+    async fn acknowledge_job_output(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobOutputAckReply>{match self{Self::Owned(runtime)=>runtime.acknowledge_job_output(inst,job,budget,execution).await,Self::Wasmtime(runtime)=>runtime.acknowledge_job_output(inst,job,budget,execution).await,#[cfg(test)]Self::Mock(runtime)=>runtime.acknowledge_job_output(inst,job,budget,execution).await,#[cfg(test)]Self::Recording(runtime)=>runtime.acknowledge_job_output(inst,job,budget,execution).await}}
+    async fn cancel_job(&self,inst:&mut GuestInstance,job:u64,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{match self{Self::Owned(runtime)=>runtime.cancel_job(inst,job,budget,execution).await,Self::Wasmtime(runtime)=>runtime.cancel_job(inst,job,budget,execution).await,#[cfg(test)]Self::Mock(runtime)=>runtime.cancel_job(inst,job,budget,execution).await,#[cfg(test)]Self::Recording(runtime)=>runtime.cancel_job(inst,job,budget,execution).await}}
+    async fn close_jobs(&self,inst:&mut GuestInstance,budget:OriginalJobBudget,execution:OriginalGuestExecutionBudget)->OriginalGuestJobCall<OriginalJobCancelReply>{match self{Self::Owned(runtime)=>runtime.close_jobs(inst,budget,execution).await,Self::Wasmtime(runtime)=>runtime.close_jobs(inst,budget,execution).await,#[cfg(test)]Self::Mock(runtime)=>runtime.close_jobs(inst,budget,execution).await,#[cfg(test)]Self::Recording(runtime)=>runtime.close_jobs(inst,budget,execution).await}}
 
     async fn checkpoint(&self, inst: &mut GuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         match self {
@@ -4058,10 +4085,10 @@ pub struct GuestRelayWakeReceipt{pub epoch:u64,pub slot:usize,pub generation:u64
 pub trait GuestRelayWakeReceiptReceiver:Send+Sync{fn checkout(&self,slot:usize,generation:u64)->Result<Option<GuestRelayWakeTurnGrant>,semio_framework_value::ValueError>;fn collect(&self,receipt:&GuestRelayWakeReceipt)->Result<bool,semio_framework_value::ValueError>;}
 /// 🚦️ Required first-party issuer and receipt receiver belong to the actual Host embedding.
 #[derive(Clone)]
-pub struct GuestRelayWakeAuthority{pub drive_policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub issuer:semio_framework_job::OriginalWorkerWakeIssuer,pub receiver:Arc<dyn GuestRelayWakeReceiptReceiver>}
+pub struct GuestRelayWakeAuthority{pub drive_policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub policy:semio_framework_value::retained_clone::RetainedCloneGrant,pub issuer:semio_framework_job::OriginalWorkerWakeIssuer,pub receiver:Arc<GuestRelayWakeDriver>}
 #[path="🔔️wake/🦀️.rs"]
 mod original_wake_receipts;
-pub use original_wake_receipts::{GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver,GuestRelayWakeContextTurn,GuestRelayWakeReceiptLedger,GuestRelayWakeTurnGrant,GuestRelayWakeTurnReceipt};
+pub use original_wake_receipts::{GuestRelayOriginalRoot,GuestRelayRootPolicy,GuestRelayDriverPolicy,GuestRelayDriverTreasury,GuestRelayDriverTurnGrant,GuestRelayWakeDriver,GuestRelayWakeContextTurn,GuestRelayWakeReceiptLedger,GuestRelayWakeTurnGrant,GuestRelayWakeTurnReceipt};
 #[cfg(test)]
 #[global_allocator]
 static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
@@ -4354,12 +4381,13 @@ impl GuestRelayMountedRegistry {
             self.reaper_cursor.store((index + 1) % GUEST_RELAY_MOUNTED_SLOTS, std::sync::atomic::Ordering::Release);
             match self.close_original_wake(&mut session.wake,index,session.generation){GuestRelayMountedReap::Idle=>{},step=>return step}
             return match self.pump_close(session,index,Some(waker)) {
-                GuestRelayMountedClose::Complete => {
+                Ok(GuestRelayMountedClose::Complete) => {
                     *slot = GuestRelayMountedSlot::Empty;
                     GuestRelayMountedReap::Progress
                 }
-                GuestRelayMountedClose::Pending => GuestRelayMountedReap::Progress,
-                GuestRelayMountedClose::Blocked { wake_registered } => GuestRelayMountedReap::Blocked { wake_registered },
+                Ok(GuestRelayMountedClose::Pending) => GuestRelayMountedReap::Progress,
+                Ok(GuestRelayMountedClose::Blocked { wake_registered }) => GuestRelayMountedReap::Blocked { wake_registered },
+                Err(failure)=>{session.terminal=Some(GuestRelayMountedTerminal::HostFault(PluginHostError::OriginalTurn(failure)));GuestRelayMountedReap::Blocked{wake_registered:session.wake.registered}},
             };
         }
         GuestRelayMountedReap::Idle
@@ -4399,47 +4427,30 @@ impl GuestRelayMountedRegistry {
         })
     }
 
-    fn pump_close(&self,session:&mut GuestRelayMountedSession,index:usize,_waker:Option<&std::task::Waker>)->GuestRelayMountedClose{
-        use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-        #[cfg(test)] use semio_framework_value::{RetainedCloneGrant};
-        if !self.collect_original_wake_receipt(&mut session.wake){return GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered};}
-        let Some(context)=self.checkout_original_wake(&mut session.wake,index,session.generation)else{return GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered};};
-        let grant=context.grant;
-        let metadata=|copy_bytes|RetirementDemand{copy_bytes,depth:1,..Default::default()};
-        let demand:Result<RetirementDemand,ValueError>=(||{
-            if session.checked_out.is_some(){return Ok(metadata(size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestColdRelayJob>>>()));}
-            if session.lifecycle_probe_checked_out.is_some(){return Ok(metadata(size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestRelayLifecycleProbeJob>>>()));}
-            let map=|error|match error{semio_framework_job::WorkerJobDemandError::Refused(error)=>error,semio_framework_job::WorkerJobDemandError::Contention(_)=>ValueError::literal(ValueRefusalKind::WorkLimit,"original Host close owner is checked out")};
-            match &session.owner{
-                GuestRelayMountedOwner::Session(owner)=>if owner.terminal_is_empty(){Ok(metadata(size_of::<GuestRelayMountedOwner>()))}else{owner.retirement_demands(grant.maximum_copy_bytes).map_err(map)},
-                GuestRelayMountedOwner::LifecycleProbe(owner)=>if owner.terminal_is_empty(){Ok(metadata(size_of::<GuestRelayMountedOwner>()))}else{owner.retirement_demands(grant.maximum_copy_bytes).map_err(map)},
-                GuestRelayMountedOwner::Rejected(owner)=>if owner.terminal_is_empty(){Ok(metadata(size_of::<GuestRelayMountedOwner>()))}else{owner.retirement_demands(grant.maximum_copy_bytes)},
-                GuestRelayMountedOwner::Empty=>Ok(Default::default()),
+    fn pump_close(&self,session:&mut GuestRelayMountedSession,index:usize,_waker:Option<&std::task::Waker>)->Result<GuestRelayMountedClose,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+        if !self.collect_original_wake_receipt(&mut session.wake){return Ok(GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered})}
+        let result=self.wake_authority.receiver.dispatch_cleanup_step(index,session.generation,|cx|{
+            let grant=cx.retained_grant();let bytes=if session.checked_out.is_some(){size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestColdRelayJob>>>()}else if session.lifecycle_probe_checked_out.is_some(){size_of::<Option<semio_framework_job::WorkerJobOutcome<GuestRelayLifecycleProbeJob>>>()}else{size_of::<GuestRelayMountedOwner>()};
+            let terminal=match &session.owner{GuestRelayMountedOwner::Session(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Rejected(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Empty=>true};
+            if session.checked_out.is_some()||session.lifecycle_probe_checked_out.is_some()||terminal{
+                if cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(GuestRelayMountedClose::Pending)}
+                cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
+                if let Some(owner)=session.checked_out.take(){owner.begin_close();session.outcome_stage=GuestRelayOutcomeStage::Idle;return Ok(GuestRelayMountedClose::Pending)}
+                if let Some(owner)=session.lifecycle_probe_checked_out.take(){owner.begin_close();session.outcome_stage=GuestRelayOutcomeStage::Idle;return Ok(GuestRelayMountedClose::Pending)}
+                session.owner=GuestRelayMountedOwner::Empty;return Ok(GuestRelayMountedClose::Complete)
             }
-        })();
-        let mut progress=RetainedCloneProgress::default();
-        let result=match demand{
-            Err(error)=>{session.wake.refusal=Some(error.kind);GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
-            Ok(demand)if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered},
-            Ok(demand)=>{
-                if let Some(owner)=session.checked_out.take(){owner.begin_close();session.outcome_stage=GuestRelayOutcomeStage::Idle;progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
-                else if let Some(owner)=session.lifecycle_probe_checked_out.take(){owner.begin_close();session.outcome_stage=GuestRelayOutcomeStage::Idle;progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
-                else{
-                    let terminal=match &session.owner{GuestRelayMountedOwner::Session(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Rejected(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Empty=>false};
-                    if terminal{session.owner=GuestRelayMountedOwner::Empty;progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};GuestRelayMountedClose::Pending}
-                    else{match &mut session.owner{
-                        GuestRelayMountedOwner::Session(owner)=>match owner.close_step(grant){semio_framework_job::WorkerJobCloseStep::Complete{progress:p}|semio_framework_job::WorkerJobCloseStep::Pending{progress:p}=>{progress=p;GuestRelayMountedClose::Pending},semio_framework_job::WorkerJobCloseStep::Refused{kind,progress:p}=>{session.wake.refusal=Some(kind);progress=p;GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},semio_framework_job::WorkerJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
-                        GuestRelayMountedOwner::LifecycleProbe(owner)=>match owner.close_step(grant){semio_framework_job::WorkerJobCloseStep::Complete{progress:p}|semio_framework_job::WorkerJobCloseStep::Pending{progress:p}=>{progress=p;GuestRelayMountedClose::Pending},semio_framework_job::WorkerJobCloseStep::Refused{kind,progress:p}=>{session.wake.refusal=Some(kind);progress=p;GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},semio_framework_job::WorkerJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
-                        GuestRelayMountedOwner::Rejected(owner)=>match owner.close_step(grant){semio_framework_job::InteractiveJobCloseStep::Complete{progress:p}|semio_framework_job::InteractiveJobCloseStep::Pending{progress:p}=>{progress=p;GuestRelayMountedClose::Pending},semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress:p}=>{session.wake.refusal=Some(kind);progress=p;GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},semio_framework_job::InteractiveJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
-                        GuestRelayMountedOwner::Empty=>{session.wake.refusal=Some(ValueRefusalKind::UnsupportedOwner);GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}},
-                    }}
-                }
-            }
-        };
-        if !progress.fits(grant){session.wake.refusal=Some(ValueRefusalKind::InvariantViolated);}
-        session.wake.receipt=Some(GuestRelayWakeReceipt{epoch:context.epoch,slot:index,generation:session.generation,grant,progress});
-        if !self.collect_original_wake_receipt(&mut session.wake){return GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered};}
-        result
+            let step=match &mut session.owner{
+                GuestRelayMountedOwner::Session(owner)=>owner.close_step(cx)?,
+                GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.close_step(cx)?,
+                GuestRelayMountedOwner::Rejected(owner)=>match owner.close_step(cx)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_job::WorkerJobCloseStep::Pending{progress},semio_framework_job::InteractiveJobCloseStep::Blocked=>semio_framework_job::WorkerJobCloseStep::Blocked},
+                GuestRelayMountedOwner::Empty=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original mounted close lost its live owner").into()),
+            };
+            Ok(match step{semio_framework_job::WorkerJobCloseStep::Pending{..}|semio_framework_job::WorkerJobCloseStep::Complete{..}=>GuestRelayMountedClose::Pending,semio_framework_job::WorkerJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}})
+        });
+        if result.as_ref().is_ok_and(|value|value.is_none()){return Ok(GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered})}
+        let returned=self.wake_authority.receiver.finish_turn(index,session.generation);
+        match(result,returned){(Ok(Some(step)),Ok(_))=>Ok(step),(Err(mut failure),Err(receipt))=>{failure.context_refusal=Some(receipt);Err(failure)},(Err(failure),Ok(_))=>Err(failure),(Ok(_),Err(receipt))=>Err(receipt.into()),(Ok(None),Ok(_))=>unreachable!()}
     }
 
     fn pump(self: &Arc<Self>, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
@@ -4459,7 +4470,7 @@ impl GuestRelayMountedRegistry {
         }
         if matches!(session.lifecycle, GuestRelayMountedLifecycle::DrainingForCaller) {
             match self.pump_close(session,index,Some(waker)) {
-                GuestRelayMountedClose::Complete => {
+                Ok(GuestRelayMountedClose::Complete) => {
                     let mounted = std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty);
                     let GuestRelayMountedSlot::Mounted(mut session) = mounted else { unreachable!("mounted relay slot remains mounted through close") };
                     let result = match session.terminal.take() {
@@ -4471,9 +4482,10 @@ impl GuestRelayMountedRegistry {
                     };
                     return std::task::Poll::Ready(result);
                 }
-                GuestRelayMountedClose::Pending => waker.wake_by_ref(),
-                GuestRelayMountedClose::Blocked { wake_registered: false } => self.schedule_reaper_timer(waker),
-                GuestRelayMountedClose::Blocked { wake_registered: true } => {}
+                Ok(GuestRelayMountedClose::Pending) => waker.wake_by_ref(),
+                Ok(GuestRelayMountedClose::Blocked { wake_registered: false }) => self.schedule_reaper_timer(waker),
+                Ok(GuestRelayMountedClose::Blocked { wake_registered: true }) => {},
+                Err(failure)=>return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure)))
             }
             return std::task::Poll::Pending;
         }
@@ -4982,6 +4994,7 @@ pub fn exercise_relay_lifecycle_trace(trace_json: &str,wake_authority:GuestRelay
 /// that produced the triggering effect returned (never re-entrantly against that turn's own `Store`).
 pub struct PluginInstanceHandle {
     pub actor: RuntimeActorId,
+    original_input:semio_framework_actor::RetainedTurnInput,
     runtime: Arc<GuestRuntimes>,
     instance: Arc<Mutex<GuestInstanceSlot>>,
     instance_gate: Arc<semio_framework_async::Semaphore>,
@@ -4990,9 +5003,10 @@ pub struct PluginInstanceHandle {
 }
 
 impl PluginInstanceHandle {
-    pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance,wake_authority:GuestRelayWakeAuthority) -> Self {
+    pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance,original_input:semio_framework_actor::RetainedTurnInput,wake_authority:GuestRelayWakeAuthority) -> Self {
         Self {
             actor,
+            original_input,
             runtime,
             instance: Arc::new(Mutex::new(GuestInstanceSlot::Available(instance))),
             instance_gate: Arc::new(semio_framework_async::Semaphore::new(1)),

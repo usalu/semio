@@ -44,11 +44,17 @@ export function toolPatchAdditions(patch:string):ReadonlyMap<string,ReadonlySet<
 
 /** 🔏️ Verifies requested final patch lines and receipts the actual immutable package files. */
 export function toolPatchReceipt(directory:string,patch:string):{version:1;files:Record<string,string>}{
-  const files:Record<string,string>={};
+  assertToolingPatchV1(patch);const files:Record<string,string>={},images=new Map<string,readonly string[]>();
   for(const [path,additions] of toolPatchAdditions(patch)){
-    const bytes=readFileSync(join(directory,path)),lines=new Set(bytes.toString("utf8").split("\n"));
+    const bytes=readFileSync(join(directory,path)),image=bytes.toString("utf8").split("\n"),lines=new Set(image);images.set(path,image);
     for(const line of additions)if(!lines.has(line))throw Error(`Requested tool patch was not applied: ${path}`);
     files[path]=createHash("sha256").update(bytes).digest("hex");
+  }
+  let path="";const rows=patch.split("\n");
+  for(let index=0;index<rows.length;index++){
+   const row=rows[index]!;if(row.startsWith("+++ b/"))path=row.slice(6);const header=row.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/u);if(!header)continue;
+   const expected:string[]=[];while(index+1<rows.length&&!rows[index+1]!.startsWith("@@")&&!rows[index+1]!.startsWith("diff --git ")){const line=rows[++index]!;if(line.startsWith(" ")||line.startsWith("+"))expected.push(line.slice(1));}
+   const image=images.get(path),start=Number(header[1])-1;if(!image||expected.some((line,offset)=>image[start+offset]!==line))throw Error("Exact SDK post-hunk context changed: "+path);
   }
   return{version:1,files};
 }

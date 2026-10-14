@@ -1,13 +1,13 @@
 {
   "name": "@semio-tech/ui-styling-dotnet",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:dotnet"
   ],
   "targets": {
     "deps": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -16,7 +16,7 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": ["{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"],
       "inputs": [

@@ -4,6 +4,7 @@
   "additionalProperties": false,
   "required": [
     "version",
+    "buildMode",
     "repositoryRoot",
     "artifactDirectory",
     "command",
@@ -113,6 +114,13 @@
           "type": "boolean"
         }
       }
+    },
+    "buildMode": {
+      "type": "string",
+      "enum": [
+        "prototype",
+        "release"
+      ]
     }
   },
   "$defs": {
@@ -127,7 +135,7 @@
       ],
       "properties": {
         "$schema": {
-          "const": "./📥️invocation/🧬️schema/🔣️.json#/$defs/NativeOwnerExecutionPolicyV1"
+          "const": "./\ud83d\udce5\ufe0finvocation/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json#/$defs/NativeOwnerExecutionPolicyV1"
         },
         "version": {
           "const": 1

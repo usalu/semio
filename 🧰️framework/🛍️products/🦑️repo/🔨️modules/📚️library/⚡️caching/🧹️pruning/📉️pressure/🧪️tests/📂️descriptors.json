@@ -1,0 +1,11 @@
+[
+  {"name":"Original Guard","status":0,"reason":"exit","stderr":"","records":["p71","f3","n{store}/debug/.cargo-build-lock"],"admitted":true},
+  {"name":"Incomplete Search","status":1,"reason":"exit","stderr":"","records":["p71","n{store}/debug/.cargo-build-lock"],"admitted":false},
+  {"name":"Truncated Inventory","status":0,"reason":"output-limit","stderr":"","records":["p71","n{store}/debug/.cargo-build-lock"],"admitted":false},
+  {"name":"Inspection Error","status":0,"reason":"exit","stderr":"incomplete","records":["p71","n{store}/debug/.cargo-build-lock"],"admitted":false},
+  {"name":"Foreign Guard Name","status":0,"reason":"exit","stderr":"","records":["p72","n{store}/debug/.cargo-build-lock"],"admitted":false},
+  {"name":"Ownerless Record","status":0,"reason":"exit","stderr":"","records":["n{store}/debug/.cargo-build-lock"],"admitted":false},
+  {"name":"Foreign Store Data","status":0,"reason":"exit","stderr":"","records":["p71","n{store}/debug/.cargo-build-lock","n{store}/debug/output.rlib"],"admitted":false},
+  {"name":"Different Store","status":0,"reason":"exit","stderr":"","records":["p71","n{store}/debug/.cargo-build-lock","p72","n{store}-other/output.rlib"],"admitted":true},
+  {"name":"Missing Held Guard","status":0,"reason":"exit","stderr":"","records":[],"admitted":false}
+]

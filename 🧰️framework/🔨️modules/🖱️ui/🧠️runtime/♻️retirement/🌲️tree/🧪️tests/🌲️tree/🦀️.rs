@@ -62,7 +62,7 @@ fn runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads(
             assert!(cursor.try_begin_node(&mut source)); assert!(source.is_none());
             assert_eq!(cursor.close_step(0, 4096).unwrap(), Default::default());
             assert_eq!(cursor.close_step(1, 0).unwrap(), Default::default());
-            let mut blocked = Some(crate::ComponentTree { root: text_node("blocked", "🌊") });
+            let mut blocked = Some(crate::ComponentTree::new(text_node("blocked", "🌊")));
             let mut blocked_node = Some(text_node("blocked-node", "🌊"));
             let mut blocked_held = Some((Some(9), text_node("blocked-held", "🌊")));
             let source_identity = blocked.as_ref().unwrap() as *const crate::ComponentTree;
@@ -101,7 +101,7 @@ fn runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmissi
         let generation = 91_401 + u64::from(maintenance);
         let mut terminal = SurfaceReconcileTerminal::try_from_reconciler(SurfaceReconciler::new("retire"), generation).unwrap();
         let state = terminal.state.as_mut().unwrap();
-        let mut source = Some(crate::ComponentTree { root: chain(pages) });
+        let mut source = Some(crate::ComponentTree::new(chain(pages)));
         assert!(state.retire_tree.try_begin_tree(&mut source));
         assert!(!state.retire_tree.step());
         let key = terminal.handback_key().unwrap();
@@ -130,7 +130,7 @@ fn runtime_tree_retirement_rejected_close_preserves_source_until_handback_admiss
     while let Some(reservation) = reserve_surface_reconcile_handback(generation) { reservations.0.push(reservation); }
     assert_eq!(reservations.0.len(), SURFACE_RECONCILE_HANDBACK_SLOTS);
     let node = populated(ui_contract::Component::Separator(ui_contract::SeparatorProps {}));
-    let mut rejected = SurfaceReconcileJob::try_new(SurfaceReconciler::new("retire"), crate::ComponentTree { root: node }, generation).unwrap_err();
+    let mut rejected = SurfaceReconcileJob::try_new(SurfaceReconciler::new("retire"), crate::ComponentTree::new(node), generation).unwrap_err();
     let source = rejected.state.as_ref().unwrap().source.as_ref().unwrap() as *const crate::ComponentTree;
     let fault = rejected.state.as_ref().unwrap().fault.clone();
     assert!(!rejected.close_step());

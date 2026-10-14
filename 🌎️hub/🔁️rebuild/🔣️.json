@@ -1,0 +1,28 @@
+{
+  "schema": "semio.plugin-registry.rebuild-chain/v1",
+  "steps": [
+    {
+      "id": "preflight-catalog",
+      "stage": "catalog",
+      "command": [
+        "nx",
+        "run",
+        "os-hub:trusted-catalog-preflight",
+        "--packages",
+        "all"
+      ]
+    },
+    {
+      "id": "publish-catalog",
+      "stage": "catalog",
+      "command": [
+        "nx",
+        "run",
+        "os-hub:trusted-catalog-bootstrap",
+        "--packages",
+        "all"
+      ]
+    }
+  ],
+  "guestFrameworkChecks": []
+}

@@ -1,5 +1,5 @@
 //#region 🧬️BindingContract
-import type { NumericIndexGrant } from "../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedUiNode, type OwnedUiPayload, type RetainedUiComponent, type RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../../📦️wire/🟦️.ts";
 import { OwnedUiSceneCursor, type OwnedUiSceneDocument, type OwnedUiSceneReader } from "../🟦️.ts";

@@ -5,8 +5,8 @@
     "includedScripts": []
   },
   "scripts": {
-    "test-compute": "nx run semio-framework-2d:test-compute",
-    "test-compute-keys": "nx run semio-framework-2d:test-compute-keys"
+    "test-compute": "bun repo run semio-framework-2d:test-compute",
+    "test-compute-keys": "bun repo run semio-framework-2d:test-compute-keys"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

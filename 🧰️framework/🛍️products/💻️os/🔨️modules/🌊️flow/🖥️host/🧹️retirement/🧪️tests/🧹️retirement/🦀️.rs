@@ -12,13 +12,13 @@ fn original_preview_retention_preserves_roster_and_closes_one_original_row_per_t
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️session-source/🔣️.json")).unwrap();let law=&fixture["retention"];
     for copy in [1,3,64]{
-        let ((mut session,roster),heap)=observe(||{let mut session=FlowEvalSession::new();for handle in law["handles"].as_array().unwrap(){let handle=handle.as_str().unwrap().to_owned();session.preview_mesh_pack_by_handle.insert(handle.clone(),handle.repeat(257));session.preview_diagnostics_by_handle.insert(handle.clone(),handle.repeat(129));}let roster=law["roster"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect::<Vec<_>>();(session,roster)});
-        let original=heap.requested_bytes-heap.released_bytes;let roster_pointer=roster.as_ptr();let mesh=session.preview_mesh_pack_by_handle.get("live-高").unwrap().as_ptr();
+        let ((mut session,roster),heap)=observe(||{let mut session=FlowEvalSession::new();for handle in law["handles"].as_array().unwrap(){let handle=handle.as_str().unwrap().to_owned();session.preview_mesh_by_handle.insert(handle.clone(),MeshData{paint_texture_base64:Some(handle.repeat(257)),..Default::default()});session.preview_diagnostics_by_handle.insert(handle.clone(),handle.repeat(129));}let roster=law["roster"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect::<Vec<_>>();(session,roster)});
+        let original=heap.requested_bytes-heap.released_bytes;let roster_pointer=roster.as_ptr();let mesh=session.preview_mesh_by_handle.get("live-高").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();
         let (result,heap)=observe(||session.begin_retain_preview_meshes(roster));assert!(result.is_ok());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.state.preview_retention.as_ref().unwrap().roster.as_ref().unwrap().as_ptr(),roster_pointer);
         let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:copy,..Default::default()};let (denied,heap)=observe(||session.retain_preview_meshes_step(zero).unwrap());assert_eq!(denied.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let mut born=0;let mut freed=0;let mut turns=0;
-        while !session.preview_retention_terminal_is_empty(){turns+=1;assert!(turns<100000);let demand=session.next_preview_retention_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.preview_mesh_pack_by_handle.len()+session.preview_diagnostics_by_handle.len();let (step,heap)=observe(||session.retain_preview_meshes_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress(),session.preview_retention_step_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(before-(session.preview_mesh_pack_by_handle.len()+session.preview_diagnostics_by_handle.len())<=1);}
-        let actual:Vec<_>=session.preview_mesh_pack_by_handle.keys().map(String::as_str).collect();let expected:Vec<_>=law["expected"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect();assert_eq!(actual,expected);assert_eq!(session.preview_mesh_pack_by_handle.get("live-高").unwrap().as_ptr(),mesh);
+        while !session.preview_retention_terminal_is_empty(){turns+=1;assert!(turns<100000);let demand=session.next_preview_retention_demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len();let (step,heap)=observe(||session.retain_preview_meshes_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(step.progress(),session.preview_retention_step_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;assert!(before-(session.preview_mesh_by_handle.len()+session.preview_diagnostics_by_handle.len())<=1);}
+        let actual:Vec<_>=session.preview_mesh_by_handle.keys().map(String::as_str).collect();let expected:Vec<_>=law["expected"].as_array().unwrap().iter().map(|value|value.as_str().unwrap()).collect();assert_eq!(actual,expected);assert_eq!(session.preview_mesh_by_handle.get("live-高").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr(),mesh);
         close(session,copy,original+born-freed);
         eprintln!("[DEBUG] Original preview retention copy={copy} turns={turns} allocated={born} released={freed} Drop=0");
     }
@@ -55,18 +55,18 @@ fn session_reset_preserves_original_lease_and_restores_every_owner_on_refusal() 
             session.eval_json=Some(Arc::new("原🌊".repeat(4097)));
             session.painted_eval_json="painted".repeat(257);session.converged_eval_json="converged".repeat(257);
             session.extension_evaluate_fault=Some(ExtensionEvaluateFault{message:"actual-fault".repeat(257),..Default::default()});
-            session.preview_mesh_pack_by_handle.insert("original-handle".into(),"original-mesh".repeat(257));
+            session.preview_mesh_by_handle.insert("original-handle".into(),MeshData{paint_texture_base64:Some("original-mesh".repeat(257)),..Default::default()});
             session.window_tick_latches.insert(7,FlowEvalWindowTickLatch{armed:true,..Default::default()});
             (session,Arc::new("incoming".repeat(257)),Arc::new("second".repeat(257)))
         });
         let original=heap.requested_bytes-heap.released_bytes;
-        let lease=session.lease_eval_json().unwrap();let painted=session.painted_eval_json.as_ptr();let mesh=session.preview_mesh_pack_by_handle.get("original-handle").unwrap().as_ptr();
+        let lease=session.lease_eval_json().unwrap();let painted=session.painted_eval_json.as_ptr();let mesh=session.preview_mesh_by_handle.get("original-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
         let (refused,denied)=observe(||session.set_eval_json(incoming,RetainedCloneGrant{maximum_depth:0,..grant}));
         let incoming=refused.err().unwrap().1;
         assert_eq!((denied.requested_bytes,denied.released_bytes),(0,0));
         assert!(session.owns_eval_json(&lease));assert_eq!(session.painted_eval_json.as_ptr(),painted);
-        assert_eq!(session.preview_mesh_pack_by_handle.get("original-handle").unwrap().as_ptr(),mesh);assert!(session.extension_evaluate_fault.is_some());
+        assert_eq!(session.preview_mesh_by_handle.get("original-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr(),mesh);assert!(session.extension_evaluate_fault.is_some());
         let (progress,admitted)=observe(||session.set_eval_json(incoming,grant).unwrap_or_else(|_|panic!("original reset admission refused")));
         assert_eq!(progress,RetainedCloneProgress{copied_items:1,..Default::default()});
         assert_eq!((admitted.requested_bytes,admitted.released_bytes),(0,0));
@@ -136,16 +136,16 @@ fn original_live_evaluation_publication_preserves_progress_and_exact_source_leas
         let ((mut session,incoming),source)=observe(||{
             let mut session=FlowEvalSession::new();session.eval_json=Some(Arc::new("原🌊".repeat(4097)));
             session.extension_evaluate_fault=Some(ExtensionEvaluateFault{message:"original-fault".repeat(257),..Default::default()});
-            session.preview_mesh_pack_by_handle.insert("actual-handle".into(),"actual-mesh".repeat(257));
+            session.preview_mesh_by_handle.insert("actual-handle".into(),MeshData{paint_texture_base64:Some("actual-mesh".repeat(257)),..Default::default()});
             session.eval_progress_by_hash.insert(31,PreviewEvalProgress::default());(session,Arc::new("incoming-source".repeat(257)))
         });
-        let original=session.lease_eval_json().unwrap();let mesh=session.preview_mesh_pack_by_handle.get("actual-handle").unwrap().as_ptr();let pointer=incoming.as_ptr();
+        let original=session.lease_eval_json().unwrap();let mesh=session.preview_mesh_by_handle.get("actual-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr();let pointer=incoming.as_ptr();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
         let (refused,heap)=observe(||session.publish_eval_json(incoming,RetainedCloneGrant{maximum_depth:0,..grant}));
         let incoming=refused.err().unwrap().1;assert!(session.owns_eval_json(&original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let (receipt,heap)=observe(||session.publish_eval_json(incoming,grant).unwrap_or_else(|_|panic!("original live publication refused")));
         assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.eval_json.as_ref().unwrap().as_ptr(),pointer);
-        assert!(session.extension_evaluate_fault.is_some());assert_eq!(session.preview_mesh_pack_by_handle.get("actual-handle").unwrap().as_ptr(),mesh);assert!(session.eval_progress_by_hash.contains_key(&31));
+        assert!(session.extension_evaluate_fault.is_some());assert_eq!(session.preview_mesh_by_handle.get("actual-handle").unwrap().paint_texture_base64.as_ref().unwrap().as_ptr(),mesh);assert!(session.eval_progress_by_hash.contains_key(&31));
         let same=session.lease_eval_json().unwrap();let (receipt,heap)=observe(||session.publish_eval_json(same,grant).unwrap_or_else(|_|panic!("original unchanged lease refused")));assert_eq!(receipt,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let (_,heap)=observe(||drop(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         close(session,copy,source.requested_bytes-source.released_bytes);
@@ -194,14 +194,14 @@ fn original_session_latch_birth_is_admitted_before_original_tick_mutations(){
 fn original_preview_cancel_preserves_sources_and_resets_one_actual_latch_per_turn(){
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
     for copy in [1,3,64]{
-        let (mut session,source)=observe(||{let mut session=FlowEvalSession::new();session.pending_tessellate_by_hash.insert(7,"actual-handle".repeat(257));session.tessellate_chunks_by_hash.insert(7,"原🌊".repeat(4097));session.eval_progress_by_hash.insert(7,PreviewEvalProgress{units_done:9,..Default::default()});for key in 0..65{session.window_tick_latches.insert(key,FlowEvalWindowTickLatch{armed:true,owed:true,in_flight:1,unfinished:true});}session});
-        let pointer=session.tessellate_chunks_by_hash.get(&7).unwrap().as_ptr();
+        let (mut session,source)=observe(||{let mut session=FlowEvalSession::new();session.pending_tessellate_by_hash.insert(7,"actual-handle".repeat(257));session.tessellate_handle_by_hash.insert(7,"原🌊".repeat(4097));session.eval_progress_by_hash.insert(7,PreviewEvalProgress{units_done:9,..Default::default()});for key in 0..65{session.window_tick_latches.insert(key,FlowEvalWindowTickLatch{armed:true,owed:true,in_flight:1,unfinished:true});}session});
+        let pointer=session.tessellate_handle_by_hash.get(&7).unwrap().as_ptr();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
         let (refused,heap)=observe(||session.cancel_preview_evaluation("",RetainedCloneGrant{maximum_items:0,..grant}));assert!(refused.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!session.preview_cancelled);
-        let ((count,receipt),heap)=observe(||session.cancel_preview_evaluation("",grant).unwrap());assert_eq!(count,1);assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.tessellate_chunks_by_hash.get(&7).unwrap().as_ptr(),pointer);assert_eq!(session.window_tick_latches.values().filter(|latch|latch.armed).count(),65);
+        let ((count,receipt),heap)=observe(||session.cancel_preview_evaluation("",grant).unwrap());assert_eq!(count,1);assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(session.tessellate_handle_by_hash.get(&7).unwrap().as_ptr(),pointer);assert_eq!(session.window_tick_latches.values().filter(|latch|latch.armed).count(),65);
         let mut born=0;let mut freed=0;
         while !session.preview_cancellation_terminal_is_empty(){let demand=session.next_preview_cancellation_demands(copy).unwrap();let funded=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let before=session.window_tick_latches.values().filter(|latch|latch.armed).count();let (step,heap)=observe(||session.preview_cancellation_step(funded).unwrap());assert!(step.progress().fits(funded));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;let after=session.window_tick_latches.values().filter(|latch|latch.armed).count();assert!(before-after<=1);}
-        assert!(session.pending_tessellate_by_hash.is_empty());assert!(session.tessellate_chunks_by_hash.is_empty());assert!(session.eval_progress_by_hash.is_empty());assert_eq!(session.window_tick_latches.len(),65);assert!(session.window_tick_latches.values().all(|latch|*latch==FlowEvalWindowTickLatch::default()));close(session,copy,source.requested_bytes-source.released_bytes+born-freed);
+        assert!(session.pending_tessellate_by_hash.is_empty());assert!(session.tessellate_handle_by_hash.is_empty());assert!(session.eval_progress_by_hash.is_empty());assert_eq!(session.window_tick_latches.len(),65);assert!(session.window_tick_latches.values().all(|latch|*latch==FlowEvalWindowTickLatch::default()));close(session,copy,source.requested_bytes-source.released_bytes+born-freed);
     }
 }
 
@@ -315,7 +315,7 @@ fn session_semantic_bytes_larger_than_production_grant_retire_exactly_across_wor
             session.painted_eval_json=text.clone();session.converged_eval_json=preview.clone();
             session.extension_evaluate_fault=Some(ExtensionEvaluateFault{extension_id:text.clone(),capability:preview.clone(),code:text.clone(),message:preview.clone()});
             session.window_tick_latches.insert(1,FlowEvalWindowTickLatch{armed:true,..Default::default()});
-            session.preview_mesh_pack_by_handle.insert("mesh".into(),preview.clone());
+            session.preview_mesh_by_handle.insert("mesh".into(),MeshData{paint_texture_base64:Some(preview.clone()),..Default::default()});
             session.pending_tessellate_by_hash.insert(1,"pending".into());
             session.live_geometry_handles.insert("geometry".into(),());
             session.previous_channels=Some(Arc::new(EvalChannels{outputs:HistoryFoldIndex::from([("output".into(),Dictionary::new().insert("label",NeuralValue::Atom(Atom::String(preview.clone()))))]),inputs:HistoryFoldIndex::new()}));

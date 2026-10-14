@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "sourceIdentity": [
+    71,
+    3
+  ],
+  "cases": [
+    {
+      "id": "no-capacity",
+      "capacity": 0,
+      "source": {
+        "kind": "payload",
+        "port": "港🌊",
+        "message": "Original media 源 rejection",
+        "produced": null,
+        "accepted": null
+      },
+      "expected": "retained"
+    },
+    {
+      "id": "short-capacity",
+      "capacity": 1,
+      "source": {
+        "kind": "payload",
+        "port": "港🌊",
+        "message": "Original media 源 rejection",
+        "produced": null,
+        "accepted": null
+      },
+      "expected": "retained"
+    },
+    {
+      "id": "paid-full-source",
+      "capacity": 65536,
+      "source": {
+        "kind": "payload",
+        "port": "港🌊",
+        "message": "Original media 源 rejection",
+        "produced": null,
+        "accepted": null
+      },
+      "expected": "published"
+    }
+  ],
+  "dispatchSources": [
+    {
+      "kind": "unknownController",
+      "controllerId": "媒🌊",
+      "toolId": null,
+      "detail": null,
+      "actual": null,
+      "maximum": null
+    },
+    {
+      "kind": "factory",
+      "controllerId": "媒🌊",
+      "toolId": "港🌊",
+      "detail": "Original 工場 refusal",
+      "actual": null,
+      "maximum": null
+    },
+    {
+      "kind": "rawWireLimit",
+      "controllerId": "媒🌊",
+      "toolId": "港🌊",
+      "detail": null,
+      "actual": 65537,
+      "maximum": 65536
+    }
+  ],
+  "artifactSources": [
+    {
+      "kind": "payload",
+      "original": "Original artifact 源 refusal"
+    },
+    {
+      "kind": "schemaMismatch",
+      "original": {
+        "expected": "源/期待",
+        "found": "港/実際"
+      }
+    },
+    {
+      "kind": "export",
+      "original": {
+        "kind": "payload",
+        "port": "港🌊",
+        "message": "Original media 源 rejection",
+        "produced": null,
+        "accepted": null
+      }
+    },
+    {
+      "kind": "noImporter",
+      "original": "源.codec"
+    }
+  ],
+  "closing": {
+    "copyWidths": [
+      1,
+      3,
+      64
+    ],
+    "payload": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "schema": "源.media.v1",
+    "mimeType": "application/octet-stream",
+    "structuralCopyBytes": 512
+  },
+  "mediaSources": [
+    {
+      "kind": "unknownPort",
+      "port": "港🌊",
+      "message": null,
+      "produced": null,
+      "accepted": null
+    },
+    {
+      "kind": "incompatible",
+      "port": "港🌊",
+      "message": null,
+      "produced": {
+        "class": 3,
+        "form": 6
+      },
+      "accepted": {
+        "class": 2,
+        "form": 5
+      }
+    },
+    {
+      "kind": "payload",
+      "port": "港🌊",
+      "message": "Original media 源 rejection",
+      "produced": null,
+      "accepted": null
+    },
+    {
+      "kind": "notImplemented",
+      "port": null,
+      "message": null,
+      "produced": null,
+      "accepted": null
+    }
+  ],
+  "birth": {
+    "maximumOutputBytes": 4096,
+    "maximumCapacityBytes": 16777216,
+    "maximumCopyBytes": 65536,
+    "cases": [
+      {
+        "id": "zero-items",
+        "items": 0,
+        "capacityBytes": 16777216,
+        "expected": false
+      },
+      {
+        "id": "zero-capacity",
+        "items": 1,
+        "capacityBytes": 0,
+        "expected": false
+      },
+      {
+        "id": "paid",
+        "items": 1,
+        "capacityBytes": 16777216,
+        "expected": true
+      }
+    ]
+  },
+  "requestFields": [
+    "source_identity",
+    "retained",
+    "operation",
+    "tool_id",
+    "parent_document_id",
+    "canonical_base_revision",
+    "snapshot",
+    "snapshot_close",
+    "port",
+    "output_credit",
+    "output_chunks",
+    "completion"
+  ],
+  "snapshotPreparation": {
+    "phases": [
+      "sourceLoan",
+      "snapshotSupplierAliases",
+      "closeFlag",
+      "closeOwner",
+      "ready"
+    ],
+    "cases": [
+      {
+        "sourceRoot": 46,
+        "incomingRoot": 46,
+        "items": 0,
+        "capacityBytes": 16777216,
+        "expectedPhases": []
+      },
+      {
+        "sourceRoot": 46,
+        "incomingRoot": 47,
+        "items": 1,
+        "capacityBytes": 16777216,
+        "expectedPhases": []
+      },
+      {
+        "sourceRoot": 46,
+        "incomingRoot": 46,
+        "items": 1,
+        "capacityBytes": 0,
+        "expectedPhases": [
+          "sourceLoan",
+          "snapshotSupplierAliases"
+        ]
+      },
+      {
+        "sourceRoot": 46,
+        "incomingRoot": 46,
+        "items": 1,
+        "capacityBytes": 16777216,
+        "expectedPhases": [
+          "sourceLoan",
+          "snapshotSupplierAliases",
+          "closeFlag",
+          "closeOwner",
+          "ready"
+        ]
+      }
+    ]
+  }
+}

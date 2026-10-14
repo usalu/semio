@@ -43,3 +43,5 @@ test("original reserved job retains spare capacity until exact physical release"
  expect(original).toEqual({length:0,capacity:0});const terminal=implementation.reservedJobByteTurn(original,law.grant);expect(terminal.owner).toBe(original);expect(terminal.complete).toBe(true);expect(terminal.progress).toEqual({copiedItems:0,copiedBytes:0,capacityBytes:0,releaseBytes:0});db.close();
  console.log(`[DEBUG] independent SQLite original reserved job copied=${law.payloadBytes} physicalRelease=${law.backingBytes}`);
 });
+
+import "../../../../🏪️store/📬️command/🛬️receiving/🧪️tests/🟦️.ts";

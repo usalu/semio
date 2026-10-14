@@ -2,7 +2,7 @@
 import sql from"./🗄️.sql"with{type:"text"};
 import type{RunSnapshot,RunStatus,RunNodeStatus,RunTrigger}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64} from "../../../../../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64} from "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,type ArtifactSqliteOptions}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import{sqliteOperation,ValueError,type SqliteDatabase,type SqliteRow,type SqliteOperation}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export const RUN_SQLITE_SCHEMA:string=sql;

@@ -339,7 +339,9 @@ impl ArtifactEditor for DeflateEditor {
         deflate_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "textEdit" => Ok(DeflateEditorCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.deflate.unhandled-action"), format!("unknown deflate editor action '{other}'"))),

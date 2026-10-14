@@ -1,6 +1,6 @@
 /** 🔌️ The complete persisted Jack parent, inline manifest and literal content identity. */
 import {parseArtifactChild,type ArtifactChild} from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import {type Binary64,parseBinary64} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {readValueType,type ValueType} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🏷️type/🟦️.ts";
 export type {ValueType,Binary64};
 export interface JackArtifact {schema:string;name:string;manifestId?:string;manifest:Manifest;camera:Camera;content:ArtifactChild;rootNodeId?:string;query:string}

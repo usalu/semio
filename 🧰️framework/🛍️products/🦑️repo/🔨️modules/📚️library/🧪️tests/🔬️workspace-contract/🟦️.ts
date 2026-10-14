@@ -24,7 +24,7 @@ import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetOpts, parseTsImportSpecs, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { partitionNextestExecutionFilters } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorBuildPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
@@ -636,7 +636,7 @@ describe("package language semantic handoff", () => {
       expect(workspace.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
       expect(workspace.dependencies[expected.cargo.name]).toEqual({ path: expected.packagePath });
       expect(semanticOwnedInputFileSnapshot(root, expected.packagePath + "/package.json")).toBeNull();
-      expect(fixedFilenameContractIdsForPath(projectPath, schema)).toContain("nx-project-manifest");
+      expect(fixedFilenameContractIdsForPath(projectPath, schema)).toContain("build-project-manifest");
       expect(fixedFilenameContractIdsForPath(expected.packagePath + "/📜️script.ts", schema)).toContain("root-script");
       expect(semanticDirectoryKindId(basename(dirname(inputRoot)), schema, { parentKindId: "members-of-modules" })).toBe("fixtures");
       expect(readdirSync(packageRoot).sort()).toEqual([...expected.packageFiles].sort());
@@ -1118,11 +1118,11 @@ describe("owned filesystem discovery", () => {
 const WORKSPACE_TAXONOMY_FIXTURE = join(import.meta.dir, "../🧫️fixtures/🌳️workspace-taxonomy/🔣️.json");
 
 
-function workspaceTaxonomyFixtureRoot(prefix: string): { readonly root: string; readonly retained: boolean } {
+function workspaceTaxonomyFixtureRoot(): { readonly root: string; readonly retained: boolean } {
   const artifactDirectory = process.env.SEMIO_TEST_ARTIFACT_DIR?.trim();
   const base = artifactDirectory ? resolve(getWorkspaceRoot(), artifactDirectory) : realpathSync(tmpdir());
   mkdirSync(base, { recursive: true });
-  return { root: mkdtempSync(join(base, prefix)), retained: Boolean(artifactDirectory) };
+  return { root: mkdtempSync(join(base, "tx-")), retained: Boolean(artifactDirectory) };
 }
 
 describe("workspace taxonomy authority", () => {
@@ -1131,11 +1131,11 @@ describe("workspace taxonomy authority", () => {
       canonicalLocator: string;
       childLocator: string;
       cases: readonly { name: string; manifest: object; target: "regular" | "file-symlink" | "directory-symlink" | "manifest-symlink"; expected: "resolve" | "reject"; reason: string }[];
-      startCases: readonly { name: string; entry: "root" | "linked-child" | "child" | "compose"; nx: "regular" | "missing"; expected: "resolve" | "reject"; reason: string }[];
+      startCases: readonly { name: string; entry: "root" | "linked-child" | "child" | "compose"; expected: "resolve" | "reject"; reason: string }[];
     };
     
     for (const vector of fixture.cases) {
-      const fixtureRoot = workspaceTaxonomyFixtureRoot("semio-workspace-taxonomy-");
+      const fixtureRoot = workspaceTaxonomyFixtureRoot();
       const root = fixtureRoot.root;
       try {
         writeFileSync(join(root, "nx.json"), "{}\n");
@@ -1177,13 +1177,13 @@ describe("workspace taxonomy authority", () => {
     }
   });
 
-  test("requires the exact marker pair and refuses symlink or compose ancestry before discovery", () => {
+  test("discovers the portable workspace and refuses symlink or compose ancestry", () => {
     const fixture = JSON.parse(readFileSync(WORKSPACE_TAXONOMY_FIXTURE, "utf8")) as {
       canonicalLocator: string;
-      startCases: readonly { name: string; entry: "root" | "linked-child" | "child" | "compose" | "compose-parent-root" | "compose-parent-start" | "root-nul" | "root-drive-relative" | "symlink-parent"; nx: "regular" | "missing"; expected: "resolve" | "reject"; reason: string }[];
+      startCases: readonly { name: string; entry: "root" | "linked-child" | "child" | "compose" | "compose-parent-root" | "compose-parent-start" | "root-nul" | "root-drive-relative" | "symlink-parent"; expected: "resolve" | "reject"; reason: string }[];
     };
     for (const vector of fixture.startCases) {
-      const fixtureRoot = workspaceTaxonomyFixtureRoot("semio-workspace-taxonomy-start-");
+      const fixtureRoot = workspaceTaxonomyFixtureRoot();
       const root = fixtureRoot.root;
       try {
         const workspace = vector.entry === "compose" ? join(root, "compose", "workspace") : join(root, "workspace");
@@ -1191,7 +1191,6 @@ describe("workspace taxonomy authority", () => {
         mkdirSync(dirname(target), { recursive: true });
         writeFileSync(target, "{}\n");
         writeFileSync(join(workspace, "📋️project.json"), JSON.stringify({ metadata: { semio: { taxonomy: fixture.canonicalLocator } } }));
-        if (vector.nx === "regular") writeFileSync(join(workspace, "nx.json"), "{}\n");
         const start = vector.entry === "linked-child" ? join(root, "linked-workspace", "child") : vector.entry === "child" ? join(workspace, "child", "nested") : vector.entry === "symlink-parent" ? `${root}${sep}linked-workspace${sep}..${sep}workspace` : vector.entry === "compose-parent-start" ? `${root}${sep}COMPOSE${sep}..${sep}workspace` : workspace;
         if (vector.entry === "linked-child") {
           mkdirSync(join(workspace, "child"), { recursive: true });
@@ -1212,13 +1211,13 @@ describe("workspace taxonomy authority", () => {
     }
   });
 
-  test("does not borrow an outer taxonomy past a malformed nested nx workspace anchor", () => {
+  test("does not borrow an outer taxonomy past a malformed nested workspace anchor", () => {
     const fixture = JSON.parse(readFileSync(WORKSPACE_TAXONOMY_FIXTURE, "utf8")) as {
       canonicalLocator: string;
-      anchorCases: readonly { name: string; nx: "regular" | "symlink"; project: "regular" | "missing" | "symlink"; reason: string }[];
+      anchorCases: readonly { name: string; project: "regular" | "directory" | "symlink"; reason: string }[];
     };
     for (const vector of fixture.anchorCases) {
-      const fixtureRoot = workspaceTaxonomyFixtureRoot("semio-workspace-taxonomy-anchor-");
+      const fixtureRoot = workspaceTaxonomyFixtureRoot();
       const root = fixtureRoot.root;
       try {
         const outer = join(root, "outer-workspace");
@@ -1229,11 +1228,9 @@ describe("workspace taxonomy authority", () => {
         writeFileSync(join(outer, "📋️project.json"), JSON.stringify({ metadata: { semio: { taxonomy: fixture.canonicalLocator } } }));
         const inner = join(outer, "nested-workspace");
         mkdirSync(join(inner, "child"), { recursive: true });
-        const nxPath = join(inner, "nx.json");
         const projectPath = join(inner, "📋️project.json");
-        if (vector.nx === "regular") writeFileSync(nxPath, "{}\n");
-        else symlinkSync(join(outer, "nx.json"), nxPath, "file");
         if (vector.project === "regular") writeFileSync(projectPath, "{}\n");
+        if (vector.project === "directory") mkdirSync(projectPath);
         if (vector.project === "symlink") symlinkSync(join(outer, "📋️project.json"), projectPath, "file");
         expect(() => resolveWorkspaceTaxonomyAuthorityFromDirectory(join(inner, "child"))).toThrow(vector.reason);
       } finally {
@@ -2814,16 +2811,16 @@ describe("loadTaxonomy", () => {
     }
     expect(fixedDirectoryContractIdsForPath(`${ticket}/🧪️target-probe/wasm32-wasi`, taxonomy, { parentDirectoryKindId: "ticket-cargo-target-evidence" })).toEqual([]);
     const nxRoot = "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript";
-    expect(fixedFilenameContractIdsForPath(`${nxRoot}/package.json`, taxonomy, { siblingFixedFilenameContractIds: ["nx-project-manifest"] })).toEqual(["nx-owned-node-package-manifest"]);
-    expect(fixedFilenameContractIdsForPath(`${nxRoot}/tsconfig.json`, taxonomy, { siblingFixedFilenameContractIds: ["nx-project-manifest"] })).toEqual(["nx-owned-typescript-config"]);
+    expect(fixedFilenameContractIdsForPath(`${nxRoot}/package.json`, taxonomy, { siblingFixedFilenameContractIds: ["build-project-manifest"] })).toEqual(["build-owned-node-package-manifest"]);
+    expect(fixedFilenameContractIdsForPath(`${nxRoot}/tsconfig.json`, taxonomy, { siblingFixedFilenameContractIds: ["build-project-manifest"] })).toEqual(["build-owned-typescript-config"]);
     expect(fixedFilenameContractIdsForPath(`${nxRoot}/package.json`, taxonomy)).toEqual([]);
     expect(fixedFilenameContractIdsForPath(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️15/BOARD-REACT-RECONCILER/_tmp/package.json", taxonomy)).toEqual([]);
     const broadCargo = probeClone(taxonomy);
     broadCargo.fixedDirectoryContracts["cargo-target-triple-wasm32-wasip2"]!.pathPattern = "**/wasm32-wasip2";
     expect(validateTaxonomy(broadCargo).some((problem) => problem.includes("cargo-target-triple-wasm32-wasip2") && problem.includes("exact governed ticket"))).toBe(true);
     const unscopedNx = probeClone(taxonomy);
-    unscopedNx.fixedFilenameContracts["nx-owned-node-package-manifest"]!.scope = { kind: "path-pattern" };
-    expect(validateTaxonomy(unscopedNx).some((problem) => problem.includes("nx-owned-node-package-manifest") && problem.includes("adjacent exact Nx"))).toBe(true);
+    unscopedNx.fixedFilenameContracts["build-owned-node-package-manifest"]!.scope = { kind: "path-pattern" };
+    expect(validateTaxonomy(unscopedNx).some((problem) => problem.includes("build-owned-node-package-manifest") && problem.includes("adjacent exact Nx"))).toBe(true);
   });
 
   test("validates the exact transaction edit preparation directory and sole rendered candidate", () => {
@@ -2913,7 +2910,7 @@ describe("loadTaxonomy", () => {
       const project = contract.target!.slice(0, contract.target!.lastIndexOf(":"));
       if (!contract.previewArguments) expect(contract.previewTarget).toBe(`${project}:preview-generated`);
       else expect(contract.previewTarget!.slice(0, contract.previewTarget!.lastIndexOf(":"))).toBe(project);
-      expect(generatorNxPreviewCommand(contract)).toEqual(["bun", "nx", "run", contract.previewTarget!]);
+      expect(generatorBuildPreviewCommand(contract)).toEqual(["bun", "repo", "run", contract.previewTarget!]);
     }
     expect(external.every((contract) => contract.previewTarget === undefined)).toBe(true);
     expect(validateGeneratorContractsAgainstWorkspace(getWorkspaceRoot(), taxonomy)).toEqual([]);
@@ -2933,6 +2930,8 @@ describe("loadTaxonomy", () => {
   test("rejects missing, external, and non-canonical generator preview targets", () => {
     const taxonomy = loadTaxonomy();
     const actor = taxonomy.generatorContracts["actor-typegen"]!;
+    expect(actor.ownerPath).toBe("🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust");
+    expect(actor.previewLimits?.timeoutMs).toBe(600_000);
     const locks = taxonomy.generatorContracts["external-cargo-locks"]!;
     const missing = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "actor-typegen": { ...actor, previewTarget: undefined } } } as unknown as Taxonomy;
     const external = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "external-cargo-locks": { ...locks, previewTarget: "workspace:preview-generated" } } } as unknown as Taxonomy;
@@ -2960,7 +2959,7 @@ describe("loadTaxonomy", () => {
     for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(selected.join("\n") + "\nreturn invokeGeneratorPreview;"), ts.transpileModule(selected.join("\n") + "\nreturn invokeGeneratorPreview;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
       let command = "bun ./📜️script.ts browser preview", cwd = "compiler";
       const invocations: unknown[] = [];
-      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "nx:run-commands", options: { cwd, command } }), requireRecord, discovery.generatorPreviewExecution, (discovery.generatorPreviewResourceLimits), (await import("../../🏭️generator/👁️preview/📈️progress/🟦️.ts")).receiveGeneratorPreviewProgressV1, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
+      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "repo:script", options: { cwd, command } }), requireRecord, discovery.generatorPreviewExecution, (discovery.generatorPreviewResourceLimits), (await import("../../🏭️generator/👁️preview/📈️progress/🟦️.ts")).receiveGeneratorPreviewProgressV1, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
       expect(invocations).toMatchObject([{ executable: "bun", args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
       command = fixture.ownerExecutionRoutes.find((row: { id: string }) => row.id === "native-owner").command.replace("preview-generated", "browser preview");
@@ -2999,7 +2998,7 @@ describe("loadTaxonomy", () => {
     const { default: parseArgv } = await import("yargs-parser");
     for (const row of fixture.ownerExecutionRoutes) {
       const contract = { ownership: "owned" as const, ownerPath: row.ownerPath ?? "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-generated" };
-      const target = { executor: "nx:run-commands", options: { cwd: row.cwd, command: row.command } };
+      const target = { executor: "repo:script", options: { cwd: row.cwd, command: row.command } };
       if (!row.valid) expect(() => discovery.generatorPreviewExecution(contract, target)).toThrow("exact owner JSON preview");
       else {
         const route = discovery.generatorPreviewExecution(contract, target);
@@ -3146,7 +3145,7 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.ecosystems["🦀️rust"].marker).toEqual({ in: "manifest", format: "toml", table: "package.metadata.semio", roleKey: "role", idKey: "id" });
     expect(taxonomy.ecosystems["🟦️typescript"].marker).toEqual({ in: "manifest", format: "json", table: "semio", roleKey: "role", idKey: "id" });
     expect(taxonomy.ecosystems["🐍️python"].marker?.table).toBe("tool.semio");
-    expect(taxonomy.ecosystems["🐹️go"].manifestContractId).toBe("nx-project-manifest");
+    expect(taxonomy.ecosystems["🐹️go"].manifestContractId).toBe("build-project-manifest");
     expect(taxonomy.ecosystems["🐹️go"].moduleRootContractId).toBe("go-module");
     expect(taxonomy.ecosystems["🐹️go"].marker?.table).toBe("metadata.semio");
   });
@@ -5178,7 +5177,7 @@ async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{ comman
   const packageRoot = resolve(import.meta.dir, "../../📦️packages/🟦️typescript");
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[vector.target]).toBeDefined();
-  expect(project.targets[vector.target].executor).toBe("nx:run-commands");
+  expect(project.targets[vector.target].executor).toBe("repo:script");
   expect(project.targets[vector.target].options).toEqual({ cwd: relative(getWorkspaceRoot(), packageRoot).replaceAll("\\", "/"), command: `bun ./📜️script.ts test ${vector.command}` });
   const ts = await import("typescript"), sourcePath = join(packageRoot, "📜️script.ts"), source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
@@ -5433,7 +5432,7 @@ function artifactProjectionPrepareProducer(repoRoot: string, taxonomy: Taxonomy,
   const writeReport = (): void => { const fence = String.fromCharCode(96).repeat(3); writeFileSync(reportPath, "# Draw Fixture Producer Context\n\nCurrent exact compiler inputs are copied into this isolated repository; source scenario members remain independently authored. No production generator runs in the real workspace.\n\n" + fence + "json\n" + JSON.stringify({ inputs, modules: captured.modules, evidence }, null, 2) + "\n" + fence + "\n"); };
   writeReport();
   for (const target of [contract.target!, contract.checkTarget!]) {
-    const result = spawnSync(process.execPath, ["nx", "run", target, "--skip-nx-cache"], { cwd: repoRoot, encoding: "utf8", timeout: 60_000, maxBuffer: 8 * 1024 * 1024, env: { ...process.env, REPO_ROOT: repoRoot, NX_DAEMON: "false" } });
+    const result = spawnSync(process.execPath, ["repo", "run", target, "--skip-nx-cache"], { cwd: repoRoot, encoding: "utf8", timeout: 60_000, maxBuffer: 8 * 1024 * 1024, env: { ...process.env, REPO_ROOT: repoRoot, NX_DAEMON: "false" } });
     evidence.push({ target, status: result.status, signal: result.signal, stdout: result.stdout, stderr: result.stderr });
     writeReport();
     if (result.error || result.status !== 0) throw new Error("Actual Draw fixture producer failed: " + target + "\n" + (result.error?.message ?? "") + result.stderr + result.stdout);
@@ -6549,9 +6548,9 @@ describe("generator preview protocol", () => {
           name: "@fixture/generator",
           root: owner,
           targets: {
-            generate: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts generate" } },
-            "preview-generated": { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts preview-generated" } },
-            check: { executor: "nx:run-commands", options: { cwd: owner, command: "bun ./📜️script.ts check" } },
+            generate: { executor: "repo:script", options: { cwd: owner, command: "bun ./📜️script.ts generate" } },
+            "preview-generated": { executor: "repo:script", options: { cwd: owner, command: "bun ./📜️script.ts preview-generated" } },
+            check: { executor: "repo:script", options: { cwd: owner, command: "bun ./📜️script.ts check" } },
           },
         }, null, 2)}\n`;
         writeFileSync(join(repoRoot, "project.json"), projectManifest);

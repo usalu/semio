@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/trinity-jack",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:typescript",
@@ -9,7 +9,7 @@
   ],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "default",
@@ -29,7 +29,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default",
@@ -46,7 +46,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default",
@@ -63,7 +63,7 @@
       }
     },
     "verify-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default",

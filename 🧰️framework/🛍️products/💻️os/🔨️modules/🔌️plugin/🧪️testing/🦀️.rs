@@ -268,6 +268,41 @@ pub mod artifact_app_laws {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
     use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
+    /// 🎟️ Drives the actual borrowed action endpoint and pays remaining original fixture sources under its authored close loan.
+    pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Option<super::DslValue>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<super::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+        let mut original_args=args;
+        let mut result=Ok(None);
+        for _ in 0..OriginalFixtureCaller::maximum_turns(){
+            result=app.handle_action(action,&mut original_args,meta,identity,cx).await;
+            if !matches!(result,Ok(None)){break}
+            if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
+        }
+        close_fixture_action_inputs(original_args,None,cx,close_loan);
+        result?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original action fixture dispatch exceeded its authored turn bound").into())
+    }
+
+    /// 📨️ Exercises the real continuation receiver with one original argument and fault pair.
+    pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&str,args:Option<super::DslValue>,fault:Option<super::Fault>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<super::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+        let(mut original_args,mut original_fault)=(args,fault);let mut result=Ok(None);
+        for _ in 0..OriginalFixtureCaller::maximum_turns(){result=app.handle_response_action(action,&mut original_args,&mut original_fault,meta,identity,cx).await;if !matches!(result,Ok(None)){break}if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}}
+        close_fixture_action_inputs(original_args,original_fault,cx,close_loan);
+        result?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original continuation fixture dispatch exceeded its authored turn bound").into())
+    }
+
+    fn close_fixture_action_inputs(args:Option<super::DslValue>,fault:Option<super::Fault>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant){
+        if args.is_some()||fault.is_some(){
+            let mut receiving=Some(crate::action_ingress::ActionIngressSource{action:None,args,prepared:None,assembled:None,fault});
+            let mut original_caller=None;
+            let mut owner=crate::action_ingress::ActionIngressRecord::receive(&mut receiving,&mut original_caller,cx).expect("original fixture action receiving receipt").expect("authored caller must fund original unused argument receiving");
+            owner.finish_parser();
+            for _ in 0..OriginalFixtureCaller::maximum_turns(){
+                if owner.terminal_is_empty(){break}
+                cx.with_retained_loan(close_loan,|same|owner.close_original_step(same)).expect("original fixture action unused argument close");
+            }
+            assert!(owner.terminal_is_empty(),"original fixture action unused source did not complete its paid close");
+        }
+    }
+
     /// 🔬️ Borrows one real app registry publication for a synchronous integration-law closure.
     pub async fn with_document_view<A, M, R>(app: &mut VcsArtifactApp<A, M>, inspect: impl for<'a> FnOnce(&super::ArtifactView<'a, A::Snapshot>) -> R) -> Result<R, super::Fault>
     where
@@ -372,7 +407,7 @@ pub mod artifact_app_laws {
     /// stamped with the live store's identity — exactly what the runtime does to an `Effect::LoadDocument` — admitted as a
     /// whole-document archive load (`members: []`), polled to its terminal state over real polls and acknowledged. A load
     /// that does not land answers its own fault.
-    pub async fn load_document<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), super::Fault>
+    pub async fn load_document<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
     where
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
@@ -381,22 +416,24 @@ pub mod artifact_app_laws {
         PluginApp::begin_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive)?;
         let mut polls = 0usize;
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity).await?;
+            if cx.should_yield(){return Err(super::Fault::from("document archive requires its next original source turn").into())}cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
+            let status = PluginApp::poll_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
             if !law_load_running(&status, &mut polls)? {
                 break status;
             }
         };
         PluginApp::acknowledge_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION)?;
-        law_load_outcome(status)
+        law_load_outcome(status).map_err(Into::into)
     }
 
     /// 🏗️ Drives one live instance's metered store constructor through the runtime exchange the reactor uses, so a fixture that
     /// loads a document straight after opening the instance finds every store owner catalog installed.
-    pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), super::Fault> {
+    pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         while crate::plugin_runtime::plugin_store_constructor_pending(runtime, instance_id).await? {
-            if std::time::Instant::now() >= deadline { return Err(super::Fault::from("the instance store constructor did not settle")); }
-            crate::plugin_runtime::plugin_exchange(runtime, instance_id, None, identity, &mut fixture_step_context()).await?;
+            if std::time::Instant::now() >= deadline { return Err(super::Fault::from("the instance store constructor did not settle").into()); }
+            if cx.should_yield(){return Err(super::Fault::from("store constructor requires its next original source turn").into())}cx.consume_fuel(1);
+            crate::plugin_runtime::plugin_exchange(runtime, instance_id, None, identity, cx).await?;
         }
         Ok(())
     }
@@ -404,24 +441,25 @@ pub mod artifact_app_laws {
     /// 🛬️ [`load_document`] for one instance of a live runtime: the archive comes from the instance's own store stamp and goes
     /// through the runtime's archive-load entry points — admit, poll to terminal, acknowledge — the path a checkpoint restore
     /// takes.
-    pub async fn plugin_load_document<PA: PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), super::Fault> {
-        plugin_settle_store_constructor(runtime, instance_id, identity).await?;
+    pub async fn plugin_load_document<PA: PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
+        plugin_settle_store_constructor(runtime, instance_id, identity,cx).await?;
         let archive = crate::plugin_runtime::plugin_document_load_archive(runtime, instance_id, files).await?;
         crate::plugin_runtime::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, archive).await?;
         let mut polls = 0usize;
         let status = loop {
-            let status = crate::plugin_runtime::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity).await?;
+            if cx.should_yield(){return Err(super::Fault::from("runtime archive requires its next original source turn").into())}cx.consume_fuel(1);crate::plugin_runtime::plugin_exchange(runtime,instance_id,None,identity,cx).await?;
+            let status = crate::plugin_runtime::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
             if !law_load_running(&status, &mut polls)? {
                 break status;
             }
         };
         crate::plugin_runtime::plugin_acknowledge_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION).await?;
-        law_load_outcome(status)
+        law_load_outcome(status).map_err(Into::into)
     }
 
     /// 📜️ [`plugin_load_document`] for a text pair typed by `S`/`Mutation`: parsed and printed to the pack and SPR the archive
     /// load takes, like [`load_document_text`].
-    pub async fn plugin_load_document_text<PA, S, Mutation>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), super::Fault>
+    pub async fn plugin_load_document_text<PA, S, Mutation>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
     where
         PA: PluginApp,
         S: Clone + pack::snapshot::ArtifactDsl + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
@@ -431,7 +469,7 @@ pub mod artifact_app_laws {
         let envelope = parsed.into_envelope();
         let pack = store::os_store::text_format::print_document_pack(&envelope).await;
         envelope.retire_unadopted();
-        plugin_load_document(runtime, instance_id, &pack.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?, identity).await
+        plugin_load_document(runtime, instance_id, &pack.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?, identity,cx).await
     }
 
     /// ⏳️ Whether a polled law load still runs; a load that never reaches its terminal state within a million polls is a fault.
@@ -458,7 +496,7 @@ pub mod artifact_app_laws {
     /// 📜️ [`load_document`] for a text pair: the DSL and op log parse into the envelope whose pack and SPR the archive load
     /// takes, through the same printers `document_pack` uses; the parsed envelope is retired through its exact owners, never
     /// dropped.
-    pub async fn load_document_text<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), super::Fault>
+    pub async fn load_document_text<A, M>(app: &mut VcsArtifactApp<A, M>, files: &store::os_store::text_format::ArtifactTextFiles, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure>
     where
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
@@ -467,7 +505,7 @@ pub mod artifact_app_laws {
         let envelope = parsed.into_envelope();
         let pack = store::os_store::text_format::print_document_pack(&envelope).await;
         envelope.retire_unadopted();
-        load_document(app, &pack.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?, identity).await
+        load_document(app, &pack.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?, identity,cx).await
     }
 
     /// ⌨️ One long typing run (fixture `🧫️fixtures/⌨️typing-run/🔣️.json`: ≥ 1000 typed characters with pauses, caret moves back
@@ -539,11 +577,13 @@ pub mod artifact_app_laws {
     /// one-item steps of `plugin_runtime::RUNTIME_CLOSE_BYTES_PER_STEP` within the same turn. A law that commits faster
     /// than the fair rotation retires (a typing run: every keystroke amends one edit and displaces its envelope, snapshot
     /// and dag — and a content-addressed child's root and member) calls this after each settled command, as the live host does.
-    pub fn drain_maintenance_pressure<P: PluginApp>(app: &mut P) {
+    pub fn drain_maintenance_pressure<P: PluginApp>(app: &mut P,cx:&mut semio_framework_job::StepContext<'_>) {
         let mut idle_stages = 0;
         while app.maintenance_under_pressure() {
             let grant = fixture_lifecycle_grant(PluginApp::maintenance_retirement_demands(app, fixture_mounted_policy().maintenance.maximum_copy_bytes).expect("quoted maintenance demand"));
-            match PluginApp::maintenance_step(app, grant).expect("bounded maintenance") {
+            if cx.should_yield(){return}
+            let demand=PluginApp::maintenance_retirement_demands(app,grant.maximum_copy_bytes).expect("original maintenance quote");
+            match crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|Ok((PluginApp::maintenance_step(app,same,loan)?,PluginApp::maintenance_terminal_is_empty(app)))).expect("original bounded maintenance") {
                 crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress != super::RetainedCloneProgress::default() => idle_stages = 0,
                 _ => idle_stages += 1,
             }
@@ -662,9 +702,9 @@ pub mod artifact_app_laws {
 
     /// ⌨️ [`document_input_commit_findings`] of `body_key` rendered under `view`; a document verb is one declared with the
     /// `Mutation` kind.
-    pub async fn document_input_commit_lint<A: ArtifactApp, M: super::SpaceMember + super::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, body_key: &str, view: &super::ViewModel) -> Result<Vec<String>, super::Fault> {
-        let tree = PluginApp::render(app, body_key, None, view).await?;
-        let projection: serde_json::Value = serde_json::from_str(&project_and_retire_fixture_tree(tree).map_err(super::plugin_sdk_fault)?).map_err(|error| super::plugin_sdk_fault(error.to_string()))?;
+    pub async fn document_input_commit_lint<A: ArtifactApp + Default, M: super::SpaceMember + super::MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, body_key: &str, view: &super::ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<String>, semio_framework_job::OriginalTurnFailure> {
+        let projected = render_registered_fixture_app(app, body_key, view,cx).await?;
+        let projection: serde_json::Value = serde_json::from_str(&projected).map_err(|error| super::plugin_sdk_fault(error.to_string()))?;
         Ok(document_input_commit_findings(&projection, &|verb| app.registry.get(verb).is_some_and(|definition| definition.kind == super::ActionKind::Mutation)))
     }
 
@@ -1095,7 +1135,6 @@ pub mod artifact_app_laws {
         serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, super::Fault>,
         mounted_policy: crate::MountedOwnerPolicyV1,
         identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<SettledExtensionInvocations,crate::PluginLifecycleFailure> {
-        use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
         let mut settled = SettledExtensionInvocations { ownership_receipts: Vec::new(), answered: 0, effects: Vec::new() };
         for effect in crate::reactor::drain_queued_effects(receiver) {
             let semio_framework::kernel::Effect::InvokeExtension { req, extension_id, capability, request_json, .. } = effect else { continue };
@@ -1106,15 +1145,9 @@ pub mod artifact_app_laws {
                     .map_err(|error| super::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.answer-not-json"), format!("the served capability answer is not JSON: {error}")))?;
                 Ok(store::pack_rt::encode_wire_value(&value))
             });
-            let Ok((instance, action, args)) = crate::reactor::take_extension_response(req, outcome) else { continue };
-            let arguments = match args {
-                super::DslValue::Object(entries) => entries.into_iter().collect(),
-                _ => std::collections::BTreeMap::new(),
-            };
-            let app_id = app.app_id().await.to_string();
-            let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: action }, arguments };
+            let Ok((instance, action, args, original_fault)) = crate::reactor::take_extension_response(req, outcome) else { continue };
             let meta = ActionMeta { instance_id: instance, ..action_meta.clone() };
-            app.handle_command(&invocation, None, &meta, identity).await?;
+            dispatch_fixture_response_action(app,&action,Some(args),original_fault,&meta,identity,cx,mounted_policy.close).await?;
             let receipt = settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await?;
             settled.ownership_receipts.extend(receipt.ownership_receipts);
             settled.effects.extend(receipt.effects);
@@ -1217,7 +1250,7 @@ pub mod artifact_app_laws {
         A: ArtifactApp,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
     {
-        let admitted = app.handle_action(action, None, &meta("local"), identity).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
+        let admitted = dispatch_fixture_action(app,action,None,&meta("local"),identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
         super::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
         settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("history verb {action} publication: {fault:?}"));
     }
@@ -1238,7 +1271,7 @@ pub mod artifact_app_laws {
         P: PartialEq + std::fmt::Debug,
     {
         let receiver = meta("local").instance_id;
-        app.dispatch_typed(command, &meta("local"), identity).await.expect("apply command");
+        app.dispatch_typed(command, &meta("local"), identity,cx).await.expect("apply command");
         settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.expect("apply command publication");
         assert_eq!(probe(app), after, "command did not produce the expected snapshot");
         settle_history_verb(app, "undo", receiver, mounted_policy, identity,cx).await;
@@ -1318,7 +1351,8 @@ pub mod artifact_app_laws {
                 continue;
             }
             let staged = declared_bridge_arguments(&action.args).unwrap_or_else(|error| panic!("action {} could not stage required arguments: {error}", action.id));
-            let command = A::command_from_action(&action.id, Some(&staged)).await.unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
+            let mut original_args=Some(staged.clone());let mut original_fault=None;
+            let command = A::command_from_action(&action.id, &mut original_args, &mut original_fault).await.unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
             assert_eq!(A::command_id(&command).await, action.id.as_str(), "command_id mismatch for action {}", action.id);
         }
     }
@@ -1616,7 +1650,7 @@ pub mod artifact_app_laws {
     /// `interactive-job.app-owned-output` is the code a retained job's fault page carries when the
     /// handler's own `Fault` crossed the publication boundary, so it is the handler's refusal.
     fn declared_verb_refusal(failure:impl Into<crate::PluginLifecycleFailure>)->DeclaredVerbOutcome{
-        let failure=failure.into();let(code,detail)=match &failure.primary{crate::PluginLifecyclePrimary::Fault(fault)=>(fault.code.0.clone(),fault.message.clone()),crate::PluginLifecyclePrimary::Value(error)=>("interactive-job.owner-refused".to_string(),format!("{error:?}"))};
+        let failure=failure.into();let(code,detail)=match &failure.primary{crate::PluginLifecyclePrimary::Fault(fault)=>(fault.code.0.clone(),fault.message.clone()),crate::PluginLifecyclePrimary::Value(error)=>("interactive-job.owner-refused".to_string(),format!("{error:?}")),crate::PluginLifecyclePrimary::Domain(domain)=>(domain.code().to_owned(),domain.message().to_owned())};
         if(code.starts_with("interactive-job.")&&code!="interactive-job.app-owned-output")||code=="app.command.unsupported"{DeclaredVerbOutcome::Unreachable{code,detail,failure:Some(failure)}}else{DeclaredVerbOutcome::Refused{code,detail,failure:Some(failure)}}
     }
 
@@ -1657,11 +1691,11 @@ pub mod artifact_app_laws {
         settle_store_constructor(&mut app, mounted_policy);
         if let Some(boot) = boot {
             let action_meta = ActionMeta { view_state: Some(boot.view.clone()), ..meta("local") };
-            let result = app.handle_action("setActiveExample", Some(&boot.args), &action_meta, identity).await.unwrap_or_else(|fault| panic!("the app's own boot example must be admitted: {fault:?}"));
+            let result = dispatch_fixture_action(&mut app,"setActiveExample",Some(boot.args.clone()),&action_meta,identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("the app's own boot example must be admitted: {fault:?}"));
             let receipt = settle_registered_typed_operation(&mut app, action_meta.instance_id, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("the app's own boot example must settle: {fault:?}"));
             for effect in result.requested_effects.into_iter().chain(receipt.effects) {
                 if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                    load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, identity).await.unwrap_or_else(|fault| panic!("the app's own boot example must load: {fault:?}"));
+                    load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, identity,cx).await.unwrap_or_else(|fault| panic!("the app's own boot example must load: {fault:?}"));
                 }
             }
             app.follow_derivable_children(identity).await.unwrap_or_else(|fault| panic!("the boot example's derivable children must follow its coordinates: {fault:?}"));
@@ -1722,7 +1756,7 @@ pub mod artifact_app_laws {
         let unheld_before = declared_verb_unheld_children(&app).await;
         let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("local") };
         let receiver = action_meta.instance_id;
-        let outcome = match app.handle_action(verb, Some(args), &action_meta, identity).await {
+        let outcome = match dispatch_fixture_action(&mut app,verb,Some(args.clone()),&action_meta,identity,cx,mounted_policy.close).await {
             Err(fault) => declared_verb_refusal(fault),
             Ok(result) => match settle_registered_typed_operation(&mut app, receiver, mounted_policy, identity,cx).await {
                 Err(fault) => declared_verb_refusal(fault),
@@ -1738,9 +1772,12 @@ pub mod artifact_app_laws {
                     let lanes = receipt.lanes.iter().map(|lane| declared_verb_lane_name(*lane)).collect::<std::collections::BTreeSet<_>>();
                     let (document_after, config_after) = declared_verb_state(&mut app).await;
                     let orphaned_children = declared_verb_unheld_children(&app).await.into_iter().filter(|child| !unheld_before.contains(child)).collect();
-                    let rendered = match app.render(body_key, None, view).await {
-                        Ok(tree) => project_and_retire_fixture_tree(tree).unwrap_or_else(|error| format!("projection:{error}")),
-                        Err(fault) => format!("render:{}", fault.code.0),
+                    let rendered = match render_registered_fixture_app(&mut app,body_key,view,cx).await {
+                        Ok(projected) => projected,
+                        Err(failure)=>{
+                            close_registered_fixture_app(&mut app,mounted_policy,cx).expect("original failed render fixture closes under its existing caller");
+                            return declared_verb_refusal(failure);
+                        }
                     };
                     let lane_text = lanes.iter().copied().collect::<Vec<_>>().join(",");
                     let fingerprint = declared_verb_fingerprint(
@@ -1767,10 +1804,46 @@ pub mod artifact_app_laws {
         result
     }
 
+    /// 🎬️ Projects the same stationary render source without donating its native resources to the fixture.
+    pub(crate) async fn render_registered_fixture_app<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&crate::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
+    where A:ArtifactApp+Default,M:super::SpaceMember+super::MemberFactory+Send+'static{
+        for _ in 0..OriginalFixtureCaller::maximum_turns(){
+            if cx.should_yield(){break}
+            if app.render(body_key,None,view,cx).await?.is_some(){
+                let source=app.original_render_tree_source(cx)?;
+                let tree=source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture render readiness lost its stationary tree"))?;
+                let mut remaining=FIXTURE_TREE_MAX_NODES;
+                return project_fixture_node(&tree.root,&mut remaining,0).and_then(|value|serde_json::to_string(&value).map_err(|_|"projection-json")).map_err(|source|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,source).into())
+            }
+        }
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original registered fixture render remained pending under its authored caller").into())
+    }
+
+    /// 🫴️ Deferred addressed fixture dispatch keeps its actual input slots and initiating context over every step.
+    pub async fn dispatch_addressed_fixture_on_original<PA:crate::plugin_app::PluginApp>(app:&mut PA,address:&semio_framework::manifest::ActionAddress,args:&mut Option<semio_framework_value::DslValue>,fault:&mut Option<semio_framework::Fault>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+        let maximum_turns=OriginalFixtureCaller::maximum_turns();
+        for _ in 0..maximum_turns{
+            if cx.should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original addressed fixture exhausted its initiating work").into())}
+            if let Some(result)=app.handle_action_invocation(address,args,fault,active_mode,meta,identity,cx).await?{return Ok(result)}
+            let grant=cx.retained_grant();app.maintenance_step(cx,grant)?;
+        }
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original addressed fixture reached its finite step limit").into())
+    }
+
+    /// 🪜️ Keeps one admitted preview source under its initiating fixture context through pending phases.
+    async fn preview_fixture_on_original<A,M>(app:&mut VcsArtifactApp<A,M>,invocation:&super::ManifestActionInvocation,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>
+    where A:ArtifactApp,M:super::SpaceMember+super::MemberFactory+Send+'static{
+        for _ in 0..OriginalFixtureCaller::maximum_turns(){
+            if cx.should_yield(){break}
+            if let Some(result)=app.preview_addressed_action(invocation,meta,cx).await?{return Ok(result)}
+        }
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture preview did not settle under its supplied context").into())
+    }
+
     /// 🤖️ Previews `verb` with `args` exactly as the MCP gateway's `action_prepare` does — the agent lane's typed command
     /// frame, addressed to the caller's declared window instance with explicit language and terminology — and answers how many document ops
     /// the preview would commit (ticket 26/09/23, G12 session 14c).
-    pub async fn agent_preview<A, M>(app: &mut VcsArtifactApp<A, M>, definition: &semio_framework::AppDefinition, verb: &str, args: &semio_framework::DslValue, view: &super::ViewModel, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<usize, super::Fault>
+    pub async fn agent_preview<A, M>(app: &mut VcsArtifactApp<A, M>, definition: &semio_framework::AppDefinition, verb: &str, args: &semio_framework::DslValue, view: &super::ViewModel, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<usize, semio_framework_job::OriginalTurnFailure>
     where
         A: ArtifactApp + Default,
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
@@ -1793,7 +1866,7 @@ pub mod artifact_app_laws {
             arguments,
         };
         let action_meta = ActionMeta { view_state: Some(view.clone()), ..meta("agent") };
-        let result = app.preview_addressed_action(&invocation, &action_meta).await?;
+        let result = preview_fixture_on_original(app,&invocation,&action_meta,cx).await?;
         Ok(result.output.get("documentOps").and_then(|value| value.as_str()).and_then(|value| value.parse::<usize>().ok()).unwrap_or(0))
     }
 
@@ -1827,7 +1900,7 @@ pub mod artifact_app_laws {
         };
         let view = super::ViewModel { active_mode_id: Some(definition.default_mode_id.clone()), active_window_kind_id: Some(window_kind_id.to_string()), window_id: Some("declared-verb-agent".to_string()), window_instances: vec![semio_framework::ViewWindowInstance { id: "declared-verb-agent".to_string(), window_kind_id: window_kind_id.to_string() }], ..super::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let action_meta = ActionMeta { view_state: Some(view), ..meta("agent") };
-        let outcome = match app.preview_addressed_action(&invocation, &action_meta).await {
+        let outcome = match preview_fixture_on_original(&mut app,&invocation,&action_meta,cx).await {
             Err(fault) => declared_verb_refusal(fault),
             Ok(result) => {
                 let count = |key: &str| result.output.get(key).and_then(|value| value.as_str()).and_then(|value| value.parse::<usize>().ok()).unwrap_or(0);
@@ -1921,7 +1994,8 @@ pub mod artifact_app_laws {
             let boot = if action.id == "setActiveExample" { None } else { boot.as_ref() };
             let audience = resolve_audience(action);
             let staged = staged_of(action);
-            let bridge = A::command_from_action(&action.id, Some(&staged)).await.map(drop).map_err(|fault| format!("{}: {}", fault.code.0, fault.message));
+            let mut original_args=Some(staged.clone());let mut original_fault=None;
+            let bridge = A::command_from_action(&action.id, &mut original_args, &mut original_fault).await.map(drop).map_err(|fault| format!("{}: {}", fault.code.0, fault.message));
             let mut window_probes = Vec::new();
             for index in windows {
                 let view = view_of(*index);
@@ -2018,8 +2092,8 @@ pub mod artifact_app_laws {
         let mut original_caller=OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let (mut instance_a, mut instance_b) = paired_apps::<A>(channel, mounted_policy, identity).await;
         let genesis = probe(&instance_a);
-        instance_a.dispatch_typed(command_a, &meta("actor-a"), identity).await.expect("a applies its edit");
-        instance_b.dispatch_typed(command_b, &meta("actor-b"), identity).await.expect("b applies its edit");
+        instance_a.dispatch_typed(command_a, &meta("actor-a"), identity,cx).await.expect("a applies its edit");
+        instance_b.dispatch_typed(command_b, &meta("actor-b"), identity,cx).await.expect("b applies its edit");
         exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
         assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     
@@ -2057,9 +2131,9 @@ pub mod artifact_app_laws {
         let (mut instance_a, mut instance_b) = paired_registered_apps_with_members::<A, M, Manifest, Build>(channel, manifest, mounted_policy, identity).await;
         let genesis = probe(&instance_a);
         let receiver = meta("actor-a").instance_id;
-        instance_a.dispatch_typed(command_a, &meta("actor-a"), identity).await.expect("a applies its edit");
+        instance_a.dispatch_typed(command_a, &meta("actor-a"), identity,cx).await.expect("a applies its edit");
         settle_registered_typed_operation(&mut instance_a, receiver, mounted_policy, identity,cx).await.expect("a's edit publishes");
-        instance_b.dispatch_typed(command_b, &meta("actor-b"), identity).await.expect("b applies its edit");
+        instance_b.dispatch_typed(command_b, &meta("actor-b"), identity,cx).await.expect("b applies its edit");
         settle_registered_typed_operation(&mut instance_b, receiver, mounted_policy, identity,cx).await.expect("b's edit publishes");
         exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
         assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
@@ -2082,14 +2156,14 @@ pub mod artifact_app_laws {
         M: super::SpaceMember + super::MemberFactory + Send + 'static,
         P: PartialEq + std::fmt::Debug,
     {
-        instance_a.tick_backbone(identity).await.expect("a folds b's events");
-        instance_b.tick_backbone(identity).await.expect("b folds a's events");
+        instance_a.tick_backbone(identity,cx).await.expect("a folds b's events");
+        instance_b.tick_backbone(identity,cx).await.expect("b folds a's events");
         assert_eq!(probe(instance_a), probe(instance_b), "both instances must converge on the same snapshot");
         let receiver = meta(actor_a).instance_id;
-        let admitted = instance_a.handle_action("commitCheckpoint", None, &meta(actor_a), identity).await.expect("a commits a checkpoint");
+        let admitted = dispatch_fixture_action(instance_a,"commitCheckpoint",None,&meta(actor_a),identity,cx,mounted_policy.close).await.expect("a commits a checkpoint");
         super::settle_framework_reserved_admission(instance_a, admitted).await.expect("a's checkpoint commit settles");
         settle_registered_typed_operation(instance_a, receiver, mounted_policy, identity,cx).await.expect("a's checkpoint publication settles");
-        instance_b.tick_backbone(identity).await.expect("b folds a's checkpoint");
+        instance_b.tick_backbone(identity,cx).await.expect("b folds a's checkpoint");
         assert_eq!(probe(instance_a), probe(instance_b), "a replicated checkpoint keeps both instances converged");
     }
 
@@ -2110,10 +2184,11 @@ pub mod artifact_app_laws {
         A: ArtifactApp + Default,
         P: PartialEq + std::fmt::Debug,
     {
+        let mut original_caller=OriginalFixtureCaller::admit().expect("closed original ingestion fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
         let mut sender = new_app::<A>(protocol::ActorId(super::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
         let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
         sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
-        sender.dispatch_typed(command, &meta("local"), identity).await.expect("apply command");
+        sender.dispatch_typed(command, &meta("local"), identity,cx).await.expect("apply command");
 
         let mut envelopes = Vec::new();
         for message in far.receive().await.expect("receive") {
@@ -2124,10 +2199,12 @@ pub mod artifact_app_laws {
         let operations = protocol::encode_envelopes(&envelopes);
 
         let mut receiver = new_app::<A>(protocol::ActorId(super::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
-        receiver.ingest_operations(&operations, identity).await.expect("ingest once");
+        receiver.ingest_operations(&operations, identity,cx).await.expect("ingest once");
         let once = probe(&receiver);
-        receiver.ingest_operations(&operations, identity).await.expect("ingest twice");
+        receiver.ingest_operations(&operations, identity,cx).await.expect("ingest twice");
         assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
+        sender.detach_backbone().await.expect("original sender detaches");close_registered_fixture_app(&mut sender,mounted_policy,cx).expect("original sender closes");close_registered_fixture_app(&mut receiver,mounted_policy,cx).expect("original receiver closes");
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original ingestion caller closes");result
     }
 
     /// 🧬️ Registered twin of [`assert_ingest_idempotent`] — the `NoMembers` spelling of
@@ -2159,7 +2236,7 @@ pub mod artifact_app_laws {
         sender.bind_instance_id(meta("local").instance_id).await;
         let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
         sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
-        sender.dispatch_typed(command, &meta("local"), identity).await.expect("apply command");
+        sender.dispatch_typed(command, &meta("local"), identity,cx).await.expect("apply command");
         settle_registered_typed_operation(&mut sender, meta("local").instance_id, mounted_policy, identity,cx).await.expect("the edit publishes");
         let mut envelopes = Vec::new();
         for message in far.receive().await.expect("receive") {
@@ -2172,10 +2249,10 @@ pub mod artifact_app_laws {
         let mut receiver = new_registered_app_with_members::<A, M, _>(manifest(), protocol::ActorId(super::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
         receiver.bind_instance_id(meta("local").instance_id).await;
         let genesis = probe(&receiver);
-        receiver.ingest_operations(&operations, identity).await.expect("ingest once");
+        receiver.ingest_operations(&operations, identity,cx).await.expect("ingest once");
         let once = probe(&receiver);
         assert_ne!(once, genesis, "ingesting the events must materialize the edit");
-        receiver.ingest_operations(&operations, identity).await.expect("ingest twice");
+        receiver.ingest_operations(&operations, identity,cx).await.expect("ingest twice");
         assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
         sender.detach_backbone().await.expect("sender releases its backbone");
         close_registered_fixture_app(&mut sender, mounted_policy,cx).expect("registered fixture original close");
@@ -2192,7 +2269,7 @@ pub mod artifact_app_laws {
     pub async fn assert_proposes_transaction<A: ArtifactApp>(app: &mut VcsArtifactApp<A>, command: A::Command, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> super::TransactionProposalDraft {
         let generation_before = app.store.generation();
         let edits_before = app.store.envelope().vcs.edits.len();
-        app.dispatch_typed(command, &meta("local"), identity).await.expect("dispatch a command whose mutations carry foreign steps");
+        app.dispatch_typed(command, &meta("local"), identity,cx).await.expect("dispatch a command whose mutations carry foreign steps");
         settle_registered_typed_operation(app, meta("local").instance_id, mounted_policy, identity,cx).await.expect("a proposing dispatch settles its own operation");
         assert_eq!(app.store.generation(), generation_before, "a proposed transaction must not bump the document store's generation");
         assert_eq!(app.store.envelope().vcs.edits.len(), edits_before, "a proposed transaction must not add an Edit");
@@ -2314,12 +2391,12 @@ pub mod artifact_app_laws {
         fn mounted_job_maintenance_phase(instance_id: u32) -> Option<crate::MountedOwnerPhaseV1> { V::mounted_job_maintenance_phase(instance_id) }
         fn mounted_job_maintenance_demands(instance_id: u32, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { V::mounted_job_maintenance_demands(instance_id, body) }
         fn mounted_job_close_demands(instance_id: u32, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { V::mounted_job_close_demands(instance_id, body) }
-        fn mounted_job_maintenance_step(instance_id: u32, grant: super::RetainedCloneGrant) -> Result<super::PluginLifecycleStep, super::Fault> {
-            V::mounted_job_maintenance_step(instance_id, grant)
+        fn mounted_job_maintenance_step(instance_id: u32, cx: &mut semio_framework_job::StepContext<'_>, grant: super::RetainedCloneGrant) -> Result<super::PluginLifecycleStep, crate::PluginLifecycleFailure> {
+            V::mounted_job_maintenance_step(instance_id, cx, grant)
         }
 
-        fn mounted_job_close_step(instance_id: u32, grant: super::RetainedCloneGrant) -> Result<super::PluginLifecycleStep, super::Fault> {
-            V::mounted_job_close_step(instance_id, grant)
+        fn mounted_job_close_step(instance_id: u32, cx: &mut semio_framework_job::StepContext<'_>, grant: super::RetainedCloneGrant) -> Result<super::PluginLifecycleStep, crate::PluginLifecycleFailure> {
+            V::mounted_job_close_step(instance_id, cx, grant)
         }
 
         fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
@@ -2395,8 +2472,8 @@ pub mod artifact_app_laws {
             V::command_id(command)
         }
 
-        fn command_from_action(action: &str, args: Option<&super::DslValue>) -> Result<Self::Command, super::Fault> {
-            V::command_from_action(action, args)
+        fn command_from_action(action: &str, args: &mut Option<super::DslValue>, original_fault: &mut Option<super::Fault>) -> Result<Self::Command, super::Fault> {
+            V::command_from_action(action, args, original_fault)
         }
 
         fn config_spec() -> super::ConfigSpec {
@@ -2419,8 +2496,9 @@ pub mod artifact_app_laws {
             view_state: &super::ViewModel,
             transient: &super::TransientView<'_, Self::Transient>,
             interaction: &super::InteractionView<'_>,
-        ) -> super::UiAssemblyResult<super::ComponentTree> {
-            V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
+            cx:&mut semio_framework_job::StepContext<'_>,
+        ) -> crate::OriginalRenderResult<crate::ComponentTree> {
+            V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
         }
 
         fn pending_effects(owner: &super::ArtifactInstanceOperationOwnerHandle, doc: &super::ArtifactView<'_, Self::Snapshot>, cfg: &super::ConfigView<'_, Self::Config>, view: Option<&super::ViewModel>) -> Vec<super::Effect> {

@@ -7,6 +7,9 @@
       "source": "import {value} from './leaf.ts'; export const result=value;",
       "imports": [
         "./leaf.ts"
+      ],
+      "moduleImports": [
+        "./leaf.ts"
       ]
     },
     {
@@ -14,6 +17,9 @@
       "path": "case.ts",
       "source": "import '@semio/example/feature';",
       "imports": [
+        "@semio/example/feature"
+      ],
+      "moduleImports": [
         "@semio/example/feature"
       ]
     },
@@ -23,6 +29,9 @@
       "source": "export {value} from 'example';",
       "imports": [
         "example"
+      ],
+      "moduleImports": [
+        "example"
       ]
     },
     {
@@ -30,6 +39,9 @@
       "path": "case.ts",
       "source": "export const load=()=>import('./leaf.ts');",
       "imports": [
+        "./leaf.ts"
+      ],
+      "moduleImports": [
         "./leaf.ts"
       ]
     },
@@ -39,6 +51,9 @@
       "source": "module.exports=require('example');",
       "imports": [
         "example"
+      ],
+      "moduleImports": [
+        "example"
       ]
     },
     {
@@ -47,37 +62,55 @@
       "source": "import value = require('example'); export const result=value;",
       "imports": [
         "example"
+      ],
+      "moduleImports": [
+        "example"
       ]
     },
     {
       "id": "type-import",
       "path": "case.ts",
       "source": "import type {Value} from 'erased'; export const value=1;",
-      "imports": []
+      "imports": [],
+      "moduleImports": [
+        "erased"
+      ]
     },
     {
       "id": "named-type-import",
       "path": "case.ts",
       "source": "import {type Value} from 'erased'; export const value=1;",
-      "imports": []
+      "imports": [],
+      "moduleImports": [
+        "erased"
+      ]
     },
     {
       "id": "type-export",
       "path": "case.ts",
       "source": "export type {Value} from 'erased';",
-      "imports": []
+      "imports": [],
+      "moduleImports": [
+        "erased"
+      ]
     },
     {
       "id": "named-type-export",
       "path": "case.ts",
       "source": "export {type Value} from 'erased';",
-      "imports": []
+      "imports": [],
+      "moduleImports": [
+        "erased"
+      ]
     },
     {
       "id": "mixed-import",
       "path": "case.ts",
       "source": "import {type Value,value} from 'example'; export const result=value;",
       "imports": [
+        "example"
+      ],
+      "moduleImports": [
         "example"
       ]
     },
@@ -87,31 +120,42 @@
       "source": "export {type Value,value} from 'example';",
       "imports": [
         "example"
+      ],
+      "moduleImports": [
+        "example"
       ]
     },
     {
       "id": "import-type-expression",
       "path": "case.ts",
       "source": "export type Value=import('erased').Value;",
-      "imports": []
+      "imports": [],
+      "moduleImports": [
+        "erased"
+      ]
     },
     {
       "id": "declaration",
       "path": "case.d.ts",
       "source": "import {Value} from 'erased'; export declare const value:Value;",
-      "imports": []
+      "imports": [],
+      "moduleImports": [
+        "erased"
+      ]
     },
     {
       "id": "comments-and-strings",
       "path": "case.ts",
       "source": "// import 'commented';\n/* export {x} from 'commented'; */\nexport const fake=\"import 'quoted'; require('quoted')\";",
-      "imports": []
+      "imports": [],
+      "moduleImports": []
     },
     {
       "id": "nonliteral",
       "path": "case.ts",
       "source": "export const load=(name:string)=>import(name); export const resolve=(name:string)=>require(name);",
-      "imports": []
+      "imports": [],
+      "moduleImports": []
     },
     {
       "id": "builtin",
@@ -119,13 +163,17 @@
       "source": "import {readFileSync} from 'node:fs'; export const read=readFileSync;",
       "imports": [
         "node:fs"
+      ],
+      "moduleImports": [
+        "node:fs"
       ]
     },
     {
       "id": "json",
       "path": "case.json",
       "source": "{\"text\":\"import 'quoted';\"}",
-      "imports": []
+      "imports": [],
+      "moduleImports": []
     }
   ],
   "contexts": [
@@ -350,7 +398,7 @@
       ]
     },
     {
-      "id": "fake-import-targets",
+      "id": "typed-import-targets-excludes-comments-and-strings",
       "source": "// import 'fake';\n/* export {value} from 'fake'; */\nexport const quote=\"import 'fake'; require('fake')\"; import type {Value} from 'fake'; export {type Value} from 'fake'; import '../target/leaf.ts';",
       "phases": [
         {
@@ -365,6 +413,7 @@
           },
           "locked": {},
           "targets": [
+            "fake",
             "provider"
           ]
         },
@@ -380,6 +429,7 @@
           },
           "locked": {},
           "targets": [
+            "fake",
             "next"
           ]
         }

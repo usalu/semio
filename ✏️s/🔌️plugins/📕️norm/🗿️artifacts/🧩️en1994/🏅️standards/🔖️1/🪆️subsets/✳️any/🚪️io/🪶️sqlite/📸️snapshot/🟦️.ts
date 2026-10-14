@@ -3,7 +3,7 @@ import sql from "./🗄️.sql" with {type:"text"};
 import type {En1994Snapshot,CompositeBeam,CompositeColumn,CompositeSlab,SteelSection,ProfiledSheeting,HeadedStuds,CharacteristicAction,ColumnAction} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 type Exact<T,K extends keyof T>=Omit<T,K>&{[P in K]:Binary64};
 export type En1994SqliteSteel=Exact<SteelSection,"heightM"|"widthM"|"twM"|"tfM"|"aM2"|"wPlYM3"|"iYM4"|"aVM2">;

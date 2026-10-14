@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "source",
+    "owner",
+    "presentation",
+    "acquire",
+    "return",
+    "denials",
+    "holds",
+    "output"
+  ],
+  "properties": {
+    "contract": {
+      "const": "ui.original-presented-source/v1"
+    },
+    "source": {
+      "const": "gpuAcceptedTree"
+    },
+    "owner": {
+      "const": "initiatingStepContext"
+    },
+    "presentation": {
+      "const": [
+        "surface",
+        "revision",
+        "accessibilityGeneration"
+      ]
+    },
+    "acquire": {
+      "const": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1,
+        "cpu": 1
+      }
+    },
+    "return": {
+      "const": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1,
+        "cpu": 1
+      }
+    },
+    "denials": {
+      "const": [
+        "items",
+        "depth",
+        "foreignContext",
+        "duplicateSource"
+      ]
+    },
+    "holds": {
+      "const": [
+        "acceptedTreeReplacement",
+        "acceptedTreeRetirement"
+      ]
+    },
+    "output": {
+      "const": "sameAcceptedTree"
+    }
+  }
+}

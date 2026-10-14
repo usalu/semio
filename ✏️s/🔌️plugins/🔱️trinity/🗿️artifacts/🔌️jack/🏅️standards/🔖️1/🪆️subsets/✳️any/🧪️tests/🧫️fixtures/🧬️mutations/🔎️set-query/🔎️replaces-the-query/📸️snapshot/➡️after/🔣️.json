@@ -16,7 +16,7 @@
     "target": {
       "artifactId": "jack-content-set-query-fixture",
       "dialect": {
-        "artifactKind": "s.stdio.semio",
+        "artifactKind": "s.fixture.graph",
         "standard": "v1",
         "subset": "graph"
       }

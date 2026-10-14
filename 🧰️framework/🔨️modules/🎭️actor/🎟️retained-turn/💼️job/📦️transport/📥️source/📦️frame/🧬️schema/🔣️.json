@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "headerBytes",
+    "wordSlots",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "actor.original-job-source-frame/v1"
+    },
+    "headerBytes": {
+      "const": 40
+    },
+    "wordSlots": {
+      "const": [
+        "job",
+        "kindBytes",
+        "inputBytes",
+        "checkpointBytes"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "hex",
+          "extent",
+          "flags"
+        ],
+        "properties": {
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "job",
+              "kind",
+              "input",
+              "checkpoint"
+            ],
+            "properties": {
+              "job": {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]{0,19})$"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "input": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              },
+              "checkpoint": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^534a5331[0-9a-f]+$"
+          },
+          "extent": {
+            "type": "integer",
+            "minimum": 40
+          },
+          "flags": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        }
+      }
+    }
+  }
+}

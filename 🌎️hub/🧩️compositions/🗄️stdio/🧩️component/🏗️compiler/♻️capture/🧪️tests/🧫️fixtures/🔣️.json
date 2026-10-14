@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "profile": "wasm-release",
+  "original": "0061736d01000000",
+  "replacement": "0061736d00000000",
+  "leaseSuffix": ".cache/framework/leases",
+  "phaseOrder": [
+    "admit",
+    "link",
+    "capture",
+    "release",
+    "transform"
+  ],
+  "denials": [
+    "cancelled",
+    "capture-refused"
+  ]
+}

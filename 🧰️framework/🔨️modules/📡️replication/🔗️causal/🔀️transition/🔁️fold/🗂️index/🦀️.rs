@@ -20,6 +20,8 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn clear(&mut self){self.root=None;self.mark_mutation();}
     /// 🪹️ Physical emptiness includes every retained arena and displaced original key backing.
     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.nodes.capacity()==0&&self.displaced_keys.capacity()==0}
+    /// 🪪️ Original occupied replacement, insertion and removal invalidate borrowed row continuations.
+    pub fn mutation_epoch(&self)->u64{self.mutation_epoch}
     fn mark_mutation(&mut self){self.mutation_epoch=self.mutation_epoch.checked_add(1).expect("original index mutation epoch overflow");}
     fn height(&self,root:Option<usize>)->usize { root.map_or(0,|root|self.nodes[root].height) }
     fn count(&self,root:Option<usize>)->usize { root.map_or(0,|root|self.nodes[root].count) }

@@ -62,3 +62,47 @@ fn native_record_writer_cancellation_transfers_original_typed_frontier(){
         run(writer,"writer original partial ownership",&law);
     }
 }
+
+#[derive(semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned)]
+struct OriginalCustodyEnvelope {visible:String,#[dsl(skip)]source:Option<String>,count:u64}
+#[derive(serde::Serialize)]
+struct IndependentCustodyEnvelope<'a> {visible:&'a str,#[serde(skip)]source:Option<&'a str>,count:u64}
+
+#[test]
+fn original_optional_custody_native_record_wire_source_identity_and_paid_retirement() {
+ use semio_framework_dsl_record::{DslField,BorrowedDslRecord,native_encoding::FieldProjectionSource};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🫴️custody/🔣️.json")).unwrap();
+ let policy:&serde_json::Value=&fixture["retirementGrant"];let grant=RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap()as usize};
+ for row in fixture["cases"].as_array().unwrap(){
+  let (source,held)=observe(||OriginalCustodyEnvelope{visible:row["visible"].as_str().unwrap().into(),source:Some(row["source"].as_str().unwrap().into()),count:row["count"].as_u64().unwrap()});let original=source.source.as_ref().unwrap().as_ptr();
+  let spec=<OriginalCustodyEnvelope as BorrowedDslRecord>::RECORD;assert_eq!(spec.fields.iter().map(|field|field.key).collect::<Vec<_>>(),fixture["wireKeys"].as_array().unwrap().iter().map(|key|key.as_str().unwrap()).collect::<Vec<_>>());
+  let record=source.to_record().unwrap();assert_eq!(record.fields.len(),2);assert!(record.get(1).is_none());assert!(matches!(record.get(0),Some(FieldValue::Text(value))if value==row["visible"].as_str().unwrap()));assert!(matches!(record.get(2),Some(FieldValue::UInt(value))if *value==row["count"].as_u64().unwrap()));
+  let oracle=serde_json::to_value(IndependentCustodyEnvelope{visible:&source.visible,source:source.source.as_deref(),count:source.count}).unwrap();assert_eq!(oracle,row["wire"]);assert_eq!(source.source.as_ref().unwrap().as_ptr(),original);
+  let (view,heap)=observe(||source.projection_view(&[]).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(matches!(view,semio_framework_dsl_record::native_encoding::FieldProjectionView::Record(ids)if ids==&[0,2]));
+  let decoded=OriginalCustodyEnvelope::from_record(&record).unwrap();assert!(decoded.source.is_none());
+  let mut accepted=|_|true;let mut encode=NativeEncodeControl::new(65536,&mut accepted);let encoded=source.to_record_controlled(&mut encode).unwrap();assert!(encoded.get(1).is_none());let mut accepted=|_|true;let mut decode=NativeDecodeControl::new(65536,&mut accepted);let controlled=OriginalCustodyEnvelope::from_record_controlled(&encoded,&mut decode).unwrap();assert!(controlled.source.is_none());assert_eq!(source.source.as_ref().unwrap().as_ptr(),original);
+  let (mut owner,birth)=observe(||ControlledRetirement::new(source).unwrap_or_else(|_|panic!("original custody declares native retirement")));let mut born=birth.requested_bytes;let mut released=birth.released_bytes;
+  for _ in 0..fixture["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break;}let(step,heap)=observe(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}
+  assert!(owner.terminal_is_empty());assert_eq!(released,held.requested_bytes+born);let((),heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,fixture["terminalDropBytes"].as_u64().unwrap()as usize));
+  eprintln!("[DEBUG] originalOptionalCustodyRecord=wire2,native3 sourcePointer=unchanged absentDecode=true independentSerde=equal held={} born={} released={} terminalDrop=0",held.requested_bytes,born,released);
+ }
+}
+
+#[derive(semio_framework_value::RetireOwned,semio_framework_dsl_record_derive::DslEnum,semio_framework_dsl_record_derive::DslReceiving)]
+enum OriginalEmptyTagged {}
+#[derive(semio_framework_dsl_record_derive::DslScalar)]
+enum OriginalEmptyScalar {}
+
+#[test]
+fn original_empty_enum_native_projection_and_receiving_compile_without_values() {
+ use semio_framework_dsl_record::{DslVariants,BorrowedDslVariants,DslField,receiving::owned::DslOwnedReceivingVariants};
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../✨️derive/🧪️tests/🕳️empty/🔣️.json")).unwrap();
+ let expected=law["variantCount"].as_u64().unwrap() as usize;
+ assert_eq!(OriginalEmptyTagged::variants().len(),expected);assert_eq!(OriginalEmptyTagged::VARIANTS.len(),expected);
+ assert!(matches!(OriginalEmptyScalar::shape(),Shape::Enum(variants)if variants.len()==expected));
+ let (result,heap)=observe(||OriginalEmptyTagged::receiving_cursor(law["missingKeyword"].as_str().unwrap()));
+ assert_eq!(result.err().unwrap().kind,semio_framework_value::ValueRefusalKind::InvalidValue);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+ assert!(OriginalEmptyTagged::from_named_record(law["missingKeyword"].as_str().unwrap(),&RecordValue::default()).is_err());
+ assert_eq!(serde_json::json!([]).as_array().unwrap().len(),expected);
+ println!("[DEBUG] Original empty tagged/scalar/owned receiver compiled variants=0 impossibleValues=0 missingKeywordRefused=true System0=true");
+}

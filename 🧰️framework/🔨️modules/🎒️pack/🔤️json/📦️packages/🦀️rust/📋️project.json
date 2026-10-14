@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-pack-json-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🎒️pack/🔤️json",
   "namedInputs": {
     "default": [
@@ -11,7 +11,7 @@
   },
   "targets": {
     "test-read-policy-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -22,7 +22,7 @@
       }
     },
     "test-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -33,7 +33,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -44,7 +44,7 @@
       }
     },
     "test-tree-wire-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -55,7 +55,7 @@
       }
     },
     "test-tree-wire-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/playbook-extension-procedural-rust",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/**/*.rs",
@@ -11,7 +11,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -19,7 +19,7 @@
       }
     },
     "package": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts package",
@@ -37,7 +37,7 @@
       ]
     },
     "geometry-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
@@ -46,7 +46,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",

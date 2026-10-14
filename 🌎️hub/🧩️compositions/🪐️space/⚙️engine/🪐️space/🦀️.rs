@@ -622,7 +622,9 @@ impl ArtifactApp for SpaceApp {
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `SpaceCommand` until every call site speaks OpBinary.
-    async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<SpaceCommand, Fault> {
+    async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<SpaceCommand, Fault> {
+        if let Some(fault)=original_fault.take(){return Err(fault)}
+        let args=args.as_ref();
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         let f64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_f64);
         let string_vec = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_array).map(|items| items.iter().filter_map(DslValue::as_str).map(str::to_string).collect::<Vec<_>>()).unwrap_or_default();

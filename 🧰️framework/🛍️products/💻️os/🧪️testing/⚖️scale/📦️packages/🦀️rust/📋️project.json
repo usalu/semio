@@ -13,21 +13,21 @@
   ],
   "targets": {
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts check",
         "cwd": "{projectRoot}"
       }
     },
     "check-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts check-wasm",
         "cwd": "{projectRoot}"
       }
     },
     "build-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts build-wasm",
         "cwd": "{projectRoot}"
@@ -42,7 +42,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test",
         "cwd": "{projectRoot}"

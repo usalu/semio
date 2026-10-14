@@ -18,6 +18,8 @@ pub use component::{
     ToolRunStepReceiving,
     ToolRunNativeTickPreparation,
     ToolRunEntityColumnReceiving,
+    ToolRunProgressReceiving,
+    ToolRunReceivedProgressSource,
     ToolRunReceivedTick,
     ToolRunReceivedTickSource,
     ToolRunReceivedProgress,

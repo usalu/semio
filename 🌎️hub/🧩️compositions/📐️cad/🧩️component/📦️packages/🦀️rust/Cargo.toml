@@ -48,4 +48,5 @@ semio-hub-cad = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async = { workspace = true }

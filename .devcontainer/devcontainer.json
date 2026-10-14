@@ -37,7 +37,7 @@
   },
   "workspaceFolder": "/workspaces/semio",
   "onCreateCommand": ["sudo", "chown", "vscode:vscode", "/workspaces/semio/node_modules", "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache"],
-  "postCreateCommand": ["bun", "nx", "run", "workspace:setup"],
+  "postCreateCommand": ["bun", "repo", "run", "workspace:setup"],
   "postStartCommand": ["bun", "./📜️script.ts", "setup", "devcontainer", "start"],
   "postAttachCommand": ["bun", "./📜️script.ts", "setup", "devcontainer", "attach"],
   "hostRequirements": {
@@ -110,9 +110,6 @@
   ],
   "remoteUser": "vscode",
   "containerEnv": {
-    "NX_VERBOSE_LOGGING": "false",
-    "NX_PERF_LOGGING": "false",
-    "NX_NATIVE_LOGGING": "nx=warn",
     "DEVCONTAINER": "true",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1",
     "PLAYWRIGHT_BROWSERS_PATH": "${containerWorkspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright",
@@ -189,10 +186,6 @@
           "overrideConfigFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs"
         },
         "terminal.integrated.env.linux": {
-          "NX_VERBOSE_LOGGING": "false",
-          "NX_PERF_LOGGING": "false",
-          "NX_NATIVE_LOGGING": "nx=warn",
-          "NX_WORKSPACE_DATA_DIRECTORY": "${containerWorkspaceFolder}/.nx/workspace-data"
         },
         "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
         "eslint.workingDirectories": [

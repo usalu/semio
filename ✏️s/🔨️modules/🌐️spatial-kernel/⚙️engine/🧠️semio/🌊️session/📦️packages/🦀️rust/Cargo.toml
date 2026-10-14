@@ -35,6 +35,9 @@ neural_engine = { path = "../../../../../../../../🧰️framework/🛍️produc
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
 serde_json.workspace = true
 parry3d = "0.17"
 
@@ -49,3 +52,7 @@ path = "../../🧪️tests/🎒️mesh-session/🦀️.rs"
 [[test]]
 name = "session_lifetime"
 path = "../../🧪️tests/🏷️session-lifetime/🦀️.rs"
+
+[[test]]
+name = "session_construction"
+path = "../../🏗️construction/🧪️tests/🦀️.rs"

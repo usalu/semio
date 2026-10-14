@@ -4,7 +4,7 @@
   "sourceRoot": "✏️s/🧑‍💻dev/📋️forms",
   "targets": {
     "verify-forms-try-window-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript",

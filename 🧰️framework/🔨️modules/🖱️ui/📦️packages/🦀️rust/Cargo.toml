@@ -165,3 +165,8 @@ semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦�
 name = "original_prepared_raster_refusal"
 path = "../../🎯️targets/🧊️wgpu/🎟️prepared/♻️refusal/🧪️tests/🦀️.rs"
 required-features = ["wgpu-engine"]
+
+[[test]]
+name = "original_clipboard_ingress"
+path = "../../🧪️tests/📋️clipboard-ingress/🦀️.rs"
+required-features = ["wgpu-engine"]

@@ -6,7 +6,7 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -23,7 +23,7 @@ import type { ComponentDeliverableV1 } from "../../🖨️describe/🏷️compon
 
 
 /** 🚰️ Builds a whole catalog of `orderedTargets`: cargo and materialize each run in bounded pools
- * sized by `cargoConcurrencyLimit()` / `materializeConcurrencyLimit()` (default `semioNxParallel()`), with
+ * sized by `cargoConcurrencyLimit()` / `materializeConcurrencyLimit()` (default `semioBuildParallel()`), with
  * materialize work enqueued as each target's cargo build finishes so both stages overlap across the catalog.
  * `publishShardWorker()` (identical content for every target) is written once at the end rather than once
  * per target. Injectable fakes support tests without a real toolchain. */
@@ -80,8 +80,16 @@ function assertPluginCatalogComplete(failedPluginIds: readonly string[]): void {
 
 /** 🗂️ Regenerates the plugin registry from the committed semantic descriptors before a dev build selects its targets. */
 export async function ensurePluginRegistry(): Promise<void> {
-  const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts");
-  if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
+  const {runtimeCatalogProjectionRootV1}=await import("../📖️catalog-view/🟦️.ts");
+  const root=runtimeCatalogProjectionRootV1();if(root===undefined)return;
+  const {readFileSync}=await import("node:fs");
+  const {parseCatalogPublicationV1}=await import("../📣️publication/🟦️.ts");
+  const publication=parseCatalogPublicationV1(JSON.parse(readFileSync(join(root,"📣️publication.json"),"utf8")));
+  if(resolve(repoRoot,publication.outputRoot)!==resolve(root))throw Error("Supplied catalog publication differs from its output root");
+  const {renderCatalogFiles,publishCatalogFilesV1}=await import("../📽️projection/🟦️.ts");
+  const result=renderCatalogFiles(repoRoot,undefined,"exclude",publication);
+  publishCatalogFilesV1(root,result.files);
 }
+
 
 export { assertPluginCatalogComplete, buildPluginCatalog };

@@ -2,8 +2,26 @@
 //! checkpoint/restore and channel admission.
 use super::*;
 
+/// 🧾️ The actual current fixed receipt reaches the original caller without JSON allocation or scalar loss.
+#[test]
+fn owned_result_preserves_original_fixed_actor_receipt_without_allocation() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let hex = fixture["failureHex"].as_str().unwrap();
+    let bytes: Vec<u8> = hex.as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+    let expected = original_actor_context::OriginalActorFixedReceipt::read(&bytes).unwrap();
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decode_owned_result::<serde_json::Value>(&bytes));
+    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+    assert!(matches!(result, Err(TurnFault::ActorCall(actual)) if actual == expected));
+    for invalid in [&bytes[..4], &bytes[..bytes.len() - 1]] {
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| decode_owned_result::<serde_json::Value>(invalid));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert!(matches!(result, Err(TurnFault::Host(PluginHostError::NativeIo(error))) if error.kind == semio_framework_value::ValueRefusalKind::InvalidValue));
+    }
+    println!("[DEBUG] Original owned receipt accepted current112 scalar bytes, rejected truncation without JSON allocation");
+}
+
 fn budget() -> Budget {
-    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 500_000_000, deadline_ms: 60_000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 500_000_000, deadline_us: semio_framework_job::default_now_us().unwrap() + 60000000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
 }
 
 fn cancel_to_completion(runtime: &OwnedRuntime, instance: &mut OwnedGuestInstance, job: u64) {
@@ -25,14 +43,14 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
 
     let Some(path) = std::env::var_os("SEMIO_OWNED_COMPONENT_FIXTURE") else { return };
     let bytes = std::fs::read(path).expect("read owned component fixture");
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&bytes).expect("compile owned fixture");
     let mut progress = Vec::new();
     let descriptor = runtime.describe_observed(&compiled, budget(), |fuel, elapsed| progress.push((fuel, elapsed))).await.expect("execute owned describe");
     assert!(!descriptor.is_empty(), "owned describe returned no bytes");
     assert!(progress.last().is_some_and(|(fuel, _)| *fuel > 0), "owned describe emitted no terminal fuel observation");
     let mut deadline_progress = Vec::new();
-    let zero_deadline = Budget { deadline_ms: 0, ..budget() };
+    let zero_deadline = Budget { deadline_us: 0, ..budget() };
     assert!(matches!(runtime.describe_observed(&compiled, zero_deadline, |fuel, elapsed| deadline_progress.push((fuel, elapsed))).await, Err(TurnFault::DeadlineExceeded)));
     assert_eq!(deadline_progress.last().map(|(fuel, _)| *fuel), Some(0), "owned describe deadline emitted no exact terminal fuel observation");
 
@@ -66,85 +84,9 @@ async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_ch
 /// 🧩️ A real owned-ABI guest of channel `channel`, built byte by byte in the interpreter's own component framing: its
 /// `semio_owned_channel_version_v1` answers `channel` as JSON, allocate/deallocate are inert, and every other export traps
 /// (`unreachable`), so any frame a host served before admitting the guest would surface as a trap, not a refusal.
-fn owned_channel_guest(channel: u32) -> Vec<u8> {
-    fn uleb(mut value: u64, output: &mut Vec<u8>) {
-        loop {
-            let byte = (value & 0x7f) as u8;
-            value >>= 7;
-            output.push(if value == 0 { byte } else { byte | 0x80 });
-            if value == 0 {
-                return;
-            }
-        }
-    }
-    fn sleb(mut value: i64, output: &mut Vec<u8>) {
-        loop {
-            let byte = (value & 0x7f) as u8;
-            value >>= 7;
-            let done = (value == 0 && byte & 0x40 == 0) || (value == -1 && byte & 0x40 != 0);
-            output.push(if done { byte } else { byte | 0x80 });
-            if done {
-                return;
-            }
-        }
-    }
-    fn section(id: u8, payload: Vec<u8>, output: &mut Vec<u8>) {
-        output.push(id);
-        uleb(payload.len() as u64, output);
-        output.extend(payload);
-    }
-    let answer = channel.to_string().into_bytes();
-    let (types, bodies): (Vec<u8>, Vec<Vec<u8>>) = OwnedSemioExport::ALL
-        .iter()
-        .map(|export| match export {
-            OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
-            OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
-            OwnedSemioExport::ChannelVersion => {
-                let mut body = vec![0x00, 0x42];
-                sleb(((answer.len() as i64) << 32) | 1024, &mut body);
-                body.push(0x0b);
-                (2, body)
-            }
-            OwnedSemioExport::Checkpoint | OwnedSemioExport::Describe => (2, vec![0x00, 0x00, 0x0b]),
-            _ => (3, vec![0x00, 0x00, 0x0b]),
-        })
-        .unzip();
-    let mut core = b"\0asm\x01\0\0\0".to_vec();
-    section(1, vec![4, 0x60, 1, 0x7f, 1, 0x7f, 0x60, 2, 0x7f, 0x7f, 0, 0x60, 0, 1, 0x7e, 0x60, 2, 0x7f, 0x7f, 1, 0x7e], &mut core);
-    let mut functions = Vec::new();
-    uleb(types.len() as u64, &mut functions);
-    functions.extend(&types);
-    section(3, functions, &mut core);
-    section(5, vec![1, 0x00, 1], &mut core);
-    let mut exports = Vec::new();
-    uleb(OwnedSemioExport::ALL.len() as u64 + 1, &mut exports);
-    exports.push(6);
-    exports.extend(b"memory");
-    exports.extend([2, 0]);
-    for (index, export) in OwnedSemioExport::ALL.iter().enumerate() {
-        uleb(export.core_name().len() as u64, &mut exports);
-        exports.extend(export.core_name().as_bytes());
-        exports.push(0);
-        uleb(index as u64, &mut exports);
-    }
-    section(7, exports, &mut core);
-    let mut code = Vec::new();
-    uleb(bodies.len() as u64, &mut code);
-    for body in &bodies {
-        uleb(body.len() as u64, &mut code);
-        code.extend(body);
-    }
-    section(10, code, &mut core);
-    let mut data = vec![1, 0x00, 0x41];
-    sleb(1024, &mut data);
-    data.push(0x0b);
-    uleb(answer.len() as u64, &mut data);
-    data.extend(&answer);
-    section(11, data, &mut core);
-    let mut component = b"\0asm\x0d\0\x01\0".to_vec();
-    section(1, core, &mut component);
-    component
-}
+#[path="../🧫️fixtures/🌱️channel/🦀️.rs"]
+mod channel_fixture;
+pub(super) use channel_fixture::owned_channel_guest;
 
 /// 🤝️ LAW (audit F2/F7): both owned host paths admit a guest's app channel before serving it anything. An actor
 /// instantiation and a codec call (the origin a hub Check In fold, the SQLite export/import and the wgpu document codec run
@@ -153,7 +95,7 @@ fn owned_channel_guest(channel: u32) -> Vec<u8> {
 /// first frame.
 #[semio_framework_async_macros::async_test]
 async fn owned_hosts_admit_a_guest_channel_before_any_frame() {
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let input = OwnedCodecInput { artifact_schema: "s.fixture.document", document_id: "", pack: &[], spr: &[], ops: &[] };
     let refusal = |guest: u32, fault: &semio_framework::Fault| {
         assert_eq!(fault.code.0, semio_framework_os_kernel::CHANNEL_MISMATCH_CODE, "guest {guest}");

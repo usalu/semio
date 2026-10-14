@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/pets-react",
   "version": "0.1.0",
   "description": "pets · React web renderer of @semio-tech/pets: the inline SVG depiction, the DOM survey, the pacer and the decorative pet layer",

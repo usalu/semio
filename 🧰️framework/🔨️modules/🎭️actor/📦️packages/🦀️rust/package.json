@@ -28,8 +28,10 @@
   },
   "bundleKind": "library",
   "scripts": {
-    "test-original-receiving-source": "nx run @semio-tech/framework-actor-rs:test-original-receiving-source",
-    "test-original-receiving-native": "nx run @semio-tech/framework-actor-rs:test-original-receiving-native"
+    "test-original-receiving-source": "bun repo run @semio-tech/framework-actor-rs:test-original-receiving-source",
+    "test-original-receiving-native": "bun repo run @semio-tech/framework-actor-rs:test-original-receiving-native",
+    "test-original-owned-async-source": "bun repo run @semio-tech/framework-actor-rs:test-original-owned-async-source",
+    "test-original-owned-async-native": "bun repo run @semio-tech/framework-actor-rs:test-original-owned-async-native"
   },
   "nx": {
     "includedScripts": []

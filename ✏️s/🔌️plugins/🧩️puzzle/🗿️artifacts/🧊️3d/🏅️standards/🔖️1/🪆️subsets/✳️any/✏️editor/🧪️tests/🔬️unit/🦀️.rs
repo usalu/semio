@@ -2561,7 +2561,7 @@ async fn app_definition_declares_its_four_panel_tabs() {
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_bridges_to_a_command() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_tests).await;
-    assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None).is_err());
+    assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None, None).is_err());
 }
 
 /// 🌉️ Every declared app action (framework-injected verbs never reach `Puzzle3dCommand::from_action`
@@ -6338,7 +6338,7 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
         ("setSelectionHidden", "hidden", json!({ "entity": "object", "hidden": true, "ids": [object_id.clone()] })),
         ("setSelectionLocked", "locked", json!({ "entity": "object", "ids": [object_id.clone()], "locked": true })),
     ] {
-        assert!(Puzzle3dPlayApp::command_from_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(Puzzle3dPlayApp::command_from_action(verb, Some((semio_framework_pack_json::to_dsl_value(&bare)).clone()), None).is_err(), "{verb} without its {flag} value must be refused");
         let (first, settled) = dispatch_reporting(&mut app, verb, Some(&args), None).await;
         first.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         let rows = history_row_labels(&settled);

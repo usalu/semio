@@ -1,15 +1,13 @@
 /** 🗞️ The TS twin of the native renderer's shell-message demux law
  * (`📺️renderer/🧑‍🎨engine/🧪️tests/🗞️typed-result-page/🦀️.rs`), on the SAME neutral oracle
- * `🔌️plugin/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json`.
+ * `./🧫️fixtures/🔣️.json`, owned by this General byte protocol.
  *
  * ⚖️ `route_exchange_output` multiplexes a mounted typed operation's result pages onto the very
  * endpoint that carries `AppFrame` replies, so a host that claims every `Shell{instance}` payload as
  * a frame hands the page magic to an `AppFrame` decoder and reads its `'s'` as a frame tag
  * (`decodeAppFrame: unknown tag 115`). These laws pin the discrimination, the acknowledgement every
  * page owes, and the lane ceiling the guest's own mesh publication lane sits under. */
-type TestSource = { readonly url: string };
-
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any): Promise<void> {
   const {
     scanTypedOperationPages,
     shellFrameBytes,
@@ -28,12 +26,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   } = dependencies;
   const { describe, expect, it } = vitest;
   const { readFileSync } = await import("node:fs");
-  const { fileURLToPath } = await import("node:url");
-  const { dirname, join } = await import("node:path");
+  const { default: Ajv } = await import("ajv");
 
   type Token = { readonly receiver: number; readonly operation: number; readonly generation: number; readonly sequence: number; readonly attempt: number };
   type Message = { readonly name: string; readonly kind: "page" | "appFrame"; readonly lane?: number; readonly payload?: string; readonly appFrameTag?: number; readonly instanceId?: number };
-  const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json"), "utf8")) as {
+  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url), "utf8")) as {
     readonly page: { readonly pageMagic: string; readonly ackMagic: string; readonly headerBytes: number; readonly tokenBytes: number; readonly laneOffset: number; readonly lengthOffset: number; readonly maxPayloadBytes: number; readonly pageMagicFirstByte: number };
     readonly lanes: readonly { readonly name: string; readonly tag: number }[];
     readonly invalidTags: readonly number[];
@@ -65,6 +62,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const shellMessage = (instanceId: number, payload: Uint8Array) => ({ tag: "send-message", val: { target: { tag: "shell", val: instanceId }, payload: [...payload] } });
 
   describe("🗞️ one shell endpoint, two wire languages", () => {
+    it("defining General corpus is closed and agrees with independent byte framing", () => {
+      const schema = JSON.parse(readFileSync(new URL("./🧫️fixtures/🧬️.json", import.meta.url), "utf8"));
+      expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+      expect(new Ajv({ strict: true }).validate(schema, { ...fixture, invalidTags: [14] })).toBe(false);
+      const bytes = Buffer.alloc(fixture.page.headerBytes + 2);
+      const token = fixture.shellMessageStream.token;
+      bytes.writeUInt32LE(token.receiver, 0); bytes.writeBigUInt64LE(BigInt(token.operation), 4); bytes.writeBigUInt64LE(BigInt(token.generation), 12); bytes.writeUInt32LE(token.sequence, 20); bytes.writeUInt8(token.attempt, 24); bytes.writeUInt8(fixture.terminalTag, 25); bytes.writeUInt32LE(2, 26); bytes.write("{}", 30);
+      const framed = Buffer.concat([Buffer.from(fixture.page.pageMagic), bytes]);
+      expect([...framed]).toEqual([...encodePage(token, fixture.terminalTag, "{}")]);
+      const actual = typedOperationResult(shellMessage(token.receiver, framed));
+      expect(actual.token).toEqual({ ...token, operation: BigInt(token.operation), generation: BigInt(token.generation) });
+      expect(actual.lane).toBe(fixture.terminalTag);
+    });
     it("declares the production page layout the guest writes", () => {
       expect(new TextDecoder().decode(TYPED_OPERATION_PAGE_MAGIC)).toBe(fixture.page.pageMagic);
       expect(new TextDecoder().decode(TYPED_OPERATION_ACK_MAGIC)).toBe(fixture.page.ackMagic);

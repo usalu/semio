@@ -5,7 +5,7 @@
   "sourceRoot": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
   "targets": {
     "journey-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts journey-check",
@@ -14,7 +14,7 @@
       "outputs": []
     },
     "creation-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts creation-check",
@@ -23,7 +23,7 @@
       "outputs": []
     },
     "collaboration-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts collaboration-check",
@@ -32,7 +32,7 @@
       "outputs": []
     },
     "collaboration-acceptance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu",
@@ -64,7 +64,7 @@
       }
     },
     "native-guest-journey-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts native-guest-journey-check",
@@ -73,7 +73,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test",

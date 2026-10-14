@@ -149,7 +149,7 @@ async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
             args["ids"] = serde_json::json!(["n20_l1"]);
             let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire args parse");
             let action = dispatch["action"].as_str().expect("action");
-            let command = <EditorApp<Fem3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action(action, Some(&args)).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
+            let command = <EditorApp<Fem3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action(action, Some((args).clone()), None).await.unwrap_or_else(|fault| panic!("{name}: {action} decodes from the host's wire args: {}", fault.message));
             edits += dispatch_rows(&mut app, command).await.len();
         }
         let after = node_position(&app, "n20_l1");

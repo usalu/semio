@@ -150,14 +150,14 @@ export async function installDashboard(packageRoot:string,root:string,options:Da
   } finally {if(expiry)clearTimeout(expiry);}
 }
 
-/** 🧭️ Recognizes native installed-tool launches while retaining Nx for authoring tasks. */
+/** 🧭️ Recognizes native installed-tool launches while retaining the build runner for authoring tasks. */
 export function dashboardInvocation(args:readonly string[]):string[]|undefined {
   if(args[0]!=="run")return;
   const prefix="@semio-tech/repo-dashboard-rs:",target=args[1]?.startsWith(prefix)?args[1].slice(prefix.length):undefined;
   if(!target||!["run","daemon","workflow","preferences"].includes(target))return;
   const rest=args.slice(2),separator=rest.indexOf("--"),options=separator<0?rest:rest.slice(0,separator);
-  if(options.some(option=>/^--(?:graph|batch|parallel|excludeTaskDependencies)(?:=|$)/.test(option)))return;
-  const forwarded=options.filter(option=>!/^--(?:outputStyle|output-style)=stream$/.test(option)&&!["--skip-nx-cache","--skipNxCache"].includes(option));
+  if(options.some(option=>/^--(?:graph|batch|parallel|exclude-dependencies)(?:=|$)/.test(option)))return;
+  const forwarded=options.filter(option=>!/^--(?:output)=stream$/.test(option)&&!["--skip-cache"].includes(option));
   return [...(target==="run"?[]:[target]),...forwarded,...(separator<0?[]:rest.slice(separator+1))];
 }
 

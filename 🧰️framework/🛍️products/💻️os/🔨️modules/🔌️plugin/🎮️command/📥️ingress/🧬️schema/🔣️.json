@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "address",
+        "arguments"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "pluginId",
+                "appId",
+                "modeId",
+                "windowKindId",
+                "windowInstanceId",
+                "actionId"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "pluginId": {
+                  "type": "string"
+                },
+                "appId": {
+                  "type": "string"
+                },
+                "modeId": {
+                  "type": "string"
+                },
+                "windowKindId": {
+                  "type": "string"
+                },
+                "windowInstanceId": {
+                  "type": "string"
+                },
+                "actionId": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "owner",
+                "commandId"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "owner": {
+                  "oneOf": [
+                    {
+                      "const": "os"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "plugin"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "plugin": {
+                          "type": "object",
+                          "required": [
+                            "pluginId"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "pluginId": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "app"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "app": {
+                          "type": "object",
+                          "required": [
+                            "pluginId",
+                            "appId"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "pluginId": {
+                              "type": "string"
+                            },
+                            "appId": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "mode"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "mode": {
+                          "type": "object",
+                          "required": [
+                            "pluginId",
+                            "appId",
+                            "modeId"
+                          ],
+                          "additionalProperties": false,
+                          "properties": {
+                            "pluginId": {
+                              "type": "string"
+                            },
+                            "appId": {
+                              "type": "string"
+                            },
+                            "modeId": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "commandId": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "arguments": {
+          "type": "object"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "args": {}
+      }
+    }
+  ]
+}

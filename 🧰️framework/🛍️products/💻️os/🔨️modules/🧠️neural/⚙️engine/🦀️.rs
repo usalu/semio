@@ -25,6 +25,9 @@ pub use input::{BudgetedInputMerge,BudgetedOwnedEntry};
 #[path = "⏱️evaluation/🦀️.rs"]
 pub mod evaluation;
 pub use evaluation::{BudgetedEvalState,BudgetedEvalStep};
+#[path="🌱️cache/🦀️.rs"]
+pub mod cache_insert;
+pub use cache_insert::NeuralCacheInsert;
 #[path="🌳️tree/📋️copy/🦀️.rs"]
 pub mod tree_copy;
 pub use tree_copy::BudgetedTreeCopy;
@@ -37,7 +40,7 @@ pub use cold::{ColdOwner, ColdRetire};
 
 #[path = "📔️registry/🦀️.rs"]
 pub mod registry;
-pub use registry::{RegistryIdentity,RegistryRetirement,RegistryLeaseRetirement,SharedRegistry};
+pub use registry::{RegistryIdentity,RegistryRetirement,RegistryLeaseRetirement,SharedRegistry,SharedRegistryIssuer,SharedRegistryAdmissionStep};
 #[path = "📔️registry/✅️output/🦀️.rs"]
 mod output;
 pub use output::OperatorFinishCursor;
@@ -189,6 +192,9 @@ impl semio_framework_pack_json::JsonWriteSource for Dictionary {
         dictionary.entry_at_rank(index).map(|(key,_)|key.as_str()).ok_or_else(||ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"JSON dictionary member is absent"))
     }
 }
+
+#[path="📤️projection/🦀️.rs"]
+mod dictionary_projection;
 
 impl FromValue for Dictionary {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -1161,6 +1167,24 @@ impl std::fmt::Display for EvalError {
 impl std::error::Error for EvalError {}
 impl From<ValueError> for EvalError{fn from(error:ValueError)->Self{Self::Retained(error)}}
 
+/// 🪢️ Keeps the complete evaluation refusal or original native turn failure with its paid receipt.
+#[derive(Debug,semio_framework_value::RetireOwned)]
+pub enum OperatorWorkFailure{
+ Evaluation{primary:EvalError,retained:RetainedCloneProgress,receipt_refusal:Option<ValueError>},
+ Original(semio_framework_job::OriginalTurnFailure),
+}
+impl OperatorWorkFailure{
+ /// 🧾️ Posts one genuine failed evaluation event without formatting or replacing its original primary.
+ pub fn debit_evaluation(primary:EvalError,retained:RetainedCloneProgress,cx:&mut semio_framework_job::StepContext<'_>)->Self{Self::Evaluation{primary,retained,receipt_refusal:cx.consume_retained(retained).err()}}
+ /// 📏️ Borrows the same failed producer's actual physical effects.
+ pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Evaluation{retained,..}=>*retained,Self::Original(failure)=>failure.primary.retained_progress()}}
+}
+impl From<EvalError> for OperatorWorkFailure{fn from(primary:EvalError)->Self{let retained=match &primary{EvalError::Retained(primary)=>primary.retained_progress(),_=>Default::default()};Self::Evaluation{primary,retained,receipt_refusal:None}}}
+impl From<semio_framework_job::OriginalTurnFailure> for OperatorWorkFailure{fn from(primary:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(primary)}}
+impl From<ValueError> for OperatorWorkFailure{fn from(primary:ValueError)->Self{Self::Original(primary.into())}}
+#[path="⚠️failure/🦀️.rs"]
+mod original_failure_projection;
+
 /// 📥️ Returns the same original input when an implementation declares no resumable plan.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PendingOperatorMetadata{pub extension_id:String,pub operator_id:String}
@@ -1209,7 +1233,7 @@ pub enum OperatorJobStep {
 /// (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
 pub trait OperatorJob: Send {
     /// ⏱️ Advances by at most `budget` units under independently supplied physical credits, preserving the actual receipt through terminal output.
-    fn step(&mut self, budget: usize, grant: RetainedCloneGrant) -> Result<(OperatorJobStep, RetainedCloneProgress), EvalError>;
+    fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(OperatorJobStep,RetainedCloneProgress),OperatorWorkFailure>;
     /// 🧾️ Preserves the actual last normal receipt through successful and failed child turns.
     fn normal_step_progress(&self)->RetainedCloneProgress;
     fn next_step_copy_byte_demand(&self) -> Result<usize, ValueError>;
@@ -1995,6 +2019,8 @@ impl NeuralCache {
         if let Some((_,value))=state.entries.insert(key,(epoch,value)) {state.displaced.push(value);}
         Ok(())
     }
+    /// 🔎️ Reads the original cached Dictionary without manufacturing an alias or payload copy.
+    pub fn inspect_original<R>(&self,key:u64,read:impl FnOnce(&Dictionary)->R)->Option<R>{let state=self.state.try_lock().ok()?;state.entries.get(&key).map(|(_,value)|read(value))}
     pub fn get(&self,key:u64)->Option<Dictionary> {
         let epoch=self.epoch.load(Ordering::Relaxed);
         let Ok(mut state)=self.state.try_lock() else {return None;};

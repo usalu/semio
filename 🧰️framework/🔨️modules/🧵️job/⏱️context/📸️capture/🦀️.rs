@@ -1,9 +1,9 @@
 //! 📸️ Captured original callers retain paid aliases and exclusively receive genuine supplier turns.
 use super::*;
 use semio_framework_async::{CancelTokenRetirement,CancelTokenRetirementError};
-#[path="🧳️source/🦀️.rs"]
+#[path="../🎟️source/🦀️.rs"]
 mod owned_source;
-pub use owned_source::{OriginalCallerSourceParent,OriginalCallerSourceLoan};
+pub use owned_source::{OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn};
 
 pub(super) struct OriginalCallerSource<'source>{pub(super) ledger:&'source Arc<JobPayloadOperationLedger>,pub(super) cancel:&'source CancelToken,pub(super) operation:OperationId,pub(super) generation:Generation,pub(super) clock:fn()->Option<u64>,pub(super) deadline:u64}
 static NEXT_CALLER_ISSUER:AtomicU64=AtomicU64::new(1);

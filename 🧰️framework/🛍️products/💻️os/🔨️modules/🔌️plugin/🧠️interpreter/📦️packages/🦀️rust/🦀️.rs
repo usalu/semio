@@ -22,6 +22,7 @@ pub(crate) mod test_native_authority;
 #[global_allocator]
 static INTERPRETER_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 pub use runtime::{
+    OriginalGuestJobCall,OwnedActorStartup,OwnedActorStartupCall,OwnedActorStartupStatus,
     decode_guest_fault_bytes, decode_owned_result, identity_turn_fault, operation, owned_engine_identity, validate_cold_page, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, IoEntryRouteConflict, IoRouteConflict, JobBudget, JobStep, OwnedCompiledGuest, OwnedGuestInstance, OwnedInvocation, OwnedRuntime, OwnedSnapshotInput,
     OwnedSnapshotOperation, PluginHostError, TurnFault, GUEST_DIAGNOSTICS_CAPACITY_BYTES, GUEST_FAULT_MAXIMUM_BYTES, OWNED_STEP_FUEL,
 };

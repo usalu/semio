@@ -114,7 +114,7 @@ pub const JSON_SCHEMA_DERIVED_KEY: &str = "x-semio-derived";
 /// redeclaring it (mirrors [`GRAPHQL_STATE_PREAMBLE`]'s composition role for `@state`).
 pub const GRAPHQL_COMPOSITION_PREAMBLE: &str = "\
 type ArtifactLink { targetId: String! kind: String! }\n\
-directive @child(kind: String!) on FIELD_DEFINITION\n\
+directive @child(kind: String, capability: String) on FIELD_DEFINITION\n\
 directive @link(roles: [String!]) on FIELD_DEFINITION\
 ";
 //#endregion 🔖️ArtifactCompositionSpec

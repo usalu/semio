@@ -4,8 +4,8 @@ export type { SemioImageSnapshot } from "../../../../../../../../🗄️stdio/�
 import { parseIntrinsicValue, type IntrinsicValue } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-import { type Binary64, type Binary32, binary64Value } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64, parseBinary32 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64, type Binary32, binary64Value } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64, parseBinary32 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 
 export interface RasterArtifact {
   schema: string;

@@ -12,7 +12,7 @@ import vectorRows from "../../../../../../🧪️tests/🧫️fixtures/🎬️sc
 import {DocumentVectorJob} from "../../../../../🎬️scene/📋️prepare/🟦️.ts";
 import type {DrawingArtifact} from "../../../../../🟦️.ts";
 import {ScenePlanCloseJob} from "../../../../../🎬️scene/🧹️retire/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {PaintedPathHitJob,type PaintedPathQuery} from "../../🟦️.ts";
 import type {PathGeometrySegment} from "../../../../../🟦️.ts";
 const progressValid=new Ajv({strict:true}).compile(schema.$defs.PaintedPathQueryProgress),hitValid=new Ajv({strict:true}).compile(schema.$defs.PaintedPathQueryHit);

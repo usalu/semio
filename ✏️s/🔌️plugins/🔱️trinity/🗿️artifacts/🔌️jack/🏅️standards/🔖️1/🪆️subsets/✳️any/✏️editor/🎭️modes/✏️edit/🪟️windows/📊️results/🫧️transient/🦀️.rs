@@ -76,14 +76,13 @@ fn query_result_retained_bytes(result: &crate::ast::QueryResult) -> Result<usize
         }
     }
     if let Some(fixture) = result.graph_snapshot.as_deref() {
-        let scene = crate::jack_working_scene(fixture)?;
-        bytes = bytes.saturating_add(size_of::<crate::JackSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
-        for node in &scene.nodes {
+        bytes = bytes.saturating_add(size_of::<crate::ast::JackQueryGraphSnapshot>()).saturating_add(fixture.name.len()).saturating_add(fixture.manifest_id.as_ref().map_or(0, String::len));
+        for node in &fixture.nodes {
             bytes = bytes.saturating_add(size_of::<crate::Node>()).saturating_add(node.id.len()).saturating_add(node.kind.len()).saturating_add(node.name.len());
             bytes = node.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
             bytes = node.ports.iter().fold(bytes, |bytes, port| bytes.saturating_add(size_of::<crate::Port>()).saturating_add(port.id.len()).saturating_add(port.kind.len()));
         }
-        for edge in &scene.edges {
+        for edge in &fixture.edges {
             bytes = bytes.saturating_add(size_of::<crate::Edge>()).saturating_add(edge.id.len()).saturating_add(edge.kind.len()).saturating_add(edge.source.len()).saturating_add(edge.target.len());
             bytes = edge.properties.iter().fold(bytes, |bytes, (key, value)| bytes.saturating_add(key.len()).saturating_add(property_value_retained_bytes(value)));
         }

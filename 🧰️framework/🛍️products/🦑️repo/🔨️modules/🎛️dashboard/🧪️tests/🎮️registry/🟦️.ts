@@ -13,21 +13,23 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { installedDashboard } from "../../📦️installation/🟦️.ts";
+import {Oracle} from "../🗺️coverage/🔮️oracle/🟦️.ts";
 
 type Json = Record<string, any>;
 const here = import.meta.dir;
 const dashboard = resolve(here, "../..");
 const repo = resolve(dashboard, "../../../../..");
 const schema = JSON.parse(readFileSync(join(dashboard, "🧬️schema/🎮️registry/🔣️.json"), "utf8")) as Json;
-const fixture = JSON.parse(readFileSync(join(dashboard, "🧫️fixtures/🎮️registry/🏗️workspace.json"), "utf8")) as { files: Json[] };
+const fixture = JSON.parse(readFileSync(join(dashboard, "🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json"), "utf8")) as { files: Json[] };
 const ajv = new (Ajv2020 as any)({ allErrors: true, strict: false });
 ajv.addSchema(schema);
 const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`) as ((value: unknown) => boolean) & { errors?: Json[] };
 
 // #region 🔖️Binary
 function binary(): string {
-  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo);
+  return process.env.SEMIO_DASHBOARD_BIN ?? installedDashboard(repo,readBuildMode(process.env.SEMIO_BUILD_MODE));
 }
 
 let root = "";
@@ -45,10 +47,23 @@ beforeAll(() => {
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 function semio(args: string[], env: Record<string, string> = {}): { code: number; out: string; err: string } {
-  const run = Bun.spawnSync([binary(), ...args], { cwd: root, env: { ...process.env, ...env, SEMIO_DASHBOARD_GRAPH: "fresh" }, stdout: "pipe", stderr: "pipe" });
+  const run = Bun.spawnSync([binary(), ...args], { cwd: root, env: { ...process.env, ...env, SEMIO_DASHBOARD_GRAPH: "fresh", SEMIO_PLUGIN_CATALOG: join(root,"catalog") }, stdout: "pipe", stderr: "pipe" });
   return { code: run.exitCode, out: run.stdout.toString(), err: run.stderr.toString() };
 }
 const json = (path: string): Json => JSON.parse(files.get(path)!) as Json;
+
+test("the independent oracle receives the authored catalog and refuses configured absence",()=>{
+  const rows=json("catalog/🚀️playgrounds.json") as unknown as Json[];
+  expect(new Oracle(root).playgrounds).toEqual([]);
+  expect(new Oracle(root,join(root,"catalog")).playgrounds).toEqual(rows);
+  expect(()=>new Oracle(root,join(root,"missing-catalog"))).toThrow();
+  expect(()=>new Oracle(root,"catalog")).toThrow();
+  const alternate=join(root,"alternate-catalog");mkdirSync(alternate);writeFileSync(join(alternate,"🚀️playgrounds.json"),JSON.stringify([{...rows[0],variant:"alternate"}]));
+  expect(new Oracle(root,alternate).playgrounds.map(row=>row.variant)).toEqual(["alternate"]);
+  writeFileSync(join(alternate,"🚀️playgrounds.json"),"{}");expect(()=>new Oracle(root,alternate)).toThrow();
+  writeFileSync(join(alternate,"🚀️playgrounds.json"),"malformed");expect(()=>new Oracle(root,alternate)).toThrow();
+  console.log("[DEBUG] independent workspace oracle uses explicit alternate catalog; absentempty, configured missing/relative/nonarray/malformed refused");
+});
 // #endregion 🔖️Binary
 
 // #region 🔖️Declarations
@@ -98,9 +113,9 @@ const FIXED_REPO = ["goals.list", "goals.tree", "tree.monorepo", "tree.goal", "t
 /** 🧭️ The command ids the fixture workspace must offer, derived without the registry. */
 function expectedIds(): string[] {
   const ids = new Set<string>();
-  const graph = json(".nx/workspace-data/project-graph.json").nodes as Json;
+  const graph = json(".🧬semio/🦑️repo/⚡️cache/build/graph.json").projects as Json;
   const projects = new Map<string, { root: string; targets: Map<string, Json> }>();
-  for (const [name, node] of Object.entries(graph)) if (existsSync(join(root, ...(node.data.root as string).split("/")))) projects.set(name, { root: node.data.root, targets: new Map(Object.entries(node.data.targets ?? {})) });
+  for (const [name, node] of Object.entries(graph)) if (existsSync(join(root, ...(node.root as string).split("/")))) projects.set(name, { root: node.root, targets: new Map(Object.entries(node.targets ?? {})) });
   for (const path of manifestPaths()) {
     const manifest = json(path);
     const project = projects.get(manifest.name) ?? { root: dirname(path) === "." ? "." : dirname(path), targets: new Map() };
@@ -112,7 +127,7 @@ function expectedIds(): string[] {
     for (const group of block.groups ?? []) ids.add(`group:${manifest.name}/${group.id}`);
   }
   for (const [name, project] of projects) for (const target of project.targets.keys()) ids.add(`${name}:${target}`);
-  for (const row of json("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json") as unknown as Json[]) ids.add(`playground:${row.variant}`);
+  for (const row of json("catalog/🚀️playgrounds.json") as unknown as Json[]) ids.add(`playground:${row.variant}`);
   for (const path of files.keys()) {
     const ticket = /\.🧬semio\/🦑️repo\/🎫️tickets\/🎆️(\d\d)\/🌙️(\d\d)\/☀️(\d\d)\/([^/]+)\/🎫️ticket\.json$/u.exec(path);
     if (!ticket) continue;
@@ -152,7 +167,7 @@ test("a search narrows by every word and the default listing leaves closed ticke
 // #endregion 🔖️Listing
 
 // #region 🔖️Resolver
-const RUNNER_ENV: Record<string, string> = { NX_NATIVE_COMMAND_RUNNER: "false", NX_TUI: "false" };
+const RUNNER_ENV: Record<string, string> = { SEMIO_BUILD_TERMINAL: "false" };
 const VERBS = ["setup", "start", "dev", "serve", "watch", "activate", "prepare", "run", "build", "package", "test", "smoke", "check", "typecheck", "verify", "gate", "lint", "format", "generate", "publish", "deploy", "preview", "bench", "clean"];
 const verbOf = (name: string, declared?: string): string => declared ?? (VERBS.includes(name.split(/[^a-z0-9]/u)[0]!) ? name.split(/[^a-z0-9]/u)[0]! : "task");
 const rootBlock = (): Json => json("📋️project.json").metadata.semio.dashboard;
@@ -172,7 +187,7 @@ function axesFor(verb: string, owned: Json[], nx: boolean): Json[] {
 
 /** 🎛️ Applies the parameters in order (fleet-plan §2.2 "effect semantics") and returns what they contribute. */
 function apply(parameters: Json[], chosen: Record<string, string | boolean | number>, values: Record<string, string>, base: Record<string, string>) {
-  const out = { env: {} as Record<string, string>, nxFlags: [] as string[], args: [] as string[] };
+  const out = { env: {} as Record<string, string>, buildFlags: [] as string[], args: [] as string[] };
   for (const parameter of parameters) {
     const typed = chosen[parameter.id];
     let value: string | undefined = typed === undefined ? undefined : String(typed);
@@ -186,12 +201,12 @@ function apply(parameters: Json[], chosen: Record<string, string | boolean | num
       const entry = (parameter.values as Json[]).find((candidate) => candidate.id === value);
       if (!entry) throw new Error(`no value ${value}`);
       Object.assign(out.env, entry.env ?? {});
-      out.nxFlags.push(...(entry.nxFlags ?? []));
+      out.buildFlags.push(...(entry.buildFlags ?? []));
       out.args.push(...(entry.args ?? []));
     } else if (parameter.kind === "flag") {
       if (value !== "true") continue;
       Object.assign(out.env, parameter.env ?? {});
-      out.nxFlags.push(...(parameter.nxFlags ?? []));
+      out.buildFlags.push(...(parameter.buildFlags ?? []));
       out.args.push(...(parameter.args ?? []));
     } else if (parameter.valueEnv) out.env[parameter.valueEnv] = value;
     else if (parameter.valueFlag) out.args.push(...(parameter.valueFlag.endsWith("=") ? [`${parameter.valueFlag}${value}`] : [parameter.valueFlag, value]));
@@ -263,8 +278,8 @@ function resolveLaunch(id: string, chosen: Pins, extra: string[], extraEnv: Reco
     const group = projectBlock(owner).groups.find((entry: Json) => entry.id === name) as Json;
     const verb = verbOf(group.targets[0]);
     const effects = apply(axesFor(verb, [], true), chosen, values, env);
-    const flags = [...new Set(effects.nxFlags)];
-    return [{ commandId: id, cmd: "bun", args: ["nx", "run-many", "-t", group.targets.join(","), "-p", group.projects.join(","), ...flags, ...(effects.args.length + extra.length ? ["--", ...effects.args, ...extra] : [])], cwd: "", env: { ...RUNNER_ENV, ...effects.env, ...extraEnv }, requires: [], verb }];
+    const flags = [...new Set(effects.buildFlags)];
+    return [{ commandId: id, cmd: "bun", args: ["repo", "run-many", "-t", group.targets.join(","), "-p", group.projects.join(","), ...flags, ...(effects.args.length + extra.length ? ["--", ...effects.args, ...extra] : [])], cwd: "", env: { ...RUNNER_ENV, ...effects.env, ...extraEnv }, requires: [], verb }];
   }
   const configuration = id.split(":").length === 3 ? id.split(":")[2] : undefined;
   const project = configuration ? id.slice(0, id.lastIndexOf(":", id.lastIndexOf(":") - 1)) : id.slice(0, id.lastIndexOf(":"));
@@ -277,8 +292,8 @@ function resolveLaunch(id: string, chosen: Pins, extra: string[], extraEnv: Reco
   const ready = resolveReady(declared.ready, env, values, parameters);
   for (const key of Object.keys(env)) env[key] = expand(env[key]!, values, ready.port);
   const args = [...effects.args.map((word) => expand(word, values, ready.port)), ...extra];
-  const flags = [...new Set(effects.nxFlags)];
-  return [{ commandId: id, cmd: "bun", args: ["nx", "run", id, ...flags, ...(args.length ? ["--", ...args] : [])], cwd: "", env: { ...RUNNER_ENV, ...env, ...lateEnv(extraEnv, values, ready.port) }, ready: ready.ready, requires: resolveRequires(declared.requires), verb }];
+  const flags = [...new Set(effects.buildFlags)];
+  return [{ commandId: id, cmd: "bun", args: ["repo", "run", id, ...flags, ...(args.length ? ["--", ...args] : [])], cwd: "", env: { ...RUNNER_ENV, ...env, ...lateEnv(extraEnv, values, ready.port) }, ready: ready.ready, requires: resolveRequires(declared.requires), verb }];
 }
 
 function ticketCompound(rest: string): boolean {
@@ -292,14 +307,14 @@ function splitOwner(kind: string, rest: string): [string, string] {
 
 /** 🛝️ The playground facts the registry derives from the catalog row (fleet-plan §2.2.1 amendment 8). */
 function resolvePlayground(id: string, variant: string, chosen: Pins, extra: string[], extraEnv: Record<string, string>): Resolved {
-  const row = (json("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json") as unknown as Json[]).find((entry) => entry.variant === variant)!;
+  const row = (json("catalog/🚀️playgrounds.json") as unknown as Json[]).find((entry) => entry.variant === variant)!;
   const renderer = String(chosen.renderer ?? "react");
   const slot = chosen["user-slot"] === undefined ? undefined : Number(chosen["user-slot"]);
   const key = renderer === "react" ? "react" : "wgpu";
   const port = slot === undefined ? row.ports[key] : row.userPorts[key][slot - 1];
   const env: Record<string, string> = { SEMIO_PLUGIN: variant, SEMIO_RENDERER: key, S_OS_PORT: String(extraEnv.S_OS_PORT ?? port), ...(row.app ? { SEMIO_APP_ID: row.app, VITE_SEMIO_APP_ID: row.app } : {}) };
   const target = renderer === "react" ? `dev-${variant}-react-dev` : renderer === "wgpu-native" ? `run-${variant}-native-dev` : `dev-${variant}-wgpu-dev`;
-  const args = ["nx", "run", `@semio-tech/framework-os-dev:${target}`];
+  const args = ["repo", "run", `@semio-tech/framework-os-dev:${target}`];
   if (chosen.example !== undefined) {
     const slug = (row.examples as string[]).find((candidate) => candidate === chosen.example || candidate.split("️").pop() === chosen.example)!;
     env.PLAYGROUND_LOCKED_EXAMPLE_ID = slug;
@@ -445,3 +460,17 @@ test("Bun's own XXH3 gives the vectors the registry pins for the Nx graph-reuse 
   }
 });
 // #endregion 🔖️Hash
+
+/** 🏗️ The language-neutral publication fixture is validated independently by Ajv. */
+test("the build graph publication and build flags have no backend-specific public shape", () => {
+  const graph = json(".🧬semio/🦑️repo/⚡️cache/build/graph.json");
+  const validate = validator("BuildGraph");
+  expect(validate(graph), JSON.stringify(validate.errors)).toBe(true);
+  expect(validate({ nodes: {}, dependencies: {} })).toBe(false);
+  expect(validate({ ...graph, version: 2 })).toBe(false);
+  const manifest = validator("ProjectManifest");
+  const project = (effect: Json) => ({ metadata: { semio: { dashboard: { parameters: [{ id: "cache", kind: "flag", ...effect }] } } } });
+  expect(manifest(project({ buildFlags: ["--skip-cache"] }))).toBe(true);
+  expect(manifest(project({ nxFlags: ["--skip-nx-cache"] }))).toBe(false);
+  console.log("[DEBUG] neutral graph fixture and buildFlags schema accepted; backend graph and obsolete effect rejected");
+});

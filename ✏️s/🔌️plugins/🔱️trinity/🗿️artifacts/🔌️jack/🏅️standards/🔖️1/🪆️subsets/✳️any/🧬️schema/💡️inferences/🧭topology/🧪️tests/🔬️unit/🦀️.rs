@@ -23,7 +23,7 @@ fn edge(id: &str, source: &str, target: &str) -> Edge {
 
 fn chain_snapshot() -> JackSnapshot {
     // root -e1- mid -e2- leaf: a 3-node chain.
-    JackSnapshot::with_content("trinity.graph".into(), "chain".into(), None, Default::default(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
+    JackSnapshot::with_content::<crate::test_support::FixtureComposition>("trinity.graph".into(), "chain".into(), None, Default::default(), Default::default(), JackWorkingScene { nodes: vec![node("root"), node("mid"), node("leaf")], edges: vec![edge("e1", "root@out", "mid@in"), edge("e2", "mid@out", "leaf@in")] }, Some("root".into()))
 }
 //#endregion 🧸️Fixtures
 
@@ -44,7 +44,7 @@ async fn a_cycle_is_reported_as_not_cycle_free() {
     let snapshot = chain_snapshot();
     let mut edges = snapshot.edges().expect("valid retained child edges");
     edges.push(edge("e3", "leaf@out", "root@in"));
-    let snapshot = JackSnapshot::with_content(snapshot.schema.clone(), snapshot.name.clone(), snapshot.manifest_id.clone(), snapshot.manifest.clone(), snapshot.camera.clone(), JackWorkingScene { nodes: snapshot.nodes().expect("valid retained child nodes"), edges: edges }, snapshot.root_node_id.clone());
+    let snapshot = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(snapshot.schema.clone(), snapshot.name.clone(), snapshot.manifest_id.clone(), snapshot.manifest.clone(), snapshot.camera.clone(), JackWorkingScene { nodes: snapshot.nodes().expect("valid retained child nodes"), edges: edges }, snapshot.root_node_id.clone());
     let topology = compute_topology(&snapshot).expect("valid retained child inference fixture");
     assert!(!topology.cycle_free);
     assert!(topology.topo_order.is_empty(), "every node in the 3-cycle has nonzero indegree");
@@ -52,6 +52,6 @@ async fn a_cycle_is_reported_as_not_cycle_free() {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_yields_default_topology() {
-    assert_eq!(compute_topology(&JackSnapshot::default()).expect("valid retained child inference fixture"), JackTopology::default());
+    assert_eq!(compute_topology(&<crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot()).expect("valid retained child inference fixture"), JackTopology::default());
 }
 //#endregion 🧪️TopologyLaws

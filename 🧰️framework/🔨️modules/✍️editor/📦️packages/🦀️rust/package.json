@@ -12,7 +12,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "test-owned-error": "nx run @semio-tech/framework-editor-rs:test-owned-error"
+    "test-owned-error": "bun repo run @semio-tech/framework-editor-rs:test-owned-error"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

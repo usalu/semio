@@ -53,7 +53,7 @@ use semio_framework_plugin_host::GuestRuntime;
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the shared
 // kernel-activation facade — see `semio-framework-os`'s own `🎠️activation/🦀️.rs` module doc for why it
 // lives in the product's host crate rather than in the wgpu target's `ParallelRuntime`.
-use semio_framework_os::activation::{actor_budget_from_turn_budget, NativeKernelRuntime};
+use semio_framework_os::activation::NativeKernelRuntime;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, Mutex};
@@ -99,6 +99,7 @@ pub enum RunError {
     },
     Cycle(Vec<String>),
     Host(String),
+    Original(semio_framework_job::OriginalTurnFailure),
     Kernel(semio_framework_actor::KernelError),
     ActorCall(semio_framework_plugin_host::original_actor_context::OriginalActorFixedCall),
     Frame(semio_framework_actor::pack::PackError),
@@ -141,6 +142,7 @@ impl std::fmt::Display for RunError {
             Self::NoConverter { class, from, to } => write!(formatter, "no media converter registered for {class:?}: {from:?} -> {to:?}"),
             Self::Cycle(nodes) => write!(formatter, "workflow has a cycle (unreachable nodes: {nodes:?})"),
             Self::Host(message) => write!(formatter, "host error: {message}"),
+            Self::Original(error) => write!(formatter,"original run source refused: {error:?}"),
             Self::Kernel(error) => std::fmt::Display::fmt(error,formatter),
             Self::ActorCall(original) => write!(formatter,"original actor call refused: {original:?}"),
             Self::Frame(error) => std::fmt::Display::fmt(error, formatter),
@@ -1119,8 +1121,8 @@ pub struct SpaceRunner<H: AppChannelHost, B: BlobStore + 'static = NoBlobStore> 
 }
 
 impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
-    pub fn new(host: H, blob_store: Arc<B>, merge_policy: protocol::MergePolicy) -> Self {
-        Self { host, blob_store, merge_policy, cancel: CancelToken::root_now(), deadline_ms: None, document_load_progress: None }
+    pub fn new(host: H, blob_store: Arc<B>, merge_policy: protocol::MergePolicy, original_cancel:CancelToken) -> Self {
+        Self { host, blob_store, merge_policy, cancel: original_cancel, deadline_ms: None, document_load_progress: None }
     }
 
     pub fn into_host(self) -> H {
@@ -1529,6 +1531,10 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     guest_runtime: Arc<semio_framework_plugin_host::GuestRuntimes>,
     host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy,
     host_driver:Arc<semio_framework_plugin_host::GuestRelayWakeDriver>,
+    direct_identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer,
+    service_identities:HashMap<String,semio_framework_plugin_host::shard::OriginalShardIdentity>,
+    service_openings:Option<ServiceActorOpening>,
+    service_identity_refusal:Option<semio_framework_plugin_host::shard::ShardIdentityIssueRefused>,
     /// 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real kernel this
     /// host now drives instead of minting `RuntimeActorId`s ad hoc — see `semio-framework-os`'s
     /// `🎠️activation/🦀️.rs` module doc. `open`'s real per-app-instance actor uses `kernel.activate`
@@ -1618,12 +1624,11 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
 }
 
-/// ⛽️ One generous constant turn/instantiate budget, shared by `load_runtime_recursive`'s
-/// plugin-service instantiate call and `run_turn`'s real per-node turns — until the DRR scheduler
-/// threads a real per-lane one through (same honestly-flagged gap `🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🦀️.rs`'s own
-/// `kernel_runtime::TURN_BUDGET` already documents on that consumer).
-#[cfg(not(target_arch = "wasm32"))]
-const NODE_TURN_BUDGET: semio_framework::kernel::Budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
+#[cfg(not(target_arch="wasm32"))]
+struct ServiceActorOpening{actor:RuntimeActorId,plugin_ordinal:u16,package_hash:[u8;32],opening:Option<semio_framework_plugin_host::GuestActorOpening>,instance:Option<semio_framework_plugin_host::GuestInstance>,input:Option<semio_framework_actor::retained_turn::OriginalActorInput<semio_framework_plugin_host::GuestInstance>>,scope:Option<semio_framework_actor::RetainedTurnInput>,execution:Option<semio_framework_actor::OriginalGuestExecutionBudget>,return_pending:Option<semio_framework_actor::RetainedTurnReceipt>,returned:Option<semio_framework_actor::RetainedTurnReceipt>,admitted:Option<semio_framework_actor::RetainedTurnInput>,fault:Option<semio_framework_plugin_interpreter::TurnFault>,refusal:Option<(semio_framework_actor::RetainedTurnInput,semio_framework_value::ValueRefusalKind)>}
+
+#[cfg(not(target_arch="wasm32"))]
+fn run_original_input(cx:&semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::RetainedTurnInput,semio_framework_job::OriginalTurnFailure>{let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Run factory requires its actual issued input epoch"))?;cx.original_source_parent()?;Ok(semio_framework_actor::RetainedTurnInput{operation:cx.operation().0,generation:cx.generation().0,epoch,grant:cx.retained_grant()})}
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
@@ -1642,13 +1647,14 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// `SpaceRunner::run`'s node loop never opens two instances concurrently either), so a second
     /// shard thread would sit idle. The type stays general (same `shard_count` parameter
     /// `ParallelRuntime::new` takes) for a future caller that does want more.
-    pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>, identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
-        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_interpreter::OwnedRuntime::new()));
+    pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>, identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, original_clock:fn()->Option<u64>, original_cancel:CancelToken, direct_identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer) -> Result<Self,RunError> {
+        let host_driver=Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,original_clock,Box::new(move||original_cancel.is_cancelled_now())).map_err(|error|RunError::Original(error.into()))?);
+        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_interpreter::OwnedRuntime::new(original_clock)));
         let kernel = NativeKernelRuntime::new(guest_runtime.clone(), 1, 0, 64,{let mut original=Some(identity);move |_|original.take().expect("sequential host has one original shard issuer")}).await;
-        Self {
+        Ok(Self {
             guest_runtime,
             host_driver_policy,
-            host_driver:Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy)),
+            host_driver,direct_identity,service_identities:HashMap::new(),service_openings:None,service_identity_refusal:None,
             kernel,
             plugin_path_for_plugin,
             descriptor_path_for_plugin,
@@ -1672,13 +1678,57 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             next_turn_seq: 1,
             retained_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
             rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
-        }
+        })
     }
 
     /// 🔢️ One ordinal per DISTINCT plugin id — see `plugin_ordinals`' own doc.
     fn plugin_ordinal(&mut self, plugin_id: &str) -> u16 {
         let next = self.plugin_ordinals.len() as u16;
         *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
+    }
+
+    /// 🌱️ The actual Run root lends every opening slice and keeps refused or pending instance custody before Handle publication.
+    async fn prepare_service_original(&mut self,plugin_id:&str,compiled:&semio_framework_plugin_host::CompiledHandle)->Result<(semio_framework_plugin_host::GuestInstance,semio_framework_actor::RetainedTurnInput),RunError>{
+        use semio_framework_actor::retained_turn::{ActorGuestPhase,OriginalActorInput};
+        use semio_framework_plugin_interpreter::OwnedActorStartupStatus;
+        while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
+        loop{
+            let state=self.service_openings.as_mut().expect("original service actor is retained before opening");
+            if let Some(receipt)=state.return_pending{if !self.host_driver.return_actor_turn(receipt).map_err(RunError::Original)?{semio_framework_async::yield_once().await;continue}state.return_pending=None;state.scope=None;state.returned=Some(receipt);}
+            if let Some(fault)=&state.fault{return Err(RunError::Host(fault.to_string()))}
+            if let Some((input,kind))=state.refusal{return Err(RunError::Host(format!("original service context {}/{}/{} refused: {kind:?}; its owner remains retained",input.operation,input.generation,input.epoch)))}
+            if state.scope.is_none(){let issued=self.host_driver.begin_actor_turn(state.returned).map_err(|error|RunError::Original(error.into()))?;if issued.is_some(){state.returned=None;state.scope=issued;}}
+            let Some(scope)=state.scope else{semio_framework_async::yield_once().await;continue};
+            if state.input.as_ref().is_some_and(|input|input.phase()==ActorGuestPhase::Ready){
+                let taken=self.host_driver.dispatch_actor_step(scope,|cx|{let copy=std::mem::size_of::<ServiceActorOpening>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(None)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;cx.consume_fuel(1);state.input.as_mut().unwrap().take_admitted_input_step(cx)}).map_err(RunError::Original)?;
+                if let Some(Some(instance))=taken{self.host_driver.finish_actor_step(scope).map_err(RunError::Original)?;state.scope=None;let input=state.admitted.expect("actual guest Ready preserves its admitted input");self.service_openings.take();return Ok((instance,input));}
+                state.returned=Some(self.host_driver.finish_actor_step(scope).map_err(RunError::Original)?);state.scope=None;
+            }else if state.input.is_some(){
+                if state.input.as_ref().unwrap().issued_input().is_none(){let budget=self.host_driver.actor_budget(scope).map_err(|error|RunError::Original(error.into()))?;state.input.as_mut().unwrap().receive_next_issued(budget.retained).map_err(|error|RunError::Original(error.into()))?;}
+                let budget=self.host_driver.actor_budget(scope).map_err(|error|RunError::Original(error.into()))?;
+                let identity=self.service_identities.get_mut(plugin_id).expect("original receiving identity stays owned through guest admission");
+                if let Some(call)=identity.admit_owned_actor_original(&self.guest_runtime,state.input.as_mut().unwrap(),budget,self.host_driver_policy.drive).await.map_err(|error|RunError::Original(error.into()))?{
+                    match call.call{Ok(reply)=>{if let Some(refusal)=reply.refusal{state.refusal=Some((reply.input,refusal));}else if reply.ready{state.admitted=Some(reply.input);}},Err(fault)=>state.fault=Some(fault)}
+                    state.return_pending=Some(call.receiving.map_err(|error|RunError::Original(error.into()))?);
+                }
+            }else if state.instance.is_some(){
+                self.host_driver.dispatch_actor_step(scope,|cx|{
+                    let copy=std::mem::size_of::<OriginalActorInput<semio_framework_plugin_host::GuestInstance>>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(())}
+                    cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;cx.consume_fuel(1);let issued=run_original_input(cx)?;let instance=state.instance.take().unwrap();match OriginalActorInput::new(instance,issued){Ok(input)=>state.input=Some(input),Err((error,instance))=>{state.instance=Some(instance);return Err(error.into())}}Ok(())
+                }).map_err(RunError::Original)?;
+                if state.input.is_none(){state.returned=Some(self.host_driver.finish_actor_step(scope).map_err(RunError::Original)?);state.scope=None;}
+            }else{
+                if state.execution.is_none()&&state.opening.as_ref().is_some_and(semio_framework_plugin_host::GuestActorOpening::requires_execution){state.execution=Some(self.host_driver.checkout_actor_execution_budget(scope).map_err(|error|RunError::Original(error.into()))?);}let execution=state.execution;
+                let call=self.host_driver.dispatch_actor_step(scope,|cx|{
+                    if state.opening.is_none(){state.opening=self.guest_runtime.begin_original_actor_step(compiled,state.actor,cx)?;return Ok(None)}
+                    if state.opening.as_ref().unwrap().ready(){let input=run_original_input(cx)?;state.instance=self.guest_runtime.take_original_actor_step(&mut state.opening,compiled,input,cx)?;return Ok(None)}
+                    self.guest_runtime.advance_original_actor_step(state.opening.as_mut().unwrap(),compiled,execution,cx).map(Some)
+                }).map_err(RunError::Original)?;
+                if let Some(Some(call))=call{if let Some(receipt)=call.execution{self.host_driver.receive_actor_execution_receipt(scope,receipt).map_err(|error|RunError::Original(error.into()))?;state.execution=None;}let status=call.result;state.returned=Some(self.host_driver.finish_actor_step(scope).map_err(RunError::Original)?);state.scope=None;match status.map_err(RunError::Original)?{OwnedActorStartupStatus::Pending|OwnedActorStartupStatus::Ready|OwnedActorStartupStatus::Deadline=>{},OwnedActorStartupStatus::Cancelled=>return Err(RunError::Host("original service startup was cancelled; its owner remains retained".into())),OwnedActorStartupStatus::ChannelMismatch{expected,observed}=>return Err(RunError::Host(format!("original service channel differs: expected {expected}, observed {observed}; its owner remains retained")))}}
+                else if call.is_some(){state.returned=Some(self.host_driver.finish_actor_step(scope).map_err(RunError::Original)?);state.scope=None;}
+            }
+            semio_framework_async::yield_once().await;
+        }
     }
 
     /// 🎬️ `Envelope` sequence source — see `next_turn_seq`'s own field doc.
@@ -1712,7 +1762,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let mut fault: Option<String> = None;
         loop {
             self.now_ms += 1;
-            let decision = self.kernel.tick_and_dispatch(self.now_ms, move |_actor, original| actor_budget_from_turn_budget(NODE_TURN_BUDGET, original)).await?;
+            let policy=self.host_driver_policy.root;
+            let decision = self.kernel.tick_and_dispatch(self.now_ms, move |_actor, original| semio_framework_plugin_host::shard::grant::ShardResourceBudget{fuel:original.fuel.min(policy.turn_execution_fuel),max_effects:original.max_effects.min(policy.max_effects),max_patch_bytes:original.max_patch_bytes.min(policy.max_patch_bytes),max_frames:original.max_frames.min(policy.max_frames),..original}).await?;
             if decision.run.is_empty() {
                 break;
             }
@@ -1854,7 +1905,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     fn read_committed_descriptor(&self, plugin_id: &str) -> Result<PackageDescriptor, RunError> {
         let Some(path) = self.descriptor_path_for_plugin.get(plugin_id) else {
             return Err(RunError::Host(format!(
-                "plugin `{plugin_id}` has no committed `🛂️.descriptor.semio` registered (regenerate the registry: `bun nx run @semio-tech/plugin-registry:generate`) and no live `describe()` fallback is wired yet (see `WasmtimeNodeHost`'s own doc)"
+                "plugin `{plugin_id}` has no committed `🛂️.descriptor.semio` registered (regenerate the registry: `bun repo run @semio-tech/plugin-registry:generate`) and no live `describe()` fallback is wired yet (see `WasmtimeNodeHost`'s own doc)"
             )));
         };
         if !path.is_file() {
@@ -1917,18 +1968,28 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         // full facade does) would take the instance away from `PluginInstanceHandle` entirely, a much
         // bigger change than this packet's own `path_scope` (`🔌️plugin/🖥️host/**`'s `io_router`
         // internals are not owned here) — see `kernel`'s own struct-field doc.
-        let plugin_ordinal = self.plugin_ordinal(plugin_id);
-        let kind = ActorKind::PluginApp { plugin: PackageId(plugin_id.to_string()), app_id: "<plugin-runtime>".to_string(), instance_id: 0 };
-        let actor = self.kernel.kernel_mut().activate(PackageId(plugin_id.to_string()), plugin_ordinal, kind, Lane::Background, None, ActivationEvent::Manual).await;
-        // ⚖️ `GuestRuntime::instantiate`'s `Budget` is `semio_framework::kernel::Budget` (the
-        // `reactor::poll`-shaped one — fuel/deadline_ms/max_effects/max_patch_bytes/max_frames), NOT
-        // `semio_framework_actor::Budget` (a different, later-wave shape by the same name — see
-        // `🎠️kernel/🦀️.rs` vs `🎭️actor/🦀️.rs`, both named `Budget`). Literal
-        // mirrors the sibling MCP gateway's own one-off-instantiate budget
-        // (`🌉️mcp/🏠️workspace/🦀️.rs`'s `activate_plugin_instance`), the closest real
-        // precedent for "compile once, instantiate once, no live turn loop yet".
-        let instance = self.guest_runtime.instantiate(&compiled, actor, &[], &NODE_TURN_BUDGET).await.map_err(|error| RunError::Host(format!("plugin `{plugin_id}`: instantiate: {error}")))?;
-        let handle = Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&self.guest_runtime), instance,semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:self.host_driver.clone()}).await);
+        let plugin_ordinal=self.plugin_ordinal(plugin_id);
+        let actor=if let Some(original)=&self.service_openings{if original.plugin_ordinal!=plugin_ordinal||original.package_hash!=compiled.package_hash{return Err(RunError::Host("another original service opening still owns the fixed pending slot".into()))}original.actor}else{
+            let kind=ActorKind::PluginApp{plugin:PackageId(plugin_id.to_string()),app_id:"<plugin-runtime>".to_string(),instance_id:0};
+            self.kernel.kernel_mut().activate(PackageId(plugin_id.to_string()),plugin_ordinal,kind,Lane::Background,None,ActivationEvent::Manual).await
+        };
+        if self.service_openings.is_none(){
+            while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
+            loop{
+                let Some(scope)=self.host_driver.begin_actor_turn(None).map_err(|error|RunError::Original(error.into()))?else{semio_framework_async::yield_once().await;continue};
+                self.host_driver.dispatch_actor_step(scope,|cx|{
+                    let copy=std::mem::size_of::<ServiceActorOpening>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(())}
+                    cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;cx.consume_fuel(1);
+                    self.service_openings=Some(ServiceActorOpening{actor,plugin_ordinal,package_hash:compiled.package_hash,opening:None,instance:None,input:None,scope:None,execution:None,return_pending:None,returned:None,admitted:None,fault:None,refusal:None});Ok(())
+                }).map_err(RunError::Original)?;
+                self.host_driver.finish_actor_step(scope).map_err(RunError::Original)?;
+                if self.service_openings.is_some(){break}semio_framework_async::yield_once().await;
+            }
+        }
+        if let Some(refusal)=&self.service_identity_refusal{return Err(RunError::Host(refusal.error.to_string()))}
+        if !self.service_identities.contains_key(plugin_id){match(self.direct_identity)(actor){Ok(identity)=>{self.service_identities.insert(plugin_id.to_string(),identity);},Err(refusal)=>{let message=refusal.error.to_string();self.service_identity_refusal=Some(refusal);return Err(RunError::Host(message))}}}
+        let(instance,original_input)=self.prepare_service_original(plugin_id,&compiled).await?;
+        let handle=Arc::new(semio_framework_plugin_host::PluginInstanceHandle::new(actor,Arc::clone(&self.guest_runtime),instance,original_input,semio_framework_plugin_host::GuestRelayWakeAuthority{drive_policy:self.host_driver_policy.drive,policy:self.host_driver_policy.wake,issuer:semio_framework_job::admit_original_thread_worker_wake,receiver:self.host_driver.clone()}).await);
 
         let artifact_dialect_entries: Vec<_> = descriptor.contributions.composer_entries.iter().map(|entry| (entry.writes.clone(), entry.reads.clone())).collect();
         // 🕳️ `ContributionSet.io_entries` (owner/counterpart/direction) carries no `fidelity`/

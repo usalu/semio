@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/pets-react",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -19,7 +19,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -27,7 +27,7 @@
       }
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
@@ -58,7 +58,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",

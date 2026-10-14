@@ -957,7 +957,9 @@ impl ArtifactEditor for VcsPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         let text_arg = |key: &str| args.get(key).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string();
         let bounded_text = |key: &str| {

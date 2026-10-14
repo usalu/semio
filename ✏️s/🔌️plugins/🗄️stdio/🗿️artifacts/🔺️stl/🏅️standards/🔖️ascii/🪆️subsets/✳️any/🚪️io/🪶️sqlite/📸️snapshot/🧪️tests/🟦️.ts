@@ -1,6 +1,6 @@
 import refusalCorpus from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json";
 const canceledKind=refusalCorpus.cases.find(c=>c.id==="canceled-projection")!.expectedKind;
-import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary32,binary64Value,binary32Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧫️ Shared STL triangle fixture and independent scalar SQL interoperability. */
 import { Database } from "bun:sqlite";
 import { expect, test } from "bun:test";

@@ -1,0 +1,27 @@
+# Original Command Decode Issuer
+
+## Actual Receiving Gap
+
+Turn command page admission supplies a retained PagedCommand. PluginCommandIngress::Encoded currently constructs Protocol PagedAppCommandDecodeCursor, whose reader copies bounded wire fields but owns no original NativeDecode allocation supplier or retirement recipient. Later runtime decode_wire_serialized calls the ordinary pack decoder and consuming FromValue. NativeJack owns the parsed continuation and public action/command calls; this task owns the admitted Actor-source allocation/copy/retirement issuer and raw source handback.
+
+## Existing Value Ports
+
+NativeForwardedDecodeControl/Continuation are real first-party producer interfaces. They retain one cumulative ledger, actual allocation callback and original NativeDecodeRetirementRecipient. The detached forwarded receipt rebind checks the same recipient unique identity and preserves refusal receipt on mismatch. The owned command issuer can retain a genuinely admitted OriginalCallerSourceLoan and recipient inline, then reborrow the actual caller in each decode hop; a scalar grant DTO must not become a fresh controller.
+
+NativeDecodeAllocationPort currently receives only a reservation descriptor before storage changes. NativeDecodeControl::charge calls it and increments owned_bytes before allocate_vec/copy helpers try_reserve_exact. There is no actual success or abort receipt to the external supplier. Debiting candidate capacity directly into the caller would falsely report physical birth if the allocation later fails. Local copy_text/copy_bytes can ordinarily Drop a partially allocated buffer on cancellation; the into variants retain the destination but still copy in64KiB spans. Stage CPU checkpoints arrive every256units. Those primitives cannot certify one-byte/one-unit caller bounds or exact physical release merely by adding a callback.
+
+## Actual Owned Entry
+
+Job now defines and explicitly exports OriginalNativeDecodePolicy, OriginalNativeDecodeIssued, OriginalNativeDecodeOutcome and OriginalNativeDecodeSource at General Job/⏱️context/🛬️decode. The empty source holds only the caller-authored cumulative policy. Admission borrows the actual OriginalCallerSourceParent, pays its real SourceLoan, then separately funds the inline recipient and consuming forwarded ledger. No business record identity or copied budget creates authority.
+
+receive_step(cx, producer) supplies the same genuine native controller and exact independently remaining grant to a concrete bounded producer. That producer returns its actual grant, physical RetainedCloneProgress, raw work and original result. Reservation callbacks borrow the real cx exclusively and reserve against its available capacity; they do not post physical birth. The receiver posts only the actual producer receipt. A mismatch, over-budget receipt or raw work refusal stays beside the complete original result; a successful result is not erased because reception refused. The source retains its consuming ledger and exact recipient across callbacks and validates each actual source loan. close_step returns the recipient, ledger and original source loan in that order.
+
+## Accepted Original Native Cohort
+
+The registered General Actor test-original-owned-async native command now runs seven laws: the five previously accepted Actor/Job source and parked turn laws, plus two actual native decoder supplier laws. The new cohort passed through the supported Repo native owner-command with the original finite caller (300000ms), full preparation and prototype profile in8.3seconds. Evidence: 🗑️generated/c/original-native-decode-native-current3.log and its exact-cargo-law output directory recorded inside that log.
+
+The physical law exercises a real first-party concrete bounded Vec producer through this actual supplier: reservation denial performs zero heap activity and posts zero birth; admitted birth requests64bytes; copy consumes exactly3bytes into that same original buffer without allocation; retirement physically releases64bytes. A foreign original parent cannot invoke the producer and retains the exact original pointer. The same consuming ledger remains at64bytes throughout those phases, and the paid source loan returns last. The second law returns successful81 while raw work9 exceeds fuel1: the value and whole receiving refusal both remain, the actual counter stays9 and fuel is saturated without refill. HeapWitness confirms0/0 during that refusal.
+
+The first actual native attempt exposed a missing Blocked match, fixed exhaustively. The second exposed an incorrect fixture getter, corrected to the canonical original_work_units_spent API. The third reached the real native producer and refused use of copy_bytes_into on an already reserved vector; that API explicitly requires a cold destination. The owning bounded producer now validates the exact3byte copy grant and remaining original capacity, checkpoints through the genuine controller, and copies into its existing buffer. No primitive semantics were relaxed. The final seven-law run is green.
+
+Portable schema/Ajv plus independent SQLite accounting passed1law/20expects. Strict and permanent source-router adoption are being verified separately. This accepted supplier proof does not qualify the still-unfinished raw PagedAppCommand/parsed producer pipeline, ordinary unbounded pack decoder, Opening factory/Arc birth or whole OS runtime. NativeJack owns the parsed continuation and this task still owns binding the concrete bounded raw decoder to the admitted Actor source.

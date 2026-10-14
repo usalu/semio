@@ -856,11 +856,11 @@ fn command_from_action_round_trips_every_command_id() {
             other => other.clone(),
         };
         let camel = camel_case_keys(&payload);
-        let bridged = <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(id, Some(&camel)).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(id, Some((camel).clone()), None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
         assert_eq!(bridged, command, "payload mismatch for action {id}");
     }
-    assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nonsense", None).is_err());
+    assert!(<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action("nonsense", None, None).is_err());
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
@@ -888,7 +888,7 @@ fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_v
 #[test]
 fn command_from_action_bridges_host_spellings() {
     let args = |json: &str| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
-    let bridge = |action: &str, json: &str| <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some(&args(json))).expect(action);
+    let bridge = |action: &str, json: &str| <RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some((args(json)).clone()), None).expect(action);
     assert_eq!(bridge("setActiveExample", r#"{"exampleId":"demo"}"#), RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }));
     assert_eq!(bridge("deleteLayer", r#"{"id":"layer-1"}"#), RasterCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: "layer-1".into() }));
     assert_eq!(bridge("setCamera", r#"{"camera":{"x":1,"y":2,"zoom":3}}"#), RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
@@ -1121,7 +1121,7 @@ async fn inspector_patch_values_preserve_numeric_names_and_typed_controls() {
     crate::standards::v1::subsets::any::io::binary::mutations::unit_tests::retirement::retire_raster_snapshot(snapshot);
     for (field, value) in [("name", serde_json::json!("123")), ("opacity", serde_json::json!(0.25)), ("visible", serde_json::json!(false))] {
         let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&serde_json::json!({"layerIds":[id],"field":field,"value":value}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
-        let command = <RasterPlayApp as ArtifactEditor>::command_from_action("patchLayers", Some(&args)).unwrap();
+        let command = <RasterPlayApp as ArtifactEditor>::command_from_action("patchLayers", Some((args).clone()), None).unwrap();
         dispatch(&mut app, command).await;
     }
     let snapshot = app.snapshot().unwrap();

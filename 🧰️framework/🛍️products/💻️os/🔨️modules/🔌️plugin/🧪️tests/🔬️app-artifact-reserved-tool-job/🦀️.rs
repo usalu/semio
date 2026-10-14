@@ -13,8 +13,8 @@ mod artifact_reserved_tool_job_tests {
     }
 
     impl semio_framework_job::InteractiveJob for TerminalJob {
-        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-            semio_framework_job::JobOutcomeBorrow::admit_yield(cx)
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+            semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -23,10 +23,9 @@ mod artifact_reserved_tool_job_tests {
 
         fn begin_close(&mut self) {}
 
-        fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-            if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()};}
-            self.terminal = true;
-            semio_framework_job::InteractiveJobCloseStep::Complete{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}}
+        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+            if self.terminal{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+            semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|_|{self.terminal=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))})
         }
 
         fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
@@ -50,20 +49,27 @@ mod artifact_reserved_tool_job_tests {
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
         use semio_framework_job::InteractiveJob;
         use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
+        let mut caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original reserved fixture caller");let mut cx=caller.context();let recipient=cx.original_recipient_identity();
         let frame=std::mem::size_of::<TerminalJob>();
-        let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:frame,maximum_depth:1,..Default::default()};
-        assert_eq!(retained.close_step(grant),semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}});
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_release_bytes:4096,maximum_depth:1,..Default::default()};
+        assert!(frame<=grant.maximum_release_bytes);
+        assert_eq!(cx.with_retained_loan(grant,|same|retained.close_step(same)).unwrap(),semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}});
         assert!(!retained.terminal_is_empty());assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst),0);
         for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_release_bytes:frame-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retained.close_step(denied));
+            let before=cx.retained_progress();let fuel=cx.fuel_remaining();
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(denied,|same|retained.close_step(same)).unwrap());
             assert_eq!(step,semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!retained.terminal_is_empty());
+            assert_eq!(cx.retained_progress(),before);assert_eq!(cx.fuel_remaining(),fuel);assert_eq!(cx.original_recipient_identity(),recipient);
         }
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst),0);
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retained.close_step(grant));
+        let before=cx.retained_progress();
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|same|retained.close_step(same)).unwrap());
         assert_eq!(step,semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:frame,..Default::default()}});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,frame));
-        assert_eq!(retained.close_step(grant),semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});
+        assert_eq!(cx.retained_progress().released_bytes-before.released_bytes,frame);assert_eq!(cx.original_recipient_identity(),recipient);
+        assert_eq!(cx.with_retained_loan(grant,|same|retained.close_step(same)).unwrap(),semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});
         assert!(retained.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+        let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("same caller source root close");
         eprintln!("[DEBUG] original reserved dispatch retains its job under item/depth/release refusals and releases its exact physical frame={frame}");
     }
 }

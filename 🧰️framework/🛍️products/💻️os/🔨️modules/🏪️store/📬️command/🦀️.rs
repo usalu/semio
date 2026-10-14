@@ -24,6 +24,9 @@ use super::canonical_edit::{
     ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
 };
 
+#[path="🛬️receiving/🦀️.rs"]
+pub mod receiving;
+
 /// 🖋️ One `by=[...]` list entry on a `commit` line: id then name, both positional
 /// (bare-preferred, quoted only when needed — e.g. a name containing a space), then the optional
 /// avatar — every field the transition's content-addressed id covers.

@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "ports",
+    "retainsOriginalOnDenial",
+    "inlineLock",
+    "sharedFrameReleaseBeforeTerminal",
+    "cases",
+    "model",
+    "closure",
+    "receiverRetainsPostedOwner"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.os.original-reserved-producer-birth"
+    },
+    "ports": {
+      "const": [
+        "typed-body",
+        "admitted-box"
+      ]
+    },
+    "retainsOriginalOnDenial": {
+      "const": true
+    },
+    "inlineLock": {
+      "const": true
+    },
+    "sharedFrameReleaseBeforeTerminal": {
+      "const": true
+    },
+    "cases": {
+      "const": [
+        {
+          "port": "typed-body",
+          "items": 2,
+          "copy": 256,
+          "capacity": 160,
+          "depth": 1,
+          "fuel": 1,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "typed-body",
+          "items": 0,
+          "copy": 256,
+          "capacity": 160,
+          "depth": 1,
+          "admitted": false,
+          "source": true,
+          "fuel": 2
+        },
+        {
+          "port": "typed-body",
+          "items": 2,
+          "copy": 256,
+          "capacity": 159,
+          "depth": 1,
+          "admitted": false,
+          "source": true,
+          "fuel": 2
+        },
+        {
+          "port": "typed-body",
+          "items": 2,
+          "copy": 256,
+          "capacity": 160,
+          "depth": 0,
+          "admitted": false,
+          "source": true,
+          "fuel": 2
+        },
+        {
+          "port": "typed-body",
+          "items": 2,
+          "copy": 256,
+          "capacity": 160,
+          "depth": 1,
+          "admitted": true,
+          "source": false,
+          "fuel": 2
+        },
+        {
+          "port": "admitted-box",
+          "items": 1,
+          "copy": 256,
+          "capacity": 95,
+          "depth": 1,
+          "admitted": false,
+          "source": true,
+          "fuel": 1
+        },
+        {
+          "port": "admitted-box",
+          "items": 1,
+          "copy": 256,
+          "capacity": 96,
+          "depth": 1,
+          "admitted": true,
+          "source": false,
+          "fuel": 1
+        }
+      ]
+    },
+    "model": {
+      "const": {
+        "bodyBytes": 64,
+        "sharedBytes": 96,
+        "headerCopyBytes": 256
+      }
+    },
+    "closure": {
+      "const": [
+        "inner-job",
+        "body-box",
+        "operation",
+        "shared-frame",
+        "empty-header"
+      ]
+    },
+    "receiverRetainsPostedOwner": {
+      "const": true
+    }
+  }
+}

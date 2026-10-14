@@ -1,6 +1,7 @@
+import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { runtimeFixturePathV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
-import { DEFAULT_PLAYGROUND_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+
 import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
 /** 🧩️ Semantic distribution plan owner. */
 
@@ -118,14 +119,14 @@ async function renderDistributionBundle(workspace: string, artifactRoot: string)
       distributionProgress("compiler watch inputs collected");
     },
   });
-  const defaultVariant = requirePlaygroundVariant(DEFAULT_PLAYGROUND_VARIANT);
+  const defaultVariant = requirePlaygroundVariant(runtimeCatalogBuildInventoryV1().defaultVariant);
   const original = { SEMIO_PLUGIN: process.env.SEMIO_PLUGIN, SEMIO_RENDERER: process.env.SEMIO_RENDERER, SEMIO_BRAND: process.env.SEMIO_BRAND };
   process.env.SEMIO_PLUGIN = defaultVariant;
   process.env.SEMIO_RENDERER = "react";
   process.env.SEMIO_BRAND = "";
   let result: Awaited<ReturnType<typeof import("vite")["build"]>>;
   try {
-    const target = PLAYGROUND_BUILD_TARGETS.find((row) => row.variant === defaultVariant);
+    const target = runtimeCatalogBuildInventoryV1().playgrounds.find((row) => row.variant === defaultVariant);
     if (!target) throw new Error("Missing default host build contribution");
     const contribution = loadDevContribution(workspace, target);
     const configPath = contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : fileURLToPath(new URL("../../🏗️builder/🌐️vite/🟦️.ts", import.meta.url));

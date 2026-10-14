@@ -7115,7 +7115,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
     /// 🎯️ Maps the host's transitional `{action,args}` wire onto Puzzle 3D's closed command
     /// enum until React and wgpu send `OpBinary` command bytes directly.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let window_id = args.and_then(|value| value.get("windowId").or_else(|| value.get("window_id"))).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         if let Some(flag) = puzzle3d_flag_value_argument(action) {
             args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle3d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
@@ -7271,10 +7273,15 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let window_transient = window_ownership::transient_from_view(transient);
         Self::render_body(Some(owner), body_key, doc, cfg, view_state, &window_transient, &Puzzle3dInteractionSnapshot::from_interaction(interaction))
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     /// 🕹️ The context menu reads the AUTHORITATIVE framework-owned selection, not only the
     /// client-supplied `request.surface.selection`: `World3dHost` only ever puts its painted object

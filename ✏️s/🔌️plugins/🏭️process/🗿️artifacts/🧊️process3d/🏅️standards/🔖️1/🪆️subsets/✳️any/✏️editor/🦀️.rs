@@ -1622,7 +1622,9 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🎯️ Exhaustive host-action bridge into the closed `Process3dCommand` enum. React and wgpu still
     /// emit manifest action ids plus JSON arguments; only this boundary interprets that transport shape.
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let field = |key: &str| args.and_then(|value| value.get(key));
         let string_field = |key: &str| field(key).and_then(DslValue::as_str).map(str::to_string);
         let number_field = |key: &str| field(key).and_then(DslValue::as_f64);
@@ -1758,10 +1760,15 @@ impl ArtifactEditor for Process3dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let selected_ids = interaction.selection(PROCESS3D_INTERACTION_DOMAIN).ids.clone();
         process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &selected_ids)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_engagements(doc: &ArtifactView<'_, Process3dSnapshot>, cfg: &ConfigView<'_, Process3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         let active_utility = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()).unwrap_or(PROCESS3D_DEFAULT_UTILITY);

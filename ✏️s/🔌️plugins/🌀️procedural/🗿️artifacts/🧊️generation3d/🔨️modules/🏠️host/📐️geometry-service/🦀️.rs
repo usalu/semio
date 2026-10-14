@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::schema::catalogue::Quality;
 use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use crate::standards::v1::subsets::any::schema::generation_host_snapshot_for;
 use crate::Generation3dSnapshot;
-use protocol::{DepHash, InferenceError};
+use protocol::DepHash;
 use semio_framework_plugin::{ArtifactDocumentPayload, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferencePayloadContract, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceCacheMode, WireArtifactInferenceDiagnostic};
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::{RetirementDemand, ToValue as _, ValueError};
@@ -172,8 +172,6 @@ fn engine_failure(error: EngineError) -> ArtifactInferenceExecutionError {
     match error {
         EngineError::Busy => ArtifactInferenceExecutionError::new("generation3d.geometry.busy", "the geometry engine is serving another call"),
         EngineError::NotStarted => ArtifactInferenceExecutionError::new("generation3d.geometry.not-started", "the geometry engine has no run"),
-        EngineError::Inference(InferenceError::Cancelled) => ArtifactInferenceExecutionError::new("generation3d.geometry.cancelled", "the geometry run was cancelled"),
-        EngineError::Inference(other) => ArtifactInferenceExecutionError::new("generation3d.geometry.internal", other.to_string()),
     }
 }
 
@@ -187,6 +185,9 @@ fn cache_mode(requested: &WireArtifactInferenceCacheMode) -> CacheMode {
 
 fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn std::any::Any, cx:&mut semio_framework_plugin::ArtifactInferenceStepContext<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
     let host = context.downcast_ref::<GeometryHost>().ok_or_else(|| ArtifactInferenceExecutionError::new("generation3d.geometry.context", "geometry inference requires its instance's geometry host"))?;
+    let admitted=host.with(|engine|engine.admit_failure(cx)).map_err(engine_failure)?.map_err(|original|ArtifactInferenceExecutionError::original(original,false))?;
+    if let Some(original)=admitted{return Err(ArtifactInferenceExecutionError::original(original,false))}
+    if host.with(GeometryEngine::has_failure).map_err(engine_failure)?{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}
     if request.cancelled {
         host.cancel().map_err(engine_failure)?;
         return Ok(ArtifactInferenceExecutionStep { execution: None, retained_progress: RetainedCloneProgress::default(), terminal: true });
@@ -199,7 +200,6 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
     }
     let digest = digest_of(request.canonical_payload);
     let mode = cache_mode(&request.requested_cache_mode);
-    let fuel = usize::try_from(request.budgets.work_units).unwrap_or(usize::MAX);
     let checkpoint = match request.previous_state {
         Some(bytes) => {
             let text = std::str::from_utf8(bytes).map_err(|error| invalid(error.to_string()))?;
@@ -208,8 +208,9 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
         }
         None => None,
     };
-    let (step, result) = host
-        .with(|engine| -> Result<(EngineStep, GeometryResult), ArtifactInferenceExecutionError> {
+    let before=cx.retained_progress();
+    let outcome = host
+        .with(|engine| -> Result<Option<(EngineStep, GeometryResult)>, ArtifactInferenceExecutionError> {
             let resumes = checkpoint.as_ref().is_some_and(|cursor| cursor.digest == digest && cursor.next as usize == engine.progress().0) && engine.is_running(&digest);
             if !resumes {
                 if engine.holds(&digest) {
@@ -221,11 +222,16 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
                     engine.start(digest.clone(), snapshot, mode, request.cancellation_id);
                 }
             }
-            let step = engine.step(fuel).map_err(engine_failure)?;
+            let step=match engine.step(cx){Ok(step)=>step,Err(original)=>{engine.hold_failure(original);return Ok(None)}};
             let result = result_of(engine, &step, &digest);
-            Ok((step, result))
+            Ok(Some((step, result)))
         })
         .map_err(engine_failure)??;
+    let Some((step,result))=outcome else{
+        let after=cx.retained_progress();
+        let delta=RetainedCloneProgress{copied_items:after.copied_items.checked_sub(before.copied_items).expect("original geometry receipt items"),copied_bytes:after.copied_bytes.checked_sub(before.copied_bytes).expect("original geometry receipt body"),retained_capacity_bytes:after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes).expect("original geometry receipt capacity"),released_bytes:after.released_bytes.checked_sub(before.released_bytes).expect("original geometry receipt release")};
+        return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:delta,terminal:false});
+    };
     let diagnostics: Vec<WireArtifactInferenceDiagnostic> = result
         .widgets
         .iter()

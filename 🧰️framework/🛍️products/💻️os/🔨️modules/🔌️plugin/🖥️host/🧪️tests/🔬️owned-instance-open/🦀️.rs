@@ -140,7 +140,7 @@ async fn owned_codec_print_mirror_round_trips_a_genesis_pair() {
 async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let jit = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let jit = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let compiled = jit.compile(&package_ref("semio:neutral-host-fixture", &bytes), &bytes).await.expect("compile plugin component");
     let jit_pair = jit.codec_genesis(&compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, &jit_budget()).await.expect("wasmtime codec.genesis");
     assert!(!jit_pair.pack.is_empty() && !jit_pair.spr.is_empty(), "wasmtime codec.genesis produced an empty pair");
@@ -183,7 +183,7 @@ async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, s
     let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
     let runtime = match which {
         CodecSweepRuntime::Owned => GuestRuntimes::Owned(OwnedRuntime::new()),
-        CodecSweepRuntime::Jit => GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).await.map_err(|error| format!("engine: {error:?}"))?),
+        CodecSweepRuntime::Jit => GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.map_err(|error| format!("engine: {error:?}"))?),
     };
     let budget = match which {
         CodecSweepRuntime::Owned => codec_budget(),
@@ -275,7 +275,7 @@ async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_i
 
     let path=fixture_component();
     let bytes = std::fs::read(&path).expect("read plugin component");
-    let concrete = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let concrete = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let compiled = concrete.compile(&package_ref("semio:neutral-host-fixture", &bytes), &bytes).await.expect("compile plugin component");
     let direct_hash = concrete.codec_pack_schema_hash(&compiled, FIXTURE_DOCUMENT_SCHEMA, &jit_budget()).await.expect("wasmtime codec.pack-schema-hash");
     let direct_pair = concrete.codec_genesis(&compiled, FIXTURE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, &jit_budget()).await.expect("wasmtime codec.genesis");

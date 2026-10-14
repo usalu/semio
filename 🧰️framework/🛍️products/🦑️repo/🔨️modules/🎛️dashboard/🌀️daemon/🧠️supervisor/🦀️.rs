@@ -39,7 +39,7 @@ const EXIT_QUIET: Duration = Duration::from_millis(250);
 const FINISH_WAIT: Duration = if cfg!(windows) { Duration::from_secs(3) } else { Duration::ZERO };
 const EXIT_LIMIT: Duration = Duration::from_secs(8);
 const SIGKILL_EXIT: i32 = 137;
-const DROPPED_ENVIRONMENT: [&str; 1] = ["NX_INVOCATION_ROOT_PID"];
+const DROPPED_ENVIRONMENT: [&str; 1] = ["SEMIO_BUILD_INVOCATION_PID"];
 
 /// 🚨 A request the daemon refuses, with the kind of failure a view can act on.
 #[derive(Debug, Clone)]
@@ -888,7 +888,7 @@ pub fn serve(root: &Path, running: &AtomicBool) -> std::io::Result<()> {
 
 /// 🚀 Starts a detached daemon process (`semio daemon serve --root …`) and waits until it answers; the answer is its pid.
 pub fn spawn_daemon(root: &Path, executable: &Path) -> std::io::Result<u32> {
-    let spawned = ui_tui::tui::pty::spawn_detached(&executable.to_string_lossy(), &["daemon", "serve", "--root", &root.display().to_string()], &["NX_INVOCATION_ROOT_PID"], root).map_err(|error| std::io::Error::other(error.message))?;
+    let spawned = ui_tui::tui::pty::spawn_detached(&executable.to_string_lossy(), &["daemon", "serve", "--root", &root.display().to_string()], &["SEMIO_BUILD_INVOCATION_PID"], root).map_err(|error| std::io::Error::other(error.message))?;
     let deadline = Instant::now() + Duration::from_secs(5);
     while Instant::now() < deadline {
         if let Ok(connection) = super::client::Connection::connect(root) { return Ok(connection.daemon_pid()); }

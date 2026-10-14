@@ -4,7 +4,7 @@
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition",
   "targets": {
     "test-typescript": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

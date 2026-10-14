@@ -1,5 +1,5 @@
 /**
- * 🔮️ Independent TypeScript resolver of the registry contract (fleet-plan §2.2): reads the Nx project graph, the
+ * 🔮️ Independent TypeScript resolver of the registry contract (fleet-plan §2.2): reads the build graph, the
  * project manifests and the playground catalog on its own and states, for every command id, what `semio run <id>
  * --dry-run` must resolve to. It shares no code with the Rust registry; Ajv validates the declarations it reads.
  *
@@ -7,7 +7,7 @@
  * @see ../../../🧫️fixtures/🗺️coverage/🔣️.json
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join,isAbsolute } from "node:path";
 
 export type Json = Record<string, any>;
 export type Selection = { id: string; parameters: Record<string, string | boolean>; extraArgs: string[]; env?: Record<string, string> };
@@ -17,7 +17,6 @@ export type Resolved = { cmd: string; args: string[]; env: Record<string, string
 export const VERBS = ["setup", "start", "dev", "serve", "watch", "activate", "prepare", "run", "build", "package", "test", "smoke", "check", "typecheck", "verify", "gate", "lint", "format", "generate", "publish", "deploy", "preview", "bench", "clean"];
 const SKIPPED = new Set(["node_modules", "target", "dist", "build", "generated", "cache", "fixtures"]);
 const MANIFESTS = ["📋️project.json", "project.json"];
-const PLAYGROUNDS = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json";
 const unique = <T>(words: T[]): T[] => [...new Set(words)];
 const substitute = (word: string, values: Record<string, string>): string => word.replace(/\{([a-z0-9._-]+)\}/g, (token, id) => (id in values ? values[id]! : token));
 const keyOf = (name: string): string => name.replace(/^[^\p{L}\p{N}]+/u, "").toLowerCase();
@@ -32,12 +31,12 @@ export class Oracle {
   readonly problems: string[] = [];
   readonly tickets = new Map<string, Json>();
 
-  constructor(readonly root: string) {
-    const graphPath = join(root, ".nx/workspace-data/project-graph.json");
-    const graph = existsSync(graphPath) ? JSON.parse(readFileSync(graphPath, "utf8")) : { nodes: {} };
+  constructor(readonly root: string, catalogRoot?:string) {
+    const graphPath = join(root, ".🧬semio/🦑️repo/⚡️cache/build/graph.json");
+    const graph = existsSync(graphPath) ? JSON.parse(readFileSync(graphPath, "utf8")) : { version: 1, projects: {}, dependencies: [] };
     const skipped = (folder: string): boolean => folder.split("/").some((part) => part !== "." && (part.startsWith(".") || SKIPPED.has(keyOf(part))));
-    for (const [name, node] of Object.entries<Json>(graph.nodes)) {
-      const data = node.data;
+    for (const [name, node] of Object.entries<Json>(graph.projects)) {
+      const data = node;
       if (skipped(data.root)) continue;
       const targets = new Map<string, { continuous: boolean; configurations: string[] }>(Object.entries<Json>(data.targets ?? {}).map(([target, value]) => [target, { continuous: value.continuous === true, configurations: Object.keys(value.configurations ?? {}) }]));
       this.projects.set(name, { name, root: data.root, targets, manifest: this.manifestOf(data.root) });
@@ -48,7 +47,9 @@ export class Oracle {
       this.projects.set(manifest.name, { name: manifest.name, root: path.slice(0, path.lastIndexOf("/")) || ".", targets: new Map(Object.entries<Json>(manifest.targets ?? {}).map(([target, value]) => [target, { continuous: value.continuous === true, configurations: Object.keys(value.configurations ?? {}) }])), manifest });
     }
     for (const project of this.projects.values()) if (project.manifest) for (const target of Object.keys(project.manifest.targets ?? {})) if (!project.targets.has(target)) project.targets.set(target, { continuous: project.manifest.targets[target].continuous === true, configurations: Object.keys(project.manifest.targets[target].configurations ?? {}) });
-    this.playgrounds = existsSync(join(root, PLAYGROUNDS)) ? JSON.parse(readFileSync(join(root, PLAYGROUNDS), "utf8")) : [];
+    if(catalogRoot!==undefined&&!isAbsolute(catalogRoot))throw Error("Configured oracle catalog root must be absolute");
+    this.playgrounds = catalogRoot===undefined ? [] : JSON.parse(readFileSync(join(catalogRoot,"🚀️playgrounds.json"),"utf8"));
+    if(!Array.isArray(this.playgrounds))throw Error("Configured oracle playground catalog must be an array");
     this.readTickets();
     this.axes = (this.project("workspace")?.manifest?.metadata?.semio?.dashboard?.parameters ?? []) as Json[];
   }
@@ -136,7 +137,7 @@ export class Oracle {
     if (kind === "tool") return this.tool(rest).parameters ?? [];
     if (kind === "group") return this.applicableAxes(this.verbOf(this.group(rest).targets[0]), []);
     if (kind === "playground" || kind === "compound") return [];
-    const { project, target } = this.nx(id);
+    const { project, target } = this.build(id);
     const declared = this.declaration(project, target);
     return [...(declared.parameters ?? []), ...this.applicableAxes(this.verbOf(target, declared.verb), declared.parameters ?? [])];
   }
@@ -168,11 +169,11 @@ export class Oracle {
       const entry = (parameter.values as Json[]).find((candidate) => candidate.id === value);
       if (!entry) throw new Error(`parameter ${parameter.id}: ${String(value)} is not one of ${(parameter.values as Json[]).map((candidate) => candidate.id).join("|")}`);
       Object.assign(out.env, entry.env ?? {});
-      out.nxFlags.push(...(entry.nxFlags ?? []));
+      out.buildFlags.push(...(entry.buildFlags ?? []));
       out.args.push(...(entry.args ?? []));
     } else if (parameter.kind === "flag") {
       Object.assign(out.env, parameter.env ?? {});
-      out.nxFlags.push(...(parameter.nxFlags ?? []));
+      out.buildFlags.push(...(parameter.buildFlags ?? []));
       out.args.push(...(parameter.args ?? []));
     } else {
       const text = String(value);
@@ -212,14 +213,14 @@ export class Oracle {
       const declared = this.compound(rest);
       return { cmd: "", args: [], env: {}, cwd: "", requires: [], stop: declared.stop ?? "independent", longRunning: true, members: (declared.members as (string | Json)[]).map((member) => { const reference = this.reference(member); return { selection: reference, resolved: this.resolve(reference) }; }) };
     }
-    const out: Effects = { env: {}, nxFlags: [], args: [], values: {} };
+    const out: Effects = { env: {}, buildFlags: [], args: [], values: {} };
     const offered = this.parameters(selection.id);
     for (const key of Object.keys(selection.parameters)) if (!offered.some((parameter) => parameter.id === key)) throw new Error(`${selection.id}: parameter ${key} is not offered (offered: ${offered.map((parameter) => parameter.id).join(", ")})`);
     for (const parameter of offered) {
       if (parameter.required && selection.parameters[parameter.id] === undefined && parameter.default === undefined) throw new Error(`${selection.id}: required parameter ${parameter.id} has no value`);
       this.effect(parameter, selection.parameters[parameter.id], out);
     }
-    const nxFlags = unique(out.nxFlags);
+    const buildFlags = unique(out.buildFlags);
     const tail = [...out.args, ...selection.extraArgs];
     const extraEnv = selection.env ?? {};
     if (kind === "tool") {
@@ -234,21 +235,21 @@ export class Oracle {
     if (kind === "group") {
       const declared = this.group(rest);
       const targets = declared.targets as string[];
-      return { cmd: "bun", args: ["nx", "run-many", "-t", targets.join(","), `--projects=${(declared.projects as string[]).join(",")}`, ...nxFlags, ...(tail.length ? ["--", ...tail] : [])], env: { ...out.env, ...extraEnv }, cwd: "", requires: [], longRunning: false };
+      return { cmd: "bun", args: ["repo", "run-many", "-t", targets.join(","), `--projects=${(declared.projects as string[]).join(",")}`, ...buildFlags, ...(tail.length ? ["--", ...tail] : [])], env: { ...out.env, ...extraEnv }, cwd: "", requires: [], longRunning: false };
     }
-    const { project, target } = this.nx(selection.id);
+    const { project, target } = this.build(selection.id);
     const declared = this.declaration(project, target);
     const env = { ...out.env, ...extraEnv };
     const ready = this.ready(declared.ready, env);
     const continuous = this.project(project)?.targets.get(target)?.continuous === true;
-    return { cmd: "bun", args: ["nx", "run", selection.id, ...nxFlags, ...(tail.length ? ["--", ...tail] : [])], env, cwd: "", ready, requires: (declared.requires ?? []).map((member: string | Json) => this.reference(member)), longRunning: continuous || ready !== undefined };
+    return { cmd: "bun", args: ["repo", "run", selection.id, ...buildFlags, ...(tail.length ? ["--", ...tail] : [])], env, cwd: "", ready, requires: (declared.requires ?? []).map((member: string | Json) => this.reference(member)), longRunning: continuous || ready !== undefined };
   }
 
   private playground(variant: string, selection: Selection): Resolved {
     const entry = this.playgrounds.find((candidate) => candidate.variant === variant);
     if (!entry) throw new Error(`playground ${variant} is not in the catalog`);
     const renderer = String(selection.parameters.renderer ?? "react");
-    if (renderer === "wgpu-native") return { cmd: "bun", args: ["nx", "run", "@semio-tech/framework-renderer-wgpu:native", "--", variant, ...selection.extraArgs], env: { ...(selection.env ?? {}) }, cwd: "", requires: [], longRunning: true };
+    if (renderer === "wgpu-native") return { cmd: "bun", args: ["repo", "run", "@semio-tech/framework-renderer-wgpu:native", "--", variant, ...selection.extraArgs], env: { ...(selection.env ?? {}) }, cwd: "", requires: [], longRunning: true };
     const key = renderer === "react" ? "react" : "wgpu";
     const slot = selection.parameters["user-slot"] === undefined ? undefined : Number(selection.parameters["user-slot"]);
     const port = slot === undefined ? entry.ports[key] : entry.userPorts?.[key]?.[slot - 1];
@@ -256,11 +257,11 @@ export class Oracle {
     const env: Record<string, string> = { S_OS_PORT: String(port), SEMIO_PLUGIN: variant, SEMIO_RENDERER: key, ...(entry.app ? { SEMIO_APP_ID: entry.app } : {}) };
     if (selection.parameters.example !== undefined) env.SEMIO_DEFAULT_EXAMPLE = String(selection.parameters.example);
     if (selection.parameters["app-role"] !== undefined) env.SEMIO_APP_ROLE = String(selection.parameters["app-role"]);
-    return { cmd: "bun", args: ["nx", "run", "workspace:dev", "--", variant, ...selection.extraArgs], env: { ...env, ...(selection.env ?? {}) }, cwd: "", ready: { port, path: "" }, requires: [], longRunning: true };
+    return { cmd: "bun", args: ["repo", "run", "workspace:dev", "--", variant, ...selection.extraArgs], env: { ...env, ...(selection.env ?? {}) }, cwd: "", ready: { port, path: "" }, requires: [], longRunning: true };
   }
 }
 
-type Effects = { env: Record<string, string>; nxFlags: string[]; args: string[]; values: Record<string, string> };
+type Effects = { env: Record<string, string>; buildFlags: string[]; args: string[]; values: Record<string, string> };
 
 /** 🧾️ Command-line flags that state the same selection to `semio run`. */
 export function runArguments(selection: Selection, flags: string[] = []): string[] {
@@ -271,10 +272,10 @@ export function runArguments(selection: Selection, flags: string[] = []): string
 export type Proc = { commandId: string; cmd: string; args: string[]; cwd: string; env: [string, string][]; ready?: { port: number; path: string; printed?: boolean }; longRunning: boolean };
 export type Launch = { commandId: string; processes: Proc[]; requires: Launch[]; stop: string; group?: string };
 
-export const policyEnv = new Set(["NX_NATIVE_COMMAND_RUNNER", "NX_TUI", "NX_FORCE_REUSE_CACHED_GRAPH", "NX_TASKS_RUNNER_DYNAMIC_OUTPUT", "VITE_SEMIO_PLUGIN", "VITE_SEMIO_RENDERER"]);
+export const policyEnv = new Set(["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "SEMIO_BUILD_DYNAMIC_OUTPUT", "VITE_SEMIO_PLUGIN", "VITE_SEMIO_RENDERER"]);
 
 const asObject = (pairs: [string, string][]): Record<string, string> => Object.fromEntries(pairs);
-/** 🧽️ Path separators and the two spellings of the Nx project filter do not distinguish launches. */
+/** 🧽️ Path separators and the two spellings of the build project filter do not distinguish launches. */
 const normal = (words: string[]): string[] => words.flatMap((word) => (word.startsWith("--projects=") ? ["-p", word.slice("--projects=".length)] : [word])).map((word) => word.replaceAll("\\", "/"));
 
 
@@ -303,8 +304,8 @@ function compareProcess(label: string, expected: Resolved, actual: Proc, notes: 
   const sameArgs = JSON.stringify(normal(expected.args)) === JSON.stringify(normal(actual.args));
   if (!sameArgs) {
     const entry = /^nx run (@semio-tech\/framework-os-dev:(?:dev|serve)-[^ ]+-(?:react|wgpu)-dev)$/.exec(`nx run ${actual.args.slice(2).join(" ")}`);
-    if (playground && actual.args[0] === "nx" && actual.args[1] === "run" && entry && actual.args.length === 3) notes.push("playground-entry-target");
-    else if (playground && actual.args[0] === "nx" && actual.args[1] === "run" && actual.args[2] === "@semio-tech/framework-renderer-wgpu:native") notes.push("playground-native-entry");
+    if (playground && actual.args[0] === "repo" && actual.args[1] === "run" && entry && actual.args.length === 3) notes.push("playground-entry-target");
+    else if (playground && actual.args[0] === "repo" && actual.args[1] === "run" && actual.args[2] === "@semio-tech/framework-renderer-wgpu:native") notes.push("playground-native-entry");
     else faults.push(`${label}: args ${JSON.stringify(actual.args)}, expected ${JSON.stringify(expected.args)}`);
   }
   if ((expected.cwd ?? "") !== (actual.cwd ?? "")) faults.push(`${label}: cwd ${JSON.stringify(actual.cwd)}, expected ${JSON.stringify(expected.cwd)}`);

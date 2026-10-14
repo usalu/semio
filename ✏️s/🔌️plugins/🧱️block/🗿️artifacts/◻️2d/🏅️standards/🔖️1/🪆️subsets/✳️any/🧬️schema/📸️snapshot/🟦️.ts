@@ -1,7 +1,7 @@
 /** ◻️ Complete Block2d persisted fields with one canonical shared Block authority. */
 import * as shared from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 import * as p from "../../../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export * from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 export interface Block2dPresentation{shape:string|null;radius:Binary64|null;width:Binary64|null;height:Binary64|null;color:string|null;iconKind:string|null}
 export interface Block2dHandleKind{id:string;name:string;label:string;color:string;defaultWireKind:string}

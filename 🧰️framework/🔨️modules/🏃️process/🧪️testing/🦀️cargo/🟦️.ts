@@ -1,3 +1,4 @@
+import {buildModePolicy,type BuildMode} from "../../🏗️build/🎚️mode/🟦️.ts";
 import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { StringDecoder } from "node:string_decoder";
@@ -8,7 +9,7 @@ import { startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
 import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1,type CargoBuildLeaseIdentityV1} from "../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 
 /** 🦀️ Binds a Cargo invocation to its exact caller-owned execution policy. */
-export type CargoTestPolicyV1 = Readonly<{version:1;manifestPath:string;targetDirectory:string;buildDirectory:string;leaseDirectory:string;nextest:boolean;configPath:string;level:TestLevel;assertionBudgets:Readonly<Record<TestLevel,number>>;buildBudgetMs:number;assertionThreads:number;artifactDirectory:string;retainArtifacts:boolean;coverageEnabled:boolean;coveragePath:string|null;rustMinStack:string}>;
+export type CargoTestPolicyV1 = Readonly<{version:1;mode:BuildMode;manifestPath:string;targetDirectory:string;buildDirectory:string;leaseDirectory:string;nextest:boolean;configPath:string;level:TestLevel;assertionBudgets:Readonly<Record<TestLevel,number>>;buildBudgetMs:number;assertionThreads:number;artifactDirectory:string;retainArtifacts:boolean;coverageEnabled:boolean;coveragePath:string|null;rustMinStack:string}>;
 /** 📋️ Selects an exact manifest and package inventory without repository discovery. */
 export type CargoTestRequestV1 = Readonly<{manifestPath:string;packages:readonly string[];cwd:string;extraArgs?:readonly string[];environment?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal;remainingMilliseconds?:()=>number|null}>;
 /** 🎬️ Describes a compiler, assertion, or report invocation under an explicit budget. */
@@ -114,23 +115,31 @@ export function partitionNextestExecutionFilters(args: readonly string[]): { bui
 }
 
 
+function requireOriginalCompilerArguments(args:readonly string[]):void{
+ const boundary=args.indexOf("--"),compiler=boundary<0?args:args.slice(0,boundary);
+ if(compiler.some(arg=>arg==="-r"||arg==="--release"||arg==="--profile"||arg.startsWith("--profile=")||arg==="--cargo-profile"||arg.startsWith("--cargo-profile=")||arg.startsWith("-P")))throw Error("Cargo compiler profile belongs to the original caller mode");
+ if(compiler.some(arg=>arg==="--target-dir"||arg.startsWith("--target-dir=")))throw Error("Cargo compiler target belongs to the original caller storage");
+}
+
 /** 🧭️ Projects one exact Cargo request into bounded build, assertion and coverage operations. */
 export function cargoTestPlanV1(request:CargoTestRequestV1, input:CargoTestPolicyV1, metadataPath:string):CargoTestStepV1[] {
   const policy=admitPolicy(input);
   if(request.manifestPath!==policy.manifestPath||!isAbsolute(policy.configPath)||policy.coveragePath!==null&&!isAbsolute(policy.coveragePath)||!isAbsolute(request.manifestPath)||!isAbsolute(request.cwd)||!isAbsolute(metadataPath)||request.packages.some(name=>!name || name.startsWith("-"))) throw Error("Cargo tests require exact absolute manifest, working directory and metadata paths");
+  requireOriginalCompilerArguments(request.extraArgs??[]);
+  const compilerProfile=buildModePolicy(policy.mode).cargoProfile,compiler=[policy.nextest?"--cargo-profile":"--profile",compilerProfile];
   const packages=["--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name])], split=partitionNextestExecutionFilters(request.extraArgs??[]), skip=TEST_LEVELS.slice(TEST_LEVELS.indexOf(policy.level)+1).flatMap(level=>["--skip",`${level}::`]), profile=["--config-file",policy.configPath,"--profile",policy.level];
   const step=(phase:CargoTestStepV1["phase"],args:string[],capture=false):CargoTestStepV1=>({phase,args,budgetMs:phase==="assert"?policy.assertionBudgets[policy.level]:policy.buildBudgetMs,capture});
   if(policy.coverageEnabled){
     if(!policy.coveragePath)throw Error("Coverage requires an explicit owner report path");
-    const report=step("report",["llvm-cov","report","--release","--lcov",...packages,"--output-path",policy.coveragePath]);
+    const report=step("report",["llvm-cov","report","--profile",compilerProfile,"--lcov",...packages,"--output-path",policy.coveragePath]);
     if(policy.nextest){
       const archive=metadataPath+".tar.zst",reporters=["--status-level","--final-status-level"].flatMap(option=>split.executionArgs.some(arg=>arg.split("=",1)[0]===option)?[]:[option,"fail"]);
-      return [step("build",["llvm-cov","nextest-archive","--release",...profile,...packages,...split.buildArgs,"--archive-file",archive]),step("assert",["llvm-cov","nextest","--release","--no-report","--archive-file",archive,"--extract-overwrite","--no-tests","fail",...reporters,...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip]),report];
+      return [step("build",["llvm-cov","nextest-archive",...compiler,...profile,...packages,...split.buildArgs,"--archive-file",archive]),step("assert",["llvm-cov","nextest",...compiler,"--no-report","--archive-file",archive,"--extract-overwrite","--no-tests","fail",...reporters,...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip]),report];
     }
-    return [step("build",["llvm-cov","test","--release","--no-report",...packages,...split.buildArgs,"--","--list"]),step("assert",["llvm-cov","test","--release","--no-report",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip]),report];
+    return [step("build",["llvm-cov","test",...compiler,"--no-report",...packages,...split.buildArgs,"--","--list"]),step("assert",["llvm-cov","test",...compiler,"--no-report",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip]),report];
   }
-  if(policy.nextest) return [step("build",["nextest","list","--list-type","binaries-only","--message-format","json",...profile,...packages,...split.buildArgs],true),step("assert",["nextest","run","--binaries-metadata",metadataPath,"--no-tests","fail",...["--status-level","--final-status-level"].flatMap(option=>split.executionArgs.some(arg=>arg.split("=",1)[0]===option)?[]:[option,"fail"]),...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip])];
-  return [step("build",["test","--no-run",...packages,...split.buildArgs]),step("assert",["test",...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip])];
+  if(policy.nextest) return [step("build",["nextest","list",...compiler,"--list-type","binaries-only","--message-format","json",...profile,...packages,...split.buildArgs],true),step("assert",["nextest","run","--binaries-metadata",metadataPath,"--no-tests","fail",...["--status-level","--final-status-level"].flatMap(option=>split.executionArgs.some(arg=>arg.split("=",1)[0]===option)?[]:[option,"fail"]),...(policy.level==="fundamental"?["--test-threads",String(policy.assertionThreads)]:[]),...profile,"--manifest-path",request.manifestPath,...split.executionArgs,"--",...split.libtestArgs,...skip])];
+  return [step("build",["test","--no-run",...compiler,...packages,...split.buildArgs]),step("assert",["test",...compiler,...packages,...split.buildArgs,...split.executionArgs,"--",...split.libtestArgs,...skip])];
 }
 
 /** 🔌️ Supplies a caller-owned executable for the Cargo command grammar. */
@@ -153,12 +162,12 @@ export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTest
   const policy=admitPolicy(input);
   if(![policy.artifactDirectory,policy.buildDirectory,policy.leaseDirectory].every(isAbsolute)) throw Error("Cargo artifact and compiler lease directories must be absolute");
   mkdirSync(policy.artifactDirectory,{recursive:true});
-  const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")), metadata=join(directory,"binaries-metadata.json"),environment=request.environment??process.env,env={...environment,CARGO_BUILD_BUILD_DIR:policy.buildDirectory,RUST_MIN_STACK:environment.RUST_MIN_STACK??policy.rustMinStack},controller=new AbortController(),abort=()=>controller.abort();
+  const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")), metadata=join(directory,"binaries-metadata.json"),environment=request.environment??process.env,env={...environment,CARGO_TARGET_DIR:policy.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.buildDirectory,RUST_MIN_STACK:environment.RUST_MIN_STACK??policy.rustMinStack},controller=new AbortController(),abort=()=>controller.abort();
   request.signal?.addEventListener("abort",abort,{once:true});if(request.signal?.aborted)abort();process.once("SIGINT",abort);process.once("SIGTERM",abort);
   let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
   try {
    const plan=cargoTestPlanV1(request,policy,metadata),identity=cargoTestBuildLeaseIdentityV1(request,policy),stop=startNativeProgress("cargo:compiler-lease");
-   try{lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal:controller.signal});}finally{stop();}
+   try{lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:["--profile",identity.profile],signal:controller.signal});}finally{stop();}
    for(const step of plan){
     const stop=startNativeProgress(`cargo:${step.phase}`), decoder=new StringDecoder("utf8");let output="";
     try {const remaining=request.remainingMilliseconds?.();if(remaining!==undefined&&remaining!==null&&(!Number.isFinite(remaining)||remaining<1))throw Error("Original Cargo deadline exhausted");const budgetMs=remaining===undefined||remaining===null?step.budgetMs:Math.floor(step.budgetMs>0?Math.min(step.budgetMs,remaining):remaining);await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env,signal:controller.signal,budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:536870912,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
@@ -170,8 +179,9 @@ export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTest
 /** 🧹️ Projects exact owner Clippy selection while keeping warning policy out of compiler flags. */
 export function cargoLintPlanV1(request:CargoTestRequestV1,input:CargoTestPolicyV1):CargoTestStepV1{
   const policy=admitPolicy(input);
+  requireOriginalCompilerArguments(request.extraArgs??[]);
   cargoTestPlanV1({...request,extraArgs:[]},policy,join(policy.artifactDirectory,"lint-metadata.json"));
-  return {phase:"build",args:["clippy","--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name]),"--all-targets",...(request.extraArgs??[]),"--","-D","warnings"],budgetMs:policy.buildBudgetMs,capture:false};
+  return {phase:"build",args:["clippy","--profile",buildModePolicy(policy.mode).cargoProfile,"--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name]),"--all-targets",...(request.extraArgs??[]),"--","-D","warnings"],budgetMs:policy.buildBudgetMs,capture:false};
 }
 
 /** 🛠️ Executes one exact manifest's Clippy plan under its existing build budget. */
@@ -180,7 +190,7 @@ export async function runCargoLintV1(request:CargoTestRequestV1,policy:CargoTest
   request.signal?.addEventListener("abort",abort,{once:true});if(request.signal?.aborted)abort();process.once("SIGINT",abort);process.once("SIGTERM",abort);
   let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
   try {
-   lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal:controller.signal});
-   await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env:{...(request.environment??process.env),CARGO_BUILD_BUILD_DIR:policy.buildDirectory},signal:controller.signal,budgetMs:step.budgetMs,throwOnFailure:true});
+   lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:["--profile",identity.profile],signal:controller.signal});
+   await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env:{...(request.environment??process.env),CARGO_TARGET_DIR:policy.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.buildDirectory},signal:controller.signal,budgetMs:step.budgetMs,throwOnFailure:true});
   }finally{lease?.release();stop();request.signal?.removeEventListener("abort",abort);process.off("SIGINT",abort);process.off("SIGTERM",abort);}
 }

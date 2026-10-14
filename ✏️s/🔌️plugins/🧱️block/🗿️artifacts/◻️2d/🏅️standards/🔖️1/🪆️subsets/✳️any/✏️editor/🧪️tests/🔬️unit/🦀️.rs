@@ -184,7 +184,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Block2dPlayApp>>(context::block2d_app_manifest_for_tests).await;
-    assert!(Block2dPlayApp::command_from_action("noSuchAction", None).is_err());
+    assert!(Block2dPlayApp::command_from_action("noSuchAction", None, None).is_err());
 }
 //#endregion 🔖️CommandSurface
 
@@ -334,7 +334,7 @@ async fn export_media_catalog_out_wraps_the_puzzle2d_fragment() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_set_active_example() {
     let _app = Block2dPlayApp;
-    assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "left" })))), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
+    assert!(matches!(Block2dPlayApp::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "left" }))).clone()), None), Ok(Block2dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "left"));
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the old `setSelection` view

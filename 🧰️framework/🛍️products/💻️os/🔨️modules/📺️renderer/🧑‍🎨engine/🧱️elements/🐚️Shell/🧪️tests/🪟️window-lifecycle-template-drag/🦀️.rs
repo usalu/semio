@@ -10,6 +10,7 @@ fn fixture() -> Value {
 
 #[test]
 fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧪️tests/🧫️fixtures/🪟️empty-dock-notice/🔣️.json")).unwrap();
     for locale in fixture["locales"].as_array().unwrap() {
         for viewport in fixture["viewports"].as_array().unwrap() {
@@ -30,7 +31,7 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
             let mut complete = false;
             for _ in 0..1_024 {
                 let before = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).count();
-                complete = shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources);
+                complete = caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources, cx));
                 let after = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH).count();
                 assert!(after.saturating_sub(before) <= 1, "each grant paints at most one notice glyph");
                 if complete { break; }
@@ -57,8 +58,10 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
             assert_eq!(lines.len() > 1, viewport["wraps"].as_bool().unwrap());
             let glyph_count: usize = lines.iter().map(|range| text[range.clone()].trim_end_matches(ui_wgpu::wgpu::text::is_wrap_space).chars().count()).sum();
             assert_eq!(glyphs.len(), glyph_count);
+            caller.retire_world(&mut resources);
         }
     }
+    caller.finish();
 }
 
 fn shell() -> ShellState {

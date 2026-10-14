@@ -1304,7 +1304,7 @@ export interface ToolResult<T = unknown> {
 }
 
 /**
- * NX technology metadata for a workspace package.
+ * 🧩️ Repository project metadata for a workspace package.
  **/
 export interface TechnologyData {
   name: string;

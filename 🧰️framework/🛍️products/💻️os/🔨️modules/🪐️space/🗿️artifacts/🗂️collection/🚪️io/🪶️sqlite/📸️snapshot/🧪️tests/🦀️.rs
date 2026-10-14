@@ -116,7 +116,7 @@ fn sqlite_snapshot_framework_collection_public_borrowed_native_preflight_admits_
 #[test]
 fn sqlite_snapshot_framework_collection_original_borrowed_variants_match_serde_owner(){
     use semio_framework_dsl_record::{DslVariants,native_encoding::FieldProjectionView as V};
-    let schema:serde_json::Value=serde_json::from_str(include_str!("../../../../\u{1f9eb}\u{fe0f}fixtures/\u{1f3ed}\u{fe0f}native-schema/\u{1f523}\u{fe0f}.json")).unwrap();
+    let schema:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🏭️native-schema/🔣️.json")).unwrap();
     let neutral=f();let source=fixture();let mut sizes=neutral["blobSizes"].as_array().unwrap().iter();let mut witnessed=std::collections::BTreeSet::new();
     let authored_entries=neutral["nativeSnapshot"]["entries"].as_array().unwrap();assert_eq!(source.entries.len(),authored_entries.len());
     for(entry,authored)in source.entries.iter().zip(authored_entries){

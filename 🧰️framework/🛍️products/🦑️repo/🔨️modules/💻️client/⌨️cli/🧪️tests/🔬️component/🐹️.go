@@ -378,7 +378,7 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "devcontainer creation prepares dependencies through Nx",
 			path: filepath.Join(repoRoot, ".devcontainer", "devcontainer.json"),
 			requiredFragments: []string{
-				`"postCreateCommand": ["bun", "nx", "run", "workspace:deps-javascript"]`,
+				`"postCreateCommand": ["bun", "repo", "run", "workspace:deps-javascript"]`,
 			},
 			forbiddenFragments: []string{
 				"post-create.sh",
@@ -391,8 +391,8 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "native shell bootstrap uses the canonical compiler route",
 			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🐚️.sh"),
 			requiredFragments: []string{
-				"bun nx run @semio-tech/repo-client:build",
-				"bun nx run workspace:setup",
+				"bun repo run @semio-tech/repo-client:build",
+				"bun repo run workspace:setup",
 			},
 			forbiddenFragments: []string{
 				"go build",
@@ -404,8 +404,8 @@ func TestMcpBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "native windows bootstrap uses the canonical compiler route",
 			path: filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔩️native", "🥾️bootstrap", "🔵️.ps1"),
 			requiredFragments: []string{
-				`@("nx", "run", "@semio-tech/repo-client:build")`,
-				`@("nx", "run", "workspace:setup")`,
+				`@("repo", "run", "@semio-tech/repo-client:build")`,
+				`@("repo", "run", "workspace:setup")`,
 			},
 			forbiddenFragments: []string{
 				`@("build",`,

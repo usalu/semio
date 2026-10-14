@@ -1,0 +1,273 @@
+{
+  "version": 1,
+  "sourceIdentity": [
+    97146,
+    17
+  ],
+  "phases": [
+    "sourceLoan",
+    "slots",
+    "keyedOperations",
+    "keyedDocuments",
+    "appChild",
+    "publication",
+    "generation",
+    "active",
+    "state",
+    "ready"
+  ],
+  "cases": [
+    {
+      "id": "zero-items",
+      "items": 0,
+      "capacityBytes": 16777216,
+      "sourceIdentity": [
+        97146,
+        17
+      ],
+      "cancelled": false,
+      "expected": "denied",
+      "expectedPhases": []
+    },
+    {
+      "id": "zero-capacity",
+      "items": 1,
+      "capacityBytes": 0,
+      "sourceIdentity": [
+        97146,
+        17
+      ],
+      "cancelled": false,
+      "expected": "denied",
+      "expectedPhases": [
+        "sourceLoan"
+      ]
+    },
+    {
+      "id": "paid",
+      "items": 1,
+      "capacityBytes": 16777216,
+      "sourceIdentity": [
+        97146,
+        17
+      ],
+      "cancelled": false,
+      "expected": "admitted",
+      "expectedPhases": [
+        "sourceLoan",
+        "slots",
+        "keyedOperations",
+        "keyedDocuments",
+        "appChild",
+        "publication",
+        "generation",
+        "active",
+        "state",
+        "ready"
+      ]
+    },
+    {
+      "id": "foreign-operation",
+      "items": 1,
+      "capacityBytes": 16777216,
+      "sourceIdentity": [
+        97147,
+        17
+      ],
+      "cancelled": false,
+      "expected": "foreign",
+      "expectedPhases": []
+    },
+    {
+      "id": "foreign-generation",
+      "items": 1,
+      "capacityBytes": 16777216,
+      "sourceIdentity": [
+        97146,
+        18
+      ],
+      "cancelled": false,
+      "expected": "foreign",
+      "expectedPhases": []
+    },
+    {
+      "id": "cancelled-original",
+      "items": 1,
+      "capacityBytes": 16777216,
+      "sourceIdentity": [
+        97146,
+        17
+      ],
+      "cancelled": true,
+      "expected": "cancelled",
+      "expectedPhases": []
+    }
+  ],
+  "lease": {
+    "phases": [
+      "sourceKey",
+      "documentChild",
+      "operationChild",
+      "publication",
+      "aliases",
+      "scopeAliases",
+      "publish"
+    ],
+    "cases": [
+      {
+        "id": "denied-key-held",
+        "keys": [
+          71,
+          71
+        ],
+        "admitted": [
+          true,
+          false
+        ],
+        "expectedKey": 71,
+        "expectedPublished": false,
+        "sourceOwners": [
+          46,
+          46
+        ]
+      },
+      {
+        "id": "foreign-key-deferred",
+        "keys": [
+          71,
+          72
+        ],
+        "admitted": [
+          true,
+          true
+        ],
+        "expectedKey": 71,
+        "expectedPublished": false,
+        "sourceOwners": [
+          46,
+          46
+        ]
+      },
+      {
+        "id": "same-key-ready",
+        "keys": [
+          71,
+          71,
+          71,
+          71,
+          71,
+          71,
+          71
+        ],
+        "admitted": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "expectedKey": 71,
+        "expectedPublished": true,
+        "sourceOwners": [
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "id": "zero-keeps-source",
+        "keys": [
+          71,
+          71,
+          71,
+          71,
+          71,
+          71,
+          71
+        ],
+        "admitted": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "expectedKey": 71,
+        "expectedPublished": false,
+        "sourceOwners": [
+          46,
+          46,
+          46,
+          46,
+          46,
+          46,
+          46
+        ]
+      },
+      {
+        "id": "same-business-key-foreign-root",
+        "keys": [
+          71,
+          71,
+          71,
+          71,
+          71,
+          71,
+          71
+        ],
+        "sourceOwners": [
+          46,
+          47,
+          47,
+          47,
+          47,
+          47,
+          47
+        ],
+        "admitted": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "expectedKey": 71,
+        "expectedPublished": false
+      }
+    ]
+  },
+  "renewal": [
+    {
+      "creationRoot": 46,
+      "displacedParent": 46,
+      "witness": 46,
+      "expected": true
+    },
+    {
+      "creationRoot": 46,
+      "displacedParent": 46,
+      "witness": 47,
+      "expected": false
+    },
+    {
+      "creationRoot": 46,
+      "displacedParent": 46,
+      "witness": null,
+      "expected": false
+    }
+  ],
+  "retirementInlineTransfer": {
+    "capacityBytes": 0,
+    "expectedPhysicalBirth": 0
+  }
+}

@@ -69,8 +69,8 @@ export function completionRejectionOracle(repoRoot?: string): number {
     for (const rows of [law.callers, law.reservedCallers]) {
       assert.equal(new Set(rows.map(row => row.family)).size, rows.length);
       for (const row of rows) {
-        const source = readFileSync(resolve(repoRoot, row.source), "utf8");
-        const region = source.split(row.sourceStart, 2)[1]?.split(row.sourceEnd, 1)[0];
+        const source:string = readFileSync(resolve(repoRoot, row.source), "utf8");
+        const region:string|undefined = source.split(row.sourceStart, 2)[1]?.split(row.sourceEnd, 1)[0];
         assert(region !== undefined, `${row.family} current producer region is absent`);
         const guard = region.indexOf(row.terminalGuard), prepare = region.indexOf(row.completion), retain = region.indexOf(row.retainedOwner, prepare), close = region.indexOf(row.incrementalClose, retain);
         assert(guard >= 0, `${row.family} can replay after a rejected completion`);

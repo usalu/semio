@@ -530,7 +530,9 @@ impl ArtifactEditor for HomeApp {
     }
 
     /// 🎯️ Bridges shell `{action,args}` JSON onto typed `HomeCommand` until every call site speaks OpBinary.
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<HomeCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<HomeCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
         match action {
             "applyDirectoryEventPage" => Ok(HomeCommand::ApplyDirectoryEventPage(apply_directory_event_page::ApplyDirectoryEventPage {
@@ -638,9 +640,14 @@ impl ArtifactEditor for HomeApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, HomeTransient>,
         _interaction: &InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         render_body(body_key, cfg.snapshot, transient.snapshot.directory(), view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 //#endregion 🔖️HomeApp
 
@@ -650,7 +657,7 @@ pub fn render_body(body_key: &str, config: &HomeConfig, directory: &crate::edito
         crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(config, directory, view_state)?,
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.render.unknown-body", "unknown body key text admission failed"))?,
     };
-    Ok(ComponentTree { root })
+    Ok(ComponentTree::new(root))
 }
 
 //#region 🔖️HomeManifest

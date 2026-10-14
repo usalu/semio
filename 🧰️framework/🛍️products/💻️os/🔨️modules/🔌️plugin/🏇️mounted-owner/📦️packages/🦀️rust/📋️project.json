@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-plugin-mounted-owner-rs",
   "targets": {
     "test-portable": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts portable",
@@ -10,7 +10,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test",

@@ -6,5 +6,5 @@ export type ArtifactDefinition = typeof definition;
 export type {WavSnapshot,WavFmt,WavData,RiffChunk,WavChunkRef} from "./🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
 export {parseWavSnapshot,parseWavFmt,parseWavData,parseRiffChunk,parseWavChunkRef,validateWavSerialization} from "./🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
 export {WAV_SQLITE_SCHEMA,wavSnapshotToSqliteDatabase,wavSnapshotFromSqliteDatabase} from "./🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-export {binary32,binary32Value} from "../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-export type {Binary32} from "../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+export {binary32,binary32Value} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+export type {Binary32} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";

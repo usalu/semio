@@ -66,7 +66,7 @@ fn schema_document_index_reads_one_file_and_ignores_unlisted_schemas() {
     let workspace = parent.join(format!("dsl-schema-index-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&workspace);
     std::fs::create_dir_all(&workspace).unwrap();
-    std::fs::write(workspace.join("nx.json"), b"{}\n").unwrap();
+    std::fs::write(workspace.join("package.json"), b"{\"workspaces\":[]}\n").unwrap();
     std::fs::write(workspace.join("📋️project.json"), b"{}\n").unwrap();
     let index_path = workspace.join(super::MUTATION_SCHEMA_INDEX_LOCATOR);
     std::fs::create_dir_all(index_path.parent().unwrap()).unwrap();

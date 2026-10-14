@@ -1,0 +1,1 @@
+{"text":"original 漢 🌱️","items":["α","β retained","最後"],"turn":{"items":1,"copyBytes":4096,"capacityBytes":65536,"releaseBytes":65536,"depth":128},"laws":["sameOriginalSource","oneItemContinuation","sameOriginalNative","independentSerdeOutput","paidPartialRetirement"]}

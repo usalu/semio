@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "expectedKind",
+    "expectedName",
+    "sameCaller",
+    "sourceClosedBeforeAdmission",
+    "successFaultEnvelope",
+    "receiptPostedOnce",
+    "copyBodies",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "expectedKind": {
+      "const": "duplicateMember"
+    },
+    "expectedName": {
+      "const": "operatorId"
+    },
+    "sameCaller": {
+      "const": true
+    },
+    "sourceClosedBeforeAdmission": {
+      "const": true
+    },
+    "successFaultEnvelope": {
+      "const": false
+    },
+    "receiptPostedOnce": {
+      "const": true
+    },
+    "copyBodies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

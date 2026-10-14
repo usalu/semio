@@ -10,7 +10,7 @@ import {Buffer} from "node:buffer";
 import controls from "./🧫️fixtures/🎛️control.json";
 import words from "./🧫️fixtures/🔢️binary64.json";
 import { DIN18599_SQLITE_SCHEMA, din18599SnapshotToSqliteDatabase, din18599SnapshotFromSqliteDatabase, type Din18599SqliteSnapshot } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 test("DIN18599 owned exact wire parser refuses every unknown native choice",()=>{for(const field of ["buildingCategory","attachment","useClass","method","automationClass"] as const)expect(()=>snapshot.parseDin18599Snapshot({...fixture,[field]:"unknown"})).toThrow();expect(()=>snapshot.parseDin18599Snapshot({...fixture,zones:[{...fixture.zones[0],usageProfile:"unknown"}]})).toThrow();for(const field of ["kind","adjacency"])expect(()=>snapshot.parseDin18599Snapshot({...fixture,elements:[{...fixture.elements[0],[field]:"unknown"}]})).toThrow()});
 test("DIN18599 owned exact wire parser refuses every unsigned32 occupant counterexample",()=>{for(const occupants of choices.invalidUnsigned32)expect(()=>snapshot.parseDin18599Snapshot({...fixture,zones:[{...fixture.zones[0],occupants}]})).toThrow()});

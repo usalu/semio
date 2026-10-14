@@ -1,0 +1,256 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "caller",
+    "expected",
+    "absent",
+    "ambientUnchanged",
+    "proofCases",
+    "senderExpected",
+    "selectedScope",
+    "journalScope",
+    "daemonFailures",
+    "lockReuse",
+    "watchStartup",
+    "daemonStartup"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "caller": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "absent": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ambientUnchanged": {
+      "const": true
+    },
+    "proofCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "value",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "value": {},
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "senderExpected": {
+      "const": {
+        "reflectedMembership": false,
+        "separateMembership": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "original": true
+      }
+    },
+    "selectedScope": {
+      "const": {
+        "version": 1,
+        "tasks": [
+          "toy:compile:release"
+        ],
+        "roots": [
+          "toy"
+        ],
+        "files": [
+          "package.json"
+        ]
+      }
+    },
+    "journalScope": {
+      "const": {
+        "roots": [
+          "toy"
+        ],
+        "files": [
+          "package.json"
+        ]
+      }
+    },
+    "daemonFailures": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "message",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "persistent",
+              "localDisabled",
+              "nextEnabled"
+            ],
+            "properties": {
+              "persistent": {
+                "const": false
+              },
+              "localDisabled": {
+                "const": true
+              },
+              "nextEnabled": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "lockReuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lock",
+        "phases",
+        "refusals"
+      ],
+      "properties": {
+        "lock": {
+          "type": "object"
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch",
+              "suffix",
+              "parseCalls",
+              "changed"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "patch": {
+                "type": "string",
+                "minLength": 1
+              },
+              "suffix": {
+                "type": "string"
+              },
+              "parseCalls": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "changed": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "refusals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "invalidRefused",
+            "missingPatchRefused",
+            "restoredParseCalls"
+          ],
+          "properties": {
+            "invalidRefused": {
+              "const": true
+            },
+            "missingPatchRefused": {
+              "const": true
+            },
+            "restoredParseCalls": {
+              "const": 3
+            }
+          }
+        }
+      }
+    },
+    "watchStartup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ready",
+        "deadlineRefused",
+        "cancelRefused",
+        "markerPreserved"
+      ],
+      "properties": {
+        "ready": {
+          "const": "ready"
+        },
+        "deadlineRefused": {
+          "const": true
+        },
+        "cancelRefused": {
+          "const": true
+        },
+        "markerPreserved": {
+          "const": true
+        }
+      }
+    },
+    "daemonStartup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clients",
+        "starts",
+        "accepted"
+      ],
+      "properties": {
+        "clients": {
+          "const": 2
+        },
+        "starts": {
+          "const": 1
+        },
+        "accepted": {
+          "const": 2
+        }
+      }
+    }
+  }
+}

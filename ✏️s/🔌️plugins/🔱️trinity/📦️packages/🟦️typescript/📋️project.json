@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/trinity-js",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

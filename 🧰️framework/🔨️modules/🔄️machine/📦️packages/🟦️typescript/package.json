@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/machine",
   "version": "0.1.0",
   "description": "In-house statechart kernel — TS twin of the Rust `statechart!` macro's compiled tables.",
@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/machine:test"
+    "test": "bun repo run @semio-tech/machine:test"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

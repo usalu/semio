@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-actor-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
   "namedInputs": {
     "default": [
@@ -12,8 +12,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts"
     ],
     "nativeSources": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧩️component/**/*"
@@ -21,16 +20,24 @@
   },
   "targets": {
     "test-original-receiving-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
-        "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🎭️actor/📦️packages/🦀️rust -- bun ./📜️script.ts test-original-receiving-source",
+        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving-source",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     },
     "test-original-receiving-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework",
@@ -39,14 +46,14 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "typegen": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts typegen"
@@ -56,7 +63,7 @@
       ]
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -64,7 +71,7 @@
       "outputs": []
     },
     "wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
@@ -73,6 +80,59 @@
         "{projectRoot}/pkg"
       ],
       "cache": true
+    },
+    "test-original-owned-async-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-owned-async source",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-original-owned-async-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-owned-async native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      }
+    },
+    "test-original-context-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-context-native",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      }
     }
   }
 }

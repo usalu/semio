@@ -33,7 +33,7 @@ async fn every_bounded_retained_route_answers_an_admissible_extent() {
             ("channel".into(), semio_framework_value::DslValue::String("width".into())),
             ("value".into(), semio_framework_value::DslValue::String("2".into())),
         ]));
-        let command = <Generation3dPlayApp as ArtifactEditor>::command_from_action(tool_id, args.as_ref()).unwrap_or_else(|_| panic!("{tool_id} decodes from its own action id"));
+        let command = <Generation3dPlayApp as ArtifactEditor>::command_from_action(tool_id, args.clone(), None).unwrap_or_else(|_| panic!("{tool_id} decodes from its own action id"));
         let extent = if GENERATION3D_PREVIEW_TOOL_IDS.contains(&tool_id) {
             Generation3dPreviewCommandWork::new(tool_id, instance_owner.clone()).extent(&command, &read, &interaction, None)
         } else {

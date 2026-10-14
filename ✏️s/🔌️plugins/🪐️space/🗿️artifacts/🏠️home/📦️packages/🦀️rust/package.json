@@ -8,7 +8,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-home-host-panel-owner": "bun nx run @semio-tech/space-home-rs:verify-home-host-panel-owner"
+    "verify-home-host-panel-owner": "bun repo run @semio-tech/space-home-rs:verify-home-host-panel-owner"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

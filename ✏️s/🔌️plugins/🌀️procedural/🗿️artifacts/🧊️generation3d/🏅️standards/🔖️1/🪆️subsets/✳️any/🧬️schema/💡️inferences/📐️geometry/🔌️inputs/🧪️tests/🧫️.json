@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "widget": "Widget Ü",
+  "ports": [
+    {
+      "name": "zeta",
+      "en": "Late Ω",
+      "de": "Spät Ä"
+    },
+    {
+      "name": "alpha",
+      "en": "First",
+      "de": "Erste"
+    }
+  ],
+  "expectedOrder": [
+    "alpha",
+    "zeta"
+  ],
+  "valuesDonation": {
+    "headerOnly": true,
+    "payloadCopies": 0
+  },
+  "maximumComparisonBytesPerEvent": 1,
+  "originalCaller": {
+    "operation": 745,
+    "generation": 3,
+    "items": 50000,
+    "copyBytes": 4194304,
+    "capacityBytes": 4194304,
+    "releaseBytes": 4194304,
+    "depth": 128,
+    "fuel": 1000000,
+    "deadlineMicros": 1000000000
+  }
+}

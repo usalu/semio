@@ -9,12 +9,14 @@
     "environment": {},
     "storage": {
       "version": 1,
-      "directory": "/owned"
+      "directory": "/owned",
+      "program": "/original/📜️script.ts"
     },
     "provenance": {
       "version": 1,
       "buildDirectory": "/compiler",
-      "mirrorDirectory": null
+      "mirrorDirectory": null,
+      "targetDirectory": "/outputs"
     }
   },
   "missing": [
@@ -55,7 +57,8 @@
       "storage",
       {
         "version": 1,
-        "directory": "relative"
+        "directory": "relative",
+        "program": "/original/📜️script.ts"
       }
     ],
     [
@@ -63,7 +66,8 @@
       {
         "version": 1,
         "buildDirectory": "relative",
-        "mirrorDirectory": null
+        "mirrorDirectory": null,
+        "targetDirectory": "/outputs"
       }
     ]
   ],

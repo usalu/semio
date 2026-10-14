@@ -27,11 +27,11 @@ fn set_cell_requires_its_full_address_and_accepts_an_empty_value() {
         ("revision".into(), semio_framework_value::DslValue::String("row-revision".into())),
         ("value".into(), semio_framework_value::DslValue::String(String::new())),
     ]);
-    let command = <EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some(&args)).expect("complete cell address");
+    let command = <EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some((args).clone()), None).expect("complete cell address");
     assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(EpwEditorCommand::SetCell { row: 1, column: main::EPW_TABLE_COLUMNS[2].into(), revision: "row-revision".into(), value: String::new() }));
-    assert!(<EpwEditor as ArtifactEditor>::command_from_action("set-cell", None).is_err());
+    assert!(<EpwEditor as ArtifactEditor>::command_from_action("set-cell", None, None).is_err());
     let missing_value = semio_framework_value::DslValue::object([("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(1))), ("column".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(2)))]);
-    assert!(<EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some(&missing_value)).is_err());
+    assert!(<EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some((missing_value).clone()), None).is_err());
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn set_cell_matches_the_language_neutral_renderer_fixture() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/✏️set-cell/🔣️.json")).expect("EPW cell fixture");
     for case in fixture["cases"].as_array().expect("fixture cases") {
         let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed fixture args");
-        let command = <EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some(&args)).expect("fixture command");
+        let command = <EpwEditor as ArtifactEditor>::command_from_action("set-cell", Some((args).clone()), None).expect("fixture command");
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(EpwEditorCommand::SetCell { row, column, revision, value }) = command else { panic!("fixture must produce the native cell command") };
         assert_eq!(u64::from(row), case["command"]["row"].as_u64().expect("row"));
         assert_eq!(column, case["command"]["column"].as_str().expect("column"));

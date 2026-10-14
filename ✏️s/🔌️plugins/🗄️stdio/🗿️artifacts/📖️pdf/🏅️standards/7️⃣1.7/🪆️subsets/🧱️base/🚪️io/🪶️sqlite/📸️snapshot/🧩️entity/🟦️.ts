@@ -1,7 +1,7 @@
 /** 🧩️ Explicit PDF entity ownership, bounded copies and relationship reconstruction. */
 import { ArtifactSqliteProjection, artifactSqliteCheckpoint, artifactSqliteTables, artifactSqliteInteger, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type { SqliteDatabase, SqliteRow, SqliteValue } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export type { ArtifactSqliteOptions, SqliteDatabase, SqliteRow, SqliteValue, Binary64 };
 export type PdfCell = SqliteValue | Binary64;

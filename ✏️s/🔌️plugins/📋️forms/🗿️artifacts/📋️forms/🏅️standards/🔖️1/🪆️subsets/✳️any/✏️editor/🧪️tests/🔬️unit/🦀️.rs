@@ -157,10 +157,10 @@ fn command_from_action_round_trips_every_command_id() {
             other => other.clone(),
         };
         let camel = camel_case_keys(&payload);
-        let bridged = FormsPlayApp::command_from_action(id, Some(&camel)).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = FormsPlayApp::command_from_action(id, Some((camel).clone()), None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
     }
-    assert!(FormsPlayApp::command_from_action("nonsense", None).is_err());
+    assert!(FormsPlayApp::command_from_action("nonsense", None, None).is_err());
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
@@ -188,31 +188,31 @@ fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_v
 fn command_from_action_bridges_block_list_verbs_and_control_values() {
     let args = |json: serde_json::Value| context::action_args(&json);
     assert_eq!(
-        FormsPlayApp::command_from_action("setActiveExample", Some(&args(serde_json::json!({ "exampleId": "onboarding" })))).expect("example bridge"),
+        FormsPlayApp::command_from_action("setActiveExample", Some((args(serde_json::json!({ "exampleId": "onboarding" }))).clone()), None).expect("example bridge"),
         FormsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "onboarding".into() })
     );
     assert_eq!(
-        FormsPlayApp::command_from_action("addBlock", Some(&args(serde_json::json!({ "stepId": "s1", "kind": "number" })))).expect("addBlock bridge"),
+        FormsPlayApp::command_from_action("addBlock", Some((args(serde_json::json!({ "stepId": "s1", "kind": "number" }))).clone()), None).expect("addBlock bridge"),
         FormsCommand::AddQuestion(add_question::AddQuestion { kind: "number".into(), step_id: Some("s1".into()) })
     );
     assert_eq!(
-        FormsPlayApp::command_from_action("removeBlock", Some(&args(serde_json::json!({ "stepId": "s1", "blockId": "q1" })))).expect("removeBlock bridge"),
+        FormsPlayApp::command_from_action("removeBlock", Some((args(serde_json::json!({ "stepId": "s1", "blockId": "q1" }))).clone()), None).expect("removeBlock bridge"),
         FormsCommand::RemoveQuestion(remove_question::RemoveQuestion { question_id: "q1".into() })
     );
     assert_eq!(
-        FormsPlayApp::command_from_action("moveBlock", Some(&args(serde_json::json!({ "blockId": "q1", "fromStepId": "s1", "toStepId": "s2", "index": 3 })))).expect("moveBlock bridge"),
+        FormsPlayApp::command_from_action("moveBlock", Some((args(serde_json::json!({ "blockId": "q1", "fromStepId": "s1", "toStepId": "s2", "index": 3 }))).clone()), None).expect("moveBlock bridge"),
         FormsCommand::MoveQuestion(move_question::MoveQuestion { question_id: "q1".into(), to_step_id: "s2".into(), target_id: None, position: "after".into(), index: Some(3) })
     );
-    let FormsCommand::SetTryValue(try_value) = FormsPlayApp::command_from_action("setTryValue", Some(&args(serde_json::json!({ "key": "name", "windowId": "w", "windowKindId": "forms-try", "value": "Column A" })))).expect("setTryValue bridge") else {
+    let FormsCommand::SetTryValue(try_value) = FormsPlayApp::command_from_action("setTryValue", Some((args(serde_json::json!({ "key": "name", "windowId": "w", "windowKindId": "forms-try", "value": "Column A" }))).clone()), None).expect("setTryValue bridge") else {
         panic!("setTryValue must bridge to SetTryValue");
     };
     assert_eq!(try_value.key, "name");
     assert_eq!(try_value.window_kind_id, "forms-try");
     assert_eq!(try_value.value_json.as_deref(), Some("\"Column A\""));
-    assert!(FormsPlayApp::command_from_action("patchStep", Some(&args(serde_json::json!({ "stepId": "s1" })))).is_err(), "a required field must not be defaulted silently");
+    assert!(FormsPlayApp::command_from_action("patchStep", Some((args(serde_json::json!({ "stepId": "s1" }))).clone()), None).is_err(), "a required field must not be defaulted silently");
     // 🔢️ Host JSON delivers integers as floats; the exact-integer codecs must still decode them.
     let float_index = semio_framework_value::DslValue::object([("stepId".to_string(), semio_framework_value::DslValue::String("s1".into())), ("index".to_string(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]);
-    assert_eq!(FormsPlayApp::command_from_action("moveStep", Some(&float_index)).expect("integral float bridge"), FormsCommand::MoveStep(move_step::MoveStep { step_id: "s1".into(), index: 2 }));
+    assert_eq!(FormsPlayApp::command_from_action("moveStep", Some((float_index).clone()), None).expect("integral float bridge"), FormsCommand::MoveStep(move_step::MoveStep { step_id: "s1".into(), index: 2 }));
 }
 //#endregion 🔖️ActionBridge
 

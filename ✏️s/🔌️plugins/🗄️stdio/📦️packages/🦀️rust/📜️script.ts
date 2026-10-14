@@ -101,7 +101,7 @@ class DeletionProofScript extends BundleScript {
     const manifest = table("workspace", { members: [...closure.values()].map((member) => relative(this.repoRoot, member.path).split("\\").join("/")), resolver: "2" }) + table("workspace.package", original.package) + table("workspace.dependencies", dependencies) + Object.entries(original.lints).map(([name, values]) => table(`workspace.lints.${name}`, values as Record<string, any>)).join("") + table("profile.dev", { debug: 0, incremental: false });
     writeFileSync(join(workspaceRoot, "Cargo.toml"), manifest);
     copy(join(this.repoRoot, "Cargo.lock"));
-    copy(join(this.repoRoot, "nx.json"));
+    copy(join(this.repoRoot, "package.json"));
     copy(join(this.repoRoot, "📋️project.json"));
     const artifactsAbsent = !existsSync(join(workspaceRoot, relative(this.repoRoot, core), "🗿️artifacts"));
     if (!artifactsAbsent) throw new Error("deletion-proof copied concrete Stdio artifacts");

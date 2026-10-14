@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/ui-styling-tokens",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate",
@@ -12,7 +12,7 @@
       "cache": true
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -20,14 +20,14 @@
       "outputs": []
     },
     "check-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-generated"
       }
     },
     "fonts": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts fonts",
@@ -36,7 +36,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -44,21 +44,21 @@
       }
     },
     "test-rs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "test-py": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "test-relative-sizing": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -70,7 +70,7 @@
       }
     },
     "test-verification-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -85,7 +85,7 @@
       "dependsOn": [
         "workspace:deps-browsers"
       ],
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-color-primitives"

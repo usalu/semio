@@ -623,7 +623,7 @@ export interface CurrentJcoPackageDestination {
   readonly adapterPath: string;
 }
 
-/** ⚙️ Schema-owned generator identity; runnable commands derive only from exact Nx targets. */
+/** ⚙️ Schema-owned generator identity; runnable commands derive only from exact build tasks. */
 export interface GeneratorContract {
   readonly ownership: GeneratorOwnership;
   readonly ownerPath: string | null;
@@ -1258,7 +1258,6 @@ function workspaceTaxonomyLocator(manifest: unknown): string {
 export function resolveWorkspaceTaxonomyAuthority(workspaceRoot: string): WorkspaceTaxonomyAuthority {
   const root = workspaceAuthorityPath(workspaceRoot, "root");
   noFollowDirectoryAncestry(root, "workspace root ancestry");
-  noFollowStat(join(root, "nx.json"), "file", "nx manifest");
   const manifestPath = join(root, "📋️project.json");
   noFollowStat(manifestPath, "file", "project manifest");
   let manifest: unknown;
@@ -1295,27 +1294,24 @@ function taxonomyWorkspaceRootFromDirectory(startDirectory: string): string | nu
     return null;
   }
   for (let candidate = start; dirname(candidate) !== candidate; candidate = dirname(candidate)) {
-    const nxPath = join(candidate, "nx.json");
-    const nxKind = noFollowNodeKind(nxPath);
-    if (nxKind === "missing") continue;
-    if (nxKind === "symlink") throw new Error(`Workspace taxonomy nx manifest must not be a symlink at ${JSON.stringify(nxPath)}.`);
-    if (nxKind !== "file") throw new Error(`Workspace taxonomy nx manifest must be a file at ${JSON.stringify(nxPath)}.`);
     const projectPath = join(candidate, "📋️project.json");
     const projectKind = noFollowNodeKind(projectPath);
-    if (projectKind === "missing") throw new Error(`Workspace taxonomy project manifest is missing at ${JSON.stringify(projectPath)}.`);
+    if (projectKind === "missing") continue;
     if (projectKind === "symlink") throw new Error(`Workspace taxonomy project manifest must not be a symlink at ${JSON.stringify(projectPath)}.`);
     if (projectKind !== "file") throw new Error(`Workspace taxonomy project manifest must be a file at ${JSON.stringify(projectPath)}.`);
+    const project = JSON.parse(readFileSync(projectPath, "utf8")) as { name?: unknown; metadata?: { semio?: { taxonomy?: unknown } } };
+    if (typeof project.name === "string" && project.name !== "workspace" && project.metadata?.semio?.taxonomy === undefined) continue;
     return candidate;
   }
   return null;
 }
 
-/** 🧭️ Finds the marker-paired workspace from a no-follow, non-compose discovery directory. */
+/** 🧭️ Finds the declared portable workspace from a no-follow, non-compose discovery directory. */
 export function resolveWorkspaceTaxonomyAuthorityFromDirectory(startDirectory: string): WorkspaceTaxonomyAuthority {
   const start = workspaceAuthorityPath(startDirectory, "start directory");
   noFollowDirectoryAncestry(start, "workspace start directory ancestry");
   const workspaceRoot = taxonomyWorkspaceRootFromDirectory(start);
-  if (!workspaceRoot) throw new Error("Workspace taxonomy root containing exact nx.json and 📋️project.json markers could not be resolved.");
+  if (!workspaceRoot) throw new Error("Workspace taxonomy root declaring metadata.semio.taxonomy could not be resolved.");
   return resolveWorkspaceTaxonomyAuthority(workspaceRoot);
 }
 //#endregion 🧭️WorkspaceTaxonomyAuthority
@@ -1914,15 +1910,15 @@ export function generatorContractIdsForOutputPath(path: string, taxonomy: Taxono
 }
 
 /** ⚙️ Derives the only runnable generator command shape admitted by v7. */
-export function generatorNxCommand(contract: GeneratorContract): readonly ["bun", "nx", "run", string] {
+export function generatorBuildCommand(contract: GeneratorContract): readonly ["bun", "repo", "run", string] {
   if (contract.ownership !== "owned" || !contract.target) throw new Error("Only owned generator contracts are runnable.");
-  return ["bun", "nx", "run", contract.target];
+  return ["bun", "repo", "run", contract.target];
 }
 
 /** 👁️ Derives an owned generator's mandatory read-only preview command. */
-export function generatorNxPreviewCommand(contract: GeneratorContract): readonly ["bun", "nx", "run", string] {
+export function generatorBuildPreviewCommand(contract: GeneratorContract): readonly ["bun", "repo", "run", string] {
   if (contract.ownership !== "owned" || !contract.previewTarget) throw new Error("Only owned generator contracts have preview targets.");
-  return ["bun", "nx", "run", contract.previewTarget];
+  return ["bun", "repo", "run", contract.previewTarget];
 }
 
 /** 👓️ Admits an exact read-only script invocation without sharing another generator's preview. */
@@ -1947,9 +1943,9 @@ export function generatorPreviewResourceLimits(contract: Pick<GeneratorContract,
 }
 
 /** ✅️ Derives an owned generator's exact optional freshness command. */
-export function generatorNxCheckCommand(contract: GeneratorContract): readonly ["bun", "nx", "run", string] | null {
+export function generatorBuildCheckCommand(contract: GeneratorContract): readonly ["bun", "repo", "run", string] | null {
   if (contract.ownership !== "owned" || !contract.checkTarget) return null;
-  return ["bun", "nx", "run", contract.checkTarget];
+  return ["bun", "repo", "run", contract.checkTarget];
 }
 
 /** 🧭️ Structural ancestry supplied to owner-local exact semantic member resolution. */
@@ -4524,7 +4520,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       }));
       const expected = new Map<string, string>([["directory:", "directory"], ["file:🦀️.rs", "rust-source:🦀️.rs"]]);
       for (const owner of [...actual.keys()].filter((key) => key.startsWith("file:") && key.endsWith(manifestSuffix)).map((key) => key.slice("file:".length, -manifestSuffix.length))) {
-        for (const [name, authority] of [["🦀️.rs", "rust-source:🦀️.rs"], ["📦️packages/🦀️rust/Cargo.toml", "fixed:cargo-manifest"], ["📦️packages/🦀️rust/📋️project.json", "fixed:nx-project-manifest"], ["📦️packages/🦀️rust/📜️script.ts", "fixed:root-script"]] as const) expected.set(`file:${owner}/${name}`, authority);
+        for (const [name, authority] of [["🦀️.rs", "rust-source:🦀️.rs"], ["📦️packages/🦀️rust/Cargo.toml", "fixed:cargo-manifest"], ["📦️packages/🦀️rust/📋️project.json", "fixed:build-project-manifest"], ["📦️packages/🦀️rust/📜️script.ts", "fixed:root-script"]] as const) expected.set(`file:${owner}/${name}`, authority);
         const segments = `${owner}/📦️packages/🦀️rust`.split("/");
         for (let index = 1; index <= segments.length; index++) expected.set(`directory:${segments.slice(0, index).join("/")}`, "directory");
       }
@@ -4899,12 +4895,12 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     if (!cache || cache.pathPattern !== `${ticketCargoPattern}${triple}/CACHEDIR.TAG` || cache.authority !== "Cargo" || cache.scope.kind !== "fixed-directory-contract" || cache.scope.fixedDirectoryContractId !== directoryId) problems.push(`fixedFilenameContracts.${cacheId} must remain conjunctively scoped through its exact Cargo target-triple contract.`);
   }
   const nxManifestScopes = [
-    ["nx-owned-node-package-manifest", "**/package.json", "Nx and Node.js"],
-    ["nx-owned-typescript-config", "**/tsconfig.json", "Nx and TypeScript"],
+    ["build-owned-node-package-manifest", "**/package.json", "Build Tools and Node.js"],
+    ["build-owned-typescript-config", "**/tsconfig.json", "Build Tools and TypeScript"],
   ] as const;
   for (const [id, pattern, authority] of nxManifestScopes) {
     const contract = taxonomy.fixedFilenameContracts[id];
-    if (!contract || contract.pathPattern !== pattern || contract.authority !== authority || contract.scope.kind !== "sibling-fixed-filename-contract" || contract.scope.fixedFilenameContractId !== "nx-project-manifest") problems.push(`fixedFilenameContracts.${id} must remain conjunctively scoped through an adjacent exact Nx project manifest.`);
+    if (!contract || contract.pathPattern !== pattern || contract.authority !== authority || contract.scope.kind !== "sibling-fixed-filename-contract" || contract.scope.fixedFilenameContractId !== "build-project-manifest") problems.push(`fixedFilenameContracts.${id} must remain conjunctively scoped through an adjacent exact build project manifest.`);
   }
   const bunPublicationScopes = [
     ["bun-package-readme", "**/README.md"],
@@ -5019,7 +5015,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     };
     const nxTarget = (value: unknown, key: string): value is string => {
       const valid = typeof value === "string" && /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*:[a-z0-9][a-z0-9._-]*$/u.test(value);
-      if (!valid) problems.push(`${key} must be one exact Nx project:target identity.`);
+      if (!valid) problems.push(`${key} must be one exact build project:target identity.`);
       return valid;
     };
     const outputOwners: { id: string; path: string }[] = [];
@@ -5522,7 +5518,7 @@ export interface CanonicalWgpuPackageCatalog {
   readonly ownerPath: string;
   readonly packageRelativePath: "📦️packages/🦀️rust";
   readonly nodePackageRelativePath: "📦️packages/🟦️typescript";
-  readonly identity: Readonly<{ cargoPackageName: string; nodePackageName: string; nxProjectName: string }>;
+  readonly identity: Readonly<{ cargoPackageName: string; nodePackageName: string; projectName: string }>;
   readonly entryPaths: Readonly<{ cargoLibrary: string; cargoBinary: string; cargoBuild: "build.rs"; nodeLibrary: string }>;
   readonly artifacts: readonly Readonly<{ id: string; relativePath: string; targetRelativePath: string | null; language: "rust" | "typescript"; role: "declaration" | "implementation"; content: string }>[];
 }
@@ -5533,7 +5529,7 @@ export function parseCanonicalWgpuPackageCatalog(bytes: string, digest: string, 
   const row = JSON.parse(bytes) as CanonicalWgpuPackageCatalog;
   const exact = (value: unknown, keys: readonly string[]): boolean => value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
   if (!exact(row, ["$schema", "schemaVersion", "kind", "ownerPath", "packageRelativePath", "nodePackageRelativePath", "identity", "entryPaths", "artifacts"]) || row.$schema !== "https://json.schemas.assets.semio-tech.com/os/renderer/component.json#/$defs/RendererPackageCatalogV1" || row.schemaVersion !== 1 || row.kind !== "canonical-wgpu-package" || row.ownerPath !== profile.ownerPath || row.packageRelativePath !== "📦️packages/🦀️rust" || row.nodePackageRelativePath !== "📦️packages/🟦️typescript") throw new Error("Current WGPU package catalog identity drift");
-  if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "nxProjectName"]) || row.identity.cargoPackageName !== "semio-framework-os-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.nxProjectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
+  if (!exact(row.identity, ["cargoPackageName", "nodePackageName", "projectName"]) || row.identity.cargoPackageName !== "semio-framework-os-renderer-wgpu" || row.identity.nodePackageName !== "@semio-tech/framework-renderer-wgpu" || row.identity.projectName !== row.identity.nodePackageName || !exact(row.entryPaths, ["cargoLibrary", "cargoBinary", "cargoBuild", "nodeLibrary"]) || Object.values(row.entryPaths).some((path) => !exactOwnerPath(path)) || row.entryPaths.cargoBuild !== "build.rs") throw new Error("Current WGPU package manifest authority drift");
   const ids = ["build-adapter", "binary-adapter", "typescript-adapter", "renderer-registration"];
   if (!Array.isArray(row.artifacts) || row.artifacts.length !== ids.length || row.artifacts.some((artifact, index) => !exact(artifact, ["id", "relativePath", "targetRelativePath", "language", "role", "content"]) || artifact.id !== ids[index] || !exactOwnerPath(artifact.relativePath) || artifact.targetRelativePath !== null && !exactOwnerPath(artifact.targetRelativePath) || !["rust", "typescript"].includes(artifact.language) || !["declaration", "implementation"].includes(artifact.role) || typeof artifact.content !== "string" || classifyPackageSource(artifact.content, taxonomy.packageGlueGrammar[artifact.language]).role !== artifact.role) || new Set(row.artifacts.map((artifact) => artifact.relativePath)).size !== ids.length) throw new Error("Current WGPU package artifact authority drift");
   for (const artifact of row.artifacts) {
@@ -5556,7 +5552,7 @@ export interface SemanticPackageProjectionCase {
   readonly destinationRoot: string;
   readonly semanticOwnerRoot: string;
   readonly workspaceKind: "repository" | "standalone";
-  readonly identity: Readonly<{ cargoPackageName: string; nodePackageName?: string; nxProjectName?: string }>;
+  readonly identity: Readonly<{ cargoPackageName: string; nodePackageName?: string; projectName?: string }>;
   readonly requiredManifestEvidence: Readonly<Record<string, unknown>>;
   readonly ignoredSourcePatterns: readonly string[];
   readonly mappings: readonly SemanticPackageProjectionMapping[];
@@ -5843,7 +5839,7 @@ export function semanticPackageProjectionAuthority(
     try {
       const workspace = JSON.parse(facts.nodeWorkspaceContent ?? "null"), node = JSON.parse(nodes.get(nodeRoot + "/package.json")?.content ?? "null"), nx = JSON.parse(nodes.get(nodeRoot + "/📋️project.json")?.content ?? "null");
       const invalidCwd = Object.values(nx?.targets ?? {}).some((target) => { const cwd = (target as { options?: { cwd?: string } }).options?.cwd; return cwd !== undefined && ![nodeRoot, ".", "{projectRoot}"].includes(cwd); });
-      if (!Array.isArray(workspace?.workspaces) || !workspace.workspaces.includes(nodeRoot) || node?.name !== row.identity.nodePackageName || node?.exports?.["."] !== (destination ? "./📚️library/🟦️.ts" : "./🟦️.ts") || nx?.name !== row.identity.nxProjectName || nx?.sourceRoot !== (destination ? row.semanticOwnerRoot : activeRoot) || !nx?.targets || invalidCwd || destination && !nx?.namedInputs?.default?.includes(`{workspaceRoot}/${row.semanticOwnerRoot}/**/*`)) problems.push("WGPU Node/Nx workspace identity drift");
+      if (!Array.isArray(workspace?.workspaces) || !workspace.workspaces.includes(nodeRoot) || node?.name !== row.identity.nodePackageName || node?.exports?.["."] !== (destination ? "./📚️library/🟦️.ts" : "./🟦️.ts") || nx?.name !== row.identity.projectName || nx?.sourceRoot !== (destination ? row.semanticOwnerRoot : activeRoot) || !nx?.targets || invalidCwd || destination && !nx?.namedInputs?.default?.includes(`{workspaceRoot}/${row.semanticOwnerRoot}/**/*`)) problems.push("WGPU Node/Nx workspace identity drift");
     } catch { problems.push("WGPU requires valid Node and Nx manifest evidence"); }
     const configPath = "vitest.config.ts";
     const config = nodes.get(nodeRoot + "/" + configPath)?.content ?? "", script = nodes.get(nodeRoot + "/📜️script.ts")?.content ?? "";
@@ -5958,7 +5954,7 @@ export function semanticPackageSourceManifestIdentity(facts: Readonly<{ cargoMan
     if (nestedCargoField(binary, "bin", "name") !== "semio-wgpu-native" || nestedCargoField(binary, "bin", "path") !== "📦️bin.rs" || JSON.stringify(nestedCargoField(binary, "bin", "required-features")) !== JSON.stringify(["native-bin"])) return false;
     const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
     const node: unknown = JSON.parse(facts.nodeManifestContent), nx: unknown = JSON.parse(facts.projectManifestContent);
-    return record(node) && node.name === row.identity.nodePackageName && record(node.exports) && node.exports["."] === "./🟦️.ts" && record(nx) && nx.name === row.identity.nxProjectName && nx.sourceRoot === row.sourceRoot && record(nx.targets) && Object.keys(nx.targets).length > 0 && Object.values(nx.targets).every((target) => record(target) && record(target.options) && target.options.cwd === row.sourceRoot);
+    return record(node) && node.name === row.identity.nodePackageName && record(node.exports) && node.exports["."] === "./🟦️.ts" && record(nx) && nx.name === row.identity.projectName && nx.sourceRoot === row.sourceRoot && record(nx.targets) && Object.keys(nx.targets).length > 0 && Object.values(nx.targets).every((target) => record(target) && record(target.options) && target.options.cwd === row.sourceRoot);
   } catch { return false; }
 }
 
@@ -6325,7 +6321,7 @@ function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string, gener
 /** 🚦 Resolves an exact preview invocation with its required native owner policy. */
 export function generatorPreviewExecution(contract: Pick<GeneratorContract, "ownership" | "ownerPath" | "target" | "previewTarget" | "previewArguments">, target: { executor?: unknown; options?: Record<string, unknown> }): { command: string; args: string[]; cwd: string } {
   const owner = contract.ownerPath, options = target.options;
-  if (!owner || target.executor !== "nx:run-commands" || !options) throw new Error("Generator target is not the exact owner JSON preview command");
+  if (!owner || target.executor !== "repo:script" || !options) throw new Error("Generator target is not the exact owner JSON preview command");
   const direct = ["./📜️script.ts", ...generatorPreviewScriptArguments(contract)];
   const native = ["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts", "native", "owner-command", "--manifest", `${owner}/Cargo.toml`, "--cwd", owner, "--", "bun", ...direct];
   const framework = "🧰️framework", frameworkOwner = owner.startsWith(`${framework}/`) && !/[\\\s]/u.test(owner) && owner.split("/").every(part => part && part !== "." && part !== "..") ? owner.slice(framework.length + 1) : null;

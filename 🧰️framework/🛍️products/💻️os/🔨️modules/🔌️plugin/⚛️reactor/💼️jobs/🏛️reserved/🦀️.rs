@@ -14,12 +14,12 @@ use crate::reserved_jobs::FRAMEWORK_RESERVED_JOB_MAGIC;
 
 /// 🧪️ Drives one framework-reserved spawn-job through the real reactor registry: a genuine original admission under a
 /// caller context funded with at least the registry's own quoted grant, then bounded steps until its terminal output.
-pub(crate) fn drive_framework_reserved_registry_job(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<Vec<u8>, Fault> {
+pub(crate) fn drive_framework_reserved_registry_job(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<Vec<u8>,OriginalTurnFailure> {
     drive_framework_reserved_registry_job_counted(job, input, policy).map(|(output, _)| output)
 }
 
 /// 🧪️ The same registry drive, also reporting how many funded `step_job` turns the job needed.
-pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<(Vec<u8>, u32), Fault> {
+pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec<u8>, policy: RetainedCloneGrant) -> Result<(Vec<u8>,u32),OriginalTurnFailure> {
     use crate::reactor::jobs::{start_job, step_job, IoRunControl, JobStep, OriginalJobAdmission, SqliteSnapshotControl, WORK_UNITS_EXECUTE};
     use semio_framework_job::{Generation, OperationId, StepBudget, StepContext};
     use semio_framework_async::poll::resolve_ready;
@@ -40,12 +40,12 @@ pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec
                 break;
             }
             Ok(false) => {}
-            Err(error) => return Err(plugin_sdk_fault(error.to_string())),
+            Err(error) => return Err(error.into()),
         }
         grant = widest(grant, crate::reactor::jobs::job_admission_demands(job, &cx).unwrap_or(grant));
     }
     if !admitted {
-        return Err(stall("framework reserved spawn-job was never admitted by the reactor registry"));
+        return Err(stall("framework reserved spawn-job was never admitted by the reactor registry").into());
     }
     let mut steps = 0u32;
     for _ in 0..TURNS {
@@ -71,17 +71,11 @@ pub(crate) fn drive_framework_reserved_registry_job_counted(job: u64, input: Vec
         match resolve_ready(step_job(job, &mut original, &mut snapshot, &mut cx)) {
             Ok(JobStep::Running(_)) => {}
             Ok(JobStep::Done(bytes)) => return Ok((bytes, steps)),
-            Ok(JobStep::Failed(bytes)) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-failed"), String::from_utf8_lossy(&bytes).into_owned())),
-            Err(error) => return Err(original_turn_fault(error)),
+            Ok(JobStep::Failed(bytes)) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-spawn-failed"), String::from_utf8_lossy(&bytes).into_owned()).into()),
+            Err(error)=>return Err(error),
         }
     }
-    Err(stall("framework reserved spawn-job did not reach a terminal step"))
-}
-
-/// 🧪️ The complete-registry fixture preserves both typed causes when it materializes its diagnostic.
-fn original_turn_fault(error:OriginalTurnFailure)->Fault{
- let progress=error.primary.retained_progress();let code=error.primary.kind.as_str();let mut fault=Fault::new(FaultOrigin::Framework,code,error.primary.into_message()).with_retained_progress(progress);
- if let Some(error)=error.receipt_refusal{let progress=error.retained_progress();let code=error.kind.as_str();fault.causes.push(semio_framework::FaultCause{message:error.into_message(),code:Some(code.into()),retained_progress:Some(progress)})}fault
+    Err(stall("framework reserved spawn-job did not reach a terminal step").into())
 }
 
 pub(crate) fn framework_reserved_job_demands(_job:u64,input:&Option<Vec<u8>>,restored:&Option<Vec<u8>>,_cx:&semio_framework_job::StepContext<'_>)->Result<RetainedCloneGrant,ValueError>{crate::reactor::jobs::original_job_admission_demands::<FrameworkReservedBoundedJob>(input,restored)}

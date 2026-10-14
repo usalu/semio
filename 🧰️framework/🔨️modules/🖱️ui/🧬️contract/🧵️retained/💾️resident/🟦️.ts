@@ -1,7 +1,7 @@
 //#region 💾️ResidentAdmission
-import type { ActorInstanceLifetime } from "../../../../🎭️actor/🚪️lifetime/🟦️.ts";
+import type { ActorInstanceLifetime } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { ShardClient, type ShardActorActivationLease } from "../../../../🎭️actor/📮️shard-client/🟦️.ts";
-import type { NumericIndexGrant } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedResidentLedger, OwnedResidentRetirement, OwnedResidentRecordDetachment, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentResources } from "../../../../🌱️value/💾️resident/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 import { OwnedUiInstance } from "../🏘️instance/🟦️.ts";

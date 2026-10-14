@@ -18,6 +18,7 @@ crate-type = ["rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-job.workspace = true
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
@@ -28,6 +29,13 @@ semio-framework-replication = { path = "../../../../../../../🔨️modules/📡
 pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", features = ["history-index-serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+[[test]]
+name = "registry_admission"
+path = "../../📔️registry/🏗️admission/🧪️tests/🦀️.rs"

@@ -1,7 +1,8 @@
+import {readCatalogBuildTargetsV1,runtimeCatalogBuildInventoryV1} from "../../📇️registry/📖️catalog-view/🟦️.ts";
 import type { CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { COMPONENT_MODULE_DIRECTORIES } from "../../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+
 /** 🧩️ Semantic plugin build materialization owner. */
 
 
@@ -11,7 +12,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -95,7 +96,7 @@ function rewriteExistingPluginShimImports(): void {
   if (!existsSync(pluginOutRoot)) return;
   const vendor = preview2ShimVendorDir();
   for (const entry of readdirSync(pluginOutRoot, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name, COMPONENT_MODULE_DIRECTORIES)) continue;
+    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name, runtimeCatalogBuildInventoryV1().moduleDirectories)) continue;
     const pluginDir = join(pluginOutRoot, entry.name);
     for (const file of readdirSync(pluginDir)) {
       if (!file.endsWith(".js")) continue;
@@ -134,7 +135,7 @@ async function materializePlugin(target: PluginBuildTargetV1, built: Readonly<{ 
 
 /** 🔁️ `components iterate <plugin-id>`: the single-plugin browser loop — iterate build, local describe, unoptimized module. */
 export async function iterateComponentV1(pluginId: string, control: CompilerAdmissionControl): Promise<void> {
-  const target = discoverPluginBuildTargets(repoRoot).find((entry) => entry.pluginId === pluginId);
+  const target = readCatalogBuildTargetsV1().find((entry) => entry.pluginId === pluginId);
   if (!target) throw new Error(`components iterate: ${pluginId} names no discovered plugin crate with a deployment directory`);
   ensurePreview2ShimVendor();
   ensureGuestSlimTypstFontsAsset();

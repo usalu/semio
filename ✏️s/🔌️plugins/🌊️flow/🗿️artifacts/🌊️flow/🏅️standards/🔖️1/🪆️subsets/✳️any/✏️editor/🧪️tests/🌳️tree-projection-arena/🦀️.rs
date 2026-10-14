@@ -37,7 +37,7 @@ fn saturated_rejected_fixture_tree(pages: usize, capacity: usize) -> semio_frame
     }
     assert_eq!(full_pages, 0);
     root.rejected_children.try_push(text("rejected")).unwrap();
-    semio_framework_plugin::ComponentTree { root }
+    semio_framework_plugin::ComponentTree::new(root)
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
     assert_eq!(fixture["maximumNodes"], FIXTURE_TREE_MAX_NODES);
     assert_eq!(fixture["retirementSteps"], FIXTURE_TREE_RETIRE_STEPS);
     for row in fixture["cases"].as_array().unwrap() {
-        let tree = semio_framework_plugin::ComponentTree { root: projection_fixture_node(&row["input"]) };
+        let tree = semio_framework_plugin::ComponentTree::new(projection_fixture_node(&row["input"]));
         match project_and_retire_fixture_tree(tree) {
             Ok(json) => assert_eq!(serde_json::from_str::<Value>(&json).unwrap(), row["expected"]),
             Err(error) => assert_eq!(Some(error), row["error"].as_str()),

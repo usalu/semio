@@ -8,7 +8,7 @@ export interface JackDiff {
   /** @state artifact — a missing key leaves the id unchanged, `null` clears it */ manifestId?: string | null;
   /** @state artifact */ manifest: Manifest | null;
   /** @state artifact */ camera: Camera | null;
-  /** @state artifact @child kind=s.stdio.semio */ content: ArtifactChild | null;
+  /** @state artifact @child capability=s.trinity.jack.graph */ content: ArtifactChild | null;
   /** @state artifact — a missing key leaves the id unchanged, `null` clears it */ rootNodeId?: string | null;
   /** @state artifact */ query: string | null;
 }

@@ -183,7 +183,7 @@
       "name": "workspace",
       "private": true,
       "scripts": {
-        "test": "bun nx run-many -t test"
+        "test": "bun repo run-many -t test"
       },
       "custom": {
         "preserved": [

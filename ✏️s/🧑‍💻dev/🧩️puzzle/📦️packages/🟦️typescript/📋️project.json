@@ -4,7 +4,7 @@
   "sourceRoot": "✏️s/🧑‍💻dev/🧩️puzzle",
   "targets": {
     "verify-puzzle-fill-policy-self-tests": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
@@ -21,7 +21,7 @@
       }
     },
     "verify-browser-contribution": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {

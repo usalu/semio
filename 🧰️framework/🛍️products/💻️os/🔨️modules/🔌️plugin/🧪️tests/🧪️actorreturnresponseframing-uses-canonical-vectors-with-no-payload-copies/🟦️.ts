@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts"), "createActorBytePage"> & Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"), "ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES" | "ActorReturnResponseFraming" | "decodeActorReturnResponse" | "encodeActorReturnResponse" | "fault" | "readActorReturnResponseHeader" | "uint">, testSource: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"), "createActorBytePage"> & Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"), "ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES" | "ActorReturnResponseFraming" | "decodeActorReturnResponse" | "encodeActorReturnResponse" | "fault" | "readActorReturnResponseHeader" | "uint">, testSource: TestSource): Promise<void> {
   const { ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES, ActorReturnResponseFraming, createActorBytePage, decodeActorReturnResponse, encodeActorReturnResponse, fault, readActorReturnResponseHeader, uint } = dependencies;
 
   const { it, expect, vi } = vitest;
@@ -14,7 +14,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
     const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧬️schema/🔣️.json"); const { default: framing } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🌿️framing/🧪️tests/🧫️fixtures/🔣️.json");
     const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json"); const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
-    const { default: returnedSchema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json"); const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json"); const { default: page } = await import("../../../../../../🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json");
+    const { default: returnedSchema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json"); const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts"); const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const { default: Ajv } = await import("ajv"); const uint = await oracle();
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returnedSchema).addSchema(schema);
     expect(ajv.validate(schema, framing)).toBe(true);
@@ -224,8 +224,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema/🔣️.json");
     const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
     
-    const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
-    const { default: page } = await import("../../../../../../🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json");
+    const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+    const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(schema);
@@ -246,8 +246,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🎟️credit/🧪️tests/🧫️fixtures/🔣️.json");
     
     const { default: response } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧬️schema/🔣️.json");
-    const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { default: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
-    const { default: page } = await import("../../../../../../🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json");
+    const { default: value } = await import("../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+    const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
     const ajv = new Ajv({ strict: true }).addSchema(value).addSchema(lifetime).addSchema(page).addSchema(returned).addSchema(response).addSchema(schema);
@@ -331,7 +331,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
     const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🧪️tests/🧫️fixtures/🔣️.json");
     const { default: returned } = await import("../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
-    const { createActorBytePage } = await import("../../../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts");
+    const { createActorBytePage } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const row = returned.pageResultVectors[fixture.maximumPage.sharedPageVector]!;
     const bytes = Uint8Array.from({ length: row.pageLength }, (_, index) => (index * 37 + 11) % 256);
     const result = { kind: "page" as const, receipt: hydrate(row.receipt), page: createActorBytePage(bytes) };

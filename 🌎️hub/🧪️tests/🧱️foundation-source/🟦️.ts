@@ -16,9 +16,21 @@ import { authenticatedFrame, hmacProof, verifyAuthenticatedFrame } from "../../�
 import { LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
 import { allocateLocalHubRunRoot, finishLocalHub, localHubReadinessAdmitted, type LocalHubRun, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
+import consumerContracts from "../🧫️fixtures/🧱️foundation-source/🏗️consumer-contracts.json";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 const hubRoot = join(repoRoot, "🌎️hub");
+
+test("Hub consumes retained OS document mounts and the bound session authority",()=>{
+  const source=readFileSync(join(hubRoot,consumerContracts.source),"utf8");
+  const start=source.indexOf(consumerContracts.mount.start),end=source.indexOf(consumerContracts.mount.end,start);
+  expect(start).toBeGreaterThanOrEqual(0);expect(end).toBeGreaterThan(start);
+  const mount=source.slice(start,end);
+  for(const marker of consumerContracts.mount.required)expect(mount).toContain(marker);
+  for(const marker of consumerContracts.mount.forbidden)expect(mount).not.toContain(marker);
+  for(const marker of consumerContracts.session.required)expect(source).toContain(marker);
+  console.log("[DEBUG] Hub-owned retained mount and bound session response source contracts",{mountChecks:consumerContracts.mount.required.length+consumerContracts.mount.forbidden.length,sessionChecks:consumerContracts.session.required.length});
+});
 const fixturePath = join(hubRoot, "🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json");
 const fixtureSource = readFileSync(fixturePath, "utf8");
 const fixture = JSON.parse(fixtureSource) as {

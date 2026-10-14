@@ -267,7 +267,7 @@ fn compile_component_worker() -> Result<(), String> {
 }
 
 /// 🪞️ `semio-os-mcp schemas` prints the `os.mcp` scope's whole draft-07 schema document on stdout —
-/// the generator behind `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`. It reads no
+/// the generator behind `bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`. It reads no
 /// environment, no filesystem and no credential, so it deliberately runs BEFORE the process-entry
 /// seal every serving mode is gated on.
 ///

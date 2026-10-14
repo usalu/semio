@@ -1207,7 +1207,7 @@ func TestSystemPolicy(t *testing.T) {
 		workspace.RootDir = root
 		t.Cleanup(func() { workspace.RootDir = oldRoot })
 		if found := kinds(); len(found) != 0 {
-			t.Errorf("run bun nx run workspace:generate-config; the checked-in block drifts: %v", found)
+			t.Errorf("run bun repo run workspace:generate-config; the checked-in block drifts: %v", found)
 		}
 	})
 	t.Run("policy registered with correct id", func(t *testing.T) {

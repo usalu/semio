@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "resource": "nx-tooling:",
+  "mode": "shared",
+  "cases": [
+    "complete",
+    "refused"
+  ],
+  "during": "refused",
+  "after": "allowed",
+  "witness": {
+    "version": 1,
+    "during": 1,
+    "after": 0,
+    "binding": [
+      "identity",
+      "toolkitRoot",
+      "processId",
+      "original",
+      "endpoint"
+    ]
+  }
+}

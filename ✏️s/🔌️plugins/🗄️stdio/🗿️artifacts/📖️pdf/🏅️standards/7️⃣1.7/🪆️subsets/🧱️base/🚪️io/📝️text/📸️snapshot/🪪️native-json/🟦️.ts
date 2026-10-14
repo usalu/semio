@@ -2,7 +2,7 @@ import { parseArtifactRef } from "../../../../../../../../../../../../../🧰️
 import {pdfDateFromNativeJson} from "./📌️annotation/🟦️.ts";
 /** 🪪️ Explicit finite native JSON admission into PDF's canonical owned scalar model. */
 import type { PdfObject, PdfDictEntry, PdfStreamFilter, PdfFunction, PdfColorSpace, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 
 function record(value: unknown): Record<string, unknown> { if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("PDF native JSON requires an object"); return value as Record<string, unknown>; }
 function array(value: unknown): unknown[] { if (!Array.isArray(value)) throw new Error("PDF native JSON requires an array"); return value; }

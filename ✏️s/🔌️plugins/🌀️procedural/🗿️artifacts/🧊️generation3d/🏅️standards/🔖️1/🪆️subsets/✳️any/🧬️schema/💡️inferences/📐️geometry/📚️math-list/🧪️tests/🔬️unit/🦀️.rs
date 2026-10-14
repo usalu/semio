@@ -19,7 +19,7 @@ fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
 fn run(id: &str, values: BTreeMap<String, GeometryValue>) -> WidgetEvaluation {
     let kind = support::kind_of(id);
     let start = COMPUTES.iter().find(|entry| entry.id == id).expect("registered").start;
-    support::drive(start(kind, WidgetInputs::new("w", kind, values)), 1)
+    support::drive(start(kind, WidgetInputs::new_cold("w", kind, values)), 1)
 }
 
 #[test]

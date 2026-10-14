@@ -4,6 +4,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
 use semio_framework_plugin::__semio_dispatch_PluginApp;
+use semio_s_dev_trinity_jack::SemioJackComposition;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
@@ -12,8 +13,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for both Trinity artifact surfaces.
     pub enum TrinityApps: PluginApp {
-        JackEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
-        JackViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        JackEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>),
+        JackViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer<SemioJackComposition>>, semio_s_artifact_stdio_semio::SemioMembers>),
         RewritingEditor(VcsArtifactApp<EditorApp<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
         RewritingViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
@@ -37,10 +38,10 @@ pub fn plugin() -> Result<Plugin<TrinityApps>, PluginAssemblyError> {
         .label("Trinity")
         .version("0.1.0")
         .package_id("semio:trinity")
-        .declare_artifact(semio_s_artifact_trinity_jack::artifact::<TrinityApps>())
+        .declare_artifact(semio_s_dev_trinity_jack::artifact::<TrinityApps>())
         .declare_artifact(semio_s_artifact_trinity_rewriting::artifact::<TrinityApps>())
-        .editor_mutation_roster::<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp>()
-        .viewer_mutation_roster::<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer>()
+        .editor_mutation_roster::<semio_s_artifact_trinity_jack::editor::jack::TrinityJackPlayApp<SemioJackComposition>>()
+        .viewer_mutation_roster::<semio_s_artifact_trinity_jack::viewer::jack::TrinityJackViewer<SemioJackComposition>>()
         .editor_mutation_roster::<semio_s_artifact_trinity_rewriting::editor::rewriting::TrinityRewritingPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_trinity_rewriting::viewer::rewriting::TrinityRewritingViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_trinity_jack::artifact_kind().id })

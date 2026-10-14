@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/puzzle-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🌎️hub/🧩️compositions/🧩️puzzle/**/*.rs",
@@ -21,7 +21,7 @@
   },
   "targets": {
     "wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
@@ -32,7 +32,7 @@
       "cache": true
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -40,7 +40,7 @@
       }
     },
     "fixtures-lint": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts fixtures lint",
@@ -49,7 +49,7 @@
       "outputs": []
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",

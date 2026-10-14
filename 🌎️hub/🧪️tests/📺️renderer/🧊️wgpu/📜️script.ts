@@ -38,7 +38,7 @@ async function withLiveHub(principals: readonly LiveHubPrincipal[], body: (env: 
     }
   } else {
     const binaryPath = join(hubRustRoot, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-    if (!existsSync(binaryPath)) throw new Error(`stage the hub first (\`bun nx run os-hub:build-dev\`): ${binaryPath} does not exist`);
+    if (!existsSync(binaryPath)) throw new Error(`stage the hub first (\`bun repo run os-hub:build-dev\`): ${binaryPath} does not exist`);
     dataDir = mkdtempSync(join(process.platform === "darwin" ? "/private/tmp" : tmpdir(), "wgpu-hub-live-"));
     for (const { prefix, email, displayName } of principals) {
       const provisioned = spawnSync(binaryPath, ["credential", "set", "--email", email, "--display-name", displayName], { env: { ...process.env, OS_HUB_DATA: dataDir }, input: password, encoding: "utf8" });

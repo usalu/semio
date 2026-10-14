@@ -50,11 +50,17 @@ type entrypointContractFixture struct {
 		Kind       string `json:"kind"`
 		ServerName string `json:"serverName"`
 	} `json:"profiles"`
+	BuildInstructions []string `json:"buildInstructions"`
 	Flow []string `json:"flow"`
 }
 
+// 🧫️ Resolves protocol vectors through the current repository identity.
+func repositoryContractFixture(name string) string {
+	return filepath.Join(client.GetRootDir(), "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔌️mcp", "🧪️tests", "🧫️fixtures", name)
+}
+
 func TestRepositoryEntrypointContract(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🚪️entrypoint-contract.json"))
+	data, err := os.ReadFile(repositoryContractFixture("🚪️entrypoint-contract.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,6 +95,11 @@ func TestRepositoryEntrypointContract(t *testing.T) {
 			server, err := NewRepositoryServerFor(&testRepository{}, kind)
 			if err != nil {
 				t.Fatal(err)
+			}
+			for _, instruction := range fixture.BuildInstructions {
+				if !strings.Contains(server.config.Instructions, instruction) {
+					t.Fatalf("missing neutral build instruction %q", instruction)
+				}
 			}
 			if server.config.ServerInfo.Name != profile.ServerName {
 				t.Fatalf("server name got=%q want=%q", server.config.ServerInfo.Name, profile.ServerName)
@@ -156,7 +167,7 @@ type lenientHandshakeFixture struct {
 }
 
 func TestInitializeAdmitsForwardExtensibleClientFrames(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "🤝️initialize-lenient.json"))
+	data, err := os.ReadFile(repositoryContractFixture("🤝️initialize-lenient.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,7 +289,7 @@ func TestOpenRequestMetaAdmitsClientKeys(t *testing.T) {
 }
 
 func TestG2CanonicalGoldenVectors(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join("..", "..", "🔌️mcp", "🧫️fixtures", "2️⃣g2-contract.json"))
+	data, err := os.ReadFile(repositoryContractFixture("2️⃣g2-contract.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

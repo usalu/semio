@@ -3,8 +3,8 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientTestDependenciesV1, testSource: TestSource): Promise<void> {
   const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
-  type ActorInstanceLifecycleReceipt = import("../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt;
-  type ActorInstanceLifetime = import("../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
+  type ActorInstanceLifecycleReceipt = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt;
+  type ActorInstanceLifetime = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
   type InboundMessage = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").InboundMessage;
   type Lane = import("../../../../../../🔨️modules/🎭️actor/🤖️generated/🎭️actor/🟦️.ts").Lane;
   type OutboundMessage = import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").OutboundMessage;
@@ -1941,7 +1941,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(() => lease.captureUiPatchAuthority(result, 0)).toThrow();
         expect(result.uiPatches[0]).toBe(patch); expect(result.uiPatchReceipt).toBe(wire);
       }
-      const [{ default: Ajv }, { default: receiptSchema }] = await Promise.all([import("ajv"), import("../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json")]);
+      const [{ default: Ajv }, { actorUiPatchReceiptSchema: receiptSchema }] = await Promise.all([import("ajv"), import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts")]);
       const identityOracle = new Ajv({ strict: true }).compile(receiptSchema.$defs.PatchIdentityReferences);
       const patchObjects = [patch, { ...patch, surface: { instance: 7, surface: "second" } }];
       for (const [index, row] of fixture.patchIdentity.entries()) {

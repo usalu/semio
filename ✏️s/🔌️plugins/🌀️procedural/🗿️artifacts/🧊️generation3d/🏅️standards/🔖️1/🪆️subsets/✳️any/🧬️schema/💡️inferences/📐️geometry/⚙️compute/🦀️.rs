@@ -13,30 +13,62 @@ pub enum WidgetStep {
     Done(WidgetEvaluation),
 }
 
-/// 🧵️ A started widget compute. `step(fuel)` does at most `fuel` units of work; a `Working` slice has consumed the whole grant, a `Done` slice one unit.
-/// `cancel` is idempotent and releases whatever the job holds; the job is dropped afterwards.
+/// 🧵️ A widget compute retains its original outputs until one handoff or controlled retirement.
+/// Cold oracle stepping uses fuel; original stepping consumes the initiating caller directly.
 pub trait WidgetJob: Send {
     fn step(&mut self, fuel: usize) -> WidgetStep;
     fn cancel(&mut self);
+    fn step_on_original(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<WidgetStep>, semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "widget job has no original funded producer").into())
+    }
 }
 
-/// 🏁️ A job that is already finished: every step answers with its evaluation.
+/// 🏁️ Retains the original evaluation until its single output handoff or controlled retirement.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ReadyJob {
-    evaluation: WidgetEvaluation,
+    evaluation: Option<WidgetEvaluation>,
+    original_source: Option<usize>,
+    cancelled: bool,
 }
 
 impl ReadyJob {
     pub fn new(evaluation: WidgetEvaluation) -> Self {
-        Self { evaluation }
+        Self { evaluation: Some(evaluation), original_source: None, cancelled: false }
+    }
+
+    /// 🎟️ Donates an already-produced evaluation header under its actual initiating caller.
+    pub(crate) fn admit(original: &mut Option<WidgetEvaluation>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Self>, semio_framework_job::OriginalTurnFailure> {
+        let source = cx.original_source_parent()?.source_identity()?;
+        if original.is_none() || !ready_handoff_open(cx) { return Ok(None); }
+        cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+        cx.consume_fuel(1);
+        Ok(Some(Self { evaluation: original.take(), original_source: Some(source), cancelled: false }))
     }
 }
 
+fn ready_handoff_open(cx: &semio_framework_job::StepContext<'_>) -> bool {
+    let grant = cx.retained_grant();
+    !cx.should_yield() && !cx.is_cancelled() && grant.maximum_items > 0 && grant.maximum_depth > 0
+}
+
 impl WidgetJob for ReadyJob {
-    fn step(&mut self, _fuel: usize) -> WidgetStep {
-        WidgetStep::Done(self.evaluation.clone())
+    fn step(&mut self, fuel: usize) -> WidgetStep {
+        if fuel == 0 || self.cancelled { return WidgetStep::Working { progress: 1.0 }; }
+        self.evaluation.take().map_or(WidgetStep::Working { progress: 1.0 }, WidgetStep::Done)
     }
 
-    fn cancel(&mut self) {}
+    fn cancel(&mut self) { self.cancelled = true; }
+
+    fn step_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<WidgetStep>, semio_framework_job::OriginalTurnFailure> {
+        let source = cx.original_source_parent()?.source_identity()?;
+        if self.original_source != Some(source) {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "ready widget output requires its original initiating source").into());
+        }
+        if self.cancelled || self.evaluation.is_none() || !ready_handoff_open(cx) { return Ok(None); }
+        cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() })?;
+        cx.consume_fuel(1);
+        Ok(self.evaluation.take().map(WidgetStep::Done))
+    }
 }
 
 /// 🏁️ An already-finished job from a compute result, at the catalogue quality of `kind`.

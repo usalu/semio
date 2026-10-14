@@ -13,7 +13,7 @@ export type MutationInventoryExecutionPolicy = Readonly<{
 export type MutationInventoryProcessRequest = Readonly<{
   command: string; argv: readonly string[]; cwd: string; environment: Readonly<Record<string,string|undefined>>;
   captureDirectory: string; budgetMs: number; maximumCaptureBytes: number;
-  compiler: Readonly<{ buildDirectory: string; leaseDirectory: string }> | null;
+  compiler: Readonly<{ buildDirectory: string; targetDirectory: string; leaseDirectory: string }> | null;
 }>;
 export type MutationInventoryProcessReason = "exit" | "spawn-error" | "deadline" | "cancelled" | "capture-budget" | "work-budget" | "byte-budget" | "operation-error";
 export type MutationInventoryCapture = Readonly<{ path: string; bytes: number }>;
@@ -123,7 +123,7 @@ export async function runMutationInventoryProcess(request: MutationInventoryProc
       await checkpoint(operation,"retention",request.cwd,1,storage);
     };
     for(const value of [request.command,request.cwd,request.captureDirectory])await admit(value);
-    if(request.compiler){for(const value of [request.compiler.buildDirectory,request.compiler.leaseDirectory]){await admit(value);if(value.length>4096||!isAbsolute(value))throw Error("Mutation inventory compiler storage must be an absolute bounded path");}}
+    if(request.compiler){for(const value of [request.compiler.buildDirectory,request.compiler.targetDirectory,request.compiler.leaseDirectory]){await admit(value);if(value.length>4096||!isAbsolute(value))throw Error("Mutation inventory compiler storage must be an absolute bounded path");}}
     for(const value of request.argv){await admit(value);w.admittedArguments.push(value);}
     for(const key in request.environment)if(Object.hasOwn(request.environment,key)){const value=request.environment[key];await admit(key);await admit(value);w.admittedEnvironment[key]=value;}
     w.request=Object.freeze({...request,argv:Object.freeze(w.admittedArguments),environment:Object.freeze(w.admittedEnvironment),compiler:request.compiler?Object.freeze({...request.compiler}):null});
@@ -136,7 +136,7 @@ export async function runMutationInventoryProcess(request: MutationInventoryProc
     if(request.compiler){
       await regularDirectory(request.compiler.leaseDirectory,operation);
       await checkpoint(operation,"lease",request.compiler.buildDirectory);
-      w.lease=await acquireCargoBuildLeaseV1({directory:request.compiler.leaseDirectory,buildDirectory:request.compiler.buildDirectory,args:request.argv,signal:operation.signal,onWait:p=>{if(controller.signal.aborted)throw new MutationInventoryProcessError(Date.now()>=w.deadline?"deadline":"cancelled",w);}});
+      w.lease=await acquireCargoBuildLeaseV1({directory:request.compiler.leaseDirectory,buildDirectory:request.compiler.buildDirectory,targetDirectory:request.compiler.targetDirectory,args:request.argv,signal:operation.signal,onWait:p=>{if(controller.signal.aborted)throw new MutationInventoryProcessError(Date.now()>=w.deadline?"deadline":"cancelled",w);}});
     }
     await checkpoint(operation,"spawn",request.command);
     const child=spawn(request.command,[...w.request.argv],{cwd:w.request.cwd,env:w.request.environment,stdio:["ignore","pipe","pipe"],detached:process.platform!=="win32",windowsHide:true});

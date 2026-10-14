@@ -6,7 +6,13 @@
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ]
     ],
@@ -22,14 +28,26 @@
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ],
       [
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ]
     ],
@@ -45,7 +63,13 @@
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ],
       [
@@ -65,7 +89,13 @@
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ],
       [
@@ -85,7 +115,13 @@
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ],
       [
@@ -105,7 +141,13 @@
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ],
       [
@@ -125,7 +167,13 @@
         "cause",
         {
           "kind": "workLimit",
-          "message": "canceled spoofed prose"
+          "message": "canceled spoofed prose",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
         }
       ],
       [
@@ -137,5 +185,78 @@
     "accept": true,
     "maximumBytes": 0,
     "expectedKind": "ownershipLimit"
+  },
+  {
+    "id": "missing-original-receipt",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "original retained physical effects"
+        }
+      ],
+      [
+        "diagnostics",
+        []
+      ]
+    ],
+    "operation": "decode",
+    "accept": true,
+    "maximumBytes": 1048576,
+    "expectedKind": "invalidValue"
+  },
+  {
+    "id": "unknown-original-receipt-axis",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "original retained physical effects",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": 0,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0,
+            "surprise": 0
+          }
+        }
+      ],
+      [
+        "diagnostics",
+        []
+      ]
+    ],
+    "operation": "decode",
+    "accept": true,
+    "maximumBytes": 1048576,
+    "expectedKind": "invalidValue"
+  },
+  {
+    "id": "negative-original-receipt-axis",
+    "members": [
+      [
+        "cause",
+        {
+          "kind": "workLimit",
+          "message": "original retained physical effects",
+          "retainedProgress": {
+            "copiedItems": 0,
+            "copiedBytes": -1,
+            "retainedCapacityBytes": 0,
+            "releasedBytes": 0
+          }
+        }
+      ],
+      [
+        "diagnostics",
+        []
+      ]
+    ],
+    "operation": "decode",
+    "accept": true,
+    "maximumBytes": 1048576,
+    "expectedKind": "invalidValue"
   }
 ]

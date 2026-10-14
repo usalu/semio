@@ -467,7 +467,7 @@ impl Display for ToolRegistrationError {
 
 impl Error for ToolRegistrationError {}
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum ToolDispatchError {
     UnknownController { controller_id: String },
     Factory { controller_id: String, tool_id: String, detail: String },

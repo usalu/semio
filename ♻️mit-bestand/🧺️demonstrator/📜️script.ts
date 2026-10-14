@@ -14,7 +14,15 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
+class RuntimeCatalogTestScript extends BundleScript {
+  async run(args:string[]):Promise<void>{
+    if(args.length)throw Error("runtime-catalog-test accepts no arguments");
+    const {runOwnedCommand}=await import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
+    await runOwnedCommand(process.execPath,["test",join(this.root,"🔨️modules/🧩️runtime/🧪️tests/🟦️.ts")],this.repoRoot,"demonstrator-runtime-catalog",120000,{signal:this.invocation.control.signal});
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("runtime-catalog-test",RuntimeCatalogTestScript);
 
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => router.run(process.argv.slice(2), original));
 

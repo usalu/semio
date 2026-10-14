@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "original": {
+    "operation": 71,
+    "generation": 3,
+    "clock": "original-us",
+    "cancel": "original-parent"
+  },
+  "diagnostic": {
+    "trace": 99,
+    "generation": 8,
+    "lane": 3
+  },
+  "phases": [
+    "metadata",
+    "alias",
+    "publish"
+  ],
+  "perTurnItems": 1,
+  "copyBytes": 4096,
+  "expected": {
+    "operation": 71,
+    "generation": 3,
+    "clock": "original-us",
+    "cancel": "original-parent",
+    "completedPhases": 3
+  },
+  "sourceMoves": [
+    {
+      "wrapper": "first",
+      "source": "paid-original"
+    },
+    {
+      "wrapper": "second",
+      "source": "paid-original"
+    }
+  ]
+}

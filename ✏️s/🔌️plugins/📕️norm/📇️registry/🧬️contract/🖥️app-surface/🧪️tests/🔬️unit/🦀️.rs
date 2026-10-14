@@ -85,7 +85,7 @@ async fn render_report_assigns_a_distinct_identity_to_each_check_row() {
 #[semio_framework_async_macros::async_test]
 async fn long_unicode_document_text_is_admitted_in_exact_utf8_chunks() {
     let source = format!("start-{}-end", "ä".repeat(ui::UI_TEXT_MAX_BYTES));
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_text_chunks(&source).expect("chunked node assembly") }).expect("chunked projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_text_chunks(&source).expect("chunked node assembly"))).expect("chunked projection");
     let projected: serde_json::Value = serde_json::from_str(&json).expect("third-party projection oracle");
     let reassembled = projected["children"].as_array().expect("chunk children").iter().map(|child| child["component"]["value"].as_str().expect("text chunk")).collect::<String>();
     assert_eq!(reassembled, source);
@@ -95,10 +95,10 @@ async fn long_unicode_document_text_is_admitted_in_exact_utf8_chunks() {
 async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_index() {
     let mut report = CheckReport::default();
     report.push(demo_check("1.1"));
-    let inside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(0), Locale::En, None).expect("node assembly") }).expect("json");
-    let outside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&report, Some(99), Locale::En, None).expect("node assembly") }).expect("json");
+    let inside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_inspection(&report, Some(0), Locale::En, None).expect("node assembly"))).expect("json");
+    let outside = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_inspection(&report, Some(99), Locale::En, None).expect("node assembly"))).expect("json");
     assert_eq!(inside, outside, "an out-of-range index must fall back to the first check");
-    let empty = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: render_inspection(&CheckReport::default(), None, Locale::En, None).expect("node assembly") }).expect("json");
+    let empty = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_inspection(&CheckReport::default(), None, Locale::En, None).expect("node assembly"))).expect("json");
     assert!(empty.contains("No checks"));
     assert!(empty.contains("\"type\":\"tree\""), "norm inspection must be a tree: {empty}");
 }
@@ -108,7 +108,7 @@ async fn byte_properties_render_their_bounded_localized_extent() {
     for (locale, extent) in [(Locale::En, "65537 bytes"), (Locale::De, "65537 Bytes")] {
         let tree = semio_framework_value::DslValue::Bytes(vec![255; 65_537]);
         let root = render_value_editor("payload", &tree, locale, "norm.mock", None, &TreeWindows::unhosted(), 0).expect("byte extent");
-        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("projection");
+        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(root)).expect("projection");
         let projected: serde_json::Value = serde_json::from_str(&json).expect("independent JSON oracle");
         assert!(projected.to_string().contains(extent));
         assert!(json.len() < 1024);
@@ -220,12 +220,8 @@ fn the_report_tree_binds_no_interaction_domain() {
 async fn report_and_summary_localize_en_and_de() {
     let mut report = CheckReport::default();
     report.push(demo_check("1.1"));
-    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::En, None).expect("en"),
-    }).expect("json");
-    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::De, None).expect("de"),
-    }).expect("json");
+    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::En, None).expect("en"))).expect("json");
+    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::De, None).expect("de"))).expect("json");
     assert!(en.contains("Pass") || en.contains("demo check"), "{en}");
     assert!(de.contains("Bestanden") || de.contains("Demo-Prüfung"), "{de}");
 }
@@ -345,9 +341,7 @@ async fn render_document_editor_emits_set_field_and_list_verbs() {
         tree_viewport_rows: Some(32),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("editor"),
-    })
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("editor")))
     .expect("json");
     assert!(json.contains("setField"), "{json}");
     assert!(json.contains("insertItem") || json.contains("removeItem"), "{json}");
@@ -364,13 +358,9 @@ async fn locale_switch_en_to_de_changes_chrome_and_check_copy() {
             .annex(AnnexChoice::De)
             .build(),
     );
-    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_report(&report, &TreeWindows::unhosted(), Locale::En, None).expect("en"),
-    })
+    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::unhosted(), Locale::En, None).expect("en")))
     .expect("en json");
-    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_report(&report, &TreeWindows::unhosted(), Locale::De, None).expect("de"),
-    })
+    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::unhosted(), Locale::De, None).expect("de")))
     .expect("de json");
     assert!(en.contains("Checks") || en.contains("Pass") || en.contains("demo check"), "{en}");
     assert!(de.contains("Nachweise") || de.contains("Bestanden") || de.contains("Demo-Prüfung"), "{de}");
@@ -534,9 +524,7 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
         ("annex".into(), semio_framework_value::DslValue::String("de".into())),
         ("note".into(), semio_framework_value::DslValue::Null),
     ]);
-    let inputs = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_value_editor("", &tree, Locale::De, "norm.mock", Some(field_meta), &TreeWindows::unhosted(), 0).expect("inputs"),
-    })
+    let inputs = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_value_editor("", &tree, Locale::De, "norm.mock", Some(field_meta), &TreeWindows::unhosted(), 0).expect("inputs")))
     .expect("inputs json");
 
     let mut report = CheckReport::default();
@@ -553,13 +541,9 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
         .annex(AnnexChoice::De)
         .build(),
     );
-    let inspection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_inspection(&report, Some(0), Locale::De, None).expect("inspection"),
-    })
+    let inspection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_inspection(&report, Some(0), Locale::De, None).expect("inspection")))
     .expect("inspection json");
-    let unknown = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree {
-        root: render_unknown_body("norm.mock.missing", Locale::De).expect("unknown"),
-    })
+    let unknown = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_unknown_body("norm.mock.missing", Locale::De).expect("unknown")))
     .expect("unknown json");
     let io = norm_io("mock", "mock.schema");
 
@@ -626,7 +610,7 @@ fn collapsed_deep_document_stays_within_retire_slots() {
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let root = render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("assemble");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("retire within slots");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(root)).expect("retire within slots");
     assert!(json.contains("norm-inputs-catalogue"), "{json}");
     assert!(json.contains("norm-inputs-dictionary"), "{json}");
     assert!(json.contains("norm-inputs-geometry"), "{json}");
@@ -660,7 +644,7 @@ fn expanding_subtree_materialises_windowed_children_within_slots() {
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let root = render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("assemble");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root }).expect("retire within slots");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(root)).expect("retire within slots");
     assert!(json.contains("\"offset\":10") || json.contains("\"total\":80"), "{json}");
     assert!(json.contains("g-10") || json.contains("g-11"), "windowed map rows materialise: {json}");
     assert!(!json.contains("g-50"), "rows outside the window stay out: {json}");

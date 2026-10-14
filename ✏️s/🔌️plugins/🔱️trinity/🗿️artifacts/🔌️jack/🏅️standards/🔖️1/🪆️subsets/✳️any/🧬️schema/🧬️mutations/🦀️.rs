@@ -1,6 +1,6 @@
 //! ⚡️ `trinity.graph` semantic mutation aggregate — the parent lane edits the document's own query only.
 //!
-//! The scene lives in the composed `content` child (`s.stdio.semio@v1/graph`); every scene edit is a child-lane leaf of
+//! The scene lives in the composed `content` child (the explicitly selected graph capability); every scene edit is a child-lane leaf of
 //! that shared vocabulary (design §20.15), so no parent leaf reads the child.
 
 use crate::standards::v1::subsets::any::schema::diff::JackDiff;

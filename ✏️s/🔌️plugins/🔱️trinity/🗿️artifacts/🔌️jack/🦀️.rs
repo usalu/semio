@@ -4,9 +4,9 @@
 //! region's own doc for why this is ONE composed child, not two: the design annotation "jack; rewriting
 //! = 2 graph children" attributes the two-child shape to the SEPARATE `rewriting` app's LHS/RHS rule
 //! windows, not to jack. jack's own persisted `nodes`/`edges` instance data is replaced by a single
-//! composed `s.stdio.semio.graph` CHILD slot (`🔖️ContentBridge` below); the compile-time `manifest`
+//! composed graph-capability CHILD slot (`🔖️ContentBridge` below); the compile-time `manifest`
 //! (kind/property/port DEFINITIONS, resolved from `manifestId` — see `semio_framework_graph::manifest::GraphManifest`)
-//! is NOT graph-shaped in the `SemioGraphSnapshot` sense (that subset is an INSTANCE graph: nodes with
+//! is distinct from the instance graph capability (nodes with
 //! position/ports/properties, edges with source/target) and stays an ordinary inline field, unchanged.
 
 #![allow(clippy::unnecessary_wraps)]
@@ -19,6 +19,9 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
+#[cfg(test)]
+#[path="🧪️tests/🧰️support/🦀️.rs"]
+pub(crate)mod test_support;
 #[cfg(test)]
 macro_rules! test_identity {
     ($identity:ident) => {
@@ -38,6 +41,13 @@ pub mod language_service;
 pub mod lexer;
 pub use crate::editor::jack::snapshot_to_workflow;
 pub use crate::standards::v1::subsets::any::schema::inferences::flat_position::compute_flat_position;
+pub use semio_s_artifact_trinity_jack_graph_query as graph_query;
+pub use graph_query::{JackGraphEndpoint, JackGraphQuery, retained_jack_graph};
+pub use crate::standards::v1::subsets::any::schema::inferences::topology::infer_jack_topology;
+pub use crate::standards::v1::subsets::any::schema::inferences::flat_position::infer_jack_flat_position;
+#[path="🪆️content/👁️read/🦀️.rs"]
+pub mod content_read;
+pub use content_read::{JackContentRead,JackContentVisual,JackContentProjection,JackContentLayout,JackOwnedContent,JackComposition,JackContentNodeView,JackContentPortView,JackContentEdgeView,JackContentMove,JackContentMoveCodec};
 pub use language_service as core;
 
 use semio_framework_graph::manifest::{GraphManifest, ManifestValidationError};
@@ -243,7 +253,7 @@ pub struct Edge {
 }
 
 /// 📷️ Camera for snapshot documents.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct Camera {
@@ -268,7 +278,7 @@ impl JackSnapshot {
         Ok(())
     }
 
-    /// 📤️ Encodes the actual Jack parent; composed Semio content travels through its independent child owner.
+    /// 📤️ Encodes the actual Jack parent; composed graph content travels through its independent child owner.
     pub fn to_json(&self) -> Result<String, TrinityRamError> {
         let value = standards::v1::subsets::any::io::json_native::convert(semio_framework_value::ToValue::to_value(self), false)?;
         Ok(semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&value)))
@@ -294,8 +304,8 @@ impl JackSnapshot {
 
     /// 🏗️ Transfers one working scene into the snapshot's exact composed content owner. The query starts empty: a document
     /// constructor names its own (`Self { query, ..Self::with_content(..) }`).
-    pub fn with_content(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, scene: JackWorkingScene, root_node_id: Option<String>) -> Self {
-        Self { schema, name, manifest_id, manifest, camera, content: jack_content_child_with_owner(scene.nodes, scene.edges), root_node_id, query: String::new() }
+    pub fn with_content<C:JackComposition>(schema: String, name: String, manifest_id: Option<String>, manifest: Manifest, camera: Camera, scene: JackWorkingScene, root_node_id: Option<String>) -> Self {
+        Self { schema, name, manifest_id, manifest, camera, content: C::child_from_working(scene.nodes,scene.edges), root_node_id, query: String::new() }
     }
 
     /// 🔎 Live node list, read through the working-scene cache — replaces the old direct `.nodes`
@@ -349,24 +359,24 @@ impl Graph {
         Ok(Self { name: snapshot.name, manifest_id: snapshot.manifest_id, manifest: snapshot.manifest, camera: snapshot.camera, nodes, edges, root_node_id: snapshot.root_node_id, query: snapshot.query })
     }
 
-    pub fn to_snapshot(&self) -> JackSnapshot {
-        JackSnapshot { query: self.query.clone(), ..JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone()) }
+    pub fn to_snapshot<C:JackComposition>(&self) -> JackSnapshot {
+        JackSnapshot { query: self.query.clone(), ..JackSnapshot::with_content::<C>(JackSnapshot::SCHEMA.to_string(), self.name.clone(), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: self.nodes.values().cloned().collect(), edges: self.edges.values().cloned().collect() }, self.root_node_id.clone()) }
     }
 
     pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
         Self::from_snapshot(JackSnapshot::from_json(json)?)
     }
 
-    pub fn host_snapshot_json(&self) -> Result<String, TrinityRamError> {
-        self.to_snapshot().to_json()
+    pub fn host_snapshot_json<C:JackComposition>(&self) -> Result<String, TrinityRamError> {
+        self.to_snapshot::<C>().to_json()
     }
 
     /// 🧩️ Build a `trinity.graph` snapshot containing only the given node and edge ids.
-    pub fn subgraph_snapshot(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> JackSnapshot {
+    pub fn subgraph_snapshot(&self,node_ids:&BTreeSet<String>,edge_ids:&BTreeSet<String>)->ast::JackQueryGraphSnapshot {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
         let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
-        JackSnapshot::with_content(JackSnapshot::SCHEMA.to_string(), format!("{} subgraph", self.name), self.manifest_id.clone(), self.manifest.clone(), self.camera.clone(), JackWorkingScene { nodes: nodes, edges: edges }, root_node_id)
+        ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:format!("{} subgraph",self.name),manifest_id:self.manifest_id.clone(),manifest:self.manifest.clone(),camera:self.camera.clone(),nodes,edges,root_node_id,query:String::new()}
     }
 
     pub fn node(&self, id: &str) -> Option<&Node> {
@@ -494,8 +504,8 @@ pub const JACK_QUERY_MAXIMUM_BYTES: usize = 3_584;
 /// `s.trinity.jack@1/*#editor` / `s.trinity.jack@1/*#viewer` (contract §1 grammar).
 pub const TRINITY_JACK_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.trinity.jack", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 
-pub fn empty_trinity_graph_snapshot() -> JackSnapshot {
-    JackSnapshot { query: TRINITY_JACK_DEFAULT_QUERY.into(), ..JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: Vec::new(), edges: Vec::new() }, None) }
+pub fn empty_trinity_graph_snapshot<C:JackComposition>() -> JackSnapshot {
+    JackSnapshot { query: TRINITY_JACK_DEFAULT_QUERY.into(), ..JackSnapshot::with_content::<C>(JackSnapshot::SCHEMA.into(), "trinity".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: Vec::new(), edges: Vec::new() }, None) }
 }
 
 /// 🎯️ `ArtifactKindSpec` identity shared by every `jack`-family app that mounts this artifact.
@@ -511,8 +521,8 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
         schema: "trinity.graph".into(),
         export_formats: vec![],
         import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json".into()],
-        import_stdio_kinds: vec!["stdio.json".into()],
+        export_stdio_kinds: Vec::new(),
+        import_stdio_kinds: Vec::new(),
     }
 }
 // #endregion 🔖️Runtime
@@ -591,17 +601,17 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 /// precedent, `📓️terra-fleet-trinity-recipe-report.md`): the real en/de localized names
 /// (`"Jack"`/`"Buchse"`) still live only on these `ArtifactCapability` rows.
 /// Jack query source and execution output now register through their exact window owners.
-pub trait ArtifactApps:
+pub trait ArtifactApps<C:JackComposition>:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp<C>>, C::Members>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer<C>>, C::Members>>
 {
 }
 
-impl<PA> ArtifactApps for PA where
+impl<PA,C:JackComposition> ArtifactApps<C> for PA where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp<C>>, C::Members>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer<C>>, C::Members>>
 {
 }
 
@@ -614,7 +624,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.trinity.jack.schema.artifact", "schema", "s.trinity.jack", &[("schema", "s.trinity.jack")], None),
         ("s.trinity.jack.inference.artifact", "inference", "s.trinity.jack.inference", &[("schema", "s.trinity.jack.inference")], None),
         ("s.trinity.jack.composer.native", "composer", "s.trinity.jack@1/*", &[("dialect", "s.trinity.jack@1/*")], None),
-        ("s.trinity.jack.composer.format-5", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.trinity.jack.grammar.1", "grammar", "jack.document", &[("grammar", "jack.document")], None),
         ("s.trinity.jack.grammar.2", "grammar", "jack.op", &[("grammar", "jack.op")], None),
         ("s.trinity.jack.grammar.3", "grammar", "jack.diff", &[("grammar", "jack.diff")], None),
@@ -648,10 +657,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
 /// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
 /// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
-pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
+pub fn artifact<PA: ArtifactApps<C>,C:JackComposition>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![standards::v1::standard::<PA,C>()] }
 }
 //#endregion 🔖️Register
 
@@ -742,72 +751,8 @@ pub mod standards {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod txt {
-                                    #[path = "."]
-                                    pub mod v_utf_8 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+
+
                 }
             }
         }

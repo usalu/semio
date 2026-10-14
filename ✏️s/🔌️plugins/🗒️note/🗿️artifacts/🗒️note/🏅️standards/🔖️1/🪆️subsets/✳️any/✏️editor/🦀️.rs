@@ -588,7 +588,9 @@ impl ArtifactEditor for NotePlayApp {
 
     /// 🎯️ Host-action bridge into the closed `NoteCommand` enum (ticket 26/09/17/NOTE-PLUGIN-END-TO-END):
     /// the trait default refuses every app action, which left every panel/canvas verb dead in the shell.
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 
@@ -647,14 +649,19 @@ impl ArtifactEditor for NotePlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key != NOTE_PLAY_BODY_COMPOSITE {
             return Self::render(body_key, doc, cfg, view_state);
         }
         let window = crate::editor::note::window::config_from_view(cfg);
         let preview = crate::editor::note::window::transient_from_view(transient).ink_tool.map(|state| ink_apply_events::note_ink_tool_preview(doc.snapshot, &state));
         composite::render_with_interaction(preview.as_ref().unwrap_or(doc.snapshot), &window.camera, note_active_utility(view_state), interaction).map(semio_framework_plugin::built_to_component_tree)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };

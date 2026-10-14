@@ -6,7 +6,7 @@ import {readFileSync} from "node:fs";
 import fixture from "../../🧪️tests/🧫️fixtures/🔣️.json";
 import contract from "./🧫️fixtures/🔣️.json";
 import {objSnapshotToSqliteDatabase,objSnapshotFromSqliteDatabase,objSnapshotValidateSqliteSubset} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
 const source=()=>({...fixture,faces:fixture.faces.map(face=>({vertices:face.vertices.map(vertex=>({...vertex}))})),vertices:fixture.vertices.map(v=>({...v,x:binary64(v.x),y:binary64(v.y),z:binary64(v.z),w:"w"in v?binary64(v.w!):undefined})),texcoords:fixture.texcoords.map(v=>({...v,u:binary64(v.u),v:binary64(v.v),w:"w"in v?binary64(v.w!):undefined})),normals:fixture.normals.map(v=>({x:binary64(v.x),y:binary64(v.y),z:binary64(v.z)})),groups:fixture.groups.map(v=>({...v,faces:v.faces.map(BigInt)})),objects:fixture.objects.map(v=>({...v,faces:v.faces.map(BigInt)})),usemtl:fixture.usemtl.map(v=>({...v,faceIndexFrom:BigInt(v.faceIndexFrom)})),smoothingGroups:fixture.smoothingGroups.map(v=>({...v,faceIndexFrom:BigInt(v.faceIndexFrom)})),unknownStatements:fixture.unknownStatements.map(v=>({...v,lineIndex:BigInt(v.lineIndex)}))});

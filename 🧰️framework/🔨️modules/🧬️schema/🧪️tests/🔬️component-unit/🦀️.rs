@@ -74,6 +74,35 @@ impl<T> ChildFieldRefs for ArtifactChild<T> {
 type AliasedChild = ArtifactChild<()>;
 
 #[derive(ArtifactSchema)]
+#[artifact_schema(id = "s.test.capability-composition")]
+struct CapabilityComposition {
+    #[state(artifact)]
+    #[child(capability = "s.test.graph")]
+    content: AliasedChild,
+}
+
+#[test]
+fn capability_child_slot_declares_behavior_and_projects_the_original_identity() {
+    use semio_framework_schema_composition::ChildSlotSelection;
+    assert_eq!(CapabilityComposition::child_slots(), &[ChildSlotSpec { name: "content", selection: ChildSlotSelection::Capability("s.test.graph"), many: false }]);
+    let composition = CapabilityComposition { content: ArtifactChild { _marker: std::marker::PhantomData } };
+    struct Visitor(usize);
+    impl<'a> ChildRefVisitor<'a> for Visitor {
+        type Error = ();
+        fn step(&mut self) -> Result<(), ()> { Ok(()) }
+        fn child(&mut self, slot: &'static str, fields: ChildRefFields<'a>) -> Result<(), ()> {
+            assert_eq!(slot, "content");
+            assert_eq!(fields, ChildRefFields { child_id: "child", artifact_id: "child", artifact_kind: "s.stdio.mesh", standard: "v1", subset: "*" });
+            self.0 += 1;
+            Ok(())
+        }
+    }
+    let mut visitor = Visitor(0);
+    composition.visit_child_refs(&mut visitor).unwrap();
+    assert_eq!(visitor.0, 1);
+}
+
+#[derive(ArtifactSchema)]
 #[artifact_schema(id = "s.test.aliased-composition")]
 struct AliasedComposition {
     #[state(artifact)]
@@ -106,8 +135,8 @@ struct CompositeArtifact {
 async fn artifact_composition_fields_derive_emits_expected_slot_tables() {
     let children = CompositeArtifact::child_slots();
     assert_eq!(children.len(), 2, "single child + Vec child must both be captured, plain field must not");
-    assert_eq!(children[0], ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false });
-    assert_eq!(children[1], ChildSlotSpec { name: "textures", kind: "s.stdio.image", many: true });
+    assert_eq!(children[0], ChildSlotSpec { name: "primaryMesh", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.mesh"), many: false });
+    assert_eq!(children[1], ChildSlotSpec { name: "textures", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.image"), many: true });
 
     let links = CompositeArtifact::link_slots();
     assert_eq!(links.len(), 1, "only the ArtifactLink field must be captured");
@@ -144,7 +173,7 @@ async fn artifact_composition_projection_walks_aliases_nested_options_and_cancel
         }
     }
     let slots = AliasedComposition::child_slots();
-    assert_eq!(slots, &[ChildSlotSpec { name: "optionalChild", kind: "s.stdio.mesh", many: false }, ChildSlotSpec { name: "children", kind: "s.stdio.mesh", many: true }]);
+    assert_eq!(slots, &[ChildSlotSpec { name: "optionalChild", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.mesh"), many: false }, ChildSlotSpec { name: "children", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.mesh"), many: true }]);
     let snapshot = AliasedComposition { optional_child: Some(Some(ArtifactChild { _marker: std::marker::PhantomData })), children: vec![None, Some(ArtifactChild { _marker: std::marker::PhantomData })] };
     let mut visitor = Visitor { steps: 0, maximum_steps: 16, rows: Vec::new() };
     snapshot.visit_child_refs(&mut visitor).unwrap();

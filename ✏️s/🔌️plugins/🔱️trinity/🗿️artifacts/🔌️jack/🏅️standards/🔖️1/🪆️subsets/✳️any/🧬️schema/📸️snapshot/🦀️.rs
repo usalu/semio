@@ -1,7 +1,7 @@
 //! 🧬️ Jack snapshot schema — artifact-lane fields only.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `nodes`/`edges` are gone from this STRUCT —
-//! replaced by a single composed `content: JackContentChild` slot (`s.stdio.semio.graph`). See
+//! replaced by a single composed `content: JackContentChild` slot (the graph capability). See
 //! `🗿️artifacts/🔌️jack/🦀️.rs`'s `🔖️ContentBridge`/`🔖️WorkingScene` regions for the
 //! converter/handle/cache machinery this field depends on.
 
@@ -27,7 +27,7 @@ pub struct JackSnapshot {
     #[state(artifact)]
     pub camera: Camera,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio")]
+    #[child(capability = "s.trinity.jack.graph")]
     pub content: JackContentChild,
     #[state(artifact)]
     #[value(skip_serializing_if = "Option::is_none")]
@@ -117,7 +117,7 @@ impl semio_framework_value::FromValue for JackSnapshot {
             let name = optional_field(fields, "name", c)?;
             let manifest_id = optional_field(fields, "manifestId", c)?;
             let manifest = semio_framework_value::DecodedValue::new(optional_field::<Manifest>(fields, "manifest", c)?, <Manifest as semio_framework_value::FromValue>::retire_decoded);
-            let camera = optional_field(fields, "camera", c)?;
+            let camera=match semio_framework_value::DslValue::field_controlled(fields,"camera",c)?{Some(value)=>crate::standards::v1::subsets::any::io::json_native::decode_camera(value,c)?,None=>Default::default()};c.step()?;
             let child = semio_framework_value::DslValue::field_controlled(fields, "content", c)?.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "missing field content"))?;
             let content = semio_framework_value::DecodedValue::new(<JackContentChild as semio_framework_value::FromValue>::from_value_controlled(child, c)?, <JackContentChild as semio_framework_value::FromValue>::retire_decoded);
             c.step()?;
@@ -176,7 +176,7 @@ impl Default for JackSnapshot {
             manifest_id: None,
             manifest: Manifest::default(),
             camera: Camera::default(),
-            content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()),
+            content: store::os_store::artifact_child::ArtifactChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}),
             root_node_id: None,
             query: crate::TRINITY_JACK_DEFAULT_QUERY.into(),
         }

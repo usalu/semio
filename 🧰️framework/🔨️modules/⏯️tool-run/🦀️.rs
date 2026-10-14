@@ -33,6 +33,9 @@ pub use native_tick_preparation::{ToolRunNativeTickPreparation,ToolRunReceivedTi
 #[path="🎞️tick/🛬️receive/🔢️entities/🦀️.rs"]
 mod entity_column_receiving;
 pub use entity_column_receiving::ToolRunEntityColumnReceiving;
+#[path="🎞️tick/🛬️receive/📊️progress/🦀️.rs"]
+mod progress_receiving;
+pub use progress_receiving::{ToolRunProgressReceiving,ToolRunReceivedProgressSource};
 
 #[path="👥️entities/🦀️.rs"]
 pub mod entities;

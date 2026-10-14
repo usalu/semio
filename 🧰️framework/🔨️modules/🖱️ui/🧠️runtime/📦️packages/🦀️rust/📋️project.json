@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/ui-runtime-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "tree-retirement-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts tree-retirement-check",
@@ -12,7 +12,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -20,11 +20,20 @@
       }
     },
     "check-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-wasm"
       }
+    },
+    "test-native-resource-custody": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native-resource-custody",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     }
   }
 }

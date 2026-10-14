@@ -1,12 +1,15 @@
 import { expect, test } from "bun:test";
-import { mkdir, mkdtemp, writeFile, rm, symlink } from "node:fs/promises";
+import Ajv from "ajv";
+import schema from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json";
+import { mkdir, mkdtemp, writeFile, rm, symlink, rename, readdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { createRepositoryFilesystemJournalV1 } from "../🟦️.ts";
+import { createLiveFilesystemJournalV1 } from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
 import { nxGraphSourceMembershipV2 } from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
-import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
+import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
 
 test("repository journal joins installed native watcher, Git census and no-follow scope", async () => {
  const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR; if (!artifact) throw Error("Ticket artifact directory required");
@@ -55,3 +58,31 @@ test("cold journal discovers a wholly ignored structural owner absent from nativ
   console.log("[DEBUG] wholly ignored structural owner admitted alongside native effective census");
  }finally{await journal?.close();await rm(root,{recursive:true,force:true});}
 },35000);
+
+
+test("directory deletion alone admits the actual renamed parent membership and its selected witness",async()=>{
+ const artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifact)throw Error("Ticket artifact directory required");const root=await mkdtemp(join(dirname(artifact),"jr-")),law=fixture.structuralRename;
+ const control:FilesystemJournalControlV1={signal:new AbortController().signal,remainingMilliseconds:()=>30000,publish:async()=>{},yieldContinuation:async()=>{}};
+ let receive:((error:unknown,events:readonly FilesystemJournalChangeV1[])=>void)|undefined,journal:Awaited<ReturnType<typeof createRepositoryFilesystemJournalV1>>|undefined;
+ try{
+  await mkdir(join(root,law.source),{recursive:true});for(const file of law.files)await writeFile(join(root,law.source,file),file==="package.json"?'{"name":"branch"}':'export const branch = 1;');
+  journal=await createRepositoryFilesystemJournalV1(root,{watch(callback){receive=callback;return()=>{}},flush(){return[]},async census(){return law.files.map(file=>law.source+"/"+file)},async admittedPaths(paths){return paths},isGlobalIdentity:path=>path.endsWith("/package.json")},control);
+  const scope={roots:["owners"],files:[]},before=await journal.capture(scope,control);await rename(join(root,law.source),join(root,law.destination));receive!(null,law.nativeEvents as readonly FilesystemJournalChangeV1[]);
+  const observed=await journal.capture(scope,control),physical=(await readdir(join(root,law.destination))).map(file=>law.destination+"/"+file).sort();expect(physical).toEqual(law.expectedMembership);expect(observed.selectedMembership.paths).toEqual(physical);expect(observed.globalIdentity.paths).toEqual(law.expectedGlobal);expect(await journal.verify(before,scope,control)).toBe(false);
+  expect(new Ajv({strict:true}).compile(schema)(observed)).toBe(true);
+  const selected=await journal.capture({roots:[law.destination],files:[]},control);expect(selected.sequence).toBeGreaterThan(0);expect(selected.changes.some(row=>row.path===law.destination+"/main.ts"&&row.type==="create")).toBe(true);
+  console.log("[DEBUG] Original delete-only native rename reconciled affected physical parent and published exact new selected/global membership");
+ }finally{await journal?.close();await rm(root,{recursive:true,force:true})}
+},35000);
+
+/** 🕰️ Journal transport preserves the initiating absolute deadline beyond one second. */
+test("journal RPC retains the caller deadline through delayed reconciliation",async()=>{
+ const rpc=await import("../🌐️rpc/🟦️.ts"),law=await Bun.file(new URL("../../../../../🧪️tests/🕸️daemon/📥️journal/🧫️fixtures/🔣️.json",import.meta.url)).json();
+ const request={...law.request,deadlineUnixMilliseconds:law.deadline.deadlineUnixMilliseconds};
+ const schema=await Bun.file(new URL("../🌐️rpc/🧬️schema/🔣️.json",import.meta.url)).json(),neutral=await Bun.file(new URL("../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json",import.meta.url)).json();
+ const ajv=new Ajv({strict:true}).addSchema(neutral),validate=ajv.compile(schema);expect(validate(request)).toBe(true);expect(rpc.readFilesystemJournalRpcRequestV1(request)).toEqual(request);const{deadlineUnixMilliseconds,...missing}=request;expect(validate(missing)).toBe(false);expect(()=>rpc.readFilesystemJournalRpcRequestV1(missing)).toThrow();
+ const{Database}=await import("bun:sqlite"),db=new Database(":memory:");try{expect(rpc.filesystemJournalRpcRemainingMillisecondsV1(request,law.deadline.later)).toBe((db.query("SELECT ?1-?2 AS remaining").get(law.deadline.deadlineUnixMilliseconds,law.deadline.later)as{remaining:number}).remaining);expect(rpc.filesystemJournalRpcRemainingMillisecondsV1({...request,deadlineUnixMilliseconds:null},law.deadline.later)).toBeNull()}finally{db.close()}
+ const abort=new AbortController(),started=Date.now(),deadline=started+3000,control:FilesystemJournalControlV1={signal:abort.signal,remainingMilliseconds:()=>rpc.filesystemJournalRpcRemainingMillisecondsV1({...request,deadlineUnixMilliseconds:deadline},Date.now()),publish:async()=>{},yieldContinuation:async()=>{}};
+ let receive!: (error:unknown,events:readonly FilesystemJournalChangeV1[])=>void;const journal=await createLiveFilesystemJournalV1({source:{watch(callback){receive=callback;return()=>{}},async census(){return[]},flush:()=>[],async reconcile(event){await delay(law.deadline.workMilliseconds);return[event.path]},async admitScope(){}},excluded:()=>false,isGlobalIdentity:()=>false,maximumPaths:10,maximumEvents:10},control);
+ try{receive(null,[{path:"sample/main.ts",type:"create"}]);expect((await journal.capture({roots:["sample"],files:[]},control)).selectedMembership.paths).toEqual(["sample/main.ts"]);expect(Date.now()-started).toBeGreaterThan(1000);expect(rpc.filesystemJournalRpcRemainingMillisecondsV1(request,4000)).toBe(0)}finally{await journal.close()}
+});

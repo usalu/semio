@@ -4,7 +4,7 @@ use store::sqlite_snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::fmt::Debug;
 
-pub(crate) fn verify<S:crate::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+Clone+PartialEq+Debug>(
+pub(crate) fn verify<S:store::os_store::serialization::ArtifactSqliteSnapshotHost+semio_framework_value::retirement::RetireOwned+Clone+PartialEq+Debug>(
  short:&S,long:&S,sql:&str,rows:usize,field_bytes:usize,cancel_at:usize,
  observe:fn(&mut dyn FnMut()->Result<(),ValueError>)->(Result<(),ValueError>,usize),
  native:&mut store::io::io_mechanism::IoRunControl<'_, '_>,

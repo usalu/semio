@@ -1,0 +1,56 @@
+{
+  "name": "@semio-tech/s-rebuild",
+  "root": "✏️s/🧑‍💻dev/🔁️rebuild",
+  "projectType": "library",
+  "tags": [
+    "scope:s",
+    "lang:typescript",
+    "role:tool"
+  ],
+  "targets": {
+    "rebuild-all": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts rebuild-all",
+        "forwardAllArgs": true
+      }
+    },
+    "guest-framework-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts guest-framework-check",
+        "forwardAllArgs": true
+      }
+    },
+    "plan-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts plan-check",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🔁️rebuild",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

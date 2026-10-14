@@ -6,7 +6,8 @@ mod json_oracle;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_module_for_sourcing_curation() {
-    let manifest = bundle().into_manifest_cold().unwrap();
+    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let manifest = bundle().into_manifest_cold(&mut cx).unwrap();
     assert_eq!(manifest.extension_id, EXTENSION_ID);
     assert_eq!(manifest.extends, "sourcing");
     assert_eq!(manifest.capabilities.len(), 0);
@@ -22,4 +23,6 @@ async fn bundle_contributes_module_for_sourcing_curation() {
     assert_eq!(typology, WindowsModule.typology());
     assert_eq!(kinds, WindowsModule.demo_kinds());
     json_oracle::verify(WindowsModule.module_id(), typology_json, kinds_json);
+
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");
 }

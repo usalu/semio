@@ -7,17 +7,17 @@ import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmen
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection, type CatalogSelection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
+import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection,readCatalogBuildTargetsV1, runtimeCatalogProjectionRootV1, type CatalogSelection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
 
 import { discoverPluginBuildTargets, type ComponentSourceOwnerV1, type PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
-const registryGeneratedDirectory = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated");
+
 
 
 
@@ -51,7 +51,7 @@ function ensureWasmTarget(): void {
  * Rows come from the plugin manifests, never from the deployed registry, so a crate whose descriptor is stale is
  * still built, re-described and thereby re-admitted by the next registry generation. */
 function discoverPluginBuildCatalog(): CatalogSelection<PluginBuildTargetV1> {
-  return { entries: discoverPluginBuildTargets(repoRoot), playgrounds: readGeneratedCatalogProjection(registryGeneratedDirectory).playgrounds };
+  return { entries: readCatalogBuildTargetsV1(), playgrounds: readGeneratedCatalogProjection().playgrounds };
 }
 
 /** 🎯️ Selects the build targets one filter names (or all of them) from the discovered crates; `SEMIO_PLUGIN_ONLY` narrows that selection to one crate. */
@@ -70,7 +70,7 @@ function resolvePluginBuildTargets(filterPlugin?: string, catalog: CatalogSelect
 
 //#region 🔖️PlaygroundVariantResolution
 /** 📚️ Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🎮️playgrounds/🟦️.ts`). */
-const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
+const playgroundCatalog = () => loadFrameworkOsPlaygroundCatalog();
 
 /** 🧭️ A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
 type ResolvedPlaygroundFilter = {
@@ -86,12 +86,12 @@ type ResolvedPlaygroundFilter = {
  * bare pluginId (existing behavior for single-app crates where variant === pluginId).
  */
 function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter {
-  const row = playgroundCatalog.find((entry) => entry.variant === filterPlugin);
+  const row = playgroundCatalog().find((entry) => entry.variant === filterPlugin);
   return row ? { pluginId: row.pluginId, appId: row.app, brand: row.brand, devContribution: row.devContribution } : { pluginId: filterPlugin };
 }
 
 /** 🎯️ Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
-function resolveCatalogFilterPluginId(filterPlugin?: string, catalog: CatalogSelection<ComponentSourceOwnerV1> = readGeneratedCatalogProjection(registryGeneratedDirectory)): string | undefined {
+function resolveCatalogFilterPluginId(filterPlugin?: string, catalog: CatalogSelection<ComponentSourceOwnerV1> = readGeneratedCatalogProjection()): string | undefined {
   return filterPlugin && !projectedHostPluginFilter(catalog, filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 

@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { spawnSync } from "node:child_process";
+import {captureOwnedCommandV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import Ajv from "ajv";
 import ts from "typescript";
 import * as owner from "../../🟦️.ts";
@@ -90,14 +92,14 @@ test("actual guards preserve identities, sparse slots, labels and exact own enum
   }
 });
 
-test("strict owned TypeScript API and both transpilers retain actual Node runtime outputs", () => {
+test("strict owned TypeScript API and both transpilers retain actual Node runtime outputs", async () => receiveScriptProcessInvocation(process.env,async original=>{
+  const control=scriptCompilerAdmissionControlV1(original,"schema-validator:shape-runtime",0);
   actualGuards();
-  const ticket = process.env.SEMIO_TEST_ARTIFACT_DIR ?? resolve(import.meta.dir, "../../../../../..", ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-framework");
+  const ticket=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!ticket)throw Error("Original shape test artifact directory required");mkdirSync(ticket,{recursive:true});
   const directory = mkdtempSync(resolve(ticket, "shape-"));
   const source = readFileSync(sourcePath, "utf8");
-  writeFileSync(resolve(directory, "owner.ts"), source);
-  writeFileSync(resolve(directory, "client.ts"), 'import { requireRecord, requireStringArray, requireString, requireLiteral, requireExactKeys, type UnknownRecord } from "./owner"; const record: UnknownRecord = requireRecord({}, "payload"); const strings: readonly string[] = requireStringArray([], "payload"); const text: string = requireString("x", "payload"); const literal: "on" = requireLiteral("on", "payload", ["on"] as const); const done: void = requireExactKeys(record, [], "payload"); void [strings, text, literal, done];');
-  const program = ts.createProgram([resolve(directory, "owner.ts"), resolve(directory, "client.ts")], { strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, skipLibCheck: true, types: [], lib: ["lib.es2022.d.ts"] });
+  writeFileSync(resolve(directory, "client.ts"), 'import { requireRecord, requireStringArray, requireString, requireLiteral, requireExactKeys, type UnknownRecord } from '+JSON.stringify(sourcePath)+'; const record: UnknownRecord = requireRecord({}, "payload"); const strings: readonly string[] = requireStringArray([], "payload"); const text: string = requireString("x", "payload"); const literal: "on" = requireLiteral("on", "payload", ["on"] as const); const done: void = requireExactKeys(record, [], "payload"); void [strings, text, literal, done];');
+  const program = ts.createProgram([sourcePath, resolve(directory, "client.ts")], { strict: true, noEmit: true, allowImportingTsExtensions:true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, skipLibCheck: true, types: [], lib: ["lib.es2022.d.ts"] });
   expect(ts.getPreEmitDiagnostics(program).map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
   const sourceFile = ts.createSourceFile("test.ts", readFileSync(import.meta.path, "utf8"), ts.ScriptTarget.Latest, true);
   const helpers = sourceFile.statements.filter(node => ts.isFunctionDeclaration(node) && ["runtimeValue", "observe"].includes(node.name?.text ?? "")).map(node => node.getText(sourceFile)).join("\n");
@@ -107,10 +109,8 @@ test("strict owned TypeScript API and both transpilers retain actual Node runtim
     const ownerPath = resolve(directory, `owner-${index}.mjs`), runnerPath = resolve(directory, `runner-${index}.mjs`);
     writeFileSync(ownerPath, compiled);
     writeFileSync(runnerPath, `import * as api from "./owner-${index}.mjs";\n${runner}`);
-    const result = spawnSync("node", [runnerPath], { encoding: "utf8", timeout: 4_000 });
-    expect(result.status).toBe(0);
-    expect(result.stderr).toBe("");
-    expect(JSON.parse(result.stdout)).toEqual(allRows.map(row => row.expected));
+    const result=await captureOwnedCommandV1("node",[runnerPath],directory,{control});
+    expect(JSON.parse(result)).toEqual(allRows.map(row => row.expected));
   }
   expect(ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true).statements.some(node => ts.isImportDeclaration(node) || ts.isExportDeclaration(node))).toBe(false);
-});
+}),15000);

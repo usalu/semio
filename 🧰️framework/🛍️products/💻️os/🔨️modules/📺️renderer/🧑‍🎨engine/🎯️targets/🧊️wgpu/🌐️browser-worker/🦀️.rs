@@ -45,20 +45,7 @@ impl PendingHubDocumentEvent {
     }
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct BrowserTickOutput {
-    media_slots: Vec<crate::media_slots::PresentedMediaSlot>,
-    cursor: &'static str,
-    fullscreen: Option<bool>,
-    request_frame: bool,
-    next_deadline_delay_ms: Option<f64>,
-    continue_frame: bool,
-    progress: f32,
-    quarantined: bool,
-    fault_code: Option<&'static str>,
-    fault_detail: Option<String>,
-}
+use crate::browser_original_output::{BrowserTickOutput,BrowserMediaOutput,OriginalBrowserOutput};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -108,6 +95,10 @@ fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
 #[wasm_bindgen]
 pub struct BrowserRendererWorker {
     host: Option<crate::os_host::OsHost>,
+    original_frame:Option<semio_framework_plugin::reactor::original_actor_context::OriginalActorGuestEntry>,
+    original_receipt:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedReceipt,
+    original_output:Option<OriginalBrowserOutput>,
+    original_failure_output:Option<semio_framework_job::JobOutcomeDescriptor>,
     retired_host: Option<crate::os_host::OsHostRetirement>,
     text_streams: [Option<PendingText>; TEXT_STREAM_CAPACITY],
     text_bytes: usize,
@@ -120,8 +111,142 @@ pub struct BrowserRendererWorker {
     hub_status_events: VecDeque<PendingHubDocumentEvent>,
 }
 
+
+struct BrowserFrameClose<'a>{
+    host:&'a mut Option<crate::os_host::OsHost>,
+    original_output:&'a mut Option<OriginalBrowserOutput>,
+    original_failure_output:&'a mut Option<semio_framework_job::JobOutcomeDescriptor>,
+    retired_host:&'a mut Option<crate::os_host::OsHostRetirement>,
+    text_streams:&'a mut [Option<PendingText>;TEXT_STREAM_CAPACITY],
+    text_bytes:&'a mut usize,
+    close_phase:&'a mut u8,
+    asset_fetch:&'a mut Option<RendererAssetFetchOwner>,
+    asset_blocked:&'a mut Option<RendererAssetFetchOwner>,
+    asset_blocked_page:&'a mut Option<WorldAssetResponsePage>,
+}
+impl BrowserFrameClose<'_>{
+    fn close_step_on_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(false)}
+        if self.original_failure_output.is_some(){return acknowledge_original_failure(self.original_failure_output,cx).map(|_|false)}
+        if let Some(output)=self.original_output.as_mut(){if !output.close_step(cx)?{return Ok(false)}if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);*self.original_output=None;return Ok(false)}
+        if self.asset_blocked_page.take().is_some() {
+            return Ok(false);
+        }
+        if let Some(mut owner) = self.asset_fetch.take() {
+            owner.begin_close();
+            let Some(host) = self.host.as_ref() else {
+                *self.asset_blocked = Some(owner);
+                return Ok(false);
+            };
+            if let Err(owner) = host.runtime.return_renderer_asset_owner(owner) {
+                *self.asset_blocked = Some(owner);
+            }
+            return Ok(false);
+        }
+        if let Some(owner) = self.asset_blocked.as_mut() {
+            if !owner.close_step() {
+                return Ok(false);
+            }
+            *self.asset_blocked = None;
+            return Ok(false);
+        }
+        if *self.close_phase == 0 {
+            let Some(host) = self.host.as_ref() else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"renderer host disappeared before shared asset retirement").into()) };
+            if !host.runtime.close_renderer_asset_step() {
+                return Ok(false);
+            }
+            *self.close_phase = 1;
+            return Ok(false);
+        }
+        if *self.close_phase == 1 {
+            let Some(host) = self.host.as_mut() else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"renderer host disappeared before frame cancellation").into()) };
+            if !host.frame_build.close_original_frame_step(cx)? || !host.frame_build.terminal_is_empty() {
+                return Ok(false);
+            }
+            *self.close_phase = 2;
+            return Ok(false);
+        }
+        if *self.close_phase == 2 {
+            if let Some(slot) = self.text_streams.iter().position(Option::is_some) {
+                let stream_id = self.text_streams[slot].as_ref().expect("text stream slot").stream_id;
+                if let Some(stream)=self.text_streams[slot].take(){*self.text_bytes=self.text_bytes.saturating_sub(stream.bytes);if matches!(stream.target,TextTarget::Text|TextTarget::Paste|TextTarget::PasteImageDataUrl){let host=self.host.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original text cleanup lost its host"))?;host.handle_event(DispatchEvent::TextEditAbort{stream:stream_id});}}
+                return Ok(false);
+            }
+            *self.close_phase = 3;
+            return Ok(false);
+        }
+        if *self.close_phase == 3 {
+            let Some(host) = self.host.as_mut() else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"renderer host disappeared before event retirement").into()) };
+            if !host.events.close_step() || !host.events.terminal_is_empty() {
+                return Ok(false);
+            }
+            *self.close_phase = 4;
+            return Ok(false);
+        }
+        if *self.close_phase == 4 {
+            let Some(host)=self.host.as_ref()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original snapshot close lost its host").into())};
+            if !host.snapshot_sink.close_on_original_caller(cx)?{return Ok(false)}
+            *self.close_phase = 5;
+            return Ok(false);
+        }
+        if *self.close_phase == 5 {
+            if self.host.is_some() {
+                let Some(retirement) = crate::os_host::OsHost::try_into_retirement(self.host, cx)? else {
+                    return Ok(false);
+                };
+                *self.retired_host = Some(retirement);
+            }
+            *self.close_phase = 6;
+            return Ok(false);
+        }
+        if let Some(retired) = self.retired_host.as_mut() {
+            if !retired.close_step(cx)? {
+                return Ok(false);
+            }
+            if !retired.terminal_is_empty() {
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"renderer host retirement completed without a terminal-empty witness").into());
+            }
+            *self.retired_host = None;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+}
+
+#[wasm_bindgen]
+extern "C"{#[wasm_bindgen(catch,js_name=semioOriginalFrameClockUs)]fn original_frame_clock()->Result<u64,JsValue>;}
+fn original_frame_now_us()->Option<u64>{original_frame_clock().ok()}
+fn original_frame_input(operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize)->semio_framework_actor::RetainedTurnInput{semio_framework_actor::RetainedTurnInput{operation,generation,epoch,grant:semio_framework_value::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}}}
+
+fn acknowledge_original_failure(output:&mut Option<semio_framework_job::JobOutcomeDescriptor>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    if cx.should_yield(){return Ok(false)}let Some(descriptor)=output.as_mut()else{return Ok(true)};let step=descriptor.acknowledge(cx.retained_grant());cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if !descriptor.is_acknowledged(){return Ok(false)}drop(output.take());Ok(true)
+}
+
 #[wasm_bindgen]
 impl BrowserRendererWorker {
+    /// 🌱️ The initiating frame stock pays each native authority birth before a producer runs.
+    #[wasm_bindgen(js_name=admitOriginalFrame)]
+    pub fn admit_original_frame(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize)->bool{
+        let original=self.original_frame.as_mut().expect("original frame entry available").admit_step(original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth));
+        let reply=semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply::borrow_original(&original);self.original_receipt.write_admission(&reply);reply.ready
+    }
+    /// 🧾️ Scalar reads borrow the same inline native tuple without an output allocation.
+    #[wasm_bindgen(js_name=originalFrameReceiptScalar)]
+    pub fn original_frame_receipt_scalar(&self,index:usize)->Result<u64,JsValue>{let bytes=self.original_receipt.bytes();if index>=13{return Err(js_error("original-frame-receipt","original scalar ordinal is absent"))}Ok(u64::from_le_bytes(bytes[8+index*8..16+index*8].try_into().unwrap()))}
+    #[wasm_bindgen(js_name=originalFrameReceiptRefusal)]
+    pub fn original_frame_receipt_refusal(&self)->u8{self.original_receipt.bytes()[6]}
+    /// 📦️ Scalar wire reads expose the retained original buffer without a wasm-bindgen Vec copy.
+    #[wasm_bindgen(js_name=originalFrameOutputLength)]
+    pub fn original_frame_output_length(&self)->usize{if let Some(descriptor)=self.original_failure_output.as_ref(){return self.original_frame.as_ref().and_then(|entry|entry.borrow_failure_outcome(descriptor).ok()).and_then(|view|match view{semio_framework_job::JobOutcomeView::Fault{detail,..}=>Some(detail.len()),_=>None}).unwrap_or(0)}self.original_output.as_ref().and_then(OriginalBrowserOutput::bytes).map_or(0,|bytes|bytes.len())}
+    #[wasm_bindgen(js_name=originalFrameOutputByte)]
+    pub fn original_frame_output_byte(&self,index:usize)->Result<u8,JsValue>{if let Some(descriptor)=self.original_failure_output.as_ref(){return self.original_frame.as_ref().and_then(|entry|entry.borrow_failure_outcome(descriptor).ok()).and_then(|view|match view{semio_framework_job::JobOutcomeView::Fault{detail,..}=>detail.original_byte_at(index),_=>None}).ok_or_else(||js_error("original-frame-failure-output","original Pack failure ordinal is absent"))}self.original_output.as_ref().and_then(OriginalBrowserOutput::bytes).and_then(|bytes|bytes.get(index)).copied().ok_or_else(||js_error("original-frame-output","original output ordinal is absent"))}
+    #[wasm_bindgen(js_name=acknowledgeOriginalFrameOutput)]
+    pub fn acknowledge_original_frame_output(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64)->bool{
+        let input=original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth);let mut recipient=Default::default();
+        let original=self.original_frame.as_mut().expect("original frame entry available").dispatch_cleanup_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx|{if self.original_failure_output.is_some(){return acknowledge_original_failure(&mut self.original_failure_output,cx)}let Some(output)=self.original_output.as_mut()else{return Ok(true)};if !output.close_step(cx)?{return Ok(false)}if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_output=None;Ok(true)});
+        let authority=match &original.result{Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Authority(error))=>Some(error.kind),_=>None};self.original_receipt.write(semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedCall{input:original.input,spent:original.receipt_spent,work_units_spent:original.work_units_spent,kind:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedKind::Failure{authority}});original.result.is_ok_and(|complete|complete)
+    }
     #[wasm_bindgen(js_name = pollAssetRequest)]
     pub fn poll_asset_request(&mut self) -> Result<String, JsValue> {
         self.ensure_live()?;
@@ -330,6 +455,22 @@ impl BrowserRendererWorker {
         Ok(())
     }
 
+    /// ♻️ Child frame aliases and checked-out output return before the same admitted native authorities close.
+    #[wasm_bindgen(js_name=closeOriginalFrame)]
+    pub fn close_original_frame(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64)->bool{
+        let input=original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth);let mut recipient=Default::default();
+        let Some(source)=self.original_frame.as_mut()else{return false};
+        let mut close=BrowserFrameClose{host:&mut self.host,original_output:&mut self.original_output,original_failure_output:&mut self.original_failure_output,retired_host:&mut self.retired_host,text_streams:&mut self.text_streams,text_bytes:&mut self.text_bytes,close_phase:&mut self.close_phase,asset_fetch:&mut self.asset_fetch,asset_blocked:&mut self.asset_blocked,asset_blocked_page:&mut self.asset_blocked_page};
+        let original=source.dispatch_cleanup_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx|close.close_step_on_original(cx));
+        let authority=match &original.result{Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Authority(error))=>Some(error.kind),_=>None};
+        self.original_receipt.write(semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedCall{input:original.input,spent:original.receipt_spent,work_units_spent:original.work_units_spent,kind:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedKind::Failure{authority}});
+        original.result.is_ok_and(|complete|complete)
+    }
+    #[wasm_bindgen(js_name=closeOriginalFrameContext)]
+    pub fn close_original_frame_context(&mut self,operation:u64,generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize)->bool{
+        let original=self.original_frame.as_mut().expect("original frame entry available").close_step(original_frame_input(operation,generation,epoch,items,copy,capacity,release,depth));
+        let reply=semio_framework_actor::retained_turn::context::OriginalActorCloseReply::borrow_original(&original);self.original_receipt.write_close(&reply);reply.complete
+    }
     /// 🧵️ Executes one private decoder opportunity without producing a frame or input acknowledgement.
     #[wasm_bindgen(js_name = assetDecodeStep)]
     pub fn asset_decode_step(&mut self) -> Result<String, JsValue> {
@@ -342,59 +483,27 @@ impl BrowserRendererWorker {
     /// frame. Without them a settled browser shell ticks only on input, so a build that needed
     /// a second step never got one and a queued `DispatchEvents` was never pumped
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-    pub fn tick(&mut self, _timestamp_ms: f64, _sequence: u64, generation: u64) -> Result<String, JsValue> {
+    pub fn tick(&mut self,_timestamp_ms:f64,_sequence:u64,generation:u64,operation:u64,business_generation:u64,epoch:u64,items:usize,copy:usize,capacity:usize,release:usize,depth:usize,fuel:u64,deadline_us:u64,cancelled:bool)->Result<u8,JsValue>{
         let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), crate::frame_latency::FrameLatencyStage::WorkerTick, 1);
-        let _ = crate::os_host::OsHostRetirement::close_abandoned_step();
         self.ensure_live()?;
         self.flush_hub_document_event();
         if generation != self.latest_generation {
             return Err(js_error("generation-mismatch", "frame tick generation does not match admitted input"));
         }
-        if let Some(detail) = self.quarantined.clone() {
-            return encode_tick_timed(
-                generation,
-                BrowserTickOutput { media_slots: Vec::new(), cursor: "default", fullscreen: None, request_frame: false, next_deadline_delay_ms: None, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) },
-            );
+        let input=original_frame_input(operation,business_generation,epoch,items,copy,capacity,release,depth);
+        let mut recipient=Default::default();
+        let entry=self.original_frame.as_mut().expect("original frame entry available");
+        if entry.original_job_refusal().is_some()||entry.original_fault().is_some(){
+            let original=entry.publish_failure_call(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us);
+            let authority=match &original.result{Err(semio_framework_actor::retained_turn::context::OriginalActorCallError::Authority(error))=>Some(error.kind),_=>None};
+            self.original_receipt.write(semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedCall{input:original.input,spent:original.receipt_spent,work_units_spent:original.work_units_spent,kind:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedKind::Failure{authority}});
+            return match original.result{Ok(Some(descriptor))=>{self.original_failure_output=Some(descriptor);Ok(2)},Ok(None)=>Ok(0),Err(_)=>Err(js_error("original-frame-failure-publication","original failure publication retains its native cause"))};
         }
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
-        let outcome = host.redraw_offscreen_worker();
-        let text_fault = host.runtime.take_text_fault();
-        let frame_fault = host.runtime.take_frame_fault();
-        let fault_code = if text_fault.is_some() {
-            "text-input-failed"
-        } else if frame_fault.is_some() {
-            "frame-credits"
-        } else {
-            "present-failed"
-        };
-        let present_fault = host.present_fault.take().or(text_fault).or(frame_fault);
-        if let Some(detail) = present_fault.clone() {
-            self.quarantined = Some(detail);
-        }
-        let continue_frame = !host.presenter.awaiting_runtime()
-            && (host.take_cursor_wake_directive().is_some()
-                || crate::os_host::component_surface_close_occupied()
-                || host.runtime.has_pending_text_work()
-                || host.runtime.has_pending_world3d_work()
-                || host.runtime.has_pending_settle()
-                || host.runtime.has_pending_applies()
-                || host.frame_build.has_live_session()
-                || host.presenter.has_pending_presentation());
-        encode_tick_timed(
-            generation,
-            BrowserTickOutput {
-                media_slots: if present_fault.is_some() { Vec::new() } else { outcome.media_slots },
-                cursor: outcome.cursor_css,
-                fullscreen: host.platform_fullscreen.take(),
-                request_frame: continue_frame,
-                next_deadline_delay_ms: host.scheduler.next_deadline().map(|deadline| ((deadline.due - host.clock.now_seconds()) * 1000.0).max(0.0)).filter(|delay| delay.is_finite()),
-                continue_frame,
-                progress: 1.0,
-                quarantined: present_fault.is_some(),
-                fault_code: present_fault.as_ref().map(|_| fault_code),
-                fault_detail: present_fault,
-            },
-        )
+        let original=self.original_frame.as_mut().expect("original frame entry available").dispatch_value_step(input,semio_framework_job::StepBudget::new(fuel,deadline_us,input.grant),&mut recipient,original_frame_now_us,|cx|{if let Some(output)=self.original_output.as_mut(){return output.advance(cx).map(|ready|if ready{1}else{0})}if cancelled&&!cx.is_cancelled(){let grant=cx.retained_grant();if let Some(progress)=cx.borrowed_original_cancel_token()?.signal_cancelled_flag_step(grant){cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64)}}let Some(outcome)=host.redraw_offscreen_worker(cx)?else{return Ok(0)};let text_fault=host.runtime.take_text_fault();let frame_fault=host.runtime.take_frame_fault();let fault_code=if text_fault.is_some(){"text-input-failed"}else if frame_fault.is_some(){"frame-credits"}else{"present-failed"};let present_fault=host.present_fault.take().or(text_fault).or(frame_fault);let continue_frame=!host.presenter.awaiting_runtime()&&(host.runtime.has_pending_text_work()||host.runtime.has_pending_world3d_work()||host.runtime.has_pending_settle()||host.runtime.has_pending_applies()||host.frame_build.has_live_session()||host.presenter.has_pending_presentation());let output=BrowserTickOutput{presentation_generation:generation,media_slots:BrowserMediaOutput::Snapshot(outcome.media_slots),cursor:outcome.cursor_css,fullscreen:host.platform_fullscreen.take(),request_frame:continue_frame,next_deadline_delay_ms:host.scheduler.next_deadline().map(|deadline|((deadline.due-host.clock.now_seconds())*1000.0).max(0.0)).filter(|delay|delay.is_finite()),continue_frame,progress:1.0,quarantined:present_fault.is_some(),fault_code:present_fault.as_ref().map(|_|fault_code),fault_detail:present_fault};self.original_output=Some(OriginalBrowserOutput::new(output));Ok(0)});
+        let authority=match &original.result{Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Authority(error))=>Some(error.kind),_=>None};
+        self.original_receipt.write(semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedCall{input:original.input,spent:original.receipt_spent,work_units_spent:original.work_units_spent,kind:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedKind::Failure{authority}});
+        match original.result{Ok(status)=>Ok(status),Err(semio_framework_plugin::reactor::original_actor_context::OriginalActorEntryFailure::Semantic)=>Ok(0),Err(_)=>Err(js_error("original-frame-failure","original frame producer retains its complete native failure"))}
     }
 }
 
@@ -402,92 +511,9 @@ impl BrowserRendererWorker {
 impl BrowserRendererWorker {
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&mut self) -> Result<bool, JsValue> {
-        if !crate::os_host::OsHostRetirement::close_abandoned_step() {
-            return Ok(false);
-        }
-        if self.asset_blocked_page.take().is_some() {
-            return Ok(false);
-        }
-        if let Some(mut owner) = self.asset_fetch.take() {
-            owner.begin_close();
-            let Some(host) = self.host.as_ref() else {
-                self.asset_blocked = Some(owner);
-                return Ok(false);
-            };
-            if let Err(owner) = host.runtime.return_renderer_asset_owner(owner) {
-                self.asset_blocked = Some(owner);
-            }
-            return Ok(false);
-        }
-        if let Some(owner) = self.asset_blocked.as_mut() {
-            if !owner.close_step() {
-                return Ok(false);
-            }
-            self.asset_blocked = None;
-            return Ok(false);
-        }
-        if self.close_phase == 0 {
-            let Some(host) = self.host.as_ref() else { return Err(js_error("host-close", "renderer host disappeared before shared asset retirement")) };
-            if !host.runtime.close_renderer_asset_step() {
-                return Ok(false);
-            }
-            self.close_phase = 1;
-            return Ok(false);
-        }
-        if self.close_phase == 1 {
-            let Some(host) = self.host.as_mut() else { return Err(js_error("host-close", "renderer host disappeared before frame cancellation")) };
-            if !host.frame_build.close_step() || !host.frame_build.terminal_is_empty() {
-                return Ok(false);
-            }
-            self.close_phase = 2;
-            return Ok(false);
-        }
-        if self.close_phase == 2 {
-            if let Some(slot) = self.text_streams.iter().position(Option::is_some) {
-                let stream_id = self.text_streams[slot].as_ref().expect("text stream slot").stream_id;
-                self.abort_text_stream(slot, stream_id)?;
-                return Ok(false);
-            }
-            self.close_phase = 3;
-            return Ok(false);
-        }
-        if self.close_phase == 3 {
-            let Some(host) = self.host.as_mut() else { return Err(js_error("host-close", "renderer host disappeared before event retirement")) };
-            if !host.events.close_step() || !host.events.terminal_is_empty() {
-                return Ok(false);
-            }
-            self.close_phase = 4;
-            return Ok(false);
-        }
-        if self.close_phase == 4 {
-            self.close_phase = 5;
-            return Ok(false);
-        }
-        if self.close_phase == 5 {
-            if let Some(host) = self.host.take() {
-                match host.try_into_retirement() {
-                    Ok(retirement) => self.retired_host = Some(retirement),
-                    Err(host) => {
-                        self.host = Some(host);
-                        return Err(js_error("host-close", "host retirement abandonment registry refused admission"));
-                    }
-                }
-            }
-            self.close_phase = 6;
-            return Ok(false);
-        }
-        if let Some(retired) = self.retired_host.as_mut() {
-            if !retired.close_step() {
-                return Ok(false);
-            }
-            if !retired.terminal_is_empty() {
-                return Err(js_error("host-close", "renderer host retirement completed without a terminal-empty witness"));
-            }
-            self.retired_host = None;
-            return Ok(false);
-        }
-        Ok(true)
+        Ok(self.host.is_none()&&self.retired_host.is_none()&&self.asset_fetch.is_none()&&self.asset_blocked.is_none()&&self.asset_blocked_page.is_none()&&self.close_phase==6)
     }
+
 
     fn ensure_live(&self) -> Result<(), JsValue> {
         if self.close_phase != 0 || self.host.is_none() {
@@ -839,6 +865,10 @@ impl BrowserRendererBootstrap {
         host.scheduler.invalidate(InvalidationReason::STRUCTURE);
         Ok(BrowserRendererWorker {
             host: Some(host),
+            original_frame:Some(semio_framework_plugin::reactor::original_actor_context::OriginalActorGuestEntry::new()),
+            original_receipt:semio_framework_plugin::reactor::original_actor_context::OriginalActorFixedReceipt::empty(),
+            original_output:None,
+            original_failure_output:None,
             retired_host: None,
             text_streams: std::array::from_fn(|_| None),
             text_bytes: 0,
@@ -901,15 +931,6 @@ pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugi
     Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, dpr, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
 }
 //#endregion 🚀️Boot
-
-fn encode_tick(output: BrowserTickOutput) -> Result<String, JsValue> {
-    serde_json::to_string(&output).map_err(|error| js_error("tick-encode", &error.to_string()))
-}
-
-fn encode_tick_timed(generation: u64, output: BrowserTickOutput) -> Result<String, JsValue> {
-    let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), crate::frame_latency::FrameLatencyStage::WorkerReplyEncode, 1);
-    encode_tick(output)
-}
 
 fn js_error(code: &str, detail: &str) -> JsValue {
     JsValue::from_str(&format!("{code}: {detail}"))

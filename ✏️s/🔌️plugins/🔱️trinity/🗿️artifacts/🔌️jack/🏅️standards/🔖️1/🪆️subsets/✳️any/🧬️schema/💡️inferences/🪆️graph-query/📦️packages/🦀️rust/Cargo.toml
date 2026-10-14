@@ -1,0 +1,30 @@
+[workspace]
+resolver = "2"
+members = ["."]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+member-manifests = ["Cargo.toml"]
+exclude-patterns = []
+
+[package]
+name = "semio-s-artifact-trinity-jack-graph-query"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[package.metadata.semio]
+role = "library"
+id = "trinity-jack-graph-query"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+value_derive = { package = "semio-framework-value-derive", path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = "1.0"
+semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

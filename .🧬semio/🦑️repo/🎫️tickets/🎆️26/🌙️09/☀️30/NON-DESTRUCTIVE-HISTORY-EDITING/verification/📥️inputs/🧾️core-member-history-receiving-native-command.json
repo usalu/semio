@@ -1,0 +1,59 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_member_history_receiving_reborrows_actual_caller_retains_pages_and_pays_cancelled_custody)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "selection": [
+    "nx",
+    "run",
+    "@semio-tech/framework-os-kernel:test",
+    "--skip-nx-cache",
+    "--excludeTaskDependencies",
+    "--configuration=prototype",
+    "--parallel=1",
+    "--",
+    "long",
+    "--lib",
+    "-E",
+    "test(original_member_history_receiving_reborrows_actual_caller_retains_pages_and_pays_cancelled_custody)",
+    "--no-fail-fast",
+    "--status-level",
+    "pass",
+    "--final-status-level",
+    "all",
+    "--",
+    "--nocapture"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 536870912,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "buildMode": "prototype"
+}

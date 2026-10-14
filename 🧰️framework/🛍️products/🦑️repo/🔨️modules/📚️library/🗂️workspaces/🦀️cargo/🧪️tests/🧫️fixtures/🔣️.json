@@ -309,5 +309,13 @@
       ],
       "valid": false
     }
-  ]
+  ],
+  "originalProcess": {
+    "buildMode": "prototype",
+    "maximumElapsedMilliseconds": 10000,
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 65536
+    }
+  }
 }

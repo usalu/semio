@@ -4,6 +4,21 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BufferGeometry, Float32BufferAttribute, Triangle, Vector3 } from "three";
 
+test("original same-parameter samples retain bounded scratch and independent curve deviation",()=>{
+ const fixture=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🧊️cold-planning/🔣️.json"),"utf8"));
+ const schema=JSON.parse(readFileSync(join(import.meta.dir,"../../🧬️schema/🧊️cold-planning/🔣️.json"),"utf8"));
+ const validate=new Ajv2020({strict:false}).compile(schema);expect(validate(fixture)).toBe(true);
+ const law=fixture.retainedSameParameter;expect(validate({...fixture,retainedSameParameter:{...law,sortComparisonsPerEvent:2}})).toBe(false);
+ expect(law.maximumSamples).toBe(law.baseSamples+16+32+64);expect(law.maximumMidpoints).toBe(64);
+ const probe=fixture.sameParameterProbe;const start=new Vector3(...fixture.vertices[probe.edge[0]]);const end=new Vector3(...fixture.vertices[probe.edge[1]]);
+ const samples=probe.samples.map((s:number)=>({s,deviation:start.distanceTo(start.clone().lerp(end,s))}));
+ const worst=samples.reduce((a:{s:number;deviation:number},b:{s:number;deviation:number})=>b.deviation>=a.deviation?b:a);
+ expect(worst.deviation).toBeCloseTo(probe.maximumDeviation,12);expect(worst.s).toBe(probe.worstParameter);
+ expect(samples.length).toBeLessThanOrEqual(law.maximumSamples);expect(law.unsupportedSources).toEqual(["NurbsSurface","NurbsCurve2","NurbsCurve3"]);
+ const source=readFileSync(join(import.meta.dir,"../../🎟️loop/🦀️.rs"),"utf8");expect(source.includes("self.same_parameter_demands(body)")).toBe(true);
+ console.log(`[DEBUG] independent Three original same-parameter samples=${samples.length} worst=${worst.deviation} scratchLimit=${law.maximumSamples}; spline source evaluator remains explicitly unfunded`);
+});
+
 test("cold validation neutral tetrahedron agrees with independent topology and volume", () => {
   const base = join(import.meta.dir, "../🧫️fixtures/🧊️cold-planning");
   const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8"));
@@ -103,4 +118,20 @@ test("original retained validation loops keep original neighbor order and indepe
   for(const body of fixture.retainedLoops.bodyBytes){let text="";for(const scalar of broken.message){if(body>0)text+=scalar;}expect(text).toBe(body===0?"":broken.message);}
   for(const count of fixture.retainedLoops.sourceTetrahedra)expect(loops.length*3*count).toBe(fixture.expected.faces*3*count);
   geometry.dispose();console.log(`[DEBUG] independent original loop count=${loops.length} coedgeBytes=8 diagnostic=${issues[0].message}`);
+});
+
+
+test("original topology diagnostics retain complete UTF8 scalar boundaries",()=>{
+ const fixture=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🧊️cold-planning/🔣️.json"),"utf8"));
+ const schema=JSON.parse(readFileSync(join(import.meta.dir,"../../🧬️schema/🧊️cold-planning/🔣️.json"),"utf8"));
+ const validate=new Ajv2020({strict:false}).compile(schema);expect(validate(fixture)).toBe(true);
+ expect(validate({...fixture,retainedTopology:{...fixture.retainedTopology,metadataCopyBytes:1}})).toBe(false);
+ const law=fixture.retainedTopology;
+ for(const row of [law.missingPcurve,law.tolerance]){
+  const bytes=new TextEncoder().encode(row.message);let output="";
+  for(const scalar of row.message){const encoded=new TextEncoder().encode(scalar);expect(new TextDecoder("utf8",{fatal:true}).decode(encoded)).toBe(scalar);output+=scalar;}
+  expect(new TextDecoder("utf8",{fatal:true}).decode(bytes)).toBe(output);expect(output).toBe(row.message);
+ }
+ expect([...law.missingPcurve.message].some((scalar:string)=>new TextEncoder().encode(scalar).length===3)).toBe(true);
+ console.log("[DEBUG] independent UTF8 original topology diagnostics preserve one/three-byte scalar atom and exact text");
 });

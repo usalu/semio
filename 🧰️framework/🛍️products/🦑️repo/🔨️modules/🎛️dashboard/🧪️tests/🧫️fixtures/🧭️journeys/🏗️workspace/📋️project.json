@@ -1,6 +1,6 @@
 {
   "name": "journey-fixture",
-  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "metadata": {
     "semio": {
       "dashboard": {

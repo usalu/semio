@@ -1,5 +1,5 @@
 /** 🧫️ Explicit native JSON fixture boundary for the owned Wfc2d scalar-word model. */
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{Wfc2dSnapshot,Wfc2dColor,Wfc2dPathSegment,Wfc2dTileMedia,Wfc2dTile,Wfc2dSlot,Wfc2dSlotEdge,Wfc2dRule}from"../../../📸️snapshot/🟦️.ts";
 import type{Wfc2dDiff,Wfc2dEdgePatch,Wfc2dOptional,Wfc2dRowPatch,Wfc2dRows,Wfc2dRulePatch,Wfc2dSlotPatch,Wfc2dTilePatch}from"../../../🔺️diff/🟦️.ts";
 import type{Wfc2dMutation,Wfc2dSlotPosition}from"../../../🧬️mutations/🟦️.ts";

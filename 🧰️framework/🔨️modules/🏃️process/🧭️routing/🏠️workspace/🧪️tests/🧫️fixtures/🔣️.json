@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "array-workspace",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":[]}"
+      },
+      "start": "domain/package",
+      "expected": "."
+    },
+    {
+      "id": "object-workspace",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":{\"packages\":[]}}"
+      },
+      "start": "domain/package",
+      "expected": "."
+    },
+    {
+      "id": "nested-project",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":[\"domain/*\"]}",
+        "domain/📋️project.json": "{}",
+        "domain/package.json": "{\"name\":\"package\"}"
+      },
+      "start": "domain/package",
+      "expected": "."
+    },
+    {
+      "id": "nested-workspace",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":[]}",
+        "domain/📋️project.json": "{}",
+        "domain/package.json": "{\"workspaces\":[]}"
+      },
+      "start": "domain/package",
+      "expected": "domain"
+    },
+    {
+      "id": "project-only",
+      "files": {
+        "📋️project.json": "{}"
+      },
+      "start": "domain",
+      "expected": null
+    },
+    {
+      "id": "package-only",
+      "files": {
+        "package.json": "{\"workspaces\":[]}"
+      },
+      "start": "domain",
+      "expected": null
+    },
+    {
+      "id": "package-without-workspaces",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"name\":\"package\"}"
+      },
+      "start": "domain",
+      "expected": null
+    },
+    {
+      "id": "null-workspaces",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":null}"
+      },
+      "start": "domain",
+      "expected": null
+    },
+    {
+      "id": "scalar-workspaces",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":\"domain/*\"}"
+      },
+      "start": "domain",
+      "expected": null
+    },
+    {
+      "id": "nx-marker-only",
+      "files": {
+        "nx.json": "{}",
+        "package.json": "{}"
+      },
+      "start": "domain",
+      "expected": null
+    },
+    {
+      "id": "malformed-package",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{"
+      },
+      "start": "domain",
+      "expected": null
+    },
+    {
+      "id": "malformed-nested-package",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":[]}",
+        "domain/📋️project.json": "{}",
+        "domain/package.json": "{"
+      },
+      "start": "domain/package",
+      "expected": null
+    }
+  ]
+}

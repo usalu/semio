@@ -165,6 +165,11 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
                         let number = value.as_ref().and_then(|value| value.get(axis)).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(0.0);
                         fields.try_push(editable_input(&format!("{key}.{axis}"), &format!("{label} {axis}"), selected_id, &port.name, Some(axis), &number.to_string(), Some(InputKind::Number))?).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
                     }
+                } else if schema=="plane"{
+                    for(part,part_label)in[("origin",labels.input_name_origin.as_str()),("normal",labels.input_name_normal.as_str())]{for axis in["x","y","z"]{
+                        let component=format!("{part}.{axis}");let number=value.as_ref().and_then(|value|value.get(part)).and_then(|value|value.get(axis)).and_then(semio_framework_value::DslValue::as_f64).unwrap_or(if part=="normal"&&axis=="z"{1.0}else{0.0});
+                        fields.try_push(editable_input(&format!("{key}.{component}"),&format!("{label} {part_label} {axis}"),selected_id,&port.name,Some(&component),&number.to_string(),Some(InputKind::Number))?).map_err(|_|semio_framework_plugin::PluginAssemblyError::new("ui.inspection.fields","fixed UI plane inspector admission failed"))?;
+                    }}
                 } else if !port.cardinality.is_collection() && matches!(schema, "number" | "text" | "boolean") {
                     let atom = value.as_ref().map(|value| value.get("value").unwrap_or(value));
                     let text = atom.map(|value| value.as_str().map(str::to_string).unwrap_or_else(|| semio_framework_pack_json::to_json_string(value))).unwrap_or_default();

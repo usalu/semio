@@ -10,18 +10,14 @@ use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 fn tree(text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded fixture text");
     let root = TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).expect("bounded fixture tree");
-    ComponentTree { root }
+    ComponentTree::new(root)
 }
 
 fn budget() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔁️reconcile-spin.json")).expect("reconcile spin budget fixture")
 }
 
-fn far_deadline() -> std::time::Instant {
-    std::time::Instant::now() + std::time::Duration::from_secs(60)
-}
-
-fn drain_pending_authority() {
+fn drain_pending_authority(cx:&mut semio_framework_job::StepContext<'_>) {
     with_pending(|pending| {
         let mut pending = pending.borrow_mut();
         for _ in 0..1_000_000 {
@@ -48,18 +44,18 @@ struct CrossingLedger {
 /// patches one at a time through `take_one` (the batching ladder above it is priced by
 /// `🧺️turn-patch-batch`), and stop when the guest stops answering
 /// `MoreWork` with nothing left to acknowledge. Every lap is one worker round trip.
-fn settle_surfaces(instance: u32, count: usize) -> (CrossingLedger, usize) {
+fn settle_surfaces(instance: u32, count: usize,cx:&mut semio_framework_job::StepContext<'_>) -> (CrossingLedger, usize) {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = patches::PatchTracker::new();
     for index in 0..count {
         tracker.begin(format!("{instance}:surface-{index}"), tree("body")).expect("mounted admission");
     }
-    settle_tracker(&tracker, instance)
+    settle_tracker(&tracker, instance,cx)
 }
 
 /// 🔁️ The same loop over an already-mounted tracker, so a law that set the tracker up differently
 /// still converges through the production ladder instead of leaking a borrowed publication turn.
-fn settle_tracker(tracker: &patches::PatchTracker, instance: u32) -> (CrossingLedger, usize) {
+fn settle_tracker(tracker: &patches::PatchTracker, instance: u32,cx:&mut semio_framework_job::StepContext<'_>) -> (CrossingLedger, usize) {
     let mut ledger = CrossingLedger::default();
     let mut acknowledgements: Vec<(ActorUiPatchReceipt, String, u64)> = Vec::new();
     let mut sequence = 0u64;
@@ -93,7 +89,7 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32) -> (CrossingLe
                 }
             }
         });
-        drive_reconcile_within(tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        drive_reconcile_within(tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
         let taken = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication");
         let carried_patch = taken.is_some();
         if let Some(patch) = taken {
@@ -120,7 +116,7 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32) -> (CrossingLe
             break;
         }
     }
-    drain_pending_authority();
+    drain_pending_authority(cx);
     (ledger, published)
 }
 
@@ -135,15 +131,21 @@ fn settle_tracker(tracker: &patches::PatchTracker, instance: u32) -> (CrossingLe
 /// (`📓️reactor-reconcile-spin-2026-09-14.md` §2).
 #[test]
 fn n_pending_retained_surfaces_converge_in_bounded_crossings_that_each_carry_something() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let fixture = budget();
     let per_surface = fixture["crossingsPerSurface"].as_u64().expect("declared crossing budget") as usize;
     for count in fixture["surfaceCounts"].as_array().expect("declared surface counts").iter().map(|value| value.as_u64().expect("surface count") as usize) {
-        let (ledger, published) = settle_surfaces(40 + count as u32, count);
+        let (ledger, published) = settle_surfaces(40 + count as u32, count,cx);
         assert_eq!(published, count, "every mounted surface must publish exactly once");
         assert!(ledger.crossings <= count * per_surface + 1, "{count} surfaces cost {} crossings against the declared {per_surface} per surface", ledger.crossings);
         assert!(ledger.with_patch >= count, "{count} surfaces published {} patch-carrying crossings", ledger.with_patch);
         assert!(ledger.idle <= fixture["idleCrossingsAllowed"].as_u64().expect("declared idle allowance") as usize, "{count} surfaces cost {} crossings that carried neither an event nor a patch", ledger.idle);
     }
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 📤️ A patch that reached the turn handback leaves the guest on the SAME turn. The old two-call
@@ -151,11 +153,14 @@ fn n_pending_retained_surfaces_converge_in_bounded_crossings_that_each_carry_som
 /// `None`.
 #[test]
 fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = patches::PatchTracker::new();
     tracker.begin("51:surface-0".to_string(), tree("body")).expect("mounted admission");
     for _ in 0..1_024 {
-        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
         if with_pending(|pending| pending.borrow().has_undelivered()) {
             break;
         }
@@ -169,7 +174,10 @@ fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
             break;
         }
     }
-    drain_pending_authority();
+    drain_pending_authority(cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🛑️ A turn with a ready output it cannot publish — every publication slot taken, so the release
@@ -178,6 +186,9 @@ fn a_published_patch_leaves_the_guest_on_the_turn_that_published_it() {
 /// turn that carried nothing (`📓️reactor-reconcile-spin-2026-09-14.md` §1, family 2).
 #[test]
 fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 52u32;
     let mut issued: Vec<(ActorUiPatchReceipt, String, u64)> = Vec::new();
@@ -191,32 +202,35 @@ fn a_host_blocked_ready_output_spends_no_opportunity_and_arms_nothing() {
         with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
         with_pending(|pending| pending.borrow_mut().commit_emission());
         issued.push((receipt, patch.surface.0.to_string(), patch.revision.0));
-        retire_host_patch(patch);
+        retire_host_patch(patch,cx);
     }
     with_pending(|pending| assert!(pending.borrow().phases().iter().all(|phase| *phase == pending::PendingPatchPhase::Issued), "every filler slot must be host-blocked"));
     let tracker = patches::PatchTracker::new();
     tracker.begin(format!("{instance}:surface-0"), tree("body")).expect("mounted admission");
     for _ in 0..1_000_000 {
-        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
         if !tracker.has_drivable_work() {
             break;
         }
     }
     assert!(tracker.has_publishable_work(), "the fixture must leave one ready output behind: {}", tracker.debug_state());
-    let spent = drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+    let spent = drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
     let arms = reconcile_arms_turn(&tracker);
     assert_eq!(spent, 0, "a saturated publication authority with nothing drivable must spend no opportunity: {}", tracker.debug_state());
     assert!(!arms, "a ready output the HOST is blocking must not arm another turn: {} | {}", tracker.debug_state(), with_pending(|pending| pending.borrow().debug_state()));
     for (receipt, surface, revision) in issued {
         assert!(with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |_| Ok(true))).expect("issued ack"));
     }
-    drain_pending_authority();
-    settle_tracker(&tracker, instance);
+    drain_pending_authority(cx);
+    settle_tracker(&tracker, instance,cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🧹️ Retires one patch the way the HOST does once it has admitted it, so a law that publishes many
 /// of them does not hold their owners open.
-fn retire_host_patch(patch: ui_contract::UiPatch) {
+fn retire_host_patch(patch: ui_contract::UiPatch,cx:&mut semio_framework_job::StepContext<'_>) {
     let mut owner = ui_contract::UiPendingPatch::default();
     *owner.source_mut().expect("writable payload") = Some(patch);
     for _ in 0..1_000_000 {
@@ -232,6 +246,9 @@ fn retire_host_patch(patch: ui_contract::UiPatch) {
 /// ceiling.
 #[test]
 fn the_reconcile_drive_respects_the_turns_wall_hold() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture = budget();
     let stride = fixture["deadlineStride"].as_u64().expect("declared deadline stride") as usize;
@@ -239,24 +256,30 @@ fn the_reconcile_drive_respects_the_turns_wall_hold() {
     for index in 0..4 {
         tracker.begin(format!("53:surface-{index}"), tree("body")).expect("mounted admission");
     }
-    let spent = drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), std::time::Instant::now()).expect("reconcile drive");
+    let spent = cx.with_original_work_loan(cx.fuel_remaining(),cx.now_us().expect("original fixture clock"),|same|drive_reconcile_within(&tracker,reconcile_step_opportunities(u64::MAX),same)).expect("expired original deadline loan");
     assert!(spent <= stride, "an expired hold must stop the drive inside one {stride}-opportunity stride; spent {spent}");
-    let (ledger, published) = settle_tracker(&tracker, 53);
+    let (ledger, published) = settle_tracker(&tracker, 53,cx);
     assert_eq!(published, 4, "a drive cut short by its hold still converges on the turns that follow it");
     assert_eq!(ledger.idle, 0, "resuming after a spent hold must not cost a crossing that carries nothing");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🛑️ A close that lands MID-drive stops the publication of that instance's surfaces and leaves the
 /// turn armed only for the retirement it owes — never for a surface that will never publish again.
 #[test]
 fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 54u32;
     let tracker = patches::PatchTracker::new();
     for index in 0..3 {
         tracker.begin(format!("{instance}:surface-{index}"), tree("body")).expect("mounted admission");
     }
-    drive_reconcile_within(&tracker, 8, far_deadline()).expect("partial reconcile drive");
+    drive_reconcile_within(&tracker, 8, cx).expect("partial reconcile drive");
     let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
     tracker.reserve_close_instance(key).expect("exact close reservation");
     tracker.activate_close_instance(key).expect("activate retained close");
@@ -266,7 +289,7 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
     loop {
         turns += 1;
         assert!(turns < 4_096, "a cancelled instance never quiesced: {} | {}", tracker.debug_state(), with_pending(|pending| pending.borrow().debug_state()));
-        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
         with_pending(|pending| {
             let mut pending = pending.borrow_mut();
             for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
@@ -276,7 +299,7 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
             }
         });
         for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
-            if tracker.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT) {
+            if tracker.close_step(cx).expect("original fixture tracker close") {
                 break;
             }
         }
@@ -304,6 +327,9 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
     }
     eprintln!("reconcile-spin cancellation quiesced in {turns} turns");
     assert!(!reconcile_arms_turn(&tracker), "a cancelled, retired instance must not arm the turn");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 📨️ The publication phases partition exactly: what the guest owes a turn for is
@@ -311,11 +337,14 @@ fn a_cancellation_mid_drive_stops_the_publication_and_still_quiesces() {
 /// in neither.
 #[test]
 fn the_pending_publication_phases_partition_what_arms_a_turn() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = patches::PatchTracker::new();
     tracker.begin("55:surface-0".to_string(), tree("body")).expect("mounted admission");
     for _ in 0..1_024 {
-        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
         if with_pending(|pending| pending.borrow().has_undelivered()) {
             break;
         }
@@ -347,9 +376,12 @@ fn the_pending_publication_phases_partition_what_arms_a_turn() {
             break;
         }
     }
-    drain_pending_authority();
+    drain_pending_authority(cx);
     with_pending(|pending| {
         let pending = pending.borrow();
         assert!(pending.phases().is_empty() && !pending.has_unpublished(), "a retired publication leaves no phase behind");
     });
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }

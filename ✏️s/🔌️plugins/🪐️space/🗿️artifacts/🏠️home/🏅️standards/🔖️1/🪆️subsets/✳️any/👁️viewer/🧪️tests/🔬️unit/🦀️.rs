@@ -127,7 +127,7 @@ fn editor_page_json(command: &crate::editor::home::HomeCommand) -> Option<&str> 
 }
 
 fn viewer_feed(transient: &HomeTransient, page_json: &str) -> Result<(Vec<semio_framework_plugin::AppEvent>, Vec<HomeTransientMutation>), Fault> {
-    let command = <HomeViewer as ArtifactViewer>::command_from_action("applyDirectoryEventPage", Some(&DslValue::Object(vec![("pageJson".into(), DslValue::String(page_json.into()))])))?;
+    let command = <HomeViewer as ArtifactViewer>::command_from_action("applyDirectoryEventPage", Some((DslValue::Object(vec![("pageJson".into(), DslValue::String(page_json.into()))])).clone()), None)?;
     assert!(home_view_retained_extent(&command, &SHomeSnapshot::default(), &protocol::InteractionState::default()).is_some(), "an ordinary page fits the retained wire budget");
     page_step::<ViewerApp<HomeViewer>>(&mut HomeDirectoryPageWork::new("applyDirectoryEventPage", home_view_page_json), &command, &SHomeSnapshot::default(), &HomeConfig::default(), transient)
 }

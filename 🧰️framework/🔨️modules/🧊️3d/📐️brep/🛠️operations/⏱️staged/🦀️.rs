@@ -175,7 +175,7 @@ impl StagedOperation for BooleanStage {
             return Ok(StageStep::Done(StageOutput::Solid(solid)));
         }
         let job = self.job.as_mut().ok_or_else(|| KernelError::Operation("boolean stage already finished".into()))?;
-        match job.step(body, rec, 1)? {
+        match job.step_unbudgeted(body, rec, 1)? {
             BooleanStep::Working(_) => Ok(StageStep::Working),
             BooleanStep::Done(solid) => {
                 self.finished = true;

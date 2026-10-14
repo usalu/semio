@@ -839,7 +839,7 @@ async fn declared_actions_bridge_to_commands() {
 #[test]
 fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
-    let decode = |args: semio_framework_value::DslValue| <Generation3dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
+    let decode = |args: semio_framework_value::DslValue| <Generation3dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some((args).clone()), None);
     let identity = semio_framework_os_kernel::Viewport2d::default();
     assert_eq!(decode(semio_framework_value::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation3dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
     let authored = semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };
@@ -1890,7 +1890,7 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
     println!("[STATS] contributions payload chars={} pages={} page-bound={}", contributions.chars().count(), pages.len(), semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
     assert!(pages.len() > 1, "the staged closure must exceed one public-invocation string page, else the paging law proves nothing");
 
-    // 🌉️ The shell reaches this route through `plugin_handle_command` → `command_from_action`, not
+    // 🌉️ The shell reaches this route through `AppCommand::Command` → `command_from_action`, not
     // through the typed binary channel, so the ARG DECODE is part of the delivery and is pinned here
     // on the real page the pager cut — including the envelope bound that sized it.
     for (index, page) in pages.iter().enumerate() {

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "parentOwnsPaidRoots": true,
+  "childOwnsStrongLoan": true,
+  "borrowActualIncomingTurn": true,
+  "noFreshRoot": true,
+  "noFreshLedger": true,
+  "exactRecipient": true,
+  "separatePhysicalSourceClose": true,
+  "operation": 99241,
+  "generation": 7,
+  "clock": 1000,
+  "fuel": 4,
+  "deadline": 1500,
+  "grant": {
+    "maximumItems": 9,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "cuts": [
+    0,
+    1,
+    2
+  ],
+  "aliasReceipt": {
+    "copiedItems": 1,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "postedBefore": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "postedAfter": {
+    "copiedItems": 1,
+    "copiedBytes": 7,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "callbackReceipt": {
+    "copiedItems": 1,
+    "copiedBytes": 7,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "closeGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 512,
+    "maximumReleaseBytes": 512,
+    "maximumDepth": 8
+  },
+  "parentMetadataCopyBytes": 0
+}

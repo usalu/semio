@@ -88,11 +88,18 @@ impl IconExportBatch {
         self.phase = Phase::Retire;
     }
 
-    pub(super) fn advance(&mut self) {
+    pub(super) fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
+        if cx.should_yield() { return Ok(()); }
+        let result=self.advance_one(cx);
+        if !cx.should_yield(){cx.consume_fuel(1)}
+        result
+    }
+
+    fn advance_one(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
         match self.phase {
             Phase::Next => self.next(),
             Phase::Load => {
-                let Some(answer) = self.asset.as_mut().and_then(IconExportAssetRequest::take_ready) else { return };
+                let Some(answer) = self.asset.as_mut().and_then(IconExportAssetRequest::take_ready) else { return Ok(()) };
                 self.asset = None;
                 match answer {
                     Ok(asset) if self.format == IconExportFormat::Svg => match IconSvgExport::new(&self.request, asset) {
@@ -107,32 +114,33 @@ impl IconExportBatch {
                 }
             }
             Phase::Prepare => {
-                let Some(preparation) = self.preparing.as_mut() else { return self.fail("icon export preparation was missing") };
-                match preparation.advance() {
+                let Some(preparation) = self.preparing.as_mut() else { self.fail("icon export preparation was missing"); return Ok(()) };
+                match preparation.advance(cx) {
                     Ok(true) => {
                         self.scene = preparation.take_prepared().map(Box::new);
-                        self.preparing = None;
                         if self.scene.is_some() { self.phase = Phase::Device; } else { self.fail("icon export scene was missing"); }
                     }
                     Ok(false) => {}
+                    Err(IconExportFault::Original(failure)) => return Err(failure),
                     Err(fault) => self.fail(fault),
                 }
             }
             Phase::Device => self.device(),
             Phase::Render => {
-                let Some(rendering) = self.rendering.as_mut() else { return self.fail("icon export render was missing") };
-                match rendering.advance() {
+                let Some(rendering) = self.rendering.as_mut() else { self.fail("icon export render was missing"); return Ok(()) };
+                match rendering.advance(cx) {
                     Ok(true) => {
                         self.bytes = rendering.take_png();
                         self.phase = Phase::Retire;
                         if self.bytes.is_none() { self.fail("icon export produced no PNG"); }
                     }
                     Ok(false) => {}
+                    Err(IconExportFault::Original(failure)) => return Err(failure),
                     Err(fault) => self.fail(fault),
                 }
             }
             Phase::Vector => {
-                let Some(vector) = self.vector.as_mut() else { return self.fail("icon export vector renderer was missing") };
+                let Some(vector) = self.vector.as_mut() else { self.fail("icon export vector renderer was missing"); return Ok(()) };
                 match vector.advance() {
                     Ok(true) => {
                         self.bytes = vector.take_svg();
@@ -143,9 +151,9 @@ impl IconExportBatch {
                     Err(fault) => self.fail(fault),
                 }
             }
-            Phase::Retire => { self.retire(); }
+            Phase::Retire => { self.retire(cx)?; }
             Phase::Save => {
-                let Some(answer) = self.saving.as_ref().and_then(ShellDetached::take) else { return };
+                let Some(answer) = self.saving.as_ref().and_then(ShellDetached::take) else { return Ok(()) };
                 self.saving = None;
                 match answer {
                     Ok(true) => {
@@ -159,6 +167,7 @@ impl IconExportBatch {
             }
             Phase::Complete | Phase::Cancelled | Phase::Failed => {}
         }
+        Ok(())
     }
 
     fn next(&mut self) {
@@ -207,71 +216,72 @@ impl IconExportBatch {
         }
     }
 
-    fn retire(&mut self) -> bool {
+    fn retire(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         if let Some(vector) = self.vector.as_mut() {
-            if !vector.close_step() { return false; }
+            if !vector.close_step() { return Ok(false); }
             self.vector = None;
-            return false;
+            return Ok(false);
         }
         if let Some(rejected) = self.vector_rejected.as_mut() {
-            if !rejected.close_step() { return false; }
+            if !rejected.close_step() { return Ok(false); }
             self.vector_rejected = None;
-            return false;
+            return Ok(false);
         }
         if let Some(saving) = self.saving.as_ref() {
-            let Some(answer) = saving.take() else { return false };
+            let Some(answer) = saving.take() else { return Ok(false) };
             self.saving = None;
             if matches!(answer, Ok(true)) { self.completed += 1; }
-            return false;
+            return Ok(false);
         }
         if let Some(initializing) = self.initializing.as_ref() {
-            let Some(answer) = initializing.take() else { return false };
+            let Some(answer) = initializing.take() else { return Ok(false) };
             self.initializing = None;
             if let Ok(source) = answer {
                 self.source = Some(Box::new(source));
             }
-            return false;
+            return Ok(false);
         }
         if let Some(rendering) = self.rendering.as_mut() {
             if !rendering.terminal() {
                 rendering.cancel();
-                if let Err(fault) = rendering.advance() { self.last_fault = Some(fault.into()); }
-                return false;
+                match rendering.advance(cx){Err(IconExportFault::Original(failure))=>return Err(failure),Err(fault)=>self.last_fault=Some(fault),Ok(_)=>{}}
+                return Ok(false);
             }
             self.rendering = None;
-            return false;
+            return Ok(false);
         }
         if let Some(rejected) = self.gpu_rejected.as_mut() {
-            if !rejected.close_step() { return false; }
+            match rejected.close_step(cx){Ok(true)=>{},Ok(false)=>return Ok(false),Err(IconExportFault::Original(failure))=>return Err(failure),Err(fault)=>{self.last_fault=Some(fault);return Ok(false)}}
             self.gpu_rejected = None;
-            return false;
+            return Ok(false);
         }
         if let Some(preparing) = self.preparing.as_mut() {
             preparing.cancel();
-            if let Err(fault) = preparing.advance() { self.last_fault = Some(fault.into()); }
-            if !preparing.terminal() { return false; }
+            match preparing.advance(cx) { Err(IconExportFault::Original(failure))=>return Err(failure),Err(fault)=>self.last_fault=Some(fault),Ok(_)=>{} }
+            if !preparing.terminal() { return Ok(false); }
             self.preparing = None;
-            return false;
+            return Ok(false);
         }
         if let Some(rejected) = self.scene_rejected.as_mut() {
-            if !rejected.close_step() { return false; }
+            if !rejected.close_step() { return Ok(false); }
             self.scene_rejected = None;
-            return false;
+            return Ok(false);
         }
         if let Some(asset) = self.asset.as_mut() {
-            if !asset.close_step() { return false; }
+            if !asset.close_step() { return Ok(false); }
             self.asset = None;
-            return false;
+            return Ok(false);
         }
         if let Some(scene) = self.scene.as_mut() {
             scene.begin_close();
-            match scene.close_step() {
+            match scene.close_step(cx) {
                 Ok(true)=>{},
                 Ok(false)=>return false,
-                Err(fault)=>{self.last_fault=Some(IconExportFault::World(fault));return false;}
+                Err(IconExportFault::Original(failure))=>return Err(failure),
+                Err(fault)=>{self.last_fault=Some(fault);return Ok(false);}
             }
             self.scene = None;
-            return false;
+            return Ok(false);
         }
         if !self.cancelled && self.item_fault.is_none() {
             if let Some(bytes) = self.bytes.take() {
@@ -279,12 +289,12 @@ impl IconExportBatch {
                 let cancel = self.cancel.clone();
                 self.saving = Some(ShellDetached::spawn(present_media_export_bytes_cancellable(filename, self.mime().into(), bytes, cancel)));
                 self.phase = Phase::Save;
-                return true;
+                return Ok(true);
             }
         }
         self.bytes = None;
         self.finish_item();
-        true
+        Ok(true)
     }
 
     fn finish_item(&mut self) {
@@ -353,14 +363,15 @@ impl ShellState {
         }
     }
 
-    pub(super) fn advance_icon_export(&mut self) {
+    pub(super) fn advance_icon_export(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
         if let Some(batch) = self.icon_export.as_mut().filter(|batch| batch.running()) {
             let started = super::chrome_now_ms();
             for _ in 0..32 {
-                batch.advance();
-                if !batch.running() || super::chrome_now_ms() - started >= 2.0 { break; }
+                batch.advance(cx)?;
+                if cx.should_yield() || !batch.running() || super::chrome_now_ms() - started >= 2.0 { break; }
             }
         }
+        Ok(())
     }
 
     pub(super) fn cancel_icon_export(&mut self) {
@@ -369,13 +380,13 @@ impl ShellState {
         }
     }
 
-    pub(crate) fn close_icon_export_step(&mut self) -> bool {
-        let Some(batch) = self.icon_export.as_mut() else { return true };
+    pub(crate) fn close_icon_export_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+        let Some(batch) = self.icon_export.as_mut() else { return Ok(true) };
         batch.cancel();
-        batch.advance();
-        if !batch.terminal_is_empty() { return false; }
+        batch.advance(cx)?;
+        if !batch.terminal_is_empty() { return Ok(false); }
         self.icon_export = None;
-        true
+        Ok(true)
     }
 
     pub(super) fn render_icon_export_step(&mut self, cursor: &mut super::ShellChromeChildCursor, overlay: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, input: &mut ui_wgpu::wgpu::InputState<ui_wgpu::wgpu::ActionDescriptor>, theme: &ui_wgpu::wgpu::Theme, width: f32) -> bool {

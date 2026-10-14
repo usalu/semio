@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "duration",
+    "absolute",
+    "snapshot"
+  ],
+  "properties": {
+    "duration": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "milliseconds",
+          "microseconds"
+        ],
+        "properties": {
+          "milliseconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "microseconds": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "absolute": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "now",
+          "deadline",
+          "expired"
+        ],
+        "properties": {
+          "now": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "deadline": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "expired": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "snapshot": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "now",
+          "deadline",
+          "fuelUsed",
+          "expired"
+        ],
+        "properties": {
+          "now": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "deadline": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "fuelUsed": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

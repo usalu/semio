@@ -581,6 +581,20 @@ pub struct BooleanJob {
 }
 
 impl BooleanJob {
+    /// 🎟️ Runs the existing result-validation producer on its actual supplied caller turn.
+    pub fn step(&mut self, body:&mut Body, _rec:&mut OpRecorder, cx:&mut semio_framework_job::StepContext<'_>)->Result<BooleanStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        if self.phase!=BooleanPhase::Validate{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boolean phase has no funded producer yet").into())}
+        let validation=self.validation.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original boolean result lost its validation producer"))?;
+        let grant=cx.retained_grant();let demand=validation.funded_demands(body)?;
+        if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(BooleanStep::Working(self.progress()))}
+        cx.consume_fuel(1);
+        let(receipt,units)=validation.step_funded(body,1,grant).map_err(|primary|semio_framework_job::OriginalTurnFailure::debit_original(primary,cx))?;
+        cx.consume_retained(receipt).map_err(|primary|semio_framework_job::OriginalTurnFailure::from(primary.with_retained_progress(receipt)))?;
+        self.units_done+=units;self.units_total=self.units_total.max(self.units_done.saturating_add(validation.progress().units_total.saturating_sub(validation.progress().units_done)));
+        Ok(BooleanStep::Working(self.progress()))
+    }
+
     /// 🔀 Plans the general exact boolean of `a` and `b`. Every plan input (which faces exist,
     /// which pairs are coincident, the weld table) is read ONCE here, so the walk below is a pure
     /// cursor advance.
@@ -691,7 +705,7 @@ impl BooleanJob {
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn run_to_completion(mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
         loop {
-            match self.step(body, rec, usize::MAX)? {
+            match self.step_unbudgeted(body, rec, usize::MAX)? {
                 BooleanStep::Done(id) => return Ok(id),
                 BooleanStep::Cancelled(_) => return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cancelled".into()))),
                 BooleanStep::Working(_) => continue,
@@ -702,7 +716,7 @@ impl BooleanJob {
     /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
     /// performs no work.
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-    pub fn step(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
+    pub(crate) fn step_unbudgeted(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
         match self.phase {
             BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
             BooleanPhase::Cancelled => return Ok(BooleanStep::Cancelled(self.progress())),

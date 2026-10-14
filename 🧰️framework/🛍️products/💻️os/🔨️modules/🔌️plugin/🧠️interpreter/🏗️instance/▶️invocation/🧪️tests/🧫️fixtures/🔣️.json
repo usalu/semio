@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "moduleHex": "0061736d01000000010b026000017e60027e7e017e0303020001070a0106696e766f6b6500000a12020800420a421410010b0700200020017c0b",
+  "expected": 30,
+  "expectedInstructions": 8,
+  "physicalCloseSeparately": true,
+  "deniedFrameKeepsOperands": true
+}

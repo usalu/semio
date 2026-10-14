@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/presentation",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -11,7 +11,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

@@ -54,7 +54,7 @@
         "axis": "depth-minus-one"
       },
       "expected": {
-        "step": "refused",
+        "step": "pending",
         "command": "retained",
         "completion": "retained",
         "releasedBytes": "zero"

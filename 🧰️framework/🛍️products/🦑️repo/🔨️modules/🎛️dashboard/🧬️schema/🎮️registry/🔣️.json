@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/registry.json",
   "title": "🎮️ Dashboard command registry",
-  "description": "🎛️ Everything the dashboard can start is a registry command. Commands are discovered from Nx targets, the playground catalog, the repo domain and from the declarations this schema describes: `metadata.semio.dashboard` of a `📋️project.json` (`#/$defs/ProjectDeclaration`), `targets.<name>.metadata.semio.dashboard` (`#/$defs/TargetDeclaration`) and the `🎮️commands.json` of an open ticket (`#/$defs/TicketCommands`, the document this schema validates at its root). `#/$defs/ProjectManifest` validates the dashboard parts of a whole `📋️project.json`. The resolved outputs (`CommandId`, `RegistryEntry`, `TaskLabel`, `Ready`, `Launch`) are what `semio commands --json` and the daemon exchange.",
+  "description": "🎛️ Everything the dashboard can start is a registry command. Commands are discovered from build targets, the playground catalog, the repo domain and from the declarations this schema describes: `metadata.semio.dashboard` of a `📋️project.json` (`#/$defs/ProjectDeclaration`), `targets.<name>.metadata.semio.dashboard` (`#/$defs/TargetDeclaration`) and the `🎮️commands.json` of an open ticket (`#/$defs/TicketCommands`, the document this schema validates at its root). `#/$defs/ProjectManifest` validates the dashboard parts of a whole `📋️project.json`. The resolved outputs (`CommandId`, `RegistryEntry`, `TaskLabel`, `Ready`, `Launch`) are what `semio commands --json` and the daemon exchange.",
   "$ref": "#/$defs/TicketCommands",
   "$defs": {
     "Slug": {
@@ -21,7 +21,7 @@
       "type": "string",
       "description": "🌱️ An environment variable name. The runner variables the dashboard owns are never declared.",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-      "not": { "enum": ["NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"] }
+      "not": { "enum": ["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "SEMIO_BUILD_DYNAMIC_OUTPUT", "NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"] }
     },
     "Text": {
       "type": "string",
@@ -40,14 +40,14 @@
       "propertyNames": { "$ref": "#/$defs/EnvName" },
       "additionalProperties": { "$ref": "#/$defs/Text" }
     },
-    "NxFlags": {
+    "BuildFlags": {
       "type": "array",
-      "description": "🚩️ Words placed before `--` of the Nx invocation (`--skip-nx-cache`, `--excludeTaskDependencies`, …). Commands that do not run Nx ignore them.",
+      "description": "🚩️ Words placed before `--` of the build runner invocation (`--skip-cache`, `--exclude-dependencies`, …). Commands that do not use the build runner ignore them.",
       "items": { "type": "string", "pattern": "^--?[A-Za-z][^\\s\\u0000]*$" }
     },
     "Args": {
       "type": "array",
-      "description": "➡️ Words placed after `--` of the Nx invocation, or appended to a tool's command.",
+      "description": "➡️ Words placed after `--` of the build runner invocation, or appended to a tool's command.",
       "items": { "$ref": "#/$defs/Text" }
     },
     "Reference": {
@@ -58,7 +58,7 @@
     },
     "AppliesTo": {
       "type": "object",
-      "description": "🎯️ Where a global axis is offered: on every command with a listed verb (tools included: their `nxFlags` are ignored, and an axis with nothing else to say is not offered on them), and on playgrounds when `playground` is true. Without `appliesTo` the axis is offered on every command Nx runs.",
+      "description": "🎯️ Where a global axis is offered: on every command with a listed verb (tools included: their `buildFlags` are ignored, and an axis with nothing else to say is not offered on them), and on playgrounds when `playground` is true. Without `appliesTo` the axis is offered on every command the build runner runs.",
       "properties": {
         "verbs": { "type": "array", "items": { "$ref": "#/$defs/Verb" }, "minItems": 1, "uniqueItems": true },
         "playground": { "type": "boolean" }
@@ -72,7 +72,7 @@
       "properties": {
         "id": { "type": "string", "pattern": "^[^\\s=\\u0000]+$", "maxLength": 128, "description": "🔑️ The value as chosen and as substituted for `{<parameter id>}`." },
         "env": { "$ref": "#/$defs/EnvMap" },
-        "nxFlags": { "$ref": "#/$defs/NxFlags" },
+        "buildFlags": { "$ref": "#/$defs/BuildFlags" },
         "args": { "$ref": "#/$defs/Args" }
       },
       "required": ["id"],
@@ -80,7 +80,7 @@
     },
     "Parameter": {
       "type": "object",
-      "description": "🎛️ Something chosen at launch. A `choice` carries one effect per value, a `flag` one effect when switched on, a `text` states where the typed value goes. Effect semantics: `env` is added to the process environment, `nxFlags` go before `--`, `args` after `--`.",
+      "description": "🎛️ Something chosen at launch. A `choice` carries one effect per value, a `flag` one effect when switched on, a `text` states where the typed value goes. Effect semantics: `env` is added to the process environment, `buildFlags` go before `--`, `args` after `--`.",
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
         "kind": { "enum": ["choice", "text", "flag"] },
@@ -89,7 +89,7 @@
         "required": { "type": "boolean", "description": "❗️ The command does not start without a value." },
         "values": { "type": "array", "items": { "$ref": "#/$defs/ParameterValue" }, "minItems": 1 },
         "env": { "$ref": "#/$defs/EnvMap" },
-        "nxFlags": { "$ref": "#/$defs/NxFlags" },
+        "buildFlags": { "$ref": "#/$defs/BuildFlags" },
         "args": { "$ref": "#/$defs/Args" },
         "valueEnv": { "$ref": "#/$defs/EnvName", "description": "🌱️ The typed text becomes this environment variable." },
         "valueFlag": { "type": "string", "pattern": "^--?[A-Za-z][A-Za-z0-9_.-]*=?$", "description": "🚩️ The typed text follows this flag after `--`: two words, or one word when the flag ends with `=`." },
@@ -102,20 +102,20 @@
           "if": { "properties": { "kind": { "const": "choice" } }, "required": ["kind"] },
           "then": {
             "required": ["values"],
-            "properties": { "default": { "type": "string" }, "env": false, "nxFlags": false, "args": false, "valueEnv": false, "valueFlag": false, "valuePositional": false }
+            "properties": { "default": { "type": "string" }, "env": false, "buildFlags": false, "args": false, "valueEnv": false, "valueFlag": false, "valuePositional": false }
           }
         },
         {
           "if": { "properties": { "kind": { "const": "flag" } }, "required": ["kind"] },
           "then": {
             "properties": { "default": { "type": "boolean" }, "values": false, "valueEnv": false, "valueFlag": false, "valuePositional": false },
-            "anyOf": [{ "required": ["env"] }, { "required": ["nxFlags"] }, { "required": ["args"] }]
+            "anyOf": [{ "required": ["env"] }, { "required": ["buildFlags"] }, { "required": ["args"] }]
           }
         },
         {
           "if": { "properties": { "kind": { "const": "text" } }, "required": ["kind"] },
           "then": {
-            "properties": { "default": { "type": "string" }, "values": false, "env": false, "nxFlags": false, "args": false },
+            "properties": { "default": { "type": "string" }, "values": false, "env": false, "buildFlags": false, "args": false },
             "not": { "anyOf": [{ "required": ["valueEnv", "valueFlag"] }, { "required": ["valueEnv", "valuePositional"] }, { "required": ["valueFlag", "valuePositional"] }] }
           }
         }
@@ -160,7 +160,7 @@
     },
     "Tool": {
       "type": "object",
-      "description": "🧰️ A command that is not an Nx target: `command` is the argument list, started in `cwd`.",
+      "description": "🧰️ A command that is not an build target: `command` is the argument list, started in `cwd`.",
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
         "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of `id` when it is a known verb, else `task`." },
@@ -215,18 +215,18 @@
     },
     "Group": {
       "type": "object",
-      "description": "👥️ One or more targets over a named project set (`nx run-many`).",
+      "description": "👥️ One or more targets over a named project set (`repo run-many`).",
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
-        "targets": { "type": "array", "items": { "type": "string", "pattern": "^[^\\s,]+$" }, "minItems": 1, "uniqueItems": true, "description": "🎯️ The targets `nx run-many` runs over the projects." },
-        "projects": { "type": "array", "items": { "type": "string", "pattern": "^[^\\s,]+$" }, "minItems": 1, "uniqueItems": true, "description": "📋️ Project names or Nx project patterns: `*` matches any run of characters, a leading `!` excludes." }
+        "targets": { "type": "array", "items": { "type": "string", "pattern": "^[^\\s,]+$" }, "minItems": 1, "uniqueItems": true, "description": "🎯️ The targets `repo run-many` runs over the projects." },
+        "projects": { "type": "array", "items": { "type": "string", "pattern": "^[^\\s,]+$" }, "minItems": 1, "uniqueItems": true, "description": "📋️ Project names or build project patterns: `*` matches any run of characters, a leading `!` excludes." }
       },
       "required": ["id", "targets", "projects"],
       "additionalProperties": false
     },
     "TargetDeclaration": {
       "type": "object",
-      "description": "🎯️ `targets.<name>.metadata.semio.dashboard`: what the dashboard knows about one Nx target beyond Nx itself.",
+      "description": "🎯️ `targets.<name>.metadata.semio.dashboard`: what the dashboard knows about one build target beyond the build runner.",
       "properties": {
         "verb": { "$ref": "#/$defs/Verb", "description": "🗂️ Default: the leading word of the target name when it is a known verb, else `task`." },
         "ready": { "$ref": "#/$defs/ReadyDeclaration" },
@@ -258,7 +258,7 @@
     },
     "ProjectManifest": {
       "type": "object",
-      "description": "📋️ The dashboard parts of a whole `📋️project.json`; every other member is Nx's.",
+      "description": "📋️ The dashboard parts of a whole `📋️project.json`; other members belong to the project manifest.",
       "properties": {
         "metadata": {
           "type": "object",
@@ -385,6 +385,66 @@
       },
       "required": ["commandId", "label", "processes", "requires", "stop"],
       "additionalProperties": false
+    },
+    "BuildGraph": {
+      "type": "object",
+      "required": [
+        "version",
+        "projects",
+        "dependencies"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "projects": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "name",
+              "root",
+              "targets"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "root": {
+                "type": "string"
+              },
+              "targets": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "source",
+              "target"
+            ],
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

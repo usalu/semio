@@ -46,31 +46,31 @@ pub(crate) trait LocalInteractionQueryCapture {
 
 impl LocalInteractionQueryCapture for LocalInteractionCaptureCursor {
     fn identity(&self) -> &LocalInteractionIdentity {
-        self.identity()
+        LocalInteractionCaptureCursor::identity(self)
     }
     fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<store::ArtifactCanonicalJsonTreeStep, store::ArtifactCanonicalJsonEncodeError> {
-        self.write_chunk(grant, output)
+        LocalInteractionCaptureCursor::write_chunk(self,grant,output)
     }
     fn complete(&self) -> bool {
-        self.complete()
+        LocalInteractionCaptureCursor::complete(self)
     }
     fn completed_bytes(&self) -> u64 {
-        self.completed_bytes()
+        LocalInteractionCaptureCursor::completed_bytes(self)
     }
     fn cancel(&mut self) {
-        self.cancel();
+        LocalInteractionCaptureCursor::cancel(self);
     }
     fn begin_close(&mut self) {
-        self.begin_close();
+        LocalInteractionCaptureCursor::begin_close(self);
     }
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        self.retirement_demands(body)
+        LocalInteractionCaptureCursor::retirement_demands(self,body)
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        self.close_step(grant)
+        LocalInteractionCaptureCursor::close_step(self,grant)
     }
     fn terminal_is_empty(&self) -> bool {
-        self.terminal_is_empty()
+        LocalInteractionCaptureCursor::terminal_is_empty(self)
     }
 }
 

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "registered": {
+    "name": "🏛️Actor · Canonical Architecture",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/framework-actor:canonical-architecture",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:canonical-architecture:caller\",\"maximumElapsedMilliseconds\":600000}",
+      "SEMIO_SCRIPT_CAPABILITIES": "{}",
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.828
+    }
+  },
+  "outputDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/v/actor-canonical-gui",
+  "command": [
+    "bun",
+    "nx",
+    "run",
+    "@semio-tech/framework-actor:canonical-architecture"
+  ],
+  "outputLocationRedirected": true,
+  "policy": {
+    "version": 1,
+    "owner": "actor:canonical-architecture:caller",
+    "maximumElapsedMilliseconds": 600000
+  }
+}

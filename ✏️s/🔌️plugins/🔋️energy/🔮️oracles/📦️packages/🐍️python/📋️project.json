@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/energy-oracle-py",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -11,7 +11,7 @@
   },
   "targets": {
     "oracle-setup": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts setup",
@@ -24,7 +24,7 @@
       ]
     },
     "oracle-status": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts status",
@@ -37,7 +37,7 @@
       ]
     },
     "oracle-run": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts run",
@@ -50,7 +50,7 @@
       ]
     },
     "oracle-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts native",
@@ -63,7 +63,7 @@
       ]
     },
     "oracle-epjson": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts epjson",
@@ -76,7 +76,7 @@
       ]
     },
     "oracle-emit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts emit",
@@ -89,7 +89,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test",

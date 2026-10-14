@@ -1,6 +1,6 @@
 /** 🔺️ Sparse Note document changes: assignable document scalars, ordered block-tree rows and keyed asset rows over the authored block, image and link contracts. */
 import { parseNoteBlockNode, parseNoteImageAsset, parseNoteRecord, parseNoteTableCell, parseNoteTextChild, noteBoolean, noteString, noteNullable, noteNumber, noteArray, type NoteValueParser, type NoteBlockNode, type NoteImageAsset, type NoteTableCell, type NoteTextChild, type ArtifactLink } from "../🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export type { NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextChild, ArtifactLink } from "../🟦️.ts";
 
 /** 🎯️ An explicitly assigned optional value: assigning `null` stays distinct from leaving the slot untouched. */

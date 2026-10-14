@@ -18,8 +18,8 @@
   "replacementSlots": 1,
   "faults": {
     "sealed": "extension.closing",
-    "exceeded": "extension.close-budget",
-    "falseComplete": "extension.close-live-owner"
+    "exceeded": "invariant-violated",
+    "falseComplete": "invariant-violated"
   },
   "resourceBytes": 29,
   "metadata": {

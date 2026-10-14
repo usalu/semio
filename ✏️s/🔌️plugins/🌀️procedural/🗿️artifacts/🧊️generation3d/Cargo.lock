@@ -3172,6 +3172,7 @@ dependencies = [
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -3185,6 +3186,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
+ "semio-framework-job",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -3236,6 +3239,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-graph",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-pack",
@@ -3363,6 +3367,7 @@ dependencies = [
 name = "semio-framework-diagnostic"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "serde",
  "serde_json",
@@ -3391,6 +3396,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl",
+ "semio-framework-io-sqlite-snapshot",
  "semio-framework-pack-json",
  "semio-framework-value",
 ]
@@ -3469,6 +3475,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
  "semio-framework-trace",
  "semio-framework-value",
 ]
@@ -3509,6 +3516,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-io-base64",
+ "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -3668,6 +3676,7 @@ dependencies = [
 name = "semio-framework-os-kernel-neural-engine"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-replication",
@@ -4013,6 +4022,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
+ "semio-framework-value",
 ]
 
 [[package]]

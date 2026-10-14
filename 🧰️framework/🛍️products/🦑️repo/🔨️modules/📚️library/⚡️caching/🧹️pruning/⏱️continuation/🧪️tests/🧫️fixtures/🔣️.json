@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "files": 257,
+  "contents": "original cache bytes λ🙂",
+  "consumer": "consumer",
+  "expected": {"units": 1, "cancelledScanUnits": 0, "escapedDeletion": false},
+  "interruption": ["signal", "deadline"]
+}

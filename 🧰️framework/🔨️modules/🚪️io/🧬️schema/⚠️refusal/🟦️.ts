@@ -1,4 +1,4 @@
-import {ValueError} from "../../../🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import {encodeValueErrorControlled,decodeValueErrorControlled,type ValueRefusalCodecControl} from "../../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
 import type {IntrinsicValue,IntrinsicMember} from "../../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
 import type {TextError} from "../../../⚠️diagnostic/🚧️text-error/🟦️.ts";

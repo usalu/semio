@@ -339,7 +339,9 @@ impl ArtifactViewer for Grid2dViewer {
     /// 👁️ The canvas host dispatches pointer and camera verbs at any `Canvas2d` surface, read-only
     /// or not, and the shell's navbar picker dispatches `setActiveExample`. Anything else is refused
     /// rather than silently swallowed, so a real typo still surfaces.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         Ok(match action {
             "setActiveExample" => Grid2dViewCommand::SetActiveExample { example_id: view_example_id(args) },
             "canvasPointerDown" => Grid2dViewCommand::CanvasPointerDown,

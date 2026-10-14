@@ -17,7 +17,7 @@ import { CacheVerifyScript } from "./🔁️verification/📋️orchestration/�
 import { CachePruneScript, CacheReportScript } from "./🧹️pruning/📋️orchestration/🟦️.ts";
 import { CargoProvenanceScript } from "./🦀️cargo/🧾️provenance/🟦️.ts";
 import { devToolingEnv, getWorkspaceRoot, orchestratorBudgetOpts, runCmd, wasmBindgenVersion, wasmBuildEnvironment } from "../📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, checkScriptInvocation, scriptInvocationBudget, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { captureOwnedCommandV1,terminateOwnedChildTree } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -97,10 +97,11 @@ class TestScript extends BundleScript {
       if(args.length!==1)throw Error("Expected test pruning");
       const owner=join(SCRIPT_ROOT,"🧹️pruning"),control=scriptCompilerAdmissionControlV1(this.invocation,"cache:pruning:typescript",120000),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
       if(!artifacts)throw Error("Original ticket artifact directory required");
+      await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,join(owner,"⏱️continuation/🧪️tests/🟦️.ts"));
       await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,join(owner,"🔒️store/🧪️tests/🟦️.ts"));
       await testWorkspaceOwnership(this.invocation,this.repoRoot,artifacts,join(owner,"🔒️incremental/🧪️tests/🟦️.ts"));
-      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts"),join(owner,"📋️orchestration/🟦️.ts")],this.repoRoot,{control,env:process.env});
-      console.log("[DEBUG] Shared cache pruning strict TypeScript check passed");return;
+      await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(owner,"🟦️.ts")],this.repoRoot,{control,env:process.env});
+      console.log("[DEBUG] Shared cache pruning core strict TypeScript check passed");return;
     }
     if(args[0]==="sdk-snapshot"){
       if(args.length!==1)throw Error("Expected test sdk-snapshot");
@@ -129,6 +130,9 @@ class TestScript extends BundleScript {
       await (await import("./🧪️tests/🕸️daemon/📥️journal/🟦️.ts")).proveDaemonJournal(this.repoRoot, output, this.invocation, args[1] === "transport", args[1] === "workspace");
       return;
     }
+    if(args[0]==="graph-cache-waiter"){if(args.length!==1)throw Error("Expected test graph-cache-waiter");await testWorkspaceOwnership(this.invocation,this.repoRoot,process.env.SEMIO_TEST_ARTIFACT_DIR??repoCacheDirectory(this.repoRoot,"graph-cache-waiter-probes"),join(SCRIPT_ROOT,"🕸️graph/🏇️waiter/🧪️tests/🟦️.ts"));return;}
+    const inferenceTests:Record<string,string>={"caller-environment":"🧪️tests/🌍️caller-environment/🟦️.ts","toolkit-retention":"🚀️bootstrap/🛠️tools/🧹️retention/🧪️tests/🟦️.ts","graph-publication":"🕸️graph/📤️publication/🧪️tests/🟦️.ts","import-edges":"🧪️tests/🔗️import-edges","task-child":"🧪️tests/📬️task-child/🟦️.ts","toolkit-use":"🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts","project-admission":"../🔌️nx-plugin/👁️observation/🧪️tests/📦️projects/🟦️.ts","inference-observation":"../🔌️nx-plugin/👁️observation/🧪️tests/🟦️.ts"};
+    if(args[0]&&inferenceTests[args[0]]){if(args.length!==1)throw Error("Expected one inference test command");const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR??repoCacheDirectory(this.repoRoot,"inference-probes");mkdirSync(artifacts,{recursive:true});process.stdout.write(await captureOwnedCommandV1(process.execPath,["test",...(args[0]==="import-edges"?["🧪️tests/🔗️import-edges/🟦️.ts","🧪️tests/🔗️import-edges/📁️paths/🟦️.ts","🧪️tests/🔗️import-edges/🔁️context/🟦️.ts","🧪️tests/🔗️import-edges/🏛️graph/🔑️authority/🟦️.ts"].map(path=>join(SCRIPT_ROOT,path)):[join(SCRIPT_ROOT,inferenceTests[args[0]]!)])],this.repoRoot,{control:scriptCompilerAdmissionControlV1(this.invocation,"nx:"+args[0],120000),env:{...scriptInvocationEnvironment(this.invocation,process.env),SEMIO_TEST_ARTIFACT_DIR:artifacts}}));if(["toolkit-use","graph-publication"].includes(args[0])){const strictOwner=args[0]==="toolkit-use"?"🚀️bootstrap/🛠️tools/📥️use":"🕸️graph/📤️publication";await captureOwnedCommandV1(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop",join(SCRIPT_ROOT,strictOwner,"🟦️.ts"),join(SCRIPT_ROOT,strictOwner,"🧪️tests/🟦️.ts")],this.repoRoot,{control:scriptCompilerAdmissionControlV1(this.invocation,"nx:"+args[0]+":typescript",120000),env:scriptInvocationEnvironment(this.invocation,process.env)});console.log("[DEBUG] "+args[0]+" strict TypeScript check passed");}return;}
     if(args[0]==="selected-graph"){if(args.length!==1)throw Error("Expected test selected-graph");await testWorkspaceOwnership(this.invocation,this.repoRoot,process.env.SEMIO_TEST_ARTIFACT_DIR??repoCacheDirectory(this.repoRoot,"selected-graph-probes"),join(SCRIPT_ROOT,"🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts"));return;}
     if(args[0]==="graph-seal"){if(args.length!==1)throw Error("Expected test graph-seal");runCmd(process.execPath,["test",join(SCRIPT_ROOT,"🕸️graph/🔏️seal/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,...orchestratorBudgetOpts()});return;}
     if (args[0] === "build-mode") {

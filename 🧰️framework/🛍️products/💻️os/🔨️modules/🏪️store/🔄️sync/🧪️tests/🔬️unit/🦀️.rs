@@ -11,7 +11,8 @@ use std::sync::Arc;
 #[tokio::test]
 async fn folder_event_log_refuses_the_repository_root() {
     let dir = crate::os_store::test_support::tempdir().expect("tempdir");
-    std::fs::write(dir.path().join("nx.json"), "{}\n").expect("marker");
+    std::fs::write(dir.path().join("📋️project.json"), "{}\n").expect("build marker");
+    std::fs::write(dir.path().join("package.json"), r#"{"workspaces":[]}"#).expect("workspace declaration");
     let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
     let error = storage.write("doc", "schema", b"pack", b"spr").await.expect_err("repository root");
     assert!(error.to_string().contains("repository root"), "{error}");

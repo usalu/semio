@@ -167,6 +167,7 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework = { workspace = true }
 semio-framework-schema = { workspace = true }
 blake3 = "1.8.2"

@@ -319,7 +319,7 @@ fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_u
             semio_framework_job::default_now_us,
             &mut sequence,
         &mut actual_retained_progress);
-        assert_eq!(zero.drive_one(&mut context), SurfaceReconcileJobStep::MoreWork);
+        assert_eq!(zero.drive_one(context.generation().0, &mut context).expect("original reconcile native resource source"), SurfaceReconcileJobStep::MoreWork);
         let cursor = zero.state.as_ref().and_then(|state| state.cursor.as_ref()).expect("cursor retained");
         assert!(cursor.pending_root.is_some());
         assert!(cursor.held_node.is_none());
@@ -338,7 +338,7 @@ fn semantic_census_zero_fuel_and_expired_deadline_leave_every_cursor_and_owner_u
         expired_now,
         &mut sequence,
     &mut actual_retained_progress);
-    assert_eq!(expired.drive_one(&mut context), SurfaceReconcileJobStep::MoreWork);
+    assert_eq!(expired.drive_one(context.generation().0, &mut context).expect("original reconcile native resource source"), SurfaceReconcileJobStep::MoreWork);
     assert!(expired.state.as_ref().and_then(|state| state.cursor.as_ref()).is_some_and(|cursor| cursor.pending_root.is_some() && cursor.held_node.is_none()));
 }
 
@@ -422,7 +422,7 @@ fn persistent_credit_transfers_through_ready_and_returns_only_after_incremental_
             semio_framework_job::default_now_us,
             &mut sequence,
         &mut actual_retained_progress);
-        if job.drive_one(&mut context) == SurfaceReconcileJobStep::Ready {
+        if job.drive_one(context.generation().0, &mut context).expect("original reconcile native resource source") == SurfaceReconcileJobStep::Ready {
             break;
         }
     }
@@ -483,7 +483,7 @@ fn stale_cancel_and_drop_handoff_preserve_public_terminal_ownership() {
         semio_framework_job::default_now_us,
         &mut sequence,
     &mut actual_retained_progress);
-    assert_eq!(job.drive_one(&mut context), SurfaceReconcileJobStep::Fault);
+    assert_eq!(job.drive_one(context.generation().0, &mut context).expect("original reconcile native resource source"), SurfaceReconcileJobStep::Fault);
     let handback_key = job.handback_key().expect("fault retains fixed public handback reservation");
     drop(job);
     let mut terminal = take_surface_reconcile_terminal(handback_key).expect("valid handback registry").expect("drop handback is observable in O(1)");
@@ -503,7 +503,7 @@ fn stale_cancel_and_drop_handoff_preserve_public_terminal_ownership() {
     let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
     let mut context =
         semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel, semio_framework_job::default_now_us, &mut sequence,&mut actual_retained_progress);
-    assert_eq!(job.drive_one(&mut context), SurfaceReconcileJobStep::Fault);
+    assert_eq!(job.drive_one(context.generation().0, &mut context).expect("original reconcile native resource source"), SurfaceReconcileJobStep::Fault);
     let mut terminal = job.into_terminal();
     assert!(matches!(terminal.fault(), Some(SurfaceReconcileFault::Cancelled)));
     for _ in 0..32 {
@@ -760,7 +760,7 @@ fn duplicate_sibling_keys_are_reported_even_when_component_tree_new_is_bypassed(
     children.try_push(leaf("a")).expect("bounded fixture child");
     children.try_push(leaf("a")).expect("bounded fixture child");
     let root = crate::TreeNode { children, ..leaf("root") };
-    let component_tree = crate::ComponentTree { root };
+    let component_tree = crate::ComponentTree::new(root);
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| reconciler.reconcile(&component_tree)));
     assert!(result.is_err(), "a duplicate sibling key must panic, not silently shadow");

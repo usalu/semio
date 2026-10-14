@@ -21,7 +21,7 @@ impl TransportAdmission{
 }
 
 /// 🛑️ Refusal has zero retained bytes and a separate transient physical-reserve witness.
-#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+#[derive(Debug,Clone,Copy,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub struct TransportCaptureRefusal{pub kind:ValueRefusalKind,pub reason:&'static str,pub allocated_bytes:usize,pub physical_bytes:usize}
 impl std::fmt::Display for TransportCaptureRefusal{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.write_str(self.reason)}}
 impl Error for TransportCaptureRefusal{}

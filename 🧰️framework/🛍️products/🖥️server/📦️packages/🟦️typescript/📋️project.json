@@ -1,12 +1,12 @@
 {
   "name": "@semio-tech/framework-server",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": ["{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🟦️.ts", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript",

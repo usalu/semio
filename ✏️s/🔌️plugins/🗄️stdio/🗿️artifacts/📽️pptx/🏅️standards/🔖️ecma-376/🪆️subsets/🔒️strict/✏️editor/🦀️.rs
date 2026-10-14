@@ -118,7 +118,9 @@ impl ArtifactEditor for PptxStrictEditor {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_id(command, |_| "set-page")
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-page" => {
                 let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;

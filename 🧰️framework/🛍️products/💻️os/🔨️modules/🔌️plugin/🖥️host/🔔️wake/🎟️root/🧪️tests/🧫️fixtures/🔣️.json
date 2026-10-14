@@ -1,0 +1,70 @@
+{
+  "policy": {
+    "operation": 71,
+    "generation": 3,
+    "turnFuel": 64,
+    "operationFuel": 1024,
+    "maximumTurnMicroseconds": 500,
+    "turnExecutionFuel": 1000000,
+    "operationExecutionFuel": 500000000,
+    "maxEffects": 256,
+    "maxPatchBytes": 1048576,
+    "maxFrames": 256
+  },
+  "clock": 1000,
+  "deadline": 1500,
+  "scope": {
+    "slot": 7,
+    "generation": 13,
+    "epoch": 6,
+    "fuel": 63,
+    "grant": [
+      7,
+      4073,
+      65536,
+      262144,
+      64
+    ]
+  },
+  "receipt": {
+    "spent": [
+      1,
+      41,
+      0,
+      0
+    ],
+    "work": 5,
+    "executionSpent": 73
+  },
+  "expected": {
+    "fuel": 58,
+    "grant": [
+      6,
+      4032,
+      65536,
+      262144,
+      64
+    ],
+    "executionFuel": 999927
+  },
+  "cuts": [
+    "foreign-slot",
+    "foreign-generation",
+    "different-epoch",
+    "changed-clock",
+    "renewed-deadline",
+    "renewed-fuel",
+    "renewed-grant",
+    "cancelled-original",
+    "expired-original",
+    "valid-original"
+  ],
+  "startupDeadline": {
+    "initiatingNow": 1000,
+    "initiatingDeadline": 1500,
+    "expiredNow": 1501,
+    "nextRootDeadline": 2001,
+    "expiredVmSpent": 0,
+    "nextVmSpent": 2
+  }
+}

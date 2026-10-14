@@ -2,7 +2,7 @@
 import type{Wfc2dSnapshot,Wfc2dColor,Wfc2dPathSegment,Wfc2dVectorPath,Wfc2dTile,Wfc2dTileMedia,Wfc2dSlot,Wfc2dSlotEdge,Wfc2dRule}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export const WFC2D_SQLITE_SCHEMA=`CREATE TABLE wfc2d_document (id INTEGER PRIMARY KEY CHECK(id=1), schema_id TEXT NOT NULL, seed TEXT NOT NULL);
 CREATE TABLE wfc2d_tile (

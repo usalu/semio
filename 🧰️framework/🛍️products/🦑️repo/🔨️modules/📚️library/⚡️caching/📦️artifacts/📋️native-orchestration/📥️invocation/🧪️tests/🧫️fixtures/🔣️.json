@@ -26,7 +26,8 @@
         },
         "network": {
           "offline": true
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": true
     },
@@ -54,7 +55,8 @@
         },
         "network": {
           "offline": true
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": false
     },
@@ -110,7 +112,8 @@
         },
         "network": {
           "offline": true
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": false
     },
@@ -154,7 +157,8 @@
         },
         "network": {
           "offline": true
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": false
     },
@@ -180,7 +184,8 @@
         },
         "network": {
           "offline": true
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": false
     },
@@ -206,7 +211,8 @@
         },
         "child": {
           "maximumElapsedMilliseconds": 60000
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": false
     },
@@ -235,7 +241,8 @@
         },
         "network": {
           "offline": true
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": false
     },
@@ -264,7 +271,8 @@
         },
         "network": {
           "offline": true
-        }
+        },
+        "buildMode": "prototype"
       },
       "accepted": false
     },
@@ -294,7 +302,97 @@
         "network": {
           "offline": true
         },
-        "authority": "unowned"
+        "authority": "unowned",
+        "buildMode": "prototype"
+      },
+      "accepted": false
+    },
+    {
+      "id": "original-release-mode",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        },
+        "buildMode": "release"
+      },
+      "accepted": true
+    },
+    {
+      "id": "original-missing-mode",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "original-implicit-dev-mode-refused",
+      "value": {
+        "version": 1,
+        "repositoryRoot": "/caller",
+        "artifactDirectory": "/caller/artifacts",
+        "command": {
+          "kind": "native-owner-command",
+          "manifest": "owner/Cargo.toml",
+          "workingDirectory": "owner",
+          "program": "bun",
+          "arguments": [
+            "owner/📜️script.ts",
+            "portable"
+          ]
+        },
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 65536
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 60000
+        },
+        "network": {
+          "offline": true
+        },
+        "buildMode": "dev"
       },
       "accepted": false
     }

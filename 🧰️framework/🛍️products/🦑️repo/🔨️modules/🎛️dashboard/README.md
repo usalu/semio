@@ -11,14 +11,14 @@ registry command (below); the interactive view and the command line start comman
 through the same workspace daemon, so a task started in one is the task the other shows. No editor or
 agent launch file exists: nothing generates, reads, gates or documents one.
 
-Start with `bun run dashboard` (the root script is the Nx bootstrap; it runs the installed native
+Start with `bun run dashboard` (the root script is the build runner bootstrap; it runs the installed native
 executable `semio`). The first start builds and installs the executable once. Installation builds and
 publishes an immutable executable with visible progress and cancellation (`Ctrl+C`), and records beside it
 a digest of the sources it was built from: the names, sizes and modification times of the files below the
 dashboard module and the modules of every path dependency of its crate (tests, fixtures, build output and
 `node_modules` excluded), plus `Cargo.toml`, `Cargo.lock` and `rust-toolchain.toml`. Ordinary startup reads
 the small installation record, recomputes that digest (about 20 ms, no file is read) and starts the native
-executable directly, without provisioning tools, hashing the binary or computing an Nx graph. When the digest
+executable directly, without provisioning tools, hashing the binary or computing a build graph. When the digest
 differs, the start first rebuilds and reinstalls with the same visible progress and says why; a failed or
 cancelled rebuild stops the start instead of running an outdated executable, except for the verbs that only observe or
 end what already runs (`tasks`, `logs`, `stop`, `kill`, `open`, `daemon stop`, `daemon status`): a broken working
@@ -38,7 +38,7 @@ The registry (`🎮️registry`) is the one source of what can be started. Its s
 
 | Source | Maintained in |
 | --- | --- |
-| Nx targets, their `continuous` flag and `configurations` | each `📋️project.json`, read from the manifests and the published project graph |
+| build targets, their `continuous` flag and `configurations` | each `📋️project.json`, read from the manifests and the published project graph |
 | Playground variants (ports, examples, user slots, hub, data directories, viewer path) | `[[package.metadata.semio.playground]]` of the plugin crate, through the generated catalog |
 | Declarations: parameters, ready ports, requirements, tools, compounds, groups | `metadata.semio.dashboard` of the owning `📋️project.json`, schema `🧬️schema/🎮️registry/🔣️.json` |
 | Ticket tools and compounds, offered while the ticket is open | `🎮️commands.json` of the ticket folder |
@@ -52,7 +52,7 @@ A command has an identity (`<project>:<target>[:configuration]`, `playground:<va
 `package`, `test`, `smoke`, `check`, `typecheck`, `verify`, `gate`, `lint`, `format`, `generate`,
 `publish`, `deploy`, `preview`, `bench`, `clean`, or `task` for any other name) and the parameters it
 accepts. A target reads `build / ♻️mit-bestand / 📋️bericht / 🟦️typescript / build-zwischenbericht`, so
-typing `build mit bestand zwischenbericht` finds it. Long-running means Nx `continuous`, a tool's
+typing `build mit bestand zwischenbericht` finds it. Long-running means `continuous`, a tool's
 `continuous`, a playground, or a declared `ready`.
 
 Declarations (all optional, schema-first, validated; a broken one is a reported problem naming its
@@ -64,11 +64,11 @@ file and never hides a valid command):
 - `requires`: commands started (or reused) and awaited first. A compound's `members` and a target's or
   tool's `requires` share one shape: `"<id>"` or `{ "run": "<id>", "parameters": {…}, "env": {…} }`, where
   `env` states a relationship between members, for example the hub address a shell joins.
-- `parameters`: a `choice` (one effect per value), a `flag` or a `text`, with `env`, `nxFlags` (before
-  `--`, ignored by commands that do not run Nx) and `args` (after `--`). The global axes live on the root
+- `parameters`: a `choice` (one effect per value), a `flag` or a `text`, with `env`, `buildFlags` (before
+  `--`, ignored by commands that do not use the build runner) and `args` (after `--`). The global axes live on the root
   project: `cache`, `test-level`, `dependencies`, `build-mode`, `nextest-output`, `cargo-jobs`,
   `build-budget`; `appliesTo.verbs` selects every command with that verb, tools included.
-- `tools`, `compounds` (`stop: "together"`), `groups` (`targets: [..]` over Nx project patterns).
+- `tools`, `compounds` (`stop: "together"`), `groups` (`targets: [..]` over build project patterns).
 - Tokens `{workspace}`, `{port}` and `{<parameter id>}`; literal absolute paths and the runner variables
   `NX_DAEMON`, `NX_TUI`, … are never stored.
 - A service port belongs to one owner: the project of a target or tool, the ticket of a ticket tool, the
@@ -76,7 +76,7 @@ file and never hides a valid command):
   scoped storybooks, the hub variants, the inspector tool beside its targets); two owners claiming the same
   port are a problem of `semio commands --check`, which compares the default ready ports of long-running
   commands with every playground port (react, wgpu, user slots). `--check` also reports a playground
-  renderer whose Nx target is missing from the graph and every plugin error Nx recorded in the published
+  renderer whose build target is missing from the graph and every plugin error Nx recorded in the published
   graph (a partial graph is not healthy).
 - Playgrounds gain `renderer`, `example` (its slug or bare id), `user-slot`, `app-role`, `language`,
   `terminology`, `appearance` and, from their catalog row, `hub`, `data` and `local-only`.
@@ -84,18 +84,14 @@ file and never hides a valid command):
 Authored scripts use `tool:workspace/run-script`: `script` is the workspace-relative `📜️script.ts`,
 `project` selects its Nx owner (default `workspace`), and `directory` selects the working directory
 (default the workspace root). Extra arguments follow `--`, and explicit environment values use
-`--env KEY=value`. This entry invokes the authored script through Nx; named recurring workflows
+`--env KEY=value`. This entry invokes the authored script through the build runner; named recurring workflows
 belong in their owner's target or typed declaration.
-Everything resolves to plain argument lists (never a shell). A finite Nx task starts from the project
-graph Nx last published instead of rebuilding it, by setting `NX_FORCE_REUSE_CACHED_GRAPH=true`; file
-hashes and the task cache still read the current sources. Rebuilding that graph is what Nx reports as
-"Waiting for graph construction in another process", and it takes minutes while many Nx processes run.
-The published graph is used only while `nx.json`, the root `package.json` and every project manifest
-still hash to what Nx recorded with it; otherwise the task rebuilds and republishes it.
-`SEMIO_DASHBOARD_GRAPH=fresh` makes every task rebuild the graph. Dashboard tasks set
-`NX_NATIVE_COMMAND_RUNNER=false` and `NX_TUI=false` so the workspace daemon owns terminal rendering
-and process lifecycle throughout Nx execution. Independent daemon tasks clear the launcher's inherited
-Nx invocation identifier, allowing repeated starts and restarts without appearing recursive to Nx.
+Everything resolves to plain argument lists. Dashboard task launches use `bun repo run` and
+`bun repo run-many`. The selected build adapter owns backend flags, environment and graph discovery.
+The dashboard reads the versioned neutral publication at `.🧬semio/🦑️repo/⚡️cache/build/graph.json`.
+Finite tasks request graph reuse only while the publication and its manifest content remain current.
+`SEMIO_BUILD_TERMINAL=false` delegates terminal rendering and lifecycle to the dashboard daemon.
+Independent daemon tasks clear the inherited `SEMIO_BUILD_INVOCATION_PID` before starting.
 
 ### ⌨️ The Command Line
 
@@ -147,8 +143,8 @@ address and attach browser previews to it; find ids with `bun run dashboard comm
 
 ### 🧩 VSCode Launch Projection
 
-Dashboard ticket declarations also own their VSCode controls. Run the normal Nx target
-`bun nx run @semio-tech/repo-dashboard-rs:launch -- generate YY/MM/DD/TICKET`, or use `check` to refuse a stale projection and `test` to run the independent projection oracle. Generation reads the ticket's current `🎮️commands.json`, emits English and German controls grouped by verb, and replaces only that ticket's projected entries. Other debug configurations and inputs stay in place.
+Dashboard ticket declarations also own their VSCode controls. Run the normal build target
+`bun repo run @semio-tech/repo-dashboard-rs:launch -- generate YY/MM/DD/TICKET`, or use `check` to refuse a stale projection and `test` to run the independent projection oracle. Generation reads the ticket's current `🎮️commands.json`, emits English and German controls grouped by verb, and replaces only that ticket's projected entries. Other debug configurations and inputs stay in place.
 
 Each control runs its safe registry identity through the same dashboard run route. Text and choice inputs enter dedicated environment variables and then native argument arrays; their contents never enter a shell command. Native registry admission still controls parameter choices, readiness, dependencies and cancellation. The projection does not read the retired launch seed and has no artifact-codec receipt dependency.
 
@@ -277,10 +273,10 @@ and a kernel job object; Unix a private per-user socket directory and process gr
 ## 📦️ Packages
 
 - `📦️packages/🦀️rust` — `semio-framework-repo-dashboard` (binary `semio`, entry point in
-  `🚪️entrypoint`), Nx project `@semio-tech/repo-dashboard-rs` with the `build`, `install`, `run`,
+  `🚪️entrypoint`), build project `@semio-tech/repo-dashboard-rs` with the `build`, `install`, `run`,
   `daemon` and `preferences` targets behind the root `dashboard` scripts
 - `📦️installation` — the installation record, the immutable executable publication and the
-  native launch the Nx bootstrap wrapper takes for `run`, `daemon` and `preferences`
+  native launch the build runner bootstrap wrapper takes for `run`, `daemon` and `preferences`
 
 The repo command line and the repo MCP server (`⌨️cli`) do not depend on this crate, so a compile
 break in the dashboard or the terminal UI never reaches them.
@@ -300,13 +296,13 @@ workspace `./🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json`
 `commands --check`, `run --dry-run`) and compares every result with an independent TypeScript resolver
 written from the declaration rules, validates declarations and outputs with Ajv against the registry schema,
 and checks the XXH3 vectors of the graph-reuse decision against Bun's own hash:
-`bun nx run @semio-tech/repo-dashboard-rs:test` builds the debug binary and runs it. The scenarios of
+`bun repo run @semio-tech/repo-dashboard-rs:test` builds the debug binary and runs it. The scenarios of
 `./🧪️tests/🧫️fixtures/🎮️registry/🥒️.feature` are mapped to Rust tests of `🎮️registry`.
 
 `🌀️control-plane` defines language-neutral lifecycle scenarios and protocol vectors. The owned
 Rust codec and the existing Ajv library validate the same vectors. The quick suite runs actual
 Bun PTYs, Nx server/build/test targets, output replay, cancellation, restart, process-tree
-termination, singleton enforcement and reattachment: `bun nx run @semio-tech/repo-dashboard-rs:test -- quick`.
+termination, singleton enforcement and reattachment: `bun repo run @semio-tech/repo-dashboard-rs:test -- quick`.
 
 `🧊️execution` pins the native launch vectors of `./🧪️tests/🧫️fixtures/🧊️execution`, the Nx scheduling of
 `run` and `install`, the immutable installation that keeps a running executable's bytes while

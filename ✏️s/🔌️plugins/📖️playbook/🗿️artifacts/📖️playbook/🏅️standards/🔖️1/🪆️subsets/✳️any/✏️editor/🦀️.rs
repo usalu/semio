@@ -619,7 +619,9 @@ impl ArtifactEditor for PlaybookPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PlaybookCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<PlaybookCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         playbook_command_from_action(action, args)
     }
 

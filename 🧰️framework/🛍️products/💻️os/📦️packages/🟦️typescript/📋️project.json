@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-os",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🟦️.ts",
@@ -13,7 +13,7 @@
   },
   "targets": {
     "generate-wgpu": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "production",
         "^production"
@@ -24,7 +24,7 @@
       }
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
@@ -32,7 +32,7 @@
       "outputs": []
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts typecheck"
@@ -40,7 +40,7 @@
       "outputs": []
     },
     "check-wgpu": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "production",
         "^production"
@@ -51,7 +51,7 @@
       }
     },
     "document-opening-attempt-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts document-opening-attempt-check"
@@ -59,7 +59,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
@@ -68,7 +68,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick --testNamePattern=\"plugin module|hub program resolution|shared directory access policy\"",
@@ -77,7 +77,7 @@
       "outputs": []
     },
     "installed-service-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
@@ -86,7 +86,7 @@
       "outputs": []
     },
     "mutation-verb-vocabulary-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts mutation-verb-vocabulary-check",
@@ -95,7 +95,7 @@
       "outputs": []
     },
     "test-actor-transport": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -111,7 +111,7 @@
       }
     },
     "test-media-transport": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -127,7 +127,7 @@
       }
     },
     "test-store-oracles": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -156,7 +156,7 @@
       }
     },
     "test-channel-oracles": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -179,7 +179,7 @@
       }
     },
     "test-scene-wire-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
@@ -188,14 +188,14 @@
       "outputs": []
     },
     "installed-service-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts installed-service-source"
       }
     },
     "test-pack-wire-materialization-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [

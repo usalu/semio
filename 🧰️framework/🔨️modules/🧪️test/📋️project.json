@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-test",
   "targets": {
     "test-adapter-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [

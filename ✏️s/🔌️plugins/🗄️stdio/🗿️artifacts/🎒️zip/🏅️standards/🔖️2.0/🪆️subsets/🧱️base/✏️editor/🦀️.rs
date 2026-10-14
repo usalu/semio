@@ -138,7 +138,9 @@ impl ArtifactEditor for ZipAnyEditor {
     fn agent_target_revision(_action: &str, args: &semio_framework_value::DslValue, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         crate::editor::editing::agent_target_revision(doc.snapshot, args)
     }
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-node" => {
                 let (node_id, value, revision) = crate::editor::editing::edit_arguments(args)?;

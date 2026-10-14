@@ -1,0 +1,226 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "imports",
+    "contexts",
+    "repository",
+    "graphAuthority",
+    "lockScopes",
+    "authorityInputs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "imports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "path",
+          "source",
+          "imports",
+          "moduleImports"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "imports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "moduleImports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "phases"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "file",
+                "projects",
+                "packages",
+                "locked",
+                "targets"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "projects": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "packages": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "locked": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "required": [
+        "owner",
+        "sources"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "graphAuthority": {
+      "type": "object",
+      "required": [
+        "module",
+        "export"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "module": {
+          "type": "string"
+        },
+        "export": {
+          "type": "string"
+        }
+      }
+    },
+    "lockScopes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "file",
+          "source",
+          "before",
+          "after",
+          "beforeTarget",
+          "afterTarget"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "before": {
+            "type": "string"
+          },
+          "after": {
+            "type": "string"
+          },
+          "beforeTarget": {
+            "type": "string"
+          },
+          "afterTarget": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "authorityInputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "files",
+          "path",
+          "after"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "files": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "path": {
+            "type": "string"
+          },
+          "after": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

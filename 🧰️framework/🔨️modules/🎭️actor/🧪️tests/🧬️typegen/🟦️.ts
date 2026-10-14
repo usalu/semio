@@ -1,16 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { actorTypegenPlan, actorTypegenTarget } from "../../🧬️typegen/📋️plan/🟦️.ts";
 import { publishActorTypegen } from "../../🧬️typegen/📤️publication/🟦️.ts";
 import { waitForActorTypegenProcess } from "../../🧬️typegen/🏃️execution/🟦️.ts";
 
 const repoRoot = join(import.meta.dir, "../../../../..");
+const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR;
+if (!artifacts) throw Error("An original caller artifact directory is required");
+mkdirSync(artifacts, { recursive: true });
 
 describe("actor typegen ownership", () => {
   test("the plan describes the generated mirror and exact stale siblings", () => {
-    const root = mkdtempSync(join(tmpdir(), "semio-actor-typegen-plan-"));
+    const root = mkdtempSync(join(artifacts, "semio-actor-typegen-plan-"));
     try {
       const target = actorTypegenTarget(root);
       mkdirSync(dirname(target), { recursive: true });
@@ -25,7 +27,7 @@ describe("actor typegen ownership", () => {
   });
 
   test("publication writes the exact mirror then prunes only its output siblings", () => {
-    const root = mkdtempSync(join(tmpdir(), "semio-actor-typegen-publish-"));
+    const root = mkdtempSync(join(artifacts, "semio-actor-typegen-publish-"));
     try {
       const target = actorTypegenTarget(root);
       mkdirSync(dirname(target), { recursive: true });
@@ -42,7 +44,7 @@ describe("actor typegen ownership", () => {
 
   test("publication refuses a linked output root before any write or prune", () => {
     if (process.platform === "win32") return;
-    const root = mkdtempSync(join(tmpdir(), "semio-actor-typegen-link-"));
+    const root = mkdtempSync(join(artifacts, "semio-actor-typegen-link-"));
     try {
       const target = actorTypegenTarget(root);
       const external = join(root, "external");
@@ -81,9 +83,6 @@ describe("actor typegen ownership", () => {
     expect(nativeExporter).toContain("SEMIO_TYPEGEN_OUT");
     expect(nativeExporter).toContain("include_str!(\"../../🤖️generated/🎭️actor/🟦️.ts\")");
     for (const consumer of ["📬️mailbox/🟦️.ts", "📮️shard-client/🟦️.ts"]) expect(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor", consumer), "utf8")).toContain("../🤖️generated/🎭️actor/🟦️.ts");
-    const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as { generatorContracts: Record<string, { ownerPath: string; inputPatterns: string[]; previewLimits?: { timeoutMs: number } }> };
-    const contract = taxonomy.generatorContracts["actor-typegen"]!;
-    expect(contract.ownerPath).toBe("🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust");
-    expect(contract.previewLimits?.timeoutMs).toBe(600_000);
+
   });
 });

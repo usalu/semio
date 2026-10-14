@@ -48,7 +48,7 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
  */
-import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioReleaseEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioReleaseEnv, semioBuildParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkDerivedConfig, writeDerivedConfig } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -111,7 +111,7 @@ const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
  * rebuilding it inline — a continuous `dev` session must stay thin and consume cached deliverables. */
 function requireRepoMcpBinary(root: string): string {
   const bin = resolveMcpBin(root);
-  if (!existsSync(bin) || !statSync(bin).isFile()) throw new Error(`repo MCP client binary is missing at ${bin}; run: bun nx run repo-mcp:build`);
+  if (!existsSync(bin) || !statSync(bin).isFile()) throw new Error(`repo MCP client binary is missing at ${bin}; run: bun repo run repo-mcp:build`);
   return bin;
 }
 
@@ -451,7 +451,7 @@ export class GenerateScript extends Script {
       return;
     }
     if (segments[0] === "scale-fixture") {
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
       return;
     }
     console.error("[generate] usage: bun ./📜️script.ts generate <config [--check]|taxonomy|plugin-glue|scale-fixture>");
@@ -7531,7 +7531,7 @@ export class VerifyScript extends Script {
       await runVitest(reactRoot, ["--silent=false", "--reporter=verbose", "-t", "uses the live session viewport|matches the shared neutral viewport schema"], "../../🧪️tests/🎚️config/🟦️.ts");
       if (segments[1] === "native") {
         if (nativePhase === undefined || nativePhase === "renderer-host") {
-          runCmd("bun", [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, NX_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
+          runCmd("bun", [join(surfaceRoot, "📜️script.ts"), "wasm"], { cwd: surfaceRoot, env: { ...process.env, SEMIO_WORKSPACE_ROOT: this.root, REPO_ROOT: this.root } });
           for (const [packageName, filters] of [
             ["semio-framework-ui-scene", ["typed_scene_neutral_catalog_matches_native_serde_contracts"]],
             ["semio-framework-surface", ["node_graph::tests::"]],
@@ -7773,7 +7773,7 @@ export class VerifyScript extends Script {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "view_context_integer_carrier", "--", "--nocapture"], this.root);
       if (segments[1] === "native") return;
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:view-state-carriage-check"], { cwd: this.root });
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-react:view-state-carriage-check"], { cwd: this.root });
       return;
     }
     if (segments[0] === "window-view-context") {
@@ -7811,7 +7811,7 @@ export class VerifyScript extends Script {
     }
     await this.runGate();
     if (segments[0] === "gate") return;
-    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run-many", "-t", "test", "--all", "--exclude", "workspace", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
   /** 🚦️ Reports findings without failing, or enforces the identical structured result. */
@@ -8337,13 +8337,13 @@ export class VerifyScript extends Script {
   /** 🧱️ Enforces dependency direction through the repository library's taxonomy-owned graph rule. */
   private runLayering(segments: string[]): void {
     if (segments.length) throw new Error("Expected verify layering");
-    runCmd("bun", ["nx", "run-many", "-p", "@semio-tech/repo-lib", "-t", "lint-dependency-direction", "lint-rust-source-direction", "lint-cargo-dependency-direction", "--skip-nx-cache", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run-many", "-p", "@semio-tech/repo-lib", "-t", "lint-dependency-direction", "lint-rust-source-direction", "lint-cargo-dependency-direction", "--skip-cache", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
   /** 🏛️ Executes architecture contract checks contributed by their owning Nx projects. */
   private runCanonicalArchitecture(): void {
     console.log("[verify canonical-architecture] checking owner-contributed dependency, state and I/O contracts…");
-    runCmd("bun", ["nx", "run-many", "-t", "canonical-architecture", "--all", "--exclude", "workspace", "--skip-nx-cache", ...semioNxParallelFlag()], {
+    runCmd("bun", ["repo", "run-many", "-t", "canonical-architecture", "--all", "--exclude", "workspace", "--skip-cache", ...semioBuildParallelFlag()], {
       cwd: this.root,
       ...orchestratorBudgetOpts(canonicalArchitectureEnvironment(this.root, process.env)),
     });
@@ -8359,17 +8359,17 @@ export class VerifyScript extends Script {
     runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
-    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] region/host-contract script lints…");
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run", "@semio-tech/repo-lib:lint-styling-pixels"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/repo-lib:lint-styling-pixels"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] framework owned-schema binding freshness…");
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] ui locale/terminology axes freshness…");
-    runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");
-    runCmd("bun", ["nx", "run", "@semio-tech/repo-lib:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/repo-lib:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] TypeScript/JavaScript dependency direction…");
     this.runLayering([]);
     console.log("[verify] owner-root test taxonomy and feature contract…");
@@ -8504,7 +8504,7 @@ export class VerifyScript extends Script {
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/s-fixture-sweep-rs) runs at
     // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
-    runCmd("bun", ["nx", "run-many", "-t", "test", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", ...semioNxParallelFlag(), "--", "quick"], {
+    runCmd("bun", ["repo", "run-many", "-t", "test", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", ...semioBuildParallelFlag(), "--", "quick"], {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
     });
@@ -8686,7 +8686,7 @@ const INTERACTIVITY_ALL_APP_EXTENSIONS_DIR = "🧩️extensions";
  * extensions' shared fixture table, not a fourteenth extension. */
 const INTERACTIVITY_ALL_APP_OWNERSHIP_DIRS: ReadonlySet<string> = new Set(["🧫️fixtures", "🧪️tests"]);
 /** 🎮️ The generated playground catalog the dashboard registry lists as `playground:<variant>` commands. */
-const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json";
+const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🚀️playgrounds.json";
 /** 🎛️ The dashboard registry source that owns the renderer axis of every playground command. */
 const INTERACTIVITY_ALL_APP_REGISTRY_FILE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs";
 /** 🧬️ The schema every `metadata.semio.dashboard` declaration is written against. */
@@ -13597,10 +13597,10 @@ export class TestScript extends Script {
     }
 
     if (rest.length) throw new Error(`Unknown workspace test selection: ${rest.join(" ")}`);
-    if (process.env.NX_TASK_TARGET_PROJECT !== "workspace") throw new Error(`test ${level} runs every project's tests as Nx prerequisites; run \`bun nx run workspace:test -- ${level}\``);
+    if (process.env.SEMIO_TASK_PROJECT !== "workspace") throw new Error(`test ${level} runs every project's tests as build prerequisites; run \`bun repo run workspace:test -- ${level}\``);
     if (testLevelRank(level) >= testLevelRank("long")) await this.runStorybookPlaywright();
     if (level === "exhaustive" && coverageEnabled()) this.enforceCoverageGate();
-    console.log(`[test] ${level} prerequisites completed through Nx`);
+    console.log(`[test] ${level} build prerequisites completed`);
   }
 
   /** 📊️Walks every `*.lcov`/`lcov.info`/`coverage.info`/`*.cover` file under `.🧬semio/🦑️repo/📊️metrics/coverage/`, merges them into one repo-wide LCOV, writes `summary.json`, and hard-fails below the 95% threshold — the exhaustive-level gate. */
@@ -13706,7 +13706,7 @@ export class TestScript extends Script {
  */
 export class BenchScript extends Script {
   run(): void {
-    throw new Error("Select the benchmark through bun nx run workspace:bench -- plugins");
+    throw new Error("Select the benchmark through bun repo run workspace:bench -- plugins");
   }
 }
 //#endregion 🔖️BenchScript
@@ -14271,12 +14271,12 @@ export class StdioScript extends Script {
     }
     if (gate === "long") {
       for (const structuralGate of ["quick", "schema-parity", "standards-coverage", "codec", "mutation-law", "inference"] as const) stdioRunStructuralGate(this.root, structuralGate);
-      runCmd("bun", ["nx", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag(), "--", "long"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["repo", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioBuildParallelFlag(), "--", "long"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "exhaustive") {
       this.run(["long"]);
-      runCmd("bun", ["nx", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag(), "--", "exhaustive"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["repo", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioBuildParallelFlag(), "--", "exhaustive"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "runtime") {
@@ -14318,7 +14318,7 @@ export class PublishScript extends Script {
       console.error(`[publish] unknown slice ${JSON.stringify(slice)}`);
       process.exit(1);
     }
-    runCmd("bun", ["nx", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() }); // nx orchestrator — leaves individually budgeted
+    runCmd("bun", ["repo", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() }); // nx orchestrator — leaves individually budgeted
   }
 }
 //#endregion 🔖️PublishScript
@@ -14352,7 +14352,7 @@ function pluginWasmArtifactExists(repoRoot: string, entry: OsPluginArtifact): bo
 }
 
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
-  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
+  const registryPath = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json");
   if (!existsSync(registryPath)) return [];
   const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
   return entries.filter((entry) => !pluginWasmArtifactExists(repoRoot, entry)).map((entry) => entry.pluginId);
@@ -14374,7 +14374,7 @@ export class OsScript extends Script {
         const missing = missingPluginWasmArtifacts(repoRoot);
         if (missing.length > 0) {
           console.error(`[os.run] missing built plugin artifact(s): ${missing.join(", ")}`);
-          for (const pluginId of missing) console.error(`[os.run]   build it: bun nx run workspace:components describe ${pluginId}`);
+          for (const pluginId of missing) console.error(`[os.run]   build it: bun repo run workspace:components describe ${pluginId}`);
           process.exit(1);
         }
       }
@@ -14551,9 +14551,8 @@ export class SchemaScript extends Script {
     if (sub === "generate") return this.generate(rest);
     if (sub === "check") return await this.check(rest);
     if (sub === "runtime-graph") {
-      const { verifyRuntimeFixtureGraphV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts");
-      const { hubRuntimeActorPublicationPortV1 } = await import("./🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts");
-      return await verifyRuntimeFixtureGraphV1(this.root, rest, hubRuntimeActorPublicationPortV1(this.root), ["🧰️framework", "✏️s", "🌎️hub"]);
+      if (!await dispatchOwnedScriptRoute(this.invocation,this.root,["schema",...segments])) throw Error("No present owner contributes schema runtime-graph");
+      return;
     }
     if (sub === "verify") return this.verify(rest);
     if (sub === "audit") return this.audit(rest);
@@ -14874,6 +14873,7 @@ class ReleaseScript extends Script {
 
 //#region 🔖️Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
+  .registerLazy("repo", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")).RepoScript)
   .register("os", OsScript)
   .register("components", ComponentsScript)
   .register("semio", SemioScript)
@@ -14891,7 +14891,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
       run(segments: string[]): void {
         const sub = segments[0];
         if (sub === "check") {
-          runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:scale-fixture-check"], { cwd: this.root });
+          runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:scale-fixture-check"], { cwd: this.root });
           return;
         }
         throw new Error(`unknown scale-fixture subcommand: ${sub} (expected check)`);
@@ -17946,7 +17946,7 @@ function policyFilenameContractApplies(repoRoot: string, relDir: string, name: s
   ] as const).find(([manifest]) => name === manifest || existsSync(join(repoRoot, relDir, manifest)))?.[1];
   const ecosystemId = packagesIndex >= 0 ? segments[packagesIndex + 1] : adjacentEcosystem;
   const packageRoot = packagesIndex === segments.length - 2 || adjacentEcosystem !== undefined;
-  const siblingFixedFilenameContractIds = existsSync(join(repoRoot, relDir, "📋️project.json")) ? ["nx-project-manifest"] : undefined;
+  const siblingFixedFilenameContractIds = existsSync(join(repoRoot, relDir, "📋️project.json")) ? ["build-project-manifest"] : undefined;
   for (const contract of Object.values(taxonomy.configurableEntryContracts)) {
     if (contract.filename === name && contract.ecosystemId === ecosystemId && packageRoot) return true;
   }
@@ -25548,7 +25548,7 @@ function policyDerivedConfigBreaches(repoRoot: string): BreachRecord[] {
     scope: /^[^:\s]+/.exec(problem)?.[0] ?? problem,
     priority: "high" as const,
     reason: "A checked-in file that derives from one canonical source must equal its derivation, otherwise two copies drift and the editor, container and test runners disagree.",
-    solution: "Run `bun nx run workspace:generate-config` to rewrite the derived files; edit the canonical source (.vscode/settings.json, .vscode/extensions.json, .devcontainer/editor-overlay.json, .config/nextest.toml) instead of the copy.",
+    solution: "Run `bun repo run workspace:generate-config` to rewrite the derived files; edit the canonical source (.vscode/settings.json, .vscode/extensions.json, .devcontainer/editor-overlay.json, .config/nextest.toml) instead of the copy.",
   }));
 }
 //#endregion 🔧️PolicyRuleDerivedConfig

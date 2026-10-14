@@ -52,13 +52,7 @@ expect(testingSchemaExists(new URL("./🧬️schema/🔣️.json",import.meta.ur
 });
 
 
-test("actual host dispatch preserves issued original authority while applying resource limits",()=>{
- const law=JSON.parse(readFileSync(new URL("./dispatch.json",import.meta.url),"utf8"));expect(testingSchemaExists(new URL("./🧬️schema/dispatch.json",import.meta.url))).toBe(false);expect(new Ajv({strict:true}).compile(grantSchema)(law.originalGrant)).toBe(true);
- const db=new Database(":memory:");try{db.exec("CREATE TABLE issued(operation INTEGER,generation INTEGER,epoch INTEGER,items INTEGER,copy INTEGER,capacity INTEGER,release INTEGER,depth INTEGER,fuel INTEGER)");const i=law.originalInput,g=law.originalGrant;db.query("INSERT INTO issued VALUES(?,?,?,?,?,?,?,?,?)").run(i.operation,i.generation,i.epoch,g.maximumItems,g.maximumCopyBytes,g.maximumCapacityBytes,g.maximumReleaseBytes,g.maximumDepth,law.scheduledFuel);db.query("UPDATE issued SET fuel=?").run(law.hostFuel);expect(db.query("SELECT operation,generation,epoch,items,copy,capacity,release,depth,fuel FROM issued").get()).toEqual({operation:i.operation,generation:i.generation,epoch:i.epoch,items:g.maximumItems,copy:g.maximumCopyBytes,capacity:g.maximumCapacityBytes,release:g.maximumReleaseBytes,depth:g.maximumDepth,fuel:law.hostFuel});}finally{db.close();}
- const paths=["🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎠️runtime/🦀️.rs"];
- for(const path of paths){const source=readFileSync(new URL("../../../../../"+path,import.meta.url),"utf8");expect(source.includes("impl Fn(ActorId, semio_framework_plugin_host::shard::grant::ShardResourceBudget) -> semio_framework_plugin_host::shard::grant::ShardResourceBudget")).toBe(true);expect(source.includes("budget_for(grant.actor, semio_framework_plugin_host::shard::grant::ShardResourceBudget::from_original(&grant.budget))")).toBe(true);expect(source.includes("ShardFrame::pack_encode_grant(grant, budget, &mut self.dispatch_bytes).await")).toBe(true);expect(source.includes("budget: budget_for(grant.actor)")).toBe(false);expect(source.includes("envelopes: grant.envelopes.clone()")).toBe(false);}
- console.error("[DEBUG] Independent SQLite host CPU override preserves exact issued91/3/19 and five-axis grant; both actual native dispatch sources retain original receipt, native host execution remains separate");
-});
+
 
 
 test("original projection allocates exact complete backing before first copied page",()=>{

@@ -15,21 +15,21 @@
     },
     "targets": {
       "type": "array",
-      "maxItems": 128,
+      "maxItems": 512,
       "items": {
         "$ref": "#/$defs/PluginCatalogTargetV1"
       }
     },
     "hosts": {
       "type": "array",
-      "maxItems": 128,
+      "maxItems": 512,
       "items": {
         "$ref": "#/$defs/PluginCatalogHostV1"
       }
     },
     "playgrounds": {
       "type": "array",
-      "maxItems": 128,
+      "maxItems": 512,
       "items": {
         "$ref": "#/$defs/PluginCatalogPlaygroundV1"
       }
@@ -186,7 +186,7 @@
     "maxJsonBytes": 2097152,
     "maxEdges": 4096,
     "maxWork": 65536,
-    "maxRows": 128,
+    "maxRows": 512,
     "maxDurationMs": 30000,
     "schemes": [
       "http:",

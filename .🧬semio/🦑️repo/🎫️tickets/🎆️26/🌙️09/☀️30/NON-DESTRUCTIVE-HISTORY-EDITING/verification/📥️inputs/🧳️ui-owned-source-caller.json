@@ -9,7 +9,7 @@
     "--",
     "bun",
     "test",
-    "./🧰️framework/🔨️modules/🧵️job/⏱️context/📸️capture/🧳️source/🧪️tests/🟦️.ts"
+    "./🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🧪️tests/🟦️.ts"
   ],
   "native": {
     "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
@@ -33,7 +33,7 @@
     "--",
     "bun",
     "test",
-    "./🧰️framework/🔨️modules/🧵️job/⏱️context/📸️capture/🧳️source/🧪️tests/🟦️.ts"
+    "./🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🧪️tests/🟦️.ts"
   ],
   "buildMode": "prototype"
 }

@@ -1,3 +1,4 @@
+import {emptyNativeCatalogV1,readNativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import {componentPackageReceiptSource} from "../../../../../🔌️plugin/📥️receipt/🟦️.ts";
 import { publishedPageUrl } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { admitWgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
@@ -13,7 +14,7 @@ import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../../🔌️plu
 import type { PluginCatalog } from "@semio-tech/framework";
 import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🚚️browser-frame-transport/🟦️.ts";
 import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../📇️interactive-job-registry/🟦️.ts";
-import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../🐚️plugin-bridge/🟦️.ts";
+import { loadPluginModule, pluginHandleForBridge, primeContributionManifest, frameOriginalWorkOwner } from "../🐚️plugin-bridge/🟦️.ts";
 import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
 import { installWgpuDynamicExtensionDoor } from "../🧩️dynamic-extension/🟦️.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
@@ -23,6 +24,8 @@ import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../�
 import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "./🧩️asset-cancellation/🟦️.ts";
 import { browserAssetFailureDisposition } from "./🧩️asset-failure/🟦️.ts";
 
+import { OriginalBrowserFrameSource, type OriginalBrowserFrameNative } from "./🎟️original/🟦️.ts";
+
 //#region 🔖️Bindings
 /** 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
  * (`🌐️browser-worker/🦀️.rs` `enqueue_batch`/`tick`), and wasm-bindgen lowers a `u64` parameter
@@ -31,9 +34,8 @@ import { browserAssetFailureDisposition } from "./🧩️asset-failure/🟦️.t
  * FIRST frame batch (`frame-runtime-fault`). Declaring them `bigint` here is what makes that ABI
  * checkable at the seam instead of at runtime; the transport's own counters stay `number`, which is
  * what a structured-cloned protocol message carries. */
-type BrowserRendererWorkerHandle = {
+type BrowserRendererWorkerHandle = OriginalBrowserFrameNative & {
   enqueueBatch(eventsJson: string, generation: bigint): void;
-  tick(timestampMs: number, sequence: bigint, generation: bigint): string;
   assetDecodeStep(): string;
   pollAssetRequest(): string;
   assetResponseCurrent(): boolean;
@@ -77,6 +79,7 @@ type RendererBindings = {
   /** 🧭️ The ONE boot-axis door of the renderer wasm (`🧊️renderer/🦀️.rs` `WgpuBootDescriptor`), fed the
    * JSON `../🧭️boot-descriptor/🟦️.ts` resolved. It replaced four per-axis setters, which is what let the
    * three wgpu entry points carry three different subsets of the same vocabulary. */
+  semioWgpuSetPluginCatalog?: (serialized:string)=>void;
   semioWgpuSetBootDescriptor?: (descriptorJson: string) => void;
   semioWgpuSetHubEnv?: (hubUrl: string, user: string, dataDir: string) => void;
   /** 🌓️ The appearance door (`🧊️renderer/🦀️.rs`, region 🌓️HostAppearance). This realm owns no
@@ -322,7 +325,7 @@ let failed = false;
 let quarantined: { readonly code: string; readonly detail: string } | undefined;
 let lastFrame = { cursor: "default", fullscreen: null as boolean | null };
 let lastWorld3dAcceptedFrameDiagnostic: string | undefined;
-let pendingFault: { readonly code: string; readonly detail: string } | undefined;
+let pendingFault: { readonly code: string; readonly detail: string;readonly originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array} } | undefined;
 let runtimeCloseComplete = false;
 let jobsCloseComplete = false;
 let closeOwner: "runtime" | "jobs" = "runtime";
@@ -440,13 +443,20 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
   }
 }
 
+let originalFrameSource:OriginalBrowserFrameSource|undefined;
+
 function runFrameTurn(): boolean {
   if (!runtime || !frameInput || closed || closing || failed || quarantined) return false;
   const startedAt = performance.now();
   try {
     frameSequence = nextFrameSequence(frameSequence);
     const input = frameInput;
-    const result = ownedStep("frame-step", () => JSON.parse(runtime!.tick(input.timestampMs, BigInt(frameSequence), BigInt(input.generation)))) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "frameSequence" | "generation" | "workerDurationMs"> & { readonly continueFrame: boolean };
+    const originalFrameOutput=ownedStep("frame-step",()=>originalFrameSource!.tick(input.timestampMs,BigInt(frameSequence),BigInt(input.generation)));
+    if(originalFrameOutput===undefined)return true;
+    if(typeof originalFrameOutput!=="string"){pendingFault={code:"original-frame-failure",detail:"original native failure retained",originalFailure:originalFrameOutput};failed=true;beginClose();return false;}
+    const result = JSON.parse(originalFrameOutput) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "frameSequence" | "generation" | "workerDurationMs"> & { readonly continueFrame: boolean;readonly presentationGeneration:string };
+    const presentationGeneration=Number(BigInt(result.presentationGeneration));
+    if(!Number.isSafeInteger(presentationGeneration)||presentationGeneration<0)throw Error("original-frame.presentation-generation-refused");
     let mediaSlots = mediaRegistry.accept(result.quarantined ? [] : result.mediaSlots);
     const outcome = lastStepOutcome;
     lastFrame = { cursor: result.cursor, fullscreen: result.fullscreen };
@@ -462,7 +472,7 @@ function runFrameTurn(): boolean {
     const sustained = outcome?.verdict === "sustained-overrun";
     const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
     if (degrade) mediaSlots = mediaRegistry.accept([]);
-    post({ kind: "frame", mediaSlots, lifecycle, frameSequence, generation: input.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
+    post({ kind: "frame", mediaSlots, lifecycle, frameSequence, generation: presentationGeneration, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, nextDeadlineDelayMs: result.nextDeadlineDelayMs, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
     publishWorld3dAcceptedFrameDiagnostic(input.generation);
     if (quarantined) requestFault(quarantined.code, quarantined.detail);
     else if (assetCancellationStep === "idle") scheduleAssetPump();
@@ -545,6 +555,7 @@ function answerIntrospection(message: Extract<BrowserFrameUiMessage, { kind: "in
 
 async function closeRuntime(): Promise<void> {
   await mediaRetirement;
+  await originalFrameSource?.close();
   for (;;) {
     ownedStep("close-step", () => {
       if (closeOwner === "runtime" && !runtimeCloseComplete) {
@@ -560,7 +571,7 @@ async function closeRuntime(): Promise<void> {
     if (runtimeCloseComplete && jobsCloseComplete && (frameTurns?.terminalIsEmpty() ?? true)) break;
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
   }
-  if (pendingFault) post({ kind: "fault", lifecycle, code: pendingFault.code, detail: pendingFault.detail });
+  if (pendingFault) post({ kind: "fault", lifecycle, code: pendingFault.code, detail: pendingFault.detail,originalFailure:pendingFault.originalFailure },pendingFault.originalFailure?[pendingFault.originalFailure.bytes.buffer as ArrayBuffer]:[]);
   post({ kind: "closed", lifecycle });
   frameTurnTasks?.close();
   frameTurnTasks = undefined;
@@ -699,6 +710,9 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     if (loaded.default) await instantiateRendererWasm(loaded, message.bindingsWasmUrl);
     if (!loaded.semioWgpuWorkerBootstrap) throw new Error("renderer bindings missing semioWgpuWorkerBootstrap");
     ownedStep("runtime-environment", () => {
+      const nativeCatalog=readNativeCatalogV1(message.nativeCatalog??emptyNativeCatalogV1());
+      if(!loaded.semioWgpuSetPluginCatalog&&nativeCatalog.plugins.length)throw Error("Renderer bindings lack supplied native catalog admission");
+      loaded.semioWgpuSetPluginCatalog?.(JSON.stringify(nativeCatalog));
       loaded.semioWgpuSetRuntimeDiagnostics?.(diagnosticsStamp === true);
       loaded.semioWgpuSetBootDescriptor?.(JSON.stringify(message.descriptor));
       loaded.semioWgpuSetHostStorage?.(JSON.stringify(message.storage));
@@ -709,16 +723,16 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       if (message.descriptor.hub) loaded.semioWgpuSetHubEnv?.(message.descriptor.hub.hubUrl, message.descriptor.hub.user, message.descriptor.hub.dataDir);
     }, suspensionLedger);
     progress("plugin-graph", 0.25);
-    const catalogRows = admitPluginCatalogV1(message.catalog, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => bootAbort.signal.aborted, progress: ({ completed, total }) => progress("catalog-admission", 0.25 + 0.005 * completed / Math.max(1, total)) });
+    const catalogRows = admitPluginCatalogV1(message.catalog, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => bootAbort.signal.aborted, progress: ({ completed, total }) => progress("catalog-admission", 0.25 + 0.005 * completed / Math.max(1, total)) });
     workerCatalog = pluginCatalogV1(catalogRows);
     explicitPluginModules = admitWgpuPluginModules(message.plugins ?? catalogRows.targets.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), scope.location.href);
-    const prepared = await prepareWgpuPluginModules(workerCatalog, explicitPluginModules, {
+    const prepared = await prepareWgpuPluginModules(workerCatalog, explicitPluginModules, componentPackageReceiptSource, {
       signal: bootAbort.signal,
       deadlineMs: performance.now() + 30000,
       now: () => performance.now(),
       maxDescriptors: explicitPluginModules.length,
       yieldTurn: macrotask,
-      readDescriptor: (id, url, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, componentPackageReceiptSource, signal, heartbeat), suspensionLedger),
+      readDescriptor: (id, url, source, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, source, signal, heartbeat), suspensionLedger),
       progress: (id, index, count) => progress(`plugin-descriptor:${id}`, 0.25 + 0.025 * index / Math.max(1, count)),
     });
     const selection = admitWgpuPluginRegistrySelection(message.pluginRegistrySelection);
@@ -745,6 +759,11 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       if (step.complete) break;
     }
     runtime = declaredStep("renderer-finish", () => bootstrap.finish(), suspensionLedger);
+    const originalFrameOwner=frameOriginalWorkOwner();
+    const originalFrameAdmission=await originalFrameOwner.admit();
+    originalFrameSource=new OriginalBrowserFrameSource(runtime,originalFrameOwner,originalFrameAdmission,()=>BigInt(Math.floor(performance.now()*1000)));
+    (scope as unknown as {semioOriginalFrameClockUs:()=>bigint}).semioOriginalFrameClockUs=()=>originalFrameSource!.operationClockUs();
+    await originalFrameSource.admit();
     frameTurnTasks = declaredStep("frame-turn-task-owner", () => new WorkerTurnTaskQueue(), suspensionLedger);
     frameTurns = declaredStep("frame-turn-scheduler", () => new FrameTurnScheduler(frameTurnTasks!.schedule, runFrameTurn, () => {
       frameInput = undefined;

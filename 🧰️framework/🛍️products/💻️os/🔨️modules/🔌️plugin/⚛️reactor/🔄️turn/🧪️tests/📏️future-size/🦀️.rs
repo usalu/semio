@@ -16,7 +16,7 @@ fn reactor_turn_future_bytes() -> usize {
     let budget = Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 };
     let mut identity = crate::app::artifact_app_laws::fixture_identity();
     let mut context = crate::app::artifact_app_laws::fixture_step_context();
-    let future = crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, budget, &mut identity, &mut context);
+    let future = crate::reactor::poll_kernel(&runtime, &mut None, None, None, budget, &mut identity, &mut context);
     let bytes = size_of_val(&future);
     drop(future);
     bytes

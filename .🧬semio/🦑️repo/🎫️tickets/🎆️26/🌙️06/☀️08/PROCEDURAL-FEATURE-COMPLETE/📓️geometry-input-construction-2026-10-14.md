@@ -1,0 +1,5 @@
+# Original Widget Inputs Construction, 2026-10-14
+
+Same active ticket/goal; Root authorized independent actual production implementation while shared graph blocks proofs. RED schema authored adjacent to the defining WidgetInputs, not a geometry facade. It requires actual firstparty ordered label/value fields, bounded UTF8 producer events, one comparison byte per ordered-map event, original source/operation/generation binding, one original resolved-value header donation with no payload copy, and controlled same-caller source/cancellation closure. Independent Bun/Ajv/Map output fixes EN+DE label order and UTF8.
+
+Constructor will replace the actual WidgetInputs cold label dictionary materialization with its defining paid continuation, keeping cold oracles explicit. Original input value resolution, common OriginalInferencePlan hash/cache/publication, and dynamic WidgetJob admission remain separately necessary; a constructor header donation does not prove those producers. No cold resolve_inputs or widget operator will be wrapped in a numeric paid grant.

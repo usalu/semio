@@ -1,0 +1,42 @@
+{
+  "sourceKind": "original-parent",
+  "loan": [
+    1,
+    4096,
+    65536,
+    262144,
+    64
+  ],
+  "cases": [
+    {
+      "id": "success",
+      "occupied": false,
+      "busy": false,
+      "faultCode": null
+    },
+    {
+      "id": "busy",
+      "occupied": false,
+      "busy": true,
+      "faultCode": "interactive-job.media-completion-busy"
+    },
+    {
+      "id": "duplicate",
+      "occupied": true,
+      "busy": false,
+      "faultCode": "interactive-job.duplicate-output"
+    }
+  ],
+  "deniedAxes": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "pendingSurvivesRejection": true,
+  "sameRecipient": true,
+  "cpuPostedOnce": true,
+  "nativeFaultKept": true,
+  "terminalDropBytes": 0
+}

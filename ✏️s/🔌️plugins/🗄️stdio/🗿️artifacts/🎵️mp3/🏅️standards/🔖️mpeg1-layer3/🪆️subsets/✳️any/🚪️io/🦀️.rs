@@ -241,6 +241,7 @@ pub enum Mp3EncodeAdvance {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum Mp3EncodePhase {
     MeasureId3v2,
     Id3v2Header,
@@ -253,6 +254,7 @@ enum Mp3EncodePhase {
 }
 
 /// 🎚️ Incrementally serializes retained MP3 structure without materializing the encoded file.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Mp3EncodeCursor {
     phase: Mp3EncodePhase,
     index: usize,

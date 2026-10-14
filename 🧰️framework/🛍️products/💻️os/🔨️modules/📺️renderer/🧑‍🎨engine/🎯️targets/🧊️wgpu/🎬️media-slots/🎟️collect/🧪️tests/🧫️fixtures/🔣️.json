@@ -1,0 +1,72 @@
+{
+  "fixture": "accepted-body-composition",
+  "productionCopyBytes": 64,
+  "retirementCopyBytes": [
+    1,
+    3,
+    64
+  ],
+  "cuts": [
+    0,
+    1,
+    13,
+    64
+  ],
+  "source": "accepted-fixture-owner",
+  "token": "800718958dca1f2f962f010771d1641122886abc698934e7787f2166bebd23e4",
+  "nativeResourceCustody": {
+    "arenaSlot": 7,
+    "arenaGeneration": "18446744073709551615",
+    "events": [
+      "producer",
+      "cursor",
+      "canonical",
+      "document-loan",
+      "prepared-loan",
+      "document-return",
+      "prepared-return",
+      "owner-close"
+    ],
+    "loanCounts": [
+      0,
+      0,
+      0,
+      1,
+      2,
+      1,
+      0,
+      0
+    ]
+  },
+  "pendingRenderRetry": {
+    "surface": "941:原本-é-panel",
+    "copyGrants": [
+      1,
+      3,
+      64
+    ],
+    "headerCopyBytes": 0,
+    "operation": 941,
+    "generation": 17
+  },
+  "originalPackCause": {
+    "variant": "malformed",
+    "message": "original cause 源 é",
+    "offset": "18446744073709551615",
+    "donationCopyBytes": 0,
+    "sameOwner": true
+  },
+  "originalTreeProducer": {
+    "source": "unchanged-original-tree",
+    "donationCopyBytes": 0,
+    "capacityDenials": [
+      0,
+      1,
+      3,
+      64
+    ],
+    "censusChildBirths": 0,
+    "censusChildReleases": 0,
+    "shellReleaseEvents": 1
+  }
+}

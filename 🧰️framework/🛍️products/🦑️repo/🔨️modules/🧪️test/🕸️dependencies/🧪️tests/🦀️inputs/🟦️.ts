@@ -64,7 +64,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   for (const entry of Object.values(projects)) put(`${entry.root}/project.json`, JSON.stringify(entry));
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const execute = async () => {
-    const child = Bun.spawn(["node", cli, "run", `${project.name}:test-subject`, "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn(["node", cli, "run", `${project.name}:test-subject`, "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
     assert.equal(code, 0, stdout + stderr);
     return readFileSync(join(root, ".results/test.txt"), "utf8");

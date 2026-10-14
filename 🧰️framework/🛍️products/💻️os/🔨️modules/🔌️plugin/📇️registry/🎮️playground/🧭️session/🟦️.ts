@@ -6,7 +6,7 @@ import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, module
 import { PLAYGROUND_SESSION_ARTIFACT_KEY, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import type { PluginHostMetadata } from "../../🔎️discovery/🟦️.ts";
-import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
+import { type GeneratedCatalogProjection, readGeneratedCatalogProjection,filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
 
 import { generatePluginRegistry, TAXONOMY } from "../../🔎️discovery/🟦️.ts";
 import { generatePlaygroundRegistry } from "../🔎️discovery/🟦️.ts";
@@ -16,8 +16,7 @@ export class SessionScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const variant = args[0];
     if (args.length !== 1 || !variant || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("Usage: session <variant>");
-    const view=registryCatalogInputView(this.repoRoot,TAXONOMY), packages=discoverCatalogPackages(this.repoRoot,TAXONOMY,view), options={packages,view,staleChannel:"exclude" as const};
-    const projection={entries:generatePluginRegistry(this.repoRoot,options),playgrounds:generatePlaygroundRegistry(this.repoRoot,options)};
+    const projection=readGeneratedCatalogProjection();
     if(!projection.playgrounds.some(row => row.variant===variant)) throw new Error("Selected playground requires current compiled descriptors: "+variant);
     const { session } = await stagePlaygroundSession(variant, join(this.root, "dist", "sessions"), projection);
     console.log(`Playground session ${variant}: ${session.plugins.length} plugins staged`);

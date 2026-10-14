@@ -52,7 +52,7 @@ fn nested_key(section: &str, node_key: &str) -> String {
 fn panel(scene_snapshot: &Puzzle3dSceneSnapshot, view: &ViewModel) -> String {
     drain_retired_ui_owners();
     let built = render(scene_snapshot, native(), &TreeWindows::for_body(view, BODY_KEY)).expect("puzzle3d artifact tree assembly");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("puzzle3d artifact tree projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("puzzle3d artifact tree projection");
     drain_retired_ui_owners();
     json
 }
@@ -62,7 +62,7 @@ fn panel(scene_snapshot: &Puzzle3dSceneSnapshot, view: &ViewModel) -> String {
 fn first_paint(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
     drain_retired_ui_owners();
     let built = render(scene_snapshot, native(), &TreeWindows::unhosted()).expect("puzzle3d artifact tree assembly");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("puzzle3d artifact tree projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("puzzle3d artifact tree projection");
     drain_retired_ui_owners();
     json
 }

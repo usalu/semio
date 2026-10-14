@@ -77,7 +77,6 @@ pub enum Advance {
 /// 🧵️ The export of one schedule as a stepped, cancellable job: infer, then encode. Dropping it half-way is the cancellation: the session keeps every node it finished.
 pub struct CsvJob {
     id: String,
-    instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
     analysis: inference::Analysis,
     records_per_step: usize,
     stage: Stage,
@@ -89,17 +88,11 @@ pub struct CsvJob {
 impl CsvJob {
     /// 🏗️ A job exporting schedule `id` of the document that instance `instance` shows.
     pub fn new(id: String, instance: inference::Instance<'_>) -> Self {
-        Self::with_steps(id, instance, NODES_PER_STEP, RECORDS_PER_STEP)
-    }
-
-    /// 🏗️ A job with explicit step sizes (at least one node and one record per step).
-    pub fn with_steps(id: String, instance: inference::Instance<'_>, nodes: usize, records_per_step: usize) -> Self {
-        Self { id, instance: instance.cloned(), analysis: inference::Analysis::new(instance, nodes), records_per_step: records_per_step.max(1), stage: Stage::Open, records: Vec::new(), written: 0, text: String::new() }
+        Self{id,analysis:inference::Analysis::new(instance),records_per_step:RECORDS_PER_STEP,stage:Stage::Open,records:Vec::new(),written:0,text:String::new()}
     }
 
     pub fn cancel(&mut self, snapshot: &ModelSnapshot) {
         self.analysis.cancel(snapshot);
-        self.stage = Stage::Open;
     }
 
     /// 📈️ How much of the encoding is written, in records.
@@ -108,41 +101,12 @@ impl CsvJob {
     }
 
     /// ⏩️ Does one bounded step against `snapshot`.
-    pub fn advance(&mut self, snapshot: &ModelSnapshot) -> Result<Advance, Fault> {
-        if !snapshot.schedules.contains_key(&self.id) {
-            return Err(fault("app.schedule.missing", format!("the model has no schedule '{}' to export", self.id)));
-        }
-        match std::mem::replace(&mut self.stage, Stage::Open) {
-            Stage::Open => {
-                self.stage = Stage::Infer;
-                Ok(Advance::Progress("bim-schedule-csv-infer"))
-            }
-            Stage::Infer => {
-                let progress = self.analysis.advance(snapshot).map_err(|error| fault("app.schedule.inference", format!("the schedule table could not be inferred: {error:?}")))?;
-                if progress.done {
-                    let schedule = &snapshot.schedules[&self.id];
-                    self.records = inference::with_inference(self.instance.as_ref(), snapshot, |found| schedule_records(schedule, found.schedules.get(&self.id).unwrap_or(&Default::default())));
-                    self.stage = Stage::Encode;
-                    Ok(Advance::Progress("bim-schedule-csv-encode"))
-                } else {
-                    self.stage = Stage::Infer;
-                    Ok(Advance::Progress("bim-schedule-csv-infer"))
-                }
-            }
-            Stage::Encode => {
-                let end = (self.written + self.records_per_step).min(self.records.len());
-                let chunk: Vec<_> = self.records[self.written..end].iter().cloned().map(codec::record).collect();
-                self.text.push_str(&codec::document_text(chunk));
-                self.written = end;
-                if end == self.records.len() {
-                    Ok(Advance::Done(std::mem::take(&mut self.text)))
-                } else {
-                    self.stage = Stage::Encode;
-                    Ok(Advance::Progress("bim-schedule-csv-encode"))
-                }
-            }
-        }
+    pub fn advance(&mut self,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<Advance,protocol::InferenceWorkFailure>{
+        if !self.analysis.is_done(){self.analysis.advance(snapshot,cx)?;return Ok(Advance::Progress("bim-schedule-csv-infer"))}
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original schedule projection and CSV output have no funded producer").into())
     }
+
+
 }
 //#endregion 🔖️Job
 
@@ -152,12 +116,15 @@ pub struct ScheduleCsvWork {
     tool_id: &'static str,
     owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     job: Option<CsvJob>,
+    failure:Option<protocol::InferenceWorkFailure>,
+    original:Option<ExportScheduleCsv>,
+    read:Option<store::os_store::snapshot_read::SnapshotRead<ModelSnapshot>>,
 }
 
 impl ScheduleCsvWork {
     /// 🏗️ The work of tool `tool_id`.
     pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, owner, job: None }
+        Self { tool_id, owner, job: None,failure:None,original:None,read:None }
     }
 }
 
@@ -166,33 +133,28 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ScheduleCsvWork {
         self.tool_id
     }
 
+    fn receive_original_command(&mut self,command:&mut BimCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.original.is_some(){return Ok(true)}let BimCommand::ExportScheduleCsv(payload)=command else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original schedule export command changed").into())};let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original=Some(std::mem::replace(payload,ExportScheduleCsv{id:String::new(),pressed:None}));Ok(true)
+    }
+
+    fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.read.is_none()&&self.job.is_none()&&self.failure.is_none()}
+
     fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
         (self.job.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
-        let original: Result<_, Fault> = (|| {
-        let BimCommand::ExportScheduleCsv(payload) = input.command else { return Err(Fault::from("bim-schedule-csv-work-mismatch")) };
-        if self.job.is_none() {
-            let shown = schedule::config::from_snapshot(input.context.and_then(|context| context.window_config.as_ref())).schedule;
-            self.job = Some(CsvJob::new(resolve(&payload.id, &shown, input.snapshot)?, Some(&self.owner)));
-        }
-        let job = self.job.as_mut().ok_or_else(|| Fault::from("bim-schedule-csv-work-terminal"))?;
-        if cx.is_cancelled(){job.cancel(input.snapshot);return Err(fault("bim.export.cancelled", "the schedule export was cancelled"))}
-        cx.consume_fuel(1);
-        Ok(match job.advance(input.snapshot)? {
-            Advance::Progress(stage) => {
-                cx.set_stage(stage);
-                ArtifactCommandWorkStep::Progress { stage, preview: b"{}" }
-            }
-            Advance::Done(text) => {
-                let id = job.id.clone();
-                ArtifactCommandWorkStep::Complete(download(input.snapshot, &id, text))
-            }
-        })
-    
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+        if let Some(original)=protocol::admit_inference_failure(&mut self.failure,cx)?{return Err(original)}
+        if self.failure.is_some(){return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-schedule-csv-infer",preview:b"{}"})}
+        let BimCommand::ExportScheduleCsv(_payload)=input.command else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original BIM schedule export command changed").into())};
+        if self.read.is_none(){self.read=input.snapshot_read.take_current(input.operation.generation,input.operation.canonical_base_revision,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-schedule-csv-infer",preview:b"{}"})}
+        if self.job.is_none(){let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-schedule-csv-infer",preview:b"{}"})}let original=self.original.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original schedule export fields were not received"))?;
+            if original.id.is_empty(){self.failure=Some(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original selected schedule config field has no donating producer").into());return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-schedule-csv-infer",preview:b"{}"})}
+            let original=self.original.take().unwrap();self.job=Some(CsvJob::new(original.id,Some(&self.owner)));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-schedule-csv-infer",preview:b"{}"})}
+        let snapshot=self.read.as_ref().unwrap().get();let job=self.job.as_mut().unwrap();if cx.is_cancelled(){job.cancel(snapshot)}
+        match job.advance(snapshot,cx){Ok(Advance::Progress(stage))=>{cx.set_stage(stage);Ok(ArtifactCommandWorkStep::Progress{stage,preview:b"{}"})},Ok(Advance::Done(text))=>Ok(ArtifactCommandWorkStep::Complete(download(snapshot,&job.id,text))),Err(original)=>{self.failure=Some(original);Ok(ArtifactCommandWorkStep::Progress{stage:"bim-schedule-csv-infer",preview:b"{}"})}}
+
     }
 }
 //#endregion 🔖️Work

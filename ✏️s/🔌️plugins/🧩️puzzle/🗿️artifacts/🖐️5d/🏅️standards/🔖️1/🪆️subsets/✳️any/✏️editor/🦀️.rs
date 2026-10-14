@@ -8408,7 +8408,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         puzzle5d_fault_notices()
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         if let Some(flag) = puzzle5d_flag_value_argument(action) {
             args.and_then(|value| value.get(flag)).and_then(semio_framework_value::DslValue::as_bool).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("puzzle5d.action.flag-value-required"), format!("action '{action}' requires the boolean '{flag}' it sets")))?;
         }
@@ -8531,7 +8533,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let projection = puzzle5d_editor_projection(&doc.snapshot);
         let window_kind = window_ownership::kind_for_view(view_state).unwrap_or_else(|| if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID });
         let window_id = view_state.window_id.as_deref().unwrap_or(window_kind);
@@ -8558,7 +8562,10 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "puzzle5d unknown-body label admission failed")),
         }?;
         Ok(semio_framework_plugin::built_to_component_tree(node))
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let projection = puzzle5d_editor_projection(&doc.snapshot);

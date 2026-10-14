@@ -6,7 +6,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "test-recursive-retirement": "nx run @semio-tech/stdio-pdf-rs:test-recursive-retirement"
+    "test-recursive-retirement": "bun repo run @semio-tech/stdio-pdf-rs:test-recursive-retirement"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

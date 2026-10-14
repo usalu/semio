@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/dsl-derive-rs",
-  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
@@ -12,7 +12,7 @@
       "outputs": []
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
@@ -21,7 +21,7 @@
       "outputs": []
     },
     "check-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
@@ -30,7 +30,7 @@
       "outputs": []
     },
     "generate-schema-index": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
@@ -39,7 +39,7 @@
       "outputs": []
     },
     "preview-schema-index": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
@@ -48,7 +48,7 @@
       "outputs": []
     },
     "check-schema-index": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
@@ -57,7 +57,7 @@
       "outputs": []
     },
     "test-schema-index-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-schema-index-source",
@@ -65,7 +65,7 @@
       }
     },
     "test-source-authority-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source-authority-source",
@@ -78,7 +78,7 @@
       ]
     },
     "test-exports-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-exports-source",
@@ -91,7 +91,7 @@
       ]
     },
     "test-exports": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-exports",
@@ -104,7 +104,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

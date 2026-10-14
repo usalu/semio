@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-renderer-wgpu",
   "version": "0.1.0",
   "description": "framework · raw wgpu WASM renderer for declarative Rust program UI trees",
@@ -10,17 +10,17 @@
     ".": "./📚️library/🟦️.ts"
   },
   "scripts": {
-    "test:browser": "bun nx run @semio-tech/framework-renderer-wgpu:test-browser",
-    "check:wasm": "bun nx run @semio-tech/framework-renderer-wgpu:check-wasm",
-    "browser:dock:acceptance": "bun nx run @semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
-    "browser:media:acceptance": "bun nx run @semio-tech/framework-renderer-wgpu:browser-media-acceptance",
-    "test": "bun nx run @semio-tech/framework-renderer-wgpu:test",
-    "test:browser-worker": "bun nx run @semio-tech/framework-renderer-wgpu:test-browser-worker",
-    "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
-    "browser:embedded:acceptance": "bun nx run @semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
-    "generate:renderer-boot": "bun nx run @semio-tech/framework-renderer-wgpu:generate-renderer-boot",
-    "test:worker-cell": "bun nx run @semio-tech/framework-renderer-wgpu:test-worker-cell",
-    "test-native-entrypoint-catalog": "nx run @semio-tech/framework-renderer-wgpu:test-native-entrypoint-catalog"
+    "test:browser": "bun repo run @semio-tech/framework-renderer-wgpu:test-browser",
+    "check:wasm": "bun repo run @semio-tech/framework-renderer-wgpu:check-wasm",
+    "browser:dock:acceptance": "bun repo run @semio-tech/framework-renderer-wgpu:browser-dock-acceptance",
+    "browser:media:acceptance": "bun repo run @semio-tech/framework-renderer-wgpu:browser-media-acceptance",
+    "test": "bun repo run @semio-tech/framework-renderer-wgpu:test",
+    "test:browser-worker": "bun repo run @semio-tech/framework-renderer-wgpu:test-browser-worker",
+    "wasm": "bun repo run @semio-tech/framework-renderer-wgpu:wasm",
+    "browser:embedded:acceptance": "bun repo run @semio-tech/framework-renderer-wgpu:browser-embedded-acceptance",
+    "generate:renderer-boot": "bun repo run @semio-tech/framework-renderer-wgpu:generate-renderer-boot",
+    "test:worker-cell": "bun repo run @semio-tech/framework-renderer-wgpu:test-worker-cell",
+    "test-native-entrypoint-catalog": "bun repo run @semio-tech/framework-renderer-wgpu:test-native-entrypoint-catalog"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

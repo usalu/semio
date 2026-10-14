@@ -47,7 +47,7 @@ fn hex32(value: String) -> [u8; 32] {
 }
 
 async fn open_live(bytes: &[u8]) -> (WasmtimeRuntime, GuestInstance, ActorInstanceLifetime) {
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("shared Wasmtime engine");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("shared Wasmtime engine");
     let package = PackageRef { package: PackageId("semio:gis".into()), hash: PackageHash(*semio_framework_hash::hash(bytes).as_bytes()) };
     let compiled = runtime.compile(&package, bytes).await.expect("genuine GIS component compiles");
     let mut instance = runtime.instantiate(&compiled, ActorId(1), &[], &budget()).await.expect("genuine GIS component instantiates");

@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/ui-styling-py",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts generate"
@@ -15,7 +15,7 @@
       ]
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ../../🏗️builder/🐍️python/📜️script.ts build"
@@ -47,7 +47,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test"

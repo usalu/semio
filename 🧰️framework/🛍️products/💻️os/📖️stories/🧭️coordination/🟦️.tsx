@@ -1,4 +1,4 @@
-import { composeSpecificOsCatalogV1 } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
+import type {NativeCatalogV1} from "../../🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 // #region 🧲️Header
 // 💻️ 🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx
 // Specs: Boot `FrameworkOsShell` inside Storybook's own React tree, filtered to one plugin from the generated registry.
@@ -8,12 +8,12 @@ import { composeSpecificOsCatalogV1 } from "../../../../../✏️s/🧑‍💻de
 
 import { useEffect, useMemo, useState } from "react";
 import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "@semio-tech/framework-renderer-react";
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 import { createBrowserStoragePort } from "@semio-tech/framework";
 
-export { PLUGIN_BUILD_TARGETS };
-export type { PluginBuildTarget };
+import type { PluginBuildTarget } from "../../🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import type {pluginCatalogV1} from "../../🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+export type StoryCatalogV1={readonly nativeCatalog?:NativeCatalogV1;readonly targets:readonly PluginBuildTarget[];readonly moduleUrl:(id:string)=>string;readonly catalog:ReturnType<typeof pluginCatalogV1>};
 
 // #region 🔖️ArtifactProbe
 /** 🔍️ HEAD-probes a plugin's module URL; `undefined` while probing, then true/false. Never blocks on a cargo build — a missing artifact just renders an instruction panel. */
@@ -35,6 +35,7 @@ function usePluginArtifactAvailable(moduleUrl: string): boolean | undefined {
 
 // #region 🔖️OsBootHost
 export type OsBootHostProps = {
+  readonly inventory:StoryCatalogV1;
   /** Registry `pluginId`, e.g. `"s"`, `"puzzle"`, `"gis"`. Also used as the shell's `pluginFilter`. */
   readonly plugin: string;
   readonly appId?: string;
@@ -42,17 +43,17 @@ export type OsBootHostProps = {
 };
 
 /** 🖥️ One entry from `PLUGIN_BUILD_TARGETS` resolved to its dev-build module URL, mirroring `framework/os/dev/js/index.ts`. */
-function resolveTargetPlugin(pluginId: string): PluginBuildTarget | undefined {
-  return PLUGIN_BUILD_TARGETS.find((t) => t.pluginId === pluginId);
+function resolveTargetPlugin(pluginId: string, inventory:StoryCatalogV1): PluginBuildTarget | undefined {
+  return inventory.targets.find((t) => t.pluginId === pluginId);
 }
 
 /** 🖥️ Boots the real `FrameworkOsShell` filtered to one plugin — the app-boot story mechanism
  * "filters for starting apps" refers to. Keyed by `plugin` so switching the Storybook `plugin` control
  * fully remounts the shell (plugin runtimes are module-singletons and must not be reused across boots). */
-export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
-  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
-  const target = resolveTargetPlugin(plugin);
-  const moduleUrl = target ? pluginModuleUrl(target.pluginId) : undefined;
+export function OsBootHost({ plugin, appId, locks, inventory }: OsBootHostProps) {
+  const catalog = inventory.catalog;
+  const target = resolveTargetPlugin(plugin,inventory);
+  const moduleUrl = target ? inventory.moduleUrl(target.pluginId) : undefined;
   const available = usePluginArtifactAvailable(moduleUrl ?? "");
   const resolvedLocks = useMemo(() => resolveShellLocks(locks), [locks]);
 
@@ -75,7 +76,7 @@ export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
       <div className="p-4 text-sm">
         <p className="font-medium text-warning">plugin artifact missing: {target.pluginId}</p>
         <p className="mt-1 opacity-80">
-          {moduleUrl} returned a non-OK response. Build it once with <code>bun nx run {target.pluginId}:build-wasm</code> (or the matching wasm target for{" "}
+          {moduleUrl} returned a non-OK response. Build it once with <code>bun repo run {target.pluginId}:build-wasm</code> (or the matching wasm target for{" "}
           <code>{target.cratePath}</code>) — this story never triggers a cargo build itself.
         </p>
       </div>
@@ -91,6 +92,7 @@ export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
 
 // #region 🔖️WgpuBootHost
 export type WgpuBootHostProps = {
+  readonly inventory:StoryCatalogV1;
   /** Registry `pluginId` passed through to the wgpu renderer as its `pluginFilter`. */
   readonly plugin: string;
 };
@@ -121,9 +123,9 @@ function navigatorGpuUnavailableReason(): string | undefined {
 /** 🧊️ Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry program,
  * with a graceful fallback when WebGPU itself is unavailable (headless CI Chromium without `--enable-unsafe-webgpu`,
  * Safari/Firefox, …) and when the plugin has no prebuilt artifact — mirrors {@link OsBootHost}'s artifact probe. */
-export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
-  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
-  const target = resolveTargetPlugin(plugin);
+export function WgpuBootHost({ plugin, inventory }: WgpuBootHostProps) {
+  const catalog = inventory.catalog;
+  const target = resolveTargetPlugin(plugin,inventory);
   const gpuUnavailableReason = navigatorGpuUnavailableReason();
   const [state, setState] = useState<WgpuBootState>({ kind: "booting" });
 
@@ -140,7 +142,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
     let dispose: (() => void) | undefined;
     setState({ kind: "booting" });
     (async () => {
-      const moduleUrl = pluginModuleUrl(target.pluginId);
+      const moduleUrl = inventory.moduleUrl(target.pluginId);
       const artifactRes = await fetch(moduleUrl, { method: "HEAD" }).catch(() => undefined);
       if (cancelled) return;
       if (!artifactRes?.ok) {
@@ -149,7 +151,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
       }
       const [{ bootFrameworkOsWgpu }, rendererModuleUrl] = await Promise.all([import("@semio-tech/framework-renderer-wgpu"), resolveWgpuRendererModuleUrl()]);
       if (cancelled) return;
-      dispose = await bootFrameworkOsWgpu({ plugin: target.pluginId, plugins: [{ pluginId: target.pluginId, moduleUrl }], rendererModuleUrl });
+      dispose = await bootFrameworkOsWgpu({ catalog:inventory.catalog,nativeCatalog:inventory.nativeCatalog, plugin: target.pluginId, plugins: [{ pluginId: target.pluginId, moduleUrl }], rendererModuleUrl });
       if (cancelled) {
         dispose();
         return;
@@ -172,7 +174,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
       <div className="p-4 text-sm">
         <p className="font-medium text-warning">plugin artifact missing: {plugin}</p>
         <p className="mt-1 opacity-80">
-          Build it once with <code>bun nx run {plugin}:build-wasm</code> — this story never triggers a cargo build itself.
+          Build it once with <code>bun repo run {plugin}:build-wasm</code> — this story never triggers a cargo build itself.
         </p>
       </div>
     );

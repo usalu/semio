@@ -70,26 +70,24 @@ pub(crate) enum ActiveArtifactEnvelopeDecodeState {
 }
 
 /// 🎟️ Keeps original worker receipts and child terminal evidence through one admitted lifecycle turn.
-pub(crate) fn original_worker_lifecycle(demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(RetainedCloneGrant)->(semio_framework_job::WorkerJobCloseStep,bool))->Result<PluginLifecycleStep,Fault>{
-    crate::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|{
-        let (step,terminal)=owner(grant);
+pub(crate) fn original_worker_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job::WorkerJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        let(step,terminal)=cx.with_retained_loan(grant,owner)?;
         let step=match step{
             semio_framework_job::WorkerJobCloseStep::Pending{progress}if progress.fits(grant)=>PluginLifecycleStep::Progress(progress),
             semio_framework_job::WorkerJobCloseStep::Complete{progress}if progress.fits(grant)&&terminal=>PluginLifecycleStep::Progress(progress),
             semio_framework_job::WorkerJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason},
-            semio_framework_job::WorkerJobCloseStep::Refused{kind,progress}=>return Err(plugin_sdk_fault(format!("original worker retirement refused: {kind:?}")).with_retained_progress(progress)),
-            _=>return Err(plugin_sdk_fault("original worker retirement violated its grant or terminal witness").with_retained_progress(step.progress()))
+            _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original worker retirement violated its grant or terminal witness").with_retained_progress(step.progress()).into())
         };Ok((step,false))
     })
 }
 
-/// 🎟️ Retains the exact admission-rejected owner while checking all original child currencies.
-pub(crate) fn original_rejection_lifecycle(demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(RetainedCloneGrant)->(semio_framework_job::InteractiveJobCloseStep,bool))->Result<PluginLifecycleStep,Fault>{
-    crate::bounded_ownership::runtime_lifecycle_step(demand,grant,|grant|{
-        let (step,terminal)=owner(grant);let step=match step.admit(grant,terminal){
+/// 🎟️ Retains the whole original rejected source through its actual context and paid terminal witness.
+pub(crate) fn original_rejection_lifecycle(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,grant:RetainedCloneGrant,reason:&'static str,owner:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_job::InteractiveJobCloseStep,bool),semio_framework_job::OriginalTurnFailure>)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
+    crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
+        let(step,terminal)=cx.with_retained_loan(grant,owner)?;let step=match step.admit(grant,terminal)?{
             semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),
             semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason},
-            semio_framework_job::InteractiveJobCloseStep::Refused{kind,progress}=>return Err(plugin_sdk_fault(format!("original rejection retirement refused: {kind:?}")).with_retained_progress(progress))
         };Ok((step,false))
     })
 }
@@ -114,19 +112,11 @@ where
     P: Send + 'static,
     Mutation: Send + 'static,
 {
-    pub(crate) fn admitted(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, decode: store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>, completion: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion>, retained:RetainedCloneGrant) -> Self {
+    pub(crate) fn admitted(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, decode: store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>, completion: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion>, source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation)) -> Self {
         let cancel = semio_framework_job::CancelToken::root_now();
-        let params = semio_framework_job::BatchJobParams {
-            operation,
-            generation,
-            cancel: cancel.clone(),
-            config: semio_framework_job::BatchDriveConfig { retained, site: "artifact_envelope_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
-            now_us: semio_framework_job::default_now_us,
-        };
-        let (session, session_rejected) = match crate::reserved_job_session::admit_mounted(decode, params, retained) {
-            Ok(session) => (Some(session), None),
-            Err(rejected) => (None, Some(rejected)),
-        };
+        let session=None;
+        let session_rejected=Some(crate::reserved_job_session::RefusedWorkerSource::pending(decode,source_identity));
+
         Self {
             operation,
             generation,
@@ -177,7 +167,7 @@ where
     pub(crate) fn drive_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         if let Some(rejected) = self.session_rejected.as_ref() {
-            return rejected.retirement_demands(body);
+            return if rejected.admission_pending()&&!self.cancel.is_cancelled_now(){rejected.admission_demands()}else{rejected.retirement_demands(body)};
         }
         if let Some(rejected) = self.rejected.as_ref() {
             return store::os_store::snapshot_read::artifact_retirement_box_demands(rejected, body);
@@ -201,28 +191,35 @@ where
     /// with the outcome, so it is reported here before the close loop releases it.
     pub(crate) fn drive(
         &mut self,
-        _pool: &semio_framework_async::WorkerPool,
+        cx: &mut semio_framework_job::StepContext<'_>,
         live_generation: semio_framework_job::Generation,
         completed: &store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<P, Mutation>,
         grant: RetainedCloneGrant,
-    ) -> Result<PluginLifecycleStep, Fault> {
+    ) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if let Some(rejected)=self.session_rejected.as_mut(){
+            if rejected.admission_pending()&&!cx.is_cancelled()&&!self.cancel.is_cancelled_now(){
+                let config=semio_framework_job::BatchDriveConfig{retained:grant,site:"artifact_envelope_decode",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
+                let before=cx.retained_progress();
+                if let Some(session)=rejected.admit_pending(config,cx)?{*self.session=Some(session);drop(self.session_rejected.take());}
+                return Ok(PluginLifecycleStep::Progress(crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+            }
+
             if rejected.terminal_is_empty(){
                 let bytes=size_of_val(rejected);if grant.maximum_copy_bytes<bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-                drop(self.session_rejected.take());self.state=ActiveArtifactEnvelopeDecodeState::ClosingFault;
+                drop(self.session_rejected.take());self.state=if cx.is_cancelled()||self.cancel.is_cancelled_now(){ActiveArtifactEnvelopeDecodeState::ClosingCancelled}else{ActiveArtifactEnvelopeDecodeState::ClosingFault};
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=rejected.retirement_demands(grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-            return original_rejection_lifecycle(demand,grant,"envelope rejection awaits its original worker",|grant|{let step=rejected.close_step(grant);(step,rejected.terminal_is_empty())});
+            let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
+            return original_rejection_lifecycle(cx,demand,grant,"envelope rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});
         }
         if let Some(rejected)=self.rejected.as_mut(){
-            let demand=if rejected.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>()+size_of::<ActiveArtifactEnvelopeDecodeState>(),release_bytes:size_of_val(&**rejected),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:rejected.next_copy_byte_demand().map_err(|error|plugin_sdk_fault(error.to_string()))?,capacity_bytes:rejected.next_capacity_byte_demand(grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?,release_bytes:rejected.next_release_byte_demand().map_err(|error|plugin_sdk_fault(error.to_string()))?,depth:rejected.next_depth_demand().map_err(|error|plugin_sdk_fault(error.to_string()))?.checked_add(1).ok_or_else(||plugin_sdk_fault("envelope original rejected frame depth overflow"))?}};
+            let demand=if rejected.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<Box<dyn store::ErasedSnapshotRetirement>>>()+size_of::<ActiveArtifactEnvelopeDecodeState>(),release_bytes:size_of_val(&**rejected),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:rejected.next_copy_byte_demand()?,capacity_bytes:rejected.next_capacity_byte_demand(grant.maximum_copy_bytes)?,release_bytes:rejected.next_release_byte_demand()?,depth:rejected.next_depth_demand()?.checked_add(1).ok_or_else(||plugin_sdk_fault("envelope original rejected frame depth overflow"))?}};
             if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
             if rejected.terminal_is_empty(){drop(self.rejected.take());self.state=ActiveArtifactEnvelopeDecodeState::Complete;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            let step=rejected.close_step(child).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-            let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,rejected.terminal_is_empty(),"envelope original rejected frame").map_err(|error|plugin_sdk_fault(error.to_string()))?;
+            let step=rejected.close_step(child)?;
+            let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,rejected.terminal_is_empty(),"envelope original rejected frame")?;
             return Ok(PluginLifecycleStep::retained(step,false));
         }
         if self.outcome_pending{
@@ -244,8 +241,8 @@ where
                 drop(self.session.take());self.terminal_state=None;if self.state!=ActiveArtifactEnvelopeDecodeState::Ready{self.state=target;}
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope original worker quote awaits its handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(plugin_sdk_fault(error.to_string()))};
-            return original_worker_lifecycle(demand,grant,"envelope original terminal worker remains contended",|grant|{let step=session.close_step(grant);(step,session.terminal_is_empty())});
+            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope original worker quote awaits its handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
+            return original_worker_lifecycle(cx,demand,grant,"envelope original terminal worker remains contended",|cx|{let step=session.close_step(cx)?;Ok((step,session.terminal_is_empty()))});
         }
         if grant.maximum_copy_bytes<size_of::<ActiveArtifactEnvelopeDecodeState>(){return Ok(PluginLifecycleStep::Progress(Default::default()));}
         if live_generation!=self.generation&&self.state==ActiveArtifactEnvelopeDecodeState::Active{self.cancel.cancel_now();}
@@ -257,10 +254,10 @@ where
         if self.state==ActiveArtifactEnvelopeDecodeState::Complete{return Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope cancellation and completion aliases retain their original close authority"});}
         if self.state==ActiveArtifactEnvelopeDecodeState::Ready&&self.session.is_none(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"decoded envelope awaits exact consumer publication"});}
         let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("envelope live decode lost its original worker session"))?;
-        match session.pump_one_for_interactive_turn(grant){
+        match session.pump_one_for_interactive_turn(cx){
             Ok(semio_framework_job::WorkerJobPoll::Outcome|semio_framework_job::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"envelope worker original receipt awaits its sole recipient"});};
-                if !progress.fits(issued)||!progress.fits(grant){return Err(plugin_sdk_fault("envelope worker original receipt exceeded its received turn").with_retained_progress(progress));}
+                if !progress.fits(issued)||!progress.fits(grant){return Err(plugin_sdk_fault("envelope worker original receipt exceeded its received turn").with_retained_progress(progress).into());}
                 self.terminal_state=match session.checked_out_outcome(){
                     Ok(Some(semio_framework_job::JobOutcomeView::Complete{..}))if self.completion.ticket().is_some()=>{self.state=ActiveArtifactEnvelopeDecodeState::Ready;Some(ActiveArtifactEnvelopeDecodeState::Ready)},
                     Ok(Some(semio_framework_job::JobOutcomeView::Cancelled{..}))=>Some(ActiveArtifactEnvelopeDecodeState::ClosingCancelled),
@@ -273,7 +270,7 @@ where
             }
             Ok(semio_framework_job::WorkerJobPoll::Submitted|semio_framework_job::WorkerJobPoll::Idle)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
             Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope worker awaits its original mounted wake"}),
-            Err(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"envelope worker awaits original scheduler authority"})
+            Err(failure)=>Err(failure.into())
         }
     }
 
@@ -654,6 +651,8 @@ where
     pub(crate) member_ingress: ManuallyDrop<Option<OwnedDocumentMemberIngressRegistry>>,
     active_member_ingress: ManuallyDrop<Option<OwnedDocumentMemberIngress>>,
     pub(crate) active_member_open: ManuallyDrop<Option<M::Open>>,
+    member_open_admission: ManuallyDrop<Option<store::MemberOpenSourceAdmission>>,
+    opened_member: ManuallyDrop<Option<M>>,
     pub(crate) candidate_children: ManuallyDrop<Option<ChildMemberRegistry<M>>>,
     pub(crate) candidate_content: ManuallyDrop<Option<ChildContentView>>,
     candidate_content_retirement: ManuallyDrop<Option<ChildContentRetirement>>,
@@ -682,20 +681,12 @@ where
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     M: SpaceMember + MemberFactory,
 {
-    pub(crate) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,job:ArtifactStoreInitializationJob<P,Mutation>,retained:RetainedCloneGrant)->Self {
+    pub(crate) fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, base_child_content_generation:u64,job:ArtifactStoreInitializationJob<P,Mutation>,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self {
         let cancel = semio_framework_job::CancelToken::root_now();
         let cancel_signal = job.cancel_signal();
-        let params = semio_framework_job::BatchJobParams {
-            operation,
-            generation,
-            cancel: semio_framework_job::CancelToken::root_now(),
-            config: semio_framework_job::BatchDriveConfig { retained, site: "artifact_store_replacement", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
-            now_us: semio_framework_job::default_now_us,
-        };
-        let (session, session_rejected) = match crate::reserved_job_session::admit_mounted(job, params, retained) {
-            Ok(session) => (Some(session), None),
-            Err(rejected) => (None, Some(rejected)),
-        };
+        let session=None;
+        let session_rejected=Some(crate::reserved_job_session::RefusedWorkerSource::pending(job,source_identity));
+
         Self {
             operation,
             generation,
@@ -714,6 +705,8 @@ where
             member_ingress: ManuallyDrop::new(None),
             active_member_ingress: ManuallyDrop::new(None),
             active_member_open: ManuallyDrop::new(None),
+            member_open_admission: ManuallyDrop::new(None),
+            opened_member: ManuallyDrop::new(None),
             candidate_children: ManuallyDrop::new(Some(ChildMemberRegistry::new())),
             candidate_content: ManuallyDrop::new(Some(ChildContentView::EMPTY)),
             candidate_content_retirement: ManuallyDrop::new(None),
@@ -811,7 +804,7 @@ where
         let ingress = if let Some(ingress) = self.active_member_ingress.as_ref() { Some(ingress) } else {
             self.member_ingress.as_ref().and_then(|registry| registry.entry(self.next_member_ordinal))
         };
-        let Some(request) = ingress.and_then(|ingress| ingress.request.as_ref()) else { return Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }); };
+        let Some(request) = self.member_open_admission.as_ref().and_then(store::MemberOpenSourceAdmission::request).or_else(||ingress.and_then(|ingress| ingress.request.as_ref())) else { return Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }); };
         let demand = M::open_birth_demand(request)?;
         if demand.capacity_bytes > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES || demand.depth > 64 { return Err(store::MemberOpenDiagnostic::Capacity); }
         Ok(demand)
@@ -846,7 +839,7 @@ where
         };
         if let Some(rejected) = self.session_rejected.as_ref() {
             if rejected.terminal_is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(rejected), ..item }); }
-            return rejected.retirement_demands(body);
+            return if rejected.admission_pending()&&!self.cancelled(){rejected.admission_demands()}else{rejected.retirement_demands(body)};
         }
         let Some(session) = self.session.as_ref() else { return Ok(item) };
         if self.outcome_pending { return session_demand(session); }
@@ -862,7 +855,8 @@ where
     pub(crate) fn member_open_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         let refused = |_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member open birth demand exceeds its fixed authority");
-        if self.active_member_open.is_some() { return Ok(RetirementDemand { depth: 2, ..item }); }
+        if let Some(open)=self.active_member_open.as_ref(){return Ok(RetirementDemand{copy_bytes:store::MemberOpenOperation::next_copy_byte_demand(open)?,capacity_bytes:store::MemberOpenOperation::next_capacity_byte_demand(open,body)?,release_bytes:store::MemberOpenOperation::next_release_byte_demand(open)?,depth:store::MemberOpenOperation::next_depth_demand(open)?.max(1)})}
+        if self.opened_member.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<M>(),depth:1,..Default::default()})}
         if self.active_member_ingress.is_none() {
             if let Some(registry) = self.member_ingress.as_ref() {
                 if self.next_member_ordinal == registry.expected { return registry.retirement_demands(body); }
@@ -884,12 +878,21 @@ where
         let idle = RetainedCloneProgress::default();
         let item = RetainedCloneProgress { copied_items: 1, ..idle };
         if grant.maximum_items == 0 { return Ok(PluginLifecycleStep::Progress(idle)); }
+        if self.opened_member.is_some(){
+            if let Some(open)=self.active_member_open.as_mut(){
+                if store::MemberOpenOperation::terminal_is_empty(open){drop(self.active_member_open.take());return Ok(PluginLifecycleStep::Progress(item))}
+                let parent=cx.original_source_parent()?;let before=cx.retained_progress();cx.with_retained_loan(grant,|same|store::MemberOpenOperation::close_step(open,parent,same))?;
+                return Ok(PluginLifecycleStep::Progress(crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+            }
+            let member=self.opened_member.take().expect("ready member remains retained until its exact source loan returns");
+            return self.publish_opened_member(member);
+        }
         if self.active_member_open.is_some() {
             if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_identity()) {
                 return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "active member open lost its exact retained ingress identity").into());
             }
             let before=cx.retained_progress();
-            let step=cx.with_retained_loan(grant,|same|Ok(store::MemberOpenOperation::step(self.active_member_open.as_mut().expect("active member open remains retained"),same,grant)))?;
+            let mut admitted=None;cx.with_retained_loan(grant,|same|{admitted=Some(store::MemberOpenOperation::step(self.active_member_open.as_mut().expect("active member open remains retained"),same,grant)?);Ok(())})?;let step=admitted.expect("original member turn returned its admitted step");
             let after=cx.retained_progress();
             let delta=|end:usize,start:usize|end.checked_sub(start).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member receipt moved before its initiating recipient"));
             let spent=RetainedCloneProgress{copied_items:delta(after.copied_items,before.copied_items)?,copied_bytes:delta(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:delta(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:delta(after.released_bytes,before.released_bytes)?};
@@ -901,17 +904,50 @@ where
                     self.state = ActiveArtifactStoreReplacementState::ClosingRejectedMember;
                     Ok(PluginLifecycleStep::Progress(spent))
                 }
-                store::MemberOpenStep::Ready(member) => {
-                    if !store::MemberOpenOperation::terminal_is_empty(self.active_member_open.as_ref().expect("ready member open remains retained")) {
-                        *self.retiring_child = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).map(|(_, reference, owner)| ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                        return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "ready member open retained nonterminal ownership").into());
-                    }
-                    drop(self.active_member_open.take());
+                store::MemberOpenStep::Ready(member) => {*self.opened_member=Some(member);Ok(PluginLifecycleStep::Progress(spent))}
+            };
+        }
+        if self.active_member_ingress.is_none() {
+            let Some(registry) = self.member_ingress.as_mut() else {
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opening member set lost its exact ingress registry").into());
+            };
+            if self.next_member_ordinal == registry.expected {
+                if !registry.sealed || registry.len != 0 {
+                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member set did not consume every sealed ordinal").into());
+                }
+                let step = registry.close_step(grant)?;
+                if !matches!(step, RetainedCloneStep::Complete(_)) { return Ok(PluginLifecycleStep::Progress(step.progress())); }
+                if !registry.terminal_is_empty() { return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member registry returned false terminal").into()); }
+                let registry = self.member_ingress.take().expect("terminal member ingress registry remains retained");
+                drop(registry);
+                self.closure = Some(store::OwnedDocumentClosure::new(self.operation, self.generation, self.candidate_source_generation, self.expires_at_us));
+                self.state = ActiveArtifactStoreReplacementState::ValidatingClosure;
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() }));
+            }
+            let Some(ingress) = registry.take(self.next_member_ordinal) else {
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "sealed member set lost an exact ordinal before open").into());
+            };
+            *self.active_member_ingress = Some(ingress);
+        }
+        if self.member_open_admission.is_none(){
+            let request=self.active_member_ingress.as_mut().and_then(|ingress|ingress.request.take()).ok_or_else(||self.refuse_invariant(ArtifactStoreReplacementLeg::Members,"member ingress lost its exact retained open request"))?;
+            *self.member_open_admission=Some(store::MemberOpenSourceAdmission::new(request));
+            return Ok(PluginLifecycleStep::Progress(item));
+        }
+        let parent=cx.original_source_parent()?;
+        let before=cx.retained_progress();
+        let admission=self.member_open_admission.as_mut().expect("original member source remains retained through constructor admission");
+        let _=M::begin_open(admission,&mut self.active_member_open,cx,parent)?;
+        if admission.terminal_is_empty(){drop(self.member_open_admission.take());}
+        Ok(PluginLifecycleStep::Progress(crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+    }
+
+    fn publish_opened_member(&mut self,member:M)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
                     let (ordinal, reference, owner) = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).expect("active member identity was verified before its exact open step");
                     if ordinal != self.next_member_ordinal || member.artifact_ref().as_ref() != Some(&reference) || member.owner_ref().as_ref() != Some(&owner) {
                         *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
                         self.refuse(ArtifactStoreReplacementRefusal::MemberIdentityMismatch { ordinal, expected: self.next_member_ordinal });
-                        return Ok(PluginLifecycleStep::Progress(spent));
+                        return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
                     }
                     let Some(candidate) = self.candidate_children.as_mut() else {
                         *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
@@ -940,49 +976,8 @@ where
                     drop(ingress);
                     self.next_member_ordinal += 1;
                     self.candidate_source_generation = candidate_source_generation;
-                    Ok(PluginLifecycleStep::Progress(spent))
-                }
-            };
-        }
-        if self.active_member_ingress.is_none() {
-            let Some(registry) = self.member_ingress.as_mut() else {
-                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opening member set lost its exact ingress registry").into());
-            };
-            if self.next_member_ordinal == registry.expected {
-                if !registry.sealed || registry.len != 0 {
-                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member set did not consume every sealed ordinal").into());
-                }
-                let step = registry.close_step(grant)?;
-                if !matches!(step, RetainedCloneStep::Complete(_)) { return Ok(PluginLifecycleStep::Progress(step.progress())); }
-                if !registry.terminal_is_empty() { return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member registry returned false terminal").into()); }
-                let registry = self.member_ingress.take().expect("terminal member ingress registry remains retained");
-                drop(registry);
-                self.closure = Some(store::OwnedDocumentClosure::new(self.operation, self.generation, self.candidate_source_generation, self.expires_at_us));
-                self.state = ActiveArtifactStoreReplacementState::ValidatingClosure;
-                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() }));
-            }
-            let Some(ingress) = registry.take(self.next_member_ordinal) else {
-                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "sealed member set lost an exact ordinal before open").into());
-            };
-            *self.active_member_ingress = Some(ingress);
-        }
-        if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_request()) {
-            return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member ingress lost its exact retained open request").into());
-        }
-        let ingress = self.active_member_ingress.as_mut().expect("funded factory retains its exact ingress");
-        match M::begin_open(&mut ingress.request, grant) {
-            Ok(Some(open)) => {
-                *self.active_member_open = Some(open);
-                Ok(PluginLifecycleStep::Progress(item))
-            }
-            Ok(None) => Ok(PluginLifecycleStep::Progress(idle)),
-            Err(_) => {
-                let ordinal = self.next_member_ordinal;
-                self.refuse(ArtifactStoreReplacementRefusal::MemberFactoryRefused { ordinal });
-                Ok(PluginLifecycleStep::Progress(item))
-            }
-        }
-    }
+                    Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+                    }
 
     pub(crate) fn drive_closure(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < store::MEMBER_OPEN_IDENTITY_BYTES {
@@ -1099,6 +1094,8 @@ where
         let parent = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "replacement original parent depth overflowed"))?; Ok(demand) };
         let header = |bytes| RetirementDemand { copy_bytes: bytes, depth: 1, ..Default::default() };
         if self.closure.is_some() { return Ok(header(size_of_val(&self.closure))); }
+        if let Some(admission)=self.member_open_admission.as_ref(){return if admission.terminal_is_empty(){Ok(header(size_of_val(&*self.member_open_admission)))}else{parent(admission.retirement_demands(body)?)}}
+        if self.opened_member.is_some()&&self.active_member_open.is_none(){return Ok(header(size_of_val(&*self.opened_member)+size_of::<ChildMemberRetirement<M>>()))}
         if let Some(open) = self.active_member_open.as_ref() {
             return if store::MemberOpenOperation::terminal_is_empty(open) { Ok(header(size_of_val(&*self.active_member_open))) } else { parent(RetirementDemand { copy_bytes: store::MemberOpenOperation::next_copy_byte_demand(open)?, capacity_bytes: store::MemberOpenOperation::next_capacity_byte_demand(open,body)?, release_bytes: store::MemberOpenOperation::next_release_byte_demand(open)?, depth: store::MemberOpenOperation::next_depth_demand(open)? }) };
         }
@@ -1144,10 +1141,19 @@ where
             Ok(PluginLifecycleStep::Progress(admitted.progress()))
         };
         if self.closure.is_some() { drop(self.closure.take()); return Ok(paid()); }
+        if let Some(admission)=self.member_open_admission.as_mut(){
+            if admission.terminal_is_empty(){drop(self.member_open_admission.take());return Ok(paid())}
+            let original=cx.original_source_parent()?;let step=cx.with_retained_loan(child,|same|admission.close_step(original,same))?;return parent(step,admission.terminal_is_empty());
+        }
         if let Some(open) = self.active_member_open.as_mut() {
             if store::MemberOpenOperation::terminal_is_empty(open) { drop(self.active_member_open.take()); return Ok(paid()); }
-            let step=cx.with_retained_loan(child,|same|store::MemberOpenOperation::close_step(open,same))?;
+            let step=cx.with_retained_loan(child,|same|store::MemberOpenOperation::close_step(open,same.original_source_parent()?,same))?;
             return parent(step,store::MemberOpenOperation::terminal_is_empty(open));
+        }
+        if self.opened_member.is_some(){
+            let (_,reference,owner)=self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).ok_or_else(||plugin_sdk_fault("ready rejected member lost its exact ingress identity"))?;
+            let member=self.opened_member.take().expect("original ready member remains retained until its identity is admitted");
+            *self.retiring_child=Some(ChildMemberRetirement::new(ChildMemberEntry{reference,owner,member}));return Ok(paid());
         }
         if let Some(ingress) = self.active_member_ingress.as_mut() {
             if ingress.terminal_is_empty() { drop(self.active_member_ingress.take()); return Ok(paid()); }
@@ -1220,17 +1226,25 @@ where
         Ok(paid())
     }
 
-    pub(crate) fn drive_initializer(&mut self, _pool: &semio_framework_async::WorkerPool, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(crate) fn drive_initializer(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         if self.state!=ActiveArtifactStoreReplacementState::Initializing{return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer awaits its actual replacement stage"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+        let business_cancelled=self.cancelled();
         if let Some(rejected)=self.session_rejected.as_mut(){
+            if rejected.admission_pending()&&!cx.is_cancelled()&&!business_cancelled{
+                let config=semio_framework_job::BatchDriveConfig{retained:grant,site:"artifact_store_replacement",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
+                let before=cx.retained_progress();
+                if let Some(session)=rejected.admit_pending(config,cx)?{*self.session=Some(session);drop(self.session_rejected.take());}
+                return Ok(PluginLifecycleStep::Progress(crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
+            }
+
             if rejected.terminal_is_empty(){
                 let bytes=size_of_val(rejected);if grant.maximum_copy_bytes<bytes{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-                drop(self.session_rejected.take());self.refuse(ArtifactStoreReplacementRefusal::InitializerAdmissionRejected);
+                drop(self.session_rejected.take());self.refuse(if cx.is_cancelled()||business_cancelled{ArtifactStoreReplacementRefusal::Cancelled}else{ArtifactStoreReplacementRefusal::InitializerAdmissionRejected});
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=rejected.retirement_demands(grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-            return original_rejection_lifecycle(demand,grant,"store initializer rejection awaits its original worker",|grant|{let step=rejected.close_step(grant);(step,rejected.terminal_is_empty())});
+            let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
+            return original_rejection_lifecycle(cx,demand,grant,"store initializer rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});
         }
         if self.outcome_pending{
             let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("store initializer original outcome acknowledgement lost its session"))?;
@@ -1252,7 +1266,7 @@ where
                     Some((2, initializer_code)) => {
                         let accepted = session.checked_out_job_mut().is_some_and(ArtifactStoreInitializationJob::accept_terminal_failure);
                         if !accepted {
-                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority"));
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority").into());
                         }
                         self.refusal.get_or_insert(ArtifactStoreReplacementRefusal::InitializerFailed(initializer_code));
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::RetiringRejectedMembers);
@@ -1277,29 +1291,29 @@ where
                 drop(self.session.take());self.terminal_target=None;self.state=target;
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
             }
-            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer original quote awaits worker handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(plugin_sdk_fault(error.to_string()))};
-            return original_worker_lifecycle(demand,grant,"store initializer original terminal worker remains contended",|grant|{let step=session.close_step(grant);(step,session.terminal_is_empty())});
+            let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"store initializer original quote awaits worker handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
+            return original_worker_lifecycle(cx,demand,grant,"store initializer original terminal worker remains contended",|cx|{let step=session.close_step(cx)?;Ok((step,session.terminal_is_empty()))});
         }
         let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
-        match session.pump_one_for_interactive_turn(grant) {
+        match session.pump_one_for_interactive_turn(cx) {
             Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
                 let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() else { return Ok(PluginLifecycleStep::Blocked { reason: "store initializer original receipt awaits its sole recipient" }) };
                 if !progress.fits(issued) || !progress.fits(grant) {
-                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-receipt"), "store initializer original receipt exceeded its received turn").with_retained_progress(progress));
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-receipt"), "store initializer original receipt exceeded its received turn").with_retained_progress(progress).into());
                 }
                 self.outcome_terminal = match session.checked_out_outcome() {
                     Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. })) => Some((1, ArtifactStoreRefusalCode::EMPTY)),
                     Ok(Some(semio_framework_job::JobOutcomeView::Cancelled { .. })) => Some((2, ArtifactStoreRefusalCode::from_page(b"initializer-cancelled"))),
                     Ok(Some(semio_framework_job::JobOutcomeView::Fault { detail, .. })) => Some((2, ArtifactStoreRefusalCode::from_page(detail.page(0).unwrap_or(b"initializer-faulted-without-detail")))),
                     Ok(Some(_)) | Ok(None) => None,
-                    Err(_) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome")),
+                    Err(_) => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome").into()),
                 };
                 self.outcome_pending = true;
                 Ok(PluginLifecycleStep::Progress(progress))
             }
             Ok(semio_framework_job::WorkerJobPoll::Submitted | semio_framework_job::WorkerJobPoll::Idle) => Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
             Ok(_) => Ok(PluginLifecycleStep::AwaitingInput { reason: "store initializer awaits its mounted wake" }),
-            Err(_) => Ok(PluginLifecycleStep::AwaitingInput { reason: "store initializer worker lane is saturated or contended" }),
+            Err(failure) => Err(failure.into()),
         }
     }
 
@@ -1353,6 +1367,8 @@ where
             && self.member_ingress.is_none()
             && self.active_member_ingress.is_none()
             && self.active_member_open.is_none()
+            && self.member_open_admission.is_none()
+            && self.opened_member.is_none()
             && self.candidate_children.is_none()
             && self.candidate_content.is_none()
             && self.candidate_content_retirement.is_none()
@@ -1386,7 +1402,7 @@ pub(crate) struct ArtifactStoreReplacementAdmissionTarget<'a, A: ArtifactApp, M:
     pub(crate) operation: semio_framework_job::OperationId,
     pub(crate) generation: semio_framework_job::Generation,
     pub(crate) child_content_generation: u64,
-    pub(crate) retained:RetainedCloneGrant,
+    pub(crate) source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),
     pub(crate) actor: ActorId,
     pub(crate) marker: std::marker::PhantomData<fn() -> A>,
 }
@@ -1400,7 +1416,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory> store::os_store::owned_sche
             return Err(envelope);
         }
         let job = A::build_document_store_initialization_job(envelope, self.operation, self.generation, self.actor.clone())?;
-        self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation,self.generation,self.child_content_generation,job,self.retained));
+        self.jobs.insert_admitted(self.operation.0, ActiveArtifactStoreReplacement::new(self.operation,self.generation,self.child_content_generation,job,self.source_identity));
         Ok(())
     }
 }

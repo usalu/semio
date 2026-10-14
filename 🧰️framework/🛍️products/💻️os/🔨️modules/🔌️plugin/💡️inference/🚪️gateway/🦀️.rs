@@ -76,10 +76,10 @@ pub struct ArtifactInferenceGateway{
  operation:u64,generation:u64,pointer:usize,length:usize,stage:u8,
  parser:Option<JsonGrammarCursor<Value>>,decoding:Option<NativeDecodeContinuation>,root:Option<Value>,
  request:Option<WireArtifactInferenceRequest>,field:usize,required:u32,nested:usize,position:usize,born:bool,dependency:usize,
- normal_progress:RetainedCloneProgress,discarded_execution:Option<ArtifactInferenceExecution>,writer:Option<JsonWriteCursor<InferenceEnvelopeSource>>,encoding:Option<NativeEncodeContinuation>,wire:Option<String>,active:Option<Box<dyn ErasedSnapshotRetirement>>,child_live:bool,closing:bool,
+ execution_work_spent:u64,normal_progress:RetainedCloneProgress,discarded_execution:Option<ArtifactInferenceExecution>,writer:Option<JsonWriteCursor<InferenceEnvelopeSource>>,encoding:Option<NativeEncodeContinuation>,wire:Option<String>,active:Option<Box<dyn ErasedSnapshotRetirement>>,child_live:bool,closing:bool,
 }
 impl ArtifactInferenceGateway{
- pub fn new(operation:u64,generation:u64,source:&[u8])->Self{Self{operation,generation,pointer:source.as_ptr()as usize,length:source.len(),stage:0,parser:None,decoding:None,root:None,request:None,field:0,required:0,nested:0,position:0,born:false,dependency:0,normal_progress:Default::default(),discarded_execution:None,writer:None,encoding:None,wire:None,active:None,child_live:false,closing:false}}
+ pub fn new(operation:u64,generation:u64,source:&[u8])->Self{Self{operation,generation,pointer:source.as_ptr()as usize,length:source.len(),stage:0,parser:None,decoding:None,root:None,request:None,field:0,required:0,nested:0,position:0,born:false,dependency:0,execution_work_spent:0,normal_progress:Default::default(),discarded_execution:None,writer:None,encoding:None,wire:None,active:None,child_live:false,closing:false}}
  pub fn matches(&self,operation:u64,generation:u64,source:&[u8])->bool{self.operation==operation&&self.generation==generation&&self.pointer==source.as_ptr()as usize&&self.length==source.len()}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn child_closed(&mut self){self.child_live=false;}
@@ -158,7 +158,22 @@ impl ArtifactInferenceGateway{
    if request.wire_version!=ARTIFACT_INFERENCE_WIRE_VERSION{return Err(ArtifactInferenceGatewayFailure::Literal("original inference wire version differs"));}
    let metadata=service.metadata();if request.owner!=metadata.owner||request.artifact_kind!=metadata.artifact_kind||request.artifact_schema!=metadata.artifact_schema||request.artifact_schema_version!=metadata.artifact_schema_version||request.inference_schema!=metadata.inference_schema||request.inference_schema_version!=metadata.inference_schema_version||request.algorithm_version!=metadata.algorithm_version||request.policy_version!=metadata.policy_version{return Err(ArtifactInferenceGatewayFailure::Literal("original inference request identity differs from its registered service"));}
    let retained=if self.closing{grant}else{intersect(grant,request.retained)};let view=ArtifactInferenceExecutionRequest{operation:self.operation,generation:self.generation,cancelled:cancelled||self.closing,policy:&request.policy,budgets:&request.budgets,retained,cancellation_id:&request.cancellation_id,previous_state:request.previous_state.as_deref(),requested_cache_mode:request.requested_cache_mode.clone(),canonical_payload:&request.canonical_payload,dependencies:&request.dependencies};
-   let result=match context{Some(context)=>service.infer_with_context(&view,context,cx),None=>service.infer(&view,cx)}.map_err(|error|{self.normal_progress=error.retained_progress;self.child_live=!error.terminal;ArtifactInferenceGatewayFailure::Execution(error)})?;
+   let work=if self.closing{cx.fuel_remaining()}else{request.budgets.work_units.saturating_sub(self.execution_work_spent)};
+   if work==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original inference request exhausted its initiating work").into())}
+   let before_work=cx.original_work_units_spent();let deadline=cx.deadline_us();let mut outcome=None;
+   let loan=cx.with_retained_loan(retained,|same|same.with_original_work_loan(work,deadline,|same|{
+    let before_fuel=same.fuel_remaining();let mut result=match context{Some(context)=>service.infer_with_context(&view,context,same),None=>service.infer(&view,same)};
+    if same.fuel_remaining()==before_fuel{let receipt=match &result{Ok(step)=>step.retained_progress,Err(error)=>error.retained_progress};same.consume_fuel(receipt.copied_items.max(1)as u64)}
+    let original=match &mut result{Err(error)=>error.cause.take(),_=>None};outcome=Some(result);match original{Some(failure)=>Err(failure),None=>Ok(())}
+   }));
+   let spent=cx.original_work_units_spent().saturating_sub(before_work);self.execution_work_spent=self.execution_work_spent.saturating_add(u64::try_from(spent).unwrap_or(u64::MAX));
+   let result=match(loan,outcome){
+    (Ok(()),Some(result))=>result,
+    (Err(failure),Some(Err(mut error)))=>{error.cause=Some(failure);Err(error)},
+    (Err(failure),Some(Ok(result)))=>{self.child_live=!result.terminal;self.discarded_execution=result.execution;Err(ArtifactInferenceExecutionError::original(failure,result.terminal))},
+    (Err(failure),None)=>Err(ArtifactInferenceExecutionError::original(failure,!self.child_live)),
+    (Ok(()),None)=>unreachable!("original service loan always retains its callback outcome"),
+   }.map_err(|error|{self.normal_progress=error.retained_progress;self.child_live=!error.terminal;ArtifactInferenceGatewayFailure::Execution(error)})?;
    let receipt=result.retained_progress;self.normal_progress=receipt;
    self.child_live=!result.terminal;
    let Some(execution)=result.execution else{if result.terminal&&!self.closing{return Err(ArtifactInferenceGatewayFailure::Literal("terminal original inference callback has no result"));}return Ok((None,receipt));};
@@ -181,8 +196,8 @@ impl ArtifactInferenceGateway{
  pub fn step(&mut self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>,context:Option<&dyn std::any::Any>)->ArtifactInferenceGatewayStep{
   let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||cx.should_yield(){return ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal:None};}
   if !self.matches(cx.operation().0,cx.generation().0,source){return ArtifactInferenceGatewayStep{payload:None,retained_progress:Default::default(),refusal:Some(ArtifactInferenceGatewayFailure::Literal("original inference gateway retains another caller").into())};}
-  let before_fuel=cx.fuel_remaining();let (payload,receipt,mut refusal)=match self.advance(source,cx,context){Ok((payload,receipt))=>(payload,receipt,None),Err(error)=>{self.closing=true;let receipt=if self.normal_progress!=Default::default(){self.normal_progress}else{match &error{ArtifactInferenceGatewayFailure::Native(error)=>error.retained_progress(),_=>Default::default()}};(None,receipt,Some(crate::ArtifactInferenceGatewayRefusal::from(error)))}};
-  if let Err(error)=cx.consume_retained(receipt){match &mut refusal{Some(original)=>{assert!(original.receipt_refusal.is_none());original.receipt_refusal=Some(error)},None=>refusal=Some(error.into())}}if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items.max(1) as u64)}ArtifactInferenceGatewayStep{payload,retained_progress:receipt,refusal}
+  let before_fuel=cx.fuel_remaining();let before=cx.retained_progress();self.normal_progress=Default::default();let (payload,receipt,mut refusal)=match self.advance(source,cx,context){Ok((payload,receipt))=>(payload,receipt,None),Err(error)=>{self.closing=true;let receipt=if self.normal_progress!=Default::default(){self.normal_progress}else{match &error{ArtifactInferenceGatewayFailure::Native(error)=>error.retained_progress(),_=>Default::default()}};(None,receipt,Some(crate::ArtifactInferenceGatewayRefusal::from(error)))}};
+  let debit=crate::bounded_ownership::original_lifecycle_unposted(receipt,before,cx.retained_progress()).and_then(|unposted|cx.consume_retained(unposted));if let Err(error)=debit{match &mut refusal{Some(original)=>{assert!(original.receipt_refusal.is_none());original.receipt_refusal=Some(error)},None=>refusal=Some(error.into())}}if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items.max(1) as u64)}ArtifactInferenceGatewayStep{payload,retained_progress:receipt,refusal}
  }
 }
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}

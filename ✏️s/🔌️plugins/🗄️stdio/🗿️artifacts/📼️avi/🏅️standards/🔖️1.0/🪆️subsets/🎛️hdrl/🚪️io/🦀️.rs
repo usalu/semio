@@ -513,6 +513,7 @@ pub enum AviEncodeAdvance {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum AviEncodePhase {
     MeasureStreams,
     MeasureStreamExtras,
@@ -562,6 +563,7 @@ enum AviEncodePhase {
 }
 
 /// 🎚️ Incrementally serializes retained AVI structure without materializing the encoded file.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct AviEncodeCursor {
     phase: AviEncodePhase,
     stream_index: usize,

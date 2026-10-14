@@ -181,6 +181,8 @@ impl ArtifactRetainedWorkCapacity {
 
 pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     fn tool_id(&self) -> &'static str;
+    /// 📨️ Receives original owned command fields under the initiating caller before immutable work views begin.
+    fn receive_original_command(&mut self,_command:&mut A::Command,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
     /// 🧰 Stable identity of the factory-provided mutable workspace retained by this job.
     fn workspace_identity(&self) -> u64 {
         0
@@ -331,6 +333,7 @@ enum ArtifactCommandPublication {
 
 pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     command: Option<A::Command>,
+    command_received:bool,
     snapshot: Option<Arc<A::Snapshot>>,
     snapshot_read: std::cell::RefCell<Option<store::os_store::snapshot_read::SnapshotRead<A::Snapshot>>>,
     config: Option<Arc<A::Config>>,
@@ -472,6 +475,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         };
         Self {
             command: Some(payload.command),
+            command_received:false,
             snapshot: Some(payload.snapshot),
             snapshot_read: std::cell::RefCell::new(Some(payload.snapshot_read)),
             config: Some(payload.config),
@@ -769,6 +773,15 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
             }
             ArtifactRetainedCommandPhase::Work => {
                 cx.set_stage("retained-command-work");
+                if !self.command_received{
+                    let (Some(command),Some(operation),Some(work))=(self.command.as_mut(),self.operation.as_ref(),self.work.as_mut())else{return Err(Self::unadmitted_input().into())};
+                    if cx.operation().0!=operation.operation_id||cx.generation().0!=operation.generation{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command receiving requires its admitted business identity").into())}
+                    let before=cx.retained_progress();let fuel=cx.fuel_remaining();
+                    if !work.receive_original_command(command,cx)?{return Ok(None)}
+                    if cx.retained_progress()==before&&!Self::metadata(cx)?{return Ok(None)}
+                    if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
+                    self.command_received=true;return Ok(None)
+                }
                 let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut()) else { return Err(Self::unadmitted_input().into()); };
                 let before = cx.retained_progress();
                 let fuel = cx.fuel_remaining();
@@ -917,6 +930,7 @@ pub(crate) fn test_raw_allocation_close<A: ArtifactApp>() {
         raw.resize(case["initializedBytes"].as_u64().unwrap() as usize, 42);
         let mut job = ArtifactRetainedCommandJob::<A> {
             command: None,
+            command_received:false,
             snapshot: None,
             snapshot_read: std::cell::RefCell::new(None),
             config: None,

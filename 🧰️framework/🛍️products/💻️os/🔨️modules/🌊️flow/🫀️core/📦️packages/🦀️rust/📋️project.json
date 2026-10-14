@@ -11,7 +11,7 @@
   ],
   "targets": {
     "declarations": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts declarations",
         "cwd": "{projectRoot}"
@@ -22,7 +22,7 @@
       ]
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true,
@@ -30,7 +30,7 @@
       }
     },
     "test-browser": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-browser",
         "cwd": "{projectRoot}"
@@ -40,7 +40,7 @@
       ]
     },
     "test-browser-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-browser-ownership",
         "cwd": "{projectRoot}"
@@ -86,7 +86,7 @@
       "cache": true
     },
     "test-browser-clock": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-browser-clock",
         "cwd": "{projectRoot}"
@@ -97,26 +97,31 @@
       ]
     },
     "test-source-read": {
-      "executor": "nx:run-commands",
-      "options": {"command": "bun ./📜️script.ts test-source-read", "cwd": "{projectRoot}"},
-      "inputs": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/**/*"]
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts test-source-read",
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/**/*"
+      ]
     },
     "test-evaluation-work": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-evaluation-work",
         "cwd": "{projectRoot}"
       }
     },
     "test-evaluation-seeds": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-evaluation-seeds",
         "cwd": "{projectRoot}"
       }
     },
     "test-evaluation-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -126,7 +131,7 @@
       }
     },
     "test-session-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-session-source",
         "cwd": "{projectRoot}"
@@ -134,7 +139,7 @@
       "cache": false
     },
     "test-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-source",
         "cwd": "{projectRoot}"
@@ -145,7 +150,7 @@
       ]
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"
@@ -156,7 +161,7 @@
       "outputs": []
     },
     "wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts wasm",
         "cwd": "{projectRoot}"
@@ -171,7 +176,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "{projectRoot}",
@@ -179,7 +184,7 @@
       }
     },
     "test-geometry-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-geometry-ownership",
         "cwd": "{projectRoot}"
@@ -189,7 +194,7 @@
       "outputs": []
     },
     "test-retained-grant-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-retained-grant-source",
@@ -197,7 +202,7 @@
       }
     },
     "test-host-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-host-source",
@@ -211,18 +216,28 @@
       }
     },
     "test-vcs-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-vcs-source",
         "cwd": "{projectRoot}"
       }
     },
     "test-retained-receipt-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-retained-receipt-source"
       }
+    },
+    "test-sdk-source": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts test-sdk-source",
+        "cwd": "{projectRoot}"
+      },
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/**/*"
+      ]
     }
   },
   "implicitDependencies": [

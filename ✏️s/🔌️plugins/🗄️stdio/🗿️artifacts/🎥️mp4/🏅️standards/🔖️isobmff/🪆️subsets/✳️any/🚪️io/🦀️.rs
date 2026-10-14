@@ -1035,6 +1035,7 @@ pub enum Mp4EncodeAdvance {
 }
 
 #[derive(Clone, Debug, Default)]
+#[derive(semio_framework_value::RetireOwned)]
 struct Mp4TrackPlan {
     sample_bytes: u64,
     chunk_count: usize,
@@ -1053,6 +1054,7 @@ struct Mp4TrackPlan {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum Mp4MeasurePhase {
     TrackChunks,
     TrackSamples,
@@ -1067,6 +1069,7 @@ enum Mp4MeasurePhase {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetireOwned)]
 enum Mp4EmitPhase {
     FtypHeader,
     FtypFixed,
@@ -1165,6 +1168,7 @@ fn mp4_udta_size(movie: &Mp4Movie) -> Result<usize, String> {
 }
 
 /// 🎚️ Incrementally serializes retained ISO-BMFF structure without materializing encoded media or sample tables.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Mp4EncodeCursor {
     measure: Option<Mp4MeasurePhase>,
     emit: Mp4EmitPhase,

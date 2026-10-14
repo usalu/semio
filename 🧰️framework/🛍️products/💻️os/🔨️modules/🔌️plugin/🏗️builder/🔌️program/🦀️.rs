@@ -43,7 +43,7 @@ pub struct AppInstance<PA: PluginApp = NoPluginApp> {
 /// 🔌️ A plugin-owned command executes at the program boundary, never through an arbitrary
 /// focused app. The manifest invocation carries its structural owner address; the handler may return
 /// the same host effects/events as app command dispatch without acquiring app document state.
-pub type PluginCommandHandler = Box<dyn Fn(&ManifestCommandInvocation, &ActionMeta) -> Result<InvocationResult, Fault> + Send>;
+pub type PluginCommandHandler = Box<dyn Fn(&semio_framework::manifest::CommandInvocationView<'_>, &ActionMeta) -> Result<InvocationResult, Fault> + Send>;
 
 /// 🗃️ sdk-dedyn (O1/§1.5): `Self::App: PluginApp` replaces `Box<dyn PluginApp>` — the single
 /// real impl (`Plugin<PA>` below) is never itself `dyn`-used (verified repo-wide), so this trait
@@ -52,7 +52,7 @@ pub trait PluginProgram: Send {
     type App: PluginApp;
     fn manifest(&self) -> PluginManifest;
     fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<Self::App>;
-    fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+    fn handle_plugin_command(&self, invocation: &semio_framework::manifest::CommandInvocationView<'_>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
 }
 
 pub struct Plugin<PA: PluginApp = NoPluginApp> {
@@ -193,7 +193,7 @@ impl<PA: PluginApp> Plugin<PA> {
     }
 
     /// 🔌️ Dispatches only commands structurally owned by this plugin.
-    pub fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+    pub fn handle_plugin_command(&self, invocation: &semio_framework::manifest::CommandInvocationView<'_>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
         let ManifestCommandOwnerAddress::Plugin { plugin_id } = &invocation.address.owner else {
             return Err(Fault::from("plugin command handler received a non-plugin owner"));
         };
@@ -282,7 +282,7 @@ impl<PA: PluginApp> PluginProgram for Plugin<PA> {
         Plugin::create_app(self, app_id, actor, mounted_policy, identity)
     }
 
-    fn handle_plugin_command(&self, invocation: &ManifestCommandInvocation, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+    fn handle_plugin_command(&self, invocation: &semio_framework::manifest::CommandInvocationView<'_>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
         Plugin::handle_plugin_command(self, invocation, meta)
     }
 }

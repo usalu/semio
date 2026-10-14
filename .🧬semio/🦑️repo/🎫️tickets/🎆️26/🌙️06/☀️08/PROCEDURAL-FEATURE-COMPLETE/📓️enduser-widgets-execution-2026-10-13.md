@@ -305,3 +305,460 @@ The exact registered canonical decoder replay `mesh16-native14-recovery.log`, se
 The recovered Session intake could retain initiating origin after its snapshot retirement and project inner completion despite outer custody. Authored strict neutral schema/fixture now requires snapshot → snapshot-close → origin → empty, with independent JSONPatch producing terminal `[false,false,true]`. Actual native law uses the original canceled StepContext and same Session-owned snapshot, denies all five currencies, requires heap/CPU receipts once, retained source pointer and complete only from outer empty. It is authored and unrun. Production now observes exact intake terminal custody for occupancy, requires original initiating operation for transfer and read-source close, keeps inner completion pending until origin closes, and drains retained snapshot retirement plus origin in full Session close. This is a targeted original close repair, not paid Host construction qualification.
 
 Root delegated actual retained-command migration floors. Normal checkpoint retirement now borrows genuine cx and selected input quotes through the defining original close helper, preserving its whole Result and effects. Decode mismatch converts the original ValueError directly into OriginalTurnFailure. Work returns its whole failure before fallback metadata/fuel can mask that failure; no held-error stall, kind/prose projection or new fault formatting. These current source repairs await actual plugin/native compilation.
+
+Current neutral intake replay `flow-source-read14-tick-close.log`, session37245, naturally ended Nx1 before source assertions after graph preparation elapsed190s: missing cached ProjectGraph. This repeats Root's infrastructure floor; no unchanged source replay follows. Actual disk is2.8GiB free. Native tests were extended to receive a genuine FlowStore-issued typed SnapshotRead, use the exact Store source pointer/generation/content revision, preserve the whole read under denied paid constructor admission, require physical copy receipts and independent Serde complete output, and cancel the real saved source/result/origin through full selected close. This new source law is authored and unrun; it does not qualify paid DagHost construction or mounting.
+
+## 2026-10-14 — Completed Preview Continuation And Resumed Execution
+
+Exact prior session75943 is no longer addressable and readonly process inspection found no Cargo/rustc/Nx descendants. The newest exact log `flow-source-read14-store-intake.log` ends at structural graph elapsed100055ms, without terminal or assertion evidence. This is an interrupted command, not a native result. The twelve-edit full defining FlowHost restoration is preserved.
+
+Authored the original completed preview receiving continuation at defining Flow `host/📥️preview/🦀️.rs`. It owns the exact original parsed DslValue envelope, checks its eleven canonical business members and full UInt64 address, borrows the original initiating StepContext, delegates the actual Mesh16 decoder, retains every partial field, fully closes the original decoded-source scaffolds, and admits the same owned handle plus decoded MeshData through genuine HistoryFoldIndexInsert before cache commitment. There is no packed-text/base64 fallback or decoded mesh clone in this continuation. Adjacent native laws use the existing strict neutral completed-envelope fixture, independent Serde-decoded expected tree, actual System-backed heap observation, exact handle/positions pointers, all five independent denied currencies, fuel/deadline negatives, late cancellation before commit, and canceled physical full-close/Drop0. These laws are authored and unrun at this observation.
+
+Registered exact `⚖️test-original-preview-receiver📥️flow🦀️` in both launch catalogs with canonical artifact directory, offline policy, unchanged positive caller budgets and exact normalized native selection. Sole current owned heavy is session79641, output `🗑️generated/enduser-2026-10-13/preview-receiver-native14.log`; it is in structural graph preparation. No assertion, Session cache/renderer integration, GPU, browser, editing or analysis outcome is claimed. Geometry delegated mandatory same-cx BudgetedEvalState normal/phase16 and FlowWork/Host/Session handoff to this lane; Geometry owns OperatorJob/native operator implementations. Root owns exact Store SnapshotRead donation and generic failure receiving.
+
+The first original completed-receiver native session79641 naturally ended Nx1/3m21, before receiver assertions at seven defining neural unresolved semio_framework_job imports. Geometry repaired the actual first-party neural package dependency. Source graph preparation genuinely reached native target/Cargo; no cache/reset was used. The current paid evaluator path now requires the same original StepContext at BudgetedEvalState, phase16 OperatorJob, FlowEvaluationWork, FlowHost and FlowEvalSession. Raw source events post CPU/retained effects once at their defining producers; nested operator turns return the whole neural OperatorWorkFailure without parent debit. Adjacent native source laws retain one actual StepContextOwner per original law and assert original context receipt equality. No generic prose/kind projection remains in FlowWork normal receiving. These source migrations require native qualification.
+
+The actual Session cache was migrated in place to HistoryFoldIndex<String,MeshData>. Reset, whole-session close, retention and retained row variants now retain typed meshes and distinct diagnostic text, and getters borrow native MeshData plus resident handle iterators directly. The original cold packed/chunk response-fold function was removed and the defining same-cx completed receiver now lends the actual Session-owned cache. The original pure phase projection law was corrected to test the retained phase ledger directly; completed receiving is tested by the adjacent genuine paid law. Procedural command/source donation and renderer/selection migration remain in progress. Root owns the generic exact DslValue response donor and whole-original domain failure carrier; no FromValue command clone or packed-text fallback will be introduced.
+
+Second selected replay22679 naturally ended Nx1/1m21 before assertions at my new neural domain projection’s unsupported FaultCode.as_str. The defining projection now borrows the actual code.0 field. No runtime pass was inferred. Actual completed native tests now drive the defining Session receiver and actual typed cache, with exact handle/decoded-positions memory and full Session close. Root generic paid whole-domain carrier now has defining neural EvalError/OperatorWorkFailure projections preserving all complete variants, exact original pending extension/operator/hash fields, retained effects and independent receipt refusal. Root’s shared borrowed Value/Turn projection helpers are used directly, with no native error formatting.
+
+Original preview request/schema/native fixture now carries only five business fields (handle,tolerance,nodeHash,windowId,windowKindId). Chunk/chunks and the old text-chunk assembly cache were removed from Session source, reset, retention, cancellation, status and whole close. Diagnostic text has its separate real owner. Geometry was notified of the exact request and completed/partial contract. Procedural response-command schema and source donation/receiver work remain to land with Root’s generic donor; actual scene transfer/renderer/selection still requires funded native Mesh16 publication, not a cold clone. The next selected receiver replay is in progress after these material source repairs; no completed receiving or browser result is claimed.
+
+### 2026-10-14 — Actual Command Reply Custody and Scope Publication
+
+The defining Editor and Viewer Flow window work now own PreviewTessellateReceive, override the generic original-command donation callback, and move FlowTessellateResolve.output directly into the original canonical receiver. The same business StepContext reaches receiving, Mesh16 decoder, typed HistoryFoldIndex<String,MeshData> cache, ledger row extraction/controlled retirement and addressed window settlement. Partial replies use the closed ten-field progress contract; completed replies use eleven fields and transfer the original handle and decoded mesh. The old packed chunk ledger/request field has been removed from the original schema and Session fields.
+
+Publication now builds the addressed Partial UiDirtyScope incrementally: quoted Vec<String> backing, each original static body-key String backing, bounded UTF-8 copy, owner-header handoff, and controlled cancellation close. The scope retains its allocated owners if receipt posting refuses. Editor includes its actual preview/graph/artifact/tool-run bodies; Viewer includes actual preview/tool-run bodies. Demand lookup borrows the retained instance owner through the original handle try-lock; no cloned Session or fabricated context is used. Native laws and browser acceptance for this new production routing remain unrun.
+
+Own session43015 ended naturally at Nx1 before native launch/assertions with structural graph missing-owner cascades. Root repaired actual catalogue JSON import attributes. Read-only ps/log revalidation found no prior owned receiver child; new exact registered selected receiver launch11675 is live, log generated/enduser-2026-10-13/preview-receiver-native14-original-work.log. No test pass is claimed. Neural whole failure projections, partial reply schema/fixture, ledger fold, actual command routing and publication remain authored but not runtime qualified.
+
+### 2026-10-14 — Occupied Original Cache Transfer
+
+HistoryFoldIndexInsert now retains the matching native slot after its actual bounded comparison. commit_or_replace_with transfers the incoming row and returns the exact displaced `(K,W)` owner under the quoted slot depth; it does not repeat key comparisons, clone payloads or allocate. The original vacant-only commit still refuses an occupied row. Actual completed preview receiving uses this defining method, retains the displaced `(String,MeshData)` source in controlled retirement and reaches received completion only after the old owner is fully closed. The actual Session native law now covers two same-handle received meshes, exact incoming handle/positions pointers, exact displaced old pointers, one current typed cache row, every System receipt, complete conservation and Drop0. Its shared replacement fixture is independently executed with JSONPatch in the existing neutral read suite. These additions are authored and unrun.
+
+NeuralCacheInsert is a genuine same-context continuation over the existing neural cache and HistoryFoldIndexInsert. It binds the original cache pointer/business operation/generation/epoch, admits the original typed Dictionary, retains the full displaced row, and closes every source under the original caller. Integration with donated FlowEvalResolve Dictionary receiving is still pending. Actual analytic component selection now borrows the typed MeshData componentReferences directly; tool-run readiness also reads typed mesh presence. Scene construction still has old owned pack/JSON paths and is not qualified.
+
+Selected native receiver11675 terminated naturally at Nx1 before Cargo/assertions. The newly reached defining source failure is `readFileSync is not defined` in @repo/emoji-project-json createNodes; missing frame-worker producer/dispatch project messages followed as graph cascades. No unchanged replay was launched.
+
+### 2026-10-14 — Typed Evaluation and Native Fault Donation
+
+Actual generation3d Editor/Viewer and exact shared generation2d Editor command constructors now accept Root's third owned original_fault argument. They move the original parsed output and window/extension/handle String owners into FlowEvalResolve/FlowTessellateResolve; the old entire args clone is gone from generation2d. Each schema has fault:Option<Fault>. On failed receiving, the genuine callback performs original item/CPU admission and moves that native Fault into complete OriginalTurnFailure; source/window command fields remain in RC custody for its paid close. No null output is interpreted as schema failure and no failed answer settles the window. Unrelated action constructors return supplied original Fault. Cancellation reply output is typed too; its failure callback moves the native Fault intact.
+
+A real FlowEvaluationReplyReceiver now retains the donated six-field source, drives existing native RetainedDictionaryInput, transfers its typed Dictionary through actual NeuralCacheInsert, closes source scaffold, updates/retires actual per-hash progress and settles the addressed existing window latch. It uses the original context and UInt64 progress. Its schema and independent Ajv/JSON fixture/oracle are authored; the selected native law exercises actual Session/latch/cache, complete Serde dictionary agreement and per-System receipt/cancellation/fullclose conservation for bodies1/3/64. The production Editor/Viewer FlowEvalResolve work owns this cursor plus actual paid Partial scope; the exact2d retained work uses the same original native receiver. Synchronous direct dispatch lacks that retained authority and rejects internal replies; no cold JSON/cache receiving remains in those public normal reply functions. Native fixture migration and actual runtime verification remain incomplete.
+
+The defining SDK evaluate output producer now keeps Dictionary directly in EvaluationEnvelopeSource.output and writes one original paid envelope, removing the inner outputJson serialization/string owner. RetainedEvaluation.advance now forwards the same original StepContext to OperatorJob.step, retaining complete OperatorWorkFailure. The actual reply/cursor records when the child already posted its receipt so the outer invoke does not debit again; raw receipts continue to post exactly once. Full native operator failure projection is borrowed, including nested original/receipt/context fields and exact UInt64. This SDK producer is authored and unqualified. Its current explicit seven-field pending/fault envelopes still require whole original receiving/admission; six-field receiving presently retains and refuses those shapes, so nested extension continuation/fault publication is an open requirement.
+
+Own selected receiver56176 reached actual Cargo after the graph repair and terminated naturally Nx1/58.8s before assertions at 91 semio-framework-plugin compilation errors from the mandatory session/close/lifecycle migration. The own borrowed inspect_original helper was corrected to the defining MountedOwnerCellErrorV1 Busy/Poisoned enum. Root owns the remaining shared plugin floors. No owned heavy is live. The renderer still uses old packed mesh/JSON paths, full actual Host/Dag construction is not yet funded, and English/German browser/GPU/edit/Undo/Redo acceptance is unrun. The full goal remains open.
+
+### 2026-10-14 — Validated Owned Obsolete Output Recovery
+
+Disk exhausted after Root reported118MiB free and held heavy issuance. Own79641 and22679 were already confirmed naturally terminal before assertions; exact missing Job dependency and FaultCode.as_str floors remain recorded above. Removed only their obsolete generated preview-receiver-native14.log and preview-receiver-native14-cx.log (9525231 bytes). Latest occupied/current compiler evidence, all source/input/audit/diary files and all peers/cache/active handles remain. No heavy launched or child interrupted.
+
+### 2026-10-14 — Original Malformed Reply Custody
+
+The original3d Editor/Viewer Eval/Tess/Cancel and exact2d Eval constructors now validate every required original routing field and duplicate occurrence by borrow before any move. A malformed source creates the same retained typed command with input_valid:false, untouched original_input Object, unchanged native Fault and guarded empty routing/output fields. Only receive_original_command may process it: original admission denial changes no source/effects/fuel; an existing native Fault remains the primary before the synthetic source refusal. No malformed routing reaches cache, scope or window settlement. input_valid stays encoded through the original factory; original_input stays explicit until that factory's native pointer and paid closure proof qualifies skipping public custody.
+
+The new adjacent original native command law uses the actual Generation3dPlayApp constructor, exact original Object/window/output/Fault pointers and System0 constructor assertions, one finite OriginalCallerSourceParent and same cx, admission denial, whole Fault primary, canceled full command+failure closure body1/3/64, System receipts, conservation and Drop0. Both original launch files register its exact selected native target/caller policy. It is authored and unrun; the full OS native cohort remains held at Root's materially unrepaired596 fixture compiler floor.
+
+Registered neutral source38362 naturally ended Nx1 after8passes/1failed/133 assertions. The new JSONPatch move oracle had mistakenly requested the independent library's copy-before-mutation mode, so its source pointer equality assertion failed with equal content. Changed only that independent oracle to its documented mutation mode. Fresh registered23607 naturally completed **Nx0,9passes/0failed/150assertions**, actual Nx308ms with strict schema/Ajv and independent JSON/JSONPatch, including complete Mesh16 envelope, occupied cache source contract, typed Dictionary and malformed reply custody. The first/source-authority replay and both logs remain generated evidence. This qualifies only the neutral contracts; native receiver/cache/GPU/browser qualification is still absent.
+
+The original SDK EvaluationExternalResult schema/defining request parser now uses output:DslValue and moves its original Object directly into RetainedDictionaryInput, removing its second JSON parser. The normal original evaluation fault path is being migrated to complete borrowed EvaluationFailure domain projection and paid final same-cx domain admission after all original cursor sources close; full native operator/work/Value/JSON variants and pending exactu64 fields are retained. That source change is unrun, and SDK fixture migration plus pending continuation receiving remain open.
+
+### 2026-10-14 — Native SDK Failure Source and Final Admission
+
+The actual retained evaluator now donates complete EvaluationFailure through EvaluationReply.refusal. EvaluationInvokeCursor keeps that exact failure while closing the actual original job/request/parser/continuation/context/reply scaffold. Only after that closure does same-cx admit_original_domain_failure move it into the first-party paid complete carrier; denial preserves the same Option owner. evaluate_invoke_json returns that admitted OriginalTurnFailure in ExtensionInvokeStep.refusal, with no successful fault envelope and no repeated source debit. Borrowed projection covers complete ValueError, all12 JSON variants and offsets/name/depth/byte fields, whole EvalError and OperatorWorkFailure including full UInt64 pending identity and original receipt/context causes. Root confirmed the defining ExtensionBundle invokes the producer with SAMEcx and admit validates actual delta without a second debit; reactor also moves refusal into its original retained fault reply without debit. This source path is authored and unqualified.
+
+New adjacent original_completed_preview_sdk_fault_donates_whole_original_domain_on_same_caller drives actual evaluate_invoke_json on the neutral duplicate-member source. It authors a single finite original caller, per-System receipt versus same-cx delta, complete borrowed native JSON variant, scaffold empty before donation, no success fault envelope, canceled request/fault/resources/parent full close body1/3/64 and conservation/Drop0. Native is held at the shared fixture compiler floor. SDK typed external-output/response fixture migration remains incomplete.
+
+The defining existing core script/project router and both launch files now register test-sdk-source. Its91359 first registered source run naturally ended Nx1/22pass/10fail. Typed output/source and external identity schemas, wire authority denial and existing full typed indexed failed-cause laws ran successfully. Old assertions on plugin worker/view/inference source locations, previous budget/preview payload and gateway shapes failed; these are explicit unqualified source integration laws, not evidence of native functionality. New whole-fault neutral law is added to that same suite and fresh registered replay is live with a distinct generated log; no concurrent own heavy.
+
+Validated readonly exact terminal markers and no selected copy descendants; removed only four further obsolete owned generated logs with actual outcomes recorded above: copy-native14-current.log (4470722 bytes), copy-native14-system.log (4445721 bytes), copy-native14-frontier.log (4395525 bytes), copy-native14-coherent.log (4421036 bytes). Recovered 17733004 bytes. Source/schema/input/audit/diary files, current91/596 compiler evidence, genuine decoder green logs, current source gate logs, canonical cache and all peer/active outputs remain.
+
+### 2026-10-14 — Same Original Fixture Completion and Caller Repair
+
+The latest registered SDK source16580 naturally finished Nx1 with23passed/10failed/283expectations (actual target498ms). The new independent whole EvaluationFailure custody law passed; the ten prior worker/view/inference integration source assertions still fail. No SDK native or full cohort qualification follows.
+
+The actual tessellation progress schema and receiver now admit original awaitingGrant/admittingSource/validating before samplingEdges/meshingFaces/packingEdges, with genuine English/German labels and cancellation tags. Geometry will normalize actual Session hyphenated owner phases to these fixed wire tags. Canonical complete11 stays unchanged. The authored native roundtrip phase law and fresh neutral phase replay are unrun.
+
+Root delegated shared FixtureJobOwners and transaction/surface/dummy fixture jobs, plus the directly coupled transaction-unit-command-close callers. Their actual owned completion output now parks on the original fixture owner until the defining complete(owned emit,owned ephemeral) succeeds. Full rejection restores the same original emission and preserves the complete native Fault. A quote covers both actual native busy/duplicate Fault constructors, original metadata transfer/fuel and genuine physical receipt once. Shared pending/raw/command/completion/context close quotes now match their selected original custody order, use mandatory same StepContext and keep the whole failure. No production completion signature facade was added.
+
+The directly coupled original Surface natural-file and work-probe fixture callers now use once-issued Plugin OriginalFixtureCaller plus finite fixed retained loans, without fresh StepContext/new fuel per event. Root accepted the observed refill flaw in the separate defining Job OriginalJobFixtureCaller helper and owns its repair. Surface cancellation and refused synchronous media scenarios have distinct initiating finite callers. Actual natural-file Account now respects its declared contract maximum_work_units_per_step; the Surface controlled decoder retains that same passed contract limit and advances under the original context. Existing neutral work authority now exercises actual unchanged available fuel17→16 by domain debit1 or scalar fallback1 instead of manufacturing a child fuel1. These native repairs remain uncompiled and unrun.
+
+Adjacent shared completion schema/input and independent Ajv/JSONPatch oracle cover original successful transfer, rejected same pending source and full terminal custody. Authored native original_fixture_completion_same_source_denials_whole_rejection_and_paid_close covers original item/copy/capacity/depth denial System0/CPU0, original vector pointer, actual busy/duplicate complete native Fault, actual original context delta, canceled paid output/fault/fixture-owner close and terminal Drop0. It is unrun at the shared fixture compiler floor. Short-depth close vectors now expect the defining original close API pending/zero receipt, preserving source, rather than the removed kind-only Refused variant.
+
+Both launch catalogs and the defining Plugin script/project register test-original-fixture-close-source. First owned session45720 naturally exited Nx1 before source assertions because the original caller declared offline=true while the launch omitted actual CARGO_NET_OFFLINE=true. Corrected that exact launch environment in both catalogs; fresh owned41717 is live in graph preparation, with distinct current log. No source/native pass is inferred. Full original FlowHost/Dag funding, actual Store read donation into tick, typed scene/GPU production, complete browser editing/UndoRedo/English-German acceptance remain open; Parent plane helper/inspector branch is preserved.
+
+
+The corrected offline41717 source run reached strict TypeScript and naturally Nx1/8.3s before assertions. Two own relative schema/input imports were incorrect; corrected to actual sibling paths. The existing fuel unit module also imports the entire Plugin script for its separate original runner oracle, exposing unrelated extension-invoke/artifact-admission/folder-reload/cargo-exact TypeScript floors. The fuel law was placed beside that runner law in a dedicated domain test file; its registered exact custody/fuel gate now selects only the two actual neutral feature laws, while the independent runner law and the broader failing source cohort are preserved.
+
+Fresh actual12843 naturally completed **Nx0,strictTS,2passed/0failed/17expectations**, registered Nx2.7s/target2.2s. It proves only shared completion neutral source/JSONPatch custody and genuine available-fuel domain/fallback semantics. No native fixture completion, original System receipt, receiver/cache, renderer or browser claim follows. New mandatory nonoptional command SnapshotRead observed from Root source was followed in the Surface Probe fixture: actual new_app Store issues the original read and actual snapshot_owner; same caller closes the command, its read registry return and that same app. This native adaptation remains unrun.
+
+
+Actual registered Flow source57100 naturally completed **Nx0,9passed/0failed/153expectations**, native-independent target278ms after graph/source admission. This freshly checks genuine awaitingGrant/admittingSource/validating enum contracts alongside existing completed Mesh16/input custody; native phase/receiver/cache remains unrun.
+
+Readonly normal transport inspection found actual SDK evaluate_invoke_json emits canonical JSON String bytes; Geometry actual ArtifactCanonicalJsonTreeWireCursor also emits JSON bytes. Root generic extension_response_args currently decodes actual answer bytes through binary store::pack_rt::decode_wire_value. These are different wire grammars. Coordinated a single normal paid transport decision with Root/Geometry; no text/pack fallback, successful completed transport or compatibility claim is made.
+
+Host identified actual scene original caller at AppFrameTransaction::step→World3dSnapshot→step_world3d_scene_bridge/state/draw/snapshot. Existing actual WorldPlaceholder Inline owns Box<MeshData>, but its current constructor runs cold whole validators, clones key, mints demand grants and creates native pages/texture cancellation; actual SceneBridge Parse still cold-parses meshes/instances/camera/scalars and clones request strings. The native lease source/scene producer must extend these actual existing owners, not a separate unattached lease facade. Full Flow typed cache publication through this producer remains pending.
+
+
+### 2026-10-14 — Typed Pack SDK Source and Whole Original Resource Close
+
+The ENOSPC write was checked against the actual defining SDK file:115558 bytes/SHA256 1b5e904cce4576b8688fb1c61a590629ebff1cfaf30bae29ab226efa61a88ac5 with the complete1052-line test tail. No restore or truncation occurred. Subsequent writes use a ticket-owned transient file, fsync, full byte comparison, unchanged original-source check and atomic replacement. Root later recovered disk space; actual available space reached13GiB. No canonical cache or peer output was deleted by this executor.
+
+The defining ordered Dictionary now exposes original native root identity and a borrowed intrinsic ordered-key/Atom projection, without a JSON or DslValue mirror. The actual SDK EvaluationEnvelopeSource delegates its output to this same native Dictionary and preserves exact pending UInt64/source strings. Its normal EvaluationOutput now uses Geometry's existing Pack record OwnedProjectedPackWireCursor, moves back the exact source and byte Vec, funds pending header donation, closes the remaining typed source, then publishes the original Pack wire. EvaluationReply/request ready/suppressed owners hold Vec bytes; evaluate_invoke_json no longer emits JSON String bytes. Business Dictionary data named error no longer fabricates a failed native invocation. Pack codec failures retain the complete ValueError and initializedPrefixBytes.
+
+Raw evaluator/request/resource source closure now propagates complete EvaluationFailure. The mandatory defining ExtensionResourceOwner.close_step borrows SAME StepContext, quotes genuine five currencies/clock/fuel before mutation, posts CPU1 and actual producer effects once, and retains original/close/receipt causes in the typed EvaluationCloseFailure until paid first-party domain admission. No Fault text reconstruction or reason extraction crosses that boundary. The generic Value RetirementCursor remains domain-neutral: the actual evaluator RetireOwned refuses a live semantic owner before admission and permits pure physical empty retirement only after its existing direct canceled source-close route reaches full terminal custody. Actual removed rows and empty arena paths obey that terminal guard.
+
+The SDK original native response law now drives its normal EvaluationOutput Pack owner with one schema-issued finite OriginalJobFixtureCaller, same root/String pointer, actual per-System receipt versus cumulative context delta, independent Serde logical tree, canceled original wire close body1/3/64, conservation and Drop0. The actual normal wire FixtureRegistry also retains one original caller for turns and resource close; native whole failures and output bytes get paid typed retirement. Test-only Job testkit is declared on the existing owning Flow package. This source is authored and uncompiled: remaining old SDK unit cold evaluator/authority/JSON assertions still require coherent mandatory-cx/typed response migration, so no native SDK claim is made.
+
+New adjacent Dictionary schema/input and registered source-read independent Ajv/JSONPatch/JSON oracle include the Pack choice and once-issued finite source stock. Actual88248 naturally ended Nx1,9passed/1failed/164expectations after graph admission and assertions; its new pointer-identity oracle incorrectly used JSONPatch clone-before-mutation mode. Corrected only that independent mode to true mutation. Fresh registered22160 is live with exact selected original caller, offline/canonical environment and a distinct generated log. The full Host/Dag funding, read donation into actual tick, completed receiver/cache native proof, typed native scene/GPU production and English/German browser editing/UndoRedo acceptance remain open.
+
+
+Fresh corrected registered22160 naturally completed **Nx0,10passed/0failed/167expectations**, actual target301ms with independent strict Ajv/JSONPatch/JSON. This qualifies only those neutral logical/source contracts. No native typed Pack SDK output, completed receiving/cache/GPU or browser result is inferred. The actual source/hash inputs and both genuine RED and GREEN generated logs remain; own heavy is terminal.
+
+
+Validated obsolete owned copy-native14-read.log terminal Nx1/6m11/old ArtifactPack native_snapshot_registration+erased-read source constructor floor matches previously recorded28352. No Cargo/rustc/Nx descendants were present at current readonly check. Deleted only this original generated log (4437135 bytes, SHA256 3ccb518c0cea3198826f48156e760debaa66be0667512f176e298ca38a2b4de8) after ENOSPC rejected new temp creation. Current91 evidence, all source/input/audits/cache/peer outputs remain. Mandatory render signature patch had not touched either source file before this recovery.
+
+ 
+### 2026-10-14 — Original Cache Epoch and Genuine Occupied Caller
+ 
+Registered source14367 naturally completed **Nx0,10passed/0failed/173expectations**, actual target344ms. Defining HistoryFoldIndex exposes its genuine mutation epoch; FlowEvalSession borrows exact indexed key/MeshData only under that epoch and refuses foreign source epoch before effects. Adjacent replacement schema/input and independent Ajv/JSONPatch enforce0→1→2 replacement epochs, one original native source and foreign-source zero effects. This remains neutral qualification; cache/native scenes are unrun.
+ 
+The occupied native receiver law now uses one repaired OriginalJobFixtureCaller, schema-authored immutable lifetime stock and a fixed independent turn policy, cumulative actual receipt/fuel, original work/deadline narrowed loan negatives, exact incoming and displaced pointers, same native borrowed row and foreign epoch/System0, full canceled source/session close and paid root retirement. Geometry reports the genuine narrowed work/deadline primitive runtime qualified83581, and owned Pack physical/semantic primitives qualified15797. Neither implies this receiver or SDK producer is qualified. The older separate normal/mismatch preview helpers still use recreated fuel1 contexts and demand-funded local grants and require migration; prior Mesh16 physical/Serde proofs do not qualify cumulative lifetime finance.
+ 
+Actual3d Editor/Viewer and exact2d Editor constructors now borrow the current retained ingress args/fault Options. Ordinary actions leave original source in ingress; accepted or malformed Flow reply arms take the exact native Fault and move the SAME residual Object into command.original_input, leaving only consumed Null in ingress. The existing own malformed native constructor law retains those exact Option owners and includes their residuals in paid close. It is unrun; native constructor/root finance helper migration remains required.
+ 
+The defining3d E/V render signature now accepts the original StepContext and returns OriginalRenderResult<ComponentTree>. Complete native owner Fault and assembly failure sources propagate without message reconstruction. The existing synchronous cold component assembly currently returns Some and does not yet use cx; this is explicitly unqualified source behavior, without a one-cap allocation wrapper. Root owns the actual Instance pending/context producer; native pages must be financed while the original plugin App/Flow session guard remains held before ComponentTree publication. The late World3d shell bridge cannot reborrow this original source. No separate payload registry, cached MeshData clone or text fallback was added. Actual original Host/Dag funding, original Store donor integration, renderer/GPU and English/German browser creation/editing/UndoRedo remain open.
+ 
+SDK original raw-request and original gateway native fixture callers now also use once-issued OriginalJobFixtureCaller, genuine same ledger/fuel and fixed narrowed5-axis events, original-source pointers, paid canceled resource/gateway/request closure and root retirement. Their prior per-event root token/StepContext/fuel refills were removed. Existing older SDK semantic/cold evaluator fixtures remain uncompiled and need coherent typed Pack/mandatorycx migration; no native SDK pass is claimed.
+
+ 
+All three actual preview receiver native laws now use ONE OriginalJobFixtureCaller per initiating case, fixed independent turn grants validated against the schema and cumulative actual ledger/fuel. Their old StepContextOwner/context fuel1 resets and positive demand-derived grants were removed. Native work0/expired-short-deadline negatives use the defining same-cx narrowed work loan; all five currency denials preserve exact state and original ledger. Actual normal Mesh16/UInt64, late cancel/mismatch full cause, occupied/displaced row+epoch and canceled receiver/session/root retirement remain authored and unrun. The positive grant helper performs no JSON parse or allocation inside System observation. Prior statements above that those two older helpers still require this migration are superseded for these three receiver laws; independent canonical-decoder old fixtures and older SDK cold semantic fixtures still need their own finance migration.
+ 
+Actual Cargo source confirmed Pack lib.name is pack, not semio_framework_pack. Defining SDK now references pack::record directly, without an alias or compatibility shim. Geometry reports compiled/runtime-qualified owned Pack return/semantic close/pure physical retirement and original work/deadline primitive separately; SDK consumer/receiver/rendering qualification is still pending.
+
+## 2026-10-14 — Terminal Owned Log Capacity Audit
+
+Readonly process custody showed no selected copy/Cargo/rustc/Nx descendants. Removed only the following obsolete naturally terminal own generated outputs after matching the already recorded floors/outcomes; original inputs, current91 diagnostics, decoder GREEN, peer outputs and canonical cache preserved:
+
+- copy-native14-typed.log 4421349 bytes SHA256 b0ec2ba29305c5a46855d23d147086702734ef42a4489d864689cea6a4b709f3; Nx1/31.5s PREASSERT old unsupported typed RetainedCloneSource::admit_borrowed; defining source repaired and old floor recorded.
+- copy-native14-quoted.log 4436888 bytes SHA256 0a8de10b5d843b6145d347b8e69b5567966b82b09e2f51d544f7fe76f24eb96b; Nx1/49.1s actual5pass/1fail/3unrun/61skipped; old System normal allocation receipt mismatch (0,0) vs(216,0), observer repaired; same failure documented in original copy replay section.
+
+### Obsolete Original Lifecycle Native Capacity Audit
+
+original-lifecycle-native.log naturally terminated Nx1/2m2 before assertions; current mandatory context fixture diagnostics supersede it. SHA256 733f6784cf7390829c17330ec476d83ca028d5c92c370e4d5432bfbf8ed53ad0, 4379184 bytes. Exact prior compiler causes:
+
+```text
+error[E0603]: struct `RetainedWireUtf8Validation` is private
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🛂️payload/🦀️.rs:2:41
+   |
+ 2 | use protocol::codec::{HistoryReadLimits,RetainedWireUtf8Validation};
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ private struct
+   |
+note: the struct `RetainedWireUtf8Validation` is defined here
+  --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs:16:13
+   |
+16 |     pub use component::*;
+
+error[E0053]: method `step` has an incompatible type for trait
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3443:81
+     |
+3443 | ...b::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `OriginalTurnFailure`, found `semio_framework_value::ValueError`
+     |
+     = note: expected signature `fn(&'a mut ArtifactEnvelopeDecodeAuthority<_, _>, &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure>`
+                found signature `fn(&mut ArtifactEnvelopeDecodeAuthority<_, _>, &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'_>>, semio_framework_value::ValueError>`
+help: change the output type to match the trait
+     |
+
+error[E0053]: method `close_step` has an incompatible type for trait
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3480:37
+     |
+3480 |     fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+     |                                     ^^^^^^^^^^^^^^^^^^ expected `&mut StepContext<'_>`, found `RetainedCloneGrant`
+     |
+     = note: expected signature `fn(&mut ArtifactEnvelopeDecodeAuthority<_, _>, &mut StepContext<'_>) -> std::result::Result<InteractiveJobCloseStep, OriginalTurnFailure>`
+                found signature `fn(&mut ArtifactEnvelopeDecodeAuthority<_, _>, semio_framework_value::RetainedCloneGrant) -> InteractiveJobCloseStep`
+help: change the parameter type to match the trait
+     |
+
+error[E0061]: this method takes 1 argument but 0 arguments were supplied
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/../../🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs:2697:19
+     |
+2697 |         if !input.close_step() {
+     |                   ^^^^^^^^^^-- argument #1 of type `RetainedCloneGrant` is missing
+     |
+note: method defined here
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/../../🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs:2360:12
+     |
+2360 |     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<bool,ValueError> {
+
+error[E0600]: cannot apply unary operator `!` to type `Result<bool, ValueError>`
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/../../🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs:2697:12
+     |
+2697 |         if !input.close_step() {
+     |            ^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+     |
+note: `Result<bool, ValueError>` does not implement `Not`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-20-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/result.rs:557:1
+     |
+ 557 | pub enum Result<T, E> {
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3270:74
+     |
+3270 |         let step = semio_framework_job::InteractiveJob::close_step(self, original);
+     |                    -----------------------------------------------       ^^^^^^^^ expected `&mut StepContext<'_>`, found `RetainedCloneGrant`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+note: method defined here
+    --> 🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️.rs:1293:8
+
+error[E0599]: no method named `progress` found for enum `std::result::Result<T, E>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3271:29
+     |
+3271 |         let progress = step.progress();
+     |                             ^^^^^^^^ method not found in `std::result::Result<InteractiveJobCloseStep, OriginalTurnFailure>`
+     |
+note: the method `progress` exists on the type `InteractiveJobCloseStep`
+    --> 🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️.rs:1260:5
+     |
+1260 |     pub fn progress(self)->RetainedCloneProgress {match self{Self::Pending{progress}|Self::Complete{progress}=>progress,Self::Bloc...
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3277:62
+     |
+3277 |         if let semio_framework_job::InteractiveJobCloseStep::Refused { kind, progress } = step {
+     |                                                              ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3488:50
+     |
+3488 |                 Err(diagnostic) => return Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress },
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3488:50
+     |
+3488 |                 Err(diagnostic) => return Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress },
+     |                                                  ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3494:38
+     |
+3494 |                 Err(error) => Close::Refused { kind: error.kind, progress: error.retained_progress() },
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3494:38
+     |
+3494 |                 Err(error) => Close::Refused { kind: error.kind, progress: error.retained_progress() },
+     |                                      ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3506:35
+     |
+3506 |                     return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: empty };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3506:35
+     |
+3506 |                     return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: empty };
+     |                                   ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3521:35
+     |
+3521 |                     return Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3521:35
+     |
+3521 |                     return Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress };
+     |                                   ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3526:35
+     |
+3526 |                     return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: empty };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3526:35
+     |
+3526 |                     return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: empty };
+     |                                   ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3533:35
+     |
+3533 |                     return Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3533:35
+     |
+3533 |                     return Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress };
+     |                                   ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3537:31
+     |
+3537 |                 return Close::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: empty };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3537:31
+     |
+3537 |                 return Close::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: empty };
+     |                               ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3552:39
+     |
+3552 |                         return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3552:39
+     |
+3552 |                         return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress };
+     |                                       ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3556:39
+     |
+3556 |                         return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3556:39
+     |
+3556 |                         return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress };
+     |                                       ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3564:28
+     |
+3564 |                     Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress }
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3564:28
+     |
+3564 |                     Close::Refused { kind: diagnostic.refusal_kind, progress: diagnostic.retained_progress }
+     |                            ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3569:28
+     |
+3569 |                     Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: empty }
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3569:28
+     |
+3569 |                     Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: empty }
+     |                            ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3591:31
+     |
+3591 |                 return Close::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: empty };
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3591:31
+     |
+3591 |                 return Close::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: empty };
+     |                               ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3596:43
+     |
+3596 | ...   Ok(step) => return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: step.progres...
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3596:43
+     |
+3596 | ...   Ok(step) => return Close::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: step.progres...
+     |                                 ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3597:45
+     |
+3597 |                 Err(error) => return Close::Refused { kind: error.kind, progress: error.retained_progress() },
+
+error[E0599]: no variant named `Refused` found for enum `InteractiveJobCloseStep`
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs:3597:45
+     |
+3597 |                 Err(error) => return Close::Refused { kind: error.kind, progress: error.retained_progress() },
+     |                                             ^^^^^^^ variant not found in `InteractiveJobCloseStep`
+
+[script] {"owner":"repository:nx","command":"native:owner-command","stage":"running"}
+[native:owner-command] running elapsedMs=110028
+warning: value assigned to `offset` is never read
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️.rs:6754:38
+```
+
+Removed only this obsolete own generated log after terminal custody revalidation; current91/native/schema/source inputs and cache/peer outputs preserved.
+
+## 2026-10-14 — Defining Component Native Resource Custody
+
+Schema-first native resource owner/loan extends actual Mesh3dOwner arena (no new registry). Owner admission moves original sealed lease under metadata item1/copy0, raw token close refuses claimed owner, actual native loan counter pins same pages, source close waits paid loan returns and blocks new aliases. Root/Host original same-cx propagation is authored, native resource qualification remains unrun. ComponentTree now carries optional UiNativeResources with original paged native rows; tree-only constructors initialize genuine absence. 87 existing owning tree literals converted to existing ComponentTree::new in 48 files; no source snapshots copied to ticket. Exact files:
+
+- ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs (3)
+- 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (1)
+- 🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/📌️panels/🔢️parameters/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️wgpu-time-travel/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs (1)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs (3)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🦀️.rs (2)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🔬️reconcile-spin/🦀️.rs (1)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🔬️m1-m2-reactor/🦀️.rs (1)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🚚️more-work-drive/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (2)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🧺️turn-patch-batch/🦀️.rs (1)
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs (1)
+- ✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🖥️app-surface/🧪️tests/🔬️unit/🦀️.rs (15)
+- ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🌳️tree-projection-arena/🦀️.rs (2)
+- 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️retirement/🌲️tree/🧪️tests/🌲️tree/🦀️.rs (3)
+- 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/🦀️.rs (1)
+- 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🧪️tests/🔬️reconcile-unit/🦀️.rs (1)
+- 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎭️present/🦀️.rs (1)
+
+New registered native-resource source71186 genuinely ended Nx1/10passed/1failed/173 expectations: Ajv default draft7 rejected my new draft2020 meta-schema URI before resource assertions. The defining schema now uses repository draft7 with unchanged closed const laws. Root production30210 reached ui-runtime and caught rows.last E0599; defining native resource lookup repaired to get(len-1) before empty. No native resource or enduser runtime pass inferred. Full scalar native/storage/allocation failure domain retains exact native variant/kind/reason/allocatedBytes; same-cx close retains full raw+receipt causes in its own pending slot and posts actual raw effects/CPU once before funded domain donation. Host owns producer/reconcile/document/Shell forwarding.
+
+Fresh corrected native resource source89482 naturally Nx0,11passed/0failed/186 expectations,317ms (strict TS/Ajv/independent JSONPatch original-custody laws). Source-only qualification; native owner/source/System/GPU/browser unrun. Host identified real ProgramBridge ExchangeOutcome guest ABI: native guest/host arena tokens differ. Local ComponentTree/native owner/loan custody cannot substitute for actual paid initialized-page transport and receiving acknowledgement. New native lease with_original_page holds original arena guard through bounded caller read, exposes only actual initialized extent; no page or mesh mirror allocated. Local bundle source count/native first row body identity and partial UTF8 routing copy preserve denied originals, typed exact loan capture/reborrow and same-cx canceled full close. Guest-to-host native transport remains open.
+
+## 2026-10-14 — Original Native Resource Runtime Qualification Attempts
+
+Registered exact UI runtime native custody target in existing script/project and both catalogs with canonical absolute original artifact authority. First98483 naturally Nx1 PREASSERT: own environment artifact path relative (no Cargo). Corrected actual invocation absolute; fresh56699 naturally Nx1/26.8s target after genuine Cargo production compile/list and one native assertion. It failed at repaired OriginalJobFixtureCaller root admission, claimed64bytes vs observed0: the new external executable omitted the defining global HeapWitness hook. Added that exact first-party System witness before any native assertion; no producer budget/receipt/stock widened. All once-issued stock/source fields remain schema-owned. Native resource proof remains RED pending material replay; no GPU/browser/cache qualification inferred.
+
+### Native Local Resource Owner And Loan Proof — Genuine GREEN
+
+Material native14686 naturally completed Nx0/3.1s, exact selected native law1passed/0failed in owning UI runtime external target. Artifact generated/enduser-2026-10-13/exact-cargo-laws-7e7pQJ/00; executable SHA256 ff074f886c55828886d2540ed84ec81f829a4b05370fff7d3a92a2a3681392f8, receipt SHA256 bf296d4a5e301ab53451ce8461f2aa27ec58dfbf765c4da14b14bc2c2bbc659b. One original fixture issues op941/gen17/clock1000/deadline1500/fuel65536 and closed finite stock once. Actual native triangle write/admission, original arena owner claim, paged source rows, partial routing-key copy, document loan and prepared-source reborrow preserve the same initialized native page pointer. Raw token close refuses claimed resource; owner waits both original loan bundles. Genuine same-cx zero-work loan changes no source/receipt/fuel/System; late owner close blocks new alias. Canceled same original context closes loans, original source, every row/page backing and root; per-event System requested/released bytes equal actual context receipt, complete conservation and terminal Drop0. This qualifies local same-arena resource primitives only. Actual guest/host page transport/source acknowledgement, typed Mesh16 cache production/scene/selection/GPU and browser editing/EN-DE/UndoRedo acceptance remain open.
+
+## 2026-10-14 — Atomic Stationary Fixture Render Correction
+
+Actual TestKit/history render consumers now share the mandatory original cx. Existing render_registered_fixture_app performs readiness, borrows SAME app.original_render_tree_source(cx) cell under the live app/instance guard, and returns only the independent test projection String. It never takes or retires the ready ComponentTree/native bundle; VCS retains original source until defining replacement/close. Lint, declared-verb dispatch and history document view use this same helper. Original native render failures propagate complete OriginalTurnFailure via full Lifecycle acceptance custody, with no formatting into business refusal. ActionIngress fixture original residual source includes genuinely absent assembled:None. Host owns readiness/getter/actual full-tree close ladder; the fixture helper is authored against that defining mandatory API and is not compile-qualified until Host lands it. Public bare constructed-tree project_and_retire_fixture_tree still uses the prior cold BuiltTreeRetirement rootBox/traversal stack and unreported physical page release; no same-cx/full physical close qualification is claimed for that independent old helper. Native resource milestone does not qualify whole tree retirement.

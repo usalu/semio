@@ -96,7 +96,7 @@ if (operation === "materialize") {
 `);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
-  const env = { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") };
+  const env = { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") };
   const run = async (args: string[]) => {
     const child = Bun.spawn(["node", cli, ...args, "--outputStyle=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
     const cancel = () => child.kill("SIGTERM"), deadline = setTimeout(cancel, 60000);

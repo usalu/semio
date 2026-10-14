@@ -80,7 +80,7 @@ fn titles(dashboard: &Dashboard, tui: &mut Tui) -> Vec<String> {
 }
 
 fn session(id: &str, label: TaskLabel, status: SessionStatus, code: Option<i32>) -> SessionInfo {
-    SessionInfo { session_id: id.into(), command: SessionCommand { cmd: "bun".into(), args: vec!["nx".into(), "run".into(), "x".into()], cwd: "workspace".into(), cols: 80, rows: 24, label, ..Default::default() }, status, pid: Some(42), code, ..Default::default() }
+    SessionInfo { session_id: id.into(), command: SessionCommand { cmd: "bun".into(), args: vec!["repo".into(), "run".into(), "x".into()], cwd: "workspace".into(), cols: 80, rows: 24, label, ..Default::default() }, status, pid: Some(42), code, ..Default::default() }
 }
 
 fn label(verb: &str, subject: &str, qualifier: &str) -> TaskLabel { TaskLabel { verb: verb.into(), owner: vec!["quiz".into()], subject: subject.into(), qualifier: qualifier.into(), parameters: Vec::new(), members: 0 } }
@@ -164,7 +164,7 @@ fn starting_from_the_launcher_sends_the_resolved_registry_launch_with_its_task_l
     assert_eq!(command.command_id, "@fx/quiz:test");
     assert_eq!((command.label.verb.as_str(), command.label.subject.as_str()), ("test", "quiz"));
     assert_eq!(command.cmd, "bun");
-    assert_eq!(&command.args[..3], ["nx", "run", "@fx/quiz:test"]);
+    assert_eq!(&command.args[..3], ["repo", "run", "@fx/quiz:test"]);
     assert!(command.cols > 10 && command.rows > 5, "the terminal starts at the size of its widget: {}x{}", command.cols, command.rows);
     assert!(matches!(dashboard.windows[1].body, Body::Output { .. }));
     assert_eq!(tabs(&dashboard, &mut tui, 1), ["Tasks", "test quiz"]);
@@ -190,7 +190,7 @@ fn chosen_parameters_and_extra_arguments_reach_the_launch() {
     let started = spawned(&dashboard);
     assert_eq!(started.len(), 1);
     let (_, command) = &started[0];
-    assert!(command.args.contains(&"--excludeTaskDependencies".to_string()), "{:?}", command.args);
+    assert!(command.args.contains(&"--exclude-dependencies".to_string()), "{:?}", command.args);
     assert!(command.env.contains(&("SEMIO_TEST_LEVEL".to_string(), "quick".to_string())));
     assert_eq!(&command.args[command.args.len() - 3..], ["--", "--filter", "a b"], "{:?}", command.args);
     assert!(command.env.contains(&("FOO".to_string(), "1".to_string())));
@@ -693,7 +693,7 @@ fn p1_8_the_launcher_filter_pages_jumps_edits_and_previews() {
     press(&mut dashboard, &mut tui, &type_text("quiz test"));
     let caption = |dashboard: &Dashboard, tui: &mut Tui| match &tui.scene.node(dashboard.windows[1].caption.unwrap()).content { ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::Label(label)) => label.text.clone(), _ => String::new() };
     let text = caption(&dashboard, &mut tui);
-    assert!(text.contains("1 of") && text.contains("bun nx run @fx/quiz:test"), "match count and preview: {text}");
+    assert!(text.contains("1 of") && text.contains("bun repo run @fx/quiz:test"), "match count and preview: {text}");
     press(&mut dashboard, &mut tui, &[Event::Key(KeyEvent { key: Key::Backspace, mods: mods::ALT })]);
     assert_eq!(query(&dashboard, &mut tui, 1), "quiz");
     press(&mut dashboard, &mut tui, &[ctrl('u')]);

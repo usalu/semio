@@ -4,20 +4,28 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retaine
 use std::mem::{ManuallyDrop,size_of};
 
 /// 🧾️ Keeps every original refused input until its actual supplied context funds physical retirement.
-pub(crate) struct RefusedWorkerSource<J:InteractiveJob>{job:ManuallyDrop<Option<J>>,params:ManuallyDrop<Option<BatchJobParams>>,error:ManuallyDrop<Option<OriginalTurnFailure>>,cancel:Option<semio_framework_async::CancelTokenRetirement>,error_retirement:Option<ControlledRetirement<OriginalTurnFailure>>,closing:bool,pending:bool,original:Option<semio_framework_job::Operation>}
+pub(crate) struct RefusedWorkerSource<J:InteractiveJob>{job:ManuallyDrop<Option<J>>,params:ManuallyDrop<Option<BatchJobParams>>,error:ManuallyDrop<Option<OriginalTurnFailure>>,cancel:Option<semio_framework_async::CancelTokenRetirement>,error_retirement:Option<ControlledRetirement<OriginalTurnFailure>>,closing:bool,pending:bool,original:Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>}
 impl<J:InteractiveJob> RefusedWorkerSource<J>{
  /// 🎒️ Retains the exact dispatched producer before the initiating turn admits its worker storage.
- pub(crate) fn pending(job:J,operation:semio_framework_job::Operation)->Self{let mut source=refused(Some(job),None,None);source.pending=true;source.original=Some(operation);source}
+ pub(crate) fn pending(job:J,operation:(semio_framework_job::OperationId,semio_framework_job::Generation))->Self{let mut source=refused(Some(job),None,None);source.pending=true;source.original=Some(operation);source}
  pub(crate) fn admission_pending(&self)->bool{self.pending&&!self.closing}
  pub(crate) fn admission_demands(&self)->Result<RetirementDemand,ValueError> where J:'static{if self.params.is_none(){Ok(RetirementDemand{depth:1,..Default::default()})}else{semio_framework_job::WorkerJobSession::<J>::owned_admission_demand()}}
  /// 🚪️ Admits the original parameter alias and session on distinct funded caller events.
- pub(crate) fn admit_pending(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<Option<MountedWorkerJobSession<J>>,OriginalTurnFailure> where J:'static{
+  fn prepare_pending_params(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if !self.admission_pending(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker source is already closing or admitted").into())}
   let original=self.original.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"pending worker lost its original business operation"))?;
-  if original.operation!=cx.operation()||original.generation!=cx.generation(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"pending worker requires its original business identity without relabeling").into())}
-  if self.params.is_none(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(None)};*self.params=Some(BatchJobParams{operation:cx.operation(),generation:cx.generation(),cancel,config,now_us:cx.clock_source()});return Ok(None)}
+  if original.0!=cx.operation()||original.1!=cx.generation(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"pending worker requires its original business identity without relabeling").into())}
+   if self.params.is_none(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(false)};*self.params=Some(BatchJobParams{operation:cx.operation(),generation:cx.generation(),cancel,config,now_us:cx.clock_source()});return Ok(false)}
+   Ok(true)
+  }
+  pub(crate) fn admit_pending(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<Option<MountedWorkerJobSession<J>>,OriginalTurnFailure> where J:'static{
+   if !self.prepare_pending_params(config,cx)?{return Ok(None)}
   let admitted=MountedWorkerJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)?;if let Some((session,_posted))=admitted{self.pending=false;return Ok(Some(session))}Ok(None)
  }
+  pub(crate) fn admit_pending_batch(&mut self,config:semio_framework_job::BatchDriveConfig,cx:&mut StepContext<'_>)->Result<Option<BatchJobSession<J>>,OriginalTurnFailure> where J:'static{
+   if !self.prepare_pending_params(config,cx)?{return Ok(None)}
+   let admitted=BatchJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)?;if let Some((session,_posted))=admitted{self.pending=false;return Ok(Some(session))}Ok(None)
+  }
  pub(crate) fn error(&self)->Option<&OriginalTurnFailure>{self.error.as_ref()}
  fn job(&self)->Option<&J>{self.job.as_ref()}
  pub(crate) fn terminal_is_empty(&self)->bool{self.job.is_none()&&self.params.is_none()&&self.cancel.is_none()&&self.error.is_none()&&self.error_retirement.is_none()}

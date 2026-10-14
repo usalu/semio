@@ -211,17 +211,17 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
     ];
     for (action, args) in cases {
         let args = semio_framework_pack_json::to_dsl_value(&args);
-        let command = SpaceIndexEditor::command_from_action(action, Some(&args)).unwrap_or_else(|error| panic!("{action} must bridge: {error:?}"));
+        let command = SpaceIndexEditor::command_from_action(action, Some((args).clone()), None).unwrap_or_else(|error| panic!("{action} must bridge: {error:?}"));
         assert_eq!(command.command_id(), action, "the bridged command's own id must round-trip");
     }
-    assert!(SpaceIndexEditor::command_from_action("bogus", None).is_err());
+    assert!(SpaceIndexEditor::command_from_action("bogus", None, None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in_the_host_relay() {
     let kind_choice = "{\"kindId\":\"s.gis.gismap\",\"schema\":\"gis.map\"}";
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "name": " First map ", "kindChoice": kind_choice }));
-    let SpaceIndexCommand::CreateArtifact(command) = SpaceIndexEditor::command_from_action("createArtifact", Some(&args)).expect("dialog submission must bridge") else {
+    let SpaceIndexCommand::CreateArtifact(command) = SpaceIndexEditor::command_from_action("createArtifact", Some((args).clone()), None).expect("dialog submission must bridge") else {
         panic!("expected CreateArtifact");
     };
     assert_eq!(command.kind_choice, kind_choice);
@@ -241,7 +241,7 @@ async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in
 /// the dialog", mirroring Home's `createSpace`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_an_empty_create_artifact_click() {
-    let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
+    let SpaceIndexCommand::CreateArtifact(payload) = SpaceIndexEditor::command_from_action("createArtifact", None, None).expect("no-args click must bridge") else { panic!("expected CreateArtifact") };
     assert_eq!(payload.name, "");
     assert_eq!(payload.kind_choice, "");
 }

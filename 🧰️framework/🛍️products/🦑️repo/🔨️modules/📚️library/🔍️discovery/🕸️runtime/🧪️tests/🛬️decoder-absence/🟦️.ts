@@ -4,7 +4,7 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import * as ts from "typescript";
 import contract from "./🧫️fixtures/🔣️.json";
-const root = process.env.NX_WORKSPACE_ROOT ?? process.cwd();
+const root = process.env.SEMIO_WORKSPACE_ROOT ?? process.cwd();
 const decoder = "🧰️framework/🔨️modules/🌱️value/🛬️decode";
 
 test("the original neutral decoder closure excludes products, S, Hub and fixture runtime inputs", async () => {

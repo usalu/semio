@@ -22,7 +22,7 @@ impl<const VIEWER:bool> ArtifactApp for CounterApp<VIEWER> {
     type Command=crate::Mutation;
     async fn initial_snapshot()->Self::Snapshot {crate::Snapshot::default()}
     async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d::compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation> {Ok(Emit::default())}
-    async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree> {semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.count.to_string()).map(|root|ComponentTree{root})}
+    async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree> {semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.count.to_string()).map(|root|ComponentTree::new(root))}
 }
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum FixtureApps:PluginApp {Editor(VcsArtifactApp<CounterApp<false>>),Viewer(VcsArtifactApp<CounterApp<true>>),
@@ -93,7 +93,7 @@ impl<C:RefusalOwner,const VIEWER:bool> ArtifactApp for RefusalApp<C,VIEWER>{
  type Command=refusal::Mutation;
  async fn initial_snapshot()->Self::Snapshot{refusal::Snapshot::default()}
  async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d::compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>{Ok(Emit::default())}
- async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree>{semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.value.to_string()).map(|root|ComponentTree{root})}
+ async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree>{semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.value.to_string()).map(|root|ComponentTree::new(root))}
 }
 fn refusal_surface<C:RefusalOwner,const VIEWER:bool>()->SurfaceDeclaration<FixtureApps>
 where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<RefusalApp<C,true>>>{

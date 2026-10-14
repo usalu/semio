@@ -85,7 +85,7 @@ async fn op_text_roundtrip() {
 
 #[semio_framework_async_macros::async_test]
 async fn missing_set_page_payload_is_rejected() {
-    assert!(<DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", None).is_err());
+    assert!(<DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", None, None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -93,7 +93,7 @@ async fn set_page_action_requires_and_preserves_the_complete_canonical_address()
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("current")]);
     let address = docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).expect("canonical address");
     let arguments = action_arguments(&address, "draft");
-    let command = <DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", Some(&arguments)).expect("canonical command");
+    let command = <DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", Some((arguments).clone()), None).expect("canonical command");
     assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxTransitionalEditorCommand::SetPage { address, text: "draft".into() }));
 }
 
@@ -109,9 +109,9 @@ async fn stale_set_page_revision_is_rejected() {
 async fn set_run_formatting_requires_and_preserves_the_complete_canonical_address() {
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("current")]);
     let address = docx_block_run_address(&snapshot, &DocxBlockPath { segments: Vec::new(), index: 0 }, 0).expect("canonical address");
-    let command = <DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-run-formatting", Some(&formatting_arguments(&address))).expect("canonical formatting command");
+    let command = <DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-run-formatting", Some((formatting_arguments(&address)).clone()), None).expect("canonical formatting command");
     assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxTransitionalEditorCommand::SetRunFormatting { address, bold: true, italic: false, underline: true }));
-    assert!(<DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-run-formatting", None).is_err());
+    assert!(<DocxTransitionalEditor as ArtifactEditor>::command_from_action("set-run-formatting", None, None).is_err());
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio/DocxTransitionalEditor", DocxTransitionalEditor, || semio_framework_plugin::App { definition: create_docx_transitional_editor(), examples: Vec::new() }, "../..");

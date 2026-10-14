@@ -1,7 +1,5 @@
 import {boundedServicePayloadV1,admitDocumentServiceDeclarationV1,InstalledServiceRegistryV1,parseInstalledServiceOperationV1,parseInstalledServiceStatusV1} from "../../🟦️.ts";
 import {admitDocumentServiceWireDeclarationV1,encodeDocumentServiceWireDeclarationV1,documentServiceRequestV1,admitDocumentServiceResponseV1,decodeDocumentServiceSchemaV1} from "../../🚪️io/🟦️.ts";
-import {gisMapDocumentServiceDeclarationV1} from "../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🟦️.ts";
-import {gisMapDocumentServiceWireDeclarationV1} from "../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🚪️io/🟦️.ts";
 import ts from "typescript";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
@@ -71,15 +69,15 @@ test("semantic dispatch and schema compilation execute with JSON codecs disabled
   expect(calls).toBe(1);console.log("[DEBUG] Pure installed service declaration/admission/dispatch/status executed with all JSON codecs disabled");
 });
 
-test("raw native declaration strings are admitted only in IO and GIS wire producer preserves the actual protocol",()=>{
-  const typed=gisMapDocumentServiceDeclarationV1(),wire=gisMapDocumentServiceWireDeclarationV1();
-  expect(typed.operations.length).toBe(6);expect(typeof typed.operations[0]!.inputSchema).toBe("object");expect(typeof wire.operations[0]!.inputSchema).toBe("string");
-  expect(admitDocumentServiceWireDeclarationV1("gis",wire)).toEqual(typed);expect(encodeDocumentServiceWireDeclarationV1(typed)).toEqual(wire);
-  expect(()=>admitDocumentServiceDeclarationV1("gis",wire)).toThrow();expect(()=>admitDocumentServiceWireDeclarationV1("gis",typed)).toThrow();
-  for(const operation of wire.operations){const schema=JSON.parse(operation.inputSchema);expect(schema.$id.startsWith("gis:")).toBe(true);new Ajv({strict:true}).compile(schema);}
+test("raw native declaration strings are admitted only through owned IO",()=>{
+  const typed=declaration(),wire=encodeDocumentServiceWireDeclarationV1(typed);
+  expect(typeof typed.operations[0]!.inputSchema).toBe("object");expect(typeof wire.operations[0]!.inputSchema).toBe("string");
+  expect(admitDocumentServiceWireDeclarationV1("neutral",wire)).toEqual(typed);
+  expect(()=>admitDocumentServiceDeclarationV1("neutral",wire)).toThrow();expect(()=>admitDocumentServiceWireDeclarationV1("neutral",typed)).toThrow();
+  for(const operation of wire.operations)new Ajv({strict:true}).compile(JSON.parse(operation.inputSchema));
   const model=declaration();const body=JSON.stringify({value:"reply"});expect(admitDocumentServiceResponseV1(model,"run",body)).toEqual(JSON.parse(body));expect(()=>admitDocumentServiceResponseV1(model,"run",'{"value":7}')).toThrow();
   expect(()=>decodeDocumentServiceSchemaV1('{"format":"unknown"}')).toThrow();expect(decodeDocumentServiceSchemaV1('{\n"$id":"neutral:pretty","type":"string"\n}')).toEqual({$id:"neutral:pretty",type:"string"});
-  console.log("[DEBUG] GIS6operations native raw string declarations roundtrip explicit IO; semantic record-only admission and independent Ajv hold");
+  console.log("[DEBUG] Neutral native declarations roundtrip explicit IO; semantic record-only admission and independent Ajv hold");
 });
 
 test("owned semantic value/compiler sources and current receiving files have explicit ownership and TS syntax",()=>{
@@ -88,18 +86,3 @@ test("owned semantic value/compiler sources and current receiving files have exp
   console.log("[DEBUG] Current semantic value/schema compiler bodies contain no JSON codec; service and Store receiving syntax accepted");
 });
 
-test("actual GIS receiving configuration selects its owner and all relocated fixture URLs resolve",()=>{
-  const configuration=readFileSync(new URL("../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🎚️config/🟦️.ts",import.meta.url),"utf8");
-  expect(configuration).toContain("🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/👷️worker");
-  const path=new URL("../../../../../../../../✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🧪️tests/🟦️.ts",import.meta.url);
-  const source=readFileSync(path,"utf8");
-  for(const match of source.matchAll(/new URL\("([^"]+)",\s*import.meta.url\)/g))expect(()=>readFileSync(new URL(match[1]!,path))).not.toThrow();
-  console.log("[DEBUG] Actual GIS receiver configuration and every literal relocated fixture/schema URL resolved");
-});
-
-
-test("relocated GIS receiving schema compilers select and resolve the canonical test IO owner",()=>{
- const owner=new URL("../../../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧰️schema/🟦️.ts",import.meta.url);
- for(const name of ["🌉️component-cold-map-patch","💡️inference-control","📇️native-codecs"]){const path=new URL(`../../../../../../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/${name}/🟦️.ts`,import.meta.url);const source=readFileSync(path,"utf8");const match=source.match(/import \{ compileGisScopeExport \} from "([^"]+)"/);expect(match).not.toBeNull();expect(new URL(match![1]!,path).href).toBe(owner.href);for(const link of source.matchAll(/from "(\.[^"]+)"/g))expect(()=>readFileSync(new URL(link[1]!,path))).not.toThrow();}
- console.log("[DEBUG] Three relocated GIS receivers select canonical test-only Ajv schema IO and all direct relative imports resolve");
-});

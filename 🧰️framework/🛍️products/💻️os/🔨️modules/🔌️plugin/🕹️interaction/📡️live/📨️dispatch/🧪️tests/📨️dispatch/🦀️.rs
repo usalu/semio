@@ -13,27 +13,31 @@ fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanup
     RuntimeCleanupFault::InteractiveCeiling
 }
 
-fn admit_fixture_session<J: semio_framework_job::InteractiveJob + 'static>(job: J, params: semio_framework_job::BatchJobParams) -> semio_framework_job::BatchJobSession<J> {
-    match crate::reserved_job_session::admit_batch(job, params, crate::app::artifact_app_laws::fixture_mounted_policy().preparation) { Ok(session) => session, Err(_) => panic!("fixed fixture session admission") }
+fn admit_fixture_session<J:semio_framework_job::InteractiveJob+'static>(job:J,config:semio_framework_job::BatchDriveConfig,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_job::BatchJobSession<J>{
+    let mut original=crate::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()));
+    for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if let Some(session)=original.admit_pending_batch(config,cx).expect("same original fixture session admission"){assert!(original.terminal_is_empty());return session;}}
+    panic!("original session admission exceeded its supplied fixture turns")
 }
 
-fn close_fixture_session<J: semio_framework_job::InteractiveJob + 'static>(session: &mut semio_framework_job::BatchJobSession<J>) {
-    for _ in 0..1_000 { if session.terminal_is_empty() { break; } let _ = session.close_step(crate::app::artifact_app_laws::fixture_mounted_policy().close); }
+fn close_fixture_session<J:semio_framework_job::InteractiveJob+'static>(session:&mut semio_framework_job::BatchJobSession<J>,cx:&mut semio_framework_job::StepContext<'_>){
+    for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if session.terminal_is_empty(){break;}session.close_step(cx).expect("same original fixture session close");}
     assert!(session.terminal_is_empty());
 }
 
-fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>> {
+fn drive_fixture_close_with_samples(state:&std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>>,cx:&mut semio_framework_job::StepContext<'_>,mut samples:impl FnMut()->Option<u64>){
+    use super::super::*;
+    let measured=runtime_callback_clock_begin(&mut samples);
+    let candidate=match measured{Ok(start)=>run_runtime_close_turn_inner(state,cx).expect("same original full close failure").map(|candidate|runtime_callback_clock_elapsed(&mut samples,start).map(|elapsed|(candidate,elapsed))),Err(cause)=>Some(Err(cause))};
+    match candidate{Some(Ok((status,elapsed)))=>runtime_close_publish_turn(state,status,elapsed),Some(Err(cause))=>{state.last_callback_elapsed_us.store(u64::MAX,Ordering::SeqCst);state.status.store(runtime_close_fault(state,cause).repr(),Ordering::SeqCst);},None=>{}}
+}
+
+fn terminal_close_state(complete: bool, faulted: bool, blocked: bool,cx:&mut semio_framework_job::StepContext<'_>) -> std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>> {
     use super::super::*;
     let job = RuntimeCloseCleanupJob { state: None, instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: true };
-    let params = semio_framework_job::BatchJobParams {
-        operation: semio_framework_job::OperationId(711), generation: semio_framework_job::Generation(1),
-        cancel: semio_framework_job::CancelToken::root_now(),
-        config: semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
-        now_us: semio_framework_job::default_now_us,
-    };
-    let mut session = admit_fixture_session(job, params);
+    let params = semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-terminal-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let mut session = admit_fixture_session(job, params,cx);
     session.begin_close();
-    close_fixture_session(&mut session);
+    close_fixture_session(&mut session,cx);
     let mut pump = RuntimeCloseCleanupPump::new();
     pump.session = Some(session); pump.terminal = true; pump.complete = complete; pump.faulted = faulted; pump.blocked = blocked;
     std::sync::Arc::new(RuntimeCloseWorkerState {
@@ -49,10 +53,11 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
 
 #[test]
 fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
-    let state = terminal_close_state(true, false, false);
-    let _ = run_runtime_close_turn_inner(&state);
+    let state = terminal_close_state(true, false, false,cx);
+    let _ = run_runtime_close_turn_inner(&state,cx);
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)) == RuntimeCloseStatus::Complete, fixture["owners"]["terminalVisibleBeforeWatchdog"].as_bool().unwrap());
     for row in fixture["callbacks"].as_array().unwrap() {
         let named = |name: &str| match name { "ready" => RuntimeCloseStatus::Ready, "complete" => RuntimeCloseStatus::Complete, "external-wait" => RuntimeCloseStatus::ExternalWait, "deadline-yield" => RuntimeCloseStatus::DeadlineYield, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), _ => unreachable!() };
@@ -63,16 +68,18 @@ fn instance_lifetime_close_does_not_publish_terminal_before_watchdog() {
         assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), expected, "{row}");
         assert_eq!(state.last_callback_elapsed_us.load(Ordering::SeqCst), elapsed_us);
     }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 
 #[test]
 fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["callbacks"].as_array().unwrap().iter().filter(|row| row["published"] == "deadline-yield") {
-        let state = terminal_close_state(true, false, false);
-        let first = run_runtime_close_turn_inner(&state).unwrap();
+        let state = terminal_close_state(true, false, false,cx);
+        let first = run_runtime_close_turn_inner(&state,cx).unwrap().unwrap();
         assert_eq!(first, RuntimeCloseStatus::Complete);
         assert!(state.pump.lock().unwrap().session.is_none());
         let candidate = match row["candidate"].as_str().unwrap() { "complete" => RuntimeCloseStatus::Complete, "ready" => RuntimeCloseStatus::Ready, "external-wait" => RuntimeCloseStatus::ExternalWait, _ => unreachable!() };
@@ -83,28 +90,30 @@ fn instance_lifetime_close_deadline_resume_never_reenters_completed_work() {
         for elapsed in [8000, 1] {
             state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
             let mut readings = [Some(0), Some(0), Some(elapsed)].into_iter();
-            run_runtime_close_turn_with_clock(&state, || readings.next().flatten());
+            drive_fixture_close_with_samples(&state,cx, || readings.next().flatten());
             assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), if elapsed == 8000 { RuntimeCloseStatus::DeadlineYield } else { candidate });
             assert!(owner.session.is_none() && !owner.outcome_pending);
         }
         assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
         assert_eq!(state.deadline_elapsed_us.load(Ordering::SeqCst), row["elapsedUs"].as_u64().unwrap());
     }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
-    let state = terminal_close_state(false, false, false);
+    let state = terminal_close_state(false, false, false,cx);
     *state.pump.lock().unwrap() = RuntimeCloseCleanupPump::new();
     **state.cell.lock().unwrap() = Some(std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy())));
     let limit = fixture["callbackLimitUs"].as_u64().unwrap();
     for _ in 0..4096 {
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
         let mut sample = 0;
-        run_runtime_close_turn_with_clock(&state, || {
+        drive_fixture_close_with_samples(&state,cx, || {
             sample += 1;
             Some(if sample == 3 && state.physical_close_calls.load(Ordering::SeqCst) > 0 { limit } else { 0 })
         });
@@ -116,7 +125,7 @@ async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() 
         let pump = state.pump.lock().unwrap();
         assert!(pump.outcome_pending && pump.session.is_some());
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
-        run_runtime_close_turn_with_clock(&state, || Some(0));
+        drive_fixture_close_with_samples(&state,cx, || Some(0));
         assert!(pump.outcome_pending && pump.session.is_some());
         assert_eq!(state.physical_close_calls.load(Ordering::SeqCst) > 1, fixture["owners"]["lateResumeRepeatsPhysicalClose"].as_bool().unwrap());
     }
@@ -125,54 +134,60 @@ async fn instance_lifetime_close_late_physical_step_retains_its_exact_outcome() 
         if status == RuntimeCloseStatus::Complete { break; }
         assert!(!matches!(status, RuntimeCloseStatus::Fault(_)), "retained real close faulted: {status:?}");
         state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
-        run_runtime_close_turn_with_clock(&state, || Some(0));
+        drive_fixture_close_with_samples(&state,cx, || Some(0));
     }
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
     assert!(state.cell.lock().unwrap().is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 
 #[test]
 fn instance_lifetime_close_deadline_submit_refusal_preserves_candidate() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
-    let state = terminal_close_state(true, false, false);
-    assert_eq!(run_runtime_close_turn_inner(&state), Some(RuntimeCloseStatus::Complete));
+    let state = terminal_close_state(true, false, false,cx);
+    assert_eq!(run_runtime_close_turn_inner(&state,cx).unwrap(), Some(RuntimeCloseStatus::Complete));
     runtime_close_publish_turn(&state, RuntimeCloseStatus::Complete, 8000);
     state.status.compare_exchange(RuntimeCloseStatus::DeadlineYield.repr(), RuntimeCloseStatus::Ready.repr(), Ordering::SeqCst, Ordering::SeqCst).unwrap();
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     pool.shutdown().expect("isolated empty test pool shutdown");
-    assert!(!try_schedule_runtime_close(&pool, &state));
+    assert!(pool.try_submit(semio_framework_async::Lane::Interactive,Box::new(||{})).is_err());
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Ready);
     assert_eq!(state.deadline_resume.load(Ordering::SeqCst), RuntimeCloseStatus::Complete.repr());
     let pump = state.pump.lock().unwrap();
     state.status.store(RuntimeCloseStatus::Queued.repr(), Ordering::SeqCst);
-    run_runtime_close_turn_with_clock(&state, || Some(0));
+    drive_fixture_close_with_samples(&state,cx, || Some(0));
     assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), RuntimeCloseStatus::Complete);
     assert_eq!(state.deadline_resume.load(Ordering::SeqCst), u8::MAX);
     assert!(pump.session.is_none() && !pump.outcome_pending);
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 #[test]
 fn instance_lifetime_close_fault_outcome_dominates_complete_progress() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["terminalPump"].as_array().unwrap() {
-        let state = terminal_close_state(row["complete"].as_bool().unwrap(), row["faulted"].as_bool().unwrap(), row["blocked"].as_bool().unwrap());
-        let actual = runtime_close_cleanup_pump_one(&state, &mut state.pump.lock().unwrap());
+        let state = terminal_close_state(row["complete"].as_bool().unwrap(), row["faulted"].as_bool().unwrap(), row["blocked"].as_bool().unwrap(),cx);
+        let actual = runtime_close_cleanup_pump_one(&state, &mut state.pump.lock().unwrap(),cx).unwrap();
         let expected = match row["status"].as_str().unwrap() { "complete" => RuntimeCloseStatus::Complete, "fault" => RuntimeCloseStatus::Fault(RuntimeCleanupFault::PriorOutcome), "external-wait" => RuntimeCloseStatus::ExternalWait, _ => unreachable!() };
         assert_eq!(actual, expected, "exact terminal outcome {row}");
     }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 #[test]
 fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward_authority() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     for row in fixture["clocks"].as_array().unwrap() {
-        let state = terminal_close_state(true, false, false);
+        let state = terminal_close_state(true, false, false,cx);
         let readings: Vec<Option<u64>> = row["samples"].as_array().unwrap().iter().map(Value::as_u64).collect();
         let mut samples = readings.clone().into_iter();
-        run_runtime_close_turn_with_clock(&state, || samples.next().flatten());
+        drive_fixture_close_with_samples(&state,cx, || samples.next().flatten());
         let expected = if row["published"] == "complete" { RuntimeCloseStatus::Complete } else if row["published"] == "deadline-yield" { RuntimeCloseStatus::DeadlineYield } else { RuntimeCloseStatus::Fault(expected_clock_cause(&readings)) };
         assert_eq!(RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)), expected, "{row}");
         assert_eq!(state.pump.lock().unwrap().session.is_none(), row["workEntered"].as_bool().unwrap(), "{row}");
@@ -182,14 +197,16 @@ fn instance_lifetime_close_optional_monotonic_clock_rejects_missing_and_backward
             pump.session = None;
         }
     }
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_owner() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let cell = std::sync::Arc::new(RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
-    let state = terminal_close_state(true, false, false);
+    let state = terminal_close_state(true, false, false,cx);
     **state.cell.lock().unwrap() = Some(cell.clone());
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Fault(RuntimeCleanupFault::InstanceNotDrained));
     assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["nonterminalPreflightKeepsExactAllocation"].as_bool().unwrap());
@@ -198,35 +215,33 @@ async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_own
         for _ in 0..200_000 {
             if instance.app.close_terminal_is_empty() { break; }
             let demand = instance.app.close_retirement_demands(4096).unwrap();
-            let _ = instance.app.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(4096), ..crate::app::plugin_demand_grant(demand) }).unwrap();
+            let _ = instance.app.close_step(cx,cx.retained_grant()).unwrap();
         }
         assert!(instance.app.close_terminal_is_empty());
     }
     {
         let mut pump = cell.maintenance_pump.lock().unwrap();
         let demand = pump.retirement_demands(4096).unwrap();
-        let _ = pump.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(4096), ..crate::app::plugin_demand_grant(demand) });
+        let _ = pump.close_step(cx);
     }
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::ExternalWait);
     assert_eq!(std::sync::Arc::ptr_eq(state.cell.lock().unwrap().as_ref().unwrap(), &cell), fixture["owners"]["sharedRestoreKeepsExactAllocation"].as_bool().unwrap());
     drop(cell);
     assert_eq!(runtime_close_retire_cell(&state), RuntimeCloseStatus::Complete);
     assert!(state.cell.lock().unwrap().is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 #[test]
 fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=(||{
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
-    let state = terminal_close_state(true, false, false);
+    let state = terminal_close_state(true, false, false,cx);
     let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), instance_id: 7, progress: None, contended: false, publication: crate::reserved_job_outcomes::CleanupPublication::new(), closing: false };
-    let params = semio_framework_job::BatchJobParams {
-        operation: semio_framework_job::OperationId(719), generation: semio_framework_job::Generation(1), cancel: semio_framework_job::CancelToken::root_now(),
-        config: semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },
-        now_us: || Some(0),
-    };
-    let mut session = admit_fixture_session(job, params);
-    session.step(crate::app::artifact_app_laws::fixture_mounted_policy().close).unwrap();
+    let params = semio_framework_job::BatchDriveConfig { retained: crate::app::artifact_app_laws::fixture_mounted_policy().close, site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 };
+    let mut session = admit_fixture_session(job, params,cx);
+    session.step_on_original_caller(cx).unwrap();
     assert!(session.checkout_outcome());
     assert!(session.take_checked_out_retained_step_receipt().is_some());
     assert!(matches!(session.checked_out_outcome(), Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. }))));
@@ -244,7 +259,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
         let _ = release_rx.recv_timeout(std::time::Duration::from_millis(200));
     });
     ready_rx.recv().unwrap();
-    run_runtime_close_turn_with_clock(&state, || Some(10));
+    drive_fixture_close_with_samples(&state,cx, || Some(10));
     let _ = release_tx.send(());
     holder.join().unwrap();
     let status = RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst));
@@ -254,13 +269,14 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     pump.outcome_pending = false;
     if let Some(session) = pump.session.as_mut() {
         session.begin_close();
-        close_fixture_session(session);
+        close_fixture_session(session,cx);
     }
     pump.session = None;
     pump.terminal = false;
     assert_eq!(status, RuntimeCloseStatus::Ready);
     assert_eq!(session_preserved, fixture["owners"]["contendedPumpPreservesSession"].as_bool().unwrap());
     assert_eq!(source_preserved, fixture["owners"]["contendedOutcomePreservesSource"].as_bool().unwrap());
+})();let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 async fn close_lease_app(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>) {
@@ -268,9 +284,9 @@ async fn close_lease_app(runtime: &crate::plugin_runtime::PluginRuntime<TestRunt
     runtime.instances.borrow_mut().insert_admitted(7, cell);
 }
 
-fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, lease: &crate::plugin_runtime::PluginInstanceCloseLease<TestRuntimeApps>) {
+fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, lease: &crate::plugin_runtime::PluginInstanceCloseLease<TestRuntimeApps>,cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..200_000 {
-        if let Err(error) = crate::plugin_runtime::plugin_step_close_cleanup(runtime) {
+        if let Err(error) = crate::plugin_runtime::plugin_step_close_cleanup(runtime,cx) {
             let entries = runtime.close_quarantine.borrow();
             let state = &entries.get(7).unwrap().state;
             let pump = state.pump.lock().unwrap();
@@ -287,6 +303,7 @@ fn drive_close_lease(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_id() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
@@ -295,7 +312,7 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
     lease.begin_close(&runtime).unwrap();
     assert_eq!(lease.close_generation(), Some(1));
     let worker = runtime.close_quarantine.borrow().get(7).expect("quarantined close worker").state.clone();
-    drive_close_lease(&runtime, &lease);
+    drive_close_lease(&runtime, &lease,cx);
     assert_eq!(lease.is_retired().unwrap(), fixture["nativeCases"]["quarantineRemovalPreservesTerminalWitness"].as_bool().unwrap());
     {
         let held = worker.pump.lock().expect("close worker pump");
@@ -308,11 +325,13 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
     let mut fresh = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
     fresh.begin_close(&runtime).unwrap();
     assert_eq!(fresh.close_generation(), Some(2));
-    drive_close_lease(&runtime, &fresh);
+    drive_close_lease(&runtime, &fresh,cx);
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detachment() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
@@ -322,14 +341,16 @@ async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detac
     let constructed_while_live = super::super::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.take());
     let live_after = runtime.instances.borrow().get(7).is_some();
     let quarantined_after = runtime.close_quarantine.borrow().get(7).is_some();
-    drive_close_lease(&runtime, &lease);
+    drive_close_lease(&runtime, &lease,cx);
     assert_eq!(constructed_while_live, fixture["atWorkerShellExactLiveAllocation"].as_bool());
     assert_eq!(live_after, fixture["states"][2]["liveOwner"].as_bool().unwrap());
     assert_eq!(quarantined_after, fixture["states"][2]["quarantineOwner"].as_bool().unwrap());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     close_lease_app(&runtime).await;
@@ -345,14 +366,16 @@ async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_deta
     assert_eq!(runtime.instances.borrow().get(7).is_some(), fixture["nativeCases"]["overflowPreservesLiveOwner"].as_bool().unwrap());
     runtime.close_generation.set(0);
     fresh.begin_close(&runtime).unwrap();
-    drive_close_lease(&runtime, &fresh);
+    drive_close_lease(&runtime, &fresh,cx);
     runtime.instances.borrow_mut().insert_admitted(7, displaced);
     old.begin_close(&runtime).unwrap();
-    drive_close_lease(&runtime, &old);
+    drive_close_lease(&runtime, &old,cx);
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 #[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_construction_failure_preserves_original_live_root() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🚪️lifetime/🏗️construction.json")).unwrap();
     let law = &fixture["constructionFailure"];
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
@@ -369,34 +392,34 @@ async fn instance_lifetime_close_construction_failure_preserves_original_live_ro
     if !live { runtime.instances.borrow_mut().insert_admitted(7, rescue.clone()); }
     drop(rescue);
     lease.begin_close(&runtime).unwrap();
-    drive_close_lease(&runtime, &lease);
+    drive_close_lease(&runtime, &lease,cx);
     assert!(fault.is_err());
     assert!(quarantine_empty);
     assert_eq!(live, law["liveOwner"].as_bool().unwrap());
     assert_eq!(same, law["sameAllocation"].as_bool().unwrap());
     assert_eq!(generation_unchanged, law["generationUnchanged"].as_bool().unwrap());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 //#endregion 🚪️ExactRuntimeCloseLease
 
-async fn query_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::LocalInteractionQueryCommand) -> Vec<protocol::AppFrame> {
-    wire_command(runtime, seq, protocol::AppCommand::LocalInteractionQuery { seq, command }).await
+async fn query_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::LocalInteractionQueryCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+    wire_command(runtime, seq, protocol::AppCommand::LocalInteractionQuery { seq, command },cx).await
 }
 
-async fn wire_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand) -> Vec<protocol::AppFrame> {
+async fn wire_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
     let encoded = protocol::encode_app_command(&command).await.unwrap();
-    run_ingress(runtime, seq, crate::plugin_runtime::PluginCommandIngress::Encoded(encoded)).await
+    run_ingress(runtime, seq, crate::plugin_runtime::PluginCommandIngress::Encoded(encoded),cx).await
 }
 
-async fn cold_decoded_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand) -> Vec<protocol::AppFrame> {
-    run_ingress(runtime, seq, crate::plugin_runtime::PluginCommandIngress::Decoded(protocol::DecodedAppCommandOwner::new(command))).await
+async fn cold_decoded_command(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, command: protocol::AppCommand,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
+    run_ingress(runtime, seq, crate::plugin_runtime::PluginCommandIngress::Decoded(crate::plugin_runtime::OriginalDecodedPluginCommand::new(command)),cx).await
 }
 
-async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, ingress: crate::plugin_runtime::PluginCommandIngress) -> Vec<protocol::AppFrame> {
+async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeApps>, seq: u64, ingress: crate::plugin_runtime::PluginCommandIngress,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<protocol::AppFrame> {
     let mut input = Some((seq, ingress));
     let mut frames = Vec::new();
     for _ in 0..100 {
-        let mut cx = crate::app::artifact_app_laws::fixture_step_context();
-        let output = crate::plugin_runtime::plugin_exchange(runtime, 7, input, &mut crate::app::artifact_app_laws::fixture_identity(), &mut cx).await.unwrap();
+        let output = crate::plugin_runtime::plugin_exchange(runtime, 7, input, &mut crate::app::artifact_app_laws::fixture_identity(), cx).await.unwrap();
         for bytes in output.frames { frames.push(protocol::decode_app_frame(&bytes).await.unwrap()); }
         input = output.retry_command;
         if input.is_none() { return frames; }
@@ -412,11 +435,12 @@ async fn run_ingress(runtime: &crate::plugin_runtime::PluginRuntime<TestRuntimeA
 /// owner-mutation payload past the decoder, and no `Error` frame hides the outcome.
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     crate::plugin_runtime::test_admit_instance_actor(&runtime, 7, "local");
-    let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+    let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), origin: Vec::new(), prepared_child_ops: Vec::new() },cx).await;
     assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
     let rejection = denied
         .iter()
@@ -432,11 +456,11 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     assert!(denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == 0)), "the rejected command still closes its own ingress slot: {denied:?}");
     for (prepare_seq, finish_seq, txn_id, commit) in [(1, 2, "receipt-commit", true), (3, 4, "receipt-rollback", false)] {
         let operation = <TestMutation as protocol::OpBinary>::encode_op(&TestMutation::SetCount(SetCount { value: prepare_seq as i32 })).unwrap();
-        let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], origin: Vec::new(), prepared_child_ops: Vec::new() }).await;
+        let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], origin: Vec::new(), prepared_child_ops: Vec::new() },cx).await;
         assert_eq!(prepared.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == prepare_seq)).count(), 1, "[TRACE] transaction prepare seq={prepare_seq} frames={prepared:?}");
         assert!(prepared.iter().any(|frame| matches!(frame, protocol::AppFrame::TransactionPrepared { txn_id: actual, rejection, .. } if actual == txn_id && rejection.is_empty())));
         let command = if commit { protocol::AppCommand::TransactionCommit { seq: finish_seq, txn_id: txn_id.into() } } else { protocol::AppCommand::TransactionRollback { seq: finish_seq, txn_id: txn_id.into() } };
-        let finished = cold_decoded_command(&runtime, finish_seq, command).await;
+        let finished = cold_decoded_command(&runtime, finish_seq, command,cx).await;
         assert_eq!(finished.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == finish_seq)).count(), 1, "[TRACE] transaction finish seq={finish_seq} frames={finished:?}");
         assert!(finished.iter().any(|frame| match frame {
             protocol::AppFrame::TransactionCommitted { txn_id: actual, edit_id } => commit && actual == txn_id && !edit_id.is_empty(),
@@ -444,17 +468,18 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
             _ => false,
         }));
     }
-    let rejected = cold_decoded_command(&runtime, 5, protocol::AppCommand::TransactionCommit { seq: 5, txn_id: "absent".into() }).await;
+    let rejected = cold_decoded_command(&runtime, 5, protocol::AppCommand::TransactionCommit { seq: 5, txn_id: "absent".into() },cx).await;
     assert!(rejected.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { in_reply_to: Some(5), .. })));
     assert!(!rejected.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { .. })));
     drop(cell);
     crate::plugin_runtime::plugin_destroy_app(&runtime, 7).await.unwrap();
     for _ in 0..200_000 {
-        crate::plugin_runtime::plugin_step_close_cleanup(&runtime).unwrap();
+        crate::plugin_runtime::plugin_step_close_cleanup(&runtime,cx).unwrap();
         if runtime.close_quarantine.borrow().get(7).is_none() { break; }
         std::thread::yield_now();
     }
     assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 /// 🧲️ `MergeDocumentArchive` reaches its handler on the encoded and on the decoded route (design §22.22): the program admits
@@ -462,22 +487,24 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
 /// the merge then does is the folder route law's (`🧪️tests/🧪️folder-reload-route`); closing the program cancels what it admitted.
 #[semio_framework_async_macros::async_test]
 async fn a_merge_archive_command_is_admitted_under_its_own_sequence_on_both_routes() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let merge = |seq| protocol::AppCommand::MergeDocumentArchive { seq, archive: protocol::DocumentArchivePack { parent_pack: vec![1, 2], parent_spr: vec![3], members: Vec::new() } };
-    for (seq, frames) in [(0, wire_command(&runtime, 0, merge(0)).await), (1, cold_decoded_command(&runtime, 1, merge(1)).await)] {
+    for (seq, frames) in [(0, wire_command(&runtime, 0, merge(0),cx).await), (1, cold_decoded_command(&runtime, 1, merge(1),cx).await)] {
         assert!(frames.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == seq)), "the merge is admitted under its own sequence: {frames:?}");
         assert!(!frames.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "an admitted merge answers no error frame: {frames:?}");
     }
     drop(cell);
     crate::plugin_runtime::plugin_destroy_app(&runtime, 7).await.unwrap();
     for _ in 0..200_000 {
-        crate::plugin_runtime::plugin_step_close_cleanup(&runtime).unwrap();
+        crate::plugin_runtime::plugin_step_close_cleanup(&runtime,cx).unwrap();
         if runtime.close_quarantine.borrow().get(7).is_none() { break; }
         std::thread::yield_now();
     }
     assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 async fn query_app() -> VcsArtifactApp<TestApp> {
@@ -499,10 +526,11 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
 
 #[semio_framework_async_macros::async_test]
 async fn local_interaction_registered_query_channel_continuation_ack_and_close() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original full-body dispatch caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }, crate::app::artifact_app_laws::fixture_mounted_policy()));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
-    let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 }).await);
+    let mut pending = std::collections::VecDeque::from(query_command(&runtime, 1, protocol::LocalInteractionQueryCommand::Read { request_id: 13 },cx).await);
     let mut expected_identity = None;
     let mut output = Vec::new();
     let mut closed = false;
@@ -512,7 +540,7 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     let mut ephemeral = 0;
     for _ in 0..200_000 {
         if pending.is_empty() {
-            let (next, _) = crate::plugin_runtime::plugin_continue_typed_operations(&runtime, crate::plugin_runtime::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
+            let (next, _) = crate::plugin_runtime::plugin_continue_typed_operations(&runtime, crate::plugin_runtime::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             if let Some((instance, batch)) = next {
                 assert_eq!(instance, 7);
                 for bytes in batch.frames { pending.push_back(protocol::decode_app_frame(&bytes).await.unwrap()); }
@@ -534,7 +562,7 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
                         pages += 1;
                         let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity, ordinal: page.ordinal };
                         seq += 1;
-                        pending.extend(query_command(&runtime, seq, protocol::LocalInteractionQueryCommand::Acknowledge { token }).await);
+                        pending.extend(query_command(&runtime, seq, protocol::LocalInteractionQueryCommand::Acknowledge { token },cx).await);
                     },
                     protocol::AppFrame::LocalInteractionQuery { reply: protocol::LocalInteractionQueryReply::Closed { cancelled: false, .. } } => closed = true,
                     frame => panic!("unexpected registered query frame {frame:?}"),
@@ -553,11 +581,12 @@ async fn local_interaction_registered_query_channel_continuation_ack_and_close()
     drop(cell);
     crate::plugin_runtime::plugin_destroy_app(&runtime, 7).await.unwrap();
     for _ in 0..200_000 {
-        crate::plugin_runtime::plugin_step_close_cleanup(&runtime).unwrap();
+        crate::plugin_runtime::plugin_step_close_cleanup(&runtime,cx).unwrap();
         if runtime.close_quarantine.borrow().get(7).is_none() { break; }
         std::thread::yield_now();
     }
     assert!(runtime.close_quarantine.borrow().get(7).is_none());
+}.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original full-body dispatch caller terminal close");result
 }
 
 /// 🔡️ A typed value whose declaration order is not its key-byte order, at two depths.

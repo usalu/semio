@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation,scriptInvocationEnvironment,scriptInvocationBudget } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -9,7 +9,7 @@ import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.shift() !== "shape") throw new Error("Expected test shape");
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🧩️shape/🟦️.ts"), ...args], this.root, "schema-validator:shape", 15_000);
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🧩️shape/🟦️.ts"), ...args], this.root, "schema-validator:shape", scriptInvocationBudget(this.invocation,15_000),{signal:this.invocation.control.signal,env:scriptInvocationEnvironment(this.invocation,process.env)});
   }
 }
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original, ...({ defaultCommand: "test" }) }));

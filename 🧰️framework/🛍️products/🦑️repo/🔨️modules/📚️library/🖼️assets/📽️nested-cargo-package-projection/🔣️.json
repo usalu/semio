@@ -11,7 +11,7 @@
       "identity": {
         "cargoPackageName": "semio-framework-os-renderer-wgpu",
         "nodePackageName": "@semio-tech/framework-renderer-wgpu",
-        "nxProjectName": "@semio-tech/framework-renderer-wgpu"
+        "projectName": "@semio-tech/framework-renderer-wgpu"
       },
       "requiredManifestEvidence": {
         "cargoManifestRelativePath": "Cargo.toml",
@@ -452,7 +452,7 @@
           "kind": "reference-path",
           "sourcePath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️.rs",
           "oldValue": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun ./📜️script.ts bench plugins --renderer native`\n",
-          "newValue": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n"
+          "newValue": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n"
         },
         {
           "id": "cargo-build-icons-input",

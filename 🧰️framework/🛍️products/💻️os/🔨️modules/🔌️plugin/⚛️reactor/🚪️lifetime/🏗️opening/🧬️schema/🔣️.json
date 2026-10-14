@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "operation",
+    "generation",
+    "epoch",
+    "instance",
+    "activationGeneration",
+    "requestSequence",
+    "factoryCalls",
+    "partialPaRetainedOnDenied",
+    "originalOpenSourceRetained",
+    "sameOriginalCaller",
+    "issuerReadyBeforeNativePublication",
+    "defaultCaller",
+    "recordIdAsOperation",
+    "eraseUncreatedOnDeferred",
+    "states",
+    "issuerFinalClose",
+    "creationLoanReturnedLast",
+    "cancelRetainsPartialPa",
+    "issuerReceiptPostedOnce"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.os.original-opening-receiver"
+    },
+    "operation": {
+      "const": 17
+    },
+    "generation": {
+      "const": 9
+    },
+    "epoch": {
+      "const": 19
+    },
+    "instance": {
+      "const": 7
+    },
+    "activationGeneration": {
+      "const": 3
+    },
+    "requestSequence": {
+      "const": 11
+    },
+    "factoryCalls": {
+      "const": 1
+    },
+    "partialPaRetainedOnDenied": {
+      "const": true
+    },
+    "originalOpenSourceRetained": {
+      "const": true
+    },
+    "sameOriginalCaller": {
+      "const": true
+    },
+    "issuerReadyBeforeNativePublication": {
+      "const": true
+    },
+    "defaultCaller": {
+      "const": false
+    },
+    "recordIdAsOperation": {
+      "const": false
+    },
+    "eraseUncreatedOnDeferred": {
+      "const": false
+    },
+    "states": {
+      "const": [
+        {
+          "phase": "opening",
+          "partialPa": false,
+          "nativeCreated": false
+        },
+        {
+          "phase": "factory-owned",
+          "partialPa": true,
+          "nativeCreated": false
+        },
+        {
+          "phase": "issuer-denied",
+          "partialPa": true,
+          "nativeCreated": false
+        },
+        {
+          "phase": "issuer-pending",
+          "partialPa": true,
+          "nativeCreated": false
+        },
+        {
+          "phase": "issuer-ready",
+          "partialPa": true,
+          "nativeCreated": false
+        },
+        {
+          "phase": "native-published",
+          "partialPa": false,
+          "nativeCreated": true
+        }
+      ]
+    },
+    "issuerFinalClose": {
+      "const": true
+    },
+    "creationLoanReturnedLast": {
+      "const": true
+    },
+    "cancelRetainsPartialPa": {
+      "const": true
+    },
+    "issuerReceiptPostedOnce": {
+      "const": true
+    }
+  }
+}

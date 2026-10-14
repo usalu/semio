@@ -85,7 +85,7 @@ import refusalFixture from "../../../../../../../../🔨️modules/🌱️value/
 import deflateFixture from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧪️tests/🧫️fixtures/🧭️cause/📡️codec/🔣️.json";
 import {deflateRawSync,inflateRawSync} from "node:zlib";
 import {PackError} from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🟦️.ts";
-import {ValueError} from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 
 test("retained Deflate physical credit has an explicit closed ownership authority",()=>{
  const admission=deflateFixture.retainedAdmission;

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/stdio-mp4",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:typescript",
@@ -9,7 +9,7 @@
   ],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "default",
@@ -39,7 +39,7 @@
       ]
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check",
@@ -56,7 +56,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

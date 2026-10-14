@@ -27,7 +27,7 @@ Every lifecycle step is a program argv — no shell script — implemented once 
 | Hook | Command | What it does |
 |---|---|---|
 | `onCreateCommand` | `sudo chown vscode:vscode` of the two checkout volumes | Docker creates them root-owned |
-| `postCreateCommand` | `bun nx run workspace:setup` | every language environment, the generated sources, the agent instruction aliases and both MCP binaries |
+| `postCreateCommand` | `bun repo run workspace:setup` | every language environment, the generated sources, the agent instruction aliases and both MCP binaries |
 | `postStartCommand` | `bun ./📜️script.ts setup devcontainer start` | hands the persisted home volumes and submodules to `vscode`; Noto Color Emoji fontconfig fallback for `sans-serif`/`serif`/`monospace`; keeps `~/.claude.json` inside the Claude volume and links it back; adds only the missing git `safe.directory` entries; with `~/.ssh/id_ed25519_signing.pub`, SSH commit/tag signing through one agent on `~/.ssh/semio-ssh-agent.sock` |
 | `postAttachCommand` | `bun ./📜️script.ts setup devcontainer attach` | installs GitKraken Desktop, the `gk` CLI and F3D when missing; creates or completes the GitKraken workspace from the checkout and its submodules and sets it as default; reinstalls the git hooks (`bun ./📜️script.ts micro-commit install-hooks`); packages the workspace VS Code extension through `@semio-tech/repo-vscode:build-vsix` and installs it into the first editor CLI that confirms it |
 | on demand | `bun ./📜️script.ts setup devcontainer gitkraken` | starts GitKraken Desktop on the checkout, on the virtual display `:99` (Xvfb) when none is set |
@@ -36,7 +36,7 @@ Optional steps report and continue; a start never runs a destructive source-cont
 
 MCP client configurations are repository files (`.mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`, …) kept consistent by the root `📜️script.ts` policy, not by the container lifecycle.
 
-The editor block of `devcontainer.json` (`customizations.vscode.settings` and `extensions`) is derived, never edited: `.vscode/settings.json` and `.vscode/extensions.json` are canonical for every native host, `editor-overlay.json` declares what the container omits (host-only entries) or sets (the Linux interpreter) and adds, and `bun nx run workspace:generate-config` rewrites the block (`generate-config-check` verifies it; so does the root policy). The same command keeps the cargo-nextest scope files equal to the root `.config/nextest.toml` plus their own overrides and checks that every `.github/dependabot.yml` directory exists and holds its manifest.
+The editor block of `devcontainer.json` (`customizations.vscode.settings` and `extensions`) is derived, never edited: `.vscode/settings.json` and `.vscode/extensions.json` are canonical for every native host, `editor-overlay.json` declares what the container omits (host-only entries) or sets (the Linux interpreter) and adds, and `bun repo run workspace:generate-config` rewrites the block (`generate-config-check` verifies it; so does the root policy). The same command keeps the cargo-nextest scope files equal to the root `.config/nextest.toml` plus their own overrides and checks that every `.github/dependabot.yml` directory exists and holds its manifest.
 
 ## Devcontainer Persistence
 

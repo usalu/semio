@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "copies",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "original-presented-params"
+    },
+    "copies": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          1,
+          3,
+          64
+        ]
+      },
+      "uniqueItems": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "result",
+          "cause",
+          "member"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 65536
+          },
+          "result": {
+            "enum": [
+              "ready",
+              "failure"
+            ]
+          },
+          "cause": {
+            "enum": [
+              null,
+              "duplicateMember",
+              "trailingData"
+            ]
+          },
+          "member": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

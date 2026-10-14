@@ -2,7 +2,7 @@ import * as vitest from "vitest";
 import { fileURLToPath } from "node:url";
 import * as shard from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import * as response from "../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts";
-import { createActorBytePage } from "../../../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts";
+import { createActorBytePage } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts";
 import { registerTests1 as registerResponse } from "../🧪️actorreturnresponseframing-uses-canonical-vectors-with-no-payload-copies/🟦️.ts";
 import { registerTests1 as registerShard } from "../🧪️shardclient-reserved-response-settlement/🟦️.ts";
 import { registerRetryableLifecycleDeadlineTests } from "../⏱️retryable-lifecycle-deadline/🟦️.ts";

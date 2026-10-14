@@ -28,7 +28,7 @@ use std::time::Duration;
 /// setting — unrelated to per-turn scheduling (terra-shard-grants: per-turn budgets now travel in
 /// `ShardFrame::Grant`, sent by whichever caller drives this process's stdin; this binary does not
 /// itself compute or need one for `instantiate`, which only runs once at startup, retains no actor turn and so carries no retained authority).
-const INSTANTIATE_BUDGET: Budget = Budget { retained: semio_framework_actor::RetainedTurnInput { operation: 0, generation: 0, epoch: 0, grant: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 } }, fuel: 200_000_000, deadline_ms: 500, max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 };
+fn instantiate_budget(original_clock:fn()->Option<u64>)->Budget{Budget { retained: semio_framework_actor::RetainedTurnInput { operation: 0, generation: 0, epoch: 0, grant: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 } }, fuel: 200_000_000, deadline_us: original_clock().expect("shard process root clock is available").checked_add(500_000).expect("shard admission deadline fits the original clock"), max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 }}
 
 /// 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
 /// never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
@@ -62,7 +62,8 @@ fn main() {
         std::process::exit(2);
     });
 
-    let runtime = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
+    let original_clock:fn()->Option<u64>=semio_framework_job::default_now_us;
+    let runtime = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(original_clock)));
     let bytes = std::fs::read(wasm_path).unwrap_or_else(|error| {
         eprintln!("[semio-shard] read {wasm_path}: {error}");
         std::process::exit(1);
@@ -73,7 +74,7 @@ fn main() {
         eprintln!("[semio-shard] compile failed: {error}");
         std::process::exit(1);
     });
-    let instance = semio_framework_async::block_on(runtime.instantiate(&compiled, ActorId(actor_id), &[], &INSTANTIATE_BUDGET)).unwrap_or_else(|error| {
+    let instance = semio_framework_async::block_on(runtime.instantiate(&compiled, ActorId(actor_id), &[], &instantiate_budget(original_clock))).unwrap_or_else(|error| {
         eprintln!("[semio-shard] instantiate failed: {error}");
         std::process::exit(1);
     });

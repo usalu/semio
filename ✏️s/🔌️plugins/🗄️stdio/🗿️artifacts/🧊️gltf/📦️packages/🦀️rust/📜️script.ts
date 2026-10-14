@@ -5,7 +5,8 @@ import { runDefinitionChecks } from "../../🧪️tests/📜️definition/🟦�
 import { runBorrowedCarrierChecks } from "../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/📦️pack/🧪️tests/🫳️borrowed-carriers/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import {prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { devToolingEnv } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -26,7 +27,7 @@ class NativeSchemaScript extends BundleScript {
     }
     const manifest = resolve(workspace, relative(this.repoRoot, this.root), "Cargo.toml");
     const target = segments[0] ? join(workspace, "target") : join(artifacts, "gltf-native-target");
-    const env = devToolingEnv({ NX_WORKSPACE_ROOT: workspace, CARGO_TARGET_DIR: target, CARGO_BUILD_BUILD_DIR: join(target, "intermediate") });
+    const env = devToolingEnv({ SEMIO_WORKSPACE_ROOT: workspace, CARGO_TARGET_DIR: target, CARGO_BUILD_BUILD_DIR: join(target, "intermediate") });
     const laws: readonly (readonly [string, string])[] = [
       ["semio-s-artifact-stdio-gltf", "definition_tests::native_codec_identity_matches_structural_graph_and_independent_blake3"],
       ["semio-s-artifact-stdio-gltf-model", "standards::v2_0::subsets::any::io::component::binary::snapshot::owned_pack::borrowed_carrier_tests::borrowed_gltf_carriers_match_the_neutral_owned_metadata_and_serde_oracle"],
@@ -41,7 +42,7 @@ class NativeSchemaScript extends BundleScript {
     process.once("SIGINT", abort); process.once("SIGTERM", abort);
     let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
     try {
-      lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(workspace, "agents", "resource-leases"), buildDirectory: target, args, signal: controller.signal });
+      lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(workspace, "agents", "resource-leases"), buildDirectory: env.CARGO_BUILD_BUILD_DIR!, targetDirectory: target, args, signal: controller.signal });
       for (const [name, law] of laws) {
         let observed = false;
         await runOwnedCommand("cargo", ["test", "--offline", "--manifest-path", manifest, "-p", name, "--lib", law, "--", "--exact", "--nocapture"], workspace, "gltf-native-schema", budget, { env, signal: controller.signal, onLine: line => { if (line.includes(`test ${law} ... ok`)) observed = true; } });

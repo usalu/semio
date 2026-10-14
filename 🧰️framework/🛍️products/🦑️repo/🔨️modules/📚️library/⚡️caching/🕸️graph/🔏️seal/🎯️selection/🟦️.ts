@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {lstat,readFile} from "node:fs/promises";
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
 /** 🎯️ Exact selected task ownership, without a workspace-wide orchestration root. */
 export interface SelectedGraphScopeV1 {readonly version:1;readonly tasks:readonly string[];readonly roots:readonly string[];readonly files:readonly string[];}
@@ -17,7 +17,8 @@ const pathPattern=/^(?!\/)(?!.*(?:^|\/)\.{1,2}(?:\/|$))[^\\:\u0000]+$/u;
 const identities=new Set(["package.json","project.json","📋️project.json","Cargo.toml","go.mod","go.work","go.sum","go.work.sum","pyproject.toml","uv.lock","bun.lock","package-lock.json","yarn.lock","pnpm-lock.yaml","nx.json",".nxignore",".gitignore","bunfig.toml","rust-toolchain.toml"]);
 /** 🏛️ Retains every project identity, package resolver and workspace compiler authority. */
 export function isGlobalGraphIdentityPathV1(path:string):boolean {return identities.has(path.split("/").at(-1)!)||path===".cargo/config.toml"||path.endsWith("/.cargo/config.toml");}
-export function validateSelectedGraphValueV1(kind:string,value:unknown):void {if(validateJsonSchemaSubset({...schema,$ref:`#/$defs/${kind}`},value).length)throw Error(`Selected graph ${kind} refused`);}
+const selectedPlans=new Map<string,CompiledJsonSchemaSubset>();
+export function validateSelectedGraphValueV1(kind:string,value:unknown):void {if(!Object.hasOwn(schema.$defs,kind))throw Error(`Selected graph ${kind} refused`);let plan=selectedPlans.get(kind);if(!plan){plan=compileJsonSchemaSubset({$ref:`#/$defs/${kind}`},schema);selectedPlans.set(kind,plan);}if(plan.validate(value).length)throw Error(`Selected graph ${kind} refused`);}
 function sameJournal(left:SelectedGraphJournalWitnessV1,right:SelectedGraphJournalWitnessV1):boolean{return left.epoch===right.epoch&&left.sequence===right.sequence&&left.globalIdentity.sha256===right.globalIdentity.sha256&&left.selectedMembership.sha256===right.selectedMembership.sha256&&JSON.stringify(left.globalIdentity.paths)===JSON.stringify(right.globalIdentity.paths)&&JSON.stringify(left.selectedMembership.paths)===JSON.stringify(right.selectedMembership.paths);}
 async function bounded<T>(rows:readonly T[],visit:(row:T)=>Promise<void>,signal?:AbortSignal):Promise<void>{
  let next=0;await Promise.all(Array.from({length:Math.min(64,rows.length)},async()=>{while(next<rows.length){signal?.throwIfAborted();await visit(rows[next++]!);}}));

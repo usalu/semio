@@ -79,7 +79,7 @@ export function shippedComponentFindings(repoRoot: string, entry: Pick<DeployedR
   if (!existsSync(deliverable.receipt) || !existsSync(deliverable.wasm)) return { warnings: [`${entry.pluginId}: no shipped component and receipt under ${relative(repoRoot, deliverable.directory)} — the described component is not built`], errors: [] };
   try {
     const findings = componentReceiptFindingsV1(readComponentReceiptV1(deliverable.receipt), { pluginId: entry.pluginId, packageId: entry.packageId, profile: SHIPPED_COMPONENT_PROFILE }, readFileSync(deliverable.wasm), semanticPack);
-    return { warnings: [], errors: findings.map((finding) => `${entry.pluginId}: ${finding} (${relative(repoRoot, deliverable.receipt)}) — rebuild it with \`bun nx run <its crate project>:component\``) };
+    return { warnings: [], errors: findings.map((finding) => `${entry.pluginId}: ${finding} (${relative(repoRoot, deliverable.receipt)}) — rebuild it with \`bun repo run <its crate project>:component\``) };
   } catch (error) {
     return { warnings: [], errors: [`${entry.pluginId}: ${relative(repoRoot, deliverable.receipt)} does not decode: ${boundedCatalogDiagnostic(error)}`] };
   }

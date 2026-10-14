@@ -3,7 +3,7 @@ import type {LayoutArtifact,LayoutRect,LayoutBounds,Layer,Frame,Page,ParentPage}
 import {ValueError,sqliteOperation,type SqliteDatabase,type SqliteTable,type SqliteValue,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,readBinary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {SEMIO_DRAWING_SQLITE_SCHEMA,projectSemioDrawingSqliteComponent,semioDrawingSnapshotFromSqliteComponent} from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import{projectFormDictionary,reconstructFormDictionary}from"./🧾️dictionary/🟦️.ts";
 import{LayoutRows}from"./🔍️rows/🟦️.ts";

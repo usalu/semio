@@ -13,7 +13,7 @@ fn start_of(id: &str) -> StartFn {
 
 fn pair_inputs(kind: &Kind) -> WidgetInputs {
     let pair = json!({ "recipe": "compound", "of": [{ "recipe": "box", "size": [1, 1, 1] }, { "recipe": "translate", "of": { "recipe": "box", "size": [2, 1, 1] }, "by": [3, 0, 0] }] });
-    WidgetInputs::new("w", kind, BTreeMap::from([("solid".to_string(), GeometryValue::shape(support::build_shape(&pair)))]))
+    WidgetInputs::new_cold("w", kind, BTreeMap::from([("solid".to_string(), GeometryValue::shape(support::build_shape(&pair)))]))
 }
 
 #[test]
@@ -57,6 +57,6 @@ fn a_cancelled_job_ends_with_a_localized_cancelled_fault_and_stays_ended() {
 fn a_non_shape_input_is_a_fault_at_that_port() {
     let kind = support::kind_of("analysis.area");
     let values = BTreeMap::from([("shape".to_string(), GeometryValue::Number(1.0))]);
-    let fault = support::drive(start_of("analysis.area")(kind, WidgetInputs::new("w", kind, values)), 1).fault.expect("a fault");
+    let fault = support::drive(start_of("analysis.area")(kind, WidgetInputs::new_cold("w", kind, values)), 1).fault.expect("a fault");
     assert_eq!((fault.code.as_str(), fault.port.as_deref()), ("generation3d.geometry.input-type", Some("shape")));
 }

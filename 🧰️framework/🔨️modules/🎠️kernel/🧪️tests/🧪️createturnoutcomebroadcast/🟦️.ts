@@ -124,7 +124,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { describe, expect, it, vi } = vitest;
 
-  const BUDGET_FIXTURE: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16 };
+  const BUDGET_FIXTURE: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNodes: 100, mailboxLen: 16, maxEffects: 8, maxPatchBytes: 1 << 16, maxFrames: 8 };
 
   /** 🧪️ A `ShardWorkerLike` that immediately auto-replies success to every request-bearing message —
    * enough for `ActivationRegistry.activate`/`suspend` to resolve without hand-delivering replies

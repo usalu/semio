@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-kernel",
   "version": "0.1.0",
   "description": "framework-kernel · pooled actor/plugin runtime (ActivationRegistry, IoEntryGraph routing, runtime metrics) — see 🟦️.ts.",
@@ -13,9 +13,9 @@
     "@semio-tech/schema-validator-ts": "workspace:*"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework-kernel:test",
-    "test-localized-label": "nx run @semio-tech/framework-kernel:test-localized-label",
-    "test-receipt-port": "nx run @semio-tech/framework-kernel:test-receipt-port"
+    "test": "bun repo run @semio-tech/framework-kernel:test",
+    "test-localized-label": "bun repo run @semio-tech/framework-kernel:test-localized-label",
+    "test-receipt-port": "bun repo run @semio-tech/framework-kernel:test-receipt-port"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

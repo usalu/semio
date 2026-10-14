@@ -1,189 +1,138 @@
-/** 🔁️ The one registered all-plugin rebuild: the build-input gates (no cargo unit built from outside this tree, a fresh
- * mutation-authority projection, the guest-linked framework crates compiling for every wasm target), every component built ONCE
- * in the one shipped profile by the release driver, its committed semantic descriptor written from those bytes with its receipt
- * (`components describe --all`), every module page materialized from the receipt-bound bytes, the generated registry
- * and its check, the restaged `s` guests and their convergence proof, the flow-core browser bindings, then the catalog preflight
- * (seconds) and the trusted catalog of every package, from one tree, in the order `🔣️.json` declares. The whole span runs inside ONE queued exclusive `wasm-build`
- * lease, so no other all-plugin wasm build lands between a descriptor and the staging it describes. Each step is an
- * existing product verb run through nx; a failing step stops the chain. `--from <step>` resumes, `--to <step>` stops. */
-
-import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+/** 🔁️ Validates owner-authored rebuild contributions and executes one cancellable leased chain. */
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { getWorkspaceRoot, orchestratorBudgetOpts, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, scriptInvocationBudget, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, readComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
-import { moduleDirectoryName } from "../📦️deployment/🟦️.ts";
-import { REGISTRY_DIAGNOSTICS_FILE, parseRegistryChannelDiagnosticsV1 } from "../🔎️discovery/🟦️.ts";
-import { readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import rebuildSchema from "./🧬️schema/🔣️.json";
 
-const guestCheckSchema = rebuildSchema.$defs.GuestFrameworkCheckV1;
-const guestCheckKeys = [...guestCheckSchema.required].sort().join("\0");
-const guestCrate = new RegExp(guestCheckSchema.properties.packages.items.pattern, "u");
-const guestFeature = new RegExp(guestCheckSchema.properties.features.items.pattern, "u");
-const guestWorkspace = new RegExp(guestCheckSchema.properties.workspace.pattern, "u");
-
-/** 🧱️ Where a step sits in the dependency order: the input gates guard every build, descriptors feed the registry, the registry feeds the guests, the guests feed the catalog. */
-export const REBUILD_STAGES = ["inputs", "descriptors", "registry", "guests", "catalog"] as const;
-
-/** 🚦️ The repository resource every all-plugin wasm build serializes on (`lease exclusive wasm-build …` for shell callers). */
+/** 🧱️ Dependency order shared by general and deployment-owned contributions. */
+export const REBUILD_STAGES = Object.freeze(rebuildSchema.$defs.RebuildStepV1.properties.stage.enum) as readonly ("inputs" | "descriptors" | "registry" | "guests" | "catalog")[];
+/** 🚦️ Serializes descriptor, registry, staging and catalog publication. */
 export const WASM_BUILD_LEASE = "wasm-build";
-
-/** 🪜️ One declared step of the chain. */
+/** 🪜️ One owner-authored Nx operation. */
 export type RebuildStepV1 = Readonly<{ id: string; stage: (typeof REBUILD_STAGES)[number]; command: readonly string[] }>;
+/** 🧊️ One portable workspace-owned guest compilation check. */
+export type GuestFrameworkCheckV1 = Readonly<{ target: "wasm32-wasip2" | "wasm32-unknown-unknown"; workspace: string; packages: readonly string[]; features: readonly string[] }>;
+/** 📜️ Explicit contribution input; concrete callers compose their owned stages. */
+export type RebuildPlanV1 = Readonly<{ schema: "semio.plugin-registry.rebuild-chain/v1"; steps: readonly RebuildStepV1[]; guestFrameworkChecks: readonly GuestFrameworkCheckV1[] }>;
 
-/** 📜️ Reads and validates the declared chain: known schema, unique ids, nx commands, stages in dependency order. */
-export function readRebuildChain(path = join(dirname(fileURLToPath(import.meta.url)), "🔣️.json")): readonly RebuildStepV1[] {
-  const document = JSON.parse(readFileSync(path, "utf8")) as { schema?: unknown; steps?: unknown };
-  if (document.schema !== "semio.plugin-registry.rebuild-chain/v1" || !Array.isArray(document.steps) || document.steps.length === 0) throw new Error("rebuild chain is not a semio.plugin-registry.rebuild-chain/v1 document");
+const keys = (value: object, required: readonly string[]): boolean => Object.keys(value).sort().join("\0") === [...required].sort().join("\0");
+const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
+const matching = (values: unknown, pattern: string, minimum: number): values is string[] => Array.isArray(values) && values.length >= minimum && new Set(values).size === values.length && values.every(value => typeof value === "string" && new RegExp(pattern, "u").test(value));
+
+/** 🔎️ Admits the exact schema and cross-field uniqueness, stage and crate-feature laws. */
+export function parseRebuildPlanV1(value: unknown): RebuildPlanV1 {
+  if (!record(value) || !keys(value, rebuildSchema.required) || value.schema !== rebuildSchema.properties.schema.const || !Array.isArray(value.steps) || value.steps.length === 0 || !Array.isArray(value.guestFrameworkChecks)) throw Error("rebuild plan is not an exact semio.plugin-registry.rebuild-chain/v1 document");
   const ids = new Set<string>();
   let stage = 0;
-  return Object.freeze(
-    document.steps.map((value: any) => {
-      const next = REBUILD_STAGES.indexOf(value?.stage);
-      if (typeof value?.id !== "string" || ids.has(value.id) || next < stage || !Array.isArray(value.command) || value.command[0] !== "nx" || value.command.some((part: unknown) => typeof part !== "string"))
-        throw new Error(`rebuild chain step ${String(value?.id)} is duplicated, out of stage order, or not an nx command`);
-      ids.add(value.id);
-      stage = next;
-      return Object.freeze({ id: value.id, stage: value.stage, command: Object.freeze([...value.command]) }) as RebuildStepV1;
-    }),
-  );
+  const steps = value.steps.map(value => {
+    const schema = rebuildSchema.$defs.RebuildStepV1;
+    if (!record(value) || !keys(value, schema.required) || typeof value.id !== "string" || !new RegExp(schema.properties.id.pattern, "u").test(value.id) || !Array.isArray(value.command) || value.command.length < schema.properties.command.minItems || value.command[0] !== "nx" || value.command.some(part => typeof part !== "string" || !part.length)) throw Error("rebuild step requires exact keys, a valid id and an nx command");
+    const next = REBUILD_STAGES.indexOf(value.stage as RebuildStepV1["stage"]);
+    if (ids.has(value.id) || next < stage) throw Error(`rebuild chain step ${value.id} is duplicated or out of stage order`);
+    ids.add(value.id);
+    stage = next;
+    return Object.freeze({ id: value.id, stage: value.stage, command: Object.freeze([...value.command]) }) as RebuildStepV1;
+  });
+  const guestFrameworkChecks = value.guestFrameworkChecks.map(value => {
+    const schema = rebuildSchema.$defs.GuestFrameworkCheckV1;
+    if (!record(value) || !keys(value, schema.required)) throw Error("guest-framework check declares missing or unknown keys");
+    if (!schema.properties.target.enum.includes(value.target as string) || !matching(value.packages, schema.properties.packages.items.pattern, 1) || !matching(value.features, schema.properties.features.items.pattern, 0) || !value.features.every(feature => (value.packages as string[]).includes(feature.split("/")[0]!))) throw Error("guest-framework check requires a known target, distinct crates and crate-qualified features");
+    if (typeof value.workspace !== "string" || value.workspace.length > schema.properties.workspace.maxLength || !new RegExp(schema.properties.workspace.pattern, "u").test(value.workspace)) throw Error("guest-framework check requires a portable workspace Cargo.toml");
+    return Object.freeze({ target: value.target, workspace: value.workspace, packages: Object.freeze([...value.packages]), features: Object.freeze([...value.features]) }) as GuestFrameworkCheckV1;
+  });
+  return Object.freeze({ schema: "semio.plugin-registry.rebuild-chain/v1", steps: Object.freeze(steps), guestFrameworkChecks: Object.freeze(guestFrameworkChecks) });
 }
 
-/** 🧊️ One fail-fast `cargo check --lib` of guest-linked framework crates for one wasm target inside the one cargo workspace
- * (`workspace`, repo-relative `Cargo.toml`) that owns them, as `🔣️.json` declares it. */
-export type GuestFrameworkCheckV1 = Readonly<{ target: "wasm32-wasip2" | "wasm32-unknown-unknown"; workspace: string; packages: readonly string[]; features: readonly string[] }>;
-
-/** 📜️ Reads the declared guest-framework checks against `🧬️schema/🔣️.json` `GuestFrameworkCheckV1`: exact keys, known targets, a
- * portable repo-relative workspace manifest (`/` segments only, no `.`/`..`, `\` or `:`), distinct crate names, features naming a checked crate. */
-export function readGuestFrameworkChecks(path = join(dirname(fileURLToPath(import.meta.url)), "🔣️.json")): readonly GuestFrameworkCheckV1[] {
-  const document = JSON.parse(readFileSync(path, "utf8")) as { guestFrameworkChecks?: unknown };
-  if (!Array.isArray(document.guestFrameworkChecks) || document.guestFrameworkChecks.length === 0) throw new Error("rebuild chain declares no guestFrameworkChecks");
-  return Object.freeze(
-    document.guestFrameworkChecks.map((value: any) => {
-      const packages = value?.packages, features = value?.features, workspace = value?.workspace;
-      if (!guestCheckSchema.properties.target.enum.includes(value?.target) || !Array.isArray(packages) || packages.length === 0 || new Set(packages).size !== packages.length || !packages.every((name: unknown) => typeof name === "string" && guestCrate.test(name))
-        || !Array.isArray(features) || new Set(features).size !== features.length || !features.every((feature: unknown) => typeof feature === "string" && guestFeature.test(feature) && packages.includes(feature.split("/")[0])))
-        throw new Error(`rebuild chain guest-framework check ${JSON.stringify(value)} is not a known target with distinct crates and crate-qualified features`);
-      if (typeof workspace !== "string" || workspace.length > guestCheckSchema.properties.workspace.maxLength || !guestWorkspace.test(workspace))
-        throw new Error(`rebuild chain guest-framework check ${JSON.stringify(value)} names no repo-relative workspace Cargo.toml`);
-      if (Object.keys(value).sort().join("\0") !== guestCheckKeys) throw new Error(`rebuild chain guest-framework check ${JSON.stringify(value)} declares unknown keys`);
-      return Object.freeze({ target: value.target, workspace, packages: Object.freeze([...packages]), features: Object.freeze([...features]) }) as GuestFrameworkCheckV1;
-    }),
-  );
+/** 📖️ Reads the neutral plan by default or an explicit owner-supplied file. */
+export function readRebuildPlanV1(path = join(dirname(fileURLToPath(import.meta.url)), "🔣️.json")): RebuildPlanV1 {
+  return parseRebuildPlanV1(JSON.parse(readFileSync(path, "utf8")));
 }
 
-/** 🧊️ The cargo argument vector of one declared guest-framework check, scoped to its declared workspace. */
+/** 🧩️ Merges explicit contributions in stage order while preserving owner order within each stage. */
+export function composeRebuildPlansV1(plans: readonly RebuildPlanV1[]): RebuildPlanV1 {
+  const admitted = plans.map(parseRebuildPlanV1);
+  return parseRebuildPlanV1({ schema: "semio.plugin-registry.rebuild-chain/v1", steps: admitted.flatMap(plan => plan.steps).sort((a, b) => REBUILD_STAGES.indexOf(a.stage) - REBUILD_STAGES.indexOf(b.stage)), guestFrameworkChecks: admitted.flatMap(plan => plan.guestFrameworkChecks) });
+}
+
+/** 🧊️ Produces portable Cargo arguments from the workspace-owned contract. */
 export function guestFrameworkCheckArgs(check: GuestFrameworkCheckV1): readonly string[] {
-  return Object.freeze(["check", "--manifest-path", check.workspace, "--lib", "--target", check.target, ...check.packages.flatMap((name) => ["-p", name]), ...(check.features.length ? ["--features", check.features.join(",")] : [])]);
+  return Object.freeze(["check", "--manifest-path", check.workspace, "--lib", "--target", check.target, ...check.packages.flatMap(name => ["-p", name]), ...(check.features.length ? ["--features", check.features.join(",")] : [])]);
 }
 
-/** 🧊️ `guest-framework-check`: the declared checks in order; cargo stops at the first crate that fails, so a broken guest-linked framework
- * crate refuses the rebuild in minutes instead of inside the 60-component build. */
+/** 🧊️ Runs supplied guest checks with progress, bounded execution and process-tree cancellation. */
 export class GuestFrameworkCheckScript extends BundleScript {
-  run(segments: string[]): void {
-    if (segments.length) throw new Error("usage: guest-framework-check");
-    const repoRoot = getWorkspaceRoot();
-    for (const check of readGuestFrameworkChecks()) {
+  constructor(root: string, repoRoot: string, invocation: ScriptInvocation, private readonly plan: RebuildPlanV1 = readRebuildPlanV1()) { super(root, repoRoot, invocation); }
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("usage: guest-framework-check");
+    for (const check of parseRebuildPlanV1(this.plan).guestFrameworkChecks) {
       const started = Date.now();
       console.log(`guest-framework-check ${check.target} (${check.workspace}): ${check.packages.join(", ")}`);
-      runCmd("cargo", [...guestFrameworkCheckArgs(check), "--message-format=json"], { cwd: repoRoot, ...orchestratorBudgetOpts() });
+      await runOwnedCommand("cargo", [...guestFrameworkCheckArgs(check), "--message-format=json"], this.repoRoot, "guest-framework-check", scriptInvocationBudget(this.invocation, 1200000), { signal: this.invocation.control.signal });
       console.log(`guest-framework-check ${check.target} done in ${Math.round((Date.now() - started) / 1000)} s`);
     }
   }
 }
 
-/** 🧭️ The contiguous step range `--from`/`--to` select, refusing an unknown or inverted bound. */
+/** 🧭️ Selects contiguous ranges and rejects unknown, repeated or inverted bounds. */
 export function selectRebuildSteps(chain: readonly RebuildStepV1[], segments: readonly string[]): readonly RebuildStepV1[] {
   const bound = (flag: string, fallback: number): number => {
     const index = segments.indexOf(flag);
     if (index === -1) return fallback;
-    const position = chain.findIndex((step) => step.id === segments[index + 1]);
-    if (position === -1) throw new Error(`${flag} names no step (${chain.map((step) => step.id).join("|")})`);
+    const position = chain.findIndex(step => step.id === segments[index + 1]);
+    if (position === -1) throw Error(`${flag} names no step (${chain.map(step => step.id).join("|")})`);
     return position;
   };
   const flags = segments.filter((_, index) => index % 2 === 0);
-  if (segments.length % 2 !== 0 || flags.some((flag) => flag !== "--from" && flag !== "--to") || new Set(flags).size !== flags.length) throw new Error("usage: rebuild-all [--from <step>] [--to <step>]");
-  const from = bound("--from", 0);
-  const to = bound("--to", chain.length - 1);
-  if (from > to) throw new Error("rebuild-all --from comes after --to");
+  if (segments.length % 2 !== 0 || flags.some(flag => flag !== "--from" && flag !== "--to") || new Set(flags).size !== flags.length) throw Error("usage: rebuild-all [--from <step>] [--to <step>]");
+  const from = bound("--from", 0), to = bound("--to", chain.length - 1);
+  if (from > to) throw Error("rebuild-all --from comes after --to");
   return chain.slice(from, to + 1);
 }
 
-/** 🏁️ `rebuild-all [--from <step>] [--to <step>]`: runs the selected steps in order under one queued exclusive
- * `wasm-build` lease, with a numbered progress line per step; cancellation (SIGINT/SIGTERM) releases the lease. */
+/** 🎛️ Owns execution and lease custody behind the general caller-facing boundary. */
+export interface RebuildExecutionPortsV1 {
+  acquire(signal: AbortSignal): Promise<Readonly<{ release(): void }>>;
+  run(step: RebuildStepV1, signal: AbortSignal, budgetMilliseconds: number): Promise<void>;
+}
+
+/** 🏁️ Executes an explicit chain under one exclusive wasm-build lease. */
 export class RebuildAllScript extends BundleScript {
+  constructor(root: string, repoRoot: string, invocation: ScriptInvocation, private readonly plan: RebuildPlanV1 = readRebuildPlanV1(), private readonly execution?: RebuildExecutionPortsV1) { super(root, repoRoot, invocation); }
   async run(segments: string[]): Promise<void> {
-    const chain = readRebuildChain();
-    const steps = selectRebuildSteps(chain, segments);
-    const repoRoot = getWorkspaceRoot();
-    const controller = new AbortController(), abort = () => controller.abort();
-    process.once("SIGINT", abort);
-    process.once("SIGTERM", abort);
-    const waited = Date.now();
-    const lease = await acquireQueuedResourceLease({ directory: repoCacheDirectory(repoRoot, "agents", "resource-leases"), resource: WASM_BUILD_LEASE, mode: "exclusive", owner: "rebuild-all", signal: controller.signal });
+    const chain = parseRebuildPlanV1(this.plan).steps, steps = selectRebuildSteps(chain, segments);
+    const signal = this.invocation.control.signal, waited = Date.now();
+    const execution = this.execution ?? {
+      acquire: (signal: AbortSignal) => acquireQueuedResourceLease({ directory: repoCacheDirectory(this.repoRoot, "agents", "resource-leases"), resource: WASM_BUILD_LEASE, mode: "exclusive", owner: "rebuild-all", signal }),
+      run: (step: RebuildStepV1, signal: AbortSignal, budgetMilliseconds: number) => runOwnedCommand(process.execPath, [...step.command], this.repoRoot, `rebuild-all:${step.id}`, budgetMilliseconds, { signal }),
+    };
+    const lease = await execution.acquire(signal);
     console.log(`rebuild-all holds ${WASM_BUILD_LEASE} after ${Math.round((Date.now() - waited) / 1000)} s`);
     try {
       for (const step of steps) {
-        const index = chain.indexOf(step);
-        const started = Date.now();
+        const budgetMilliseconds = scriptInvocationBudget(this.invocation, 7200000), index = chain.indexOf(step), started = Date.now();
         console.log(`rebuild-all ${index + 1}/${chain.length} ${step.id} (${step.stage}) started`);
-        runCmd("bun", [...step.command], { cwd: repoRoot, ...orchestratorBudgetOpts() });
+        await execution.run(step, signal, budgetMilliseconds);
         console.log(`rebuild-all ${index + 1}/${chain.length} ${step.id} done in ${Math.round((Date.now() - started) / 1000)} s`);
       }
-    } finally {
-      lease.release();
-    }
+    } finally { lease.release(); }
   }
 }
 
-/** 🧾️ One component's convergence row: its committed semantic descriptor, the receipt of its shipped `dist/components`
- * deliverable, the module page staged from it and the activation receipt must name ONE build. */
-export type StagedConvergenceRowV1 = Readonly<{ pluginId: string; committed: string; dist: string; staged: string; activated: boolean; missing: readonly string[]; ok: boolean }>;
-
-/** 🔍️ Proves `receipt(committed) == dist == staged` and full staging for every registry component of one dev variant: the shipped
- * receipt names the committed semantic descriptor and the bytes the module page binds; every plugin the dev catalog withholds
- * (§21.4 stale channel) is a refused row. */
-export function stagedConvergence(repoRoot: string, variant: string): Readonly<{ rows: readonly StagedConvergenceRowV1[]; receiptPlugins: number }> {
-  const sha = (path: string): string => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : "-");
-  const registry = readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")).entries;
-  const inventory = registryModuleDirectories(registry);
-  const receipt = readActivationReceipt(join(developmentRuntimeRoot(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, "prototype", "react"), "activation"));
-  const activated = new Set(receipt.plugins.map((row) => row.pluginId));
-  const modules = pluginModulesRoot();
-  const rows = registry.map((entry) => {
-    const deliverable = componentDeliverableV1(join(repoRoot, entry.cratePath), entry.packageName, SHIPPED_COMPONENT_PROFILE);
-    const receipt = existsSync(deliverable.receipt) ? readComponentReceiptV1(deliverable.receipt) : undefined;
-    const semantic = sha(join(repoRoot, entry.cratePath, "..", "..", "🛂️.descriptor.semio"));
-    const committed = receipt && receipt.semanticDescriptorSha256 === semantic ? receipt.wasmSha256 : "-";
-    const dist = sha(deliverable.wasm);
-    const moduleRoot = join(modules, moduleDirectoryName(entry.pluginId, inventory));
-    const stagedReceipt = join(moduleRoot, COMPONENT_RECEIPT_FILE);
-    const staged = existsSync(stagedReceipt) ? readComponentReceiptV1(stagedReceipt).wasmSha256 : "-";
-    const manifest = join(moduleRoot, ".nx-artifact.json");
-    const files = existsSync(manifest) ? (JSON.parse(readFileSync(manifest, "utf8")) as { files: string[] }).files : [];
-    const missing = [...files.filter((file) => !existsSync(join(moduleRoot, file))), ...(files.some((file) => file.endsWith("_component.core.wasm")) ? [] : ["*_component.core.wasm"])];
-    const ok = committed !== "-" && committed === dist && dist === staged && activated.has(entry.pluginId) && missing.length === 0;
-    return Object.freeze({ pluginId: entry.pluginId, committed, dist, staged, activated: activated.has(entry.pluginId), missing: Object.freeze(missing), ok });
-  });
-  const diagnostics = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated", REGISTRY_DIAGNOSTICS_FILE);
-  const withheld = existsSync(diagnostics) ? parseRegistryChannelDiagnosticsV1(readFileSync(diagnostics, "utf8")).map((row) => Object.freeze({ pluginId: row.pluginId, committed: row.code, dist: "-", staged: "-", activated: activated.has(row.pluginId), missing: Object.freeze([]), ok: false })) : [];
-  return Object.freeze({ rows: Object.freeze([...rows, ...withheld]), receiptPlugins: receipt.plugins.length });
+/** 📋️ Emits the validated plan for observable runtime verification. */
+export function printRebuildPlanV1(plan: RebuildPlanV1): void {
+  const admitted = parseRebuildPlanV1(plan);
+  for (const step of admitted.steps) console.log(`rebuild-plan ${step.id} (${step.stage}): ${step.command.join(" ")}`);
+  console.log(`rebuild-plan steps=${admitted.steps.length} guestChecks=${admitted.guestFrameworkChecks.length}`);
 }
 
-/** ✅️ `verify-staged --variant <variant>`: one row per component, the summary line, exit 1 when any component diverged. */
-export class VerifyStagedScript extends BundleScript {
-  run(segments: string[]): void {
-    if (segments.length !== 2 || segments[0] !== "--variant") throw new Error("usage: verify-staged --variant <variant>");
-    const { rows, receiptPlugins } = stagedConvergence(getWorkspaceRoot(), segments[1]!);
-    for (const row of rows) console.log(`${row.ok ? "OK  " : "DIFF"} ${row.pluginId.padEnd(34)} committed=${row.committed.slice(0, 12)} dist=${row.dist.slice(0, 12)} staged=${row.staged.slice(0, 12)} activated=${row.activated}${row.missing.length ? ` missing=${row.missing.slice(0, 3).join(",")}` : ""}`);
-    const diverged = rows.filter((row) => !row.ok).length;
-    console.log(`components=${rows.length} consistent=${rows.length - diverged} diverged=${diverged} receiptPlugins=${receiptPlugins}`);
-    if (diverged > 0) process.exitCode = 1;
+/** 🔬️ Observes the validated neutral plan without expensive component compilation. */
+export class RebuildPlanCheckScript extends BundleScript {
+  run(args: string[]): void {
+    if (args.length) throw Error("plan-check accepts no arguments");
+    printRebuildPlanV1(readRebuildPlanV1());
   }
 }

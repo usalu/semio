@@ -8,8 +8,8 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-layout-window-ownership": "bun nx run @semio-tech/layout-layout-rs:verify-layout-window-ownership",
-    "verify-layout-document-contract": "bun nx run @semio-tech/layout-layout-rs:verify-layout-document-contract"
+    "verify-layout-window-ownership": "bun repo run @semio-tech/layout-layout-rs:verify-layout-window-ownership",
+    "verify-layout-document-contract": "bun repo run @semio-tech/layout-layout-rs:verify-layout-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

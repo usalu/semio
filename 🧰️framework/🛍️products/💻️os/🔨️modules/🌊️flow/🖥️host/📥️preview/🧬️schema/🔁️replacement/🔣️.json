@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rounds",
+    "expectedEntries",
+    "sameHandle",
+    "displacedSourceRetained",
+    "copyBody",
+    "cancelCloseBodies",
+    "terminalDropBytes",
+    "sourceEpochs",
+    "foreignEpochEffects",
+    "borrowedSourceOnly",
+    "caller"
+  ],
+  "properties": {
+    "rounds": {
+      "const": 2
+    },
+    "expectedEntries": {
+      "const": 1
+    },
+    "sameHandle": {
+      "const": true
+    },
+    "displacedSourceRetained": {
+      "const": true
+    },
+    "copyBody": {
+      "const": 64
+    },
+    "cancelCloseBodies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "terminalDropBytes": {
+      "const": 0
+    },
+    "sourceEpochs": {
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "foreignEpochEffects": {
+      "const": {
+        "copiedItems": 0,
+        "copiedBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0
+      }
+    },
+    "borrowedSourceOnly": {
+      "const": true
+    },
+    "caller": {
+      "const": {
+        "operation": 706,
+        "generation": 9,
+        "clock": 1000,
+        "deadline": 1500,
+        "fuel": 65536,
+        "stock": {
+          "maximumItems": 65536,
+          "maximumCopyBytes": 134217728,
+          "maximumCapacityBytes": 268435456,
+          "maximumReleaseBytes": 536870912,
+          "maximumDepth": 4096
+        },
+        "turn": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 64,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 268435456,
+          "maximumDepth": 4096
+        }
+      }
+    }
+  }
+}

@@ -33,7 +33,7 @@ import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🟦�
 class DslScript extends Script {
   run(segments: string[]): void {
     const { level, rest } = resolveTestLevel(segments);
-    runCmd("bun", ["nx", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-nx-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-nx-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 }
 

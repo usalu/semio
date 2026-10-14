@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "build": "bun nx run @semio-tech/norm-en1997:build",
-    "check": "bun nx run @semio-tech/norm-en1997:check",
-    "test": "bun nx run @semio-tech/norm-en1997:test"
+    "build": "bun repo run @semio-tech/norm-en1997:build",
+    "check": "bun repo run @semio-tech/norm-en1997:check",
+    "test": "bun repo run @semio-tech/norm-en1997:test"
   },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",

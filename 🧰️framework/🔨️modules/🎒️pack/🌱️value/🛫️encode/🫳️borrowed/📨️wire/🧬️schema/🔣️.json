@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "copyGrants",
+    "cancelStops",
+    "fieldId",
+    "sourceReturned",
+    "headerCopyBytes",
+    "terminalDrop",
+    "stock",
+    "fuel",
+    "clock",
+    "deadline",
+    "physicalRetirement"
+  ],
+  "properties": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "values",
+        "nodeHashLiteral"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "nodeHashLiteral": {
+          "const": "18446744073709551613"
+        }
+      }
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "cancelStops": {
+      "const": [
+        0,
+        1,
+        3,
+        17,
+        83
+      ]
+    },
+    "fieldId": {
+      "const": 1
+    },
+    "sourceReturned": {
+      "const": true
+    },
+    "headerCopyBytes": {
+      "const": 0
+    },
+    "terminalDrop": {
+      "const": 0
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copy": 1000000,
+        "capacity": 4000000,
+        "release": 4000000,
+        "depth": 128
+      }
+    },
+    "fuel": {
+      "const": 100000
+    },
+    "clock": {
+      "const": 1000
+    },
+    "deadline": {
+      "const": 1000000
+    },
+    "physicalRetirement": {
+      "const": true
+    }
+  }
+}

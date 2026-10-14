@@ -21,7 +21,7 @@ impl std::fmt::Debug for ShardIdentityIssueRefused{fn fmt(&self,f:&mut std::fmt:
 pub struct OriginalShardIdentity{birth:RetainedCloneProgress,policy:ShardIdentityPolicy,receipt:Option<NativeForwardedEncodeReceipt>,recipient:Pin<Box<NativeEncodeRetirementRecipient>>,observer:Box<Observer<'static>>,allocate:Box<NativeEncodeAllocationPort<'static>>}
 struct OriginalShardIdentityLoan<'a>{original:&'a mut Option<NativeForwardedEncodeReceipt>,identity:Option<EntityIdentityAuthority<'a>>}
 /// 📬️ The actual guest outcome and its original receiving decision remain available together.
-pub struct OriginalShardActorAdmission{pub call:Result<crate::original_actor_context::OriginalActorAdmissionReply,TurnFault>,pub receiving:Result<semio_framework_actor::RetainedTurnReceipt,ValueError>}
+pub struct OriginalShardActorAdmission{pub call:Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>,pub receiving:Result<semio_framework_actor::RetainedTurnReceipt,ValueError>}
 impl<'a> std::ops::Deref for OriginalShardIdentityLoan<'a>{type Target=EntityIdentityAuthority<'a>;fn deref(&self)->&Self::Target{self.identity.as_ref().expect("original shard loan remains borrowed")}}
 impl std::ops::DerefMut for OriginalShardIdentityLoan<'_>{fn deref_mut(&mut self)->&mut Self::Target{self.identity.as_mut().expect("original shard loan remains borrowed")}}
 impl Drop for OriginalShardIdentityLoan<'_>{fn drop(&mut self){let identity=self.identity.take().expect("original shard loan returns exactly once");let receipt=identity.pause_forwarded().expect("original shard loan retains its forwarded authority").detach().expect("original shard loan ends between synchronous receiving hops");assert!(self.original.is_none(),"original shard receipt slot remains reserved by its unique loan");*self.original=Some(receipt);}}
@@ -57,12 +57,15 @@ impl OriginalShardIdentity{
   if original.issued_input()!=Some(&budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Host budget differs from its issued Actor input"))}
   let Some(input)=original.checkout_guest(policy)?else{return Ok(None)};budget.retained=input;
   let call={let mut identity=self.loan()?;runtime.admit_actor_context(instance,input,budget,&mut *identity).await};
-  let receiving=(||{match &call{
-   Ok(reply)=>{let phase=if reply.refusal.is_none()&&reply.ready{semio_framework_actor::retained_turn::ActorGuestPhase::Ready}else{original.phase()};original.receive_guest_spent(reply.input,reply.spent,phase)?;},
-   Err(TurnFault::ActorCall(reply))=>{original.receive_guest_spent(reply.input,reply.spent,original.phase())?;},
-   Err(_)=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original guest trap has no returned raw receipt; its checkout remains held")),
-  }original.return_actor_turn()})();
+  let receiving=receive_actor_admission(original,&call);
   Ok(Some(OriginalShardActorAdmission{call,receiving}))
+ }
+ /// 🧳️ Admits the actual instance retained inside the original input without borrowing a second owner.
+ pub async fn admit_owned_actor_original(&mut self,runtime:&GuestRuntimes,original:&mut semio_framework_actor::retained_turn::OriginalActorInput<GuestInstance>,mut budget:semio_framework::kernel::Budget,policy:RetainedCloneGrant)->Result<Option<OriginalShardActorAdmission>,ValueError>{
+  if original.issued_input()!=Some(&budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Host budget differs from its issued instance input"))}
+  let Some(input)=original.checkout_guest(policy)?else{return Ok(None)};budget.retained=input;
+  let call={let mut identity=self.loan()?;let instance=original.original_mut_for_guest(input)?;runtime.admit_actor_context(instance,input,budget,&mut *identity).await};
+  let receiving=receive_actor_admission(original,&call);Ok(Some(OriginalShardActorAdmission{call,receiving}))
  }
  /// 📸️ Resumes the original identity through the entire asynchronous checkpoint callback.
  pub async fn checkpoint(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance)->Result<Vec<u8>,PluginHostError>{
@@ -80,6 +83,8 @@ impl OriginalShardIdentity{
   runtime.execute_turn(instance,events,budget,&mut *identity).await
  }
 }
+
+fn receive_actor_admission<T>(original:&mut semio_framework_actor::retained_turn::OriginalActorInput<T>,call:&Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>)->Result<semio_framework_actor::RetainedTurnReceipt,ValueError>{match call{Ok(reply)=>{let phase=if reply.refusal.is_none()&&reply.ready{semio_framework_actor::retained_turn::ActorGuestPhase::Ready}else{original.phase()};original.receive_guest_spent(reply.input,reply.spent,phase)?;},Err(TurnFault::ActorCall(reply))=>{original.receive_guest_spent(reply.input,reply.spent,original.phase())?;},Err(_)=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original guest trap has no returned raw receipt; its checkout remains held")),}original.return_actor_turn()}
 
 /// 🏭️ Creates each actor's original ports once from the root's unchanged independent policy.
 pub fn native_identity_issuer(policy:ShardIdentityPolicy,mut observer_issuer:impl FnMut(semio_framework_actor::ActorId)->Box<Observer<'static>>+Send+'static)->OriginalShardIdentityIssuer{

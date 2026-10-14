@@ -9,7 +9,7 @@ fn sphere(subdivisions: i64) -> std::sync::Arc<HalfedgeMesh> {
 
 fn inputs(kind_id: &str, entries: Vec<(&str, GeometryValue)>) -> (&'static Kind, WidgetInputs) {
     let kind = oracle::kind_of(kind_id);
-    (kind, WidgetInputs::new("w", kind, entries.into_iter().map(|(port, value)| (port.to_string(), value)).collect::<BTreeMap<_, _>>()))
+    (kind, WidgetInputs::new_cold("w", kind, entries.into_iter().map(|(port, value)| (port.to_string(), value)).collect::<BTreeMap<_, _>>()))
 }
 
 fn start(kind_id: &str, entries: Vec<(&str, GeometryValue)>) -> Box<dyn WidgetJob> {
@@ -55,7 +55,7 @@ fn a_started_job_reports_monotone_progress_and_finishes_at_every_fuel() {
     for fuel in [1, 2, 64] {
         let evaluation = oracle::drive(start("mesh.edit.triangulate", vec![("mesh", GeometryValue::Mesh(sphere(3)))]), fuel);
         assert!(evaluation.fault.is_none());
-        let GeometryValue::Mesh(mesh) = &evaluation.outputs["mesh"] else { panic!("a mesh output") };
+        let GeometryValue::Mesh(mesh) = &*evaluation.outputs.get("mesh").unwrap() else { panic!("a mesh output") };
         assert_eq!(mesh.face_count(), 1280);
     }
 }

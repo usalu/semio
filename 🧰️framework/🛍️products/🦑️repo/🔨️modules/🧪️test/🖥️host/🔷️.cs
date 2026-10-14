@@ -236,12 +236,17 @@ public static class TestHost
         var directory = System.IO.Path.GetFullPath(start);
         for (var i = 0; i < 32; i++)
         {
-            if (File.Exists(System.IO.Path.Combine(directory, "nx.json")) && File.Exists(System.IO.Path.Combine(directory, "package.json"))) return directory;
+            var markers = new[] { "📋️project.json", "package.json" }.Select(name => System.IO.Path.Combine(directory, name)).ToArray();
+            if (markers.All(path => File.Exists(path) && (File.GetAttributes(path) & FileAttributes.ReparsePoint) == 0))
+            {
+                using var package = JsonDocument.Parse(File.ReadAllText(markers[1]));
+                if (package.RootElement.ValueKind == JsonValueKind.Object && package.RootElement.TryGetProperty("workspaces", out var workspaces) && workspaces.ValueKind is JsonValueKind.Array or JsonValueKind.Object) return directory;
+            }
             var parent = System.IO.Path.GetDirectoryName(directory);
             if (parent is null || parent == directory) break;
             directory = parent;
         }
-        return Directory.GetCurrentDirectory();
+        throw new DirectoryNotFoundException("workspace root with paired build and package markers was not found");
     }
 
     /// <summary>🚪️ Loads the plan, executes every planned scenario against the adapter, emits JSONL.</summary>

@@ -499,7 +499,7 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
 
 /// 🧩️ [`example_graph_snapshot`] as a resolved in-memory [`Graph`].
 pub fn example_graph() -> Graph {
-    Graph::from_snapshot(example_graph_snapshot()).expect("jack example fixture")
+    example_graph_snapshot().into_graph().expect("jack example fixture")
 }
 
 
@@ -1003,8 +1003,8 @@ pub fn parse_spanned(source: &str) -> SpannedNode {
 // #endregion 🔖️SpannedAst
 
 /// 🧩️ Typed example graph for language service and playground consumers.
-pub fn example_graph_snapshot() -> JackSnapshot {
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "jack-example".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+pub fn example_graph_snapshot()->crate::ast::JackQueryGraphSnapshot {
+    crate::ast::JackQueryGraphSnapshot{schema:JackSnapshot::SCHEMA.into(),name:"jack-example".into(),manifest_id:Some("nakagin".into()),manifest:Manifest::nakagin_default(),camera:Camera::default(),nodes:vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),
@@ -1027,5 +1027,5 @@ pub fn example_graph_snapshot() -> JackSnapshot {
                 properties: PropertyBag::new(),
                 ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
             },
-        ], edges: vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }] }, Some("root".into()))
+        ], edges: vec![Edge { id: "e1".into(), kind: "Connection".into(), source: "root@out".into(), target: "child@in".into(), properties: PropertyBag::new() }],root_node_id:Some("root".into()),query:String::new()}
 }

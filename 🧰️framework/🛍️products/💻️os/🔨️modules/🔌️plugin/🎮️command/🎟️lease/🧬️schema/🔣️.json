@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "originalLoan",
+    "retainedKey",
+    "bodyAfterAdmission",
+    "loanBeforeHandoff",
+    "states",
+    "receivingLanes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.os.original-tool-lease-admission"
+    },
+    "originalLoan": {
+      "const": true
+    },
+    "retainedKey": {
+      "const": true
+    },
+    "bodyAfterAdmission": {
+      "const": true
+    },
+    "loanBeforeHandoff": {
+      "const": true
+    },
+    "states": {
+      "const": [
+        {
+          "phase": "source",
+          "operation": 0,
+          "body": false,
+          "lease": false
+        },
+        {
+          "phase": "key",
+          "operation": 17,
+          "body": false,
+          "lease": false
+        },
+        {
+          "phase": "denied",
+          "operation": 17,
+          "body": false,
+          "lease": false
+        },
+        {
+          "phase": "denied",
+          "operation": 17,
+          "body": false,
+          "lease": false
+        },
+        {
+          "phase": "lease",
+          "operation": 17,
+          "body": false,
+          "lease": true
+        },
+        {
+          "phase": "source-return",
+          "operation": 17,
+          "body": false,
+          "lease": true
+        },
+        {
+          "phase": "handoff",
+          "operation": 17,
+          "body": true,
+          "lease": true
+        }
+      ]
+    },
+    "receivingLanes": {
+      "const": [
+        {
+          "lane": "ordinary-command",
+          "ownedBeforeLease": true,
+          "originalFailure": true,
+          "sameKey": true,
+          "noneMeansPending": true
+        },
+        {
+          "lane": "reserved-action",
+          "ownedBeforeLease": true,
+          "originalFailure": true,
+          "sameKey": true,
+          "noneMeansPending": true
+        },
+        {
+          "lane": "configuration",
+          "ownedBeforeLease": true,
+          "originalFailure": true,
+          "sameKey": true,
+          "noneMeansPending": true
+        },
+        {
+          "lane": "owned-emission",
+          "ownedBeforeLease": true,
+          "originalFailure": true,
+          "sameKey": true,
+          "noneMeansPending": true
+        },
+        {
+          "lane": "media-import",
+          "ownedBeforeLease": true,
+          "originalFailure": true,
+          "sameKey": true,
+          "noneMeansPending": true
+        },
+        {
+          "lane": "pure-head-renewal",
+          "ownedBeforeLease": true,
+          "originalFailure": true,
+          "sameKey": true,
+          "noneMeansPending": true
+        }
+      ]
+    }
+  }
+}

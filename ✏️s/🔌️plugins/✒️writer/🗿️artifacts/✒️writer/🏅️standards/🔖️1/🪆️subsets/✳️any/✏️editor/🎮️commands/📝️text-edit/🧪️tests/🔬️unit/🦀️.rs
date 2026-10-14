@@ -51,13 +51,14 @@ async fn a_typing_burst_is_one_run_one_edit_and_one_undo_step() {
 /// ledger, lands as ONE edit, and ONE undo reverts it, ONE redo restores it (ticket 26/09/23 F1, typing census).
 #[semio_framework_async_macros::async_test]
 async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step() {
+    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let run = semio_framework_plugin::artifact_app_laws::typing_run();
     assert!(run.texts.len() > 64 * 10, "the run must outlast the edit ledger many times over");
     let mut app = new_app().await;
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: run.initial.clone() })).await;
     for (index, text) in run.texts.iter().enumerate() {
         type_text(&mut app, text, 20_000 + 40 * index as u64).await;
-        semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app);
+        semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app,cx);
     }
     assert_eq!(writer_text(&app.rendered_snapshot()), run.expected);
     end_typing_run(&mut app, "textEdit", "idle", 20_000 + 40 * run.texts.len() as u64 + 750).await;
@@ -66,6 +67,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.initial, "one undo reverts the whole run");
     crate::editor::writer::unit_tests::context::history_verb(&mut app, "redo").await;
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.expected, "one redo restores the whole run");
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
 }
 
 /// ⌨️ LAW (coordinator P1, ticket 26/09/23 C12): ONE uninterrupted 10 000-keystroke typing run at the maximum rate — one
@@ -75,6 +77,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
 /// The run then lands as ONE edit, and maintenance returns its retirements below their pressure bound.
 #[semio_framework_async_macros::async_test]
 async fn a_ten_thousand_keystroke_burst_applies_every_key_in_order() {
+    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     const KEYS: [char; 8] = ['a', 'q', 'ß', 'ü', '€', '𝄞', ' ', '\n'];
     let mut app = new_app().await;
     let edits = app.edit_transactions().len();
@@ -106,8 +109,9 @@ async fn a_ten_thousand_keystroke_burst_applies_every_key_in_order() {
     assert!(last <= first.saturating_mul(3), "per-key cost stays flat over one uninterrupted run: the median key of the last 1 000 took {last} ns against {first} ns for the first 1 000");
     end_typing_run(&mut app, "textEdit", "blur", 300_000).await;
     assert_eq!((writer_text(&app.snapshot().expect("projection")), app.edit_transactions().len()), (model, edits + 1), "the run lands as ONE edit");
-    semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app);
+    semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app,cx);
     assert!(!PluginApp::maintenance_under_pressure(&*app), "maintenance returns the burst's retirements below their pressure bound");
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
 }
 
 #[semio_framework_async_macros::async_test]

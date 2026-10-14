@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
+import { runExactCargoLaws, configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧠️ Neural engine native and language-neutral lifecycle validation. */
@@ -11,6 +13,11 @@ import { runScriptMain } from "../../../../../../../🔨️modules/🏃️proces
 //#region 🧪️Validation
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="original-registry-admission-source"||segments[0]==="original-registry-admission-native"){
+      if(segments.length!==1)throw Error("Original registry admission requires exact one cohort");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original registry admission requires finite original deadline");
+      await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../📔️registry/🏗️admission/🧪️tests/🟦️.ts")],this.repoRoot,"neural:original-registry-admission-source",remaining,{env:process.env});
+      if(segments[0]==="original-registry-admission-native"){const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original registry admission deadline expired");await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-os-kernel-neural-engine":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-os-kernel-neural-engine",target:{kind:"test",name:"registry_admission"},laws:["original_registry_issuer_reserves_two_shells_before_same_source_donation","original_registry_issuer_cancellation_returns_same_payload_after_born_shell_close"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});}return;
+    }
     const { rest } = resolveTestLevel(segments);
     await runCargo(["test", "-p", "semio-framework-os-kernel-neural-engine", ...rest], this.repoRoot);
   }

@@ -234,19 +234,27 @@
     {
       "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
       "target": "wasm",
-      "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build dev",
+      "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build",
       "dependencies": [
         "workspace:deps-trunk",
         "workspace:deps-wasm-opt"
+      ],
+      "mode": "prototype",
+      "args": [
+        "prototype"
       ]
     },
     {
       "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📋️project.json",
-      "target": "wasm-release",
-      "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build release",
+      "target": "wasm",
+      "command": "bun ../../🏗️compiler/🌐️wasm/📜️script.ts build",
       "dependencies": [
         "workspace:deps-trunk",
         "workspace:deps-wasm-opt"
+      ],
+      "mode": "release",
+      "args": [
+        "release"
       ]
     },
     {

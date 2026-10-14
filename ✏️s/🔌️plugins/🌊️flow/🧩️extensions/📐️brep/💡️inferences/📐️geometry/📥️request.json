@@ -6,8 +6,7 @@
   "required": [
     "neuronId",
     "operatorId",
-    "inputJson",
-    "retained"
+    "inputJson"
   ],
   "properties": {
     "operatorId": {
@@ -18,14 +17,6 @@
       "type": "string"
     },
     "nodeHash": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "budget": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "wallMicros": {
       "type": "integer",
       "minimum": 0
     },
@@ -45,39 +36,6 @@
       "type": "boolean",
       "description": "Resume the same parked owner with empty inputJson and dependencyJson; operator, node hash, version and cancellation identity must match."
     },
-    "retained": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "maximumItems",
-        "maximumCopyBytes",
-        "maximumCapacityBytes",
-        "maximumReleaseBytes",
-        "maximumDepth"
-      ],
-      "properties": {
-        "maximumItems": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumCopyBytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumCapacityBytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumReleaseBytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maximumDepth": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
     "neuronId": {
       "type": "string",
       "minLength": 1
@@ -94,7 +52,7 @@
         "extensionId",
         "operatorId",
         "nodeHash",
-        "outputJson"
+        "output"
       ],
       "properties": {
         "neuronId": {
@@ -109,12 +67,12 @@
           "type": "string",
           "minLength": 1
         },
-        "outputJson": {
-          "type": "string"
-        },
         "nodeHash": {
           "type": "integer",
           "minimum": 0
+        },
+        "output": {
+          "type": "object"
         }
       }
     }

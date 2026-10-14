@@ -375,7 +375,7 @@
     "packagePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
     "packageScript": "test:browser-ownership",
     "previewPackageScript": "preview:browser-package",
-    "packageCommand": "bun nx run semio-framework-os-flow-core:test-browser-ownership",
-    "previewPackageCommand": "bun nx run semio-framework-os-flow-core:preview-generated"
+    "packageCommand": "bun repo run semio-framework-os-flow-core:test-browser-ownership",
+    "previewPackageCommand": "bun repo run semio-framework-os-flow-core:preview-generated"
   }
 }

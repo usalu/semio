@@ -1,6 +1,6 @@
 {
   "name": "semio-framework-geometry",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/📐️geometry/**/*",
@@ -9,7 +9,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -17,7 +17,7 @@
       }
     },
     "test-oracle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test oracle",
@@ -34,7 +34,7 @@
       ]
     },
     "test-oracle-three": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test oracle three",
@@ -49,7 +49,7 @@
       ]
     },
     "test-oracle-shapely": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test oracle shapely",

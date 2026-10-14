@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-plugin-host-test-component",
   "targets": {
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust"
@@ -16,7 +16,7 @@
       "cache": false
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
@@ -25,7 +25,7 @@
       }
     },
     "test-snapshot-sqlite-release-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
@@ -34,7 +34,7 @@
       }
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",

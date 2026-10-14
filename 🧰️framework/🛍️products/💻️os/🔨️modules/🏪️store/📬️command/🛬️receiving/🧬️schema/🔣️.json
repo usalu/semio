@@ -1,0 +1,22 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "title":"Original Artifact Command Receiving",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["version","original","turn","whole","maximumTurns","literal","ordinals","sameSource","sameContext","wholeFailure","retainedNested","retainedEnvelope","terminalDropBytes"],
+  "properties":{
+    "version":{"const":1},
+    "original":{"const":{"operation":17,"generation":9}},
+    "turn":{"const":{"maximumItems":1,"maximumCopyBytes":4096,"maximumCapacityBytes":65536,"maximumReleaseBytes":65536,"maximumDepth":128}},
+    "whole":{"const":{"maximumItems":100000,"maximumCopyBytes":8388608,"maximumCapacityBytes":8388608,"maximumReleaseBytes":8388608,"maximumDepth":128}},
+    "maximumTurns":{"const":100000},
+    "literal":{"const":"original command 源\u0000\r\n"},
+    "ordinals":{"const":[0,1,2,3,4,5,6,7,9,10,11,13,14,15,16,17,18,19,20,21]},
+    "sameSource":{"const":true},
+    "sameContext":{"const":true},
+    "wholeFailure":{"const":true},
+    "retainedNested":{"const":true},
+    "retainedEnvelope":{"const":true},
+    "terminalDropBytes":{"const":0}
+  }
+}

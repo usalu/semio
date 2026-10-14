@@ -1,7 +1,8 @@
+import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { phaseCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+
 import * as Vitest from "vitest";
 import * as Fs from "node:fs";
 import * as Crypto from "node:crypto";
@@ -18,7 +19,6 @@ import * as Owner06 from "../../../🔌️plugin/🏗️build/📥️installatio
 import * as Owner07 from "../../../🔌️plugin/🏗️build/🏃️execution/🟦️.ts";
 import * as Owner08 from "../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts";
 import * as Owner09 from "../../../🔌️plugin/📊️size/🟦️.ts";
-import * as Owner10 from "../../♻️activation/🌐️browser-host/🏗️staging/🟦️.ts";
 import * as Owner11 from "../../⚙️engine/🧭️selection/🟦️.ts";
 import * as Owner12 from "../../⚙️engine/📤️publication/🟦️.ts";
 import * as Owner13 from "../../♻️activation/🔐️lease/🟦️.ts";
@@ -63,7 +63,6 @@ import * as External01 from "../../../../../🦑️repo/🔨️modules/📚️li
 import * as External02 from "../../../🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 import * as External03 from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import * as External04 from "../../♻️activation/🟦️.ts";
-import * as External05 from "../../♻️activation/🌐️browser-host/🟦️.ts";
 import * as External06 from "../../🔌️vite-plugins/🟦️.ts";
 import * as External07 from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import * as External08 from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
@@ -78,7 +77,7 @@ import * as External15 from "../../../../🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: typeof testDependencies, source: TestSource): Promise<void> {
-  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildPluginCatalog, cargoProfileDir, componentCargoV1, componentProfileV1, COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE, pluginWasmArtifactPath, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginComponentBridgeSource, pluginOutRoot, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, shardWorkerSource, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
+  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildPluginCatalog, cargoProfileDir, componentCargoV1, componentProfileV1, COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE, pluginWasmArtifactPath, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, pathToFileURL, pluginComponentBridgeSource, pluginOutRoot, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, shardWorkerSource, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
   type OwnedParityImage = import("../../⚖️parity/🖼️pixels/🟦️.ts").OwnedParityImage;
   type PackValue = import("../../../../🟦️.ts").PackValue;
   type ParityDump = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
@@ -116,144 +115,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     visit(root);
     return files.sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
   };
-
-  describe("ticket-owned browser host staging", () => {
-    it("matches the neutral schema and closes only the exact Space, GIS and support module set", async () => {
-      const contractRoot = join(dirname(fileURLToPath(source.url)), "../../♻️activation/🌐️browser-host");
-      const document = JSON.parse(readFileSync(join(contractRoot, "🧬️schema/🔣️.json"), "utf8"));
-      const fixture = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8"));
-      const { default: AjvDraft7 } = await import("ajv");
-      const stagingAjv = new AjvDraft7({ strict: true, allErrors: true });
-      stagingAjv.addSchema(document);
-      const validate = stagingAjv.getSchema(`${document.$id}#/$defs/TestBrowserHostStagingV1`)!;
-      const validateMaterialization = stagingAjv.getSchema(`${document.$id}#/$defs/TestBrowserGisMaterializationV1`)!;
-      
-      const provenanceFixture = JSON.parse(readFileSync(join(contractRoot, "🧪️tests/🧫️fixtures/🧬️selected-gis-byte-provenance-v1/🔣️.json"), "utf8"));
-      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-      
-      expect(parseTestBrowserHostStagingReceiptV1(fixture)).toEqual(fixture);
-      for (const specimen of provenanceFixture.specimens) {
-        const bytes = new TextEncoder().encode(specimen.utf8);
-        expect(createHash("sha256").update(bytes).digest("hex")).toBe(specimen.sha256);
-        expect(Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex")).toBe(specimen.sha256);
-      }
-      expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindChoice" }] }] })).toBe(true);
-      expect(exactSpaceCreateArtifactArgs({ dialogs: [{ id: "createArtifact", args: [{ id: "name" }, { id: "kindId" }] }] })).toBe(false);
-      const scriptSource = readFileSync(fileURLToPath(new URL("../../♻️activation/🌐️browser-host/🏗️staging/🟦️.ts", import.meta.url)), "utf8");
-      // 🔒️ `buildPluginCargo` now always builds into the ONE shared, fine-grain-locked `cargoTargetDirectory`
-      // (no private per-caller target dirs) — this asserts the ticket-owned COPY step that still makes the
-      // fresh Space artifact eligible for `ownedTestBrowserHostInput`'s bounded-regular-file check survives.
-      expect(scriptSource).toContain("const builtSpace = await buildPluginCargo(space, input.control);");
-      expect(scriptSource).toContain('const stagedSpacePath = join(artifactRoot, "browser-host-wasi-target", basename(builtSpace.artifact));');
-      expect(scriptSource).toContain("writeFileSync(stagedSpacePath, readFileSync(builtSpace.artifact), { mode: 0o600 });");
-      const materializerStart = scriptSource.indexOf("async function materializeTestBrowserPluginV1(");
-      const materializerEnd = scriptSource.indexOf("export async function stageTestBrowserHostV1", materializerStart);
-      const materializerOwner = scriptSource.slice(materializerStart, materializerEnd);
-      expect(materializerOwner.indexOf("writeFileSync(join(outDir, MODULE_BRIDGE_FILE)")).toBeLessThan(materializerOwner.indexOf("writeTestBrowserGisMaterializationReceiptV1(outDir, input.selectedSource)"));
-      expect(scriptSource).toContain("selectedSource: { componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 }");
-      expect(scriptSource.indexOf("await materializeTestBrowserPluginV1({ target: gis")).toBeLessThan(scriptSource.indexOf("Selected GIS bytes changed during browser staging"));
-
-      const owner = mkdtempSync(join(tmpdir(), "semio-browser-host-law-"));
-      const artifactRoot = join(owner, "🗑️generated");
-      mkdirSync(artifactRoot, { recursive: true });
-      try {
-        const roots = prepareTestBrowserHostRootsV1(artifactRoot);
-        const hostComponent = Buffer.from("space-cargo-component");
-        const hostComponentSha256 = createHash("sha256").update(hostComponent).digest("hex");
-        const hostCoreSha256 = createHash("sha256").update("space-component").digest("hex");
-        const specimens = Object.fromEntries(provenanceFixture.specimens.map((row: any) => [row.id, row]));
-        const files = new Map([
-          ["🪞️vendor/.nx-artifact.json", "vendor"],
-          ["🧵️shard/🟨️shard-worker.js", "shard"],
-          ["🪐️space/semio_s_plugin_space_component.core.wasm", "space-component"],
-          ["🪐️space/🛂️.descriptor.semio", "space-descriptor"],
-          ["🪐️space/🔣️.json", JSON.stringify({ packageId: "semio:space", manifest: { pluginId: "space" } })],
-          ["🪐️space/🧾️receipt.json", `${JSON.stringify({ schema: "semio.plugin.component-receipt/v1", pluginId: "space", packageId: "semio:space", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: hostComponentSha256, wasmBytes: hostComponent.byteLength, semanticDescriptorSha256: createHash("sha256").update("space-descriptor").digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) }, null, 2)}\n`],
-          ["🪐️space/🌉️bridge.js", "space-bridge"],
-          ["🌍️gis/semio_hub_gis_component.core.wasm", specimens["staged-core"].utf8],
-          ["🌍️gis/🛂️.descriptor.semio", specimens["selected-descriptor"].utf8],
-          ["🌍️gis/🌉️bridge.js", specimens["staged-bridge"].utf8],
-        ]);
-        for (const [name, body] of files) {
-          const path = join(roots.moduleRoot, name);
-          mkdirSync(dirname(path), { recursive: true });
-          writeFileSync(path, body);
-        }
-        const materialization = writeTestBrowserGisMaterializationReceiptV1(join(roots.moduleRoot, "🌍️gis"), { componentSha256: specimens["selected-component"].sha256, descriptorSha256: specimens["selected-descriptor"].sha256 });
-        expect(validateMaterialization(materialization), JSON.stringify(validateMaterialization.errors)).toBe(true);
-        expect(parseTestBrowserGisMaterializationReceiptV1(materialization)).toEqual(materialization);
-        const current = { generationId: "a".repeat(64), currentSha256: "b".repeat(64), componentSha256: specimens["selected-component"].sha256, descriptorSha256: specimens["selected-descriptor"].sha256 };
-        expect(() => closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: "c".repeat(64) })).toThrow("receipt differs from its materialized owner");
-        const closed = closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: hostComponentSha256 });
-        expect(validate(closed.receipt), JSON.stringify(validate.errors)).toBe(true);
-        expect(closed.receipt.selectedGis).toMatchObject(current);
-        expect(closed.receipt.selectedGis).toMatchObject({ stagedDescriptorSha256: specimens["selected-descriptor"].sha256, bridgeSha256: specimens["staged-bridge"].sha256, generatedCores: [{ relativePath: "semio_hub_gis_component.core.wasm", byteLength: specimens["staged-core"].utf8.length, sha256: specimens["staged-core"].sha256 }] });
-        expect(closed.receipt.host).toMatchObject({ pluginId: "space", componentByteLength: hostComponent.byteLength, componentSha256: hostComponentSha256, coreSha256: hostCoreSha256 });
-        expect(readActivationReceipt(closed.activationRoot).plugins.map((row) => row.pluginId)).toEqual(["gis", "space"]);
-        const environment = {
-          SEMIO_TEST_ARTIFACT_DIR: artifactRoot,
-          [TEST_BROWSER_MODULE_ROOT_ENV]: closed.moduleRoot,
-          [TEST_BROWSER_ACTIVATION_ROOT_ENV]: closed.activationRoot,
-          [TEST_BROWSER_HOST_RECEIPT_ENV]: closed.receiptPath,
-        };
-        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
-        expect(resolveTestBrowserHostRootsV1({})).toBeNull();
-        expect(() => resolveTestBrowserHostRootsV1({ SEMIO_TEST_ARTIFACT_DIR: artifactRoot, [TEST_BROWSER_MODULE_ROOT_ENV]: closed.moduleRoot })).toThrow("complete ticket authority");
-
-        const descriptor = join(closed.moduleRoot, "🪐️space/🛂️.descriptor.semio");
-        writeFileSync(descriptor, "substituted-space-descriptor");
-        expect(() => resolveTestBrowserHostRootsV1(environment)).toThrow("module set changed");
-        writeFileSync(descriptor, "space-descriptor");
-        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
-
-        const bridge = join(closed.moduleRoot, "🪐️space/🌉️bridge.js");
-        writeFileSync(bridge, "substituted-space-module");
-        expect(() => resolveTestBrowserHostRootsV1(environment)).toThrow("module set changed");
-        writeFileSync(bridge, "space-bridge");
-        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
-
-        const receiptBytes = readFileSync(closed.receiptPath);
-        const moduleSetSha256 = (): string => {
-          const paths = ownedRelativeFiles(closed.moduleRoot);
-          const hash = createHash("sha256");
-          for (const path of paths) {
-            const bytes = readFileSync(join(closed.moduleRoot, path));
-            hash.update(`${JSON.stringify([path.replaceAll("\\", "/"), bytes.byteLength, createHash("sha256").update(bytes).digest("hex")])}\n`);
-          }
-          return hash.digest("hex");
-        };
-        for (const hostile of provenanceFixture.hostiles) {
-          if (hostile.target === "host-receipt") {
-            const changed: any = JSON.parse(JSON.stringify(closed.receipt));
-            changed.selectedGis.componentSha256 = hostile.replacement;
-            writeFileSync(closed.receiptPath, `${JSON.stringify(changed)}\n`);
-          } else {
-            const target = join(closed.moduleRoot, hostile.target === "staged-descriptor" ? "🌍️gis/🛂️.descriptor.semio" : "🌍️gis/🌉️bridge.js");
-            const original = readFileSync(target);
-            writeFileSync(target, hostile.replacement);
-            const changed: any = JSON.parse(JSON.stringify(closed.receipt));
-            changed.moduleSetSha256 = moduleSetSha256();
-            writeFileSync(closed.receiptPath, `${JSON.stringify(changed)}\n`);
-            expect(() => resolveTestBrowserHostRootsV1(environment), hostile.id).toThrow("GIS materialization differs");
-            writeFileSync(target, original);
-            writeFileSync(closed.receiptPath, receiptBytes);
-            continue;
-          }
-          expect(() => resolveTestBrowserHostRootsV1(environment), hostile.id).toThrow("GIS identity changed");
-          writeFileSync(closed.receiptPath, receiptBytes);
-        }
-
-        const activationPath = join(closed.activationRoot, ACTIVATION_RECEIPT_FILE);
-        const activation = readFileSync(activationPath);
-        writeFileSync(activationPath, `${activation.toString("utf8").trim()} `);
-        expect(() => resolveTestBrowserHostRootsV1(environment)).toThrow("activation changed");
-        writeFileSync(activationPath, activation);
-        expect(resolveTestBrowserHostRootsV1(environment)?.receipt).toEqual(closed.receipt);
-      } finally {
-        rmSync(owner, { recursive: true, force: true });
-      }
-    });
-  });
 
   //#region 🌉️LinkedSessionEnginesTests
   describe("scaleFixtureArtifacts", () => {
@@ -1362,7 +1223,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       for (const spec of fixture.moduleRoots) {
         const root = spec.route === MODULE_EXTENSION_ROUTE ? defaultExtensionInstallRoot(repoRoot) : join(dirname(pluginOutRoot), spec.directory);
         let components = 0, imports = 0;
-        for (const directory of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && moduleIdForDirectoryName(entry.name, COMPONENT_MODULE_DIRECTORIES))) {
+        for (const directory of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && moduleIdForDirectoryName(entry.name, runtimeCatalogBuildInventoryV1().moduleDirectories))) {
           const files = readdirSync(join(root, directory.name)).filter((name) => name.endsWith("_component.js"));
           for (const filename of files) {
             components++;
@@ -1880,5 +1741,5 @@ const testPackageDirectory = Path.resolve(Path.dirname(Url.fileURLToPath(import.
  * `buildPluginCatalog` is pinned for the same reason: `📇️registry/🟦️.ts` exports a zero-argument
  * projection builder under that same name and spreads later, so only the pin reaches the
  * `📇️registry/🔄️refresh` catalog BUILD these cases drive. */
-const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner10, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...Owner50, ...Owner51, ...Owner52, ...External01, ...External02, ...External03, ...External04, ...External05, ...External06, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
+const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...Owner50, ...Owner51, ...Owner52, ...External01, ...External02, ...External03, ...External04, ...External06, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
 await registerTests1(Vitest as unknown as NonNullable<ImportMeta["vitest"]>, testDependencies, { directory: testPackageDirectory, url: Url.pathToFileURL(Path.resolve(testPackageDirectory, "📜️script.ts")).href });

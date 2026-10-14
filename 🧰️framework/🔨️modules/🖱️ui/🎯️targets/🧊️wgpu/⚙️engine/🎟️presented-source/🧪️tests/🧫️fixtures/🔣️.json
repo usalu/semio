@@ -1,0 +1,37 @@
+{
+  "contract": "ui.original-presented-source/v1",
+  "source": "gpuAcceptedTree",
+  "owner": "initiatingStepContext",
+  "presentation": [
+    "surface",
+    "revision",
+    "accessibilityGeneration"
+  ],
+  "acquire": {
+    "items": 1,
+    "copy": 0,
+    "capacity": 0,
+    "release": 0,
+    "depth": 1,
+    "cpu": 1
+  },
+  "return": {
+    "items": 1,
+    "copy": 0,
+    "capacity": 0,
+    "release": 0,
+    "depth": 1,
+    "cpu": 1
+  },
+  "denials": [
+    "items",
+    "depth",
+    "foreignContext",
+    "duplicateSource"
+  ],
+  "holds": [
+    "acceptedTreeReplacement",
+    "acceptedTreeRetirement"
+  ],
+  "output": "sameAcceptedTree"
+}

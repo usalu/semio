@@ -1,6 +1,6 @@
 /** 🔣️ Physical graph JSON projection and admission. */
 import type {SemioGraphSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type {SemioValue} from "../../../../../🔢️value/🧬️schema/📸️snapshot/🟦️.ts";
 
 

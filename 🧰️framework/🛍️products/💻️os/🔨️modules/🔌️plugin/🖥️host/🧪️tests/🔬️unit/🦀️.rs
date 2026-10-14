@@ -137,7 +137,7 @@ async fn io_router_register_plugin_rejects_conflicting_io_entry_ownership() {
 //#region 🔖️IoRouterPostTurnRelay
 #[semio_framework_async_macros::async_test]
 async fn wasmtime_runtime_keeps_wrong_abi_components_isolated_by_package() {
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
     for name in ["stdio", "cad"] {
         let package = PackageRef { package: PackageId(name.to_string()), hash: PackageHash([name.len() as u8; 32]) };

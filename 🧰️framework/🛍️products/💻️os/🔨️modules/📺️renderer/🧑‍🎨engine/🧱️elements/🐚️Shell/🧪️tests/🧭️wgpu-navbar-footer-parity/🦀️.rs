@@ -116,6 +116,7 @@ fn every_painted_pane_chip_registers_a_hit_target() {
 /// moves the chip's own icon, which is where React shows the live spec too.
 #[test]
 fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let theme = Theme::light();
     let window = Rect::new(0.0, 0.0, 800.0, 600.0);
     let mut shell = world_pane_shell();
@@ -144,7 +145,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         let mut overlay = Some(&mut overlay);
         let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
         for _ in 0..1_usize << 24 {
-            if shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources) {
+            if caller.turn(|cx|shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources, cx)) {
                 break;
             }
         }
@@ -154,6 +155,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
             .filter_map(|hit| hit.control_id.clone())
             .filter(|id| id.starts_with("tree.label.") && id.contains(WORLD_PROJECTION_PANE_PARENT))
             .collect::<Vec<_>>()
+        caller.retire_world(&mut world_resources);
     };
     assert!(rows(&mut shell).is_empty(), "🔀️ a folded projection pane paints no body");
 
@@ -234,6 +236,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
 
     press_chip(&mut shell, WindowPaneChip::Projection.control_id("pane-top", false));
     assert!(shell.projection_pane_folded("pane-top"), "🔀️ the same id folds it again");
+    caller.finish();
 }
 
 /// 🛑️ **The overlay-press law.** A press on a pane's OWN overlay chip belongs to the shell, never to
@@ -283,6 +286,7 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
 /// it never abandons the body, which is what left the live pane blank.
 #[test]
 fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let theme = Theme::light();
     let body = |shell: &mut ShellState, window: Rect| {
         let mut input = InputState::<ActionDescriptor>::default();
@@ -297,7 +301,7 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
         while opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES {
             polls += 1;
             assert!(polls < 1 << 24, "⏱️ the pane's layout worker answers");
-            let complete = shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources);
+            let complete = caller.turn(|cx|shell.paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources, cx));
             if cursor.document.last_step_was_own_work() {
                 opportunities += 1;
             }
@@ -307,6 +311,7 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
         }
         let rows = input.staged_hits().iter().filter(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("tree.label.") && id.contains(WORLD_PROJECTION_PANE_PARENT))).cloned().collect::<Vec<_>>();
         (opportunities, rows, draw)
+        caller.retire_world(&mut world_resources);
     };
 
     let mut shell = world_pane_shell();
@@ -350,6 +355,7 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     for row in &clamped {
         assert!(row.rect.y >= theme.panel_inset - 0.5, "🧭️ every painted row stays inside the pane: {:?}", row.rect.y);
     }
+    caller.finish();
 }
 
 /// 🪟️ A focus/maximize paint plan contains only the visible window, while the committed dock still

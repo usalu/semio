@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/layout-layout-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -9,7 +9,7 @@
   ],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -25,7 +25,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -33,7 +33,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -41,7 +41,7 @@
       }
     },
     "verify-layout-window-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
@@ -58,7 +58,7 @@
       }
     },
     "verify-layout-document-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
@@ -75,7 +75,7 @@
       }
     },
     "verify-layout-frame-selection": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
@@ -92,7 +92,7 @@
       }
     },
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -107,7 +107,7 @@
       }
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -122,7 +122,7 @@
       }
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -137,7 +137,7 @@
       }
     },
     "verify-physical-codecs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",

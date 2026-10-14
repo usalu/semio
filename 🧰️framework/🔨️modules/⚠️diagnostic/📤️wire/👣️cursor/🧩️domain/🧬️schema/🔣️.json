@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "unsigned",
+    "signed",
+    "octets",
+    "float",
+    "text",
+    "cuts",
+    "grant",
+    "metadataCopyBytes",
+    "heapBytesPerTurn",
+    "total"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "unsigned": {
+      "const": "18446744073709551615"
+    },
+    "signed": {
+      "const": "-9223372036854775808"
+    },
+    "octets": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "float": {
+      "type": "number"
+    },
+    "text": {
+      "type": "string"
+    },
+    "cuts": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "const": "complete"
+          }
+        ]
+      }
+    },
+    "grant": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "metadataCopyBytes": {
+      "const": 0
+    },
+    "heapBytesPerTurn": {
+      "const": 0
+    },
+    "total": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 5,
+      "maxItems": 5
+    }
+  }
+}

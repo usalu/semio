@@ -1,7 +1,7 @@
 /** 🧱️ Literal Block scalar capture and direct semantic row ownership. */
 import {ValueError,sqliteOperation,sqliteValueByteLength,type SqliteOperation,type SqliteDatabase,type SqliteDatabaseOptions,type SqliteValue,type SqliteRow,type SqliteTable} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import {ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteValueByteLengthControlled} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {parseBinary64,binary64Value,type Binary64} from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,binary64Value,type Binary64} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export const invalid=(message:string):never=>{throw new ValueError("invalidValue","Block "+message)};
 export function strict(value:unknown,keys:readonly string[]):Record<string,unknown>{if(value===null||typeof value!=="object"||Array.isArray(value))return invalid("object required");const own=Reflect.ownKeys(value);if(own.length!==keys.length||own.some(key=>typeof key!=="string"||!keys.includes(key)))return invalid("exact owned fields required");return value as Record<string,unknown>}
 export function text(value:unknown):string{if(typeof value!=="string")return invalid("well-formed TEXT required");sqliteValueByteLength(value);return value}

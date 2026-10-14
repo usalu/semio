@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-transient",
   "targets": {
     "test-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "{projectRoot}/**/*",
@@ -17,7 +17,7 @@
       }
     },
     "test-retained": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "{projectRoot}/**/*",

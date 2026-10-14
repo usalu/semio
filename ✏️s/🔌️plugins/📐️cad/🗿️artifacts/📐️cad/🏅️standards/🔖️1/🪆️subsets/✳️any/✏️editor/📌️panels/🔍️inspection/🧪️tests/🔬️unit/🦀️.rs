@@ -10,7 +10,7 @@ use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::ViewModel;
 
 fn projected(panel: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: panel }).expect("CAD panel projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(panel)).expect("CAD panel projection")
 }
 
 fn forest_object_panel(view_state: &ViewModel, ids: &[&str]) -> String {

@@ -37,7 +37,7 @@ class BuildScript extends Script {
     const [variant, renderer, profile] = args;
     if (args.length !== 3 || renderer !== "react" || !["prototype", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("build <variant> react <prototype|release>");
     const workspace = getWorkspaceRoot(), root = resolve(import.meta.dir, ".."), packageRoot = join(root, "📦️packages/🟦️typescript");
-    const catalog = JSON.parse(readFileSync(join(root, "../🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string; brand?: string; devContribution?: string }[];
+    const catalog = JSON.parse(readFileSync(join(process.env.SEMIO_PLUGIN_CATALOG ?? (()=>{throw Error("Distribution requires a supplied catalog root");})(), "🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string; brand?: string; devContribution?: string }[];
     const playground = catalog.find((row) => row.variant === variant);
     const contribution = playground ? loadDevContribution(workspace, playground) : undefined;
     if (!playground) throw new Error(`Unknown production playground: ${variant}`);

@@ -6,7 +6,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "test": "nx run @semio-tech/framework-plugin-host-test-component-compute-ownership:test"
+    "test": "bun repo run @semio-tech/framework-plugin-host-test-component-compute-ownership:test"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

@@ -1,11 +1,11 @@
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, parseActivationReceipt, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 import { MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { artifactFiles } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
@@ -136,7 +136,7 @@ function playServedActivationRow(pluginId: string, candidates: readonly PlayActi
   if (new Set(candidates.map(candidate => candidate.row.artifactSha256)).size === 1) return { ...candidates[0]!.row, rebuiltAt: earliest(candidates) };
   const installed = options.installedArtifactSha256?.(pluginId);
   const served = candidates.filter(candidate => candidate.row.artifactSha256 === installed);
-  if (served.length === 0) throw new Error(`Stale play activation lane: ${pluginId} is ${candidates.map(candidate => `${candidate.row.artifactSha256} in ${candidate.lane}`).join(" but ")}, and the installed artifact (${installed ?? "unreadable"}) matches none of them (run bun nx run @semio-tech/framework-os-dev:activate-${candidates[0]!.lane}-react-prototype)`);
+  if (served.length === 0) throw new Error(`Stale play activation lane: ${pluginId} is ${candidates.map(candidate => `${candidate.row.artifactSha256} in ${candidate.lane}`).join(" but ")}, and the installed artifact (${installed ?? "unreadable"}) matches none of them (run bun repo run @semio-tech/framework-os-dev:activate-${candidates[0]!.lane}-react-prototype)`);
   const newest = served.reduce((best, candidate) => candidate.receiptMtimeMs > best.receiptMtimeMs ? candidate : best);
   options.warn?.(`[play] lane drift: ${pluginId} served from ${newest.lane} (${installed!.slice(0, 8)}), stale in ${candidates.filter(candidate => candidate.row.artifactSha256 !== installed).map(candidate => candidate.lane).join(", ")}`);
   return { ...newest.row, rebuiltAt: earliest(served) };
@@ -170,7 +170,7 @@ function readPlayActivationLane(workspace: string, lane: string): PlayActivation
   try { return { lane, receipt: readActivationReceipt(directory), receiptMtimeMs: statSync(join(directory, ACTIVATION_RECEIPT_FILE)).mtimeMs }; }
   catch (error) {
     if ((error as NodeJS.ErrnoException | undefined)?.code !== "ENOENT") throw error;
-    throw new Error(`Missing play activation lane receipt: ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
+    throw new Error(`Missing play activation lane receipt: ${lane} (run bun repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
   }
 }
 

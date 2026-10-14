@@ -336,7 +336,7 @@
         {
           "directory": "root",
           "files": [
-            "nx.json",
+            "📋️project.json",
             "package.json"
           ]
         }
@@ -350,14 +350,14 @@
         {
           "directory": "root",
           "files": [
-            "nx.json",
+            "📋️project.json",
             "package.json"
           ]
         },
         {
           "directory": "root/package",
           "files": [
-            "nx.json",
+            "📋️project.json",
             "package.json"
           ]
         }
@@ -365,13 +365,13 @@
       "expected": "root/package"
     },
     {
-      "id": "unpaired-nx-marker-is-insufficient",
+      "id": "unpaired-build-marker-is-insufficient",
       "start": "root/package/topic",
       "markers": [
         {
           "directory": "root",
           "files": [
-            "nx.json"
+            "📋️project.json"
           ]
         }
       ],
@@ -397,7 +397,7 @@
         {
           "directory": "root",
           "files": [
-            "nx.json"
+            "📋️project.json"
           ]
         },
         {
@@ -414,6 +414,28 @@
       "start": "root/package/topic",
       "markers": [],
       "expected": null
+    },
+    {
+      "id": "nested-build-package-is-not-a-workspace",
+      "start": "root/package/topic",
+      "markers": [
+        {
+          "directory": "root",
+          "files": [
+            "📋️project.json",
+            "package.json"
+          ]
+        },
+        {
+          "directory": "root/package",
+          "files": [
+            "📋️project.json",
+            "package.json"
+          ],
+          "workspace": false
+        }
+      ],
+      "expected": "root"
     }
   ]
 }

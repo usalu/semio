@@ -3,15 +3,18 @@
   "accepted": [
     {
       "version": 1,
-      "directory": "/a"
+      "directory": "/a",
+      "program": "/original/📜️script.ts"
     },
     {
       "version": 1,
-      "directory": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "directory": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "program": "/original/📜️script.ts"
     },
     {
       "version": 1,
-      "directory": "C:\\a"
+      "directory": "C:\\a",
+      "program": "C:\\original\\📜️script.ts"
     }
   ],
   "rejected": [
@@ -27,11 +30,13 @@
     },
     {
       "version": 1,
-      "directory": ""
+      "directory": "",
+      "program": "/original/📜️script.ts"
     },
     {
       "version": 1,
-      "directory": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "directory": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "program": "/original/📜️script.ts"
     },
     {
       "version": 1,
@@ -40,7 +45,17 @@
     },
     {
       "version": 1,
-      "directory": "relative"
+      "directory": "relative",
+      "program": "/original/📜️script.ts"
+    },
+    {
+      "version": 1,
+      "directory": "/a",
+      "program": "relative/📜️script.ts"
+    },
+    {
+      "version": 1,
+      "directory": "/a"
     }
   ]
 }

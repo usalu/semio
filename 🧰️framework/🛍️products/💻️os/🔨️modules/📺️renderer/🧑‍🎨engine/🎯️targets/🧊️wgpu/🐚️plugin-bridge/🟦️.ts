@@ -188,7 +188,7 @@ function routeShardPorts(): void {
 //#region 🔖️PooledSingletons
 let pooledRuntime: PooledActorRuntime | null = null;
 let originalWorkOwner: RemoteOriginalBootstrapOwner | undefined;
-function frameOriginalWorkOwner(): RemoteOriginalBootstrapOwner {
+export function frameOriginalWorkOwner(): RemoteOriginalBootstrapOwner {
   if (originalWorkOwner) return originalWorkOwner;
   const owner = new RemoteOriginalBootstrapOwner(request => self.postMessage(request));
   self.addEventListener("message", (event: MessageEvent<OriginalBootstrapResponse>) => { if (event.data?.kind === "original-stock-result") owner.receiveResponse(event.data); });

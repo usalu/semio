@@ -1,0 +1,30 @@
+{
+  "contract": "media.original-command-custody/v1",
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "operation": "71",
+  "generation": "3",
+  "command": {
+    "seq": "9007199254740993",
+    "port": "playback:out",
+    "parent": "doc-alpha",
+    "revision": "18446744073709551615"
+  },
+  "failure": {
+    "primary": "initial native media error",
+    "receipt": "original receipt refusal",
+    "context": "original context refusal"
+  },
+  "close": [
+    "originalPort",
+    "originalParent",
+    "originalCommandShell",
+    "originalFailure",
+    "parent"
+  ],
+  "pending": "sameDecodedOwner",
+  "wire": "borrowedOriginalHandle"
+}

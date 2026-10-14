@@ -2,7 +2,7 @@
 
 use crate::editor::jack::window_config::JackGraphWindowConfig;
 use crate::JackSnapshot;
-use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+
 use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, NodeGraphScene, UiAssemblyResult, WindowMeasure};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_contract::SurfaceKind;
@@ -38,7 +38,7 @@ pub(crate) fn trinity_lod_json_for_window(config: Option<&JackGraphWindowConfig>
 /// `stamp_and_cache_interaction_ui` post-pass would stamp either. The live node-graph host reads
 /// domain "ast"'s `DomainSelection`/`DomainHover` directly (`GraphHost::sync_interaction`), so the
 /// interactive surface stays correct even though this snapshot doesn't carry it.
-pub(crate) fn render(surface_id: &str, _controller_id: &str, snapshot: &JackSnapshot, content: &SemioGraphSnapshot, config: Option<&JackGraphWindowConfig>) -> UiAssemblyResult<BuiltNode> {
+pub(crate) fn render(surface_id: &str, _controller_id: &str, snapshot: &JackSnapshot, content: &dyn crate::JackContentVisual, config: Option<&JackGraphWindowConfig>) -> UiAssemblyResult<BuiltNode> {
     let (nodes, edges, _) = crate::editor::jack::content_to_workflow(&snapshot.camera, content);
     let camera = config.and_then(|config| config.camera.as_ref()).unwrap_or(&snapshot.camera);
     let viewport = Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom };

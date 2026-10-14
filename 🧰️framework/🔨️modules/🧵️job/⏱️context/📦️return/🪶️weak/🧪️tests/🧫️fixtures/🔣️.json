@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "contract": "framework.job.original-scoped-weak-return",
+  "operation": 17,
+  "generation": 9,
+  "recordHandle": 77,
+  "storeGeneration": 35,
+  "grant": [
+    1,
+    0,
+    0,
+    0,
+    1
+  ],
+  "events": [
+    {
+      "name": "missingParent",
+      "returned": false,
+      "items": 0,
+      "born": 0,
+      "freed": 0
+    },
+    {
+      "name": "foreignParent",
+      "returned": false,
+      "items": 0,
+      "born": 0,
+      "freed": 0
+    },
+    {
+      "name": "deniedItem",
+      "returned": false,
+      "items": 0,
+      "born": 0,
+      "freed": 0
+    },
+    {
+      "name": "deniedDepth",
+      "returned": false,
+      "items": 0,
+      "born": 0,
+      "freed": 0
+    },
+    {
+      "name": "crossThread",
+      "returned": false,
+      "items": 0,
+      "born": 0,
+      "freed": 0
+    },
+    {
+      "name": "originalParent",
+      "returned": true,
+      "items": 1,
+      "born": 0,
+      "freed": 0
+    },
+    {
+      "name": "scopeRestored",
+      "returned": false,
+      "items": 0,
+      "born": 0,
+      "freed": 0
+    }
+  ],
+  "parentAddressUnchanged": true,
+  "weakSourceAddressUnchangedOnDenial": true,
+  "wholeOriginalFailure": true,
+  "borrowedStrongSourceUntilReturn": true,
+  "unwindRestoresReceiver": true,
+  "aliasOrContextBirth": false,
+  "threadBoundWitness": true
+}

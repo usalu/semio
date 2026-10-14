@@ -1,0 +1,409 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/media/turn/schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceIdentity",
+    "cases",
+    "mediaSources",
+    "dispatchSources",
+    "artifactSources",
+    "closing",
+    "birth",
+    "requestFields",
+    "snapshotPreparation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sourceIdentity": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "capacity",
+          "source",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "source": {
+            "$ref": "#/definitions/mediaSource"
+          },
+          "expected": {
+            "enum": [
+              "retained",
+              "published"
+            ]
+          }
+        }
+      }
+    },
+    "dispatchSources": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "controllerId",
+          "toolId",
+          "detail",
+          "actual",
+          "maximum"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "unknownController",
+              "factory",
+              "rawWireLimit"
+            ]
+          },
+          "controllerId": {
+            "type": "string"
+          },
+          "toolId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "detail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actual": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "maximum": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "artifactSources": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "original"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "payload",
+              "value",
+              "export",
+              "import",
+              "schemaMismatch",
+              "noImporter"
+            ]
+          },
+          "original": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "closing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyWidths",
+        "payload",
+        "schema",
+        "mimeType",
+        "structuralCopyBytes"
+      ],
+      "properties": {
+        "copyWidths": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "payload": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mimeType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "structuralCopyBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "mediaSources": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/definitions/mediaSource"
+      }
+    },
+    "birth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumOutputBytes",
+        "maximumCapacityBytes",
+        "maximumCopyBytes",
+        "cases"
+      ],
+      "properties": {
+        "maximumOutputBytes": {
+          "const": 4096
+        },
+        "maximumCapacityBytes": {
+          "const": 16777216
+        },
+        "maximumCopyBytes": {
+          "const": 65536
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "items",
+              "capacityBytes",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "capacityBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expected": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "requestFields": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "source_identity",
+          "retained",
+          "operation",
+          "tool_id",
+          "parent_document_id",
+          "canonical_base_revision",
+          "snapshot",
+          "snapshot_close",
+          "port",
+          "output_credit",
+          "output_chunks",
+          "completion"
+        ]
+      }
+    },
+    "snapshotPreparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phases",
+        "cases"
+      ],
+      "properties": {
+        "phases": {
+          "const": [
+            "sourceLoan",
+            "snapshotSupplierAliases",
+            "closeFlag",
+            "closeOwner",
+            "ready"
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sourceRoot",
+              "incomingRoot",
+              "items",
+              "capacityBytes",
+              "expectedPhases"
+            ],
+            "properties": {
+              "sourceRoot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "incomingRoot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "capacityBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expectedPhases": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "mediaType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "form"
+      ],
+      "properties": {
+        "class": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "form": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        }
+      }
+    },
+    "mediaSource": {
+      "type": "object",
+      "required": [
+        "kind",
+        "port",
+        "message",
+        "produced",
+        "accepted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "unknownPort",
+            "incompatible",
+            "payload",
+            "notImplemented"
+          ]
+        },
+        "port": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "produced": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/mediaType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accepted": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/mediaType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

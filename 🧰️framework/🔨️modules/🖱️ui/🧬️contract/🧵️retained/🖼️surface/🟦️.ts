@@ -1,5 +1,5 @@
 //#region 🧬️SurfaceContract
-import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { UiDocumentLimits } from "../../../../🛂️manifest/🟦️.ts";
 import { RetainedUiNumericTable } from "../🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";

@@ -6,7 +6,7 @@ type Witness=(usize,usize,Option<(u64,u64)>,(usize,usize));
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Field,Tag,Length,Bytes,Commit,Complete,Closed}
-pub struct ToolRunEntityColumnReceiving{source:Witness,frame:usize,phase:Phase,remaining:usize,scalar:[u8;8],at:usize,receipt:Receipt,closing:bool}
+pub struct ToolRunEntityColumnReceiving{source:Witness,frame:usize,phase:Phase,remaining:usize,entities:usize,scalar:[u8;8],at:usize,receipt:Receipt,closing:bool}
 fn witness(source:&RetainedRecordBodySourceDecode)->Witness{let s=source.source_identity();(s.address,s.extent,s.authority,source.original_range())}
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"original entity column source or token is invalid")}
 fn limit()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"original entity column exceeds captured receiving allocation or item ceiling")}
@@ -15,7 +15,7 @@ fn funded(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.ma
 fn progress()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 impl ToolRunEntityColumnReceiving{
  pub fn admit(source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-  if source.receipt().is_some()||!funded(g,metadata()){return Ok(None)}let address=frame.native_address().ok_or_else(fault)?;if !frame.begin_entity_issuer(source)?{return Ok(None)}let p=progress();let receiver=Self{source:witness(source),frame:address,phase:Phase::Field,remaining:0,scalar:[0;8],at:0,receipt:Some((g,p)),closing:false};Ok(Some((receiver,p)))
+  if source.receipt().is_some()||!funded(g,metadata()){return Ok(None)}let address=frame.native_address().ok_or_else(fault)?;if !frame.begin_entity_issuer(source)?{return Ok(None)}let p=progress();let receiver=Self{source:witness(source),frame:address,phase:Phase::Field,remaining:0,entities:0,scalar:[0;8],at:0,receipt:Some((g,p)),closing:false};Ok(Some((receiver,p)))
  }
  fn validate(&self,source:&RetainedRecordBodySourceDecode,frame:&ToolRunNativeTickPreparation)->Result<(),ValueError>{if witness(source)!=self.source{return Err(fault())}frame.entity_column(source,self.frame)?;Ok(())}
  fn allocation(&self,source:&RetainedRecordBodySourceDecode,frame:&ToolRunNativeTickPreparation,birth:usize)->Result<(),ValueError>{
@@ -31,17 +31,17 @@ impl ToolRunEntityColumnReceiving{
   if self.phase==Phase::Commit{d.depth=column.next_push_depth_demand().map_err(|_|fault())?+1}Ok(d)
  }
  pub fn reserve_demands(&self,source:&RetainedRecordBodySourceDecode,frame:&ToolRunNativeTickPreparation)->Result<RetirementDemand,ValueError>{
-  self.validate(source,frame)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.phase!=Phase::Bytes||self.at!=0{return Ok(Default::default())}let column=frame.entity_column(source,self.frame)?;if column.has_reserved_slot(){return Ok(Default::default())}let d=RetirementDemand{copy_bytes:column.next_reserve_copy_byte_demand().map_err(|_|limit())?,capacity_bytes:column.next_allocation_bytes().map_err(|_|limit())?,depth:column.next_reserve_depth_demand().map_err(|_|limit())?+1,..Default::default()};self.allocation(source,frame,d.capacity_bytes)?;Ok(d)
+  self.validate(source,frame)?;if self.receipt.is_some()||source.receipt().is_some()||self.closing||self.phase!=Phase::Bytes||self.at!=0{return Ok(Default::default())}let column=frame.entity_column(source,self.frame)?;if column.has_reserved_slot(){return Ok(Default::default())}let d=RetirementDemand{copy_bytes:column.next_capacity_copy_byte_demand(self.entities).map_err(|_|limit())?,capacity_bytes:column.next_capacity_allocation_bytes(self.entities).map_err(|_|limit())?.ok_or_else(fault)?,depth:column.next_reserve_depth_demand().map_err(|_|limit())?+1,..Default::default()};self.allocation(source,frame,d.capacity_bytes)?;Ok(d)
  }
  pub fn reserve_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  let d=self.reserve_demands(source,frame)?;if d.depth==0||!funded(g,d){return Ok(None)}let result=frame.entity_column_mut(source,self.frame)?.reserve_one_funded(g);let p=match result{Ok(p)=>p,Err(error)=>{let p=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes>0),retained_capacity_bytes:error.allocated_bytes,..Default::default()};self.receipt=Some((g,p));return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason).with_retained_progress(p))}};self.receipt=Some((g,p));if !p.fits(g){return Err(limit().with_retained_progress(p))}Ok(Some(p))
+  let d=self.reserve_demands(source,frame)?;if d.depth==0||!funded(g,d){return Ok(None)}let result=frame.entity_column_mut(source,self.frame)?.reserve_capacity_one_funded(self.entities,g);let p=match result{Ok(p)=>p,Err(error)=>{let p=RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes>0),retained_capacity_bytes:error.allocated_bytes,..Default::default()};self.receipt=Some((g,p));return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason).with_retained_progress(p))}};self.receipt=Some((g,p));if !p.fits(g){return Err(limit().with_retained_progress(p))}Ok(Some(p))
  }
  pub fn receive(&mut self,source:&RetainedRecordBodySourceDecode,frame:&ToolRunNativeTickPreparation,pending:&mut Option<RetainedRecordBodyToken>,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
   let d=self.demands(source,frame,pending)?;if d.depth==0||self.phase==Phase::Commit||!funded(g,d){return Ok(None)}let Some(RetainedRecordBodyToken::Value(token))=pending.as_ref().copied()else{return Ok(None)};let mut p=progress();
   match(self.phase,token){
    (Phase::Field,RetainedValueToken::Unsigned{role:RetainedValueRole::FieldId,value:7})=>self.phase=Phase::Tag,
    (Phase::Tag,RetainedValueToken::Tag{value:8,..})=>self.phase=Phase::Length,
-   (Phase::Length,RetainedValueToken::Unsigned{role:RetainedValueRole::BytesLength,value})=>{self.remaining=usize::try_from(value).map_err(|_|limit())?;self.phase=if self.remaining==0{Phase::Complete}else{Phase::Bytes}},
+   (Phase::Length,RetainedValueToken::Unsigned{role:RetainedValueRole::BytesLength,value})=>{self.remaining=usize::try_from(value).map_err(|_|limit())?;self.entities=self.remaining/8;self.phase=if self.remaining==0{Phase::Complete}else{Phase::Bytes}},
    (Phase::Bytes,RetainedValueToken::Byte(byte))if self.remaining>0=>{self.scalar[self.at]=byte;self.at+=1;self.remaining-=1;p.copied_bytes=1;if self.at==8{self.phase=Phase::Commit}},
    _=>return Err(fault()),
   }
@@ -51,8 +51,9 @@ impl ToolRunEntityColumnReceiving{
   let d=self.demands(source,frame,&None)?;if self.phase!=Phase::Commit||d.depth==0||!funded(g,d){return Ok(None)}let mut original=Some(u64::from_le_bytes(self.scalar));let adopted=frame.entity_column_mut(source,self.frame)?.adopt_reserved(&mut original).map_err(|_|fault())?;if !adopted.progressed||original.is_some(){return Err(fault())}self.at=0;self.phase=if self.remaining==0{Phase::Complete}else{Phase::Bytes};let p=progress();self.receipt=Some((g,p));Ok(Some(p))
  }
  pub fn cancel(&mut self){self.closing=true}
+ pub fn close_demands(&self)->RetirementDemand{if self.receipt.is_some()||self.phase==Phase::Closed||(!self.closing&&self.phase!=Phase::Complete){return Default::default()}metadata()}
  pub fn close_step(&mut self,source:&RetainedRecordBodySourceDecode,frame:&mut ToolRunNativeTickPreparation,g:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
-  if self.receipt.is_some()||source.receipt().is_some()||self.phase==Phase::Closed||(!self.closing&&self.phase!=Phase::Complete)||!funded(g,metadata()){return Ok(None)}self.validate(source,frame)?;self.at=0;self.remaining=0;self.phase=Phase::Closed;let p=progress();self.receipt=Some((g,p));Ok(Some(p))
+  let d=self.close_demands();if d.depth==0||source.receipt().is_some()||!funded(g,d){return Ok(None)}self.validate(source,frame)?;self.at=0;self.remaining=0;self.phase=Phase::Closed;let p=progress();self.receipt=Some((g,p));Ok(Some(p))
  }
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.at==0&&self.remaining==0&&self.receipt.is_none()}
 }

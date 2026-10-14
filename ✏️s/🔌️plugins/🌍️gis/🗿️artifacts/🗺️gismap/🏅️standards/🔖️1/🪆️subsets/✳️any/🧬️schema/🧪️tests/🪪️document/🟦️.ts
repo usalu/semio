@@ -1,7 +1,7 @@
 /** 🧪️ Map document facets preserve every durable handle and dynamic feature value. */
 import artifactReferenceSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json";
 import {test} from "bun:test";
-import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {applyGisMapFeaturePatch,parseGisMapFeature,parseGisMapFeaturePatch,type GisMapValue} from "../../📍️feature/🟦️.ts";
 import {readFileSync,readdirSync} from "node:fs";
 import {applyPatch,type Operation} from "fast-json-patch";

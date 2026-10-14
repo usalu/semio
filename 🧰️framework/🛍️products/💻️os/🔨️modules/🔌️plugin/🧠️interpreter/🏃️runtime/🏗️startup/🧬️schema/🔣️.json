@@ -1,0 +1,127 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "channelVersion",
+    "phases",
+    "expectedInstructions",
+    "transferCuts",
+    "hostFactory",
+    "nativeFactory"
+  ],
+  "properties": {
+    "hostFactory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalContext",
+        "retainedOpening",
+        "instructionReceiptBeforeReturn",
+        "admittedInputBeforeHandle",
+        "fullFailureRestoresOwner"
+      ],
+      "properties": {
+        "originalContext": {
+          "const": true
+        },
+        "retainedOpening": {
+          "const": true
+        },
+        "instructionReceiptBeforeReturn": {
+          "const": true
+        },
+        "admittedInputBeforeHandle": {
+          "const": true
+        },
+        "fullFailureRestoresOwner": {
+          "const": true
+        }
+      }
+    },
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "channelVersion": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "Resources",
+          "StartOpening",
+          "StartDriving",
+          "StartClosing",
+          "ChannelOpening",
+          "ChannelDriving",
+          "ChannelParsing",
+          "ChannelClosing",
+          "Ready",
+          "Closing"
+        ]
+      }
+    },
+    "expectedInstructions": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "transferCuts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "copyBytes",
+          "expectedTaken"
+        ],
+        "properties": {
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedTaken": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "nativeFactory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transferCopyBytes",
+        "foreignSourceSameBusiness",
+        "terminalState"
+      ],
+      "properties": {
+        "transferCopyBytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 2
+        },
+        "foreignSourceSameBusiness": {
+          "const": true
+        },
+        "terminalState": {
+          "const": "Closed"
+        }
+      }
+    }
+  }
+}

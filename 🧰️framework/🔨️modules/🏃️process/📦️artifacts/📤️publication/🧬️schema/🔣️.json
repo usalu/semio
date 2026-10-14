@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["owner", "files", "cancelReason", "cancellation", "replacement"],
+  "properties": {
+    "owner": {"type": "string", "minLength": 1},
+    "files": {"$ref": "#/definitions/Files"},
+    "cancelReason": {"type": "string", "minLength": 1},
+    "cancellation": {"type": "object", "additionalProperties": false, "required": ["point", "outcome", "unchanged"], "properties": {"point": {"const": "identical-eof"}, "outcome": {"const": "rejected"}, "unchanged": {"const": true}}},
+    "replacement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["files", "transient", "permanent", "cancellation", "persistent", "initial"],
+      "properties": {
+        "files": {"$ref": "#/definitions/Files"},
+        "transient": {"type": "object", "additionalProperties": false, "required": ["code", "failures", "outcome"], "properties": {"code": {"const": "EPERM"}, "failures": {"type": "integer", "minimum": 1}, "outcome": {"const": "published"}}},
+        "permanent": {"$ref": "#/definitions/Failure"},
+        "cancellation": {"$ref": "#/definitions/Failure"},
+        "persistent": {"type": "object", "additionalProperties": false, "required": ["code", "timeoutMs", "outcome", "unchanged"], "properties": {"code": {"const": "EPERM"}, "timeoutMs": {"const": 5000}, "outcome": {"const": "rejected"}, "unchanged": {"const": true}}},
+        "initial": {"type": "object", "additionalProperties": false, "required": ["absentBefore", "code", "failures", "outcome"], "properties": {"absentBefore": {"const": true}, "code": {"const": "EPERM"}, "failures": {"type": "integer", "minimum": 1}, "outcome": {"const": "published"}}}
+      }
+    }
+  },
+  "definitions": {
+    "Files": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}},
+    "Failure": {"type": "object", "additionalProperties": false, "required": ["code", "outcome", "unchanged"], "properties": {"code": {"enum": ["EIO", "EBUSY"]}, "outcome": {"const": "rejected"}, "unchanged": {"const": true}}}
+  }
+}

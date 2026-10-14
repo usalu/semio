@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-2d-js",
   "version": "0.1.0",
   "description": "2d drawing scene contracts, canvas raster, and WASM export bridge",
@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework-2d-js:test"
+    "test": "bun repo run @semio-tech/framework-2d-js:test"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

@@ -1,3 +1,4 @@
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveEmbeddedWgpuBoot } from "./🧩️selection/🟦️.ts";
 // #region 🧲️Header
@@ -19,6 +20,7 @@ import { Locale } from "../../../../../../../../🔨️modules/🖱️ui/🌐️
  * cannot cross into the renderer wasm); the wgpu twin of that seam is the plugin bridge. */
 export type FrameworkOsWgpuBootOptions = {
   readonly catalog: PluginCatalogRowsV1;
+  readonly nativeCatalog?: NativeCatalogV1;
   readonly rootId?: string;
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
@@ -56,7 +58,7 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions, e
   const moduleUrl = new URL(options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL, window.location.href).href;
   const wasmUrl = execution.rendererWasmUrl ?? moduleUrl.replace(/\.js(?=[?#]|$)/u, "_bg.wasm");
   const locale = Locale.fromLanguageTag(descriptor.locks.locale || navigator.language).id as "en" | "de";
-  return mountWgpuBrowserHost(root, { catalog: options.catalog, descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection, frameWorkerUrl: execution.frameWorkerUrl, suppressAutoIntroduction: execution.suppressAutoIntroduction, signal: execution.signal, onProgress: execution.onProgress });
+  return mountWgpuBrowserHost(root, { catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(), descriptor, locale, mountId: rootId, rendererModuleUrl: moduleUrl, rendererWasmUrl: wasmUrl, plugins, pluginRegistrySelection, frameWorkerUrl: execution.frameWorkerUrl, suppressAutoIntroduction: execution.suppressAutoIntroduction, signal: execution.signal, onProgress: execution.onProgress });
 }
 
 export type { WgpuBootProgress } from "../🌐️browser-host/🟦️.ts";

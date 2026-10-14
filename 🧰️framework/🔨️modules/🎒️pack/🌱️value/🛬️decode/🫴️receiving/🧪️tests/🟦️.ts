@@ -1,0 +1,9 @@
+import {test,expect} from "bun:test";
+import {readFileSync} from "node:fs";
+import {resolve} from "node:path";
+import Ajv from "ajv/dist/2020.js";
+import {Database} from "bun:sqlite";
+const read=(path:string)=>readFileSync(resolve(import.meta.dir,path),"utf8");
+test("original Record receiving schema requires successful one-item continuation",()=>{const fixture=JSON.parse(read("🧫️fixtures/🔣️.json"));expect(new Ajv().compile(JSON.parse(read("../🧬️schema/🔣️.json")))(fixture)).toBe(true);const db=new Database(":memory:");try{expect(db.query("SELECT json_extract(?,'$.turn.items') AS items,json_extract(?,'$.text') AS text").get(JSON.stringify(fixture),JSON.stringify(fixture))).toEqual({items:1,text:fixture.text});}finally{db.close()}const source=read("../🦀️.rs");expect(source).toContain("cursor.source_step_demands()");expect(source).toContain("source.as_ptr()");expect(source).not.toContain("decode_record_body_exact_controlled");expect(source).not.toContain("NativeDecodeControl::new");});
+
+test("original columnar receiving fixture independently preserves sparse row values",()=>{const fixture=JSON.parse(read("🧫️fixtures/📊️table.json"));expect(new Ajv().compile(JSON.parse(read("../🧬️schema/📊️table.json")))(fixture)).toBe(true);const db=new Database(":memory:");try{expect(db.query("SELECT json_array_length(?,'$.rows') AS rows,json_extract(?,'$.rows[0][0]') AS text,json_extract(?,'$.rows[1][1]') AS absent").get(JSON.stringify(fixture),JSON.stringify(fixture),JSON.stringify(fixture))).toEqual({rows:10,text:"漢",absent:null});}finally{db.close()}});

@@ -10376,7 +10376,10 @@
         "🧰️framework/🔨️modules/🏗️mesh-engine/🌲️canonical/📥️decode/🦀️.rs",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs",
         "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🦀️.rs",
-        "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🧪️tests/🦀️.rs"
+        "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🧪️tests/🦀️.rs",
+        "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📝️step/🦀️.rs",
+        "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📊️progress/🦀️.rs",
+        "🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📊️progress/🧪️tests/🦀️.rs"
       ],
       "cwd": ""
     },
@@ -10865,13 +10868,198 @@
     {
       "id": "test-original-tick-entity-column-native",
       "verb": "test",
-      "command": ["bun", "nx", "run", "@semio-tech/framework-tool-run-rs:test-original-entity-column", "--excludeTaskDependencies", "--skip-nx-cache"],
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-tool-run-rs:test-original-entity-column",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache"
+      ],
       "cwd": ""
     },
     {
       "id": "test-original-job-owned-parent-source-loan-source",
       "verb": "test",
-      "command": ["bun", "nx", "exec", "--projects=workspace", "--excludeTaskDependencies", "--skip-nx-cache", "--", "bun", "test", "./🧰️framework/🔨️modules/🧵️job/⏱️context/📸️capture/🧳️source/🧪️tests/🟦️.ts"],
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-tick-progress-receiving-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📊️progress/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-normal-worker-paired-failure-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/👷️worker/⚠️failure/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-normal-worker-paired-failure-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_normal_worker_failure_loans_both_causes_after_receipt_and_paid_close)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "check-original-root-private-group-syntax",
+      "verb": "check",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "{workspace}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+        "rust-syntax",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️close-ladder/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🤝️group/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔄️full-operation/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-child-source-admission-source",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "exec",
+        "--projects=workspace",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "bun",
+        "test",
+        "./🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🧪️tests/🟦️.ts"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-job-child-source-admission-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-job-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(original_child_source_issues_business_identity_once_and_closes_every_paid_prefix_under_same_parent)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-sealed-transfer-copy-quote-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/value-rs:test",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache",
+        "--",
+        "long",
+        "--lib",
+        "-E",
+        "test(sealed_original_issuer_quotes_metadata_transfer_separately_from_generic_inline_copy)",
+        "--no-fail-fast",
+        "--status-level",
+        "pass",
+        "--final-status-level",
+        "all",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": ""
+    },
+    {
+      "id": "test-original-tool-run-progress-receiving-native",
+      "verb": "test",
+      "command": [
+        "bun",
+        "nx",
+        "run",
+        "@semio-tech/framework-tool-run-rs:test-original-progress-receiving",
+        "--excludeTaskDependencies",
+        "--skip-nx-cache"
+      ],
       "cwd": ""
     }
   ]

@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unchanged-success",
+      "source": {
+        "args": {
+          "value": "original",
+          "unused": [
+            0,
+            255
+          ]
+        },
+        "fault": null
+      },
+      "takeFault": false,
+      "expectedArgsPresent": true,
+      "expectedFaultPresent": false
+    },
+    {
+      "id": "whole-original-fault",
+      "source": {
+        "args": {
+          "unknown": {
+            "raw": "all source fields"
+          }
+        },
+        "fault": {
+          "origin": "extension",
+          "code": "original.extension.failure",
+          "message": "original",
+          "domain": {
+            "opaque": [
+              1,
+              255
+            ]
+          },
+          "causes": [
+            {
+              "code": "nested.original",
+              "message": "same cause"
+            }
+          ]
+        }
+      },
+      "takeFault": true,
+      "expectedArgsPresent": true,
+      "expectedFaultPresent": false
+    }
+  ],
+  "admission": {
+    "capacity": 1,
+    "requiredItems": 1,
+    "requiredDepth": 1
+  },
+  "refused": {
+    "capacity": 0,
+    "requiredItems": 1,
+    "requiredDepth": 1
+  },
+  "retirement": [
+    "pending",
+    "complete"
+  ],
+  "prepared": {
+    "source": {
+      "original": "exact initiating source",
+      "unused": [
+        0,
+        255
+      ]
+    },
+    "projection": {
+      "assembled": "owned staged import",
+      "chunks": 3
+    }
+  },
+  "parsed": [
+    {
+      "id": "addressed-action",
+      "kind": "command",
+      "envelope": {
+        "address": {
+          "pluginId": "original.plugin",
+          "appId": "original.app",
+          "modeId": "edit",
+          "windowKindId": "editor",
+          "windowInstanceId": "main",
+          "actionId": "edit"
+        },
+        "arguments": {
+          "payload": [
+            0,
+            255
+          ],
+          "unused": {
+            "exact": "original"
+          }
+        }
+      },
+      "expectedAddress": "action"
+    },
+    {
+      "id": "owned-command",
+      "kind": "command",
+      "envelope": {
+        "address": {
+          "owner": {
+            "app": {
+              "pluginId": "original.plugin",
+              "appId": "original.app"
+            }
+          },
+          "commandId": "resolve"
+        },
+        "arguments": {
+          "reply": [
+            3,
+            7
+          ]
+        }
+      },
+      "expectedAddress": "command"
+    },
+    {
+      "id": "artifact-command",
+      "kind": "artifact",
+      "envelope": {
+        "action": "undo",
+        "args": {
+          "opaque": [
+            255,
+            0
+          ]
+        }
+      },
+      "expectedAddress": null
+    }
+  ],
+  "parsedRefusals": [
+    {
+      "kind": "command",
+      "envelope": {
+        "address": {},
+        "extra": {}
+      }
+    },
+    {
+      "kind": "artifact",
+      "envelope": {
+        "action": "undo",
+        "unexpected": [
+          0,
+          255
+        ]
+      }
+    },
+    {
+      "kind": "command",
+      "envelope": {
+        "address": {
+          "pluginId": "original.plugin",
+          "appId": "original.app",
+          "modeId": "edit",
+          "windowKindId": "editor",
+          "windowInstanceId": "main",
+          "actionId": "edit",
+          "unknown": "undeclared"
+        },
+        "arguments": {}
+      }
+    },
+    {
+      "kind": "command",
+      "envelope": {
+        "address": {
+          "owner": {
+            "app": {
+              "pluginId": "p",
+              "appId": "a",
+              "unknown": "undeclared"
+            }
+          },
+          "commandId": "resolve"
+        },
+        "arguments": {}
+      }
+    },
+    {
+      "kind": "command",
+      "envelope": {
+        "address": {
+          "owner": {
+            "app": {
+              "pluginId": "p",
+              "appId": "a"
+            }
+          },
+          "commandId": "resolve"
+        },
+        "arguments": []
+      }
+    },
+    {
+      "kind": "artifact",
+      "envelope": {
+        "action": 255,
+        "args": {}
+      }
+    }
+  ],
+  "previewAdmission": {
+    "key": {
+      "instance": 7,
+      "document": 7,
+      "operation": 19,
+      "revision": 23,
+      "generation": 29
+    },
+    "turns": [
+      {
+        "lease": false,
+        "bodyCalls": 0
+      },
+      {
+        "lease": false,
+        "bodyCalls": 0
+      },
+      {
+        "lease": true,
+        "bodyCalls": 1
+      }
+    ]
+  },
+  "nativeParsed": {
+    "maximumOwnedBytes": 1048576,
+    "expectedBirthBytes": 0,
+    "expectedReleaseBytes": 0,
+    "preserveArgumentBacking": true,
+    "moveOriginalAddressBacking": true,
+    "maximumMetadataWork": 128
+  },
+  "parserSettlement": [
+    {
+      "terminal": false,
+      "retired": false,
+      "closeCalls": 0
+    },
+    {
+      "terminal": false,
+      "retired": false,
+      "closeCalls": 0
+    },
+    {
+      "terminal": true,
+      "retired": true,
+      "closeCalls": 1
+    }
+  ]
+}

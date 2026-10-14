@@ -110,7 +110,7 @@ pub struct EvaluateRequest {
 /// 📬️ Completion names the exact pending extension owner and its original output source.
 #[derive(FromValue,semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase")]
-pub struct EvaluationExternalResult {pub neuron_id:String,pub extension_id:String,pub operator_id:String,pub node_hash:u64,pub output_json:String}
+pub struct EvaluationExternalResult {pub neuron_id:String,pub extension_id:String,pub operator_id:String,pub node_hash:u64,pub output:DslValue}
 #[path="📨️result/🦀️.rs"] mod external_completion;
 use external_completion::EvaluationExternalCompletion;
 
@@ -185,7 +185,7 @@ const COLD_EVALUATION_IDENTITY_POLICY:RetainedCloneGrant=RetainedCloneGrant {max
 
 /// 🧾️ The shape every `evaluate` answer takes. Declared here as one string so the Rust law, the
 /// TypeScript twin and the fixture all name the same fields.
-pub const EVALUATE_ENVELOPE_SCHEMA: &str = "{done,cancellable,phase,unitsDone,unitsTotal,outputJson}";
+pub const EVALUATE_ENVELOPE_SCHEMA: &str = "{done,cancellable,phase,unitsDone,unitsTotal,output}";
 
 /// ⏱️ One budgeted `evaluate` ROUND TRIP as the extension-boundary JSON envelope.
 ///
@@ -246,41 +246,44 @@ fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,jobs:&mut E
     let (key,retained)=jobs.jobs.slot_entry_mut(slot).unwrap();
     let mut spent=0u64;
     loop{
-        if cx.should_yield(){return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
+        if cx.should_yield(){return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
         let remaining=evaluation_remaining_grant(memory_grant,physical);
         if let Some(response)=&mut retained.response{
-            if retained.response_failed{let result=response.close_step(remaining);let(receipt,refusal)=match result{Ok(step)=>(step.progress(),None),Err(error)=>(error.retained_progress(),Some(EvaluationFailure::Native(error)))};physical=physical.checked_add(receipt).expect("failed original response cleanup receipt");if response.terminal_is_empty(){retained.response=None;retained.response_failed=false;}return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:physical,returned_request,refusal};}
+            if retained.response_failed{let result=response.close_step(remaining);let(receipt,refusal)=match result{Ok(step)=>(step.progress(),None),Err(error)=>(error.retained_progress(),Some(error))};physical=physical.checked_add(receipt).expect("failed original response cleanup receipt");if response.terminal_is_empty(){retained.response=None;retained.response_failed=false;}return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:physical,returned_request,refusal};}
             let result=response.step(1,retained.units,remaining);let receipt=response.normal_step_progress();physical=physical.checked_add(receipt).expect("original SDK response receipt");
-            match result{Ok((Some(mut reply),_))=>{assert!(response.terminal_is_empty());retained.response=None;retained.compact_cleanup=true;reply.retirement_progress=physical;reply.returned_request=returned_request;return reply;},Ok((None,_))=>return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None},Err(error)=>{retained.response_failed=true;retained.fault=Some(error);retained.cancel();return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:physical,returned_request,refusal:None};}}
+            match result{Ok((Some(mut reply),_))=>{assert!(response.terminal_is_empty());retained.response=None;retained.compact_cleanup=true;reply.retirement_progress=physical;reply.returned_request=returned_request;return reply;},Ok((None,_))=>return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None},Err(error)=>{retained.response_failed=true;retained.fault=Some(error);retained.cancel();return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:physical,returned_request,refusal:None};}}
         }
         if let Some(mut identity)=retained.continuation_identity.take(){
             let request=retained.compact_request.as_ref().expect("original continuation source");
             let result=identity.step(request,retained.external_pending.as_ref(),retained.current_neuron(),retained.current_version(),retained.current_cancellation(),retained.cancelled,remaining);
-            let(status,receipt)=match result{Ok(step)=>step,Err(error)=>{retained.continuation_identity=Some(identity);return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:physical.checked_add(error.retained_progress()).expect("original failed identity receipt"),returned_request,refusal:Some(error.into())}}};
+            let(status,receipt)=match result{Ok(step)=>step,Err(error)=>{retained.continuation_identity=Some(identity);return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:physical.checked_add(error.retained_progress()).expect("original failed identity receipt"),returned_request,refusal:Some(error.into())}}};
             physical=physical.checked_add(receipt).expect("original continuation identity receipt");
-            match status{None=>retained.continuation_identity=Some(identity),Some(false)=>return EvaluationReply::refused(retained.compact_request.take().unwrap(),physical,"continuation does not match its original retained owner"),Some(true)=>{if identity.external{retained.continuation_identity=Some(identity);if remaining.maximum_items<=receipt.copied_items{return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}retained.external_completion=Some(EvaluationExternalCompletion::new(retained.compact_request.as_mut().unwrap().external_result.take().unwrap()));retained.compact_cleanup=true;retained.continuation_identity=None;physical.copied_items+=1;}}}
-            return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}
+            match status{None=>retained.continuation_identity=Some(identity),Some(false)=>return EvaluationReply::refused(retained.compact_request.take().unwrap(),physical,"continuation does not match its original retained owner"),Some(true)=>{if identity.external{retained.continuation_identity=Some(identity);if remaining.maximum_items<=receipt.copied_items{return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}retained.external_completion=Some(EvaluationExternalCompletion::new(retained.compact_request.as_mut().unwrap().external_result.take().unwrap()));retained.compact_cleanup=true;retained.continuation_identity=None;physical.copied_items+=1;}}}
+            return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}
         }
         if retained.compact_cleanup&&(retained.compact_request.is_some()||retained.compact_active.is_some()){
             let result=if retained.compact_active.is_some(){evaluation_child_close(&mut retained.compact_active,remaining)}else{evaluation_admit_original(&mut retained.compact_request,&mut retained.compact_active,remaining)};
             match result{Ok(step)=>physical=physical.checked_add(step.progress()).expect("original SDK compact source receipt"),Err(error)=>{physical=physical.checked_add(error.retained_progress()).expect("original SDK failed compact source receipt");retained.fault=Some(error.into());retained.cancel();}}
-            if retained.compact_request.is_none()&&retained.compact_active.is_none(){retained.compact_cleanup=false;}return EvaluationReply{external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None};
+            if retained.compact_request.is_none()&&retained.compact_active.is_none(){retained.compact_cleanup=false;}return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None};
         }
         let budget=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX);let units=if round_units==0{budget}else{budget.min(round_units.saturating_sub(spent)as usize)};spent=spent.saturating_add(units as u64);
-        let before_units=retained.units;let restarting=retained.restarting;let (step,receipt)=match retained.advance(registry,&key.1,units,4096,remaining){Ok(step)=>step,Err(error)=>{let receipt=retained.normal_step_progress();retained.fault=Some(error);retained.cancel();(EvaluationStep::Working(retained.progress()),receipt)}};
-        let work=if restarting&&!retained.restarting&&retained.units==0{receipt.copied_items.max(1)}else{retained.units.checked_sub(before_units).expect("original evaluation unit progress changes only at explicit restart").max(receipt.copied_items).max(1)};cx.consume_fuel(work as u64);
+        if physical!=Default::default(){return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
+        let before_units=retained.units;let restarting=retained.restarting;let (step,receipt,failed)=match retained.advance(registry,&key.1,cx){Ok((step,receipt))=>(step,receipt,false),Err(error)=>{let receipt=retained.normal_step_progress();retained.fault=Some(error);retained.cancel();(EvaluationStep::Working(retained.progress()),receipt,true)}};
+        if !failed&&!retained.normal_context_posted&&receipt==Default::default()&&retained.units==before_units{return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
+        let work=if restarting&&!retained.restarting&&retained.units==0{receipt.copied_items.max(1)}else{retained.units.checked_sub(before_units).expect("original evaluation unit progress changes only at explicit restart").max(receipt.copied_items).max(1)};if !retained.normal_context_posted{cx.consume_fuel(work as u64);}
         physical=physical.checked_add(receipt).expect("original evaluation cumulative physical receipt");
         let funded=receipt.fits(remaining)&&physical.fits(memory_grant);if !funded{if retained.fault.is_none(){retained.fault=Some("original evaluation exceeded its caller memory grant".into());}retained.cancel();}
         match step{
-            EvaluationStep::Fault(error)=>retained.response=Some(EvaluationOutput::fault(error,retained.units)),
-            EvaluationStep::Done(mut reply)=>{reply.retirement_progress=physical;reply.returned_request=returned_request;if reply.complete{retained.cancelled=true;}return reply;},
-            EvaluationStep::Cancelled(progress)=>retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output_json:String::new(),done:true,cancellable:false,phase:"cancelled",units_done:progress.units_done,units_total:progress.units_total,pending:None,fault:None},false)),
+            EvaluationStep::Fault(error)=>return EvaluationReply{retirement_posted:retained.normal_context_posted,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:physical,returned_request,refusal:Some(error)},
+            EvaluationStep::Done(mut reply)=>{reply.retirement_posted=retained.normal_context_posted;reply.retirement_progress=physical;reply.returned_request=returned_request;if reply.complete{retained.cancelled=true;}return reply;},
+            EvaluationStep::Cancelled(progress)=>retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output:None,done:true,cancellable:false,phase:"cancelled",units_done:progress.units_done,units_total:progress.units_total,pending:None},false)),
             EvaluationStep::Working(progress)=>{
                 let expired=cx.should_yield();
                 let _=(funded,expired,spent);
-                retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output_json:String::new(),done:false,cancellable:true,phase:progress.phase,units_done:progress.units_done,units_total:progress.units_total,pending:None,fault:None},false));
+                retained.response=Some(EvaluationOutput::envelope(EvaluationEnvelopeSource{output:None,done:false,cancellable:true,phase:progress.phase,units_done:progress.units_done,units_total:progress.units_total,pending:None},false));
             },
         }
+        return EvaluationReply{retirement_posted:retained.normal_context_posted,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None};
     }
 }
 /// 🎟️ Keeps each original round-trip currency after its actual physical effects.
@@ -289,11 +292,12 @@ fn evaluation_remaining_grant(memory_grant:RetainedCloneGrant,physical:RetainedC
 }
 
 /// 🧾️ Publishes the original physical envelope with facts from its same execution owner.
-pub struct EvaluationReply {pub external_pending:bool,pending_source:Option<neural_engine::PendingExtensionEval>,pub wire:Option<String>,pub complete:bool,pub faulted:bool,pub retirement_progress:RetainedCloneProgress,pub returned_request:Option<EvaluateRequest>,pub refusal:Option<EvaluationFailure>}
+#[derive(semio_framework_value::RetireOwned)]
+pub struct EvaluationReply {pub external_pending:bool,pending_source:Option<neural_engine::PendingExtensionEval>,pub wire:Option<Vec<u8>>,pub complete:bool,pub faulted:bool,pub retirement_progress:RetainedCloneProgress,retirement_posted:bool,pub returned_request:Option<EvaluateRequest>,pub refusal:Option<EvaluationFailure>}
 impl EvaluationReply{
-    fn pending_request(request:EvaluateRequest,retirement_progress:RetainedCloneProgress)->Self{Self{external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress,returned_request:Some(request),refusal:None}}
+    fn pending_request(request:EvaluateRequest,retirement_progress:RetainedCloneProgress)->Self{Self{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress,returned_request:Some(request),refusal:None}}
     fn refused(request:EvaluateRequest,retirement_progress:RetainedCloneProgress,message:&'static str)->Self{Self::refused_original(request,retirement_progress,EvaluationFailure::Literal(message))}
-    fn refused_original(request:EvaluateRequest,retirement_progress:RetainedCloneProgress,refusal:EvaluationFailure)->Self{Self{external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress,returned_request:Some(request),refusal:Some(refusal)}}
+    fn refused_original(request:EvaluateRequest,retirement_progress:RetainedCloneProgress,refusal:EvaluationFailure)->Self{Self{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress,returned_request:Some(request),refusal:Some(refusal)}}
 }
 
 /// 🧮️ The operator input `dispatch`/`dispatch_job` both see: the request's `inputJson` parsed and
@@ -307,12 +311,6 @@ fn parsed_operator_input(registry: &Registry, operator_id: &str, input_json: &st
     }))
 }
 
-/// 💥️ The `{"error": …}` output body a refused evaluation carries — the SAME shape
-/// [`evaluate_json`] has always produced, so a budgeted failure and a one-shot failure are
-/// indistinguishable to the requester's node cache.
-fn error_output_json(message: &str) -> String {
-    semio_framework_pack_json::to_json_string(&DslValue::object([("error".to_string(), message.to_value())]))
-}
 // #endregion 🔖️Evaluate
 
 // #region ⏱️EvaluationJobs
@@ -349,28 +347,16 @@ fn evaluation_child_close(active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,
 
 /// ⚠️ Keeps each original typed failure without allocating display text during a normal turn.
 #[derive(Debug,semio_framework_value::RetireOwned)]
-pub enum EvaluationFailure {Native(ValueError),Json(semio_framework_pack_json::JsonError),Operator(neural_engine::EvalError),Literal(&'static str)}
+pub enum EvaluationFailure {Pack(pack::record::BorrowedProjectedPackFailure),Native(ValueError),Json(semio_framework_pack_json::JsonError),Operator(neural_engine::EvalError),Work(neural_engine::OperatorWorkFailure),Original(semio_framework_job::OriginalTurnFailure),Literal(&'static str)}
+#[path="⚠️failure/🦀️.rs"] mod original_failure;
+impl From<pack::record::BorrowedProjectedPackFailure> for EvaluationFailure{fn from(error:pack::record::BorrowedProjectedPackFailure)->Self{Self::Pack(error)}}
 impl From<ValueError> for EvaluationFailure {fn from(error:ValueError)->Self{Self::Native(error)}}
 impl From<semio_framework_pack_json::JsonError> for EvaluationFailure {fn from(error:semio_framework_pack_json::JsonError)->Self{Self::Json(error)}}
 impl From<neural_engine::EvalError> for EvaluationFailure {fn from(error:neural_engine::EvalError)->Self{Self::Operator(error)}}
+impl From<semio_framework_job::OriginalTurnFailure> for EvaluationFailure{fn from(original:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(original)}}
+impl From<neural_engine::OperatorWorkFailure> for EvaluationFailure{fn from(original:neural_engine::OperatorWorkFailure)->Self{Self::Work(original)}}
 impl From<&'static str> for EvaluationFailure {fn from(message:&'static str)->Self{Self::Literal(message)}}
-impl EvaluationFailure{
-    fn wire_fields(&self)->usize{match self{Self::Literal(_)|Self::Native(_)=>3,Self::Operator(neural_engine::EvalError::CycleDetected)=>2,Self::Operator(neural_engine::EvalError::PendingExtension{..})=>5,Self::Operator(neural_engine::EvalError::Retained(_))=>4,Self::Operator(_)=>3,Self::Json(error)=>match error{semio_framework_pack_json::JsonError::Native(_)|semio_framework_pack_json::JsonError::UnexpectedByte{..}|semio_framework_pack_json::JsonError::ControlCharacterInString{..}|semio_framework_pack_json::JsonError::DuplicateMember{..}=>4,semio_framework_pack_json::JsonError::UnexpectedEof|semio_framework_pack_json::JsonError::InvalidUtf8=>2,_=>3}}}
-    fn wire_entry(&self,index:usize)->Result<(&str,semio_framework_pack_json::JsonWriteNode<'_>),ValueError>{
-        use semio_framework_pack_json::{JsonError,JsonWriteNode as Node};use neural_engine::EvalError;
-        let invalid=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original typed evaluation fault path is absent");
-        if index==0{return Ok(("source",Node::String(match self{Self::Native(_)=>"native",Self::Json(_)=>"json",Self::Operator(_)=>"operator",Self::Literal(_)=>"literal"})));}
-        match self{
-            Self::Literal(message)=>match index{1=>Ok(("kind",Node::String("literal"))),2=>Ok(("message",Node::String(message))),_=>Err(invalid())},
-            Self::Native(error)=>match index{1=>Ok(("kind",Node::String(error.kind.as_str()))),2=>Ok(("message",Node::String(&error.message))),_=>Err(invalid())},
-            Self::Operator(error)=>{let kind=match error{EvalError::Retained(_)=>"retained",EvalError::UnknownKind(_)=>"unknownKind",EvalError::MissingInput(_)=>"missingInput",EvalError::InvalidInput(_)=>"invalidInput",EvalError::CardinalityViolation(_)=>"cardinalityViolation",EvalError::HeterogeneousList(_)=>"heterogeneousList",EvalError::CycleDetected=>"cycleDetected",EvalError::PendingExtension{..}=>"pendingExtension"};if index==1{return Ok(("kind",Node::String(kind)));}match error{EvalError::Retained(error)=>match index{2=>Ok(("refusalKind",Node::String(error.kind.as_str()))),3=>Ok(("message",Node::String(&error.message))),_=>Err(invalid())},EvalError::UnknownKind(message)|EvalError::MissingInput(message)|EvalError::InvalidInput(message)|EvalError::CardinalityViolation(message)|EvalError::HeterogeneousList(message)if index==2=>Ok(("message",Node::String(message))),EvalError::PendingExtension{extension_id,operator_id,node_hash}=>match index{2=>Ok(("extensionId",Node::String(extension_id))),3=>Ok(("operatorId",Node::String(operator_id))),4=>Ok(("nodeHash",Node::Number(semio_framework_value::Number::UInt(*node_hash)))),_=>Err(invalid())},_=>Err(invalid())}},
-            Self::Json(error)=>{let kind=match error{JsonError::Native(_)=>"native",JsonError::UnexpectedEof=>"unexpectedEof",JsonError::UnexpectedByte{..}=>"unexpectedByte",JsonError::InvalidNumber(_)=>"invalidNumber",JsonError::InvalidEscape(_)=>"invalidEscape",JsonError::InvalidUnicodeEscape(_)=>"invalidUnicodeEscape",JsonError::UnpairedSurrogate(_)=>"unpairedSurrogate",JsonError::ControlCharacterInString{..}=>"controlCharacterInString",JsonError::InvalidUtf8=>"invalidUtf8",JsonError::TrailingData(_)=>"trailingData",JsonError::MaxDepthExceeded(_)=>"maxDepthExceeded",JsonError::DuplicateMember{..}=>"duplicateMember"};if index==1{return Ok(("kind",Node::String(kind)));}let number=|key,value|Ok((key,Node::Number(semio_framework_value::Number::UInt(value))));match error{JsonError::Native(error)=>match index{2=>Ok(("refusalKind",Node::String(error.kind.as_str()))),3=>Ok(("message",Node::String(&error.message))),_=>Err(invalid())},JsonError::UnexpectedByte{found,offset}|JsonError::ControlCharacterInString{byte:found,offset}=>match index{2=>number("offset",*offset as u64),3=>number("byte",u64::from(*found)),_=>Err(invalid())},JsonError::DuplicateMember{name,offset}=>match index{2=>number("offset",*offset as u64),3=>Ok(("member",Node::String(name))),_=>Err(invalid())},JsonError::InvalidNumber(offset)|JsonError::InvalidEscape(offset)|JsonError::InvalidUnicodeEscape(offset)|JsonError::UnpairedSurrogate(offset)|JsonError::TrailingData(offset)if index==2=>number("offset",*offset as u64),JsonError::MaxDepthExceeded(depth)if index==2=>number("depth",u64::from(*depth)),_=>Err(invalid())}}
-        }
-    }
-    fn wire_node(&self,index:usize)->Result<semio_framework_pack_json::JsonWriteNode<'_>,ValueError>{self.wire_entry(index).map(|(_,node)|node)}
-    fn wire_key(&self,index:usize)->Result<&str,ValueError>{self.wire_entry(index).map(|(key,_)|key)}
-}
-impl std::fmt::Display for EvaluationFailure {fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Native(error)=>std::fmt::Display::fmt(error,formatter),Self::Json(error)=>std::fmt::Display::fmt(error,formatter),Self::Operator(error)=>std::fmt::Display::fmt(error,formatter),Self::Literal(message)=>formatter.write_str(message)}}}
+impl std::fmt::Display for EvaluationFailure {fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Pack(error)=>formatter.write_str(&error.reason.message),Self::Native(error)=>std::fmt::Display::fmt(error,formatter),Self::Json(error)=>std::fmt::Display::fmt(error,formatter),Self::Operator(error)=>std::fmt::Display::fmt(error,formatter),Self::Original(error)=>formatter.write_str(error.primary.message()),Self::Work(error)=>formatter.write_str(semio_framework_job::OriginalDomainFailure::domain_message(error)),Self::Literal(message)=>formatter.write_str(message)}}}
 impl std::error::Error for EvaluationFailure {}
 
 /// 🎒️ Moves the existing canonical JSON and typed input owners through retained admission.
@@ -564,110 +550,60 @@ const EVALUATION_JOB_CAPACITY: usize = 16;
 
 enum EvaluationStep {Fault(EvaluationFailure),Working(neural_engine::OperatorProgress),Done(EvaluationReply),Cancelled(neural_engine::OperatorProgress)}
 
-/// 📤️ Borrows inline envelope fields while retaining the same original output string.
+/// 📤️ Borrows inline envelope fields while retaining the same original native Dictionary.
 #[derive(semio_framework_value::RetireOwned)]
-struct EvaluationEnvelopeSource {output_json:String,done:bool,cancellable:bool,phase:&'static str,units_done:usize,units_total:usize,pending:Option<neural_engine::PendingExtensionEval>,fault:Option<EvaluationFailure>}
-impl semio_framework_pack_json::JsonWriteSource for EvaluationEnvelopeSource {
-    fn node_at_path(&self,path:&[usize])->Result<semio_framework_pack_json::JsonWriteNode<'_>,ValueError>{
-        use semio_framework_pack_json::JsonWriteNode as Node;
-        match path{[]=>Ok(Node::Object(if self.pending.is_some()||self.fault.is_some(){7}else{6})),[0]=>Ok(Node::Bool(self.cancellable)),[1]=>Ok(Node::Bool(self.done)),[2]=>Ok(Node::String(&self.output_json)),[3]=>Ok(Node::String(self.phase)),[4]=>Ok(Node::Number(semio_framework_value::Number::UInt(self.units_done as u64))),[5]=>Ok(Node::Number(semio_framework_value::Number::UInt(self.units_total as u64))),[6]=>Ok(Node::Object(if let Some(fault)=&self.fault{fault.wire_fields()}else{5})),[6,index]=>{if let Some(fault)=&self.fault{return fault.wire_node(*index);}let original=self.pending.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original pending envelope is absent"))?;match index{0=>Ok(Node::String(&original.extension_id)),1=>Ok(Node::String(&original.input_json)),2=>Ok(Node::String(&original.neuron_id)),3=>Ok(Node::Number(semio_framework_value::Number::UInt(original.node_hash))),4=>Ok(Node::String(&original.operator_id)),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original pending envelope field is absent"))}},_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original evaluation envelope path is absent"))}
-    }
-    fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
-        if path==[6]{if let Some(fault)=&self.fault{return fault.wire_key(index);}return ["extensionId","inputJson","neuronId","nodeHash","operatorId"].get(index).copied().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original pending envelope key is absent"));}
-        if !path.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original evaluation envelope key path is absent"));}
-        ["cancellable","done","outputJson","phase","unitsDone","unitsTotal",if self.fault.is_some(){"fault"}else{"pending"}].get(index).copied().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original evaluation envelope key is absent"))
-    }
+struct EvaluationEnvelopeSource {output:Option<Dictionary>,done:bool,cancellable:bool,phase:&'static str,units_done:usize,units_total:usize,pending:Option<neural_engine::PendingExtensionEval>}
+impl semio_framework_job::OriginalDomainProjection for EvaluationEnvelopeSource {
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{
+  use semio_framework_job::OriginalDomainView as View;
+  if path.first()==Some(&2){return match &self.output{Some(output)=>semio_framework_job::OriginalDomainProjection::projection_view(output,&path[1..]),None if path.len()==1=>Ok(View::IntrinsicNull),_=>Err(evaluation_projection_error())}}
+  Ok(match path{[]=>View::IntrinsicObject(if self.pending.is_some(){7}else{6}),[0]=>View::IntrinsicBool(self.cancellable),[1]=>View::IntrinsicBool(self.done),[3]=>View::IntrinsicText(self.phase),[4]=>View::IntrinsicNumber(semio_framework_value::Number::UInt(self.units_done as u64)),[5]=>View::IntrinsicNumber(semio_framework_value::Number::UInt(self.units_total as u64)),[6] if self.pending.is_some()=>View::IntrinsicObject(5),[6,index]=>{let original=self.pending.as_ref().ok_or_else(evaluation_projection_error)?;match index{0=>View::IntrinsicText(&original.extension_id),1=>View::IntrinsicText(&original.input_json),2=>View::IntrinsicText(&original.neuron_id),3=>View::IntrinsicNumber(semio_framework_value::Number::UInt(original.node_hash)),4=>View::IntrinsicText(&original.operator_id),_=>return Err(evaluation_projection_error())}},_=>return Err(evaluation_projection_error())})
+ }
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{
+  if path.first()==Some(&2){return self.output.as_ref().ok_or_else(evaluation_projection_error).and_then(|output|semio_framework_job::OriginalDomainProjection::projection_key(output,&path[1..],index))}
+  if path==[6]&&self.pending.is_some(){return ["extensionId","inputJson","neuronId","nodeHash","operatorId"].get(index).copied().ok_or_else(evaluation_projection_error)}
+  if !path.is_empty(){return Err(evaluation_projection_error())}
+  ["cancellable","done","output","phase","unitsDone","unitsTotal","pending"].get(index).copied().filter(|_|index<6||self.pending.is_some()).ok_or_else(evaluation_projection_error)
+ }
 }
+fn evaluation_projection_error()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original evaluation Pack projection path is absent")}
 
 struct EvaluationOutput {
-    writer:Option<semio_framework_pack_json::JsonWriteCursor<Dictionary>>,envelope:Option<semio_framework_pack_json::JsonWriteCursor<EvaluationEnvelopeSource>>,
-    encoding:Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,retirement:neural_engine::ValueRetirement,
-    pending_source:Option<neural_engine::PendingExtensionEval>,text:Option<String>,wire:Option<String>,stage:u8,units:usize,faulted:bool,complete:bool,external_pending:bool,closing_fields:u8,normal_progress:RetainedCloneProgress,
-    active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+ output:Option<Dictionary>,envelope:Option<pack::record::OwnedProjectedPackWireCursor<EvaluationEnvelopeSource>>,encoded_source:Option<EvaluationEnvelopeSource>,pending_source:Option<neural_engine::PendingExtensionEval>,wire:Option<Vec<u8>>,active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,stage:u8,units:usize,faulted:bool,complete:bool,external_pending:bool,closing:bool,normal_progress:RetainedCloneProgress,
 }
-
-
 impl EvaluationOutput {
-    fn new(output:Dictionary)->Self {let faulted=output.get("error").is_some();Self {writer:Some(semio_framework_pack_json::JsonWriteCursor::new(output)),envelope:None,encoding:None,retirement:Default::default(),pending_source:None,text:None,wire:None,stage:0,units:0,faulted,complete:true,external_pending:false,closing_fields:0,normal_progress:Default::default(),active:std::mem::ManuallyDrop::new(None)}}
-    fn envelope(source:EvaluationEnvelopeSource,faulted:bool)->Self{let complete=source.done;let external_pending=source.pending.is_some();Self{writer:None,envelope:Some(semio_framework_pack_json::JsonWriteCursor::new(source)),encoding:None,retirement:Default::default(),pending_source:None,text:None,wire:None,stage:2,units:0,faulted,complete,external_pending,closing_fields:0,normal_progress:Default::default(),active:std::mem::ManuallyDrop::new(None)}}
-    fn pending(original:neural_engine::PendingExtensionEval)->Self{Self::envelope(EvaluationEnvelopeSource{output_json:String::new(),done:false,cancellable:true,phase:"external-invoke",units_done:0,units_total:0,pending:Some(original),fault:None},false)}
-    fn fault(original:EvaluationFailure,units:usize)->Self{Self::envelope(EvaluationEnvelopeSource{output_json:String::new(),done:true,cancellable:false,phase:"fault",units_done:units,units_total:units,pending:None,fault:Some(original)},true)}
-    fn phase(&self)->&'static str {if self.active.is_some()||self.closing_fields!=0{return "output-retire";}match self.stage {0=>if self.writer.as_ref().unwrap().progress().1 {"output-write"}else{"output-measure"},1=>"output-retire",2=>if self.envelope.as_ref().unwrap().progress().1 {"output-envelope-write"}else{"output-envelope-measure"},3=>"output-envelope-retire",_=>"complete"}}
-    fn close_intermediate(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-        if !self.retirement.terminal_is_empty(){return self.retirement.close_step(grant).map(|step|step.progress());}
-        if self.active.is_some(){return evaluation_child_close(&mut self.active,grant).map(|step|step.progress());}
-        if grant.maximum_items==0{return Ok(Default::default());}
-        if self.closing_fields==0{return Ok(Default::default());}
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation output handoff requires admitted depth"));}
-        let field=self.closing_fields&self.closing_fields.wrapping_neg();
-        let progress=match field{
-            1=>evaluation_admit_original(&mut self.writer,&mut self.active,grant)?.progress(),
-            2=>evaluation_admit_original(&mut self.envelope,&mut self.active,grant)?.progress(),
-            4=>{self.encoding=None;RetainedCloneProgress {copied_items:1,..Default::default()}},
-            _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"evaluation output has an unknown original close field")),
-        };
-        if progress.copied_items!=0{self.closing_fields&=!field;}Ok(progress)
-    }
-    fn normal_step_progress(&self)->RetainedCloneProgress {self.normal_progress}
-    fn step(&mut self,maximum_units:usize,base_units:usize,grant:RetainedCloneGrant)->Result<(Option<EvaluationReply>,RetainedCloneProgress),EvaluationFailure>{
-        self.normal_progress=Default::default();let result=self.step_original(maximum_units,base_units,grant);if let Ok((_,progress))=&result {self.normal_progress=*progress;}result
-    }
-    fn step_original(&mut self,maximum_units:usize,base_units:usize,grant:RetainedCloneGrant)->Result<(Option<EvaluationReply>,RetainedCloneProgress),EvaluationFailure>{
-        let empty=RetainedCloneProgress::default();
-        if maximum_units==0||grant.maximum_items==0{return Ok((None,empty));}
-        if self.active.is_some()||self.closing_fields!=0||!self.retirement.terminal_is_empty(){
-            let receipt=self.close_intermediate(grant).map_err(|error|{self.normal_progress=error.retained_progress();EvaluationFailure::from(error)})?;self.units=self.units.saturating_add(receipt.copied_items);return Ok((None,receipt));
-        }
-        match self.stage{
-            0|2=>{
-                let mut admitted=|_|true;let mut control=match self.encoding.take(){Some(receipt)=>semio_framework_value::NativeEncodeControl::resume(receipt,&mut admitted),None=>Ok(semio_framework_value::NativeEncodeControl::new_retained(&mut admitted))}.map_err(EvaluationFailure::from)?;
-                let result=if self.stage==0{self.writer.as_mut().unwrap().step(1,&mut control,grant)}else{self.envelope.as_mut().unwrap().step(1,&mut control,grant)};let progress=if self.stage==0{self.writer.as_ref().unwrap().normal_step_progress()}else{self.envelope.as_ref().unwrap().normal_step_progress()};self.normal_progress=progress;self.encoding=Some(control.pause().map_err(EvaluationFailure::from)?);
-                if let Some(text)=result.map_err(EvaluationFailure::from)?{if self.stage==0{self.text=Some(text);self.closing_fields=1|4;self.stage=1;}else{self.wire=Some(text);if self.external_pending{let mut source=self.envelope.as_mut().unwrap().take_source().unwrap();self.pending_source=source.pending.take();assert!(source.output_json.capacity()==0&&source.fault.is_none());}self.closing_fields=2|4;self.stage=3;}}
-                self.units=self.units.saturating_add(progress.copied_items);return Ok((None,progress));
-            },
-            1=>{
-                if grant.maximum_depth==0{return Err("evaluation envelope handoff exceeds admitted depth".into());}
-                let units=base_units.saturating_add(self.units);
-                self.envelope=Some(semio_framework_pack_json::JsonWriteCursor::new(EvaluationEnvelopeSource{output_json:self.text.take().unwrap(),done:true,cancellable:false,phase:"complete",units_done:units,units_total:units,pending:None,fault:None}));self.stage=2;
-                return Ok((None,RetainedCloneProgress {copied_items:1,..empty}));
-            },
-            3=>{self.stage=4;return Ok((Some(EvaluationReply {external_pending:self.pending_source.is_some(),pending_source:self.pending_source.take(),wire:Some(self.wire.take().unwrap()),returned_request:None,refusal:None,complete:self.complete,faulted:self.faulted,retirement_progress:Default::default()}),empty));},
-            _=>return Ok((None,empty)),
-        }
-        self.units=self.units.saturating_add(1);Ok((None,empty))
-    }
-    fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-        if !self.retirement.terminal_is_empty(){return evaluation_value_demands(&self.retirement,copy);}
-        if self.active.is_some(){return evaluation_child_demands(&self.active,copy);}
-        if self.pending_source.is_some(){return Ok(evaluation_owned_birth::<neural_engine::PendingExtensionEval>());}
-        if self.writer.is_some(){return Ok(evaluation_owned_birth::<semio_framework_pack_json::JsonWriteCursor<Dictionary>>());}
-        if self.envelope.is_some(){return Ok(evaluation_owned_birth::<semio_framework_pack_json::JsonWriteCursor<EvaluationEnvelopeSource>>());}
-        Ok(RetirementDemand {depth:usize::from(!self.terminal_is_empty()),..Default::default()})
-    }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let empty=RetainedCloneProgress::default();
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-        let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation output close exceeds supplied depth"));}
-        let step=if !self.retirement.terminal_is_empty(){self.retirement.close_step(grant)?}
-        else if self.active.is_some(){evaluation_child_close(&mut self.active,grant)?}
-        else if self.pending_source.is_some(){evaluation_admit_original(&mut self.pending_source,&mut self.active,grant)?}
-        else if self.writer.is_some(){evaluation_admit_original(&mut self.writer,&mut self.active,grant)?}
-        else if self.envelope.is_some(){evaluation_admit_original(&mut self.envelope,&mut self.active,grant)?}
-        else if self.encoding.is_some(){
-            self.encoding=None;RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty})
-        }else{
-            let source=if self.text.is_some(){&mut self.text}else{&mut self.wire};
-            let value=source.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"evaluation output close lost its original text"))?;
-            match self.retirement.text(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{*source=Some(value);return Err(error);}}
-        };
-        let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,RetainedCloneStep::Progress(step.progress()),false,"evaluation output parent")?;
-        Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
-    }
-    fn terminal_is_empty(&self)->bool {self.pending_source.is_none()&&self.writer.is_none()&&self.envelope.is_none()&&self.text.is_none()&&self.wire.is_none()&&self.encoding.is_none()&&self.active.is_none()&&self.retirement.terminal_is_empty()}
+ fn new(output:Dictionary)->Self{let faulted=false;Self{output:Some(output),envelope:None,encoded_source:None,pending_source:None,wire:None,active:std::mem::ManuallyDrop::new(None),stage:0,units:0,faulted,complete:true,external_pending:false,closing:false,normal_progress:Default::default()}}
+ fn envelope(source:EvaluationEnvelopeSource,faulted:bool)->Self{let complete=source.done;let external_pending=source.pending.is_some();Self{output:None,envelope:Some(pack::record::OwnedProjectedPackWireCursor::new(source,1)),encoded_source:None,pending_source:None,wire:None,active:std::mem::ManuallyDrop::new(None),stage:2,units:0,faulted,complete,external_pending,closing:false,normal_progress:Default::default()}}
+ fn pending(original:neural_engine::PendingExtensionEval)->Self{Self::envelope(EvaluationEnvelopeSource{output:None,done:false,cancellable:true,phase:"external-invoke",units_done:0,units_total:0,pending:Some(original)},false)}
+ fn phase(&self)->&'static str{if self.closing||self.active.is_some(){"output-retire"}else{match self.stage{0=>"output-envelope-bind",2=>self.envelope.as_ref().unwrap().phase(),3=>"output-pending-transfer",4=>"output-source-close",_=>"complete"}}}
+ fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_progress}
+ fn step(&mut self,maximum_units:usize,base_units:usize,grant:RetainedCloneGrant)->Result<(Option<EvaluationReply>,RetainedCloneProgress),EvaluationFailure>{self.normal_progress=Default::default();let result=self.step_original(maximum_units,base_units,grant);self.normal_progress=match &result{Ok((_,progress))=>*progress,Err(original)=>original.retained_progress()};result}
+ fn step_original(&mut self,maximum_units:usize,base_units:usize,grant:RetainedCloneGrant)->Result<(Option<EvaluationReply>,RetainedCloneProgress),EvaluationFailure>{
+  let empty=RetainedCloneProgress::default();if maximum_units==0||grant.maximum_items==0||grant.maximum_depth==0{return Ok((None,empty))}if self.closing{return Err(EvaluationFailure::Literal("original Pack output is closing"))}
+  if self.active.is_some(){let step=evaluation_child_close(&mut self.active,grant)?;return Ok((None,step.progress()))}
+  match self.stage{
+   0=>{self.envelope=Some(pack::record::OwnedProjectedPackWireCursor::new(EvaluationEnvelopeSource{output:self.output.take(),done:true,cancellable:false,phase:"complete",units_done:base_units,units_total:base_units,pending:None},1));self.stage=2;Ok((None,RetainedCloneProgress{copied_items:1,..empty}))},
+   2=>{match self.envelope.as_mut().unwrap().advance(grant){Ok(step)=>{if let Some(ready)=step.ready{assert!(self.envelope.as_ref().unwrap().terminal_is_empty());self.envelope=None;self.encoded_source=Some(ready.source);self.wire=Some(ready.wire);self.stage=3;}Ok((None,step.progress))},Err(original)=>{self.normal_progress=original.reason.retained_progress();Err(EvaluationFailure::Pack(original))}}},
+   3=>{if self.external_pending{self.pending_source=self.encoded_source.as_mut().unwrap().pending.take();assert!(self.pending_source.is_some())}self.stage=4;Ok((None,RetainedCloneProgress{copied_items:1,..empty}))},
+   4 if self.encoded_source.is_some()=>{let step=evaluation_admit_original(&mut self.encoded_source,&mut self.active,grant)?;Ok((None,step.progress()))},
+   4=>{self.stage=5;Ok((None,RetainedCloneProgress{copied_items:1,..empty}))},
+   5=>{self.stage=6;Ok((Some(EvaluationReply{retirement_posted:false,external_pending:self.pending_source.is_some(),pending_source:self.pending_source.take(),wire:self.wire.take(),returned_request:None,refusal:None,complete:self.complete,faulted:self.faulted,retirement_progress:empty}),RetainedCloneProgress{copied_items:1,..empty}))},
+   _=>Ok((None,empty)),
+  }
+ }
+ fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+  if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if self.active.is_some(){return evaluation_child_demands(&self.active,copy)}if let Some(cursor)=self.envelope.as_ref(){return cursor.next_demand(copy)}
+  if self.pending_source.is_some(){return Ok(evaluation_owned_birth::<neural_engine::PendingExtensionEval>())}if self.encoded_source.is_some(){return Ok(evaluation_owned_birth::<EvaluationEnvelopeSource>())}if self.output.is_some(){return Ok(evaluation_owned_birth::<Dictionary>())}if self.wire.is_some(){return Ok(evaluation_owned_birth::<Vec<u8>>())}Ok(Default::default())
+ }
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
+  let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty))}
+  if !self.closing{self.closing=true;if let Some(cursor)=self.envelope.as_mut(){cursor.begin_close()}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+  let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant)?}else if let Some(cursor)=self.envelope.as_mut(){let step=cursor.close_step(grant)?;if cursor.terminal_is_empty(){self.envelope=None}step}else if self.pending_source.is_some(){evaluation_admit_original(&mut self.pending_source,&mut self.active,grant)?}else if self.encoded_source.is_some(){evaluation_admit_original(&mut self.encoded_source,&mut self.active,grant)?}else if self.output.is_some(){evaluation_admit_original(&mut self.output,&mut self.active,grant)?}else{evaluation_admit_original(&mut self.wire,&mut self.active,grant)?};
+  Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+ }
+ fn terminal_is_empty(&self)->bool{self.output.is_none()&&self.envelope.is_none()&&self.encoded_source.is_none()&&self.pending_source.is_none()&&self.wire.is_none()&&self.active.is_none()}
 }
-impl Drop for EvaluationOutput {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"evaluation output dropped before terminal-empty");}}
+impl Drop for EvaluationOutput{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Pack evaluation output requires full paid close")}}
 
 struct RetainedEvaluation {
     registry:Option<neural_engine::SharedRegistry>,lease:Option<neural_engine::RegistryLeaseRetirement>,owner_identity:neural_engine::RegistryIdentity,
@@ -675,7 +611,7 @@ struct RetainedEvaluation {
     job:Option<Box<dyn neural_engine::OperatorJob>>,admission:Option<EvaluationInputPreparation>,replacement:Option<EvaluationInputPreparation>,candidate:Option<(Dictionary,String)>,
     dependency_identity:String,version:String,cancellation_id:String,next_version:Option<String>,next_cancellation:Option<String>,
     retirement:neural_engine::ValueRetirement,finished:Option<Dictionary>,output:Option<EvaluationOutput>,fault:Option<EvaluationFailure>,
-    units:usize,identity_position:Option<usize>,cancelled:bool,restarting:bool,normal_progress:RetainedCloneProgress,
+    units:usize,identity_position:Option<usize>,cancelled:bool,restarting:bool,normal_progress:RetainedCloneProgress,normal_context_posted:bool,
     plan:neural_engine::OperatorPlanCursor,planning:bool,finish:neural_engine::OperatorFinishCursor,
     active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     response:Option<EvaluationOutput>,response_failed:bool,continuation_identity:Option<EvaluationContinuationIdentity>,compact_request:Option<EvaluateRequest>,compact_cleanup:bool,compact_active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,completed_reply:Option<EvaluationReply>,pending_input:Option<Dictionary>,discarded_candidate:Option<(Dictionary,String)>,discarded_preparation:Option<EvaluationInputPreparation>,discarded_version:Option<String>,discarded_cancellation:Option<String>,
@@ -684,7 +620,7 @@ struct RetainedEvaluation {
 
 impl RetainedEvaluation {
     fn new(registry:neural_engine::SharedRegistry,request:EvaluateRequest)->Self {
-        Self {finish:neural_engine::OperatorFinishCursor::new(),plan:neural_engine::OperatorPlanCursor::new(),planning:false,owner_identity:registry.owner_identity(),registry:Some(registry),lease:None,active:std::mem::ManuallyDrop::new(None),response:None,response_failed:false,continuation_identity:None,compact_request:None,compact_cleanup:false,compact_active:std::mem::ManuallyDrop::new(None),completed_reply:None,pending_input:None,discarded_candidate:None,discarded_preparation:None,discarded_version:None,discarded_cancellation:None,request_admission:Some(EvaluationRequestAdmission::new(request)),discarded_request:None,request_initial:true,discarded_operator:None,neuron_id:String::new(),pending_wave:None,pending_wave_closing:false,external_pending:None,external_completion:None,discarded_neuron:None,job:None,admission:None,replacement:None,candidate:None,dependency_identity:String::new(),version:String::new(),cancellation_id:String::new(),next_version:None,next_cancellation:None,retirement:Default::default(),finished:None,output:None,fault:None,units:0,identity_position:None,cancelled:false,restarting:false,normal_progress:Default::default()}
+        Self {finish:neural_engine::OperatorFinishCursor::new(),plan:neural_engine::OperatorPlanCursor::new(),planning:false,owner_identity:registry.owner_identity(),registry:Some(registry),lease:None,active:std::mem::ManuallyDrop::new(None),response:None,response_failed:false,continuation_identity:None,compact_request:None,compact_cleanup:false,compact_active:std::mem::ManuallyDrop::new(None),completed_reply:None,pending_input:None,discarded_candidate:None,discarded_preparation:None,discarded_version:None,discarded_cancellation:None,request_admission:Some(EvaluationRequestAdmission::new(request)),discarded_request:None,request_initial:true,discarded_operator:None,neuron_id:String::new(),pending_wave:None,pending_wave_closing:false,external_pending:None,external_completion:None,discarded_neuron:None,job:None,admission:None,replacement:None,candidate:None,dependency_identity:String::new(),version:String::new(),cancellation_id:String::new(),next_version:None,next_cancellation:None,retirement:Default::default(),finished:None,output:None,fault:None,units:0,identity_position:None,cancelled:false,restarting:false,normal_progress:Default::default(),normal_context_posted:false}
     }
     fn current_version(&self)->&str{self.request_admission.as_ref().and_then(|owner|owner.request.as_ref()).map_or_else(||self.next_version.as_deref().unwrap_or(&self.version),|request|request.operator_version.as_str())}
     fn current_neuron(&self)->&str{self.request_admission.as_ref().and_then(|owner|owner.request.as_ref()).map_or(&self.neuron_id,|request|&request.neuron_id)}
@@ -735,13 +671,13 @@ impl RetainedEvaluation {
     fn close_fields_terminal(&self,preserve_candidate:bool,preserve_fault:bool)->bool{
         self.continuation_identity.is_none()&&self.external_pending.is_none()&&self.external_completion.is_none()&&self.response.is_none()&&self.compact_request.is_none()&&self.compact_active.is_none()&&self.pending_wave.is_none()&&self.discarded_neuron.is_none()&&self.neuron_id.capacity()==0&&(preserve_candidate||self.request_admission.is_none())&&self.discarded_request.is_none()&&self.discarded_operator.is_none()&&(preserve_fault||self.fault.is_none())&&(preserve_fault||self.completed_reply.is_none())&&self.pending_input.is_none()&&self.discarded_candidate.is_none()&&self.discarded_preparation.is_none()&&self.discarded_version.is_none()&&self.discarded_cancellation.is_none()&&self.active.is_none()&&self.retirement.terminal_is_empty()&&self.admission.is_none()&&self.job.is_none()&&self.finished.is_none()&&self.output.is_none()&&self.dependency_identity.capacity()==0&&self.version.capacity()==0&&self.cancellation_id.capacity()==0&&(preserve_candidate||(self.replacement.is_none()&&self.candidate.is_none()&&self.next_version.is_none()&&self.next_cancellation.is_none()&&self.registry.is_none()&&self.lease.is_none()))
     }
-    fn close_step(&mut self,grant:RetainedCloneGrant,preserve_candidate:bool,preserve_fault:bool)->Result<RetainedCloneStep,ValueError>{
+    fn close_step(&mut self,grant:RetainedCloneGrant,preserve_candidate:bool,preserve_fault:bool)->Result<RetainedCloneStep,EvaluationFailure>{
         let empty=RetainedCloneProgress::default();
         if self.close_fields_terminal(preserve_candidate,preserve_fault){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.retirement_demands(grant.maximum_copy_bytes,preserve_candidate,preserve_fault)?;
-        if self.continuation_identity.is_some(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original comparison metadata close requires depth"))}self.continuation_identity=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
-        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation close exceeds supplied depth"));}
+        if self.continuation_identity.is_some(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original comparison metadata close requires depth").into())}self.continuation_identity=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation close exceeds supplied depth").into());}
         let step=if !self.retirement.terminal_is_empty(){self.retirement.close_step(grant)?}
         else if self.active.is_some(){evaluation_child_close(&mut self.active,grant)?}
         else if self.compact_active.is_some(){evaluation_child_close(&mut self.compact_active,grant)?}
@@ -750,8 +686,8 @@ impl RetainedEvaluation {
         else if let Some(completion)=&mut self.external_completion{let step=completion.close_step(grant)?;if completion.terminal_is_empty(){self.external_completion=None;}step}
         else if self.external_pending.is_some(){evaluation_admit_original(&mut self.external_pending,&mut self.active,grant)?}
         else if let Some(wave)=&mut self.pending_wave{wave.begin_close();let step=wave.close_step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,wave.terminal_is_empty(),"original pending evaluation wave")?;if wave.terminal_is_empty(){self.pending_wave=None;self.pending_wave_closing=false;}step}
-        else if self.discarded_neuron.is_some(){let original=self.discarded_neuron.take().unwrap();match self.retirement.text(original,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,original))=>{self.discarded_neuron=Some(original);return Err(error);}}}
-        else if self.neuron_id.capacity()!=0{let original=std::mem::take(&mut self.neuron_id);match self.retirement.text(original,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,original))=>{self.neuron_id=original;return Err(error);}}}
+        else if self.discarded_neuron.is_some(){let original=self.discarded_neuron.take().unwrap();match self.retirement.text(original,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,original))=>{self.discarded_neuron=Some(original);return Err(error.into());}}}
+        else if self.neuron_id.capacity()!=0{let original=std::mem::take(&mut self.neuron_id);match self.retirement.text(original,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,original))=>{self.neuron_id=original;return Err(error.into());}}}
         else if self.discarded_request.is_some(){evaluation_admit_original(&mut self.discarded_request,&mut self.active,grant)?}
         else if !preserve_candidate&&self.request_admission.is_some(){evaluation_admit_original(&mut self.request_admission,&mut self.active,grant)?}
         else if self.intermediate_pending(){self.close_intermediate(grant)?}
@@ -768,24 +704,24 @@ impl RetainedEvaluation {
                 drop(self.job.take());RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty})
             }else{let step=job.close_step(grant)?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"evaluation operator job")?}
         }else if let Some(value)=self.finished.take(){
-            match self.retirement.push_dictionary(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{self.finished=Some(value);self.finish=neural_engine::OperatorFinishCursor::new();return Err(error);}}
+            match self.retirement.push_dictionary(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{self.finished=Some(value);self.finish=neural_engine::OperatorFinishCursor::new();return Err(error.into());}}
         }else if let Some(output)=&mut self.output{
             let step=output.close_step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,output.terminal_is_empty(),"evaluation output")?;
             if output.terminal_is_empty(){self.output=None;}step
         }else if self.dependency_identity.capacity()!=0||self.version.capacity()!=0||self.cancellation_id.capacity()!=0{
             let original=if self.dependency_identity.capacity()!=0{&mut self.dependency_identity}else if self.version.capacity()!=0{&mut self.version}else{&mut self.cancellation_id};
-            let value=std::mem::take(original);match self.retirement.text(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{*original=value;return Err(error);}}
+            let value=std::mem::take(original);match self.retirement.text(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{*original=value;return Err(error.into());}}
         }else if !preserve_candidate&&self.candidate.is_some(){evaluation_admit_original(&mut self.candidate,&mut self.active,grant)?}
         else if !preserve_candidate&&(self.next_version.is_some()||self.next_cancellation.is_some()){
-            let original=if self.next_version.is_some(){&mut self.next_version}else{&mut self.next_cancellation};let value=original.take().unwrap();match self.retirement.text(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{*original=Some(value);return Err(error);}}
+            let original=if self.next_version.is_some(){&mut self.next_version}else{&mut self.next_cancellation};let value=original.take().unwrap();match self.retirement.text(value,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,value))=>{*original=Some(value);return Err(error.into());}}
         }else if !preserve_fault&&self.completed_reply.is_some(){
-            let mut reply=self.completed_reply.take().unwrap();let wire=reply.wire.take().unwrap();match self.retirement.text(wire,grant){Ok(progress)=>RetainedCloneStep::Progress(progress),Err((error,wire))=>{reply.wire=Some(wire);self.completed_reply=Some(reply);return Err(error);}}
+            evaluation_admit_original(&mut self.completed_reply,&mut self.active,grant)?
         }else if !preserve_fault&&self.fault.is_some(){
             evaluation_admit_original(&mut self.fault,&mut self.active,grant)?
         }else if let Some(lease)=&mut self.lease{
             let step=lease.close_step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"evaluation registry source lease")?;if lease.terminal_is_empty(){self.lease=None;}step
         }else if !preserve_candidate&&self.registry.is_some(){self.lease=Some(self.registry.take().unwrap().into_retirement());RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty})}
-        else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"evaluation close lost its retained frontier"));};
+        else{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"evaluation close lost its retained frontier").into());};
         let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,RetainedCloneStep::Progress(step.progress()),false,"original evaluation parent")?;
         Ok(if self.close_fields_terminal(preserve_candidate,preserve_fault){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
@@ -815,13 +751,14 @@ impl RetainedEvaluation {
         let step=job.close_step(grant)?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,job.terminal_is_empty(),"finished original operator job").map(|step|step.progress())
     }
     fn normal_step_progress(&self)->RetainedCloneProgress {self.normal_progress}
-    fn advance(&mut self,registry:&Registry,operator:&str,maximum_units:usize,maximum_bytes:usize,grant:RetainedCloneGrant)->Result<(EvaluationStep,RetainedCloneProgress),EvaluationFailure>{
-        self.normal_progress=Default::default();let result=self.advance_original(registry,operator,maximum_units,maximum_bytes,grant);if let Ok((_,progress))=&result {self.normal_progress=*progress;}result
+    fn advance(&mut self,registry:&Registry,operator:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<(EvaluationStep,RetainedCloneProgress),EvaluationFailure>{
+        self.normal_progress=Default::default();self.normal_context_posted=false;let result=self.advance_original(registry,operator,cx);if let Ok((_,progress))=&result {self.normal_progress=*progress;}result
     }
-    fn advance_original(&mut self,registry:&Registry,operator:&str,maximum_units:usize,maximum_bytes:usize,grant:RetainedCloneGrant)->Result<(EvaluationStep,RetainedCloneProgress),EvaluationFailure>{
+    fn advance_original(&mut self,registry:&Registry,operator:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<(EvaluationStep,RetainedCloneProgress),EvaluationFailure>{
+        let grant=cx.retained_grant();let maximum_units=usize::from(!cx.should_yield());let maximum_bytes=grant.maximum_copy_bytes;
         use neural_engine::OperatorJobStep;
         let empty=RetainedCloneProgress::default();
-        if maximum_units==0||maximum_bytes==0||grant.maximum_items==0{return Ok((EvaluationStep::Working(self.progress()),empty));}
+        if maximum_units==0||grant.maximum_items==0{return Ok((EvaluationStep::Working(self.progress()),empty));}
         if !self.cancelled&&self.completed_reply.as_ref().is_some_and(|reply|reply.external_pending){let mut reply=self.completed_reply.take().unwrap();self.external_pending=reply.pending_source.take();return Ok((EvaluationStep::Done(reply),RetainedCloneProgress{copied_items:1,..empty}));}
         if !self.cancelled&&self.completed_reply.is_some(){
             let step=self.close_step(grant,false,true).map_err(|error|{self.normal_progress=error.retained_progress();EvaluationFailure::from(error)})?;let receipt=step.progress();
@@ -889,14 +826,14 @@ impl RetainedEvaluation {
         if let Some(job)=&mut self.job{
             let demand=RetirementDemand {copy_bytes:job.next_step_copy_byte_demand().map_err(EvaluationFailure::from)?,capacity_bytes:job.next_step_capacity_byte_demand(grant.maximum_copy_bytes).map_err(EvaluationFailure::from)?,release_bytes:job.next_step_release_byte_demand().map_err(EvaluationFailure::from)?,depth:job.next_step_depth_demand().map_err(EvaluationFailure::from)?};
             if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((EvaluationStep::Working(self.progress()),empty));}
-            let receipt=match job.step(maximum_units,grant){
+            self.normal_context_posted=true;let receipt=match job.step(cx){
                 Ok((step,receipt))=>{
                     self.normal_progress=job.normal_step_progress();
                     if self.normal_progress!=receipt{return Err("original operator reply differs from its actual normal step receipt".into());}
                     if !receipt.fits(grant){return Err("original operator step exceeded the caller full grant".into());}
                     match step{OperatorJobStep::Working(progress)=>return Ok((EvaluationStep::Working(neural_engine::OperatorProgress {units_done:self.units.saturating_add(progress.units_done),units_total:self.units.saturating_add(progress.units_total),phase:progress.phase}),receipt)),OperatorJobStep::Done(value)=>{self.units=self.units.saturating_add(job.progress().units_total);self.finished=Some(value);self.finish=neural_engine::OperatorFinishCursor::new();},OperatorJobStep::Cancelled(_)=>{self.cancelled=true;}}receipt
                 },
-                Err(error)=>{let receipt=job.normal_step_progress();self.normal_progress=receipt;self.fault=Some(error.into());self.cancelled=true;job.cancel();receipt},
+                Err(error)=>{let receipt=job.normal_step_progress();self.normal_progress=receipt;self.fault=Some(EvaluationFailure::Work(error));self.cancelled=true;job.cancel();receipt},
             };return Ok((EvaluationStep::Working(self.progress()),receipt));
         }
         if self.finished.is_some()&&self.external_pending.is_some(){let step=evaluation_admit_original(&mut self.external_pending,&mut self.active,grant).map_err(EvaluationFailure::from)?;return Ok((EvaluationStep::Working(self.progress()),step.progress()));}
@@ -914,20 +851,17 @@ impl RetainedEvaluation {
 
 struct EvaluationRetirement(RetainedEvaluation);
 impl semio_framework_value::retirement::RetirementCursor for EvaluationRetirement {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
-        use semio_framework_value::retirement::RetirementStep as Step;
-        match self.0.close_step(grant,false,false){Err(error)=>Step::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress)}
-    }
+    fn close_step(&mut self,_grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{assert!(self.0.close_fields_terminal(false,false));semio_framework_value::retirement::RetirementStep::Complete}
     fn terminal_is_empty(&self)->bool{self.0.close_fields_terminal(false,false)}
-    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands(0,false,false)?.copy_bytes)}
-    fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.0.retirement_demands(copy,false,false).ok().map(|demand|demand.capacity_bytes)}
-    fn next_close_byte_demand(&self)->Option<usize>{self.0.retirement_demands(0,false,false).ok().map(|demand|demand.release_bytes)}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands(0,false,false)?.depth)}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
+    fn next_birth_bytes(&self,_copy:usize)->Option<usize>{Some(0)}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
 impl RetireOwned for RetainedEvaluation {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(EvaluationRetirement(self))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<EvaluationRetirement>())}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{assert!(self.close_fields_terminal(false,false));Box::new(EvaluationRetirement(self))}
+    fn retirement_birth_bytes(&self)->Option<usize>{self.close_fields_terminal(false,false).then_some(size_of::<EvaluationRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 
@@ -996,12 +930,12 @@ pub fn evaluation_retirement_demands(owner:&neural_engine::SharedRegistry,copy:u
     evaluation_registry_demands(&registry,owner.owner_identity(),copy)
 }
 /// 🧹️ Advances the same map under every independently supplied physical credit.
-pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegistry,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegistry,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
     let empty=RetainedCloneProgress::default();
     let mut registry=evaluation_jobs().lock().map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"evaluation registry close is contended"))?;
     let identity=owner.owner_identity();let demand=evaluation_registry_demands(&registry,identity,grant.maximum_copy_bytes)?;
     if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-    if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation registry close exceeds supplied depth"));}
+    if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation registry close exceeds supplied depth").into());}
     if registry.closing_owner==Some(identity){
         if let Some(key)=&mut registry.retiring_key{
             let step=key.step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,key.terminal_is_empty(),"original evaluation map key")?;if key.terminal_is_empty(){registry.retiring_key=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -1037,45 +971,98 @@ pub fn evaluation_progress(owner:&neural_engine::SharedRegistry,operator_id: &st
 }
 
 /// 🔌️ Retains the original extension registry and its existing exact retirement authority.
-pub struct ExtensionEvaluationResources {invoke:std::sync::Mutex<Option<EvaluationInvokeCursor>>,registry:Option<neural_engine::SharedRegistry>,lease:Option<neural_engine::RegistryLeaseRetirement>,retirement:neural_engine::RegistryRetirement}
+pub struct ExtensionEvaluationResources {
+    invoke: std::sync::Mutex<Option<EvaluationInvokeCursor>>,
+    original_registry: Option<Registry>,
+    registry_issuer: neural_engine::SharedRegistryIssuer,
+    registry_source_close: Option<Box<dyn ErasedSnapshotRetirement>>,
+    registry: Option<neural_engine::SharedRegistry>,
+    lease: Option<neural_engine::RegistryLeaseRetirement>,
+    retirement: Option<neural_engine::RegistryRetirement>,
+    close_failure: Option<original_failure::EvaluationCloseFailure>,
+    closing: bool,
+}
 impl ExtensionEvaluationResources {
-    pub fn new(registry:Registry)->Self {let (registry,retirement)=neural_engine::SharedRegistry::new(registry);Self {invoke:std::sync::Mutex::new(None),registry:Some(registry),lease:None,retirement}}
-    pub fn registry(&self)->&neural_engine::SharedRegistry {self.registry.as_ref().expect("open extension evaluation owner")}
-    fn source_close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub fn new(registry: Registry) -> Self {
+        Self { invoke: std::sync::Mutex::new(None), original_registry: Some(registry), registry_issuer: neural_engine::SharedRegistryIssuer::new(), registry_source_close: None, registry: None, lease: None, retirement: None, close_failure: None, closing: false }
+    }
+    pub fn registry(&self) -> Option<&neural_engine::SharedRegistry> { self.registry.as_ref() }
+    pub fn admit_registry_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
+        if self.registry.is_some() { return Ok(Some(true)); }
+        if self.closing { return Ok(None); }
+        let admitted = self.registry_issuer.step(&mut self.original_registry, cx)?;
+        if let Some((registry, retirement)) = admitted.ready {
+            self.registry = Some(registry);
+            self.retirement = Some(retirement);
+        }
+        Ok(if admitted.progress == RetainedCloneProgress::default() { None } else { Some(false) })
+    }
+    fn source_close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
         let empty=RetainedCloneProgress::default();
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         let pending=self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(cursor)=pending {let step=cursor.close_step_with_registry(self.registry.as_ref().expect("original invocation retains its registry"),grant)?;if cursor.terminal_is_empty(){*pending=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(cursor)=pending {let step=match self.registry.as_ref(){Some(registry)=>cursor.close_step_with_registry(registry,grant)?,None=>cursor.close_step(grant)?};if cursor.terminal_is_empty(){*pending=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(registry)=&self.registry{
             if evaluation_retirement_pending(registry){return retire_cancelled_evaluations_close_step(registry,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-            if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation resource lease handoff requires admitted depth"));}
+            if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation resource lease handoff requires admitted depth").into());}
             self.lease=Some(self.registry.take().unwrap().into_retirement());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
         }
         if let Some(lease)=&mut self.lease{
             let step=lease.close_step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"extension evaluation source lease")?;
             if lease.terminal_is_empty(){self.lease=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        self.retirement.close_step(grant)
+        if self.registry_source_close.is_some(){return evaluation_child_close(&mut self.registry_source_close,grant).map_err(Into::into);}
+        if self.original_registry.is_some(){return evaluation_admit_original(&mut self.original_registry,&mut self.registry_source_close,grant).map_err(Into::into);}
+        let Some(retirement)=self.retirement.as_mut() else{return Ok(RetainedCloneStep::Complete(empty));};
+        let step=retirement.close_step(grant)?;
+        if retirement.terminal_is_empty(){self.retirement=None;}
+        Ok(step)
     }
 }
 impl semio_framework_plugin::ExtensionResourceOwner for ExtensionEvaluationResources {
     fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-        let pending=self.invoke.lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some(cursor)=pending.as_ref(){return cursor.retirement_demands_with_registry(self.registry.as_ref().expect("original invocation retains its registry"),copy);}
+        let pending=self.invoke.lock().unwrap_or_else(std::sync::PoisonError::into_inner);if self.close_failure.is_some(){return Ok(semio_framework_job::original_domain_failure_demand::<original_failure::EvaluationCloseFailure>());}if let Some(cursor)=pending.as_ref(){return match self.registry.as_ref(){Some(registry)=>cursor.retirement_demands_with_registry(registry,copy),None=>cursor.retirement_demands(copy)};}
         if let Some(registry)=&self.registry{if evaluation_retirement_pending(registry){return evaluation_retirement_demands(registry,copy);}return Ok(RetirementDemand {depth:1,..Default::default()});}
         if let Some(lease)=&self.lease{return Ok(RetirementDemand {copy_bytes:lease.next_copy_byte_demand()?,capacity_bytes:lease.next_capacity_byte_demand(copy)?,release_bytes:lease.next_release_byte_demand()?,depth:lease.next_depth_demand()?});}
-        Ok(RetirementDemand {copy_bytes:self.retirement.next_copy_byte_demand()?,capacity_bytes:self.retirement.next_capacity_byte_demand(copy)?,release_bytes:self.retirement.next_release_byte_demand()?,depth:self.retirement.next_depth_demand()?})
+        if !self.registry_issuer.terminal_is_empty(){return self.registry_issuer.next_demand(copy);}
+        if self.registry_source_close.is_some(){return evaluation_child_demands(&self.registry_source_close,copy);}
+        if self.original_registry.is_some(){return Ok(evaluation_owned_birth::<Registry>());}
+        let Some(retirement)=self.retirement.as_ref() else{return Ok(Default::default());};
+        Ok(RetirementDemand {copy_bytes:retirement.next_copy_byte_demand()?,capacity_bytes:retirement.next_capacity_byte_demand(copy)?,release_bytes:retirement.next_release_byte_demand()?,depth:retirement.next_depth_demand()?})
     }
-    fn invoke(&self,capability:&str,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::ExtensionInvokeStep,semio_framework::Fault>{
+    fn invoke(&mut self,capability:&str,request:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::ExtensionInvokeStep,semio_framework::Fault>{
         match capability {"evaluate"=>evaluate_invoke_json(self,request,cx),_=>Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin,semio_framework::FaultCode::new("extension.unknown-capability"),"unknown flow evaluation capability"))}
     }
 
     fn cancel_inference(&self,cancellation_id:&str)->bool{self.registry.as_ref().is_some_and(|registry|cancel_inference_evaluation(registry,cancellation_id))}
-    fn begin_close(&mut self){if let Some(cursor)=self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner){cursor.begin_close();}if let Some(registry)=&self.registry{cancel_all_evaluations(registry);}}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework::Fault>{
-        let result=self.source_close(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"original extension evaluation resource"));
-        result.map(|step|semio_framework_plugin::PluginLifecycleStep::retained(step,self.terminal_is_empty())).map_err(|error|semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin,semio_framework::FaultCode::new("extension.registry-close"),error.into_message()))
+    fn begin_close(&mut self){self.closing=true;self.registry_issuer.begin_close();if let Some(cursor)=self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner){cursor.begin_close();}if let Some(registry)=&self.registry{cancel_all_evaluations(registry);}}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_plugin::PluginLifecycleStep;
+        if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
+        if self.close_failure.is_some(){return match semio_framework_job::admit_original_domain_failure(&mut self.close_failure,cx)?{Some(failure)=>Err(failure),None=>Ok(PluginLifecycleStep::Progress(Default::default()))}}
+        if !self.registry_issuer.terminal_is_empty(){
+            if self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_none_or(EvaluationInvokeCursor::terminal_is_empty){
+                let grant=cx.retained_grant();
+                if self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(){
+                    if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+                    let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+                    cx.consume_retained(progress)?;cx.consume_fuel(1);
+                    self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                    return Ok(PluginLifecycleStep::Progress(progress));
+                }
+                let step=self.registry_issuer.close_step(&mut self.original_registry,cx)?;
+                return Ok(PluginLifecycleStep::Progress(step.progress()));
+            }
+        }
+        let remaining=cx.retained_grant();let demand=self.retirement_demands(remaining.maximum_copy_bytes)?;
+        if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()))}
+        cx.consume_fuel(1);let grant=RetainedCloneGrant{maximum_items:1,..remaining};
+        match self.source_close(grant){
+            Ok(step)=>{let progress=step.progress();if let Err(refusal)=cx.consume_retained(progress){self.close_failure=Some(original_failure::EvaluationCloseFailure{initial:None,closure:refusal.into(),receipt_refusal:None});return Ok(PluginLifecycleStep::Progress(progress))}Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty()))}
+            Err(closure)=>{let progress=closure.retained_progress();let receipt_refusal=cx.consume_retained(progress).err();self.close_failure=Some(original_failure::EvaluationCloseFailure{initial:None,closure,receipt_refusal});Ok(PluginLifecycleStep::Progress(progress))}
+        }
     }
-    fn terminal_is_empty(&self)->bool{self.invoke.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()&&self.registry.is_none()&&self.lease.is_none()&&self.retirement.terminal_is_empty()}
+    fn terminal_is_empty(&self)->bool{self.close_failure.is_none()&&self.invoke.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()&&self.registry.is_none()&&self.lease.is_none()&&self.registry_issuer.terminal_is_empty()&&self.original_registry.is_none()&&self.registry_source_close.is_none()&&self.retirement.as_ref().is_none_or(neural_engine::RegistryRetirement::terminal_is_empty)}
 }
 
 // #endregion ⏱️EvaluationJobs

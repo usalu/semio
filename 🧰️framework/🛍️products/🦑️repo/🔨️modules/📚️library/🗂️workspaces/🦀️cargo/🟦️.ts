@@ -5,7 +5,6 @@ import {admitCargoPreparationObservationV1,assertCargoPreparationObservationCurr
 import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json";
 import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json";
 import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import {createRequire} from "node:module";
 const {workspaceTestingCollectionRoot: collectionRoot}:{workspaceTestingCollectionRoot:(root:string,directory:string)=>string|undefined}=createRequire(import.meta.url)("../🟨️.cjs");
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -326,7 +325,7 @@ function* preparationPlan(root:string,selected:CargoWorkspaceScope,names:readonl
  console.error(`[cargo-preparation] ${manifest} ${recipe.command.join(" ")}`);
  const recipeStart=timed?performance.now():0;
  const observation=observationDirectory?join(observationDirectory,createHash("sha256").update(key).digest("hex")+".json"):undefined, before=createHash("sha256").update(readFileSync(physical(root,script))).digest("hex"), program=observation?cargoPreparationProgramSourcesV1(root,script):undefined;
- yield {operation:"recipe",path:script,root,args:[...recipe.command],cwd:resolve(root,pkg.directory),sourceSha256:before,environment:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script,...(observation?{SEMIO_CARGO_PREPARATION_OBSERVATION:observation}:{})}};
+ yield {operation:"recipe",path:script,root,args:[...recipe.command],cwd:resolve(root,pkg.directory),sourceSha256:before,environment:{...process.env,SEMIO_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script,...(observation?{SEMIO_CARGO_PREPARATION_OBSERVATION:observation}:{})}};
  if(observation){const captured=admitCargoPreparationObservationV1(JSON.parse(readFileSync(observation,"utf8")));if(captured.root!==root||captured.sourceRoot!==program!.sourceRoot||captured.script!==script||JSON.stringify(captured.command)!==JSON.stringify(recipe.command)||captured.sources.find(input=>input.path===script)?.sha256!==before)throw Error("Preparation observation does not bind its original producer");assertCargoPreparationObservationCurrentV1(captured);assertCargoPreparationObservationCurrentV1({...captured,sources:program!.sources,resolverInputs:program!.resolverInputs,inputs:program!.inputs,outputs:[],resolutions:program!.resolutions});const merged={...captured,resolverInputs:program!.resolverInputs,resolutions:program!.resolutions,sources:[...new Map([...program!.sources,...captured.sources].map(input=>[input.path,input])).values()],inputs:[...new Map([...program!.inputs,...captured.inputs].map(input=>[JSON.stringify([input.path,input.kind]),input])).values()]};assertCargoPreparationObservationCurrentV1(merged);recipes.push(merged);}
  diagnostic("recipe",manifest,recipeStart,1);
  yield* refresh();
@@ -376,7 +375,7 @@ export function cargoWorkspacePreparationInvocationV1(storage:CargoPreparationSt
   const selectedPackage=read(root,slash(relative(root,path))).package?.name;
   if(!names.length && !args.includes("--workspace") && typeof selectedPackage==="string")names.push(selectedPackage);
   if (source.workspace?.metadata?.semio?.repository === undefined)return;
-  const selection=parseCargoPreparationSelectionV1({manifest:owner.manifest,packages:names}),env:Record<string,string>={};for(const [key,value] of Object.entries(environment))if(value!==undefined)env[key]=value;env.NX_WORKSPACE_ROOT=root;env.SEMIO_CARGO_PREPARATION_STORAGE=JSON.stringify(storage);
+  const selection=parseCargoPreparationSelectionV1({manifest:owner.manifest,packages:names}),env:Record<string,string>={};for(const [key,value] of Object.entries(environment))if(value!==undefined)env[key]=value;env.SEMIO_WORKSPACE_ROOT=root;env.SEMIO_CARGO_PREPARATION_STORAGE=JSON.stringify(storage);
   return{command:process.execPath,args:[storage.program,"synchronize","--manifest",selection.manifest,...selection.packages.flatMap(name=>["--package",name])],cwd:root,environment:env};
 }
 

@@ -58,8 +58,8 @@ production mode when you want a server.
 ## Build
 
 ```bash
-bun nx run os-hub:build        # cargo build --release --bin os-hub → dist/build
-bun nx run os-hub:build-dev    # dev profile, what the dev launcher execs
+bun repo run os-hub:build        # cargo build --release --bin os-hub → dist/build
+bun repo run os-hub:build-dev    # dev profile, what the dev launcher execs
 ```
 
 `build` is the release target (`📦️packages/🦀️rust/📜️script.ts`, `BuildScript` →
@@ -214,7 +214,7 @@ Launching both halves on PostgreSQL in development: `bun run dashboard run os-hu
 commands `os-hub:dev-postgres` / `os-hub:build-dev-postgres`; `semio …` is `bun run dashboard …`). It stages its own binary with the
 `postgres,neo4j` features into `dist/build-dev-postgres`, requires `OS_HUB_DATABASE_URL`, and points the
 directory at the same database unless `OS_HUB_DIRECTORY_BACKEND`/`OS_HUB_DIRECTORY_DATABASE_URL` say
-otherwise. The live lanes behind `bun nx run os-hub:directory-live-lanes` exercise both databases for
+otherwise. The live lanes behind `bun repo run os-hub:directory-live-lanes` exercise both databases for
 real (they start their own containers and need a running Docker daemon).
 
 The SQLite directory path is **not** configurable: it is always `{OS_HUB_DATA}/directory.db`, and
@@ -573,7 +573,7 @@ carry; and a `HEALTHCHECK` that sends `X-Forwarded-Proto: https`, because with
 refuses `/healthz` and `/readyz` too. `OS_HUB_DATA` is the single writable volume and the whole
 backup unit.
 
-An earlier revision of this file carried the whole repository and ran `bun nx run os-hub:dev`,
+An earlier revision of this file carried the whole repository and ran `bun repo run os-hub:dev`,
 because production mode was then unreachable and development mode needs the launcher's inherited
 fd 3. That is still the right shape for a *development* container and the wrong one for a server.
 
@@ -587,7 +587,7 @@ clients, and each needs one thing from you: the origin `s` is served from (which
 
 Give them the URL of the `s` bundle, not of the hub. `s` asks for the hub URL on first run and signs
 in against `POST /auth/sessions` with the email and password `os-hub credential set` minted. Serve
-the release bundle (`bun nx run @semio-tech/framework-os-dev:build-s-react-release`, output
+the release bundle (`bun repo run @semio-tech/framework-os-dev:build-s-react-release`, output
 `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/build-s-react-release`)
 from any static web server, put its origin in `OS_HUB_ALLOWED_ORIGINS`, and put both behind the same
 TLS-terminating proxy.
@@ -603,7 +603,7 @@ pays for is the model.
 Build the binary once:
 
 ```bash
-bun nx run @semio-tech/framework-os-mcp-rs:build-release
+bun repo run @semio-tech/framework-os-mcp-rs:build-release
 # → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp
 ```
 

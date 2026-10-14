@@ -260,6 +260,7 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
 /// ↔️ The real panel walk publishes exactly React's resize edges and one compact-spacing hit rail.
 #[test]
 fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
     let theme = Theme::default();
     assert_eq!(fixture["widthUiSpacing"], serde_json::json!(1));
@@ -279,7 +280,7 @@ fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
         let mut cursor = ShellChromeChildCursor::default();
-        assert!((0..32).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources)), "{anchor_id} panel walk completes");
+        assert!((0..32).any(|_| caller.turn(|cx|shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx))), "{anchor_id} panel walk completes");
         input.publish_hits();
         let actual: Vec<&HitTarget<ActionDescriptor>> = input.hits().iter().filter(|hit| hit.kind == HitKind::PanelResize).collect();
         let expected = case["handles"].as_array().expect("handles");
@@ -298,7 +299,9 @@ fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
             assert_eq!(hit.rect.y, panel.y);
             assert_eq!(hit.rect.h, panel.h);
         }
+        caller.retire_world(&mut resources);
     }
+    caller.finish();
 }
 
 //#region 🧭️DefaultDockFixture

@@ -1,6 +1,6 @@
 /** 🏔️ Meshes, primitive attributes and morph targets retain ordered pairs. */
 import type {GltfMesh,GltfPrimitive,GltfMorphTarget} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {type Write,type Read,word,optionalWord,ordinal,optionalText,columns} from "../🧩️control/🟦️.ts";
 const VALUE=columns(3);
 async function pairs(write:Write,table:string,key:bigint,values:[string,bigint][]):Promise<void>{await write.check(values.length);for(const[position,[name,value]]of values.entries())await write.insert(table,[key,ordinal(position),name,...word(value)])}

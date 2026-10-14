@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "builders": [
+    "cohort_a",
+    "cohort_b"
+  ],
+  "profiles": [
+    "prototype",
+    "release"
+  ],
+  "value": 137,
+  "workers": 1,
+  "maximumMilliseconds": 180000,
+  "maximumBytes": 100000000,
+  "readinessMilliseconds": 30000,
+  "lockObservations": [
+    "blocked",
+    "acquired"
+  ],
+  "librarySource": "pub fn value()->u64{137}\npub fn workers()->&'static str{env!(\"COHORT_WORKERS\")}\n",
+  "buildSource": "fn main(){let ready=std::env::var(\"COHORT_READY\").unwrap();let gate=std::env::var(\"COHORT_GATE\").unwrap();std::fs::write(ready,b\"held\").unwrap();let start=std::time::Instant::now();while !std::path::Path::new(&gate).exists(){assert!(start.elapsed()<std::time::Duration::from_secs(30));std::thread::sleep(std::time::Duration::from_millis(10));}println!(\"cargo::rerun-if-changed=build.rs\");println!(\"cargo::rustc-env=COHORT_WORKERS={}\",std::env::var(\"NUM_JOBS\").unwrap());}\n",
+  "lockSource": "fn main(){let mut args=std::env::args().skip(1);let file=std::fs::OpenOptions::new().read(true).write(true).open(args.next().unwrap()).unwrap();match file.try_lock(){Ok(())=>{print!(\"acquired\");if let Some(ready)=args.next(){let release=args.next().unwrap();std::fs::write(ready,b\"held\").unwrap();let start=std::time::Instant::now();while !std::path::Path::new(&release).exists(){assert!(start.elapsed()<std::time::Duration::from_secs(30));std::thread::sleep(std::time::Duration::from_millis(10));}}},Err(std::fs::TryLockError::WouldBlock)=>print!(\"blocked\"),Err(error)=>panic!(\"{error:?}\")}}\n"
+}

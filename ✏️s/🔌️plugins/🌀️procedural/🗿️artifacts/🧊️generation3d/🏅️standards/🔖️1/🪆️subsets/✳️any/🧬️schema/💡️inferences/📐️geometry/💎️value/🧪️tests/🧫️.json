@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "ports": [
+    "zeta",
+    "alpha",
+    "mu"
+  ],
+  "expectedPorts": [
+    "alpha",
+    "mu",
+    "zeta"
+  ],
+  "text": "Original Geometry Ütf8",
+  "handoff": {
+    "items": 1,
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "releaseBytes": 0
+  },
+  "originalCaller": {
+    "operation": 741,
+    "generation": 3,
+    "items": 10000,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128,
+    "fuel": 100000,
+    "deadlineMicros": 1000000000
+  },
+  "cancellation": {
+    "text": "Retained Through Cancellation Ä",
+    "selectionIds": [
+      3,
+      7,
+      11
+    ],
+    "wirePoint": [
+      1,
+      2,
+      3
+    ]
+  }
+}

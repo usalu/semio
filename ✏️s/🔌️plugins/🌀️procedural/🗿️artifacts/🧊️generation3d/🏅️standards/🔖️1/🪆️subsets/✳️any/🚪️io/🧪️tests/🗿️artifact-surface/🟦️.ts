@@ -9,9 +9,9 @@ import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Uint8Buffe
 import { toTrianglesDrawMode } from "three/addons/utils/BufferGeometryUtils.js";
 import { polygonMeshFromPrepared, polygonMeshFromObj, polygonMeshFromPly, mergePreparedMeshes, meshFormatDiagnostics, exportSourceChannels, applyGltfSceneToHost, materialFieldsForExport, gltfMaterialSurface, preparedGltfChannels, gltfImportAdmission, restoreGltfAuthoredAttributes } from "../../🟦️.ts";
 import { parseGltfDocument } from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
-import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type { FlowHostSnapshot, NeuralDictionary } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type { MeshAttribute } from "../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🟦️.ts";
+import type { MeshAttribute } from "@semio-tech/framework/mesh/polygon";
 
 /** 🗿️ Third-party twin of the ARTIFACT-IO SURFACE (`🧫️fixtures/🚪️io/🗿️artifact-surface.json`) — an
  * independent TypeScript model of the import/export surface the generation3d editor and viewer

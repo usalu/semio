@@ -1790,7 +1790,7 @@ async function runAuthoredSurfaceOracle(repoRoot: string, output: string): Promi
   fixture.textureCases = surface.pixelCases.map((row: any) => ({ ...row, preserveVertexColor: true, emissiveIntensity: 0 }));
   const shaderDirectory = join(output, "native-shader");
   await mkdir(shaderDirectory, { recursive: true });
-  await runOwnedCommand("bun", ["nx", "run", "@semio-tech/ui-rs:test", "--", "wgpu-engine", "long", "--offline", "a_native_gpu_context_creates_every_pipeline_without_a_validation_error"], repoRoot, "authored-surface-native-shader", 1200000, { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: shaderDirectory, NEXTEST_SUCCESS_OUTPUT: "immediate" } });
+  await runOwnedCommand("bun", ["repo", "run", "@semio-tech/ui-rs:test", "--", "wgpu-engine", "long", "--offline", "a_native_gpu_context_creates_every_pipeline_without_a_validation_error"], repoRoot, "authored-surface-native-shader", 1200000, { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: shaderDirectory, NEXTEST_SUCCESS_OUTPUT: "immediate" } });
   const shader = await readFile(join(shaderDirectory, "world3d-authored.wgsl"), "utf8");
   const mipShader=await readFile(join(shaderDirectory,"raster-mip.wgsl"),"utf8");
   const typescript = await import("typescript");

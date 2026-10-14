@@ -15,6 +15,14 @@ extern crate semio_framework as store;
 extern crate semio_framework_artifact_workflow_workflow as workflow;
 extern crate semio_framework_os_kernel as protocol;
 
+#[path = "../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs"]
+mod workspace_identity;
+
+/// 🏠️ Admits only a declared package workspace with regular build authority.
+fn is_repository_root(path: &Path) -> Result<bool, String> {
+    workspace_identity::is_workspace_root(path, |source| semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| matches!(value.get("workspaces"), Some(semio_framework_pack_json::Value::Array(_) | semio_framework_pack_json::Value::Object(_)))).map_err(|error| error.to_string()))
+}
+
 use semio_framework_os_run::{plan, register_builtin_converters, MediaCache, NodeDocumentLoadProgress, RunSink, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -54,26 +62,26 @@ impl MediaCache for FileMediaCache {
 
 //#region 🔖️PluginArtifacts
 // 🤖️ The registry generate target owns the selected-mode artifact lookup and plugin roster.
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🔌️plugin/📇️registry/🤖️generated/🗿️artifacts/🦀️.rs"));
+use protocol::native_catalog::{configured_native_catalog_v1,plugin_component_directory};
 
 /// 🧭️ Locates the repo root: `SEMIO_REPO_ROOT` (already plumbed by `📜️script.ts`'s `os run` region)
 /// when present and valid, else walks up from this crate's own compiled-in `CARGO_MANIFEST_DIR`
-/// looking for `nx.json` — so a direct `cargo run -p semio-framework-os-run` (bypassing the script,
+/// looking for paired build and package workspace markers — so a direct `cargo run -p semio-framework-os-run` (bypassing the script,
 /// from an arbitrary working directory) still resolves correctly.
 fn find_repo_root() -> Result<PathBuf, String> {
     if let Ok(value) = std::env::var("SEMIO_REPO_ROOT") {
         let candidate = PathBuf::from(value);
-        if candidate.join("nx.json").is_file() {
+        if is_repository_root(&candidate)? {
             return Ok(candidate);
         }
     }
     let mut candidate = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     loop {
-        if candidate.join("nx.json").is_file() {
+        if is_repository_root(&candidate)? {
             return Ok(candidate);
         }
         if !candidate.pop() {
-            return Err("could not locate the repo root (no nx.json found above SEMIO_REPO_ROOT or CARGO_MANIFEST_DIR)".to_string());
+            return Err("could not locate the repo root (no declared package workspace with build authority above SEMIO_REPO_ROOT or CARGO_MANIFEST_DIR)".to_string());
         }
     }
 }
@@ -81,20 +89,21 @@ fn find_repo_root() -> Result<PathBuf, String> {
 /// 🗺️ Resolves each plugin component using the exact build mode tracked by rustc.
 fn resolve_plugin_paths(repo_root: &Path, plugin_ids: impl Iterator<Item = String>) -> Result<HashMap<String, PathBuf>, String> {
     let component_directory = plugin_component_directory(env!("SEMIO_BUILD_MODE")).map_err(str::to_owned)?;
-    let artifact_by_plugin: HashMap<&str, (&str, &str)> = PLUGIN_WASM_ARTIFACTS.iter().map(|(plugin_id, crate_path, wasm_out)| (*plugin_id, (*crate_path, *wasm_out))).collect();
+    let catalog=configured_native_catalog_v1()?;
+    let artifact_by_plugin: HashMap<&str, (&str, &str)> = catalog.plugins.iter().map(|row| (row.plugin_id.as_str(), (row.crate_path.as_str(), row.wasm_out.as_str()))).collect();
     let mut resolved = HashMap::new();
     for plugin_id in plugin_ids.collect::<BTreeSet<_>>() {
-        let (crate_path, wasm_out) = artifact_by_plugin.get(plugin_id.as_str()).ok_or_else(|| format!("plugin `{plugin_id}` is not in the plugin registry — regenerate it: `bun nx run @semio-tech/plugin-registry:generate`"))?;
+        let (crate_path, wasm_out) = artifact_by_plugin.get(plugin_id.as_str()).ok_or_else(|| format!("plugin `{plugin_id}` is not in the plugin registry — regenerate it: `bun repo run @semio-tech/plugin-registry:generate`"))?;
         let path = repo_root.join(crate_path).join(component_directory).join(wasm_out);
         if !path.is_file() {
-            return Err(format!("plugin `{plugin_id}`'s shipped component is missing at {}; build it: `bun nx run <its crate project>:describe`", path.display()));
+            return Err(format!("plugin `{plugin_id}`'s shipped component is missing at {}; build it: `bun repo run <its crate project>:describe`", path.display()));
         }
         resolved.insert(plugin_id, path);
     }
     Ok(resolved)
 }
 
-/// 🪪️ One row of the registry's `🔣️plugins.json` (`bun nx run @semio-tech/plugin-registry:generate`
+/// 🪪️ One row of the registry's `🔣️plugins.json` (`bun repo run @semio-tech/plugin-registry:generate`
 /// output) — only the two fields `resolve_descriptor_paths` needs; every other field (capabilities,
 /// contributes, …) is ignored by ordinary serde (no `deny_unknown_fields` here).
 #[derive(serde::Deserialize)]
@@ -113,9 +122,7 @@ struct RegistryPluginEntry {
 /// file does not exist on disk, simply has no committed descriptor yet — `WasmtimeNodeHost` treats
 /// that as an honest per-plugin load failure, not a hard error at startup.
 fn resolve_descriptor_paths(repo_root: &Path) -> Result<HashMap<String, PathBuf>, String> {
-    let registry_path = repo_root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
-    let text = std::fs::read_to_string(&registry_path).map_err(|error| format!("reading {}: {error}", registry_path.display()))?;
-    let entries: Vec<RegistryPluginEntry> = serde_json::from_str(&text).map_err(|error| format!("parsing {}: {error}", registry_path.display()))?;
+    let entries=configured_native_catalog_v1()?.plugins;
     Ok(entries
         .into_iter()
         .filter_map(|entry| {
@@ -188,6 +195,7 @@ fn parse_args() -> Result<Args, String> {
         }
     }
     let bundle = bundle.ok_or_else(|| "usage: os run <bundle>.studio [--node <id>] [--watch] [--dry] [--param <parameter_id>=<value>]* [--policy <laissez-faire|normal|vigilant>]".to_string())?;
+    let direct_identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=direct_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
     let host_driver_policy = host_driver_policy.ok_or("--host-driver-policy is required")?;
     Ok(Args { host_driver_policy, bundle, dry, watch, only_node, params, policy })
 }
@@ -310,11 +318,13 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let descriptor_paths = resolve_descriptor_paths(&repo_root)?;
     let blob_store = Arc::new(bundle.blob_store());
     let identity_policy=semio_framework_pack_json::from_json_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
-    let identity_cancel=semio_framework_async::CancelToken::root_now();
+    let original_cancel=semio_framework_async::CancelToken::root_now();
+    let identity_cancel=original_cancel.clone();
+    let direct_cancel=original_cancel.clone();
     let identity=semio_framework_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=identity_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
     let host_driver_policy = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(&args.host_driver_policy)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
-    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity,host_driver_policy).await;
-    let mut runner = SpaceRunner::new(host, blob_store, args.policy).with_document_load_progress(document_load_reporter());
+    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity,host_driver_policy,semio_framework_job::default_now_us,original_cancel.clone(),direct_identity).await?;
+    let mut runner = SpaceRunner::new(host, blob_store, args.policy,original_cancel).with_document_load_progress(document_load_reporter());
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 
     let mut sink = RunSink::new(semio_framework_artifact_workflow_run::empty_run_document().await);

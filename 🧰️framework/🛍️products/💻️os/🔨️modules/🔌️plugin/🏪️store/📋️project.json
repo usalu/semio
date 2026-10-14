@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/plugin-extension-store",
-  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
   "projectType": "library",
   "namedInputs": {
@@ -12,7 +12,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",

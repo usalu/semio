@@ -506,6 +506,8 @@ pub struct BodyValidationJob {
     same_stage: u8,
     same_cursor: usize,
     same_pass: usize,
+    same_sort_cursor:usize,
+    same_worst:Option<(f64,f64)>,
     same_samples: Vec<(f64, f64)>,
     same_midpoints: Vec<f64>,
 }
@@ -513,17 +515,19 @@ pub struct BodyValidationJob {
 semio_framework_value::artifact_retire_leaf!(BodyValidationPhase);
 semio_framework_value::artifact_retire_struct!(ShellVolumeUnit {solid,shell,outer,faces,total});
 semio_framework_value::artifact_retire_struct!(FaceCoedgeCursor {face_slot,face,loop_slot,start,next,visited});
-semio_framework_value::artifact_retire_struct!(BodyValidationJob {source_body,phase,issues,shells,shell_cursor,shell_face_cursor,edges,edge_cursor,faces,face_cursor,units_done,units_total,planning_stage,planning_slot,planning_solid,planning_shell,planning_face,live_coedges,loop_slot,loop_id,ring,ring_next,ring_probe,loop_findings,loop_finding_cursor,loop_output,loop_text_stage,valence_edge_slot,valence_edge,valence_coedge_slot,valence_uses,pcurve_slot,tolerance_stage,tolerance_edge_cursor,tolerance_vertex,tolerance_faces,same_faces,same_pair,same_stage,same_cursor,same_pass,same_samples,same_midpoints});
+semio_framework_value::artifact_retire_struct!(BodyValidationJob {source_body,phase,issues,shells,shell_cursor,shell_face_cursor,edges,edge_cursor,faces,face_cursor,units_done,units_total,planning_stage,planning_slot,planning_solid,planning_shell,planning_face,live_coedges,loop_slot,loop_id,ring,ring_next,ring_probe,loop_findings,loop_finding_cursor,loop_output,loop_text_stage,valence_edge_slot,valence_edge,valence_coedge_slot,valence_uses,pcurve_slot,tolerance_stage,tolerance_edge_cursor,tolerance_vertex,tolerance_faces,same_faces,same_pair,same_stage,same_cursor,same_pass,same_sort_cursor,same_worst,same_samples,same_midpoints});
 
 #[path="🎟️planning/🦀️.rs"]
 mod retained_planning;
 #[path="🎟️loop/🦀️.rs"]
 mod retained_loop;
+#[path="🎟️parameter/🦀️.rs"]
+mod retained_parameter;
 
 impl BodyValidationJob {
     /// 🧊 Admits an empty original frontier; topology is borrowed only inside funded steps.
     pub fn new(body: &Body) -> Self {
-        Self { source_body:body as *const Body as usize, phase: BodyValidationPhase::CollectingTopology, issues: Default::default(), shells: Default::default(), shell_cursor: 0, shell_face_cursor: 0, edges: Vec::new(), edge_cursor: 0, faces: Vec::new(), face_cursor: 0, units_done: 0, units_total: 1, planning_stage: 0, planning_slot: 0, planning_solid: None, planning_shell: 0, planning_face: None, live_coedges: 0, loop_slot: 0, loop_id: None, ring: Vec::new(), ring_next: None, ring_probe: 0, loop_findings:[None,None],loop_finding_cursor:0,loop_output:None,loop_text_stage:0,valence_edge_slot: 0, valence_edge: None, valence_coedge_slot: 0, valence_uses: 0, pcurve_slot: 0, tolerance_stage: 0, tolerance_edge_cursor: 0, tolerance_vertex: 0, tolerance_faces: FaceCoedgeCursor::default(), same_faces: FaceCoedgeCursor::default(), same_pair: None, same_stage: 0, same_cursor: 0, same_pass: 0, same_samples: Vec::new(), same_midpoints: Vec::new() }
+        Self { source_body:body as *const Body as usize, phase: BodyValidationPhase::CollectingTopology, issues: Default::default(), shells: Default::default(), shell_cursor: 0, shell_face_cursor: 0, edges: Vec::new(), edge_cursor: 0, faces: Vec::new(), face_cursor: 0, units_done: 0, units_total: 1, planning_stage: 0, planning_slot: 0, planning_solid: None, planning_shell: 0, planning_face: None, live_coedges: 0, loop_slot: 0, loop_id: None, ring: Vec::new(), ring_next: None, ring_probe: 0, loop_findings:[None,None],loop_finding_cursor:0,loop_output:None,loop_text_stage:0,valence_edge_slot: 0, valence_edge: None, valence_coedge_slot: 0, valence_uses: 0, pcurve_slot: 0, tolerance_stage: 0, tolerance_edge_cursor: 0, tolerance_vertex: 0, tolerance_faces: FaceCoedgeCursor::default(), same_faces: FaceCoedgeCursor::default(), same_pair: None, same_stage: 0, same_cursor: 0, same_pass: 0, same_sort_cursor:0,same_worst:None,same_samples: Vec::new(), same_midpoints: Vec::new() }
     }
 
     /// 📈 Constant-time funded work progress, including cold planning turns.

@@ -1,0 +1,9 @@
+{
+  "domain": {"code": "geometry.invalid-operand", "message": "Original operand 源", "operand": "9007199254740993", "retainedProgress": {"copiedItems": 1, "copiedBytes": 3, "retainedCapacityBytes": 7, "releasedBytes": 11}},
+  "cases": [
+    {"name": "itemsDenied", "items": 0, "capacity": 262144, "depth": 128, "transfer": false},
+    {"name": "capacityDenied", "items": 1, "capacity": 0, "depth": 128, "transfer": false},
+    {"name": "depthDenied", "items": 1, "capacity": 262144, "depth": 0, "transfer": false},
+    {"name": "admitted", "items": 1, "capacity": 262144, "depth": 128, "transfer": true}
+  ]
+}

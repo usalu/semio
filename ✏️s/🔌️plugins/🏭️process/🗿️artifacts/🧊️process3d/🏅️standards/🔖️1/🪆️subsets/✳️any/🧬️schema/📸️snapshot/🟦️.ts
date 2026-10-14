@@ -1,5 +1,5 @@
 /** 🏭️ Complete canonical Process3d persisted parent and exact native scalar words. */
-import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export type{Binary64};
 export interface ArtifactDialect{artifactKind:string;standard:string;subset:string}
 export interface ArtifactRef{artifactId:string;dialect:ArtifactDialect}

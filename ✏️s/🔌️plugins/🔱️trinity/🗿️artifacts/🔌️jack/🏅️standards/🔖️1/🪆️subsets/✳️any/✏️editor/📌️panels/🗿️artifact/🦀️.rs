@@ -1,7 +1,7 @@
 //! 📄️ Trinity Jack app — Document panel (node/edge tree).
 
 use crate::editor::jack::terminology::TrinityJackLabels;
-use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::{PanelTreeBuilder, TreeWindows};
 use semio_framework_ui_contract as ui;
@@ -12,26 +12,28 @@ use semio_framework_ui_contract as ui;
 /// same selection) and marked with the domain's `"node"` granularity. The tree-level
 /// `.interaction_domain(...)` binding carries the dispatch, so the row itself binds no action and spends
 /// no `UiValue` arena — which is what lets a full window of rows exist at all.
-fn node_row(node: &crate::Node) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let label = crate::editor::jack::ui_label(if node.name.is_empty() { node.id.as_str() } else { node.name.as_str() })?;
+fn node_row(node: &crate::JackContentNodeView<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let label = crate::editor::jack::ui_label(node.presented_label())?;
     let granularity = semio_framework_plugin::UiText::try_from_str("node").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("trinity.document.granularity", "the fixed pick granularity exceeds its UI bound"))?;
     let mut builder = ui::tree_item(label)
-        .try_id(node.id.clone())
+        .try_id(node.id.to_string())
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node-id", "the node row id exceeds its UI bound"))?
         .granularity(granularity);
     if !node.kind.is_empty() {
-        builder = builder.description(semio_framework_plugin::UiText::try_from_str(node.kind.as_str()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node-kind", "the node kind exceeds its UI bound"))?);
+        builder = builder.description(semio_framework_plugin::UiText::try_from_str(node.kind).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node-kind", "the node kind exceeds its UI bound"))?);
     }
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.document.node", "the node row exceeds its UI bound"))
 }
 
-fn edge_row(edge: &crate::Edge) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let label = crate::editor::jack::ui_label(format!("{} → {}", edge.source, edge.target))?;
+fn edge_row(edge: &crate::JackContentEdgeView<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let label = crate::editor::jack::ui_label(format!("{}{} → {}{}",edge.source,edge.source_port.map(|port|format!("@{port}")).unwrap_or_default(),edge.target,edge.target_port.map(|port|format!("@{port}")).unwrap_or_default()))?;
     semio_framework_plugin::tree_item(format!("trinity-document.edge.{}", edge.id), label)
 }
 
-pub(crate) fn render(content: &SemioGraphSnapshot, _cfg: &semio_framework_plugin::NoConfig, labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let (nodes, edges) = crate::working_from_jack_content_snapshot(content).map_err(|cause| semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content-unreadable", cause.into_message()))?;
+pub(crate) fn render(content: &dyn crate::JackContentVisual, _cfg: &semio_framework_plugin::NoConfig, labels: &TrinityJackLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let (node_count,edge_count)=content.visual_counts();
+    let nodes:Vec<_>=(0..node_count).filter_map(|index|content.node_view(index)).collect();
+    let edges:Vec<_>=(0..edge_count).filter_map(|index|content.edge_view(index)).collect();
     PanelTreeBuilder::new("trinity-document")?
         .window_section(windows, "trinity-document.nodes", Some(crate::editor::jack::ui_label(labels.pieces.as_str())?), true, &nodes, node_row)?
         .window_section(windows, "trinity-document.edges", Some(crate::editor::jack::ui_label(labels.connections.as_str())?), false, &edges, edge_row)?

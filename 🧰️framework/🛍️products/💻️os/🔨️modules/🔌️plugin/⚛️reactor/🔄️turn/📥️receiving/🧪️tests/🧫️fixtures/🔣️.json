@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "contract": "framework.os.original-reactor-receiving",
+  "routes": [
+    "response",
+    "intent"
+  ],
+  "originalSourceLoan": true,
+  "borrowedInputSlots": true,
+  "resultNoneKeepsSource": true,
+  "wholeFailure": true,
+  "receiptReceivedBeforeParking": true,
+  "sourceClosesBeforePublication": true,
+  "sourceLoanReturnedLast": true,
+  "recordIsBusinessSource": false,
+  "acceptedEmptyOutput": false,
+  "states": [
+    {
+      "phase": "input-held",
+      "input": true,
+      "loan": false,
+      "published": false
+    },
+    {
+      "phase": "admitted",
+      "input": true,
+      "loan": true,
+      "published": false
+    },
+    {
+      "phase": "deferred",
+      "input": true,
+      "loan": true,
+      "published": false
+    },
+    {
+      "phase": "outcome-held",
+      "input": true,
+      "loan": true,
+      "published": false
+    },
+    {
+      "phase": "input-closed",
+      "input": false,
+      "loan": true,
+      "published": false
+    },
+    {
+      "phase": "loan-returned",
+      "input": false,
+      "loan": false,
+      "published": false
+    },
+    {
+      "phase": "published",
+      "input": false,
+      "loan": false,
+      "published": true
+    }
+  ]
+}

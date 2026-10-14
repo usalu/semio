@@ -4,7 +4,7 @@
     "check": {
       "cache": false,
       "dependsOn": [],
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts check",
         "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
@@ -18,7 +18,7 @@
     "test": {
       "cache": false,
       "dependsOn": [],
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test",
         "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
@@ -32,7 +32,7 @@
     "test-source": {
       "cache": false,
       "dependsOn": [],
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test-source",
         "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"

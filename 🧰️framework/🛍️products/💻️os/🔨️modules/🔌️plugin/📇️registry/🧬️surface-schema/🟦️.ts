@@ -677,7 +677,7 @@ export class SurfaceSchemaScript extends BundleScript {
     for (const outcome of counted("drift")) console.error(`  drift ${(outcome as { files: string[] }).files.join(", ")}`);
     console.log(`[surface-schema] ${outcomes.length} lane(s): ${counted("written").length} written, ${counted("current").length} current, ${counted("authored").length} authored, ${counted("blocked").length} blocked, ${counted("drift").length} drifted`);
     if (segments.includes("--check") && counted("drift").length > 0) {
-      console.error(`[surface-schema] run \`bun nx run @semio-tech/plugin-registry:surface-schema\` to refresh.`);
+      console.error(`[surface-schema] run \`bun repo run @semio-tech/plugin-registry:surface-schema\` to refresh.`);
       process.exit(1);
     }
   }

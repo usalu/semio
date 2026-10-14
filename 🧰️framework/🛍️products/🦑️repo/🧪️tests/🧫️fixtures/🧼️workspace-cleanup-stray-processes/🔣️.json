@@ -79,7 +79,7 @@
       "rows": [
         { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
         { "pid": 1100, "ppid": 1, "stat": "S", "name": "tool", "command": "/opt/tools/runner serve" },
-        { "pid": 1101, "ppid": 1100, "stat": "S", "name": "bun", "command": "bun nx run os-hub:dev" },
+        { "pid": 1101, "ppid": 1100, "stat": "S", "name": "bun", "command": "bun repo run os-hub:dev" },
         { "pid": 1102, "ppid": 1101, "stat": "S", "name": "node", "command": "node /home/dev/semio/node_modules/.bin/vite" },
         { "pid": 1103, "ppid": 1102, "stat": "S", "name": "esbuild", "command": "/home/dev/semio/node_modules/@esbuild/linux-x64/bin/esbuild --service" },
         { "pid": 1200, "ppid": 1, "stat": "S", "name": "rustc", "command": "/home/dev/.rustup/toolchains/stable/bin/rustc lib.rs" }

@@ -1,0 +1,152 @@
+# Original Fixture Caller Migration Plan
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs
+
+test `clipboard_paste_requested_reads_the_mocked_clipboard_and_inserts_it_at_the_focused_caret`
+helper `retire_presented_document`
+helper `drain_presented_document_close`
+test `ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishing`
+test `a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuation_is_inert`
+test `ink_canvas_text_and_table_editing_matches_the_react_host_lifecycle`
+test `closing_window_retires_an_unfinished_ink_clipboard_stream_before_reopening`
+test `closing_one_window_retires_only_its_ink_clipboard_owner`
+test `text_editor_space_reaches_the_focused_editor_before_the_runtime_pan_modifier`
+test `presented_ink_intent_finishes_before_an_unchanged_same_host_sibling_refresh_is_accepted`
+test `presented_ink_intent_uses_old_authored_content_before_a_changed_same_host_successor_starts`
+test `presented_ink_intent_in_a_hidden_window_does_not_block_an_unrelated_candidate`
+test `presented_ink_intent_from_a_stale_revision_does_not_block_the_current_candidate`
+test `presented_ink_intent_barrier_has_an_independent_bounded_progress_owner`
+test `window_close_retires_queued_scene_and_capture_owners_before_slot_release`
+test `closing_window_silently_retires_an_active_canvas_gesture`
+test `live_canvas_gesture_cancels_when_its_published_generation_is_replaced`
+test `retained_input_commit_has_a_generation_bound_completion_receipt`
+test `retained_input_refusal_settlement_obeys_the_shared_draft_disposition_law`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⏯️wgpu-tool-run-panel/🦀️.rs
+
+helper `paint_panel`
+helper `close_panel`
+test `tool_run_panel_of_a_running_run_paints_and_its_buttons_dispatch_the_run`
+test `tool_run_panel_buttons_are_keyboard_reachable`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs
+
+test `a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/📏️wgpu-window-measures/🦀️.rs
+
+test `window_measures_overlay_paints_and_dispatches_every_gesture_like_react`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-input/🦀️.rs
+
+test `the_topmost_retained_world_owns_the_press_and_release_outside_its_bounds`
+test `captured_world_movement_and_wheel_never_fan_out_to_an_overlapping_peer`
+test `cancelled_world_capture_cannot_manufacture_a_successful_release`
+test `a_modal_layer_blocks_actual_world_pointer_ingress`
+test `a_scene_refresh_preserves_the_exact_captured_owner_until_outside_release`
+test `an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture`
+test `renderer_canvas_multiple_accepted_removals_invalidate_every_checked_out_camera`
+test `renderer_canvas_same_host_sibling_rebase_preserves_checked_out_camera`
+test `a_replacement_scene_cannot_inherit_the_previous_keys_capture`
+test `another_pointers_chrome_release_preserves_the_captured_scene_drag`
+test `another_pointers_cancellation_preserves_the_captured_scene_drag`
+test `replaced_scene_pointer_slots_release_the_fixed_capture_grant`
+helper `retained_world_sequence_probe`
+test `retained_panel_focus_routes_keyboard_without_activating_an_application_window`
+test `same_surface_keyed_successor_retains_keyboard_focus_without_a_synthetic_focus_event`
+test `successor_that_removes_the_focused_key_cannot_receive_retained_keyboard_input`
+test `same_key_changed_control_kind_cannot_inherit_retained_keyboard_focus`
+test `retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_blur`
+test `retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distinct`
+test `accessibility_focus_arms_shell_select_space_and_typeahead_routing`
+helper `paint_tree_pointer_documents`
+helper `paint_tree_pointer_document`
+helper `paint_component_pointer_documents`
+test `a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it`
+test `published_tree_handle_routes_through_shell_and_preserves_label_selection`
+helper `display_transfer_host_fixture`
+test `cancelled_display_transfer_retires_capture_without_creating_a_window`
+test `refused_window_publication_does_not_block_a_ready_display_peer`
+test `actual_display_release_refuses_item_and_byte_credit_before_dock_mutation`
+test `display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag`
+test `two_published_table_surfaces_transfer_through_the_shell_host`
+test `a_published_table_transfer_survives_a_same_host_document_refresh`
+helper `table_transfer_through_the_shell_host`
+test `published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once`
+test `renderer_canvas_surface_routes_the_retained_pointer_sequence`
+test `renderer_foreign_pointer_cancel_preserves_the_retained_canvas_sequence`
+helper `renderer_canvas_pointer_sequence`
+test `renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_its_context_menu`
+test `a_published_canvas_hit_cannot_retarget_a_same_key_successor`
+test `renderer_canvas_wheel_burst_preserves_each_zoom_in_event`
+test `renderer_canvas_first_wheel_uses_the_authored_camera`
+test `renderer_canvas_opposite_wheel_events_preserve_the_react_camera`
+helper `renderer_canvas_wheel_burst`
+test `retained_catalogue_item_drags_and_drops_into_a_published_canvas`
+test `published_canvas_double_click_emits_once_at_surface_coordinates`
+test `renderer_canvas_closed_window_retires_its_pending_camera_owner`
+test `renderer_canvas_reopen_waits_for_the_exact_old_window_close`
+test `sibling_canvas_components_mount_under_one_document_without_sharing_their_camera`
+test `renderer_canvas_sequential_window_close_reuses_retained_surface_capacity`
+test `renderer_canvas_camera_obeys_the_mounted_component_identity`
+test `renderer_canvas_retired_deadline_cannot_publish_a_successor`
+test `renderer_canvas_removal_retires_its_pending_camera`
+test `renderer_canvas_same_key_remount_retires_checked_out_camera`
+helper `renderer_canvas_retirement_probe`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎯️presented-input-authority/🦀️.rs
+
+helper `paint_retained_button_candidate`
+helper `publish_presented_button`
+helper `publish_retained_candidate`
+test `actual_retained_pointer_dispatch_keeps_the_presented_position_and_binding_until_acceptance`
+test `presented_button_release_without_down_does_not_activate`
+test `presented_button_cancelled_press_cannot_activate_on_later_release`
+test `presented_button_press_a_release_b_activates_neither`
+test `pending_select_uses_the_presented_options_and_binding_for_keyboard_input`
+test `pending_number_stepper_uses_the_presented_value_step_and_binding`
+test `pending_candidate_cannot_replace_presented_keyboard_focus_or_tab_authority`
+test `pending_candidate_cannot_replace_the_presented_accessibility_projection_or_action`
+test `presented_interaction_invalidates_a_candidate_built_from_an_older_input_epoch`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧪️wgpu-time-travel/🦀️.rs
+
+helper `paint_retained_body`
+helper `close_retained_body`
+test `beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection`
+helper `wheel_history_window_into_view`
+test `the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason`
+test `the_guest_editor_offers_list_and_chip_edits_within_their_bounds`
+test `a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror`
+test `a_panel_body_is_one_scroll_region_under_its_rows`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/⌨️wgpu-shell-shortcuts-palette/🦀️.rs
+
+helper `publish_palette_chrome`
+test `the_command_palette_publishes_filters_and_activates_through_normal_chrome`
+test `find_publishes_filters_and_activates_with_a_physical_row_click`
+test `palette_dialog_absorbs_interior_clicks_and_rows_activate_only_on_same_row_release`
+test `palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stable_items`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎬️wgpu-window-actions-search-panes/🦀️.rs
+
+helper `publish_dense_actions_chrome`
+test `the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_to_it`
+test `physical_actions_and_search_chips_publish_only_their_own_retained_body`
+
+## 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs
+
+helper `paint_retained_map_document`
+helper `publish_retained_map_fixture`
+helper `close_retained_map_fixture`
+helper `close_retained_surface_fixture`
+helper `paint_retained_surface_scene`
+helper `paint_retained_surface_in_window`
+test `tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam`
+test `a_board_window_paints_its_tool_run_trace_lane_and_echoes_the_cursor`
+test `tiled_map_paint_reserves_the_visible_tiles_react_fetches`
+test `board_and_map_two_touch_gestures_share_camera_math_but_keep_distinct_transfer_rules`
+test `retained_map_same_identity_refresh_preserves_the_active_gesture`
+test `retained_map_key_replacement_and_removal_retire_the_old_gesture_without_input`
+test `retained_map_same_host_sibling_rebase_retires_engine_interaction_owner`
+

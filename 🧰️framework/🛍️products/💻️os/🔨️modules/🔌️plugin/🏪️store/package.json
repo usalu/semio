@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/plugin-extension-store",
   "version": "0.1.0",
   "description": "framework · runtime extension install store for OS dev + hub",

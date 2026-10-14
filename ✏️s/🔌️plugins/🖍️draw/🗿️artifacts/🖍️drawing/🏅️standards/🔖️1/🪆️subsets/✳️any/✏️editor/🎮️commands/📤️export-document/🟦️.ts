@@ -3,7 +3,7 @@ import type {DrawingArtifact} from "../../../🧬️schema/🟦️.ts";
 import {DocumentRasterJob,type DocumentSceneLimits,type DocumentAlgorithmLimits,type DocumentRasterProgress} from "../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
 import {PngEncodeJob,type PngEncodeProgress} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts";
 import {UnitRetirement,type WorkRetirement} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts";
-import {binary64Value} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type {PixelImage} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts";
 import {loadBuiltinUnicodeSource} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts";
 import {loadBuiltinFontSources,FONT_CATALOG_DEFAULT_FAMILY,type FontByteSource,type FontByteProvider} from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts";

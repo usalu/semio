@@ -490,3 +490,58 @@ fn original_validation_loop_frontier_quotes_source_and_diagnostic_events(){
         let(_,heap)=observe(||drop(close));assert_eq!(heap,(0,0));assert_eq!(born,freed);eprintln!("[DEBUG] Original validation loops sourceTetrahedra={count} broken={broken} stop={stop} turns={turns} denials={denies} backingEvents={backing} textEvents={texts} born={born} released={freed} terminalDrop=0");
     }}}
 }
+
+
+#[test]
+fn original_validation_topology_frontier_quotes_each_probe_and_utf8_finding(){
+ use crate::test_support::observe_tessellation_system as observe;
+ use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedTopology"];
+ for malformed in [false,true]{for stop in law["cancelStops"].as_array().unwrap(){
+  let mut body=Body::new();build_tetrahedron(&mut body,&mut OpRecorder::new());
+  if malformed{let id=body.coedges.slot_at(0).unwrap().0;body.coedges.get_mut(id).unwrap().pcurve=None;let id=body.vertices.slot_at(0).unwrap().0;body.vertices.get_mut(id).unwrap().tol=Tol::new(10.0);}
+  let mut job=BodyValidationJob::new(&body);let(mut born,mut freed,mut turns,mut denials,mut utf8)=(0,0,0,0,0);
+  while job.phase!=BodyValidationPhase::EdgeValence{let d=job.funded_demands(&body).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let((r,_),h)=observe(||job.step_funded(&body,1,g).unwrap());assert_eq!(h,(r.retained_capacity_bytes,r.released_bytes));born+=h.0;freed+=h.1;}
+  while job.phase!=BodyValidationPhase::SameParameter&&stop.as_u64().is_none_or(|stop|turns<stop as usize){
+   let(d,h)=observe(||job.funded_demands(&body).unwrap());assert_eq!(h,(0,0));let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
+   let before=(job.progress(),job.valence_edge_slot,job.valence_coedge_slot,job.pcurve_slot,job.tolerance_edge_cursor,job.tolerance_vertex,job.issues.len());
+   for axis in 0..5{let n=match axis{0=>1,1=>d.copy_bytes,2=>d.capacity_bytes,3=>d.release_bytes,_=>d.depth};if n==0{continue}let mut denied=g;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes-=1,2=>denied.maximum_capacity_bytes-=1,3=>denied.maximum_release_bytes-=1,_=>denied.maximum_depth-=1};let(r,h)=observe(||job.step_funded(&body,1,denied).unwrap());assert_eq!(r,(Default::default(),0));assert_eq!(h,(0,0));assert_eq!(before,(job.progress(),job.valence_edge_slot,job.valence_coedge_slot,job.pcurve_slot,job.tolerance_edge_cursor,job.tolerance_vertex,job.issues.len()));denials+=1;}
+   for width in law["bodyBytes"].as_array().unwrap(){let width=width.as_u64().unwrap()as usize;if width<d.copy_bytes{let(r,h)=observe(||job.step_funded(&body,1,RetainedCloneGrant{maximum_copy_bytes:width,..g}).unwrap());assert_eq!(r,(Default::default(),0));assert_eq!(h,(0,0));}}
+   let((r,u),h)=observe(||job.step_funded(&body,1,g).unwrap());assert_eq!(u,1);assert!(r.fits(g));assert_eq!(h,(r.retained_capacity_bytes,r.released_bytes));born+=h.0;freed+=h.1;utf8+=usize::from(r.copied_bytes==3);turns+=1;assert!(turns<10000);
+  }
+  if stop.is_null(){if malformed{let missing=job.issues.iter().find(|i|i.code=="missing-pcurve").unwrap();assert_eq!(missing.entity,law["missingPcurve"]["entity"]);assert_eq!(missing.message,law["missingPcurve"]["message"]);let tolerance=job.issues.iter().find(|i|i.entity==law["tolerance"]["entity"]&&i.message==law["tolerance"]["message"]).unwrap();assert_eq!(tolerance.code,law["tolerance"]["code"]);assert!(utf8>0);}else{assert!(job.issues.is_empty());}}
+  let(mut close,h)=observe(||ControlledRetirement::new(job).unwrap_or_else(|_|panic!("original topology custody")));assert_eq!(h,(0,0));
+  while !close.terminal_is_empty(){let d=close.selected_demand(close.next_copy_byte_demand().unwrap()).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let(s,h)=observe(||close.step(g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));born+=h.0;freed+=h.1;}
+  let(_,h)=observe(||drop(close));assert_eq!(h,(0,0));assert_eq!(born,freed);eprintln!("[DEBUG] Original topology malformed={malformed} stop={stop} turns={turns} denied={denials} utf8={utf8} born={born} released={freed} terminalDrop0");
+ }}
+}
+
+#[test]
+fn original_validation_same_parameter_retains_scratch_samples_and_one_original_caller(){
+ use crate::test_support::observe_tessellation_system as observe;
+ use semio_framework_job::{OriginalJobFixtureCaller,OriginalTurnFailure,OperationId,Generation};
+ use semio_framework_value::{retained_clone::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress},retirement::controlled::ControlledRetirement};
+ fn clock()->Option<u64>{Some(1000)}
+ fn grant(row:&serde_json::Value)->Grant{Grant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:row["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:row["release"].as_u64().unwrap()as usize,maximum_depth:row["depth"].as_u64().unwrap()as usize}}
+ fn turn(job:&mut BodyValidationJob,body:&Body,cx:&mut semio_framework_job::StepContext<'_>)->Result<Progress,OriginalTurnFailure>{
+  let g=cx.retained_grant();if cx.should_yield()||g.maximum_items==0{return Ok(Default::default())}let d=job.funded_demands(body)?;if g.maximum_copy_bytes<d.copy_bytes||g.maximum_capacity_bytes<d.capacity_bytes||g.maximum_release_bytes<d.release_bytes||g.maximum_depth<d.depth{return Ok(Default::default())}cx.consume_fuel(1);let(r,u)=job.step_funded(body,1,g).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;assert_eq!(u,1);cx.consume_retained(r)?;Ok(r)
+ }
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedSameParameter"];
+ for width in [1,3,64]{for malformed in [false,true]{for stop in law["cancelStops"].as_array().unwrap(){
+  let mut body=Body::new();let solid=build_tetrahedron(&mut body,&mut OpRecorder::new());let face=body.solid_faces(solid)[0];let coedge=body.face_coedges(face)[0];if malformed{let pcurve=body.coedges.get(coedge).unwrap().pcurve.unwrap();let semio_framework_3d_brep_representation::curve::Curve2::Line{dir,..}=body.curves2.get_mut(pcurve).unwrap()else{panic!("original planar fixture")};*dir=semio_framework_3d_brep_representation::vector::Vec2::new(0.0,0.0);}
+  let source=&body as*const Body;let policy=grant(&law["policy"]);let mut caller=OriginalJobFixtureCaller::admit(OperationId(941),Generation(37),grant(&law["stock"]),clock,law["deadline"].as_u64().unwrap(),law["fuel"].as_u64().unwrap());let(mut job,h)=observe(||BodyValidationJob::new(&body));assert_eq!(h,(0,0));
+  while job.phase!=BodyValidationPhase::SameParameter{let(r,h)=observe(||caller.turn(policy,|cx|turn(&mut job,&body,cx)));let r=r.unwrap();assert_ne!(r,Default::default());assert_eq!(r,caller.receipt());assert_eq!(h,(r.retained_capacity_bytes,r.released_bytes));}
+  let policy=Grant{maximum_copy_bytes:width,..policy};let mut samples=0;let mut events=0;let mut born=0;let mut denied=0;let mut recipient=0;
+  while job.phase==BodyValidationPhase::SameParameter&&stop.as_u64().is_none_or(|stop|events<stop as usize){
+   let(d,h)=observe(||job.funded_demands(&body).unwrap());assert_eq!(h,(0,0));let before=(job.progress(),job.same_stage,job.same_cursor,job.same_samples.len(),job.same_midpoints.len(),job.same_sort_cursor,job.issues.len());
+   for axis in [0,1,2,3,4]{let n=match axis{0=>1,1=>d.copy_bytes,2=>d.capacity_bytes,3=>d.release_bytes,_=>d.depth};if n==0{continue}let mut g=policy;match axis{0=>g.maximum_items=0,1=>g.maximum_copy_bytes=n-1,2=>g.maximum_capacity_bytes=n-1,3=>g.maximum_release_bytes=n-1,_=>g.maximum_depth=n-1};let fuel=caller.fuel_remaining();let cumulative=caller.cumulative_receipt();let(r,h)=observe(||caller.turn(g,|cx|turn(&mut job,&body,cx)));assert_eq!(r.unwrap(),Default::default());assert_eq!(h,(0,0));assert_eq!(fuel,caller.fuel_remaining());assert_eq!(cumulative,caller.cumulative_receipt());assert_eq!(before,(job.progress(),job.same_stage,job.same_cursor,job.same_samples.len(),job.same_midpoints.len(),job.same_sort_cursor,job.issues.len()));denied+=1;}
+   for(fuel,deadline)in[(0,1000000),(1,1000)]{let original=caller.fuel_remaining();let(r,h)=observe(||caller.turn(policy,|cx|cx.with_original_work_loan(fuel,deadline,|same|turn(&mut job,&body,same))));assert_eq!(r.unwrap(),Default::default());assert_eq!(h,(0,0));assert_eq!(original,caller.fuel_remaining());}
+   SAME_PARAMETER_SAMPLES.with(|value|value.set(0));let(r,h)=observe(||caller.turn(policy,|cx|{if recipient==0{recipient=cx.original_recipient_identity()}assert_eq!(recipient,cx.original_recipient_identity());turn(&mut job,&body,cx)}));let r=r.unwrap();assert_ne!(r,Default::default());assert_eq!(r,caller.receipt());assert_eq!(h,(r.retained_capacity_bytes,r.released_bytes));let actual=SAME_PARAMETER_SAMPLES.with(std::cell::Cell::get);assert!(actual<=1);samples+=actual;born+=h.0;events+=1;assert!(events<10000);assert_eq!(&body as*const _,source);
+  }
+  if stop.is_null(){assert_eq!(job.phase,BodyValidationPhase::ShellClosure);if malformed{let issue=job.issues.iter().find(|issue|issue.code=="same-parameter-violated").unwrap();assert_eq!(issue.entity,format!("coedge-{}",coedge.raw_index()));assert!(issue.message.starts_with("pcurve and 3D curve disagree by 1 at s=1 "));assert_eq!(samples,fixture["sameParameterProbe"]["totalBodySamples"].as_u64().unwrap()as usize);}else{assert!(job.issues.is_empty());assert_eq!(samples,12*17);}assert!(born>0);}
+  semio_framework_async::poll::resolve_ready(caller.cancel().cancel());let close_policy=grant(&law["policy"]);let mut source=Some(job);
+  let(r,h)=observe(||caller.turn(close_policy,|cx|{cx.consume_retained(Progress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);match ControlledRetirement::new(source.take().unwrap()){Ok(close)=>Ok(close),Err((error,original))=>{source=Some(original);Err(error.into())}}}));let mut close=r.unwrap();assert!(source.is_none());assert_eq!(h,(0,0));assert_eq!(caller.receipt(),Progress{copied_items:1,..Default::default()});
+  while !close.terminal_is_empty(){let(r,h)=observe(||caller.turn(close_policy,|cx|{let g=cx.retained_grant();let d=close.selected_demand(g.maximum_copy_bytes)?;assert!(d.copy_bytes<=g.maximum_copy_bytes&&d.capacity_bytes<=g.maximum_capacity_bytes&&d.release_bytes<=g.maximum_release_bytes&&d.depth<=g.maximum_depth);cx.consume_fuel(1);let r=close.step(g).map_err(|error|OriginalTurnFailure::debit_original(error.with_retained_progress(close.step_progress()),cx))?.progress();cx.consume_retained(r)?;Ok(r)}));let r=r.unwrap();assert_eq!(r,caller.receipt());assert_eq!(h,(r.retained_capacity_bytes,r.released_bytes));}
+  let(_,h)=observe(||drop(close));assert_eq!(h,(0,0));let cumulative=caller.cumulative_receipt();let roots=caller.born_bytes();assert_eq!(cumulative.retained_capacity_bytes,cumulative.released_bytes+roots);let(released,h)=observe(||caller.retire(close_policy));assert_eq!(released,roots);assert_eq!(h,(0,roots));eprintln!("[DEBUG] original same-parameter body{width} malformed={malformed} stop={stop} samples={samples} events={events} denied={denied} SAME caller and actual scratch conservation/Drop0");
+ }}}
+}

@@ -61,3 +61,49 @@ fn borrowed_tables_are_upper_snake_named_and_stay_distinct() {
         assert!(statics.iter().all(|name| name.chars().all(|c| !c.is_lowercase())), "{statics:?}");
     }
 }
+
+#[test]
+fn original_optional_custody_is_excluded_from_wire_but_retired_as_owned_native_field() {
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🫴️custody/🔣️.json")).unwrap();
+ let declaration:DeriveInput=syn::parse_str(fixture["declaration"].as_str().unwrap()).unwrap();let Data::Struct(data)=&declaration.data else {unreachable!()};
+ let (spec,to,from,fields)=record_codegen(&data.fields);let _:syn::File=syn::parse2(emit_record(declaration.clone())).unwrap();
+ assert_eq!(spec.len(),fixture["wireIds"].as_array().unwrap().len());assert_eq!(fields.iter().map(ToString::to_string).collect::<Vec<_>>(),fixture["nativeFields"].as_array().unwrap().iter().map(|field|field.as_str().unwrap().to_owned()).collect::<Vec<_>>());
+ for output in [spec,to,schema_record_codegen(&data.fields),encoding_record_codegen(&data.fields,false),borrowed_record_codegen(&data.fields,&declaration.ident)] {let text=output.into_iter().map(|tokens|tokens.to_string()).collect::<String>();assert!(!text.contains("source"),"custody source entered wire projection: {text}");}
+ for output in [retained_record_codegen(&data.fields,false),retained_record_key_codegen(&data.fields,false)] {let text=output.to_string();assert!(!text.contains("self . source"));}
+ let decode=from.into_iter().map(|tokens|tokens.to_string()).collect::<String>();assert!(decode.contains("None"));assert!(!decode.contains("missing field 'source'"));
+ let controlled=controlled_record_codegen(&data.fields).into_iter().map(|tokens|tokens.to_string()).collect::<String>();assert!(controlled.contains("None"));assert!(!controlled.contains("record . get (1u16)"));
+ assert!(record_retirement_codegen(&data.fields,None).to_string().contains("source"));
+ let invalid:DeriveInput=syn::parse_str(fixture["invalidDeclaration"].as_str().unwrap()).unwrap();assert!(emit_record(invalid).to_string().contains(fixture["invalidMessage"].as_str().unwrap()));
+ println!("[DEBUG] originalOptionalCustody=wireOmitted originalNativeField=retirementIncluded independentSynOutput=valid invalidNonOptional=refused");
+}
+
+/// 🕳️ Zero-variant borrowed projections eliminate the underlying uninhabited owner.
+#[test]
+fn empty_enum_borrowed_and_receiving_emission_matches_independent_syntax() {
+ struct Matches { count:usize }
+ impl<'ast> syn::visit::Visit<'ast> for Matches {
+  fn visit_expr_match(&mut self,expression:&'ast syn::ExprMatch) {
+   if expression.arms.is_empty() && matches!(&*expression.expr,syn::Expr::Unary(value) if matches!(value.op,syn::UnOp::Deref(_)) && matches!(&*value.expr,syn::Expr::Path(value) if value.path.is_ident("self"))) { self.count+=1; }
+   syn::visit::visit_expr_match(self,expression);
+  }
+ }
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/✨️derive/🕳️empty/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap() {
+  let declaration:syn::DeriveInput=syn::parse_str(row["declaration"].as_str().unwrap()).unwrap();
+  let output=match row["mode"].as_str().unwrap() { "Variants"=>emit_enum(declaration),"Scalar"=>emit_scalar(declaration),"Receiving"=>emit_receiving(declaration),_=>unreachable!() };
+  let syntax:syn::File=syn::parse2(output).unwrap();let mut matches=Matches{count:0};syn::visit::Visit::visit_file(&mut matches,&syntax);
+  assert_eq!(matches.count,row["borrowedEmptyMatches"].as_u64().unwrap() as usize,"{}",row["id"]);
+ }
+ println!("[DEBUG] Empty tagged/scalar/owned-receiving borrowed eliminations match six neutral cases under independent syn AST");
+}
+
+#[test]
+fn original_empty_enums_match_dereferenced_uninhabited_values_in_all_borrowed_methods() {
+    let law:serde_json::Value=serde_json::from_str(include_str!("🕳️empty/🔣️.json")).unwrap();
+    for row in law["cases"].as_array().unwrap() {
+        let input:DeriveInput=syn::parse_str(row["declaration"].as_str().unwrap()).unwrap();
+        let generated=match row["mode"].as_str().unwrap(){"Variants"=>emit_enum(input),"Receiving"=>owned_receiving::emit_owned_receiving(&input),"Scalar"=>emit_scalar(input),_=>unreachable!()};
+        let parsed:syn::File=syn::parse2(generated.clone()).unwrap();assert!(!parsed.items.is_empty());
+        let text=generated.to_string();assert_eq!(text.matches("match * self { }").count(),row["borrowedMatches"].as_u64().unwrap() as usize);assert_eq!(text.matches("match self { }").count(),row["ownedMatches"].as_u64().unwrap() as usize);
+    }
+}

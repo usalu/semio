@@ -4,6 +4,6 @@
   "projectType": "application",
   "tags": ["lang:rust", "role:tool"],
   "targets": {
-    "check": {"executor":"nx:run-commands", "cache":false, "options":{"command":"bun ./📜️script.ts check", "cwd":"✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust", "forwardAllArgs":true}}
+    "check": {"executor":"repo:script", "cache":false, "options":{"command":"bun ./📜️script.ts check", "cwd":"✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust", "forwardAllArgs":true}}
   }
 }

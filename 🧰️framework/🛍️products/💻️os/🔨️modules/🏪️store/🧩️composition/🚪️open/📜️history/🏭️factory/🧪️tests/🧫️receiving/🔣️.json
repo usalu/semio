@@ -32,5 +32,41 @@
     "deadlineUs": 999,
     "fuel": 8192,
     "maximumTurns": 65536
+  },
+  "sourceParent": {
+    "alreadyPaidRoots": true,
+    "requiredParent": true,
+    "sameOperationGeneration": true,
+    "strongLoanItems": 1,
+    "loanCopyBytes": 0,
+    "loanCapacityBytes": 0,
+    "loanReleaseBytes": 0,
+    "separateParentClose": true,
+    "noRebase": true
+  },
+  "boxedShell": {
+    "paidItems": 1,
+    "copiedBytes": 0,
+    "terminalDropBytes": 0,
+    "originalContext": true,
+    "separateChildClose": true
+  },
+  "sourceReceiving": {
+    "cuts": [
+      0,
+      1,
+      5,
+      64,
+      65536
+    ],
+    "originalPageBytes": 4096,
+    "reservationDebits": 0,
+    "receiptDebits": 1,
+    "sameControlReceipt": true,
+    "sameRecipient": true,
+    "actualCallerPorts": true,
+    "paidCancelledClose": true,
+    "typedFaultCustody": true,
+    "terminalDropBytes": 0
   }
 }

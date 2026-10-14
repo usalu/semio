@@ -14,7 +14,7 @@ import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
 
 import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -149,7 +149,7 @@ class ColdBootCheckScript extends BundleScript {
     const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
     const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
     const receiptRoot = join(developmentRuntimeRoot(this.root, variant, profile, renderer), "activation");
-    if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) throw new Error(`No activation receipt at ${receiptRoot} — run: bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
+    if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) throw new Error(`No activation receipt at ${receiptRoot} — run: bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
     const activated = new Set(readActivationReceipt(receiptRoot).plugins.map((row) => row.pluginId));
     const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
     const healthy = healthyPreparedComponents(verdicts, playground.pluginId);

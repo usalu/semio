@@ -30,8 +30,6 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   assert.ok(sourceFiles.includes(entry.slice(workspace.length + 1)));
   assert.ok(!sourceFiles.some((path: string) => path.includes(".vscode") || path.includes("⚡️caching/📦️artifacts/🦀️rust/") || path.endsWith("📦️packages/🟦️typescript/📜️script.ts") || path.endsWith("🤖️generated/🎮️playgrounds/🟦️.ts")));
   assert.deepEqual(sourceInputs.filter((input: any) => input.externalDependencies), [{ externalDependencies: ["ajv", "typescript"] }]);
-  const catalog = await import(resolve(entry, "../../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts"));
-  assert.equal(catalog.DEFAULT_PLAYGROUND_VARIANT, fixture.defaultVariant);
   const resolverPath = resolve(entry, "../../🧭️boot-descriptor/🟦️.ts"), resolver = await import(resolverPath);
   const output = mkdtempSync(join(generated, "wgpu-boot-inputs-"));
   const input = (row: any) => ({ defaultVariant: fixture.defaultVariant, search: row.search, hash: row.hash, overrides: row.overrides, meta: (name: string) => row.meta?.[name] ?? "" });

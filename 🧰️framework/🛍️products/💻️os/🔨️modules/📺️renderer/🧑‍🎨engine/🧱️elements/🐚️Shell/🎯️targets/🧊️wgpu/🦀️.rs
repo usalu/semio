@@ -9843,7 +9843,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub(crate) fn marketplace_roster(&self) -> Vec<String> {
         let extension_ids: Vec<&str> = self.extensions.iter().map(|entry| entry.record.extension_id.as_str()).collect();
         let mut ids: Vec<String> = self.plugins.iter().filter(|entry| !extension_ids.contains(&entry.plugin_id.as_str())).map(|entry| entry.plugin_id.clone()).collect();
-        for (_, plugin_id) in crate::program_bridge::PLUGIN_ARTIFACT_KIND_ACTIVATIONS.iter() {
+        for (_, plugin_id) in crate::program_bridge::plugin_artifact_kind_activations().iter() {
             if !ids.iter().any(|id| id.as_str() == *plugin_id) {
                 ids.push((*plugin_id).to_string());
             }
@@ -14926,7 +14926,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// Both targets: the table is generated into this crate and the install is [`Self::install_plugin`],
     /// which O2 made target-neutral.
     async fn resolve_activation_owner_app(&mut self, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<(String, AppDefinition)> {
-        let owner = crate::program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, crate::program_bridge::PLUGIN_ARTIFACT_KIND_ACTIVATIONS)?;
+        let owner = crate::program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, crate::program_bridge::plugin_artifact_kind_activations())?;
         if let Err(error) = self.install_plugin(owner).await {
             Self::debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install {owner}: {error}"));
             return None;
@@ -15950,19 +15950,9 @@ impl ShellState {
         }
     }
 
-    /// 🎬️ Publishes accepted media geometry only in the browser host that owns a DOM player.
-    pub(crate) fn presented_media_slots(&self) -> Vec<crate::media_slots::PresentedMediaSlot> {
-        #[cfg(target_arch = "wasm32")]
-        {
-            let geometry = &self.presented_input_geometry;
-            let mut slots = crate::interpreter::presented_media_slots(&geometry.retained_body_rects, &geometry.retained_surfaces, &geometry.media_owners, &geometry.panel_rects, &geometry.dock_window_plan);
-            if geometry.media_blocked {
-                for slot in &mut slots { slot.occluded = true; }
-            }
-            slots
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        Vec::new()
+    /// 🎬️ Lends the accepted original geometry and owner roster to the same caller's media producer.
+    pub(crate) fn drive_presented_media_slots(&self,cursor:&mut crate::media_slots::original_collect::OriginalPresentedRoster,output:&mut Vec<crate::media_slots::PresentedMediaSlot>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let geometry=&self.presented_input_geometry;let source=crate::media_slots::original_collect::PresentedRosterSource{bodies:&geometry.retained_body_rects,surfaces:&geometry.retained_surfaces,owners:&geometry.media_owners,panels:&geometry.panel_rects,docks:&geometry.dock_window_plan,blocked:geometry.media_blocked};crate::interpreter::drive_presented_media_slots(&source,cursor,output,cx)
     }
 
     /// 🧭 Resolves one timer owner from this shell's GPU-accepted retained surface roster.
@@ -17410,7 +17400,6 @@ impl ShellState {
     /// `Crossed` alternate every frame of a converging edit and a line apiece would bury the
     /// console the probes read.
     pub async fn settle_pump_step(&mut self) -> ShellSettleStep {
-        self.advance_icon_export();
         self.pump_tree_windows();
         let step = self.settle_pump_step_inner().await;
         let entering = matches!(step, ShellSettleStep::Wedged | ShellSettleStep::Quiescent) || matches!(self.settle_pump.traced, None | Some(ShellSettleStep::Quiescent));
@@ -26941,6 +26930,8 @@ impl ShellState {
         world_resources: &mut infinite_world::world::World3dBuildContext,
         cx:&mut semio_framework_job::StepContext<'_>,
     ) -> Result<bool,semio_framework_job::OriginalTurnFailure>{
+        self.advance_icon_export(cx)?;
+        if cx.should_yield(){return Ok(false)}
         let mut failure=None;let completed=(||{
         if let Some(census) = cursor.note_opportunity() {
             Self::debug_log(&format!("[TRACE] wgpu-shell chrome walk parked {census} windows={}", self.dock_window_plan.len()));

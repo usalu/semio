@@ -4,7 +4,7 @@
   "sourceRoot": "✏️s/🧑‍💻dev/🪐️space",
   "targets": {
     "verify-framework-ui-protocol-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript",

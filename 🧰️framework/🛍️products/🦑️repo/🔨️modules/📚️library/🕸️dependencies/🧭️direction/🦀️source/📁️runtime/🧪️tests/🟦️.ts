@@ -5,12 +5,12 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import micromatch from "micromatch";
 import { inspectRustPathLiterals } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts";
+import schema from "../🧬️schema/🔣️.json";
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
 test("closed runtime direction corpus has independent schema admission", () => {
-  
-  expect(fixture["schemaVersion"]).toEqual(1);
-  
+  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
+  expect(new Set(fixture.cases.map((row:{id:string})=>row.id)).size).toBe(fixture.cases.length);
 });
 test("runtime owner direction agrees with independent glob policy at all three deletion boundaries", async () => {
   const module = await import(resolve(import.meta.dir, "../🟦️.ts"));

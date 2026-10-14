@@ -21,7 +21,7 @@
       }
     }
   },
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -83,7 +83,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate"
@@ -114,7 +114,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate"
@@ -135,7 +135,7 @@
       "continuous": true
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate"
@@ -157,7 +157,7 @@
       ]
     },
     "publish": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate"
@@ -172,7 +172,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -182,7 +182,7 @@
       "outputs": []
     },
     "test-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate"
@@ -196,7 +196,7 @@
       "outputs": []
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/framework-rs:generate",
         "@semio-tech/ui-contract-rs:generate",
@@ -214,7 +214,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check"
@@ -222,7 +222,7 @@
       "cache": false
     },
     "docker-image-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-image-build",
@@ -231,7 +231,7 @@
       "cache": false
     },
     "docker-image-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-image-check",
@@ -240,7 +240,7 @@
       "cache": false
     },
     "docker-image-publish": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "docker-image-build"
       ],
@@ -252,7 +252,7 @@
       "cache": false
     },
     "docker-stack-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-stack-check",
@@ -261,7 +261,7 @@
       "cache": false
     },
     "docker-stack-bundle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts docker-stack-bundle",
@@ -273,7 +273,7 @@
       ]
     },
     "deploy-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate"

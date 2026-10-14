@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "contract": "framework.os.original-window-reset",
+  "sameOriginalSource": true,
+  "sameReadyGeneration": true,
+  "opaqueAdmission": true,
+  "admissionRetainedOnYield": true,
+  "renewalBeforeStoreDonation": true,
+  "repeatRenewalOnRetry": false,
+  "states": [
+    {
+      "phase": "candidate-valid",
+      "candidate": true,
+      "liveChanged": false,
+      "admitted": false
+    },
+    {
+      "phase": "renewal-pending",
+      "candidate": true,
+      "liveChanged": false,
+      "admitted": false
+    },
+    {
+      "phase": "ready-no-commit-fuel",
+      "candidate": true,
+      "liveChanged": false,
+      "admitted": true
+    },
+    {
+      "phase": "commit",
+      "candidate": false,
+      "liveChanged": true,
+      "admitted": false
+    }
+  ],
+  "validationBeforeRenewal": true,
+  "publicationGuards": [
+    {
+      "valid": false,
+      "closing": false,
+      "renew": false
+    },
+    {
+      "valid": true,
+      "closing": true,
+      "renew": false
+    },
+    {
+      "valid": true,
+      "closing": false,
+      "renew": true
+    }
+  ]
+}

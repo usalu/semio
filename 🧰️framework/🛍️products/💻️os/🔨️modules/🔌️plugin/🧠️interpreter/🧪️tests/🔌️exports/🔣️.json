@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "results": [
+    "i64"
+  ],
+  "commands": {
+    "source": "test-job-exports",
+    "native": "test-job-exports-native"
+  },
+  "jobs": [
+    {
+      "variant": "StartJob",
+      "constant": "SEMIO_OWNED_START_JOB_EXPORT",
+      "core": "semio_owned_start_job_v1",
+      "wit": "start-job",
+      "parameters": [
+        "i32",
+        "i32"
+      ]
+    },
+    {
+      "variant": "StepJob",
+      "constant": "SEMIO_OWNED_STEP_JOB_EXPORT",
+      "core": "semio_owned_step_job_v1",
+      "wit": "step-job",
+      "parameters": [
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64"
+      ]
+    },
+    {
+      "variant": "ReadJobOutput",
+      "constant": "SEMIO_OWNED_READ_JOB_OUTPUT_EXPORT",
+      "core": "semio_owned_read_job_output_v1",
+      "wit": "read-job-output",
+      "parameters": [
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64"
+      ]
+    },
+    {
+      "variant": "AcknowledgeJobOutput",
+      "constant": "SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_EXPORT",
+      "core": "semio_owned_acknowledge_job_output_v1",
+      "wit": "acknowledge-job-output",
+      "parameters": [
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64"
+      ]
+    },
+    {
+      "variant": "CancelJob",
+      "constant": "SEMIO_OWNED_CANCEL_JOB_EXPORT",
+      "core": "semio_owned_cancel_job_v1",
+      "wit": "cancel-job",
+      "parameters": [
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64"
+      ]
+    },
+    {
+      "variant": "CloseJobs",
+      "constant": "SEMIO_OWNED_CLOSE_JOBS_EXPORT",
+      "core": "semio_owned_close_jobs_v1",
+      "wit": "close-jobs",
+      "parameters": [
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64"
+      ]
+    }
+  ],
+  "helpers": [
+    {
+      "variant": "BorrowJobOutput",
+      "constant": "SEMIO_OWNED_BORROW_JOB_OUTPUT_EXPORT",
+      "core": "semio_owned_borrow_job_output_v1",
+      "parameters": [
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64"
+      ]
+    },
+    {
+      "variant": "AcknowledgeJobOutputChunk",
+      "constant": "SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_CHUNK_EXPORT",
+      "core": "semio_owned_acknowledge_job_output_chunk_v1",
+      "parameters": [
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64",
+        "i64"
+      ]
+    }
+  ]
+}

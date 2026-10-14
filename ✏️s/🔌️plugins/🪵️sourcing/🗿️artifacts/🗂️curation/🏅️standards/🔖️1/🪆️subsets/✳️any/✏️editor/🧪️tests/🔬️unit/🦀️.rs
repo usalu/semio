@@ -412,7 +412,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
 async fn the_production_action_bridge_admits_every_declared_command() {
     for command in every_command() {
         let action = command.command_id();
-        let built = <SourcingCurationApp as ArtifactEditor>::command_from_action(action, None).unwrap_or_else(|fault| panic!("action '{action}' is declared but the production bridge rejects it: {fault:?}"));
+        let built = <SourcingCurationApp as ArtifactEditor>::command_from_action(action, None, None).unwrap_or_else(|fault| panic!("action '{action}' is declared but the production bridge rejects it: {fault:?}"));
         assert_eq!(built.command_id(), action, "the bridge routed '{action}' to the wrong command");
     }
 }
@@ -432,11 +432,11 @@ async fn every_rendered_action_bridges_through_the_framework_harness() {
 /// vocabularies are joined here and nowhere else.
 #[semio_framework_async_macros::async_test]
 async fn the_action_bridge_reads_the_declared_arg_names() {
-    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID })))).expect("setActiveExample must convert");
+    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID }))).clone()), None).expect("setActiveExample must convert");
     assert_eq!(built, SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }));
-    let filter = <SourcingCurationApp as ArtifactEditor>::command_from_action("setFilterModule", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "moduleId": "walls", "enabled": true })))).expect("setFilterModule must convert");
+    let filter = <SourcingCurationApp as ArtifactEditor>::command_from_action("setFilterModule", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "moduleId": "walls", "enabled": true }))).clone()), None).expect("setFilterModule must convert");
     assert_eq!(filter, SourcingCurationCommand::SetFilterModule(set_filter_module::SetFilterModule { module_id: "walls".into(), enabled: true }));
-    assert!(<SourcingCurationApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err(), "an undeclared action must fault, not silently no-op");
+    assert!(<SourcingCurationApp as ArtifactEditor>::command_from_action("noSuchAction", None, None).is_err(), "an undeclared action must fault, not silently no-op");
 }
 
 /// ⚖️ LAW (S15 matrix, 2026-09-25): the rail stages `curationSetCount`'s `delta`/`value` through the argument schema
@@ -451,7 +451,7 @@ async fn the_rail_stages_numeric_curation_counts_into_one_curated_edit() {
         let arg = action.args.iter().find(|arg| arg.id == id).unwrap_or_else(|| panic!("curationSetCount declares {id}"));
         assert!(matches!(arg.schema, semio_framework_plugin::ArgSchema::Number { .. }), "curationSetCount.{id} must be a number argument, found {:?}", arg.schema);
     }
-    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 })))).expect("curationSetCount must convert");
+    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 }))).clone()), None).expect("curationSetCount must convert");
     assert_eq!(built, SourcingCurationCommand::CurationSetCount(curation_set_count::CurationSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }));
 }
 

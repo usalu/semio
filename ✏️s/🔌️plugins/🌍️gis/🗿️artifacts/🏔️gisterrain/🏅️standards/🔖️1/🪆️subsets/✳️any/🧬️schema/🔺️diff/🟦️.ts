@@ -1,5 +1,5 @@
-import { type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🔺️ Sparse Terrain changes own named fields and optional imported-map intent. */
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import { parseGisTerrainArtifact,parseImportedMap,type ImportedMap, type GisTerrainArtifact } from "../🟦️.ts";

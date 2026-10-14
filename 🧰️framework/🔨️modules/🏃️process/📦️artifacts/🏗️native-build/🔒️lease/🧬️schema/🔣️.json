@@ -12,14 +12,14 @@
     "buildDirectory": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 2048
+      "maxLength": 256
     },
     "profile": {
       "type": "string",
       "pattern": "^[A-Za-z0-9_-]{1,64}$"
     },
     "mode": {
-      "const": "exclusive"
+      "const": "shared"
     }
   },
   "definitions": {
@@ -33,7 +33,10 @@
           "test": "debug",
           "bench": "release"
         },
-        "pollMs": 1000
+        "pollMs": 1000,
+        "compilerAccess": "shared",
+        "maintenanceAccess": "exclusive",
+        "compilerLockGranularity": "cargo-compilation-unit"
       }
     },
     "StoreProtocol": {

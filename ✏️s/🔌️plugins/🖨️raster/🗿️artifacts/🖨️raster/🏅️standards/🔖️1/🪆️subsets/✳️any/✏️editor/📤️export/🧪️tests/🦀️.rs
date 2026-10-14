@@ -94,7 +94,7 @@ async fn png_command_download_survives_operation_retirement_and_preserves_histor
     use semio_framework_plugin::{PluginApp,artifact_app_laws,app::TypedOperationResultLane};
     use crate::editor::raster::{unit_tests::context,RasterCommand,commands::{add_layer,export_png}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let expected=&fixture["download"];
-    let command=<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(),None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
+    let command=<RasterPlayApp as semio_framework_plugin::ArtifactEditor>::command_from_action(expected["action"].as_str().unwrap(), None, None).unwrap();assert!(matches!(command,RasterCommand::ExportPng(_)));
     store::os_store::test_support::assert_op_text_binary_equivalence(&command);
     let mut app=context::app().await;context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
     let before=app.snapshot().unwrap();let mut meta=artifact_app_laws::meta("local");meta.view_state=Some(context::raster_view_state());let instance=meta.instance_id;

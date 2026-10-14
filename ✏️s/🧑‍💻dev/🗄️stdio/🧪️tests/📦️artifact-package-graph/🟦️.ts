@@ -101,7 +101,7 @@ export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot())
     assert(set, `stdio command ${command} declares no input set`);
     assert(project.targets?.[command]?.inputs?.includes(STDIO_NAMED_INPUTS[set]), `target ${command} does not hash ${STDIO_NAMED_INPUTS[set]}`);
     assert.equal(project.targets[command].options?.command, `bun ./📜️script.ts ${command}`);
-    const invocation = `bun nx run ${fixture.registration.projectName}:${command}`;
+    const invocation = `bun repo run ${fixture.registration.projectName}:${command}`;
     assert.equal(manifest.scripts?.[command], invocation, `package script ${command}`);
   }
   console.log(`[stdio-command-ownership] owners=${fixture.owners.length} routers=${fixture.routers.length} artifacts=${fixture.artifactDefinitions.length} commands=${compositionRouter.commands.length}`);

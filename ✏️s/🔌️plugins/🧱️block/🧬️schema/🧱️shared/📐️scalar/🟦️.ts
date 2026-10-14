@@ -1,5 +1,5 @@
 /** 📐️ Literal Block-owned primitive admission shared by its real document records. */
-import {type Binary64,parseBinary64} from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {textUtf8ByteLength} from "../../../../../../🧰️framework/🔨️modules/🌱️value/📝️text/🟦️.ts";
 export type BlockVector3=[Binary64,Binary64,Binary64];
 export type BlockVector4=[Binary64,Binary64,Binary64,Binary64];

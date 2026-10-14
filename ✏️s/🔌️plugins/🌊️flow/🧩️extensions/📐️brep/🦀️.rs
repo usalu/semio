@@ -7,6 +7,9 @@ use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator
 use semio_framework_3d_brep_operations::boolean::BooleanOp;
 use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
 
+#[path="📐️tessellate/🦀️.rs"]
+mod tessellation;
+
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
 /// human-readable summary, so both `register()`'s catalogue and the packaged `🔣️.json` descriptor
 /// carry the same fidelity the kernel contract declares — audit §13.1/§13.2: no node may imply
@@ -600,12 +603,11 @@ impl BrepBooleanOperatorJob {
 }
 
 impl neural_engine::OperatorJob for BrepBooleanOperatorJob {
-    fn step(&mut self, budget: usize, _grant: semio_framework_value::RetainedCloneGrant) -> Result<(neural_engine::OperatorJobStep, semio_framework_value::RetainedCloneProgress), EvalError> {
-        self.receipt = Default::default();
-        let step = self.advance(budget)?;
-        Ok((step, self.receipt))
+    fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(neural_engine::OperatorJobStep,semio_framework_value::RetainedCloneProgress),neural_engine::OperatorWorkFailure>{
+        self.receipt=Default::default();let before=cx.retained_progress();let result=self.advance(cx);let after=cx.retained_progress();
+        let difference=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original Boolean recipient regressed"));
+        self.receipt=semio_framework_value::RetainedCloneProgress{copied_items:difference(after.copied_items,before.copied_items)?,copied_bytes:difference(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:difference(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:difference(after.released_bytes,before.released_bytes)?};result.map(|step|(step,self.receipt))
     }
-
     fn normal_step_progress(&self) -> semio_framework_value::RetainedCloneProgress {
         self.receipt
     }
@@ -664,17 +666,17 @@ impl neural_engine::OperatorJob for BrepBooleanOperatorJob {
 }
 
 impl BrepBooleanOperatorJob {
-    fn advance(&mut self, budget: usize) -> Result<neural_engine::OperatorJobStep, EvalError> {
+    fn advance(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<neural_engine::OperatorJobStep,neural_engine::OperatorWorkFailure> {
         if self.cancelled {
             return Ok(neural_engine::OperatorJobStep::Cancelled(self.progress));
         }
-        if let Some(handle) = self.answered.clone() {
-            return Ok(neural_engine::OperatorJobStep::Done(Self::output(&self.session, &handle)?));
+        if self.answered.is_some() {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Boolean dictionary output has no funded producer yet").into());
         }
         let Some(job) = self.job.as_mut() else {
-            return Err(EvalError::InvalidInput("boolean job carries neither an answer nor a plan".to_string()));
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"boolean job carries neither an answer nor a plan").into());
         };
-        let step = self.session.with_kernel(|kernel| kernel.step_boolean_job_sync(job, budget.max(1)).map_err(|error| map_kernel_error(&error)))?;
+        let step=self.session.step_boolean_job(job,cx)?;
         match step {
             BrepBooleanStep::Working(progress) => {
                 self.progress = neural_engine::OperatorProgress { units_done: progress.units_done, units_total: progress.units_total, phase: progress.phase.tag() };
@@ -689,7 +691,7 @@ impl BrepBooleanOperatorJob {
                 self.job = None;
                 self.answered = Some(handle.clone());
                 self.progress = neural_engine::OperatorProgress { units_done: self.progress.units_total.max(self.progress.units_done), units_total: self.progress.units_total.max(self.progress.units_done), phase: "complete" };
-                Ok(neural_engine::OperatorJobStep::Done(Self::output(&self.session, &handle)?))
+                Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Boolean dictionary output has no funded producer yet").into())
             }
         }
     }
@@ -2454,29 +2456,21 @@ pub mod extension_guest {
     }
 
     #[cfg(test)]
-    fn scoped_bundle()->(ExtensionBundle,neural_engine::SharedRegistry) {let context=super::geometry_inference::GeometryInferenceContext::new(super::Session::new().capture());let scope=context.registry().clone();(owned_bundle(context),scope)}
+    fn scoped_bundle()->(ExtensionBundle,neural_engine::SharedRegistry) {let context=super::geometry_inference::GeometryInferenceContext::new(super::Session::new().capture());let scope=context.evaluation().registry().expect("original fixture must admit its registry before reader handoff").clone();(owned_bundle(context),scope)}
 
     struct BrepExtensionResources { context:super::geometry_inference::GeometryInferenceContext }
 
     impl BrepExtensionResources {
         fn invoke_bytes(&self, capability: &str, req: &[u8]) -> Result<Vec<u8>, Fault> {
             match capability {
-                "tessellate" => {
-                    let request = semio_framework_pack_json::parse_bytes(req, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
-                    let handle = request.get("handle").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
-                    let tolerance = request.get("tolerance").and_then(semio_framework_pack_json::Value::as_f64).unwrap_or(0.05);
-                    let budget = request.get("budget").and_then(semio_framework_pack_json::Value::as_f64).map_or(TESSELLATE_STEP_BUDGET, |value| (value as usize).max(1));
-                    let wall_micros = request.get("wallMicros").and_then(semio_framework_pack_json::Value::as_f64).map_or(flow_extension_sdk::mesh::TESSELLATE_STEP_WALL_MICROS, |value| value.max(0.0) as u64);
-                    let chunk = request.get("chunk").and_then(semio_framework_pack_json::Value::as_f64).map_or(0, |value| value.max(0.0) as usize);
-                    Ok(self.context.session().tessellate_step_envelope_json(handle, tolerance, budget, wall_micros, chunk).into_bytes())
-                },
                 "evaluateCancel" => {
                     let request = semio_framework_pack_json::parse_bytes(req, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate-cancel.bad-request"), err.to_string()))?;
+                    let evaluation=self.context.evaluation();let registry=evaluation.registry();
                     let retired = match (request.get("operatorId").and_then(semio_framework_pack_json::Value::as_str), request.get("nodeHash").and_then(semio_framework_pack_json::Value::as_f64)) {
-                        (Some(operator_id), Some(node_hash)) => usize::from(flow_extension_sdk::cancel_evaluation(self.context.registry(),operator_id, node_hash.max(0.0) as u64)),
-                        _ => flow_extension_sdk::cancel_all_evaluations(self.context.registry()),
+                        (Some(operator_id), Some(node_hash)) => usize::from(registry.is_some_and(|registry|flow_extension_sdk::cancel_evaluation(registry,operator_id,node_hash.max(0.0)as u64))),
+                        _ => registry.map_or(0,flow_extension_sdk::cancel_all_evaluations),
                     };
-                    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".to_string(), semio_framework_pack_json::Value::Bool(true)), ("retired".to_string(), semio_framework_pack_json::Value::from(retired as u64)), ("pending".into(),semio_framework_pack_json::Value::Bool(flow_extension_sdk::evaluation_retirement_pending(self.context.registry())))])).into_bytes())
+                    Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("ok".to_string(), semio_framework_pack_json::Value::Bool(true)), ("retired".to_string(), semio_framework_pack_json::Value::from(retired as u64)), ("pending".into(),semio_framework_pack_json::Value::Bool(registry.is_some_and(flow_extension_sdk::evaluation_retirement_pending)))])).into_bytes())
                 },
                 "tessellateCancel" => {
                     let request = semio_framework_pack_json::parse_bytes(req, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate-cancel.bad-request"), err.to_string()))?;
@@ -2492,16 +2486,17 @@ pub mod extension_guest {
     }
 
     impl ExtensionResourceOwner for BrepExtensionResources {
-        fn invoke(&self, capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::ExtensionInvokeStep, Fault> {
+        fn invoke(&mut self, capability: &str, request: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::ExtensionInvokeStep, Fault> {
             match capability {
                 "evaluate" => self.context.evaluate_raw(request, cx),
+                "tessellate" => self.context.tessellate_raw(request, cx),
                 _ => self.invoke_bytes(capability, request).map(|payload| semio_framework_plugin::ExtensionInvokeStep { payload: Some(payload), retained_progress: Default::default(), refusal: None }),
             }
         }
         fn inference_context(&self) -> Option<&dyn std::any::Any> { Some(&self.context) }
-        fn cancel_inference(&self, cancellation_id: &str) -> bool { flow_extension_sdk::cancel_inference_evaluation(self.context.registry(),cancellation_id) }
+        fn cancel_inference(&self, cancellation_id: &str) -> bool { self.context.evaluation().registry().is_some_and(|registry|flow_extension_sdk::cancel_inference_evaluation(registry,cancellation_id)) }
         fn begin_close(&mut self) { self.context.begin_close(); }
-        fn close_step(&mut self, grant:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {self.context.close_step(grant)}
+        fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {self.context.close_step(cx)}
         fn terminal_is_empty(&self) -> bool { self.context.terminal_is_empty() }
         fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError> {self.context.retirement_demands(copy)}
         fn cancel_close(&mut self) { if !self.context.session().terminal_is_empty() { self.context.session().cancel_close(); } }

@@ -56,6 +56,7 @@ fn dense_actions_shell() -> ShellState {
 }
 
 fn publish_dense_actions_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) -> DrawList {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     while input.retire_hit_step() {}
     shell.screen_w = 1440.0;
     shell.screen_h = 640.0;
@@ -67,8 +68,10 @@ fn publish_dense_actions_chrome(shell: &mut ShellState, input: &mut InputState<A
     let theme = Theme::light();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..262_144 {
-        if shell.render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources) {
+        if caller.turn(|cx|shell.render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources, cx)).expect("original fixture caller turn") {
             shell.publish_retained_hit_registry(input);
+            caller.retire_world(&mut world_resources);
+            caller.finish();
             return draw;
         }
     }

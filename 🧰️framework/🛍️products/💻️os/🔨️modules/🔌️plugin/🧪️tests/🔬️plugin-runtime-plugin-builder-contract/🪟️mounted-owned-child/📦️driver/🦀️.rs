@@ -1,10 +1,11 @@
 #[cfg(test)] use crate::tool_contract::ArtifactToolPublicationLane;
-pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64) {
+pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64,semio_framework_job::OriginalJobFixtureCaller) {
     let revision = app.store.content_revision_now();
     let command_count = app.command_log.len();
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.store.generation_now()), 17);
         let lease = app.tool_cancellations.clone().begin(ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
         let mut mounted = MountedTypedCommandFullOperation::<A> {
+            source_identity:(operation.operation,operation.generation),
             verb: "compositeEdit".into(), meta, operation, canonical_revision: revision,
             artifact_generation: operation.generation.0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
             window_config_authority: None, window_transient_authority: None, publication_lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child],
@@ -16,6 +17,8 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
             ui_pending: true, progress: None, progress_pending: false, user_cancel_requested: false, published_artifact: false, published_config: false, published_window_config: false,
             command_logged: false, interaction_revalidated: false, retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
         };
+        let policy=crate::app_testing::artifact_app_laws::fixture_mounted_policy();
+        let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(operation.operation,operation.generation,policy.preparation,||Some(1),1_000_000,1);
         let started = std::time::Instant::now();
         let mut child_page = false;
         let mut witnessed = false;
@@ -30,7 +33,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
                 }
             }
             assert!(started.elapsed().as_millis() <= 90000, "original mounted publication wall limit");
-            app.publish_mounted_typed_operation_run(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.expect("actual retained publisher owns original parent and children");
+            test_mounted_publication_original_turn(app,&mut mounted,&mut caller,false).expect("actual retained publisher owns original parent and children");
             let changed = observe(&app);
             assert!(!changed.is_empty());
             assert!(changed.iter().all(|changed| *changed) || changed.iter().all(|changed| !*changed), "all original child lanes share one visibility decision");
@@ -40,7 +43,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
                 let bytes = page.bytes().to_vec();
                 let token = page.token;
                 assert!(mounted.take_result_page().is_none());
-                app.publish_mounted_typed_operation_run(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
+                test_mounted_publication_original_turn(app,&mut mounted,&mut caller,false).unwrap();
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), bytes);
                 assert_eq!(mounted.result_page.as_ref().unwrap().token, token);
                 if page.lane == TypedOperationResultLane::Child { child_page = true; assert!(mounted.owned_child_committed); assert_eq!(app.command_log.len(),command_count+1); assert_eq!(app.command_log.iter().next_back().unwrap().action_id,"compositeEdit"); }
@@ -52,16 +55,25 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
     assert!(child_page, "actual publisher must deliver its child result page");
     let result = app.typed_composed_outbox.pop().expect("actual original member mutation/inverse outbox");
     assert!(!mounted.owned_child_result_pending, "original child result ACK releases the publication close barrier");
-    for _ in 0..100000 { if mounted.owned_child_group.is_none() { break; } app.publish_mounted_owned_child_operation_unit(&mut mounted).await.unwrap(); }
+    for _ in 0..100000 { if mounted.owned_child_group.is_none() { break; } test_mounted_publication_original_turn(app,&mut mounted,&mut caller,true).unwrap(); }
     assert!(mounted.owned_child_group.is_none(), "actual private group registry closes before the mounted original owner");
     let mut retired = false;
     for _ in 0..100000 {
         let grant = app.mounted_policy.close;
         let demand = mounted.retirement_demands(grant.maximum_copy_bytes).unwrap();
         assert!(grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth,"original mounted caller policy must fund its quoted close frontier");
-        if matches!(mounted.retirement_step(grant).unwrap(), crate::bounded_ownership::PluginLifecycleStep::Complete(_)) { retired=true; break; }
+        if matches!(caller.turn(grant,|cx|mounted.retirement_step(cx)).unwrap(), crate::bounded_ownership::PluginLifecycleStep::Complete(_)) { retired=true; break; }
     }
     assert!(retired, "mounted original owner reaches its complete terminal retirement");
     assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::Retiring);
-    (result.mutations, result.inverse_group, operation.operation.0)
+    (result.mutations, result.inverse_group, operation.operation.0,caller)
+}
+
+/// 🎟️ Polls the actual mounted publisher once under its transaction's original paid fixture caller.
+fn test_mounted_publication_original_turn<A:ArtifactApp,M:SpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>,mounted:&mut MountedTypedCommandFullOperation<A>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,closing:bool)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    let grant=if closing{app.mounted_policy.close}else{app.mounted_policy.maintenance};
+    caller.turn(grant,|cx|{let mut task=std::task::Context::from_waker(std::task::Waker::noop());
+        if closing{let mut turn=std::pin::pin!(app.publish_mounted_owned_child_operation_unit(mounted,cx));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private close suspended inside its original caller")}}
+        else{let mut turn=std::pin::pin!(app.publish_mounted_typed_operation_run(mounted,cx,grant));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private publication suspended inside its original caller")}}
+    })
 }

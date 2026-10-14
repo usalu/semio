@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-mesh-engine-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🏗️mesh-engine",
   "namedInputs": {
     "default": [
@@ -11,7 +11,7 @@
   },
   "targets": {
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

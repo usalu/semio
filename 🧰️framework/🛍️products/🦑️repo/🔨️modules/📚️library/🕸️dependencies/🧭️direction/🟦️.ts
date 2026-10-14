@@ -2,6 +2,7 @@ import { lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { authoredPackageExportAuthority } from "./🏗️construction/🟦️.ts";
 import { bunRepositoryMembership } from "../../🗂️workspaces/🟦️bun/🟦️.ts";
+import type { DependencyPolicySnapshot } from "./🚀️bootstrap/🟦️.ts";
 
 export type DependencyDirectionRule = Readonly<{ name: string; severity: string; from: { path: readonly string[]; pathNot?: readonly string[] }; to: { path: readonly string[]; pathNot?: readonly string[] } }>;
 export type DependencyDirectionEdge = Readonly<{ rule: string; from: string; to: string }>;
@@ -9,13 +10,54 @@ export type DependencyDirectionGraphScope = Readonly<{ workspaceRoots: readonly 
 
 const sourceExtension = /\.(?:[cm]?[jt]s|[jt]sx)$/u;
 const pathPatterns = new Map<string, RegExp>();
-const pathMatches = (patterns: readonly string[], path: string): boolean => patterns.some((pattern) => {
+/** 🔎️ Reuses immutable compiled selector patterns across source and runtime path checks. */
+export const dependencyDirectionPathMatches = (patterns: readonly string[], path: string): boolean => patterns.some((pattern) => {
   let expression = pathPatterns.get(pattern);
   if (!expression) { expression = new RegExp(pattern, "u"); pathPatterns.set(pattern, expression); }
   return expression.test(path);
 });
-const terminalPath = (scope: DependencyDirectionGraphScope, path: string): boolean => pathMatches([...scope.excludedPaths, ...scope.nonFollowedPaths], path);
+const terminalPath = (scope: DependencyDirectionGraphScope, path: string): boolean => dependencyDirectionPathMatches([...scope.excludedPaths, ...scope.nonFollowedPaths], path);
 const workspacePath = (scope: DependencyDirectionGraphScope, path: string): boolean => scope.workspaceRoots.some((root) => path === root || path.startsWith(`${root}/`));
+
+/** 🧾️ Admits the exact path-rule subset shared by the resolver and independent graph verifier. */
+function strictRule(value: unknown): DependencyDirectionRule {
+  const record=(value:unknown):Record<string,unknown>=>{if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Dependency direction requires exact strict rule authority");return value as Record<string,unknown>;};
+  const rule=record(value);
+  if(typeof rule.name!=="string"||!rule.name||Object.keys(rule).some(key=>!["name","severity","comment","scope","from","to"].includes(key))||rule.severity!=="error"||rule.scope!==undefined&&rule.scope!=="module"||rule.comment!==undefined&&typeof rule.comment!=="string")throw Error("Dependency direction requires exact strict rule authority");
+  const selector=(value:unknown):DependencyDirectionRule["from"]=>{
+    const selected=record(value);
+    if(Object.keys(selected).some(key=>key!=="path"&&key!=="pathNot"))throw Error("Dependency direction cannot enforce undeclared rule selectors");
+    const patterns=(value:unknown,empty=false):readonly string[]=>{
+      const paths=typeof value==="string"?[value]:value;
+      if(!Array.isArray(paths)||!empty&&!paths.length||paths.some(path=>typeof path!=="string"))throw Error("Dependency direction requires readable rule paths");
+      for(const path of paths)try{new RegExp(path,"u");}catch{throw Error("Dependency direction requires valid rule path patterns");}
+      return paths;
+    };
+    return {path:patterns(selected.path),...(Object.hasOwn(selected,"pathNot")?{pathNot:patterns(selected.pathNot,true)}:{})};
+  };
+  return {name:rule.name,severity:"error",from:selector(rule.from),to:selector(rule.to)};
+}
+
+/** 🧮️ Selects complete mandatory semantic authority before any graph is inspected. */
+function selectedStrictRules(snapshot: Pick<DependencyPolicySnapshot,"taxonomy"|"plugins"|"policy">,publicApi:boolean): readonly DependencyDirectionRule[] {
+  const {taxonomy,plugins,policy}=snapshot;
+  if(new Set(plugins).size!==plugins.length||plugins.some(plugin=>typeof plugin!=="string"||!plugin))throw Error("Dependency direction requires distinct present plugin owners");
+  const names=new Set(["framework-no-implementation","repo-no-implementation","s-modules-no-plugins",...(publicApi?["plugins-framework-sdk-only"]:[]),...Object.keys(taxonomy.dependencyDirections.rules),...plugins.flatMap(from=>plugins.filter(to=>to!==from).map(to=>`no-cross-plugin-${from}-to-${to}`))]);
+  const rules=policy.forbidden.filter(rule=>names.has(rule.name)||publicApi&&rule.name.startsWith(taxonomy.dependencyDirections.publicApi.rulePrefix)||rule.name.startsWith("plugin-no-extension-or-artifact-")).map(strictRule);
+  const present=new Set(rules.map(rule=>rule.name));
+  if(rules.length!==present.size||[...names].some(name=>!present.has(name)))throw Error("Canonical architecture is missing or repeats a declared strict rule");
+  return rules;
+}
+
+/** 🌳️ Requires every intrinsic layer and removable plugin boundary for native source ownership. */
+export function dependencyDirectionLayerRules(snapshot: Pick<DependencyPolicySnapshot,"taxonomy"|"plugins"|"policy">): readonly DependencyDirectionRule[] {
+  return selectedStrictRules(snapshot,false);
+}
+
+/** 🛡️ Extends layer authority with strict authored TypeScript/JavaScript public export contracts. */
+export function dependencyDirectionStrictRules(snapshot: Pick<DependencyPolicySnapshot,"taxonomy"|"plugins"|"policy">): readonly DependencyDirectionRule[] {
+  return selectedStrictRules(snapshot,true);
+}
 
 function validateScope(scope: DependencyDirectionGraphScope): void {
   if (!scope || typeof scope !== "object") throw new Error("Dependency direction requires readable scope metadata");
@@ -52,7 +94,7 @@ export function dependencyDirectionWorkspacePackages(root: string, excludedPaths
     if (entry.isDirectory()) lstatSync(join(owner, "package.json"));
   }
   const workspaces = membership.packages, names = new Map<string,string>();
-  return workspaces.filter((path) => !pathMatches(excludedPaths, path)).flatMap((owner) => {
+  return workspaces.filter((path) => !dependencyDirectionPathMatches(excludedPaths, path)).flatMap((owner) => {
     let directory;
     try { directory = lstatSync(join(root, owner)); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
     if (!directory.isDirectory()) throw new Error(`Dependency direction workspace owner must be a directory: ${owner}`);
@@ -107,14 +149,19 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
     if (typeof value !== "string" || !value) throw new Error("Dependency direction graph requires a nonempty path or rule name");
     return value;
   };
-  const matches = pathMatches;
+  const matches = dependencyDirectionPathMatches;
   validateScope(scope);
   if (!scope.expectedSources.length) throw new Error("Dependency direction requires source inventory");
   const graph = record(report), modules = array(graph.modules), summary = record(graph.summary);
   const names = rules.map((rule) => rule.name);
   if (!names.length || new Set(names).size !== names.length || rules.some((rule) => rule.severity !== "error")) throw new Error("Dependency direction requires distinct strict rules");
-  const usedRules = array(record(summary.ruleSetUsed).forbidden).map((value) => text(record(value).name));
-  if (JSON.stringify([...usedRules].sort()) !== JSON.stringify([...names].sort())) throw new Error("Dependency direction graph used a different policy");
+  const authority = (value: unknown): string => {
+    const rule = strictRule(value);
+    const selector=(value:DependencyDirectionRule["from"]):readonly (string|null)[]=>[value.path.join("|"),value.pathNot?.join("|")??null];
+    return JSON.stringify([rule.name,rule.severity,selector(rule.from),selector(rule.to)]);
+  };
+  const usedRules = array(record(summary.ruleSetUsed).forbidden).map(authority).sort();
+  if (JSON.stringify(usedRules) !== JSON.stringify(rules.map(authority).sort())) throw new Error("Dependency direction graph used different authored rule authority");
   if (!modules.length || summary.totalCruised !== modules.length) throw new Error("Dependency direction graph is empty or incomplete");
   const edges: DependencyDirectionEdge[] = [], problems: string[] = [], sources = new Map<string, string>();
   let dependencyCount = 0;

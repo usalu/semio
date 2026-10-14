@@ -1,0 +1,61 @@
+{
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+    "rust-syntax",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️close-ladder/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🤝️group/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔄️full-operation/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+  ],
+  "selection": [
+    "nx",
+    "exec",
+    "--projects=workspace",
+    "--excludeTaskDependencies",
+    "--skip-nx-cache",
+    "--",
+    "bun",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/native-matrix/📜️script.ts",
+    "rust-syntax",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️close-ladder/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🤝️group/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔄️full-operation/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/📦️driver/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs"
+  ],
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/target",
+    "transport": {
+      "maximumBytes": 268435456,
+      "maximumLines": 65536
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1800000
+    },
+    "network": {
+      "offline": false
+    }
+  },
+  "buildMode": "prototype"
+}

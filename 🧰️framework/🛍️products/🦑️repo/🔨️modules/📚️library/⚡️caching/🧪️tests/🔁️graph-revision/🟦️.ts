@@ -1,3 +1,4 @@
+import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -37,7 +38,7 @@ const schemaPath=join(library,fixture.installationSchema), originalSchema=readFi
 const taxonomy=join(library,"🔣️taxonomy.json"), before=readFileSync(taxonomy,"utf8"); writeFileSync(taxonomy,"{"); await assert.rejects(run("invalid-taxonomy")); writeFileSync(taxonomy,before); await run("taxonomy");
 assert.deepEqual(results,fixture.expected); console.log(JSON.stringify(results));
 `);
-      const result = await runTool(runtime,[join(directory, "📜️script.ts")],directory,AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),true,{ ...process.env, NX_WORKSPACE_ROOT: directory, REPO_ROOT: directory, NODE_PATH: join(workspace, "node_modules") },{version:1,directory:output});
+      const result = await runTool(runtime,[join(directory, "📜️script.ts")],directory,AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),true,{ ...process.env, SEMIO_WORKSPACE_ROOT: directory, REPO_ROOT: directory, NODE_PATH: join(workspace, "node_modules") },{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
       results.push(JSON.parse(result.trim()));
     }
     assert.deepEqual(results[0], results[1]);

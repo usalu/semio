@@ -41,7 +41,7 @@ export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
 class DevScript extends BundleScript {
   run(segments: string[]): void {
     const bin = resolveCliBin(this.repoRoot);
-    if (!existsSync(bin)) throw new Error(`repo client binary is missing at ${bin}; run: bun nx run @semio-tech/repo-client:build`);
+    if (!existsSync(bin)) throw new Error(`repo client binary is missing at ${bin}; run: bun repo run @semio-tech/repo-client:build`);
     runCmd(bin, [...segments], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },

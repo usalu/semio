@@ -116,7 +116,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     sourceRoots: [repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"), repoRelative("🧰️framework/📦️packages/🟦️typescript")],
     storyGlobs: [
       "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/📖️stories/**/🧪️.story.tsx",
-      "../🧰️framework/🛍️products/💻️os/📖️stories/**/🧪️.story.tsx",
+      "../✏️s/🧑‍💻dev/📖️stories/**/🧪️.story.tsx",
     ],
   },
   {
@@ -160,7 +160,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
       const { playgroundIframeEmbedHeadersPlugin } = await import(/* @vite-ignore */ "../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌐️iframe/🟦️.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
-    storyGlobs: ["../🧰️framework/🛍️products/💻️os/📖️stories/**/🧪️.story.tsx"],
+    storyGlobs: ["../✏️s/🧑‍💻dev/📖️stories/**/🧪️.story.tsx"],
   },
   {
     id: "infinite",

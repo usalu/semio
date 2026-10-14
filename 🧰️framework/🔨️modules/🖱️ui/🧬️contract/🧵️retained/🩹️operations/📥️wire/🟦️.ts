@@ -1,5 +1,5 @@
 //#region 🧬️NativeOperationContract
-import type { NumericIndexGrant } from "../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedUiOperation, type OwnedUiOperationRetirement } from "../🟦️.ts";
 import { RetainedUiTypedCursor, RetainedUiChildIdsCursor, type RetainedUiTypedValues, type OwnedUiPayload, type UiPayloadRetirement } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../../📦️wire/🟦️.ts";

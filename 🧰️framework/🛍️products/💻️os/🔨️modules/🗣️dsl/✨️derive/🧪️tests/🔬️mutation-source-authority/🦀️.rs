@@ -19,14 +19,14 @@ fn link_dir(target: &Path, link: &Path) {
     std::os::windows::fs::symlink_dir(target, link).unwrap();
 }
 
-fn fixture_workspace(case: &str) -> PathBuf {
+fn fixture_workspace() -> PathBuf {
     let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
     fs::create_dir_all(&base).unwrap();
-    fs::canonicalize(base).unwrap().join(format!("semio-source-authority-{case}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()))
+    fs::canonicalize(base).unwrap().join(format!("msa-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()))
 }
 
 pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, PathBuf, PathBuf) {
-    let workspace = fixture_workspace(case);
+    let workspace = fixture_workspace();
     let mutation_root = workspace.join("domain/🧬️mutations");
     let owner = mutation_root.join("🆕️insert-page");
     let source = owner.join("🦀️.rs");
@@ -34,7 +34,7 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
     let taxonomy = workspace.join(MUTATION_AUTHORITY_LOCATOR);
     fs::create_dir_all(&owner).unwrap();
     fs::create_dir_all(taxonomy.parent().unwrap()).unwrap();
-    fs::write(workspace.join("nx.json"), "{}").unwrap();
+    fs::write(workspace.join("package.json"), r#"{"workspaces":[]}"#).unwrap();
     fs::write(&source, "pub struct Probe;").unwrap();
     let owner_text = mutation_authority_relative(&workspace, &owner).unwrap();
     let mut descriptor_value = fixture["descriptor"].clone();
@@ -46,7 +46,7 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
         "missing-authority" => fs::remove_file(&taxonomy).unwrap(),
         "malformed-authority" => fs::write(&taxonomy, r#"{"schema":"semio.dsl.mutation-source-authority/v0","sourceFilename":"🦀️.rs","descriptorFilename":"🔣️.json","mutationCollection":"🧬️mutations","mutationPayloadFacet":"🦠️mutation","mutationDomainOwners":{},"mutationAggregateSources":{}}"#).unwrap(),
         "unsafe-authority-segment" => fs::write(&taxonomy, r#"{"schema":"semio.dsl.mutation-source-authority/v1","sourceFilename":"🦀️.rs","descriptorFilename":"🔣️.json","mutationCollection":"domain/🧬️mutations","mutationPayloadFacet":"🦠️mutation","mutationDomainOwners":{},"mutationAggregateSources":{}}"#).unwrap(),
-        "wrong-root-pair" => fs::remove_file(workspace.join("nx.json")).unwrap(),
+        "wrong-root-pair" => fs::remove_file(workspace.join("package.json")).unwrap(),
         "wrong-primary-filename" => {
             const HISTORICAL_PRIMARY_FILENAME: &str = "component.rs";
             let wrong = owner.join(HISTORICAL_PRIMARY_FILENAME);
@@ -95,10 +95,10 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
             fs::rename(&taxonomy, &actual).unwrap();
             link_file(&actual, &taxonomy);
         }
-        "nested-nx-anchor" => {
+        "nested-workspace-anchor" => {
             let nested = workspace.join("nested");
             fs::create_dir_all(&nested).unwrap();
-            fs::write(nested.join("nx.json"), "{}").unwrap();
+            fs::write(nested.join("package.json"), r#"{"workspaces":[]}"#).unwrap();
             fs::rename(workspace.join("domain"), nested.join("domain")).unwrap();
             return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🆕️insert-page/🦀️.rs"));
         }
@@ -158,7 +158,7 @@ fn validates_mutation_source_authority_fixture() {
         if name == "raw-nonutf8" {
             assert!(result.as_ref().unwrap_err().contains("not UTF-8"));
         }
-        if name == "nested-nx-anchor" {
+        if name == "nested-workspace-anchor" {
             assert!(result.as_ref().unwrap_err().contains("lacks paired"));
         }
         if name == "file-parent-erasure" {

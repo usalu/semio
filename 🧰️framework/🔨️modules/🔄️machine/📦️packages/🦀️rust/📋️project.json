@@ -1,13 +1,13 @@
 {
   "name": "@semio-tech/framework-machine",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🔄️machine/**/*.rs", "{projectRoot}/**/*"]
   },
   "tags": ["scope:framework"],
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

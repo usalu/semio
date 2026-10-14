@@ -8,7 +8,7 @@ fn labels() -> &'static SStudioLabels {
 }
 
 fn project(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("parameters tree projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("parameters tree projection")
 }
 
 /// 🪟️ A workflow an order of magnitude past one viewport — the subject of every window law below.

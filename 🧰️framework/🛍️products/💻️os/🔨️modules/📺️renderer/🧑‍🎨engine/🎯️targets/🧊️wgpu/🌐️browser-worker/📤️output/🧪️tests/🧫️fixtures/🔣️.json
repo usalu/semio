@@ -1,0 +1,70 @@
+{
+  "caller": {
+    "operation": 71,
+    "generation": 3,
+    "clockUs": 12000,
+    "deadlineUs": 12345,
+    "fuel": 4000000,
+    "stock": {
+      "maximumItems": 4000000,
+      "maximumCopyBytes": 67108864,
+      "maximumCapacityBytes": 67108864,
+      "maximumReleaseBytes": 67108864,
+      "maximumDepth": 64
+    }
+  },
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "wire": {
+    "presentationGeneration": "18446744073709551615",
+    "mediaSlots": [
+      {
+        "token": "retained-λ",
+        "windowId": "preview",
+        "nodeId": "18446744073709551615",
+        "nodeKey": "player",
+        "rect": {
+          "x": 1.25,
+          "y": 2,
+          "width": 32,
+          "height": 16
+        },
+        "clip": {
+          "x": 1.25,
+          "y": 2,
+          "width": 32,
+          "height": 16
+        },
+        "paintOrder": 0,
+        "occluded": false,
+        "pluginId": "procedural",
+        "controllerId": "preview",
+        "appInstanceId": 71,
+        "parentDocumentId": "original-λ",
+        "props": {
+          "kind": "video",
+          "resource": null,
+          "label": "Paid \\\" λ",
+          "flags": [
+            true,
+            false,
+            null
+          ],
+          "position": 1.25
+        }
+      }
+    ],
+    "cursor": "default",
+    "fullscreen": null,
+    "requestFrame": true,
+    "nextDeadlineDelayMs": 1.25,
+    "continueFrame": true,
+    "progress": 0.5,
+    "quarantined": false,
+    "faultCode": null,
+    "faultDetail": null
+  }
+}

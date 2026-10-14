@@ -244,6 +244,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
+    pub(crate) fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {

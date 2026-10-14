@@ -127,12 +127,12 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis3dPlayApp>>(gis3d_app_manifest_for_tests).await;
-    assert!(Gis3dPlayApp::command_from_action("noSuchAction", None).is_err());
+    assert!(Gis3dPlayApp::command_from_action("noSuchAction", None, None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_reads_the_nested_camera_object() {
-    let camera = Gis3dPlayApp::command_from_action("setCamera", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "camera": { "position": [1.0, 2.0, 3.0] } })))).expect("setCamera");
+    let camera = Gis3dPlayApp::command_from_action("setCamera", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "camera": { "position": [1.0, 2.0, 3.0] } }))).clone()), None).expect("setCamera");
     assert!(matches!(camera, Gis3dCommand::SetCamera(ref payload) if payload.camera_json.contains("position")));
 }
 
@@ -154,7 +154,7 @@ fn retained_command_factory_matches_the_language_neutral_maximum_oracle() {
     assert_eq!(gis3d_retained_extent(&rejected, &snapshot, &interaction), None);
     let factory = Gis3dCommandJobFactory::new("s.gis.gisterrain@1/*#editor");
     assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
-    assert!(Gis3dPlayApp::command_from_action("setCamera", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "cameraJson": "c".repeat(maximum + additional) })))).is_err());
+    assert!(Gis3dPlayApp::command_from_action("setCamera", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "cameraJson": "c".repeat(maximum + additional) }))).clone()), None).is_err());
 }
 //#endregion 🔖️CommandSurface
 
@@ -299,7 +299,7 @@ async fn set_exaggeration_stages_a_bounded_default_that_actually_edits() {
     let seeded = app.snapshot().expect("projection").exaggeration;
     assert_ne!(seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, "a staged default equal to the seeded value would dispatch a no-op");
     let staged = semio_framework::effective_action_args(&action.args, &semio_framework_value::DslValue::Object(Vec::new()), None);
-    let command = <EditorApp<Gis3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action("setExaggeration", Some(&staged)).await.expect("the staged default bridges to a command");
+    let command = <EditorApp<Gis3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action("setExaggeration", Some((staged).clone()), None).await.expect("the staged default bridges to a command");
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, command, |app| app.snapshot().expect("projection").exaggeration, seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     context::close(&mut app);
 }

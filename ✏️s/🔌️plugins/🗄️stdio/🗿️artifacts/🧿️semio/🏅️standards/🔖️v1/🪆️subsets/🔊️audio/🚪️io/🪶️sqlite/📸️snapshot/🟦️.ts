@@ -1,7 +1,7 @@
 /** 🔊️ Exact native binary32 samples beside independently queryable channel/tag entities. */
 import type {SemioAudioSnapshot,SemioAudioFormat,SemioAudioChannel,SemioAudioTag} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteCheckpoint,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {binary32Value,parseBinary32,type Binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32Value,parseBinary32,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export const SEMIO_AUDIO_SQLITE_SCHEMA=`CREATE TABLE semio_audio_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, sample_rate INTEGER NOT NULL CHECK (sample_rate BETWEEN 0 AND 4294967295), sample_format TEXT NOT NULL CHECK (sample_format IN ('pcm8','pcm16','pcm24','pcm32','f32','f64')));
 CREATE TABLE semio_audio_channel (id INTEGER PRIMARY KEY, document_id INTEGER NOT NULL REFERENCES semio_audio_document(id), ordinal INTEGER NOT NULL CHECK (ordinal >= 0));

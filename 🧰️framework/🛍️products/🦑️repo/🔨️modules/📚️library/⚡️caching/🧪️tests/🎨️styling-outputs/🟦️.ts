@@ -42,7 +42,7 @@ appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\
   put("consumer/consumer.csproj", `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings></PropertyGroup></Project>`);
   put("consumer/Program.cs", `var assembly = System.Reflection.Assembly.LoadFrom(args[0]); Console.Write(assembly.GetType(${JSON.stringify(fixture.type)})!.GetField(${JSON.stringify(fixture.field)})!.GetRawConstantValue());`);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
-  const env = { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, SEMIO_STYLING_DOTNET_ARTIFACTS_ROOT: join(root, "state"), MSBUILDDISABLENODEREUSE: "1", DOTNET_CLI_TELEMETRY_OPTOUT: "1" };
+  const env = { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, SEMIO_STYLING_DOTNET_ARTIFACTS_ROOT: join(root, "state"), MSBUILDDISABLENODEREUSE: "1", DOTNET_CLI_TELEMETRY_OPTOUT: "1" };
   const execute = async (args: string[]) => {
     const child = Bun.spawn(args, { cwd: root, env, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);

@@ -5,11 +5,11 @@ use std::{mem::ManuallyDrop,sync::{Arc,atomic::{AtomicPtr,AtomicU8,AtomicU64,Ord
 static NEXT_ISSUANCE:AtomicU64=AtomicU64::new(1);
 
 /// 🎟️ The original producer supplies admission and demand functions without an erased allocation.
-pub struct SharedIssuer<T>{pub demand:fn(&T)->Result<RetirementDemand,ValueError>,pub admit:fn(&mut Option<T>,RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>}
+pub struct SharedIssuer<T>{pub transfer_copy_bytes:fn(&T)->usize,pub demand:fn(&T)->Result<RetirementDemand,ValueError>,pub admit:fn(&mut Option<T>,RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>}
 impl<T> Copy for SharedIssuer<T>{}
 impl<T> Clone for SharedIssuer<T>{fn clone(&self)->Self{*self}}
 impl<T:RetireOwned> SharedIssuer<T>{
- pub fn owned()->Self{Self{demand:|_|{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"sealed original has no owned issuer"));}Ok(RetirementDemand{capacity_bytes:crate::retirement::owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()})},admit:|slot,grant|{let Some(value)=slot.take()else{return Ok(None)};match crate::retirement::admit_owned_retirement(value,grant){Ok(admitted)=>Ok(Some(admitted)),Err((error,value))=>{*slot=Some(value);Err(error)}}}}}
+ pub fn owned()->Self{Self{transfer_copy_bytes:|_|size_of::<T>(),demand:|_|{if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"sealed original has no owned issuer"));}Ok(RetirementDemand{capacity_bytes:crate::retirement::owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()})},admit:|slot,grant|{let Some(value)=slot.take()else{return Ok(None)};match crate::retirement::admit_owned_retirement(value,grant){Ok(admitted)=>Ok(Some(admitted)),Err((error,value))=>{*slot=Some(value);Err(error)}}}}}
 }
 
 /// 🔐️ The private Arc has no raw, Weak, mutable or consuming escape hatch.
@@ -71,10 +71,12 @@ impl<T:Send+Sync+'static> SealedShared<T>{
   Ok(())
  }
  /// 📤️ Transfers the same original value after one funded atomic strong-only unwrap.
+ pub fn original_transfer_demand(&self)->Result<RetirementDemand,ValueError>{let source=self.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original sealed value already transferred"))?;Ok(RetirementDemand{copy_bytes:(self.issuer.transfer_copy_bytes)(source),release_bytes:Self::birth_bytes(),depth:1,..Default::default()})}
  pub fn try_unwrap(mut self,grant:RetainedCloneGrant)->Result<(T,RetainedCloneProgress),(ValueError,Self)>{
-  if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<T>()||grant.maximum_release_bytes<Self::birth_bytes()||grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original sealed value transfer is not funded"),self));}
+  let demand=match self.original_transfer_demand(){Ok(demand)=>demand,Err(error)=>return Err((error,self))};
+  if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original sealed value transfer is not funded"),self));}
   let Some(source)=self.source.take()else{return Err((ValueError::literal(ValueRefusalKind::InvalidValue,"original sealed value already transferred"),self));};
-  match Arc::try_unwrap(source){Ok(value)=>Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),released_bytes:Self::birth_bytes(),..Default::default()})),Err(source)=>{*self.source=Some(source);Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original sealed value still has live projections"),self))}}
+  match Arc::try_unwrap(source){Ok(value)=>Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})),Err(source)=>{*self.source=Some(source);Err((ValueError::literal(ValueRefusalKind::WorkLimit,"original sealed value still has live projections"),self))}}
  }
  pub fn identity(&self)->usize{self.source.as_ref().map_or(0,|source|Arc::as_ptr(source)as usize)}
  pub fn get(&self)->&T{self.source.as_deref().expect("sealed shared source has transferred")}

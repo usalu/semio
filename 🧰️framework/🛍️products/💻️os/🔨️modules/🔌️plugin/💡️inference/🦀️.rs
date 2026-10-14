@@ -79,12 +79,12 @@ impl From<ArtifactInferencePayloadContract> for semio_framework::InferencePayloa
 }
 
 /// ⚠️ Structured failure returned by a type-erased inference execution boundary.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
+#[derive(Debug,semio_framework_value::RetireOwned)]
 pub struct ArtifactInferenceExecutionError {
     pub code: &'static str,
     pub message: String,
     pub retained_progress:RetainedCloneProgress,
-    pub cause:Option<ValueError>,
+    pub cause:Option<semio_framework_job::OriginalTurnFailure>,
     pub terminal:bool,
 }
 
@@ -97,12 +97,36 @@ impl ArtifactInferenceExecutionError {
 }
 
 impl ArtifactInferenceExecutionError {
-    pub fn native(error:ValueError,terminal:bool)->Self{let retained_progress=error.retained_progress();Self{code:"artifact-inference.native",message:String::new(),retained_progress,cause:Some(error),terminal}}
+    /// 🪢️ Moves the complete original envelope after producer admission, preserving every receipt and context cause.
+    pub fn original(failure:semio_framework_job::OriginalTurnFailure,terminal:bool)->Self{let retained_progress=failure.primary.retained_progress();Self{code:"artifact-inference.original",message:String::new(),retained_progress,cause:Some(failure),terminal}}
+    pub fn native(error:ValueError,terminal:bool)->Self{let retained_progress=error.retained_progress();Self{code:"artifact-inference.native",message:String::new(),retained_progress,cause:Some(error.into()),terminal}}
+}
+
+impl semio_framework_job::OriginalDomainProjection for ArtifactInferenceExecutionError{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{
+  use semio_framework_job::OriginalDomainView as V;match path{
+   []=>Ok(V::IntrinsicObject(5)),[0]=>Ok(V::Text(self.code)),[1]=>Ok(V::Text(&self.message)),[2]=>Ok(V::IntrinsicObject(4)),
+   [2,0]=>Ok(V::UInt(self.retained_progress.copied_items as u64)),[2,1]=>Ok(V::UInt(self.retained_progress.copied_bytes as u64)),[2,2]=>Ok(V::UInt(self.retained_progress.retained_capacity_bytes as u64)),[2,3]=>Ok(V::UInt(self.retained_progress.released_bytes as u64)),
+   [3,rest @ ..]=>match &self.cause{Some(original)=>semio_framework_job::project_original_turn_failure(original,rest),None if rest.is_empty()=>Ok(V::IntrinsicNull),_=>Err(inference_execution_projection_refusal())},[4]=>Ok(V::Bool(self.terminal)),_=>Err(inference_execution_projection_refusal()),
+  }
+ }
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match path{
+  []=>["code","message","retainedProgress","cause","terminal"].get(index).copied().ok_or_else(inference_execution_projection_refusal),
+  [2]=>["items","copyBytes","capacityBytes","releaseBytes"].get(index).copied().ok_or_else(inference_execution_projection_refusal),
+  [3,rest @ ..]=>self.cause.as_ref().ok_or_else(inference_execution_projection_refusal).and_then(|original|semio_framework_job::key_original_turn_failure(original,rest,index)),_=>Err(inference_execution_projection_refusal()),
+ }}
+}
+fn inference_execution_projection_refusal()->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference execution failure projection ordinal changed")}
+
+impl semio_framework_job::OriginalDomainFailure for ArtifactInferenceExecutionError{
+ fn domain_code(&self)->&str{self.code}
+ fn domain_message(&self)->&str{self.cause.as_ref().map_or(self.message.as_str(),|original|original.primary.message())}
+ fn domain_retained_progress(&self)->RetainedCloneProgress{self.retained_progress}
 }
 
 impl std::fmt::Display for ArtifactInferenceExecutionError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "{}: {}", self.code, self.message)
+        write!(formatter, "{}: {}", self.code, self.cause.as_ref().map_or(self.message.as_str(),|original|original.primary.message()))
     }
 }
 
@@ -748,7 +772,7 @@ impl ArtifactInferenceGatewayFailure {
  pub(crate) fn fault_wire_fields(&self)->(&str,&str,RetainedCloneProgress){
   match self{
    Self::Native(error)=>(error.kind.as_str(),&error.message,error.retained_progress()),
-   Self::Execution(error)=>(error.code,error.cause.as_ref().map_or(error.message.as_str(),|cause|cause.message.as_ref()),error.retained_progress),
+   Self::Execution(error)=>(error.code,error.cause.as_ref().map_or(error.message.as_str(),|cause|cause.primary.message()),error.retained_progress),
    Self::Literal(message)=>("inference.gateway.refusal",message,Default::default()),
    Self::Json(error)=>{use semio_framework_pack_json::JsonError;match error{
     JsonError::Native(error)=>(error.kind.as_str(),&error.message,error.retained_progress()),

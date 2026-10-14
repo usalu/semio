@@ -24,7 +24,9 @@
       "contextBirth": 0,
       "deniedBirth": 0,
       "backingPages": 80,
-      "terminalDrop": 0
-    }
+      "terminalDrop": 0,
+      "cancelledTerrainEmptyStep": "idle"
+    },
+    "cancelBeforeClose": true
   }
 }

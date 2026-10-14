@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "source": {
+    "job": 11,
+    "kind": "actual.源\"\\\n",
+    "input": [
+      0,
+      9,
+      128,
+      255
+    ],
+    "checkpoint": [
+      8,
+      7,
+      6
+    ]
+  },
+  "expected": "{\"job\":11,\"kind\":\"actual.源\\\"\\\\\\n\",\"input\":[0,9,128,255],\"checkpoint\":[8,7,6]}",
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "items": 1
+}

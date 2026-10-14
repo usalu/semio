@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/gis-gismap-js",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "inference-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
@@ -13,7 +13,7 @@
       "outputs": []
     },
     "cold-document-pair-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
@@ -23,7 +23,7 @@
       "outputs": []
     },
     "inference-presentation-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
@@ -33,7 +33,7 @@
       "outputs": []
     },
     "inference-bridge-source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
@@ -48,7 +48,7 @@
       }
     },
     "inference-bridge-process-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -71,7 +71,7 @@
       }
     },
     "tiles-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts tiles-check",
         "cwd": "{projectRoot}",
@@ -85,7 +85,7 @@
       }
     },
     "tiles-check-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts tiles-check --native",
         "cwd": "{projectRoot}",
@@ -100,7 +100,7 @@
       }
     },
     "tiles-prefetch": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts tiles-prefetch",
         "cwd": "{projectRoot}",
@@ -114,7 +114,7 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "default",
@@ -133,7 +133,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check",
@@ -148,7 +148,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -163,7 +163,7 @@
       ]
     },
     "inference-service-receiving-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
@@ -173,7 +173,7 @@
       "outputs": []
     },
     "verify-physical-codecs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",

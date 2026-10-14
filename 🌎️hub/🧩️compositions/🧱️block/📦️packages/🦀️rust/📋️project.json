@@ -1,12 +1,12 @@
 {
   "name": "@semio-tech/block-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/🧱️block/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

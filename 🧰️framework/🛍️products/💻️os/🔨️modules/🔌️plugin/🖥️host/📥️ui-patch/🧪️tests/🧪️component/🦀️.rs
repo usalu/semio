@@ -23,7 +23,7 @@ fn budget() -> Budget {
 
 async fn open_live(config: serde_json::Value, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (WasmtimeRuntime, GuestInstance, ActorInstanceLifetime) {
     let bytes = fixture_bytes();
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let package = PackageRef { package: PackageId("semio:scale-ui-patch".to_string()), hash: PackageHash(*semio_framework_hash::hash(&bytes).as_bytes()) };
     let compiled = runtime.compile(&package, &bytes).await.expect("scale component compiles");
     let mut instance = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget()).await.expect("scale component instantiates");

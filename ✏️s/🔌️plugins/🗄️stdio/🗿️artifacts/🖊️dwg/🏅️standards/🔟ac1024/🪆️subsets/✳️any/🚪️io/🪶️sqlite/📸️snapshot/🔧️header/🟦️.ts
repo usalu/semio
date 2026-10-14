@@ -1,6 +1,6 @@
 /** 🗄️ Exact handwritten DWG domain DDL, embedded for filesystem-free runtimes. */
 import type { DwgHeaderVariables,DwgHeaderSpaceGeometry } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { DwgProjection,dwgInteger,dwgBoolean as B,dwgUnsignedWords as H,dwgOptionalWords as O } from "../🔢️number/🟦️.ts";
 import { DwgReader,dwgDocument as document,dwgByte as byte,dwgWord as word,dwgSignedWord as signedWord,dwgUnsigned as unsigned,dwgSignedInteger as signedInteger,dwgFullUnsigned as full,dwgOptionalUnsigned as optional,dwgBoolean as boolean } from "../🫳️reader/🟦️.ts";
 const W=(value:number)=>dwgInteger(value,0,65535),S=(value:number)=>dwgInteger(value,-32768,32767),U=(value:number)=>dwgInteger(value,0,4294967295),Y=(value:number)=>dwgInteger(value,0,255),I=(value:number)=>dwgInteger(value,-2147483648,2147483647);

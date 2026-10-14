@@ -93,14 +93,14 @@
     {
       "childId": "",
       "artifactId": "target\u0000!@/🌍",
-      "artifactKind": "s.stdio.semio",
+      "artifactKind": "s.fixture.graph",
       "standard": "v1",
       "subset": "graph"
     },
     {
       "childId": "alias\u0000!@/🌍",
       "artifactId": "",
-      "artifactKind": "s.stdio.semio",
+      "artifactKind": "s.fixture.graph",
       "standard": "v1",
       "subset": "graph"
     }
@@ -600,7 +600,7 @@
     "content": {
       "childId": "",
       "artifactId": "target\u0000!@/🌍",
-      "artifactKind": "s.stdio.semio",
+      "artifactKind": "s.fixture.graph",
       "standard": "v1",
       "subset": "graph"
     }

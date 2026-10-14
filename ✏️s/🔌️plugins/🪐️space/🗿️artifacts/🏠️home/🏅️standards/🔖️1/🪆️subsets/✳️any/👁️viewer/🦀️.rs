@@ -256,7 +256,9 @@ impl ArtifactViewer for HomeViewer {
     }
 
     /// 🎯️ The host's sealed-page feed is the one action this surface is dispatched with; anything else is refused.
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         match action {
             "applyDirectoryEventPage" => Ok(HomeViewCommand::ApplyDirectoryEventPage {
                 page_json: args.and_then(|value| value.get("pageJson")).and_then(DslValue::as_str).map(str::to_string).ok_or_else(|| Fault::from("s.home.directory-event-page-input-missing"))?,
@@ -288,9 +290,14 @@ impl ArtifactViewer for HomeViewer {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         render_view_body(body_key, cfg.snapshot, transient.snapshot, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 
 /// 👁️ One viewer body from the tombstones and the folded directory projection.
@@ -299,7 +306,7 @@ pub fn render_view_body(body_key: &str, config: &HomeConfig, transient: &HomeTra
         main::S_HOME_VIEW_BODY => main::render(transient.directory().spaces(), &config.retired_local_studio_ids, view_state)?,
         _ => semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data(format!("Unknown body: {body_key}"))).map_err(|_| PluginAssemblyError::new("s.home.viewer.render.unknown-body", "unknown body key text admission failed"))?,
     };
-    Ok(ComponentTree { root })
+    Ok(ComponentTree::new(root))
 }
 //#endregion 🔖️Viewer
 

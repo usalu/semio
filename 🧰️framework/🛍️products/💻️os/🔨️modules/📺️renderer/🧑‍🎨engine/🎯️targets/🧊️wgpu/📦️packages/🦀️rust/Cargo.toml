@@ -187,6 +187,7 @@ web-sys = { version = "0.3.98", features = [
 ] }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-ui-runtime = { workspace = true }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
@@ -204,3 +205,4 @@ semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+

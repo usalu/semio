@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "package": "@semio-tech/framework-actor",
+  "facets": [
+    {
+      "subpath": "./page",
+      "public": "📃️page/🟦️.ts",
+      "implementation": "📃️page/🟦️.ts",
+      "runtime": [
+        "ACTOR_BYTE_PAGE_BYTES",
+        "createActorBytePage",
+        "readActorBytePage",
+        "actorBytePageSchema"
+      ],
+      "types": [
+        "ActorBytePageBlock",
+        "ActorBytePage"
+      ],
+      "schema": "📃️page/🧬️schema/🔣️.json",
+      "schemaExport": "actorBytePageSchema"
+    },
+    {
+      "subpath": "./lifetime",
+      "public": "🚪️lifetime/🟦️.ts",
+      "implementation": "🚪️lifetime/🟦️.ts",
+      "runtime": [
+        "ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES",
+        "encodeActorInstanceLifecycle",
+        "decodeActorInstanceLifecycle",
+        "actorInstanceLifetimeEquals",
+        "actorInstanceLifecycleReceiptEquals",
+        "actorInstanceCapturedReceiptMatches",
+        "actorInstanceCloseReceiptMatches",
+        "actorInstanceLifecycleSchema"
+      ],
+      "types": [
+        "ActorInstanceLifetime",
+        "ActorInstanceOpenRequest",
+        "ActorInstanceCloseRequest",
+        "ActorInstanceLifecycleReceipt",
+        "ActorInstanceLifecycleAck",
+        "ActorInstanceLifecycleWire"
+      ],
+      "schema": "🚪️lifetime/🧬️schema/🔣️.json",
+      "schemaExport": "actorInstanceLifecycleSchema"
+    },
+    {
+      "subpath": "./lifetime/patch",
+      "public": "🚪️lifetime/🩹️patch/🟦️.ts",
+      "implementation": "🚪️lifetime/🩹️patch/🟦️.ts",
+      "runtime": [
+        "ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES",
+        "encodeActorUiPatchReceipt",
+        "decodeActorUiPatchReceipt",
+        "actorUiPatchReceiptEquals",
+        "validateActorUiPatchPairing",
+        "actorUiPatchReceiptSchema"
+      ],
+      "types": [
+        "ActorUiPatchReceipt"
+      ],
+      "schema": "🚪️lifetime/🩹️patch/🧬️schema/🔣️.json",
+      "schemaExport": "actorUiPatchReceiptSchema"
+    },
+    {
+      "subpath": ".",
+      "public": "🟦️.ts",
+      "implementation": "🧵️turn-scheduler/🟦️.ts",
+      "runtime": [
+        "TurnScheduler"
+      ],
+      "types": [
+        "QueuedTurn",
+        "TurnBudgetProvider",
+        "TurnSchedulerOptions"
+      ],
+      "schema": null,
+      "schemaExport": null
+    },
+    {
+      "subpath": "./retained-turn",
+      "public": "🎟️retained-turn/🟦️.ts",
+      "implementation": "🎟️retained-turn/🟦️.ts",
+      "runtime": [
+        "KernelOriginalResourcePool",
+        "KernelOriginalOperationIssuer",
+        "OriginalOperationReceiptRefusal",
+        "OriginalOperationSource",
+        "originalTurnWit",
+        "originalOperationWorkerSource",
+        "originalReceiptFromWit",
+        "originalRetainedReceiptSchema"
+      ],
+      "types": [
+        "OriginalRetainedGrant",
+        "OriginalRetainedProgress",
+        "OriginalRetainedInput",
+        "OriginalOperationResources",
+        "OriginalOperationAdmission",
+        "OriginalOperationTurn",
+        "OriginalOperationReceipt",
+        "OriginalWireGrant",
+        "OriginalWireInput",
+        "OriginalWireReceipt",
+        "OriginalOperationPhysicalSpent"
+      ],
+      "schema": "🎟️retained-turn/🧬️schema/🔣️.json",
+      "schemaExport": "originalRetainedReceiptSchema"
+    }
+  ]
+}

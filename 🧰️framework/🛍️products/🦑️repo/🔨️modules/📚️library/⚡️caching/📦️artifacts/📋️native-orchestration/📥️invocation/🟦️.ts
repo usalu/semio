@@ -1,6 +1,7 @@
 import schema from "./🧬️schema/🔣️.json";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import callerSchema from "../../../../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
+import buildCallerSchema from "../../../../🏗️build/🧬️schema/📥️caller.json";
 import {resolve} from "node:path";
 import {checkScriptInvocation,advanceScriptInvocation,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -9,6 +10,7 @@ import type {OwnedCommandOptions} from "../../../../../../../../🔨️modules/�
 /** 📥️ Declares the actual native caller's selected command and finite child authority. */
 export interface NativeOwnerCapabilities {
   readonly version: 1;
+  readonly buildMode:"prototype"|"release";
   readonly repositoryRoot: string;
   readonly artifactDirectory: string;
   readonly command: Readonly<{ kind: "native-owner-command"; manifest: string; workingDirectory: string; program: string; arguments: readonly string[] }>;
@@ -25,6 +27,7 @@ export function readNativeOwnerCapabilities(value: unknown): NativeOwnerCapabili
 
 /** 🧭️ Receives the existing closed Nx orchestration caller without issuing replacement authority. */
 export interface NativeOrchestrationCallerV1 {
+ readonly tool?:"nx"|"bazel";
  readonly workspaceRoot:string;
  readonly buildMode:"prototype"|"release";
  readonly arguments:readonly string[];
@@ -35,7 +38,7 @@ export interface NativeOrchestrationCallerV1 {
 /** 🔐️ Projects either current native role while retaining its exact declared capabilities. */
 export function readNativeCallerAuthorityV1(value:unknown):Readonly<{role:"native-owner-command"|"nx-orchestration";repositoryRoot:string;artifactDirectory:string;transport:NativeOwnerCapabilities["transport"];child:NativeOwnerCapabilities["child"];network:NativeOwnerCapabilities["network"];original:NativeOwnerCapabilities|NativeOrchestrationCallerV1}>{
  if(value&&typeof value==="object"&&"native" in value){
-  if(validateJsonSchemaSubset(callerSchema,value).length)throw Error("Original native caller capabilities required");
+  if(validateJsonSchemaSubset(value&&typeof value==="object"&&"tool" in value?buildCallerSchema:callerSchema,value).length)throw Error("Original native caller capabilities required");
   const caller=value as NativeOrchestrationCallerV1;return{role:"nx-orchestration",repositoryRoot:caller.workspaceRoot,...caller.native,original:caller};
  }
  const caller=readNativeOwnerCapabilities(value);return{role:"native-owner-command",repositoryRoot:caller.repositoryRoot,artifactDirectory:caller.artifactDirectory,transport:caller.transport,child:caller.child,network:caller.network,original:caller};

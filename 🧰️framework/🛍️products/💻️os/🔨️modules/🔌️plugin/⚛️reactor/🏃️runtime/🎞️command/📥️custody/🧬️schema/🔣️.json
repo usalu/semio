@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "copies",
+    "operation",
+    "generation",
+    "command",
+    "failure",
+    "close",
+    "pending",
+    "wire"
+  ],
+  "properties": {
+    "contract": {
+      "const": "media.original-command-custody/v1"
+    },
+    "copies": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "operation": {
+      "const": "71"
+    },
+    "generation": {
+      "const": "3"
+    },
+    "command": {
+      "const": {
+        "seq": "9007199254740993",
+        "port": "playback:out",
+        "parent": "doc-alpha",
+        "revision": "18446744073709551615"
+      }
+    },
+    "failure": {
+      "const": {
+        "primary": "initial native media error",
+        "receipt": "original receipt refusal",
+        "context": "original context refusal"
+      }
+    },
+    "close": {
+      "const": [
+        "originalPort",
+        "originalParent",
+        "originalCommandShell",
+        "originalFailure",
+        "parent"
+      ]
+    },
+    "pending": {
+      "const": "sameDecodedOwner"
+    },
+    "wire": {
+      "const": "borrowedOriginalHandle"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "name": "original-resource",
+      "identity": [
+        "media.video.viewer",
+        "1",
+        "media-slot🎬",
+        "media",
+        "video.viewer",
+        17,
+        "document-7",
+        [
+          "artifact-media-export",
+          "video.viewer",
+          17,
+          "document-7",
+          "playback:out",
+          "7",
+          "3"
+        ]
+      ],
+      "token": "2aeee904b09634293d24b0d0889889d69d54869625f6936f68e8219d2dbc40ea"
+    },
+    {
+      "name": "wide-id-unicode-null",
+      "identity": [
+        "media.video.viewer",
+        "18446744073709551615",
+        "media-slot🎬",
+        "media",
+        "video.viewer",
+        17,
+        "document-7",
+        null
+      ],
+      "token": "8f1fcedf756af72b24aa35556282393ea9036647d7a678f482ee4fa90e388718"
+    }
+  ]
+}

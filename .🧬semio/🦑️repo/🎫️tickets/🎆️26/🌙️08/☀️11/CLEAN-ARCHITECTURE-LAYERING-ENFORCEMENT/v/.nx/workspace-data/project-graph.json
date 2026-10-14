@@ -1,0 +1,62 @@
+{
+  "nodes": {
+    "architecture-source-verification": {
+      "name": "architecture-source-verification",
+      "type": "app",
+      "data": {
+        "root": ".",
+        "name": "architecture-source-verification",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "architecture-source-verification",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {
+          "test": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts test",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "run": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts run",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "strict": {
+            "executor": "nx:run-commands",
+            "cache": false,
+            "options": {
+              "command": "bun ./📜️script.ts strict",
+              "forwardAllArgs": true
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "architecture-source-verification": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1791972628374
+}

@@ -6,7 +6,7 @@ import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicy
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {parseFreshProcessPolicyV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🟦️.ts";
 import cargoCommandLimits from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
-import {repositoryCargoPreparationStorageV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
+import {cargoPreparationStorageFromEnvironmentV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { produceFreshComponentV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
 import { compileGisScopeExport } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧰️schema/🟦️.ts";
@@ -127,7 +127,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
     mkdirSync(target, { mode: 0o700 });
     mkdirSync(stage, { mode: 0o700 });
     const build = freshGisComponentBuildControl();
-    const control={...build.control,invocation:this.invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
+    const control={...build.control,invocation:this.invocation,process:parseFreshProcessPolicyV1({version:1,storage:cargoPreparationStorageFromEnvironmentV1(process.env),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})};
     try {
       const produced = await produceFreshComponentV1(
         this.repoRoot,

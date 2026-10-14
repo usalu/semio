@@ -12,7 +12,7 @@ import paintStyles from "./🧫️fixtures/🎨️paint/🔣️.json";
 import commonStyles from "../../../../../../../../../✏️editor/🎮️commands/📤️export-document/🧪️tests/🧫️fixtures/🎨️styles/🔣️.json";
 import traces from "../../../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 import {prepareDocumentVector,type DocumentScenePlan} from "../../../../../../../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 const lift=(value:any):any=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,lift(item)])):value;
 const styles=[...commonStyles,...paintStyles];
 const algorithms={maxWork:1e7,trace:traces[0]!.limits,booleans:{tolerance:.005,epsilon:1e-8,maxDepth:32,maxReferences:256,maxEdges:65536,maxParameters:262144,maxAtomicEdges:65536,maxSegments:65536,maxRetainedSegments:262144,maxWork:1e7}};

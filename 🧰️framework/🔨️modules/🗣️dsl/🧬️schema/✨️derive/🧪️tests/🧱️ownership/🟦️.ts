@@ -1,12 +1,33 @@
 /** 🧩️ Admits generic derivation and explicit higher composition through one owned compiler. */
 import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
+import { build } from "esbuild";
+import Ajv2020 from "ajv/dist/2020";
+import empty from "../🕳️empty/🔣️.json" with { type: "json" };
+import emptySchema from "../🕳️empty/🧬️.json" with { type: "json" };
+import absence from "../🚮️absence/🔣️.json" with { type: "json" };
+import absenceSchema from "../🚮️absence/🧬️.json" with { type: "json" };
 
 import TOML from "@iarna/toml";
 
 type Case = Readonly<{id: string; mode: string; names?: Readonly<{spec: string; to: string; from: string}>; members: readonly string[]; traits: readonly string[]}>;
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
+
+/** 🚮️ Actual generic native receivers survive removal of product sources and preserve owned law selection. */
+test("generic derivation native commands survive product removal", async () => {
+  expect(new Ajv2020({ strict: true }).validate(absenceSchema, absence)).toBe(true);
+  const workspace = resolve(owner, "../../../../.."), entry = resolve(owner, absence.entry);
+  const bundled = await build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, metafile: true, platform: "node", format: "esm", packages: "external", plugins: [{ name: "specific-removal", setup(builder) {
+    builder.onResolve({ filter: /./ }, args => { if (absence.removedPackages.some(name => args.path === name || args.path.startsWith(name + "/") || args.path.startsWith(name + "-"))) throw Error("removed product package: " + args.path); return undefined; });
+    builder.onLoad({ filter: /./ }, args => { const path = relative(workspace, args.path).split("\\").join("/"); if (absence.removedRoots.some(root => path === root || path.startsWith(root + "/"))) throw Error("removed product source: " + path); return undefined; });
+  } }] });
+  expect(Object.keys(bundled.metafile!.inputs).length).toBeGreaterThan(1);
+  expect(Object.keys(bundled.metafile!.inputs).every(path => path.startsWith("🧰️framework/🔨️modules/"))).toBe(true);
+  const source = read(absence.entry);
+  for (const name of [...absence.packages, ...absence.laws]) expect(source).toContain(name);
+  console.log("[DEBUG] original generic derive native command closure productRemoval=true twoOriginalLawGroups=true");
+});
 
 test("language-neutral emission modes require explicit projection names and exclude product fronts", () => {
   const fixture = JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🧩️composition/🔣️.json")) as {cases: Case[]; ownedFronts: string[]; higherFronts: string[]};
@@ -45,4 +66,26 @@ test("a required inline tagged owner has exactly one native variant without boxi
   expect(source).toContain("RequiredInlineStatements(Box<Type>)");
   expect(source).toContain("FieldKind::RequiredInlineStatements");
   expect(fixture.fieldKinds.map(row => row.role)).toEqual(["RequiredInlineStatements", "RequiredStatements", "OptionStatements", "VecStatements"]);
+});
+
+/** 🫴️ Declares original optional custody independently of public wire fields. */
+test("original optional custody stays native while wire omits its source",()=>{
+ const fixture=JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🫴️custody/🔣️.json")),source=read("🦀️.rs");expect(fixture.wireKeys).toEqual(["visible","count"]);expect(fixture.nativeFields).toEqual(["visible","source","count"]);expect(fixture.absentDecodedCustody).toBeNull();
+ for(const row of fixture.cases){const {source:_,wire:expectedWire,...wire}=row;expect(wire).toEqual(row.wire);expect(JSON.parse(JSON.stringify(row.wire))).toEqual(row.wire);}
+ expect(source).toContain('meta.path.is_ident("skip")');expect(source).toContain("if plan.skip");expect(source).toContain("filter(|plan|!plan.skip)");expect(read("🧪️tests/🦀️.rs")).toContain("original_optional_custody_is_excluded_from_wire_but_retired_as_owned_native_field");
+});
+
+test("empty native enums preserve zero variants and borrowed uninhabited match selection", () => {
+ expect(new Ajv2020({strict:true}).validate(emptySchema,empty)).toBe(true);
+ expect(JSON.parse(JSON.stringify([]))).toHaveLength(empty.variantCount);
+ expect(empty.cases.map(row=>row.borrowedMatches)).toEqual([6,7,3]);
+});
+
+/** 🕳️ The neutral empty and inhabited owner corpus admits exactly six generic emitter roles. */
+test("empty generic variant contracts retain zero and inhabited owner roles",()=>{
+ const corpus=JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🕳️empty/🔣️.json")),schema=JSON.parse(read("../../🧪️tests/🧫️fixtures/✨️derive/🕳️empty/🧬️.json"));
+ expect(new Ajv2020({strict:true}).validate(schema,corpus)).toBe(true);expect(corpus.cases.length).toBe(6);
+ expect(corpus.cases.filter((row:{borrowedEmptyMatches:number})=>row.borrowedEmptyMatches>0).map((row:{mode:string})=>row.mode)).toEqual(["Variants","Scalar","Receiving"]);
+ expect(read("🧪️tests/🦀️.rs")).toContain("empty_enum_borrowed_and_receiving_emission_matches_independent_syntax");
+ console.log("[DEBUG] Empty generic variant contracts Ajv=true sixRoles=true originalNativeLawDeclared=true");
 });

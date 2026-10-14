@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "phases",
+    "cuts",
+    "invocation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "cuts": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "items",
+          "copyBytes",
+          "demand",
+          "sourceMatches",
+          "advance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "demand": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sourceMatches": {
+            "type": "boolean"
+          },
+          "advance": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "invocation": {
+      "type": "object",
+      "required": [
+        "address",
+        "arguments"
+      ],
+      "properties": {
+        "address": {
+          "type": "object"
+        },
+        "arguments": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

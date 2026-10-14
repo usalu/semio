@@ -43,7 +43,7 @@ interface PlaygroundRow {
  * not share `node_modules` or build caches) and, created root-owned by Docker, is handed to the remote user before
  * `postCreateCommand` installs into it. https://containers.dev/implementors/json_reference/#variables-in-devcontainerjson
  * https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume */
-export function testContainerRuntimeBootstrap(workspace: string): void {
+export function testContainerRuntimeBootstrap(workspace: string,catalogRoot:string): void {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
   const dockerfile = readFileSync(join(workspace, ".devcontainer/Dockerfile"), "utf8"), configSource = readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8");
   const config = Bun.JSONC.parse(configSource) as DevcontainerConfig;
@@ -70,9 +70,9 @@ export function testContainerRuntimeBootstrap(workspace: string): void {
   assert.ok(!Object.keys(config.features).some((key) => /\/nx:/.test(key)), "Nx must come from the repository's locked bootstrap");
   assert.deepEqual(config.features[fixture.dockerDaemonFeature.id], fixture.dockerDaemonFeature.options, "Hub backends publish on 127.0.0.1, so the devcontainer needs its own Docker daemon (docker-in-docker, Docker CE on Ubuntu noble), not the host's socket");
   const lodash = require("lodash"), readManifest = (path: string): ProjectManifest => JSON.parse(readFileSync(join(workspace, path), "utf8"));
-  const catalogPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json";
-  const catalog: readonly PlaygroundRow[] = JSON.parse(readFileSync(join(workspace, catalogPath), "utf8"));
-  assert.deepEqual(catalog, require("jsonc-parser").parse(readFileSync(join(workspace, catalogPath), "utf8")));
+  const catalogPath = join(catalogRoot,"🚀️playgrounds.json");
+  const catalog: readonly PlaygroundRow[] = JSON.parse(readFileSync(catalogPath, "utf8"));
+  assert.deepEqual(catalog, require("jsonc-parser").parse(readFileSync(catalogPath, "utf8")));
   const declaredPort = (command: ForwardedCommand): number => {
     if (command.playground !== undefined) {
       const row = catalog.find((candidate) => candidate.variant === command.playground);

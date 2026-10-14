@@ -8,7 +8,7 @@ use super::compute::take_computed;
 use super::projection::{apply, project, rebuild_diagnostics, retract};
 use super::{kinds, ModelGraph, ModelNode, ModelValue, READS};
 use crate::{ModelDiff, ModelInference, ModelSnapshot};
-use protocol::{step_field_update, DiffRegions, MutationDiff, FieldChange, FieldDelta, FieldUpdate, InferenceCache, InferenceCacheConfig, InferenceError, InferenceFault, InferenceSession, TouchedPaths};
+use protocol::{step_field_update, DiffRegions, MutationDiff, FieldChange, FieldDelta, FieldUpdate, InferenceCache, InferenceCacheConfig, InferenceError, InferenceWorkFailure, InferenceFault, InferenceSession, TouchedPaths};
 use std::collections::BTreeMap;
 
 /// 📊️ What the last run did: the proof an edit recomputed only what it touched.
@@ -57,18 +57,20 @@ type Delta = FieldDelta<ModelNode, ModelValue>;
 /// 🧷️ One resumable update of a session: the engine update (the held node values with their dependency links, moved into the run while it walks the plan, carrying every node the diff and its parents did not move) and the counters of what it
 /// computed. It borrows nothing, so a job can hold it across steps.
 pub struct SessionRun {
+    pub(crate) instance_access:semio_framework_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>,
     touches: Touches,
     update: Option<Update>,
     cancelled: bool,
     gated: bool,
     fault: Option<InferenceError>,
+    failed:bool,
     computed_by_kind: BTreeMap<&'static str, usize>,
     epoch: u64,
 }
 
 impl SessionRun {
     fn new(gated: bool, touches: TouchedPaths, epoch: u64) -> Self {
-        Self { touches: Touches(touches), update: None, cancelled: false, gated, fault: None, computed_by_kind: BTreeMap::new(), epoch }
+        Self { instance_access:Default::default(),touches: Touches(touches), update: None, cancelled: false, gated, fault: None,failed:false, computed_by_kind: BTreeMap::new(), epoch }
     }
 
     /// 🛑️ Stops the run: later steps refuse with `InferenceError::Cancelled`; the nodes finished so far stay in the session's cache.
@@ -125,6 +127,14 @@ impl Default for ModelInferenceSession {
 }
 
 impl ModelInferenceSession {
+    /// 🎟️ Admits the defining empty typed session without retained container allocation.
+    pub fn new_funded(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?;
+        let grant=cx.retained_grant();
+        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()})?;
+        Ok(Some(Self::new()))
+    }
     /// 🆕️ A session with an enabled cache of 256 MiB.
     pub fn new() -> Self {
         Self::with_cache_budget(256 * 1024 * 1024)
@@ -178,24 +188,33 @@ impl ModelInferenceSession {
         }
     }
 
+    /// 🎟️ Admits the original first run inline before any previous snapshot or pending diff exists.
+    pub fn begin_sync_funded(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<SessionRun>,InferenceWorkFailure>{
+        cx.original_source_parent()?;
+        if self.previous.is_some()||self.pending.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original model graph snapshot comparison and diff donation require their funded producer").into())}
+        let grant=cx.retained_grant();
+        if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        cx.consume_fuel(1);cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()})?;
+        Ok(Some(SessionRun::new(false,Default::default(),self.epoch)))
+    }
+
     /// ⏩️ Spends at most `fuel` node computes of `run` on `snapshot` (cache hits are free) and answers where the run stands. `snapshot` must be the same for every step of one run.
-    pub fn step(&mut self, run: &mut SessionRun, snapshot: &ModelSnapshot, fuel: usize) -> Result<RunProgress, InferenceError> {
+    pub fn step(&mut self,run:&mut SessionRun,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<RunProgress,InferenceWorkFailure> {
         if run.gated {
             return Ok(run.progress());
         }
-        if run.cancelled {
-            run.fault = Some(InferenceError::Cancelled);
-            return Err(InferenceError::Cancelled);
-        }
-        let update = run.update.get_or_insert_with(|| self.engine.begin_update::<ModelSnapshot, ModelGraph<{ kinds::ALL }>, _>(&run.touches, true));
-        let outcome = step_field_update::<ModelSnapshot, ModelGraph<{ kinds::ALL }>>(snapshot, &mut self.cache, update, fuel);
+        if run.failed{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original model graph already handed its complete failure to the caller").into())}
+        if run.cancelled{return Err(InferenceError::Cancelled.into())}
+        if run.update.is_none(){run.update=self.engine.begin_update_funded::<ModelSnapshot,ModelGraph<{kinds::ALL}>>(true,cx)?;return Ok(run.progress())}
+        let update=run.update.as_mut().unwrap();
+        let outcome = step_field_update::<ModelSnapshot, ModelGraph<{ kinds::ALL }>>(snapshot,&mut self.cache,update,cx);
         for (kind, count) in take_computed() {
             *run.computed_by_kind.entry(kind).or_insert(0) += count;
         }
         match outcome {
             Ok(_) => Ok(run.progress()),
             Err(error) => {
-                run.fault = Some(error.clone());
+                run.failed=true;
                 Err(error)
             }
         }
@@ -203,7 +222,11 @@ impl ModelInferenceSession {
 
     /// 🏁️ Ends `run`: a finished run is adopted and the held inference moves to `snapshot`; a cancelled or failed run changes nothing the consumers read, the session stays unsettled
     /// and the nodes the run finished stay cached.
-    pub fn finish(&mut self, run: SessionRun, snapshot: &ModelSnapshot) -> Result<&ModelInference, InferenceError> {
+    pub fn finish(&mut self,_run:&mut SessionRun,_snapshot:&ModelSnapshot,_cx:&mut semio_framework_job::StepContext<'_>)->Result<&ModelInference,InferenceWorkFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original model graph projection publication and owner retirement have no funded producer").into())
+    }
+
+    fn finish_cold(&mut self, run: SessionRun, snapshot: &ModelSnapshot) -> Result<&ModelInference, InferenceError> {
         let SessionRun { update, cancelled, gated, fault, computed_by_kind, epoch, .. } = run;
         let computed: usize = computed_by_kind.values().sum();
         let ended = if gated || update.as_ref().is_some_and(Update::is_done) {
@@ -274,13 +297,14 @@ impl ModelInferenceSession {
         protocol::try_infer_field::<ModelSnapshot, ModelGraph<WANT>>(snapshot, Some(&mut self.cache)).map(project)
     }
 
-    fn complete(&mut self, mut run: SessionRun, snapshot: &ModelSnapshot) -> Result<&ModelInference, InferenceError> {
-        while run.fault.is_none() && !run.progress().done {
-            if self.step(&mut run, snapshot, usize::MAX).is_err() {
-                break;
+    fn complete(&mut self,mut run:SessionRun,snapshot:&ModelSnapshot)->Result<&ModelInference,InferenceError>{
+        if !run.gated{
+            match protocol::infer_field_delta::<ModelSnapshot,ModelGraph<{kinds::ALL}>,_>(snapshot,&run.touches,&mut self.engine,&mut self.cache){
+                Ok(delta)=>{let(gated,computed,carried,confirmed)=(delta.gated,delta.computed,delta.carried,delta.confirmed);for(kind,count)in take_computed(){*run.computed_by_kind.entry(kind).or_insert(0)+=count;}self.adopt(delta);self.previous=Some(snapshot.clone());self.stale=false;self.report=UpdateReport{gated,nodes:self.nodes,computed,reused:self.nodes.saturating_sub(computed),carried,confirmed,computed_by_kind:run.computed_by_kind,..Default::default()};return Ok(&self.inference)},
+                Err(original)=>{run.fault=Some(original)}
             }
         }
-        self.finish(run, snapshot)
+        self.finish_cold(run,snapshot)
     }
 
     fn adopt(&mut self, delta: Delta) {

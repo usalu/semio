@@ -449,7 +449,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
     describe("extension invocation completion publication", () => {
       async function withRequester(turn: (actor: string, events: readonly ShardEventEnvelope[]) => Promise<WireTurnResult>, run: (handle: PluginWasmHandle, instance: number, activation: { replace(): void; captures(): number; guardedTurns(): number }) => Promise<void>, hooks: { activate?: (actor: string) => Promise<void>; open?: (actor: string) => Promise<void>; dispose?: (actor: string) => void; jobs?: { start?: (job: bigint, kind: string, input: Uint8Array) => void; step?: (job: bigint, budget: { fuel: bigint; deadlineMs: number }) => ShardJobStep; cancel?: (job: bigint) => void } } = {}): Promise<void> {
-        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
         const idle: WireTurnResult = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
         let generation = 1n;
@@ -474,7 +474,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
             const openRequest = { kind: "open" as const, activationGeneration, instanceId, requestSequence: 1 };
             const captured = { kind: "captured" as const, lifetime, requestSequence: openRequest.requestSequence };
             let phase: "opening" | "captured" | "open" | "closing" | "accepted" | "retired" | "complete" = "opening";
-            let pending: import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt | null = null;
+            let pending: import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt | null = null;
             const closeRequest = { kind: "close" as const, lifetime, requestSequence: 2 };
             const accepted = { kind: "accepted" as const, lifetime, requestSequence: closeRequest.requestSequence, closeGeneration: 1n };
             const retired = { ...accepted, kind: "retired" as const };
@@ -2002,7 +2002,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("schedules captured lifecycle work through the original owner after operation revocation", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
-        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
         const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
         const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
@@ -2043,8 +2043,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
       it("schedules captured lifecycle UI ACKs with their exact private source and successful submission receipt", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
-        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
-        const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+        const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
         const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
         const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
@@ -2095,7 +2095,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       it("composes the production plugin runtime with one real UI owner through exact patch ACK and retirement", async () => {
         const { default: equal } = await import("fast-deep-equal");
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
-        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
         const sent: Array<{ readonly kind: string; readonly events: readonly string[] }> = [];
         const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
@@ -2182,7 +2182,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
        * the continuation bound in `retained_operation_continues_after_command_admission_until_
        * publication_and_retirement`. */
       it("spends one worker turn per command page plus the guest's own continuations and none of its own", async () => {
-        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const COMMAND_BYTES = 8_192;
         const invocation = { address: { pluginId: "ingress-census", appId: "fixture", windowKindId: "editor", actionId: "registerBrushMesh" }, arguments: { payload: "m".repeat(7_800) } };
         const census: Array<{ readonly guestContinuations: number; readonly bytes: number; readonly pages: number; readonly turns: number }> = [];
@@ -2265,7 +2265,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       it("retries actual actor retirement with the original witness after final acknowledgement failure", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧪️tests/🧫️fixtures/🔣️.json");
         const { default: equal } = await import("fast-deep-equal");
-        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
         const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
         for (const row of fixture.disposal.retirementRetry) {
           const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
@@ -3592,8 +3592,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
     it("names a foreign surface owner and a busy one apart, and answers whether a patch is still open", async () => {
       const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
-      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
-      const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
+      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+      const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
       const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
       const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
       const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
@@ -3650,7 +3650,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
     it("installs a turn page that names one surface twice, in order, and leaves no surface wedged", async () => {
       const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
-      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
       const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
       const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
       const closeGeneration = BigInt(fixture.closeGeneration);

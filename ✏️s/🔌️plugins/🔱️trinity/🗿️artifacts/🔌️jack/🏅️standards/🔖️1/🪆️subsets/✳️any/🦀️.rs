@@ -31,11 +31,6 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-fn examples() -> &'static [ExampleSource] {
-    static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
-}
-
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::jack_artifact_inference_descriptor()]).as_slice()
@@ -44,7 +39,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 /// 🚪️ See this file's own module doc for why this is not `io::io()`. `pilot_languages()` indices
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
-fn io_declaration() -> IoDeclaration {
+fn io_declaration<C:crate::JackComposition>() -> IoDeclaration {
     let langs = crate::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
@@ -54,19 +49,19 @@ fn io_declaration() -> IoDeclaration {
             inferences: None,
             codec: store::bare_artifact_codec::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA.to_string()),
         },
-        entries: &[],
+        entries: C::io_entries(),
     }
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub fn subset<PA: crate::ArtifactApps>() -> SubsetDeclaration<PA> {
+pub fn subset<PA: crate::ArtifactApps<C>,C:crate::JackComposition>() -> SubsetDeclaration<PA> {
     SubsetDeclaration {
         dialect: TRINITY_JACK_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::jack_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
-        io: io_declaration(),
-        viewer: viewer_surface::<viewer::TrinityJackViewer, PA>(viewer::create_trinity_jack_viewer()),
-        editor: editor_surface::<editor::TrinityJackPlayApp, PA>(editor::create_trinity_jack_app()),
-        examples: examples(),
+        io: io_declaration::<C>(),
+        viewer: viewer_surface::<viewer::TrinityJackViewer<C>, PA>(viewer::create_trinity_jack_viewer()),
+        editor: editor_surface::<editor::TrinityJackPlayApp<C>, PA>(editor::create_trinity_jack_app()),
+        examples: C::examples(),
     }
 }
 

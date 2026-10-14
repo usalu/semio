@@ -1,4 +1,4 @@
-import { lstatSync } from "node:fs";
+import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation } from "./📥️invocation/🟦️.ts";
 export { readScriptPolicy, checkScriptInvocation, scriptInvocationBudget, type ScriptPolicy, type ScriptControl, type ScriptInvocation, type ScriptProgress } from "./📥️invocation/🟦️.ts";
@@ -87,17 +87,20 @@ export interface WorkspaceRootSearch {
   readonly stopAt?: string;
 }
 
-/** 📁️ Resolves the nearest paired Nx/package owner and refuses missing or escaping roots. */
+/** 📁️ Resolves the nearest declared package workspace with build authority and refuses missing or escaping roots. */
 export function findWorkspaceRoot(start?: string, options: WorkspaceRootSearch = {}): string {
-  let directory = resolve(start?.trim() || process.env.NX_WORKSPACE_ROOT?.trim() || process.env.REPO_ROOT?.trim() || process.cwd());
+  let directory = resolve(start?.trim() || process.env.SEMIO_WORKSPACE_ROOT?.trim() || process.env.REPO_ROOT?.trim() || process.cwd());
   const boundary = resolve(options.stopAt ?? parse(directory).root), distance = relative(boundary, directory);
   if (isAbsolute(distance) || distance === ".." || distance.startsWith(`..${sep}`)) throw Error("workspace root boundary must contain its start directory");
   for (let depth = 0; depth < 32; depth++) {
-    if (["nx.json", "package.json"].every((filename) => lstatSync(join(directory, filename), { throwIfNoEntry: false })?.isFile())) return directory;
+    if (["📋️project.json", "package.json"].every((filename) => lstatSync(join(directory, filename), { throwIfNoEntry: false })?.isFile())) {
+      const { workspaces } = JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
+      if (Array.isArray(workspaces) || workspaces !== null && typeof workspaces === "object") return directory;
+    }
     if (directory === boundary) break;
     const parent = dirname(directory);
     if (parent === directory) break;
     directory = parent;
   }
-  throw Error("workspace root with paired Nx and package markers was not found");
+  throw Error("workspace root with paired build and package markers was not found");
 }

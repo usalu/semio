@@ -3414,7 +3414,9 @@ impl ArtifactEditor for SequencePlayApp {
     /// refuses EVERY id (`app.command.unsupported`) — without this bridge no Actions-pane row, no
     /// palette drop and no graph gesture ever reached `handle`. Key aliases mirror the shells' own
     /// vocabularies (`value`/`id`, `nodeId`, `sourceNodeId`) rather than adding shell-side shims.
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<SequenceCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<SequenceCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string));
         let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(DslValue::as_f64)).unwrap_or_default();
         let json_arg = |key: &str, fallback: &str| args.and_then(|value| value.get(key)).map_or_else(|| fallback.to_string(), json::to_json_string);
@@ -3524,7 +3526,9 @@ impl ArtifactEditor for SequencePlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         _interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let live = sequence_host_snapshot_from_children(doc.snapshot, &doc.children)
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let config = main::config::current(cfg);
@@ -3539,7 +3543,10 @@ impl ArtifactEditor for SequencePlayApp {
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
         }.map(semio_framework_plugin::built_to_component_tree)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         sequence_context_menu_items(registry, view_state, request.surface.as_ref(), &[])

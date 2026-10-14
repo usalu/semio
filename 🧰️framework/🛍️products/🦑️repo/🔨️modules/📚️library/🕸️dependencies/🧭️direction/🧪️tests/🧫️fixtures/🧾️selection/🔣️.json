@@ -1,0 +1,11 @@
+{
+  "version":1,
+  "plugins":["📐️cad","🌊️flow","🗄️stdio"],
+  "cases":[
+    {"id":"present-owners","absent":[],"expectedPairs":6},
+    {"id":"deleted-plugin","absent":["🌊️flow"],"expectedPairs":2},
+    {"id":"single-plugin","absent":["🌊️flow","🗄️stdio"],"expectedPairs":0},
+    {"id":"deleted-specific","absent":["📐️cad","🌊️flow","🗄️stdio"],"expectedPairs":0}
+  ],
+  "refusals":["missing-pair","duplicate-pair","weakened-pair","extra-selector","missing-framework-rule","empty-selector"]
+}

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/draw-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/**/*.rs",
@@ -9,7 +9,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83d\udd8d\ufe0fdraw/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
@@ -17,7 +17,7 @@
       }
     },
     "guest-instance-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts guest-instance-check"

@@ -1,15 +1,15 @@
 //! 🔌️ Input resolution: for every catalogue input port of a widget, the connected output, else the stored literal, else the
 //! catalogue default — type-checked, range-checked and localized, before any compute runs.
 
-use super::value::{shape_kind, GeometryValue, PlaneValue, SelectionKind, SelectionValue, WidgetEvaluation, WidgetFault};
-use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType, SelectionComponent};
+use super::value::{shape_kind, GeometryValue, Outputs, PlaneValue, SelectionKind, SelectionValue, WidgetEvaluation, WidgetFault};
+use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Localized, Port, PortType, SelectionComponent};
 use semio_framework_artifact_flow_flow::neural::{Dictionary, Value as NeuralValue};
 use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{neural_number, neural_boolean};
 use semio_framework_artifact_flow_flow::SynapseSpec;
 use semio_framework_3d_brep_engine::ShapeValue;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_value::DslValue;
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::sync::Arc;
 
 //#region 🔖️Codes
@@ -27,20 +27,29 @@ pub const UPSTREAM: &str = "generation3d.geometry.upstream";
 
 //#region 🔖️Inputs
 /// 🔌️ The resolved inputs of one widget, by catalogue input port name; an optional port without a value is absent.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct WidgetInputs {
     widget: String,
-    labels: BTreeMap<String, crate::standards::v1::subsets::any::schema::catalogue::Localized>,
-    values: BTreeMap<String, GeometryValue>,
+    labels: RetainedOrderedMap<String, Localized>,
+    values: Outputs,
 }
 
 fn port_label(kind: &Kind, port: &str) -> (String, String) {
     kind.input(port).map_or_else(|| (port.to_string(), port.to_string()), |declared| (declared.label.en.clone(), declared.label.de.clone()))
 }
 
+#[path="🏗️constructor/🦀️.rs"]
+pub mod construction;
+pub use construction::WidgetInputsConstruction;
+
 impl WidgetInputs {
-    pub fn new(widget: impl Into<String>, kind: &Kind, values: BTreeMap<String, GeometryValue>) -> Self {
-        Self { widget: widget.into(), labels: kind.inputs.iter().map(|port| (port.name.clone(), port.label.clone())).collect(), values }
+    /// 🏗️ Produces the actual widget id and bilingual labels, then moves the original resolved values.
+    pub fn new(widget: &str, kind: &Kind, values: &mut Option<Outputs>, construction: &mut WidgetInputsConstruction, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Self>, semio_framework_job::OriginalTurnFailure> {
+        construction.step(widget, kind, values, cx)
+    }
+
+    pub fn new_cold(widget: impl Into<String>, kind: &Kind, values: impl IntoIterator<Item=(String,GeometryValue)>) -> Self {
+        Self { widget: widget.into(), labels: kind.inputs.iter().map(|port| (port.name.clone(), port.label.clone())).collect(), values: values.into_iter().collect() }
     }
 
     pub fn widget(&self) -> &str {
@@ -417,7 +426,7 @@ fn source_value(port: &Port, wire: &SynapseSpec, parent: &dyn Fn(&str) -> Option
         return Err(fault(UPSTREAM, port, |label| format!("Input \u{201c}{label}\u{201d} is unavailable because widget \u{201c}{from}\u{201d} failed: {en}"), |label| format!("Eingang \u{201c}{label}\u{201d} ist nicht verfügbar, weil Widget \u{201c}{from}\u{201d} fehlgeschlagen ist: {de}")));
     }
     let output = if wire.from_port.is_empty() {
-        if evaluation.outputs.len() == 1 { evaluation.outputs.values().next() } else { None }
+        if evaluation.outputs.len() == 1 { evaluation.outputs.iter().map(|(_, value)| value).next() } else { None }
     } else {
         evaluation.outputs.get(&wire.from_port)
     };
@@ -444,7 +453,7 @@ fn connected_value(port: &Port, wires: &[&SynapseSpec], parent: &dyn Fn(&str) ->
     source_value(port, wires[0], parent)
 }
 
-fn selection_component(port: &Port, resolved: &BTreeMap<String, GeometryValue>) -> Result<Option<SelectionKind>, WidgetFault> {
+fn selection_component(port: &Port, resolved: &Outputs) -> Result<Option<SelectionKind>, WidgetFault> {
     let Some(selection) = &port.selection else { return Ok(None) };
     Ok(Some(match selection.component {
         SelectionComponent::Face => SelectionKind::Face,
@@ -467,7 +476,7 @@ pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&
         let name = unknown.to_port.clone();
         return Err(WidgetFault::new(INPUT_UNKNOWN, format!("A wire ends at \u{201c}{name}\u{201d}, which is not an input of {}.", kind.label.en), format!("Eine Verbindung endet bei \u{201c}{name}\u{201d}, das kein Eingang von {} ist.", kind.label.de)).at(name));
     }
-    let mut resolved: BTreeMap<String, GeometryValue> = BTreeMap::new();
+    let mut resolved = Outputs::new();
     for selecting in [false, true] {
         for port in kind.inputs.iter().filter(|port| (port.port_type == PortType::Selection) == selecting) {
             let component = selection_component(port, &resolved)?;
@@ -483,13 +492,13 @@ pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&
             };
             match value {
                 Some(value) => {
-                    resolved.insert(port.name.clone(), checked(port, value, component)?);
+                    resolved.cold_insert(port.name.clone(), checked(port, value, component)?);
                 }
                 None if port.optional => {}
                 None => return Err(fault(INPUT_MISSING, port, |label| format!("Input \u{201c}{label}\u{201d} has no value: connect a widget or enter one."), |label| format!("Eingang \u{201c}{label}\u{201d} hat keinen Wert: Widget verbinden oder Wert eingeben."))),
             }
         }
     }
-    Ok(WidgetInputs::new(widget, kind, resolved))
+    Ok(WidgetInputs::new_cold(widget, kind, resolved))
 }
 //#endregion 🔖️Resolve

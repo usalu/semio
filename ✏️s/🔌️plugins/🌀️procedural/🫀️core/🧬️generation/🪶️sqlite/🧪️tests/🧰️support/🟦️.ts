@@ -1,5 +1,5 @@
 /** 🧫️ Explicit test-only construction of the neutral procedural domain corpus. */
-import {binary64,type Binary64} from "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{ProceduralSnapshot,NeuralValue,NeuralDictionary,GenerationValue,FlowTree,FlowUi,NodeChrome,Widget,WidgetLayout,SynapseSpec}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 type ObjectValue=Record<string,unknown>;
 function object(v:unknown):ObjectValue{if(v===null||typeof v!=="object"||Array.isArray(v))throw Error("fixture object differs");return v as ObjectValue;}

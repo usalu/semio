@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 const MANIFEST_SCHEMA = "🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
-const REGISTRY = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json";
+
 const FRAMEWORK_VIEW_SHELL_ACTION_IDS = new Set(["setActiveUtility", "setActiveTool", "startIntroduction", "setHistoryCommandFilter", "noteShellCommand"]);
 
 export type DescriptionProblem = "missing" | "schema" | "untranslated" | "repeatsTitle" | "sharedWithinApp";
@@ -84,7 +84,7 @@ export function capabilityDescriptionCensus(repoRoot: string): DescriptionFindin
   const judge = (prefix: string, verbs: DescribedVerb[]) => {
     for (const { verb, problem } of capabilityDescriptionProblems(repoRoot, verbs)) findings.push({ capabilityId: `${prefix}${verb}`, problem });
   };
-  for (const entry of read(repoRoot, REGISTRY) as { cratePath: string }[]) {
+  for (const entry of read(repoRoot, resolve(process.env.SEMIO_PLUGIN_CATALOG ?? (()=>{throw Error("Capability audit requires a supplied catalog root");})(), "🔌️plugins.json")) as { cratePath: string }[]) {
     const descriptor = read(repoRoot, resolve(repoRoot, dirname(dirname(entry.cratePath)), "🔣️.json")) as Descriptor;
     const pluginId = descriptor.manifest.pluginId;
     for (const app of descriptor.manifest.apps ?? []) {

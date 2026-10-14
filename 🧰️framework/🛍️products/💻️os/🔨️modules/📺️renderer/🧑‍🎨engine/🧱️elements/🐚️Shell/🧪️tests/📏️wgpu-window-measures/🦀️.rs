@@ -124,6 +124,7 @@ struct PaintedOverlay {
 }
 
 fn paint_overlay(shell: &mut ShellState, window_id: &str, rect: Rect) -> PaintedOverlay {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -133,13 +134,15 @@ fn paint_overlay(shell: &mut ShellState, window_id: &str, rect: Rect) -> Painted
     let mut cursor = ShellChromeChildCursor::default();
     crate::interpreter::begin_accessibility_visible_documents();
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-        let complete = shell.paint_window_measures_step(&mut cursor, &mut draw, &mut None, &mut atlas, &icons, &mut input, &theme, window_id, rect, &mut world_resources);
+        let complete = caller.turn(|cx|shell.paint_window_measures_step(&mut cursor, &mut draw, &mut None, &mut atlas, &icons, &mut input, &theme, window_id, rect, &mut world_resources, cx));
         assert!(!cursor.document.terminal_is_fault(), "the overlay paint faulted in phase {}", cursor.document.phase_name());
         complete
     });
     assert!(complete, "the overlay paint completed within its opportunity ceiling");
     let instances = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
     shell.publish_retained_hit_registry(&mut input);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     PaintedOverlay { input, instances }
 }
 
@@ -161,6 +164,7 @@ fn dispatched(input: &mut InputState<ActionDescriptor>, name: &str) -> Value {
 
 #[test]
 fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture = fixture();
     let measures = section_measures();
     let mut shell = ShellState::new(vec![], "test".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -200,10 +204,11 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
             if !crate::interpreter::ui_document_close_pending_for(&surface) {
                 break;
             }
-            assert!(crate::interpreter::close_ui_document_one());
+            assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"));
         }
         assert!(!crate::interpreter::ui_document_close_pending_for(&surface));
         let mut document = shell.window_measures_documents.remove(window_id).expect("the accepted overlay retains its lease");
         while !document.close_step() {}
     }
+    caller.finish();
 }

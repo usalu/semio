@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
+import schema from "./🧬️schema/🔣️.json";
 import { getWorkspaceRoot, loadTaxonomy, semanticDirectoryKindId } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -28,7 +29,7 @@ function relativeSpecifier(consumer: string, owner: string): string {
 
 test("validates the language-neutral cache command source contract", () => {
   
-  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["route"]["target"]).toEqual("test-cache-command-source");expect(fixture["route"]["command"]).toEqual("bun ./📜️script.ts test cache-command-source");expect(fixture["route"]["namedInput"]).toEqual("cacheCommandSources");expect(fixture["coordinates"]["policy"]).toEqual("🔣️policy.json");expect(fixture["coordinates"]["bootstrap"]).toEqual("🚀️bootstrap/📜️script.ts");
+  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
   expect(fixture.owners).toHaveLength(13);
   expect(new Set(fixture.owners.map((owner: { path: string }) => owner.path)).size).toBe(13);
 });
@@ -158,22 +159,24 @@ test("composes target inventory, artifact ownership and dependency consumers fro
 
 test("projects cache areas through injected scanners and preserves cancellation", async () => {
   const { scanCacheAreas, areaUnitRoot } = await import("../../🧹️pruning/🌐️workspace/🟦️.ts");
+  const {phaseCompilerAdmissionControlV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts");
+  const control=(signal:AbortSignal)=>phaseCompilerAdmissionControlV1(signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)));
   const unit = { path: "unit", bytes: 4, recencyMs: 1, lockHeld: false, kind: "directory" as const };
   const operations = {
     cargoDirectories: () => ({ build: "/cache/build", target: "/cache/target" }),
     cacheDirectory: (_root: string, area: string) => `/cache/${area}`,
-    scanCargoBuild: (_path: string, signal: AbortSignal) => (signal.throwIfAborted(), [unit]),
-    scanCargoTarget: (_path: string, signal: AbortSignal) => (signal.throwIfAborted(), [unit]),
-    scanCargoIncremental: (_path: string, signal: AbortSignal) => (signal.throwIfAborted(), { units: [unit], staleSessions: [unit] }),
-    scanDirectories: (_path: string, signal: AbortSignal) => (signal.throwIfAborted(), [unit]),
+    scanCargoBuild: async (_path: string, original:ReturnType<typeof control>) => (original.signal.throwIfAborted(), [unit]),
+    scanCargoTarget: async (_path: string, original:ReturnType<typeof control>) => (original.signal.throwIfAborted(), [unit]),
+    scanCargoIncremental: async (_path: string, original:ReturnType<typeof control>) => (original.signal.throwIfAborted(), { units: [unit], staleSessions: [unit] }),
+    scanDirectories: async (_path: string, original:ReturnType<typeof control>) => (original.signal.throwIfAborted(), [unit]),
   };
-  const areas = scanCacheAreas("/repo", new AbortController().signal, undefined, operations);
+  const areas = await scanCacheAreas("/repo", control(new AbortController().signal), undefined, operations);
   expect(areas.map((area: { name: string }) => area.name)).toEqual(["cargo", "cargo-incremental", "cargo-incremental-sessions", "vite", "agents"]);
   expect(areaUnitRoot("/repo", "cargo", { ...unit, kind: "cargo-build" }, operations)).toBe("/cache/build");
   expect(areaUnitRoot("/repo", "cargo", { ...unit, kind: "cargo-target-file" }, operations)).toBe("/cache/target");
   const cancelled = new AbortController();
   cancelled.abort(new Error("portable cancellation"));
-  expect(() => scanCacheAreas("/repo", cancelled.signal, undefined, operations)).toThrow(/portable cancellation/);
+  await expect(scanCacheAreas("/repo", control(cancelled.signal), undefined, operations)).rejects.toThrow(/portable cancellation/);
 });
 
 test("captures bounded child output and terminates a timed-out process tree", async () => {
@@ -220,6 +223,7 @@ test("registers the exact Bun and Nx source closure", () => {
   expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
   expect(project.targets[fixture.route.target]?.inputs).toEqual([fixture.route.namedInput]);
   const inputs = new Set(project.namedInputs?.[fixture.route.namedInput] ?? []);
+  for(const input of inputs){const path=String(input).replace("{projectRoot}",domainRoot).replace("{workspaceRoot}",repoRoot);if(!/[?*\[\]{}]/u.test(path))expect(existsSync(path),String(input)).toBe(true);}
   for (const owner of fixture.owners) expect(inputs.has(`{projectRoot}/${relative(domainRoot, resolve(repoRoot, owner.path)).replaceAll("\\", "/")}`), owner.path).toBe(true);
   for (const path of [
     "{projectRoot}/📋️project.json",
@@ -227,8 +231,9 @@ test("registers the exact Bun and Nx source closure", () => {
     "{projectRoot}/🔣️policy.json",
     "{projectRoot}/🚀️bootstrap/📜️script.ts",
     "{projectRoot}/🧪️tests/🧱️command-source/🟦️.ts",
-    "{projectRoot}/🧬️schema/🧱️command-source/🔣️.json",
-    "{projectRoot}/🧫️fixtures/🧱️command-source/🔣️.json",
+    "{projectRoot}/🧪️tests/🧱️command-source/🧬️schema/🔣️.json",
+    "{projectRoot}/🧪️tests/🧫️fixtures/🧱️command-source/🔣️.json",
+    "{projectRoot}/🧹️pruning/🧬️schema/🔣️.json",
   ])
     expect(inputs.has(path), path).toBe(true);
 });

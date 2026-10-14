@@ -9,6 +9,9 @@ pub(crate) enum BuiltChildRetirementNext {
 }
 
 impl BuiltChildrenIntoIter {
+    pub(crate) fn original_release_demand(&self)->usize{if self.cursor<self.len{0}else{self.backing.as_ref().map_or(0,|backing|std::mem::size_of_val(backing.as_ref()))}}
+    pub(crate) fn original_terminal_is_empty(&self)->bool{self.cursor==self.len&&self.backing.is_none()&&self.handback.is_none()}
+
     pub(crate) fn try_next_or_release(&mut self) -> Result<BuiltChildRetirementNext, &'static str> {
         if self.cursor < self.len {
             let node = self.backing.as_mut().and_then(|backing| backing.get_mut(self.cursor)).and_then(Option::take).ok_or("built child retirement lost its next node")?;

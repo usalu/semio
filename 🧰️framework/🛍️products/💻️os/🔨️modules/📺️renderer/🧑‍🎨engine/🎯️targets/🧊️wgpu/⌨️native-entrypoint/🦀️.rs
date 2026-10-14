@@ -25,7 +25,8 @@ pub(crate) fn drive_native_entrypoint<F: std::future::Future>(future: F) -> F::O
 
 /// ⌨️ Runs the native application with a caller-owned inventory of installed document services.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>) {
+pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>, catalog:semio_framework_os_kernel::native_catalog::NativeCatalogV1) {
+    crate::install_plugin_catalog_v1(catalog).expect("Native renderer catalog refused");
     use crate::{run_native, run_smoke};
     use semio_framework_os_kernel::os_directory::identity::{claim_inherited_local_hub_credential, IdentityEnv};
     use std::env;
@@ -141,7 +142,7 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
             std::process::exit(1);
         };
         let shard_count: u16 = arg_value("--shards").and_then(|v| v.parse().ok()).unwrap_or(8);
-        match drive_native_entrypoint(crate::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))) {
+        match drive_native_entrypoint(crate::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path),semio_framework_job::default_now_us)) {
             Ok(status) => std::process::exit(status),
             Err(refusal) => {
                 eprintln!("scale-bench: original frame publication refused: {refusal}");
@@ -152,7 +153,7 @@ pub fn run_native_entrypoint(services: Vec<semio_framework_os_kernel::os_directo
     let modules_root = match env::var("SEMIO_PLUGIN_MODULES") {
         Ok(value) if !value.trim().is_empty() => PathBuf::from(value),
         _ => {
-            eprintln!("SEMIO_PLUGIN_MODULES is unset: run through `bun nx run @semio-tech/framework-os-dev:run-<variant>-native-<profile>`");
+            eprintln!("SEMIO_PLUGIN_MODULES is unset: run through `bun repo run @semio-tech/framework-os-dev:run-<variant>-native-<profile>`");
             std::process::exit(2);
         }
     };

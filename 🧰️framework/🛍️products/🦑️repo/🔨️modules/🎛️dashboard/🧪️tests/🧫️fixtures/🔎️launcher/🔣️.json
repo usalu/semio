@@ -8,9 +8,9 @@
         "name": "workspace", "root": ".", "manifest": "📋️project.json",
         "dashboard": {
           "parameters": [
-            { "id": "cache", "kind": "choice", "appliesTo": { "verbs": ["build", "test"], "playground": false }, "default": "use", "values": [{ "id": "use" }, { "id": "skip-local", "nxFlags": ["--skip-nx-cache"] }] },
+            { "id": "cache", "kind": "choice", "appliesTo": { "verbs": ["build", "test"], "playground": false }, "default": "use", "values": [{ "id": "use" }, { "id": "skip-local", "buildFlags": ["--skip-cache"] }] },
             { "id": "test-level", "kind": "choice", "appliesTo": { "verbs": ["test"] }, "values": [{ "id": "quick", "env": { "SEMIO_TEST_LEVEL": "quick" } }, { "id": "long", "env": { "SEMIO_TEST_LEVEL": "long" } }] },
-            { "id": "dependencies", "kind": "flag", "appliesTo": { "verbs": ["build", "test"] }, "nxFlags": ["--excludeTaskDependencies"] },
+            { "id": "dependencies", "kind": "flag", "appliesTo": { "verbs": ["build", "test"] }, "buildFlags": ["--exclude-dependencies"] },
             { "id": "cargo-jobs", "kind": "text", "appliesTo": { "verbs": ["test"] }, "valueEnv": "CARGO_BUILD_JOBS" }
           ],
           "tools": [
@@ -78,7 +78,7 @@
         "ids": [
           "@fx/quiz:test"
         ],
-        "caption": "1 of 24 commands · bun nx run @fx/quiz:test",
+        "caption": "1 of 24 commands · bun repo run @fx/quiz:test",
         "input": "quiz test",
         "outcome": null
       }
@@ -156,7 +156,7 @@
           "dependencies",
           "cargo-jobs",
           "[ Start ]",
-          "bun nx run @fx/quiz:test"
+          "bun repo run @fx/quiz:test"
         ]
       }
     },

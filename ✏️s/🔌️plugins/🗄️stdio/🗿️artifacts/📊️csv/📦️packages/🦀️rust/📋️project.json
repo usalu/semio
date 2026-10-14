@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/stdio-csv-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -9,7 +9,7 @@
   ],
   "targets": {
     "test-snapshot-subset-validation-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
@@ -18,7 +18,7 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -34,7 +34,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -42,7 +42,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -50,7 +50,7 @@
       }
     },
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite"
@@ -67,7 +67,7 @@
       ]
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native"
@@ -84,7 +84,7 @@
       ]
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source"

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/repo-lib",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
   "projectType": "library",
   "namedInputs": {
@@ -143,7 +143,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -153,7 +153,7 @@
       }
     },
     "test-cargo-nextest-configuration": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -163,7 +163,7 @@
       }
     },
     "test-general-execution-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -179,7 +179,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -187,7 +187,7 @@
       }
     },
     "test-locale-law-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -196,7 +196,7 @@
       }
     },
     "lint-dependency-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -214,7 +214,7 @@
       ]
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -232,7 +232,7 @@
       ]
     },
     "test-canonical-execution": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -240,7 +240,7 @@
       }
     },
     "test-mutation-case-pair": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -248,7 +248,7 @@
       }
     },
     "test-mutation-wire-witness": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -256,7 +256,7 @@
       }
     },
     "test-mutation-leaf-identity": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -264,7 +264,7 @@
       }
     },
     "go-test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -276,7 +276,7 @@
       ]
     },
     "test-process-budgets": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -285,7 +285,7 @@
       "outputs": []
     },
     "test-exact-cargo-laws": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -294,7 +294,7 @@
       "outputs": []
     },
     "test-go-input-projection": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -306,7 +306,7 @@
       ]
     },
     "test-runtime-corpus-behavior": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -315,7 +315,7 @@
       }
     },
     "test-go-dispatch": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -327,7 +327,7 @@
       ]
     },
     "test-generated-source-topology": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -336,7 +336,7 @@
       }
     },
     "test-package-body-policy": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -355,7 +355,7 @@
       ]
     },
     "test-cross-platform-bootstrap": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -364,7 +364,7 @@
       }
     },
     "test-windows-command-paths": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -373,7 +373,7 @@
       }
     },
     "test-kind-only-basename": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -382,7 +382,7 @@
       "outputs": []
     },
     "test-framework-source-topology": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -391,7 +391,7 @@
       "outputs": []
     },
     "test-framework-root-source-topology": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -400,7 +400,7 @@
       "outputs": []
     },
     "test-root-artifact-dependency-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -409,7 +409,7 @@
       "outputs": []
     },
     "test-root-taxonomy-workflow-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -418,7 +418,7 @@
       "outputs": []
     },
     "test-root-schema-field-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -427,7 +427,7 @@
       "outputs": []
     },
     "test-root-clean-scaffold-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -449,7 +449,7 @@
       "outputs": []
     },
     "test-root-artifact-schema-law-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -472,7 +472,7 @@
       "outputs": []
     },
     "test-root-surface-abstraction-law-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -494,7 +494,7 @@
       "outputs": []
     },
     "test-root-inference-law-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -517,7 +517,7 @@
       "outputs": []
     },
     "test-cargo-transaction-command-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "cargoTransactionCommandSources"
@@ -529,7 +529,7 @@
       }
     },
     "test-manifestless-source-closure": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -552,7 +552,7 @@
       "outputs": []
     },
     "test-plugin-publication-source-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -573,7 +573,7 @@
       "outputs": []
     },
     "test-app-verification-source-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -596,7 +596,7 @@
       "outputs": []
     },
     "test-vitest-configuration-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -623,7 +623,7 @@
       "outputs": []
     },
     "test-tool-configuration-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -659,7 +659,7 @@
       "outputs": []
     },
     "test-repo-source-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -668,7 +668,7 @@
       "outputs": []
     },
     "test-storybook-discovery": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -677,7 +677,7 @@
       "outputs": []
     },
     "test-os-source-topology": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -686,42 +686,42 @@
       "outputs": []
     },
     "test-path-emoji-statutes": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test path-emoji-statutes"
       }
     },
     "test-mutation-ticket-role-routing": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test mutation-ticket-role-routing"
       }
     },
     "test-mutation-source-index-capture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test mutation-source-index-capture"
       }
     },
     "test-mutation-source-roster-roles": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test mutation-source-roster-roles"
       }
     },
     "test-mutation-source-file-facts": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test mutation-source-file-facts"
       }
     },
     "test-typescript-declaration-facts": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test typescript-declaration-facts"
@@ -736,7 +736,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts typecheck",
@@ -745,7 +745,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -753,7 +753,7 @@
       }
     },
     "test-transaction-v2": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test transaction-v2"
@@ -763,21 +763,21 @@
       ]
     },
     "test-artifact-support": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test artifact-support long"
       }
     },
     "test-historical-package-owner-identity": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test historical-package-owner-identity"
       }
     },
     "test-rust-physical-reference-context": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -785,21 +785,21 @@
       }
     },
     "test-cargo-provider-binding-trace": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cargo-provider-binding-trace"
       }
     },
     "test-metadata-source-provider": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test metadata-source-provider long"
       }
     },
     "test-taxonomy-cli-cancellation": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -807,7 +807,7 @@
       }
     },
     "test-inventory-artifact-shards": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test inventory-artifact-shards"
@@ -815,42 +815,42 @@
       "cache": true
     },
     "test-root-script-compiler": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test root-script-compiler"
       }
     },
     "test-json-reference-owner-lookup": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test json-reference-owner-lookup"
       }
     },
     "test-cargo-discovery-exclusions": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cargo-discovery-exclusions"
       }
     },
     "test-nested-cargo-collision-authority": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test nested-cargo-collision-authority"
       }
     },
     "test-registry-import-language": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test registry-import-language"
       }
     },
     "test-preflight-reference-basis": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -858,7 +858,7 @@
       }
     },
     "test-typescript-path-collection": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -866,28 +866,28 @@
       }
     },
     "test-frozen-markdown-coordinates": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test frozen-markdown-coordinates"
       }
     },
     "test-historical-document-evidence": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test historical-document-evidence"
       }
     },
     "test-cargo-target-discovery-skip": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cargo-target-discovery-skip"
       }
     },
     "test-registry-catalog-gitlink-boundary": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -895,35 +895,35 @@
       }
     },
     "test-historical-json-source-encoding": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test historical-json-source-encoding"
       }
     },
     "test-transaction-recovery-authority": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test transaction-recovery-authority"
       }
     },
     "test-transaction-fixture-key-exactness": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test transaction-fixture-key-exactness"
       }
     },
     "test-testing-readme-coordinates": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test testing-readme-coordinates"
       }
     },
     "test-rust-finite-target-consumption": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -931,42 +931,42 @@
       }
     },
     "test-readme-current-source-revision": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test readme-current-source-revision"
       }
     },
     "test-rust-writable-path-authority": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-writable-path-authority"
       }
     },
     "test-readme-move-source-authority": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test readme-move-source-authority"
       }
     },
     "test-artifact-source-residue": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test artifact-source-residue"
       }
     },
     "test-artifact-source-commit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test artifact-source-commit"
       }
     },
     "test-artifact-empty-facet-authority": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -974,28 +974,28 @@
       }
     },
     "test-rust-divergence-callback-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-divergence-callback-source"
       }
     },
     "test-rust-divergence-callback-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-divergence-callback-native"
       }
     },
     "test-rust-divergence-callback-syn": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test rust-divergence-callback-syn"
       }
     },
     "test-readme-current-source-activation": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1003,21 +1003,21 @@
       }
     },
     "test-artifact-io-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test artifact-io-ownership"
       }
     },
     "lint-artifact-io-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts lint artifact-io-ownership"
       }
     },
     "test-artifact-empty-facet-authoring": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1025,91 +1025,91 @@
       }
     },
     "test-readme-reviewed-fixture-inputs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test readme-reviewed-fixture-inputs"
       }
     },
     "test-taxonomy-pattern-compiler-reuse": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test taxonomy-pattern-compiler-reuse"
       }
     },
     "test-reference-coverage-selection": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test reference-coverage-selection"
       }
     },
     "test-taxonomy-leading-grapheme": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test taxonomy-leading-grapheme"
       }
     },
     "test-reference-coordinate-progress": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test reference-coordinate-progress"
       }
     },
     "test-markdown-inline-references": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test markdown-inline-references"
       }
     },
     "test-gherkin-description-inline-code": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test gherkin-description-inline-code"
       }
     },
     "test-transaction-process-observer": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test transaction-process-observer"
       }
     },
     "test-nx-workspace-root-file-reference": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test nx-workspace-root-file-reference"
       }
     },
     "test-bare-reference-sibling-precedence": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test bare-reference-sibling-precedence"
       }
     },
     "test-run-vitest-config-argument-tokens": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test run-vitest-config-argument-tokens"
       }
     },
     "test-cargo-native-owner-discovery": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cargo-native-owner-discovery"
       }
     },
     "test-workspace-publication-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "workspacePublicationSources"
@@ -1121,7 +1121,7 @@
       "outputs": []
     },
     "test-wasm-package-wrappers": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "wasmPackageWrapperSources"
@@ -1133,7 +1133,7 @@
       "outputs": []
     },
     "workspaces-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts workspaces --check"
@@ -1145,7 +1145,7 @@
       "outputs": []
     },
     "workspaces-write": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts workspaces --write"
@@ -1156,7 +1156,7 @@
       "cache": false
     },
     "test-composition-policy": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test composition-policy",
@@ -1164,7 +1164,7 @@
       }
     },
     "test-os-dev-composition-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "sharedGlobals",
@@ -1249,7 +1249,7 @@
       "outputs": []
     },
     "test-cargo-dependency-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1266,7 +1266,7 @@
       ]
     },
     "lint-cargo-dependency-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1283,7 +1283,7 @@
       ]
     },
     "test-compute-constructor-owner": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1301,7 +1301,7 @@
       }
     },
     "test-dependency-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1309,7 +1309,7 @@
       }
     },
     "test-rust-source-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1328,7 +1328,7 @@
       ]
     },
     "test-rust-source-scopes": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1336,7 +1336,7 @@
       }
     },
     "test-canonical-json": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1344,7 +1344,7 @@
       }
     },
     "test-mutation-authority-scaffolding": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1352,7 +1352,7 @@
       }
     },
     "test-mutation-authority-inventory": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1360,7 +1360,7 @@
       }
     },
     "test-mutation-authority-reachability": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1368,7 +1368,7 @@
       }
     },
     "test-mutation-authority-type-origin": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1376,7 +1376,7 @@
       }
     },
     "test-rust-source-graph": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1384,7 +1384,7 @@
       }
     },
     "test-rust-source-attributes": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1392,7 +1392,7 @@
       }
     },
     "lint-rust-source-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1428,7 +1428,7 @@
       ]
     },
     "test-native-dependencies": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -1438,7 +1438,7 @@
       }
     },
     "test-owned-script-routes": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1446,7 +1446,7 @@
       }
     },
     "lint-framework-neutral-product-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1464,7 +1464,7 @@
       ]
     },
     "lint-styling-pixels": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1474,7 +1474,7 @@
       }
     },
     "lint-styling-colors": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1484,7 +1484,7 @@
       }
     },
     "test-native-source-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -1500,7 +1500,7 @@
       }
     },
     "test-ui-router-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -1516,7 +1516,7 @@
       }
     },
     "ui-storybook-dev": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts ui dev",
@@ -1536,7 +1536,7 @@
       ]
     },
     "ui-storybook-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts ui build",
@@ -1558,7 +1558,7 @@
       ]
     },
     "check-ui-primitives": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts ui check-ui-primitives"
@@ -1575,7 +1575,7 @@
       "cache": false
     },
     "check-chrome-i18n": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts ui check-chrome-i18n"
@@ -1594,7 +1594,7 @@
       "cache": false
     },
     "test-fixture-law-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -1610,7 +1610,7 @@
       }
     },
     "test-native-owner-command-policy": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -1630,7 +1630,7 @@
       "outputs": []
     },
     "test-dependency-policy-bootstrap": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1652,7 +1652,7 @@
       ]
     },
     "test-rust-binding": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1669,7 +1669,7 @@
       ]
     },
     "test-rust-binding-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1686,7 +1686,7 @@
       ]
     },
     "test-nx-project-inference": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -1705,7 +1705,7 @@
       }
     },
     "test-nx-project-inference-revision": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -1725,7 +1725,7 @@
       }
     },
     "test-nx-project-inference-imports": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -1747,7 +1747,7 @@
       }
     },
     "test-nx-project-inference-facts": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -1765,7 +1765,7 @@
       }
     },
     "test-rust-source-participation": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1781,7 +1781,7 @@
       }
     },
     "test-source-services": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default",
@@ -1795,7 +1795,7 @@
       }
     },
     "test-multi-scope-verification": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default",
@@ -1808,7 +1808,7 @@
       }
     },
     "test-rust-source-roots": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1825,7 +1825,7 @@
       }
     },
     "test-rust-fixture-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1859,7 +1859,7 @@
       }
     },
     "test-pool-use-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1867,7 +1867,7 @@
       }
     },
     "test-deferred-wake-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1875,7 +1875,7 @@
       }
     },
     "test-rust-family-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1896,7 +1896,7 @@
       ]
     },
     "test-rust-family-ownership-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -1917,7 +1917,7 @@
       ]
     },
     "test-rust-runtime-path-direction": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1936,7 +1936,7 @@
       }
     },
     "test-cargo-library-search-path": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -1946,7 +1946,7 @@
       }
     },
     "test-fixture-placement": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -2001,7 +2001,7 @@
       }
     },
     "test-mutation-fixture-placement": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -2056,7 +2056,7 @@
       }
     },
     "test-runtime-fixture-graph": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -2068,7 +2068,7 @@
       ]
     },
     "test-artifact-command-extension": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -2076,7 +2076,7 @@
       }
     },
     "test-generator-preview-receiving": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test generator-preview-receiving",
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"
@@ -2084,7 +2084,7 @@
       "cache": false
     },
     "test-selected-runtime-actor-port": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test selected-runtime-actor-port",
@@ -2092,7 +2092,7 @@
       }
     },
     "test-nx-owner-arguments": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test nx-owner-arguments",
@@ -2100,7 +2100,7 @@
       }
     },
     "probe-nx-owner-arguments": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test nx-owner-arguments-probe",
@@ -2108,7 +2108,7 @@
       }
     },
     "test-schema-reads": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "sharedGlobals",
@@ -2120,7 +2120,7 @@
       }
     },
     "schema-read-inventory": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "sharedGlobals",
@@ -2133,7 +2133,7 @@
       }
     },
     "test-nx-native-child-issuance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test nx-native-child-issuance",
@@ -2149,7 +2149,7 @@
       }
     },
     "test-original-command-control": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -2165,7 +2165,7 @@
       }
     },
     "test-original-exact-preparation-control": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -2180,24 +2180,8 @@
         }
       }
     },
-    "test-native-prerequisites": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "{projectRoot}",
-        "command": "bun ./📜️script.ts test native-prerequisites"
-      },
-      "metadata": {
-        "semio": {
-          "execution": {
-            "version": 1,
-            "kind": "source"
-          }
-        }
-      }
-    },
     "test-decoder-absence": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -2213,7 +2197,7 @@
       }
     },
     "test-target-execution": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "metadata": {
         "semio": {
@@ -2229,7 +2213,7 @@
       }
     },
     "test-original-default-preparation-control": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -2245,37 +2229,65 @@
       }
     },
     "test-go-executable-acceptance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
-      "inputs": ["{projectRoot}/../../🧪️tests/🐹️executable-owners/**/*", "{projectRoot}/../../🧪️tests/🧫️fixtures/🐹️executable-owners/🔣️.json"],
+      "inputs": [
+        "{projectRoot}/../../🧪️tests/🐹️executable-owners/**/*",
+        "{projectRoot}/../../🧪️tests/🧫️fixtures/🐹️executable-owners/🔣️.json"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners",
         "command": "bun ./📜️script.ts test runtime"
       },
-      "metadata": {"semio": {"execution": {"version": 1, "kind": "orchestration"}}}
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          }
+        }
+      }
     },
     "test-go-executable-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
-      "inputs": ["{projectRoot}/../../🧪️tests/🐹️executable-owners/🧭️ownership/🟦️.ts", "{projectRoot}/../../🧪️tests/🧫️fixtures/🐹️executable-ownership/🔣️.json"],
+      "inputs": [
+        "{projectRoot}/../../🧪️tests/🐹️executable-owners/🧭️ownership/🟦️.ts",
+        "{projectRoot}/../../🧪️tests/🧫️fixtures/🐹️executable-ownership/🔣️.json"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️executable-owners",
         "command": "bun ./📜️script.ts test ownership"
       },
-      "metadata": {"semio": {"execution": {"version": 1, "kind": "source"}}}
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
     },
     "owner-command": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
         "cwd": ".",
         "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\" owner-command --cwd . -- node --version",
         "forwardAllArgs": false
+      }
+    },
+    "test-build-surfaces": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test build-surfaces"
       }
     }
   }

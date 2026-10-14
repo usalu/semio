@@ -48,7 +48,7 @@ async fn op_text_roundtrip() {
 
 #[semio_framework_async_macros::async_test]
 async fn missing_set_page_payload_is_rejected() {
-    assert!(<PptxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", None).is_err());
+    assert!(<PptxTransitionalEditor as ArtifactEditor>::command_from_action("set-page", None, None).is_err());
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio/PptxTransitionalEditor", PptxTransitionalEditor, || semio_framework_plugin::App { definition: create_pptx_transitional_editor(), examples: Vec::new() }, "../..");

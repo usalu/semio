@@ -400,10 +400,6 @@ pub(crate) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
 
 pub(crate) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
     value.validate_schema().map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()))?;
-    let dialect = &value.content.target.dialect;
-    if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {
-        return Err(ValueError::new(ValueRefusalKind::InvalidValue, "Jack Graph child dialect mismatch"));
-    }
     Ok(())
 }
 pub(crate) fn retire_snapshot(value: JackSnapshot) {

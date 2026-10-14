@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "owner": "🧰️framework/🔨️modules/🎭️actor",
+  "inventory": [
+    {
+      "path": "📃️page/🟦️.ts",
+      "runtime": [
+        "ACTOR_BYTE_PAGE_BYTES",
+        "createActorBytePage",
+        "readActorBytePage"
+      ],
+      "types": [
+        "ActorBytePageBlock",
+        "ActorBytePage"
+      ]
+    },
+    {
+      "path": "🚪️lifetime/🟦️.ts",
+      "runtime": [
+        "ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES",
+        "encodeActorInstanceLifecycle",
+        "decodeActorInstanceLifecycle",
+        "actorInstanceLifetimeEquals",
+        "actorInstanceLifecycleReceiptEquals",
+        "actorInstanceCapturedReceiptMatches",
+        "actorInstanceCloseReceiptMatches"
+      ],
+      "types": [
+        "ActorInstanceLifetime",
+        "ActorInstanceOpenRequest",
+        "ActorInstanceCloseRequest",
+        "ActorInstanceLifecycleReceipt",
+        "ActorInstanceLifecycleAck",
+        "ActorInstanceLifecycleWire"
+      ]
+    },
+    {
+      "path": "🚪️lifetime/🩹️patch/🟦️.ts",
+      "runtime": [
+        "ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES",
+        "encodeActorUiPatchReceipt",
+        "decodeActorUiPatchReceipt",
+        "actorUiPatchReceiptEquals",
+        "validateActorUiPatchPairing"
+      ],
+      "types": [
+        "ActorUiPatchReceipt"
+      ]
+    },
+    {
+      "path": "📮️shard-client/🟦️.ts",
+      "runtime": [
+        "SHARD_COMMAND_MAXIMUM_PAGES",
+        "createShardCommandIngressPages",
+        "MAINTENANCE_LANE_DEFAULT_BUDGET",
+        "SHARD_FRAME_VARIANT_FIELDS",
+        "orderEnvelopesByLane",
+        "createGrantedBudgetTracker",
+        "interpretShardFrame",
+        "evaluateShardLiveness",
+        "isShardLostError",
+        "describeShardWorkerError",
+        "describeShardSilence",
+        "settleFailedInstanceOpen",
+        "describeShardMessageError",
+        "formatShardWorkerFault",
+        "SHARD_JSPI_FAULT_CODE",
+        "SHARD_JSPI_FAULT_TEXT",
+        "shardJspiAvailable",
+        "ShardJspiUnavailableError",
+        "assertShardJspiAvailable",
+        "RETRYABLE_LIFECYCLE_TURN",
+        "isRetryableLifecycleTurn",
+        "RETRYABLE_LIFECYCLE_TURN_ATTEMPTS",
+        "OwnedShardReturn",
+        "OwnedShardReturnPage",
+        "OwnedNativeUiPatchAuthority",
+        "OwnedNativeUiPatchSubmissionReceipt",
+        "ShardClient",
+        "shardClientTestDependenciesV1",
+        "shardClientRetryableLifecycleTestDependenciesV1"
+      ],
+      "types": [
+        "ShardBudget",
+        "ShardJobBudget",
+        "ShardCapabilityGrant",
+        "ShardEventEnvelope",
+        "ShardCommandPageCursor",
+        "ShardCommandIngressPage",
+        "ShardAsset",
+        "ShardJobStep",
+        "ShardMetrics",
+        "ShardMetricsSample",
+        "ShardOrigin",
+        "ShardEnvelope",
+        "ShardFrame",
+        "GrantedBudgetTracker",
+        "ShardFrameDispatch",
+        "ShardQuotaBreach",
+        "HostEffectHandler",
+        "ShardWorkerLike",
+        "CreateShardWorker",
+        "ShardCarriedBeat",
+        "ShardLivenessWindow",
+        "ShardLivenessDecision",
+        "ShardSilenceReport",
+        "ShardJspiScope",
+        "ShardInstanceOpenInput",
+        "ShardInstanceLifecycleLease",
+        "ShardActorActivationLease",
+        "ShardReturnReport",
+        "ShardReturnAdmission",
+        "OwnedNativeUiPatchValue",
+        "OwnedUiPatchAcknowledgementEntry",
+        "ShardClientOptions",
+        "ShardClientTestDependenciesV1",
+        "ShardClientRetryableLifecycleTestDependenciesV1"
+      ]
+    },
+    {
+      "path": "📮️shard-client/🧬️component-codec/🟦️.ts",
+      "runtime": [
+        "ACTOR_CODEC_REFUSAL",
+        "actorCodecAnswer"
+      ],
+      "types": [
+        "ShardCodecRequest",
+        "ShardCodecDocumentPair",
+        "ShardCodecAnswer",
+        "ActorCodecExports"
+      ]
+    },
+    {
+      "path": "📮️shard-client/🫀️liveness/🟦️.ts",
+      "runtime": [
+        "SHARD_LIVENESS_POLICY"
+      ],
+      "types": []
+    },
+    {
+      "path": "🖼️wire-turn/🟦️.ts",
+      "runtime": [
+        "coerceWireBytes",
+        "coerceTurnResult",
+        "shellFrameBytes",
+        "shellMessageKind",
+        "leftoverShellInvocationFrames",
+        "wireSendMessageTargetTag",
+        "WIRE_SEND_MESSAGE_ROUTED_TARGETS",
+        "isRoutedWireSendMessage",
+        "TYPED_OPERATION_PAGE_MAGIC",
+        "TYPED_OPERATION_ACK_MAGIC",
+        "TYPED_OPERATION_PAGE_HEADER_BYTES",
+        "TYPED_OPERATION_TOKEN_BYTES",
+        "TYPED_OPERATION_RESULT_PAGE_BYTES",
+        "TYPED_OPERATION_RESULT_LANE_MAX",
+        "TYPED_OPERATION_LANE_ARTIFACT",
+        "TYPED_OPERATION_LANE_TERMINAL",
+        "TYPED_OPERATION_LANE_FAULT",
+        "typedOperationResult",
+        "typedOperationAcknowledgements",
+        "scanTypedOperationPages",
+        "typedOperationPageAnswerV1",
+        "drainTypedOperationTurns",
+        "decodeWirePatchOps",
+        "applyUiPatchToRetained",
+        "wireExtensionInvocation",
+        "wireRespondAnswer",
+        "wireOptionValue",
+        "wireOptionText",
+        "wireMediaExportEncoding",
+        "wireDownloadMediaExport",
+        "wireIconRenderExport",
+        "wireVideoRenderExport",
+        "wireSpawnJob",
+        "wireCancelJob",
+        "wireJobIdentity",
+        "wireTurnStatusTag",
+        "shardTurnCarriesNothingV1",
+        "shardTurnDriveStepsV1",
+        "shardTurnDriveBudgetMsV1",
+        "driveShardTurnMoreWorkV1",
+        "INBOUND_REQUEST_TURN_BUDGET",
+        "driveInboundRequest",
+        "wireJobStep",
+        "driveSpawnedJob",
+        "spawnedJobCompletedEvent",
+        "wireSpawnedJobs",
+        "wireEffectToFriendly"
+      ],
+      "types": [
+        "WireVariant",
+        "WireUiPatch",
+        "WireTurnResult",
+        "TypedOperationToken",
+        "TypedOperationAckEvent",
+        "TypedOperationPage",
+        "TypedOperationPageScan",
+        "PatchOp",
+        "RetainedSurface",
+        "ShardTurnCarriers",
+        "InboundRequestDrive",
+        "InboundRequestTurn",
+        "InboundRequestAnswer",
+        "SpawnedJobPort",
+        "SpawnedJobDrive"
+      ]
+    },
+    {
+      "path": "🎟️retained-turn/🟦️.ts",
+      "runtime": [
+        "KernelOriginalResourcePool",
+        "KernelOriginalOperationIssuer",
+        "OriginalOperationReceiptRefusal",
+        "OriginalOperationSource",
+        "originalTurnWit",
+        "originalOperationWorkerSource",
+        "originalReceiptFromWit"
+      ],
+      "types": [
+        "OriginalRetainedGrant",
+        "OriginalRetainedProgress",
+        "OriginalRetainedInput",
+        "OriginalOperationResources",
+        "OriginalOperationAdmission",
+        "OriginalOperationTurn",
+        "OriginalOperationReceipt",
+        "OriginalWireGrant",
+        "OriginalWireInput",
+        "OriginalWireReceipt",
+        "OriginalOperationPhysicalSpent"
+      ]
+    },
+    {
+      "path": "🧵️turn-scheduler/🟦️.ts",
+      "runtime": [
+        "TurnScheduler"
+      ],
+      "types": [
+        "QueuedTurn",
+        "TurnBudgetProvider",
+        "TurnSchedulerOptions"
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, renameSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import {createRequire} from "node:module";
 import Ajv from "ajv";
 import fg from "fast-glob";
 import { nxGraphSealHolds, writeNxGraphSeal, nxGraphSourceMembershipV2 } from "../🟦️.ts";
@@ -72,3 +73,15 @@ test("a seal is refused for another process's receipts or a graph older than the
     expect(await nxGraphSealHolds(root, data)).toBe(true);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test("verified immutable whole graph authorizers preserve the portable custody corpus",async()=>{
+ const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity||!/^[a-f0-9]{64}$/u.test(identity))throw Error("Actual incoming immutable SDK identity required");
+ const sdk=createRequire(join(process.cwd(),".🧬semio/🦑️repo/⚡️cache/tools/nx",identity,"package.json")),frozen=await sdk("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();expect(frozen.toolingIdentity).toBe(identity);
+ for(const scenario of fixture.scenarios){const {root,data,pid,startedAt}=workspace();try{
+  const membership=await frozen.authorizers.nxGraphSourceMembershipV2(root);expect(membership).toEqual(await nxGraphSourceMembershipV2(root));
+  expect(await frozen.authorizers.writeNxGraphSeal(root,data,pid,startedAt,membership.digest),scenario.id).toBe(true);expect(validate(JSON.parse(readFileSync(join(data,"semio-graph-seal.json"),"utf8"))),JSON.stringify(validate.errors)).toBe(true);
+  const mutation=scenario.mutation;if(mutation.kind==="write"){const path=join(root,mutation.path.replace("{collection}",collectionPolicy.names[0]));mkdirSync(dirname(path),{recursive:true});writeFileSync(path,mutation.content);}else if(mutation.kind==="directory")mkdirSync(join(root,mutation.path),{recursive:true});else if(mutation.kind==="delete")rmSync(join(root,mutation.path));else if(mutation.kind==="rename")renameSync(join(root,mutation.path),join(root,mutation.destination));
+  const actual=await frozen.authorizers.nxGraphSealHolds(root,data);expect(actual,scenario.id).toBe(scenario.holds);expect(actual).toBe(await nxGraphSealHolds(root,data));
+ }finally{rmSync(root,{recursive:true,force:true});}}
+ console.log("[DEBUG] Actual immutable SDK whole graph publisher agrees with Ajv, read-only Git and all portable source-custody scenarios");
+},30_000);

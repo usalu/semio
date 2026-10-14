@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-os-dev",
-  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
   "namedInputs": {
     "default": [
@@ -84,7 +84,7 @@
   },
   "targets": {
     "canonical-bootstrap-folder-mirror-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -93,7 +93,7 @@
       }
     },
     "canonical-bootstrap-folder-mirror-process-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -102,7 +102,7 @@
       }
     },
     "browser-host-staging-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -116,7 +116,7 @@
       ]
     },
     "closed-browser-component-factory-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -125,7 +125,7 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ../../🚚️distribution/🏁completion/📜️script.ts complete",
@@ -139,7 +139,7 @@
       "inputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -152,7 +152,7 @@
       ]
     },
     "verify": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts verify",
@@ -160,7 +160,7 @@
       }
     },
     "bench": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -170,7 +170,7 @@
       }
     },
     "plugin": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/os-plugin-describe-rs:build",
         "@semio-tech/framework-plugin-web:support"
@@ -183,7 +183,7 @@
       }
     },
     "parity": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts parity",
@@ -191,7 +191,7 @@
       }
     },
     "index-lint": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -200,7 +200,7 @@
       }
     },
     "host-handle-lint": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -249,7 +249,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -293,7 +293,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -352,7 +352,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -379,7 +379,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -406,7 +406,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -433,7 +433,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -460,7 +460,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -469,7 +469,7 @@
       }
     },
     "catalog-smoke": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -479,7 +479,7 @@
       "outputs": []
     },
     "cold-boot-check-s": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         "activate-s-react-prototype"
@@ -500,7 +500,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": ".",
@@ -519,7 +519,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": ".",
@@ -529,7 +529,7 @@
       "outputs": []
     },
     "generate-distribution": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts distribution generate",
@@ -537,7 +537,7 @@
       }
     },
     "preview-distribution": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -546,7 +546,7 @@
       }
     },
     "check-distribution": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts distribution check",
@@ -554,7 +554,7 @@
       }
     },
     "generate-playground-session": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [],
       "outputs": [
@@ -566,7 +566,7 @@
       }
     },
     "preview-playground-session": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -576,7 +576,7 @@
       "dependsOn": []
     },
     "check-playground-session": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [],
       "outputs": [],
@@ -586,7 +586,7 @@
       }
     },
     "generate-scale-fixture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate scale-fixture",
@@ -594,7 +594,7 @@
       }
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -603,7 +603,7 @@
       }
     },
     "scale-fixture-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -612,7 +612,7 @@
       }
     },
     "bench-plugins-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -626,7 +626,7 @@
       }
     },
     "bench-plugins-react": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -639,7 +639,7 @@
       }
     },
     "bench-plugins-wgpu": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -652,7 +652,7 @@
       }
     },
     "build-inputs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -661,7 +661,7 @@
       }
     },
     "channel-version-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -670,7 +670,7 @@
       }
     },
     "channel-version-generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -679,7 +679,7 @@
       }
     },
     "serve-hold": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "continuous": true,
       "options": {
@@ -689,7 +689,7 @@
       }
     },
     "verify-home": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -698,7 +698,7 @@
       }
     },
     "two-human-viewer": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -707,7 +707,7 @@
       }
     },
     "two-human-cross-undo": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -716,7 +716,7 @@
       }
     },
     "boot-budget": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -754,7 +754,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "inputs": [
@@ -772,7 +772,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts canonical-architecture",
@@ -780,7 +780,7 @@
       }
     },
     "parity-journey": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "inputs": [
@@ -798,7 +798,7 @@
       }
     },
     "channel-version-ownership-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -808,7 +808,7 @@
       }
     },
     "channel-version-contributions-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -818,7 +818,7 @@
       }
     },
     "distribution-output-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -833,7 +833,7 @@
       }
     },
     "source-watch-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -848,7 +848,7 @@
       }
     },
     "test-publication": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -856,6 +856,16 @@
       "options": {
         "command": "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts publication-check",
         "cwd": "."
+      }
+    },
+    "verify-staged": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts verify-staged",
+        "forwardAllArgs": true
       }
     }
   },

@@ -1,0 +1,1 @@
+{"nested":"nested 漢","statements":["first 🌱️","second 🌱️"],"unsigned":[0,127,65535],"map":[["a","first"],["b","second"]],"dynamic":{"list":[null,true,127,"漢"],"object":{"same":"漢"}},"wire":{"from":"node-a","to":"node-b","kind":"node","fromPort":"out","toPort":"in","label":"edge-1","labelKind":"connection","directed":true}}

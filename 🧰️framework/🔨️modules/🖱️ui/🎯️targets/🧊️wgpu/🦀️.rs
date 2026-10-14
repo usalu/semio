@@ -307,7 +307,7 @@ pub use chrome::{
     UiDriverTooltips, ICON_TINY, ICON_TREE_ROW, SIZE_TINY,
 };
 #[cfg(feature = "wgpu-engine")]
-pub use engine::{SurfaceLane, Ui, UiCaretSource, UiFrameStep, UiLayoutStep, UiOverlayPlacement, UiPresentedCaret, UiSceneHit, UiSurfaceToken, UiWindowClockStep, UI_LAYOUT_SURFACE_SLOTS};
+pub use engine::{SurfaceLane, Ui, UiCaretSource, UiFrameStep, UiLayoutStep, UiOverlayPlacement, UiPresentedCaret, UiPresentedTreeLoan, UiSceneHit, UiSurfaceToken, UiWindowClockStep, UI_LAYOUT_SURFACE_SLOTS};
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use gpu::schedule_frame;
 #[cfg(feature = "wgpu-engine")]
@@ -321,8 +321,8 @@ pub use gpu::{PreparedGpuPresentCursor, PreparedGpuReadback};
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
-pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardContent, ClipboardIoJob, WindowInputState};
-pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
+pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardContent, ClipboardContentBorrow, ClipboardIoJob, ClipboardIoJobInitializer, WindowInputState};
+pub use input::{ClipboardIntentRecipient, ClipboardIntentSource, OriginalClipboardIntent, DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
 pub use input::{RetainedHitRegistration, RetainedSceneHit};
 #[cfg(feature = "wgpu-engine")]

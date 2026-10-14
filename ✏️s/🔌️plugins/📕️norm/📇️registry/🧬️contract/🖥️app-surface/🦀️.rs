@@ -1848,7 +1848,9 @@ macro_rules! norm_command_from_action {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command,
         /// for the two editors whose `setSnapshot` payload carries DSL TEXT rather than a decoded
         /// snapshot struct.
-        fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework_plugin::Fault>) -> Result<$command, semio_framework_plugin::Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+            let args = args.as_ref();
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
@@ -1884,7 +1886,9 @@ macro_rules! norm_command_from_action {
         /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command.
         /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
         /// camelCase JSON projection (exactly what the Inputs window renders).
-        fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
+        fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework_plugin::Fault>) -> Result<$command, semio_framework_plugin::Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+            let args = args.as_ref();
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),

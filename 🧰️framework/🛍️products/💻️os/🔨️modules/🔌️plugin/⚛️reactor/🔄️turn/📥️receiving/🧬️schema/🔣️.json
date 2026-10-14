@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "routes",
+    "originalSourceLoan",
+    "borrowedInputSlots",
+    "resultNoneKeepsSource",
+    "wholeFailure",
+    "receiptReceivedBeforeParking",
+    "sourceClosesBeforePublication",
+    "sourceLoanReturnedLast",
+    "recordIsBusinessSource",
+    "acceptedEmptyOutput",
+    "states"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.os.original-reactor-receiving"
+    },
+    "routes": {
+      "const": [
+        "response",
+        "intent"
+      ]
+    },
+    "originalSourceLoan": {
+      "const": true
+    },
+    "borrowedInputSlots": {
+      "const": true
+    },
+    "resultNoneKeepsSource": {
+      "const": true
+    },
+    "wholeFailure": {
+      "const": true
+    },
+    "receiptReceivedBeforeParking": {
+      "const": true
+    },
+    "sourceClosesBeforePublication": {
+      "const": true
+    },
+    "sourceLoanReturnedLast": {
+      "const": true
+    },
+    "recordIsBusinessSource": {
+      "const": false
+    },
+    "acceptedEmptyOutput": {
+      "const": false
+    },
+    "states": {
+      "const": [
+        {
+          "phase": "input-held",
+          "input": true,
+          "loan": false,
+          "published": false
+        },
+        {
+          "phase": "admitted",
+          "input": true,
+          "loan": true,
+          "published": false
+        },
+        {
+          "phase": "deferred",
+          "input": true,
+          "loan": true,
+          "published": false
+        },
+        {
+          "phase": "outcome-held",
+          "input": true,
+          "loan": true,
+          "published": false
+        },
+        {
+          "phase": "input-closed",
+          "input": false,
+          "loan": true,
+          "published": false
+        },
+        {
+          "phase": "loan-returned",
+          "input": false,
+          "loan": false,
+          "published": false
+        },
+        {
+          "phase": "published",
+          "input": false,
+          "loan": false,
+          "published": true
+        }
+      ]
+    }
+  }
+}

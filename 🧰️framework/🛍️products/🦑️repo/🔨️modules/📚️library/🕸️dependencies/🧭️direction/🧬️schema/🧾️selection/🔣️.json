@@ -1,0 +1,12 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"urn:semio:dependency-direction:strict-selection-law",
+  "type":"object","additionalProperties":false,
+  "required":["version","plugins","cases","refusals"],
+  "properties":{
+    "version":{"const":1},
+    "plugins":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}},
+    "cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","absent","expectedPairs"],"properties":{"id":{"type":"string","minLength":1},"absent":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}},"expectedPairs":{"type":"integer","minimum":0}}}},
+    "refusals":{"type":"array","uniqueItems":true,"items":{"enum":["missing-pair","duplicate-pair","weakened-pair","extra-selector","missing-framework-rule","empty-selector"]}}
+  }
+}

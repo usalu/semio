@@ -712,7 +712,7 @@ The default model for agent work is the one native to the platform we use for th
 </details>
 
 All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
-The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
+The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun repo run …`).
 Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, and `bun run test` explicitly before pushing. `bun ./📜️script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
 # 🏘️ [Examples](compose/examples) [↑](#-overview)

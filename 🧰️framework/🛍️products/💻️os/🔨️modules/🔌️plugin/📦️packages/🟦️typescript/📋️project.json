@@ -2,14 +2,14 @@
   "name": "@semio-tech/framework-plugin-web",
   "targets": {
     "test-tick-payload": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-tick-payload"
       }
     },
     "support": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "production",
@@ -31,28 +31,28 @@
       ]
     },
     "test-catalog-composition": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test catalog-composition"
       }
     },
     "test-catalog-receivers": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test catalog-receivers"
       }
     },
     "test-mounted-owner": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test mounted-owner"
       }
     },
     "test-lifecycle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -62,7 +62,7 @@
       }
     },
     "test-package-receipt": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -80,7 +80,7 @@
       }
     },
     "test-original-guest-loan": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-original-guest-loan"
@@ -95,7 +95,7 @@
       }
     },
     "test-original-inference-wire-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-original-inference-wire-source"

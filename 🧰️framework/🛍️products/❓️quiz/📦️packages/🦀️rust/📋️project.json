@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/quiz-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "root": "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
   "projectType": "library",
@@ -18,7 +18,7 @@
   },
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
@@ -30,7 +30,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

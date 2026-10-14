@@ -155,7 +155,7 @@ impl NativeClipboardJob {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl semio_framework_job::InteractiveJob for NativeClipboardJob {
-    fn step<'a>(&'a mut self, cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError>{
+    fn step<'a>(&'a mut self, cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::JobOutcomeBorrow;
         let grant=cx.retained_grant();
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
@@ -164,21 +164,21 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
             if outcome.is_some(){self.cancelled=true}
             return Ok(outcome)
         }
-        if self.completed{return JobOutcomeBorrow::admit_complete(cx,None,None)}
-        if cx.should_yield(){return JobOutcomeBorrow::admit_yield(cx)}
+        if self.completed{return JobOutcomeBorrow::admit_complete(cx,None,None).map_err(Into::into)}
+        if cx.should_yield(){return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
         cx.set_stage("ClipboardIo");
         if let Some(NativeClipboardOperation::Write(text))=self.operation.as_ref(){
             let mut clipboard=arboard::Clipboard::new().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native clipboard write surface unavailable"))?;
             clipboard.set_text(text.as_str()).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native clipboard write failed"))?;
             self.completed=true;
             cx.consume_fuel(1);
-            return JobOutcomeBorrow::admit_complete(cx,None,None)
+            return JobOutcomeBorrow::admit_complete(cx,None,None).map_err(Into::into)
         }
         let diagnostic=b"native clipboard read requires original bounded platform recipient";
         if !self.fault.advance_initialization(cx)?{return Ok(None)}
         if !self.fault.append_original(cx,diagnostic,&mut self.fault_cursor)?{return Ok(None)}
         if !self.fault.seal(cx)?{return Ok(None)}
-        JobOutcomeBorrow::admit_fault(cx,self.fault.published().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original clipboard diagnostic was not sealed"))?)
+        JobOutcomeBorrow::admit_fault(cx,self.fault.published().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original clipboard diagnostic was not sealed"))?).map_err(Into::into)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{
@@ -195,20 +195,21 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::{InteractiveJobCloseStep as Close,RetainedCloneProgress as Progress,RetainedCloneStep};
-        if !self.closing{return Close::Blocked}
+        if !self.closing{return Ok(Close::Blocked)}
         if !self.fault.terminal_is_empty(){
-            let demand=match self.fault.retirement_demands(){Ok(demand)=>demand,Err(error)=>return Close::Refused{kind:error.kind,progress:error.retained_progress()}};
-            if grant.maximum_depth<=demand.depth{return Close::Pending{progress:Progress::default()}}
-            let child=semio_framework_job::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            return match self.fault.close_step_granted(child){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>Close::Refused{kind:error.kind,progress:error.retained_progress()}}
+            let mut demand=self.fault.retirement_demands()?;
+            demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"clipboard fault close depth overflow"))?;
+            return semio_framework_job::close_original_retained_step(cx,demand,|grant|self.fault.close_step_granted(semio_framework_job::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));
         }
-        if self.operation.is_none(){return Close::Complete{progress:Progress::default()}}
+        if self.operation.is_none(){return Ok(Close::Complete{progress:Progress::default()})}
         let bytes=match self.operation.as_ref(){Some(NativeClipboardOperation::Write(text))=>text.capacity(),_=>0};
-        if grant.maximum_items==0||bytes>grant.maximum_release_bytes||(bytes!=0&&grant.maximum_depth==0){return Close::Pending{progress:Progress::default()}}
-        *self.operation=None;
-        Close::Complete{progress:Progress{copied_items:1,released_bytes:bytes,..Progress::default()}}
+        let step=semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|_|{
+            *self.operation=None;
+            Ok(RetainedCloneStep::Complete(Progress{copied_items:1,released_bytes:bytes,..Progress::default()}))
+        })?;
+        Ok(if self.operation.is_none(){Close::Complete{progress:step.progress()}}else{step})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if !self.fault.terminal_is_empty(){return Ok(self.fault.retirement_demands()?.copy_bytes)}Ok(0)}
     fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{if !self.fault.terminal_is_empty(){return Ok(self.fault.retirement_demands()?.capacity_bytes)}Ok(0)}

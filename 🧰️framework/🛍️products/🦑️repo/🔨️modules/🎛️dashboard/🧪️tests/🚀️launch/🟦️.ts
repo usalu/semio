@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 const owner=()=>import("../../🌳️command-tree/🚀️launch/🟦️.ts");
 const dashboard=resolve(import.meta.dir,"../..");
 const read=(p:string)=>JSON.parse(readFileSync(resolve(dashboard,p),"utf8"));
-const fixture=read("🧫️fixtures/🚀️launch/🔣️.json");
+const fixture=read("🧪️tests/🧫️fixtures/🚀️launch/🔣️.json");
 const registry=read("🧬️schema/🎮️registry/🔣️.json");
 const ajv=new Ajv2020({strict:false});ajv.addSchema(registry);
 const admits=ajv.compile({$ref:registry.$id+"#/$defs/TicketCommands"});
@@ -23,10 +23,12 @@ test("dashboard launch preserves unrelated entries and projects exact owned comm
  expect(actual.configurations.slice(1).map(x=>x.name)).toEqual([
   "Test · ticket:26/09/30/HISTORY/test-choice [EN]","Test · ticket:26/09/30/HISTORY/test-text [EN]",
   "Prüfen · ticket:26/09/30/HISTORY/test-choice [DE]","Prüfen · ticket:26/09/30/HISTORY/test-text [DE]"]);
- for(const row of actual.configurations.slice(1))expect(row.command).toBe("bun nx run @semio-tech/repo-dashboard-rs:launch -- run "+row.name.split(" · ")[1]!.split(" [")[0]);
+ for(const row of actual.configurations.slice(1))expect(row.command).toBe("bun repo run @semio-tech/repo-dashboard-rs:launch -- run "+row.name.split(" · ")[1]!.split(" [")[0]);
  const oracle=applyPatch(structuredClone(current),[...fixture.expectedConfigurations.map((value:any)=>({op:"add" as const,path:"/configurations/-",value})),{op:"replace",path:"/inputs",value:fixture.expectedInputs}],true).newDocument;
  expect(actual).toEqual(oracle);
  expect(projectDashboardLaunch(actual,commands,fixture.ticket)).toEqual(actual);
+ const peerAfter={...actual,configurations:[...actual.configurations,{...fixture.unrelated,name:"Peer Appended Later"}]};
+ expect(projectDashboardLaunch(peerAfter,commands,fixture.ticket)).toEqual(peerAfter);
  console.log(`[DEBUG] dashboard launch commands=${commands.length} locales=en,de peerPreserved=true idempotent=true`);
 });
 test("parameter values remain raw arguments and never enter shell command text",async()=>{
@@ -53,8 +55,20 @@ test("current ticket declarations and generated launch routes are admitted by th
  expect(projectDashboardLaunch(published,commands,ticket)).toEqual(published);
  const rows=published.configurations.filter((row:any)=>row.presentation?.group?.startsWith("semio.dashboard."+ticket+"."));
  expect(rows.length).toBe(commands.length*2);
- for(const command of commands)expect(rows.filter((row:any)=>row.command==="bun nx run @semio-tech/repo-dashboard-rs:launch -- run "+command.id).length).toBe(2);
+ for(const command of commands)expect(rows.filter((row:any)=>row.command==="bun repo run @semio-tech/repo-dashboard-rs:launch -- run "+command.id).length).toBe(2);
  const project=JSON.parse(readFileSync(resolve(dashboard,"📦️packages/🦀️rust/📋️project.json"),"utf8"));
  expect(project.targets.launch.options.command).toBe("bun ./📜️script.ts launch");
- console.log(`[DEBUG] dashboard current declaration schema=true tools=${commands.length} launchConfigurations=${rows.length} NxRouting=true`);
+ console.log(`[DEBUG] dashboard current declaration schema=true tools=${commands.length} launchConfigurations=${rows.length} BuildRouting=true`);
+});
+
+/** 🧼️ RFC6902 independently states the complete neutral editor projection, including capabilities. */
+test("launch publication normalizes fresh backend commands and nested capabilities while retaining backend choices",async()=>{
+ const {normalizeDashboardLaunchBuildV1}=await owner(),vector=fixture.buildNormalization;
+ const expected=applyPatch(structuredClone(vector.current),vector.patch,true).newDocument;
+ const actual=normalizeDashboardLaunchBuildV1(vector.current);
+ expect(actual).toEqual(expected);
+ expect(output(actual),JSON.stringify(output.errors)).toBe(true);
+ expect(normalizeDashboardLaunchBuildV1(actual)).toEqual(actual);
+ expect(actual.inputs[0].options).toEqual(["nx","bazel"]);
+ console.log("[DEBUG] launch normalization command=true capabilityArguments=true nestedPayload=true backendEnvironmentRemoved=true backendChoicesPreserved=true");
 });

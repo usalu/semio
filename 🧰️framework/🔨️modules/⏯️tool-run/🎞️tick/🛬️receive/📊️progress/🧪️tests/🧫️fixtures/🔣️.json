@@ -1,0 +1,74 @@
+{
+  "contract": "original-tick-progress-receiving/v1",
+  "grant": [
+    1,
+    17,
+    65536,
+    262144,
+    64
+  ],
+  "requiredFields": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    9
+  ],
+  "counterBytes": 10,
+  "counterLimit": 8,
+  "stepLimit": 64,
+  "stateOrdinals": 9,
+  "sameFinalSlot": true,
+  "includesSourceAllocation": true,
+  "cases": [
+    {
+      "name": "empty optional fields",
+      "sequence": 0,
+      "state": 0,
+      "stage": 0,
+      "completed": 0,
+      "total": null,
+      "counterHex": "",
+      "counters": [],
+      "unitsHex": "0000000000000000",
+      "unitsPerSecond": 0,
+      "conflicts": 0,
+      "stepCount": 0,
+      "bodyHex": "0007010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f802040003040004040005040008050000000000000000090400"
+    },
+    {
+      "name": "original full Tick progress",
+      "sequence": 12,
+      "state": 1,
+      "stage": 1,
+      "completed": 42,
+      "total": 100,
+      "counterHex": "00002a0000000000000002000500000000000000",
+      "counters": [
+        {
+          "counter": 0,
+          "value": 42
+        },
+        {
+          "counter": 2,
+          "value": 5
+        }
+      ],
+      "unitsHex": "0000000000c04240",
+      "unitsPerSecond": 37.5,
+      "conflicts": 0,
+      "stepCount": 1,
+      "bodyHex": "000a010d0401040302042a0304010408200008101820283038404850586068707880889098a0a8b0b8c0c8d0d8e0e8f0f802040c03040104040105042a06046407081400002a000000000000000200050000000000000008050000000000c042400904000a0c010d06010403020402030401040482fe03060402070809000500000000000000"
+    }
+  ],
+  "interruptPolicy": "every-paid-frontier",
+  "allocationCeiling": {
+    "sourceBytes": 24576,
+    "frameBytes": 568,
+    "progressBytes": 216,
+    "maximumTotalAllocationBytes": 25144,
+    "maximumCursorAllocationBytes": 24576
+  }
+}

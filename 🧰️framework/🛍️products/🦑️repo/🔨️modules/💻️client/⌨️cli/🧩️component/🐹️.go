@@ -16275,14 +16275,14 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Kind:        BreachSystemDevcontainerVscodeSettingsDrift,
 		Priority:    BreachPriorityHigh,
 		Reason:      "The devcontainer editor settings are derived from .vscode/settings.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-		Solution:    "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+		Solution:    "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
 		Autofixable: false,
 	},
 	BreachSystemDevcontainerVscodeExtensionsDrift: {
 		Kind:        BreachSystemDevcontainerVscodeExtensionsDrift,
 		Priority:    BreachPriorityHigh,
 		Reason:      "The devcontainer extensions are derived from .vscode/extensions.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-		Solution:    "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+		Solution:    "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
 		Autofixable: false,
 	},
 	BreachFolderIllegalEmpty: {

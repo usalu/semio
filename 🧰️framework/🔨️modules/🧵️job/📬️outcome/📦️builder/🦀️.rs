@@ -19,6 +19,12 @@ impl Drop for JobPayloadAuthority{fn drop(&mut self){assert!(std::thread::panick
 const JOB_PAYLOAD_BINDINGS_PER_INITIALIZATION_TURN:usize=16;
 pub struct RetainedPayloadBuilder{original:MaybeUninit<RetainedJobPayload>,stream:JobPayloadStream,initialized:usize,ready:bool,sealed:bool}
 impl RetainedPayloadBuilder{
+ /// 🏗️ Quotes only initialized empty-carrier metadata; its large payload storage remains uninitialized.
+ pub fn empty_carrier_copy_bytes()->usize{size_of::<JobPayloadStream>()+size_of::<usize>()+2*size_of::<bool>()}
+ /// 🖋️ Initializes an enclosing caller-paid destination without moving or zeroing payload bindings.
+ /// # Safety
+ /// The destination must be exclusively owned uninitialized storage and the enclosing original initializer must pay the quoted metadata before entry.
+ pub unsafe fn initialize_empty_at(target:*mut Self,stream:JobPayloadStream){unsafe{std::ptr::addr_of_mut!((*target).stream).write(stream);std::ptr::addr_of_mut!((*target).initialized).write(0);std::ptr::addr_of_mut!((*target).ready).write(false);std::ptr::addr_of_mut!((*target).sealed).write(false);}}
  pub fn new(stream:JobPayloadStream)->Self{Self{original:MaybeUninit::uninit(),stream,initialized:0,ready:false,sealed:false}}
  pub fn original(&self)->Option<&RetainedJobPayload>{self.ready.then(||unsafe{self.original.assume_init_ref()})}
  pub fn published(&self)->Option<&RetainedJobPayload>{if self.sealed{self.original()}else{None}}

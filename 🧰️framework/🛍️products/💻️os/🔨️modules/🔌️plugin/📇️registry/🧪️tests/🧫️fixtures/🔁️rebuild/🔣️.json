@@ -236,5 +236,40 @@
         "guest"
       ]
     }
+  ],
+  "execution": [
+    {
+      "id": "success-releases-lease",
+      "stop": null,
+      "cancel": false,
+      "expected": [
+        "acquired",
+        "inputs",
+        "describe",
+        "check",
+        "released"
+      ]
+    },
+    {
+      "id": "failure-stops-and-releases-lease",
+      "stop": "describe",
+      "cancel": false,
+      "expected": [
+        "acquired",
+        "inputs",
+        "describe",
+        "released"
+      ]
+    },
+    {
+      "id": "cancellation-stops-and-releases-lease",
+      "stop": "inputs",
+      "cancel": true,
+      "expected": [
+        "acquired",
+        "inputs",
+        "released"
+      ]
+    }
   ]
 }

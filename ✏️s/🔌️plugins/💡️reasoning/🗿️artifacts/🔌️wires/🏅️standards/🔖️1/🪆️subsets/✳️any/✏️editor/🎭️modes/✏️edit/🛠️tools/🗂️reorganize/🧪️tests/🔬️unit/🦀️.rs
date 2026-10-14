@@ -68,7 +68,7 @@ fn reorganize_tool_declares_the_shared_layout_run_definition() {
     }
     for removed in tool["removedActions"].as_array().expect("removed").iter().chain(std::iter::once(&tool["id"])) {
         let removed = removed.as_str().expect("removed id");
-        assert!(<ReasoningWiresPlayApp as ArtifactEditor>::command_from_action(removed, None).is_err(), "{removed} no longer resolves to a synchronous command");
+        assert!(<ReasoningWiresPlayApp as ArtifactEditor>::command_from_action(removed, None, None).is_err(), "{removed} no longer resolves to a synchronous command");
     }
 }
 

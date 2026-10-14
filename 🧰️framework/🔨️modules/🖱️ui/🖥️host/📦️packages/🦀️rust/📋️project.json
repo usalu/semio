@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/ui-host-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
   "projectType": "library",
   "namedInputs": {
@@ -12,7 +12,7 @@
   },
   "targets": {
     "test-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
@@ -22,7 +22,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
@@ -32,7 +32,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
@@ -42,7 +42,7 @@
       "outputs": []
     },
     "check-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",

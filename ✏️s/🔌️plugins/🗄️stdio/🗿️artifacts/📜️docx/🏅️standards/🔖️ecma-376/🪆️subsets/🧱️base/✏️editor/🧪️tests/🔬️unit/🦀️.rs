@@ -79,9 +79,9 @@ fn set_page_replaces_one_revision_bound_canonical_run() {
 fn parser_requires_the_complete_nested_address_and_empty_text_remains_valid() {
     let snapshot = snapshot_with_blocks(vec![DocxBlock::paragraph("hello")]);
     let target = run(&snapshot);
-    let command = <DocxEditor as ArtifactEditor>::command_from_action("set-page", Some(&arguments(&target.address, ""))).expect("canonical empty text");
+    let command = <DocxEditor as ArtifactEditor>::command_from_action("set-page", Some((arguments(&target.address, "")).clone()), None).expect("canonical empty text");
     assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address: target.address, text: String::new() }));
-    assert!(<DocxEditor as ArtifactEditor>::command_from_action("set-page", None).is_err());
+    assert!(<DocxEditor as ArtifactEditor>::command_from_action("set-page", None, None).is_err());
 }
 
 #[test]
@@ -96,9 +96,9 @@ fn formatting_parser_requires_all_schema_fields_and_preserves_the_canonical_addr
     )
     .expect("canonical formatting command");
     assert_eq!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetRunFormatting { address: target.address, bold: false, italic: true, underline: false }));
-    assert!(<DocxEditor as ArtifactEditor>::command_from_action("set-run-formatting", None).is_err());
+    assert!(<DocxEditor as ArtifactEditor>::command_from_action("set-run-formatting", None, None).is_err());
     let incomplete = semio_framework_value::DslValue::object([("address".into(), semio_framework_value::ToValue::to_value(&run(&snapshot).address)), ("bold".into(), semio_framework_value::DslValue::Bool(true))]);
-    assert!(<DocxEditor as ArtifactEditor>::command_from_action("set-run-formatting", Some(&incomplete)).is_err());
+    assert!(<DocxEditor as ArtifactEditor>::command_from_action("set-run-formatting", Some((incomplete).clone()), None).is_err());
 }
 
 #[test]

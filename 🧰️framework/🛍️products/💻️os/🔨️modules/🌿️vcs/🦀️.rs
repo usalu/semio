@@ -1642,7 +1642,7 @@ impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcs<P, Mu
 // 🎞️ `Eq` dropped: `Rejected` below carries
 // `Vec<crate::os_spr::MutationMessage>`, and `MutationMessage` itself only derives `PartialEq`
 // (not `Eq`) — see `📡️spr/🎮️command`'s `🔖️Message` region.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum VcsError {
     UnknownEdit(String),
     UnknownChange(String),

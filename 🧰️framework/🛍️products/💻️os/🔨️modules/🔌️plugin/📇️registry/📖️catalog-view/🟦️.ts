@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import type { ComponentSourceOwnerV1, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
-import { parseDeployedRegistryEntryV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
+import {parsePluginBuildTargetV1, parseDeployedRegistryEntryV1 } from "../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
 import { parseModuleDirectories, type ModuleDirectory } from "../📦️deployment/🟦️.ts";
 
@@ -21,7 +21,8 @@ export function registryModuleDirectories(entries: readonly ModuleDirectory[]): 
 }
 
 /** 📖️ Reads the rows `generate` just projected into `🤖️generated` so one dev boot walks the repository once instead of once per consumer; the projection is the language-agnostic twin of [[generatePluginRegistry]] and [[generatePlaygroundRegistry]]. */
-export function readGeneratedCatalogProjection(generatedDir = runtimeCatalogProjectionRoot()): GeneratedCatalogProjection {
+export function readGeneratedCatalogProjection(generatedDir = runtimeCatalogProjectionRootV1()): GeneratedCatalogProjection {
+  if(generatedDir===undefined)return {entries:[],playgrounds:[]};
   const read = <T>(name: string): readonly T[] => {
     const parsed: unknown = JSON.parse(readFileSync(join(generatedDir, name), "utf8"));
     if (!Array.isArray(parsed)) throw new Error(`📇️registry: ${name} is not a projected row array`);
@@ -29,7 +30,7 @@ export function readGeneratedCatalogProjection(generatedDir = runtimeCatalogProj
   };
   const entries = read<unknown>(GENERATED_PLUGINS_PROJECTION).map(parseDeployedRegistryEntryV1);
   registryModuleDirectories(entries);
-  return { entries, playgrounds: read<PlaygroundEntry>(GENERATED_PLAYGROUNDS_PROJECTION) };
+  return { entries, playgrounds: read<unknown>(GENERATED_PLAYGROUNDS_PROJECTION).map(parseProjectedPlaygroundV1) };
 }
 
 /** 🏠️ Host detection of projected rows: a variant, alias or bare plugin id whose crate declares
@@ -58,10 +59,44 @@ function loadDiscovery(): { resolveRegistryPluginIdsForFilter: (filter: string, 
 }
 
 
-/** 🎮️ Binds a selected runtime to the immutable catalog published with its session. */
-function runtimeCatalogProjectionRoot(): string {
-  const variant=process.env.SEMIO_PLUGIN;
-  if(variant===undefined || variant==="") return join(import.meta.dir,"..","🤖️generated");
-  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("Invalid runtime catalog variant");
-  return join(import.meta.dir,"..","dist","sessions",variant);
+/** 📍️ A process receives the publication it operates on from its caller. */
+export function runtimeCatalogProjectionRootV1():string|undefined{
+  const path=process.env.SEMIO_PLUGIN_CATALOG;
+  if(path===undefined)return undefined;
+  if(!path||path.includes("\0"))throw Error("Explicit catalog root required");
+  return path;
+}
+/** 🧩️ Derives deployment inventory from supplied rows without application constants. */
+export function catalogBuildInventoryV1(projection:GeneratedCatalogProjection){
+  const plugins=projection.entries.filter(row=>row.role==="plugin"),extensions=projection.entries.filter(row=>row.role==="extension");
+  const hosts=plugins.flatMap(row=>row.host?[{pluginId:row.pluginId,...row.host}]:[]);
+  const defaults=projection.playgrounds.filter(row=>row.catalogDefault===true);
+  if(defaults.length>1)throw Error("Catalog declares multiple defaults");
+  return {plugins,extensions,hosts,playgrounds:projection.playgrounds,moduleDirectories:registryModuleDirectories(projection.entries),defaultVariant:defaults[0]?.variant};
+}
+export function runtimeCatalogBuildInventoryV1(){return catalogBuildInventoryV1(readGeneratedCatalogProjection());}
+export type PluginBuildTarget=import("../🔎️discovery/🧬️schema/🟦️.ts").PluginBuildTargetV1;
+export type PlaygroundBuildTarget=PlaygroundEntry;
+
+/** 🎮️ Rejects malformed configured playground rows before a host resolves them. */
+export function parseProjectedPlaygroundV1(value:unknown):PlaygroundEntry{
+  if(!value||typeof value!=="object"||Array.isArray(value))throw Error("Malformed projected playground");
+  const row=value as Record<string,unknown>,keys=["variant","pluginId","cratePath","catalogDefault","app","brand","devContribution","compositionConfigPath","nativeHost","mcpHost","distDir","aliases","ports","userPorts","hub","dataDir","userDataDir","localOnly","viewerPath","examples","engines","assets"];
+  if(Object.keys(row).some(key=>!keys.includes(key)))throw Error("Unknown projected playground field");
+  for(const key of ["variant","pluginId","cratePath"])if(typeof row[key]!=="string"||!row[key])throw Error("Invalid projected playground "+key);
+  for(const key of ["aliases","examples","engines"])if(!Array.isArray(row[key])||(row[key] as unknown[]).some(item=>typeof item!=="string"))throw Error("Invalid projected playground "+key);
+  const ports=row.ports as Record<string,unknown>|undefined;
+  if(!ports||typeof ports!=="object"||Array.isArray(ports)||Object.keys(ports).some(key=>!["react","wgpu"].includes(key))||![ports.react,ports.wgpu].every(port=>Number.isInteger(port)&&Number(port)>0&&Number(port)<=65535))throw Error("Invalid projected playground ports");
+  if(!Array.isArray(row.assets))throw Error("Invalid projected playground assets");
+  for(const key of ["catalogDefault","localOnly"])if(row[key]!==undefined&&typeof row[key]!=="boolean")throw Error("Invalid projected playground "+key);
+  for(const key of ["app","brand","devContribution","compositionConfigPath","distDir","hub","dataDir","userDataDir","viewerPath"])if(row[key]!==undefined&&typeof row[key]!=="string")throw Error("Invalid projected playground "+key);
+  return row as unknown as PlaygroundEntry;
+}
+
+/** 🏗️ Source inventory remains selectable while compiled deployment rows are withheld. */
+export function readCatalogBuildTargetsV1(generatedDir=runtimeCatalogProjectionRootV1()){
+  if(generatedDir===undefined)return [];
+  const value:unknown=JSON.parse(readFileSync(join(generatedDir,"🗂️sources.json"),"utf8"));
+  if(!Array.isArray(value))throw Error("Malformed configured source catalog");
+  return value.flatMap(row=>{if(!row||typeof row!=="object")throw Error("Malformed source catalog row");return row.directoryName===undefined?[]:[parsePluginBuildTargetV1(row)];});
 }

@@ -258,10 +258,10 @@ async fn command_from_action_round_trips_every_command_id() {
             semio_framework_value::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other,
         };
-        let bridged = NotePlayApp::command_from_action(id, Some(&camel_case_keys(&payload))).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = NotePlayApp::command_from_action(id, Some((camel_case_keys(&payload)).clone()), None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged, command, "payload drifted through the bridge for action {id}");
     }
-    assert!(NotePlayApp::command_from_action("nonsense", None).is_err());
+    assert!(NotePlayApp::command_from_action("nonsense", None, None).is_err());
 }
 
 /// 🐫️ The shell's spelling of the payload keys.
@@ -297,39 +297,39 @@ fn camel_case_keys(value: &semio_framework_value::DslValue) -> semio_framework_v
 async fn command_from_action_bridges_host_control_contracts() {
     let args = |json: serde_json::Value| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&json.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"));
     assert_eq!(
-        NotePlayApp::command_from_action("addBlock", Some(&args(serde_json::json!({ "kind": "math" })))).expect("panel quick-add"),
+        NotePlayApp::command_from_action("addBlock", Some((args(serde_json::json!({ "kind": "math" }))).clone()), None).expect("panel quick-add"),
         NoteCommand::AddBlock(add_block::AddBlock { kind: "math".into(), x: 0.0, y: 0.0 })
     );
     assert_eq!(
-        NotePlayApp::command_from_action("addBlock", Some(&args(serde_json::json!({ "kind": "text", "x": 12, "y": "24.5", "windowId": "note-composite" })))).expect("palette form"),
+        NotePlayApp::command_from_action("addBlock", Some((args(serde_json::json!({ "kind": "text", "x": 12, "y": "24.5", "windowId": "note-composite" }))).clone()), None).expect("palette form"),
         NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 12.0, y: 24.5 })
     );
     assert_eq!(
-        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "eventsJson": "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]", "selectIds": ["b1"] })))).expect("one-shot ink canvas gesture"),
+        NotePlayApp::command_from_action("inkApplyEvents", Some((args(serde_json::json!({ "eventsJson": "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]", "selectIds": ["b1"] }))).clone()), None).expect("one-shot ink canvas gesture"),
         NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]".into(), phase: None, reason: None, gesture_json: None, select_ids: Some(vec!["b1".into()]) })
     );
     assert_eq!(
-        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "phase": "abort", "reason": "captureLost" })))).expect("ink gesture abort"),
+        NotePlayApp::command_from_action("inkApplyEvents", Some((args(serde_json::json!({ "phase": "abort", "reason": "captureLost" }))).clone()), None).expect("ink gesture abort"),
         NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("abort".into()), reason: Some("captureLost".into()), gesture_json: None, select_ids: None })
     );
     assert_eq!(
-        NotePlayApp::command_from_action("inkApplyEvents", Some(&args(serde_json::json!({ "phase": "stream", "gestureJson": "{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":4,\"dy\":0}" })))).expect("ink drag tick"),
+        NotePlayApp::command_from_action("inkApplyEvents", Some((args(serde_json::json!({ "phase": "stream", "gestureJson": "{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":4,\"dy\":0}" }))).clone()), None).expect("ink drag tick"),
         NoteCommand::InkApplyEvents(ink_apply_events::InkApplyEvents { events_json: "[]".into(), phase: Some("stream".into()), reason: None, gesture_json: Some("{\"kind\":\"drag\",\"ids\":[\"b1\"],\"dx\":4,\"dy\":0}".into()), select_ids: None })
     );
     assert_eq!(
-        NotePlayApp::command_from_action("patchBlocks", Some(&args(serde_json::json!({ "blockId": "b1", "field": "x", "value": 120 })))).expect("inspector patch"),
+        NotePlayApp::command_from_action("patchBlocks", Some((args(serde_json::json!({ "blockId": "b1", "field": "x", "value": 120 }))).clone()), None).expect("inspector patch"),
         NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec!["b1".into()], field: "x".into(), value: "120".into() })
     );
-    assert_eq!(NotePlayApp::command_from_action("setGridSpacing", Some(&args(serde_json::json!({ "value": "24" })))).expect("text slider"), NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 24.0 }));
-    assert_eq!(NotePlayApp::command_from_action("setSnapEnabled", Some(&args(serde_json::json!({ "checked": true })))).expect("toggle"), NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: Some(true) }));
-    assert_eq!(NotePlayApp::command_from_action("setGridVisible", None).expect("toggle without value"), NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
+    assert_eq!(NotePlayApp::command_from_action("setGridSpacing", Some((args(serde_json::json!({ "value": "24" }))).clone()), None).expect("text slider"), NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 24.0 }));
+    assert_eq!(NotePlayApp::command_from_action("setSnapEnabled", Some((args(serde_json::json!({ "checked": true }))).clone()), None).expect("toggle"), NoteCommand::SetSnapEnabled(set_snap_enabled::SetSnapEnabled { value: Some(true) }));
+    assert_eq!(NotePlayApp::command_from_action("setGridVisible", None, None).expect("toggle without value"), NoteCommand::SetGridVisible(set_grid_visible::SetGridVisible { value: None }));
     assert_eq!(
-        NotePlayApp::command_from_action("setCamera", Some(&args(serde_json::json!({ "x": 1, "y": 2, "zoom": 1.5 })))).expect("flat camera"),
+        NotePlayApp::command_from_action("setCamera", Some((args(serde_json::json!({ "x": 1, "y": 2, "zoom": 1.5 }))).clone()), None).expect("flat camera"),
         NoteCommand::SetCamera(set_camera::SetCamera { camera: crate::NoteCamera { x: 1.0, y: 2.0, zoom: 1.5 } })
     );
-    assert_eq!(NotePlayApp::command_from_action("engagementSubmit", Some(&args(serde_json::json!({ "value": null })))).expect("submit without value"), NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
-    assert_eq!(NotePlayApp::command_from_action("deleteSelection", Some(&args(serde_json::json!({ "windowId": "note-composite" })))).expect("keybound verb"), NoteCommand::DeleteSelection(delete_selection::DeleteSelection {}));
-    assert!(NotePlayApp::command_from_action("deleteBlock", None).is_err(), "a required field must not be defaulted silently");
+    assert_eq!(NotePlayApp::command_from_action("engagementSubmit", Some((args(serde_json::json!({ "value": null }))).clone()), None).expect("submit without value"), NoteCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }));
+    assert_eq!(NotePlayApp::command_from_action("deleteSelection", Some((args(serde_json::json!({ "windowId": "note-composite" }))).clone()), None).expect("keybound verb"), NoteCommand::DeleteSelection(delete_selection::DeleteSelection {}));
+    assert!(NotePlayApp::command_from_action("deleteBlock", None, None).is_err(), "a required field must not be defaulted silently");
 }
 /// 🧾️ LAW (census): every note verb that cannot be built without arguments declares the arguments it reads, so a
 /// schema-driven caller (an agent through the semio MCP, a staged rail form) can address it at all — `patchBlocks`,
@@ -341,7 +341,7 @@ async fn every_note_verb_that_reads_arguments_declares_them() {
         .actions
         .iter()
         .chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()))
-        .filter(|action| action.args.is_empty() && NotePlayApp::command_from_action(&action.id, None).is_err_and(|fault| fault.code.0 == "app.command.invalid-args"))
+        .filter(|action| action.args.is_empty() && NotePlayApp::command_from_action(&action.id, None, None).is_err_and(|fault| fault.code.0 == "app.command.invalid-args"))
         .map(|action| action.id.as_str())
         .collect();
     assert!(undeclared.is_empty(), "verbs that read arguments but declare none: {undeclared:?}");
@@ -357,14 +357,14 @@ async fn the_block_verbs_decode_from_exactly_their_declared_arguments() {
     assert_eq!(declared("duplicateBlock"), ["blockId"]);
     assert_eq!(declared("moveBlock"), ["blockId", "targetRowId", "dropPosition"]);
     assert_eq!(declared("patchBlocks"), ["blockIds", "field", "value"]);
-    assert_eq!(NotePlayApp::command_from_action("deleteBlock", Some(&args(serde_json::json!({ "blockId": "b1" })))).expect("delete"), NoteCommand::DeleteBlock(delete_block::DeleteBlock { block_id: "b1".into() }));
-    assert_eq!(NotePlayApp::command_from_action("duplicateBlock", Some(&args(serde_json::json!({ "blockId": "b1" })))).expect("duplicate"), NoteCommand::DuplicateBlock(duplicate_block::DuplicateBlock { block_id: "b1".into() }));
+    assert_eq!(NotePlayApp::command_from_action("deleteBlock", Some((args(serde_json::json!({ "blockId": "b1" }))).clone()), None).expect("delete"), NoteCommand::DeleteBlock(delete_block::DeleteBlock { block_id: "b1".into() }));
+    assert_eq!(NotePlayApp::command_from_action("duplicateBlock", Some((args(serde_json::json!({ "blockId": "b1" }))).clone()), None).expect("duplicate"), NoteCommand::DuplicateBlock(duplicate_block::DuplicateBlock { block_id: "b1".into() }));
     assert_eq!(
-        NotePlayApp::command_from_action("moveBlock", Some(&args(serde_json::json!({ "blockId": "b1", "targetRowId": "row-b2", "dropPosition": "before" })))).expect("move"),
+        NotePlayApp::command_from_action("moveBlock", Some((args(serde_json::json!({ "blockId": "b1", "targetRowId": "row-b2", "dropPosition": "before" }))).clone()), None).expect("move"),
         NoteCommand::MoveBlock(move_block::MoveBlock { block_id: "b1".into(), target_row_id: "row-b2".into(), drop_position: "before".into() })
     );
     assert_eq!(
-        NotePlayApp::command_from_action("patchBlocks", Some(&args(serde_json::json!({ "blockIds": ["b1", "b2"], "field": "textContent", "value": "Hello" })))).expect("patch"),
+        NotePlayApp::command_from_action("patchBlocks", Some((args(serde_json::json!({ "blockIds": ["b1", "b2"], "field": "textContent", "value": "Hello" }))).clone()), None).expect("patch"),
         NoteCommand::PatchBlocks(patch_blocks::PatchBlocks { block_ids: vec!["b1".into(), "b2".into()], field: "textContent".into(), value: "Hello".into() })
     );
 }

@@ -1,7 +1,7 @@
 import type { ArtifactRef } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟦️.ts";
 import { validateRoleInputs, type PdfAdmittedStreamRole } from "../🪪️stream-roles/🟦️.ts";
 /** 🧬️ Canonical owned PDF1.7 domain with explicit admission from its native JSON schema. */
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export type { Binary64 };
 
 export interface PdfSnapshot {

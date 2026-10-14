@@ -576,6 +576,17 @@ impl ChildContentView {
         self.dialect_at(MemberKeyRef::root(slot, child_id))
     }
 
+    /// 🪪️ Borrows every address coordinate from the same published entry whose snapshot is read.
+    pub fn reference_fields(&self, slot: &str, child_id: &str) -> Option<semio_framework_schema_composition::ChildRefFields<'_>> {
+        self.reference_fields_at(MemberKeyRef::root(slot, child_id))
+    }
+
+    /// 🧷️ Borrows the selected published child identity at one exact owner edge.
+    pub fn reference_fields_at(&self, key: MemberKeyRef<'_>) -> Option<semio_framework_schema_composition::ChildRefFields<'_>> {
+        let entry = self.find(key).ok().flatten()?;
+        Some(semio_framework_schema_composition::ChildRefFields { child_id: &entry.child_id, artifact_id: &entry.artifact_id, artifact_kind: &entry.dialect.artifact_kind, standard: &entry.dialect.standard, subset: &entry.dialect.subset })
+    }
+
     /// 🎳️ [`Self::dialect`] of the member at one exact owner edge, whatever its depth.
     pub fn dialect_at(&self, key: MemberKeyRef<'_>) -> Option<ArtifactDialect> {
         self.find(key).ok().flatten().map(|entry| entry.dialect.clone())

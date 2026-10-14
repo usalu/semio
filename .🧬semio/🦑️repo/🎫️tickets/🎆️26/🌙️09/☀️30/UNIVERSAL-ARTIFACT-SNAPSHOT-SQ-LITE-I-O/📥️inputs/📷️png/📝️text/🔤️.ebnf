@@ -1,3 +1,0 @@
-(* 🪆️ Logical owner Record; raw PNG file framing belongs to the separate file engine. *)
-document = "stdio.png", "schema", "=", text, "bytes", "=", text;
-text = quoted-string | identifier;

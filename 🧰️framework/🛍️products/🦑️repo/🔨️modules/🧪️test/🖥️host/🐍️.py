@@ -371,13 +371,17 @@ def snapshot_patch_inverse(snapshot: Any, patch: Dict[str, Any]) -> Dict[str, An
 def _repo_root_from(start: str) -> str:
     directory = os.path.abspath(start)
     for _ in range(32):
-        if os.path.exists(os.path.join(directory, "nx.json")) and os.path.exists(os.path.join(directory, "package.json")):
-            return directory
+        paths = [os.path.join(directory, name) for name in ("📋️project.json", "package.json")]
+        if all(os.path.isfile(path) and not os.path.islink(path) for path in paths):
+            with open(paths[1], encoding="utf-8") as handle:
+                package = json.load(handle)
+            if isinstance(package, dict) and isinstance(package.get("workspaces"), (list, dict)):
+                return directory
         parent = os.path.dirname(directory)
         if parent == directory:
             break
         directory = parent
-    return os.getcwd()
+    raise FileNotFoundError("workspace root with paired build and package markers was not found")
 
 
 def _prioritize_local_source_paths(paths: List[str]) -> None:

@@ -41,15 +41,15 @@ pub(super) fn toy_member_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> Resul
 }
 
 impl semio_framework_job::InteractiveJob for ToyMemberJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         let grant = cx.retained_grant();
         match self.phase {
             0 => {
                 if self.done >= self.target {
-                    return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None);
+                    return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into);
                 }
                 let unit = self.done + 1;
                 if self.original.unit.advance(&mut self.original.writer, self.base_count, unit, cx)? {
@@ -87,7 +87,7 @@ impl semio_framework_job::InteractiveJob for ToyMemberJob {
                     self.phase = 0;
                 }
             }
-            _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original member phase is absent")),
+            _ => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original member phase is absent").into()),
         }
         Ok(None)
     }
@@ -166,7 +166,8 @@ fn fresh_fold(base: &TestSnapshot, ops: &[Vec<u8>]) -> TestSnapshot {
 }
 
 async fn member_action(app: &mut MemberApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
-    app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta(), &mut caller.identity).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
+    let mut input=Some(DslValue::Object(arguments));
+    app.handle_action(action, &mut input, &toy_meta(), &mut caller.identity,caller.context).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).expect("actual member action admitted under its original caller").output
 }
 
 async fn member_run_action(app: &mut MemberApp, action: &str, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {

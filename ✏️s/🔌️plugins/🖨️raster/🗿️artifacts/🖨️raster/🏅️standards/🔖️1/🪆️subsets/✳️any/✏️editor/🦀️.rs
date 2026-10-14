@@ -1509,7 +1509,9 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     /// 🎯️ See `args_bridge` — without this override the trait default refuses every shell action.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 
@@ -1541,7 +1543,9 @@ impl ArtifactEditor for RasterPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let preview = match body_key {
             composite::RASTER_PLAY_BODY_COMPOSITE => transient.window::<composite::transient::RasterCompositeWindowTransientOwner>().and_then(|window| paint_stroke::raster_stroke_preview(doc.snapshot, window)),
             _ => None,
@@ -1551,7 +1555,10 @@ impl ArtifactEditor for RasterPlayApp {
             crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(preview);
         }
         rendered
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 /// 🖼️ Projects live selection into both paint windows without a second selection store; the Composite window paints
 /// `preview` (the committed document with its stroke in flight) when it holds one.

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/shooting-shooting-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -8,12 +8,12 @@
     "family:shooting"
   ],
   "targets": {
-    "verify-snapshot-sqlite-source": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts verify snapshot-sqlite-source","forwardAllArgs":true}},
-    "test-snapshot-sqlite": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
-    "test-snapshot-sqlite-native": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
-    "test-snapshot-sqlite-source": {"executor":"nx:run-commands","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
+    "verify-snapshot-sqlite-source": {"executor":"repo:script","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts verify snapshot-sqlite-source","forwardAllArgs":true}},
+    "test-snapshot-sqlite": {"executor":"repo:script","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite","forwardAllArgs":true}},
+    "test-snapshot-sqlite-native": {"executor":"repo:script","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native","forwardAllArgs":true}},
+    "test-snapshot-sqlite-source": {"executor":"repo:script","cache":false,"options":{"cwd":"✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source","forwardAllArgs":true}},
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -29,7 +29,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -37,7 +37,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

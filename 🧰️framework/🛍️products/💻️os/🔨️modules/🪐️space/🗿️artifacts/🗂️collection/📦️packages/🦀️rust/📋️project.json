@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-space-collection-rs",
-  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -14,9 +14,13 @@
   },
   "targets": {
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
-      "inputs": ["nativeSources", "^production", "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"],
+      "inputs": [
+        "nativeSources",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite",
@@ -24,9 +28,13 @@
       }
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
-      "inputs": ["nativeSources", "^production", "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"],
+      "inputs": [
+        "nativeSources",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native",
@@ -34,9 +42,13 @@
       }
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
-      "inputs": ["nativeSources", "^production", "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"],
+      "inputs": [
+        "nativeSources",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
@@ -44,7 +56,7 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -60,7 +72,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -68,10 +80,40 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-original-receiving-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "nativeSources",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/⏱️control/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving-source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-original-receiving-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "nativeSources",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/⏱️control/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving-native",
         "forwardAllArgs": true
       }
     }

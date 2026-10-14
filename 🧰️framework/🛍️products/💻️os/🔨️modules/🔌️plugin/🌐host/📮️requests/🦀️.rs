@@ -180,11 +180,12 @@ impl Default for RequestRegistry {
 /// 🔁️ What `RequestRegistry::take_continuation` hands back: the app instance that asked for the
 /// extension invocation, the app command its outcome must be dispatched into, and the request
 /// object that was sent (the app's only correlation handle).
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ExtensionContinuation {
     pub instance: u32,
     pub response_action: String,
     pub request_json: String,
-    partial: Result<Vec<u8>, Fault>,
+    pub(crate) partial: Result<Vec<u8>, Fault>,
 }
 
 impl ExtensionContinuation {
@@ -339,6 +340,12 @@ impl RequestRegistry {
             Slot::Continuation { response_action, request_json, partial } => Some(ExtensionContinuation { instance, response_action, request_json, partial }),
             _ => None,
         }
+    }
+
+    /// 🔎️ Quotes the resident continuation identity without transferring its original fields.
+    pub(crate) fn continuation_instance(&self,id:RequestId)->Option<u32>{
+        let inner=self.inner.borrow();
+        inner.get(id.0).filter(|entry|matches!(entry.value,Slot::Continuation{..})).map(|entry|entry.instance)
     }
 
     /// ✅️ Called from `poll`'s event-routing step when `Event::Completed{req, result}` (or an

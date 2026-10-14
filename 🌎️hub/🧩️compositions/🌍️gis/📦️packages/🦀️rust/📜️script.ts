@@ -2,6 +2,8 @@
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { runOwnedCommand } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🌍️ GIS plugin package command router. */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -22,6 +24,19 @@ class NativeCodecOracleScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisNativeCodecReceipts(this.repoRoot);
     await proveGisControlledProposal(this.repoRoot);
+  }
+}
+
+/** 🧱️ Verifies GIS service composition and each concrete receiver at its owning deployment. */
+class InstalledServiceSourceScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw new Error("installed-service-source accepts no arguments");
+    const tests=resolve(this.root,"../../🧪️tests");
+    const source=resolve(tests,"🧱️io-boundary/🟦️.ts");
+    const receivers=["🌉️component-cold-map-patch","💡️inference-control","📇️native-codecs"].map(name=>resolve(tests,name,"🟦️.ts"));
+    const options={signal:this.invocation.control.signal};
+    await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,...receivers],this.repoRoot,"gis-installed-service-strict",TEST_LEVEL_BUDGET_MS.long,options);
+    await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"gis-installed-service-source",TEST_LEVEL_BUDGET_MS.long,options);
   }
 }
 
@@ -64,6 +79,7 @@ class InferenceTransportCheckScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir)
+  .register("installed-service-source", InstalledServiceSourceScript)
   .register("inference-discovery-oracle", InferenceDiscoveryOracleScript)
   .register("inference-discovery-check", InferenceDiscoveryCheckScript)
   .register("native-codec-oracle", NativeCodecOracleScript)

@@ -1,3 +1,4 @@
+const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not request a package receipt");}};
 import type { PluginCatalogRowsV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 const emptyCatalogRows: PluginCatalogRowsV1 = { version: 1, targets: [], hosts: [], playgrounds: [] };
 import { shouldStartIntroduction } from "../../../../../../../🔨️modules/🖱️ui/🎓️introduction/🟦️.ts";
@@ -389,7 +390,7 @@ describe("explicit embedded plugin registry admission", () => {
   it("selects only supplied custom modules with the React registry and graphlib dependency oracles", async () => {
     for (const row of pluginModulesFixture.selection) {
       const modules = admitWgpuPluginModules(row.rows.map(({ pluginId, moduleUrl }) => ({ pluginId, moduleUrl })), pluginModulesFixture.baseUrl);
-      const prepared = await prepareWgpuPluginModules(emptyPluginCatalog, modules, { readDescriptor: async id => describedModule(id, row.rows.find(module => module.pluginId === id)?.dependencies ?? []) });
+      const prepared = await prepareWgpuPluginModules(emptyPluginCatalog, modules, authoredReceiptSource, { readDescriptor: async id => describedModule(id, row.rows.find(module => module.pluginId === id)?.dependencies ?? []) });
       const planner = new PlaygroundBootPlanner(prepared.catalog, row.variant, undefined, "selection" in row ? row.selection as "all" : "variant");
       while (planner.step()) {}
       const plan = planner.finish();
@@ -420,20 +421,20 @@ describe("explicit embedded plugin registry admission", () => {
       const structural = validateAuthority(descriptor.manifest);
       const duplicate = new Set(row.dependencies.map(edge => edge.pluginId)).size !== row.dependencies.length;
       expect(!structural || duplicate || row.received !== row.requested).toBe(row.refused);
-      const admission = prepareWgpuPluginModules(emptyPluginCatalog, [{ pluginId: row.requested, moduleUrl: modules[0]!.moduleUrl }], { readDescriptor: async () => descriptor });
+      const admission = prepareWgpuPluginModules(emptyPluginCatalog, [{ pluginId: row.requested, moduleUrl: modules[0]!.moduleUrl }], authoredReceiptSource, { readDescriptor: async () => descriptor });
       if (row.refused) await expect(admission).rejects.toThrow();
       else expect((await admission).packages.get(row.requested)?.manifest.pluginId).toBe(row.requested);
     }
-    const prepared = await prepareWgpuPluginModules(emptyPluginCatalog, modules, { readDescriptor: async id => describedModule(id, id === "custom.host" ? [{ pluginId: "custom.core", version: "=2.0.0" }] : []) });
+    const prepared = await prepareWgpuPluginModules(emptyPluginCatalog, modules, authoredReceiptSource, { readDescriptor: async id => describedModule(id, id === "custom.host" ? [{ pluginId: "custom.core", version: "=2.0.0" }] : []) });
     expect(() => assertWgpuPluginPlan(new PlaygroundBootPlanner(prepared.catalog, "custom.host").finish(), prepared, "variant")).toThrow("descriptor dependency graph");
-    await expect(prepareWgpuPluginModules(emptyPluginCatalog, modules, { readDescriptor: async id => describedModule(id, [{ pluginId: "custom.core", version: "^1" }]) })).rejects.toThrow("dependency version");
-    await expect(prepareWgpuPluginModules(emptyPluginCatalog, modules, { readDescriptor: async id => describedModule(id, [{ pluginId: "custom.core" }, { pluginId: "custom.core" }]) })).rejects.toThrow("dependency identity");
+    await expect(prepareWgpuPluginModules(emptyPluginCatalog, modules, authoredReceiptSource, { readDescriptor: async id => describedModule(id, [{ pluginId: "custom.core", version: "^1" }]) })).rejects.toThrow("dependency version");
+    await expect(prepareWgpuPluginModules(emptyPluginCatalog, modules, authoredReceiptSource, { readDescriptor: async id => describedModule(id, [{ pluginId: "custom.core" }, { pluginId: "custom.core" }]) })).rejects.toThrow("dependency identity");
   });
 
   it("withdraws descriptor admission at a turn boundary before reading or starting actors", async () => {
     const abort = new AbortController();
     let reads = 0;
-    await expect(prepareWgpuPluginModules(emptyPluginCatalog, admitWgpuPluginModules(pluginModulesFixture.valid, pluginModulesFixture.baseUrl), { signal: abort.signal, yieldTurn: async () => abort.abort(), readDescriptor: async id => { reads++; return describedModule(id); } })).rejects.toThrow();
+    await expect(prepareWgpuPluginModules(emptyPluginCatalog, admitWgpuPluginModules(pluginModulesFixture.valid, pluginModulesFixture.baseUrl), authoredReceiptSource, { signal: abort.signal, yieldTurn: async () => abort.abort(), readDescriptor: async id => { reads++; return describedModule(id); } })).rejects.toThrow();
     expect(reads).toBe(0);
   });
 

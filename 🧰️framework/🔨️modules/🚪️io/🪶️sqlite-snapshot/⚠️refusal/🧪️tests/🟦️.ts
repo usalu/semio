@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import corpus from "./🧫️fixtures/🔣️.json";
 
-import { ValueError } from "../../../../🌱️value/⚠️refusal/🟦️.ts";
+import { ValueError } from "../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import { exportSqliteDatabase, parseSqliteDatabaseSchema, sqliteValueByteLength, SqliteAllocationControl } from "../../🟦️.ts";
 import { ArtifactSqliteProjection } from "../../🧩️artifact/🟦️.ts";
 import "../../🧩️artifact/🧪️tests/🧮️allocation/🟦️.ts";

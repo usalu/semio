@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/space-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\ude90\ufe0fspace/**/*.rs",
@@ -10,7 +10,7 @@
   "targets": {
     
     "home-directory-identity-rows-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -19,7 +19,7 @@
       "outputs": []
     },
     "home-directory-identity-rows-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -28,7 +28,7 @@
       "outputs": []
     },
     "plugin-identity-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -37,19 +37,19 @@
       "outputs": []
     },
     "snapshot-owner-census-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census source"},
       "outputs": []
     },
     "snapshot-owner-census-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {"cwd": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust", "command": "bun ./📜️script.ts snapshot-owner-census native"},
       "outputs": []
     },
     "interactive-job-catalog-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -58,7 +58,7 @@
       "outputs": []
     },
     "interactive-job-catalog-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -67,7 +67,7 @@
       "outputs": []
     },
     "home-directory-event-page-owner-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -76,7 +76,7 @@
       "outputs": []
     },
     "home-directory-event-page-owner-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -85,7 +85,7 @@
       "outputs": []
     },
     "home-directory-projection-persistence-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -94,7 +94,7 @@
       "outputs": []
     },
     "home-directory-projection-persistence-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
@@ -103,7 +103,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
@@ -111,7 +111,7 @@
       }
     },
     "persistence-data-class-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",

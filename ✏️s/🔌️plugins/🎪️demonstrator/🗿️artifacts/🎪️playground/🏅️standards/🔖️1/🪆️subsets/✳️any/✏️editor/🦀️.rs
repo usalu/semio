@@ -409,7 +409,9 @@ impl ArtifactEditor for PlaygroundEditor {
 
     /// 🗺️ Maps the manifest `changeSchema` action (declared via `.mutation(...)` below) to the one
     /// typed command row — the same shape `gis2d`'s `command_from_action` uses for its own rows.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PlaygroundCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<PlaygroundCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         match action {
             "changeSchema" => {

@@ -328,7 +328,7 @@ fn args(value: serde_json::Value) -> DslValue {
 #[test]
 fn the_bridge_folds_host_arguments_into_typed_commands() {
     use serde_json::json;
-    let bridge = |action: &str, value: serde_json::Value| BimModelApp::command_from_action(action, Some(&args(value))).unwrap_or_else(|error| panic!("{action} failed to bridge: {}", error.message));
+    let bridge = |action: &str, value: serde_json::Value| BimModelApp::command_from_action(action, Some((args(value)).clone()), None).unwrap_or_else(|error| panic!("{action} failed to bridge: {}", error.message));
     assert_eq!(bridge("createEntity", json!({ "kind": "wall" })), BimCommand::CreateEntity(create_entity::CreateEntity { kind: "wall".into(), parent: String::new(), name: String::new() }));
     assert_eq!(bridge("deleteSelection", json!({ "id": "w-south" })), BimCommand::DeleteSelection(delete_selection::DeleteSelection { ids: vec!["w-south".into()] }));
     assert_eq!(bridge("renameEntity", json!({ "id": "st-first", "value": "Upper" })), BimCommand::RenameEntity(rename_entity::RenameEntity { id: "st-first".into(), name: "Upper".into() }));
@@ -376,7 +376,7 @@ fn the_bridge_folds_host_arguments_into_typed_commands() {
     assert_eq!(bridge("editClassification", json!({ "id": "cs-uni", "op": "add", "value": "Pr_20 | Products" })), BimCommand::EditClassification(edit_classification::EditClassification { id: "cs-uni".into(), op: "add".into(), code: String::new(), title: "Pr_20 | Products".into(), parent: String::new() }));
     assert_eq!(bridge("searchClassification", json!({ "system": "cs-uni", "value": "wall" })), BimCommand::SearchClassification(search_classification::SearchClassification { system: "cs-uni".into(), query: "wall".into() }));
     assert_eq!(bridge("cursorRightFar", json!({})), BimCommand::CursorRightFar(cursor_keys::CursorRightFar {}));
-    assert!(BimModelApp::command_from_action("nonsense", None).is_err());
+    assert!(BimModelApp::command_from_action("nonsense", None, None).is_err());
 }
 //#endregion 🔖️ActionBridge
 

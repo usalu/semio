@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-io-schema-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🚪️io/🧬️schema",
   "namedInputs": {
     "default": [
@@ -17,7 +17,7 @@
   },
   "targets": {
     "test-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -28,7 +28,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -39,7 +39,7 @@
       }
     },
     "test-refusal": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

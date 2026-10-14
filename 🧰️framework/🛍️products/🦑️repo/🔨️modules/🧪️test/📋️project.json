@@ -1,11 +1,11 @@
 {
   "name": "@semio-tech/repo-test-domain",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
   "projectType": "application",
   "targets": {
     "test-command-composition-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test command-composition-source",
         "forwardAllArgs": true
@@ -17,7 +17,7 @@
       "outputs": []
     },
     "test-discover": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts discover",
         "forwardAllArgs": true
@@ -37,14 +37,14 @@
       "outputs": []
     },
     "test-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts contract",
         "forwardAllArgs": true
       }
     },
     "test-oracle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts oracle",
         "forwardAllArgs": true
@@ -56,14 +56,14 @@
       ]
     },
     "test-subject": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts subject",
         "forwardAllArgs": true
       }
     },
     "test-parity": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts parity",
         "forwardAllArgs": true
@@ -75,7 +75,7 @@
       ]
     },
     "test-report": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts report",
@@ -93,7 +93,7 @@
       ]
     },
     "test-clean": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts clean",
@@ -101,14 +101,14 @@
       }
     },
     "test-dependency": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts dependency",
         "forwardAllArgs": true
       }
     },
     "test-doctor": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts doctor",
@@ -116,7 +116,7 @@
       }
     },
     "test-inventory": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts inventory",
@@ -124,7 +124,7 @@
       }
     },
     "test-schema": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test schema",
@@ -141,7 +141,7 @@
       "outputs": []
     },
     "test-schema-mutation-inputs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-inputs",
@@ -150,7 +150,7 @@
       "outputs": []
     },
     "test-schema-mutation-inputs-census": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-inputs --census",
@@ -159,7 +159,7 @@
       "outputs": []
     },
     "test-schema-mutation-payloads": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-payloads",
@@ -168,7 +168,7 @@
       "outputs": []
     },
     "test-schema-mutation-payloads-census": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-payloads --census",
@@ -177,7 +177,7 @@
       "outputs": []
     },
     "test-schema-mutation-labels": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-labels",
@@ -186,7 +186,7 @@
       "outputs": []
     },
     "test-schema-mutation-labels-census": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-labels --census",
@@ -195,7 +195,7 @@
       "outputs": []
     },
     "test-schema-fault-notices": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema fault-notices",
@@ -204,7 +204,7 @@
       "outputs": []
     },
     "test-schema-fault-notices-census": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema fault-notices --census",
@@ -213,7 +213,7 @@
       "outputs": []
     },
     "test-schema-mutation-editability": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-editability",
@@ -222,7 +222,7 @@
       "outputs": []
     },
     "test-schema-mutation-editability-census": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts schema mutation-editability --census",
@@ -231,7 +231,7 @@
       "outputs": []
     },
     "test-mutation-payload-parity": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test mutation-payload-parity",
@@ -240,7 +240,7 @@
       "outputs": []
     },
     "test-fault-notices-gate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test fault-notices-gate",
@@ -249,7 +249,7 @@
       "outputs": []
     },
     "test-mutation-history-gates": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test mutation-history-gates",
@@ -258,7 +258,7 @@
       "outputs": []
     },
     "test-fixture-verify": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts fixture verify",
         "forwardAllArgs": true
@@ -270,14 +270,14 @@
       ]
     },
     "test-fixture-audit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts fixture audit",
         "forwardAllArgs": true
       }
     },
     "test-fixture-reproduce": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts fixture reproduce",
@@ -285,7 +285,7 @@
       }
     },
     "test-fixture-generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts fixture generate",
@@ -293,14 +293,14 @@
       }
     },
     "test-probe": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts probe",
         "forwardAllArgs": true
       }
     },
     "test-matrix": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts matrix",
@@ -309,7 +309,7 @@
       "outputs": []
     },
     "test-gc": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts gc",
@@ -317,7 +317,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts run",
         "forwardAllArgs": true
@@ -357,7 +357,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
@@ -367,7 +367,7 @@
       "outputs": []
     },
     "acceptance-plan": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
@@ -377,7 +377,7 @@
       "outputs": []
     },
     "inventory-provider-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
@@ -385,7 +385,7 @@
       }
     },
     "test-artifact-root-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test artifact-root-source",

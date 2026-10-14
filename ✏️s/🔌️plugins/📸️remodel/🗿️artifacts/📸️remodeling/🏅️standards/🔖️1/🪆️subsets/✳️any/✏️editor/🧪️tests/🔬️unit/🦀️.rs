@@ -584,22 +584,22 @@ async fn command_ids_and_wire_keywords_are_unique_per_row() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests).await;
-    assert!(RemodelingPlayApp::command_from_action("nonsense", None).is_err());
+    assert!(RemodelingPlayApp::command_from_action("nonsense", None, None).is_err());
 }
 
 /// 🌉️ Select-typed args arrive as strings; numeric-option selects (`textureSize`) must still land in
 /// a `u32` field, and a `setCamera` payload is accepted both flat and `{camera:{…}}`-nested.
 #[semio_framework_async_macros::async_test]
 async fn the_action_bridge_coerces_select_strings_and_both_camera_arg_shapes() {
-    let mesh = RemodelingPlayApp::command_from_action("setMeshParams", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "textureSize": "4096" })))).expect("bridge");
+    let mesh = RemodelingPlayApp::command_from_action("setMeshParams", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "textureSize": "4096" }))).clone()), None).expect("bridge");
     let RemodelingCommand::SetMeshParams(payload) = mesh else { panic!("expected SetMeshParams") };
     assert_eq!(payload.texture_size, 4096);
 
-    let flat = RemodelingPlayApp::command_from_action("setCamera", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 })))).expect("bridge");
-    let nested = RemodelingPlayApp::command_from_action("setCamera", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } })))).expect("bridge");
+    let flat = RemodelingPlayApp::command_from_action("setCamera", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 }))).clone()), None).expect("bridge");
+    let nested = RemodelingPlayApp::command_from_action("setCamera", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.25 } }))).clone()), None).expect("bridge");
     assert_eq!(flat, nested);
 
-    let example = RemodelingPlayApp::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" })))).expect("bridge");
+    let example = RemodelingPlayApp::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": "demo-session" }))).clone()), None).expect("bridge");
     assert_eq!(example, RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo-session".into() }));
 }
 

@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Native Mesh Resource Custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity",
+    "admission",
+    "loans",
+    "close",
+    "wire",
+    "caller"
+  ],
+  "properties": {
+    "identity": {
+      "const": [
+        "operation",
+        "generation",
+        "revision",
+        "cacheEpoch",
+        "sourceSlot",
+        "nativeSlot",
+        "nativeEpoch"
+      ]
+    },
+    "admission": {
+      "const": {
+        "ownerItems": 1,
+        "ownerCopyBytes": 0,
+        "loanItems": 1,
+        "loanCopyBytes": 0,
+        "returnItems": 1,
+        "returnCopyBytes": 0,
+        "newArena": false
+      }
+    },
+    "loans": {
+      "const": {
+        "sameNativePages": true,
+        "ownerCloseWaits": true,
+        "newLoanAfterClose": false,
+        "tokenOnlyClose": false
+      }
+    },
+    "close": {
+      "const": {
+        "originalCaller": true,
+        "deniedEffects": 0,
+        "dropEffects": 0,
+        "wholeFault": true
+      }
+    },
+    "wire": {
+      "const": "native-resource"
+    },
+    "caller": {
+      "const": {
+        "operation": 941,
+        "generation": 17,
+        "revision": 23,
+        "cacheEpoch": 1,
+        "sourceSlot": 0,
+        "clock": 1000,
+        "deadline": 1500,
+        "fuel": 65536,
+        "stock": {
+          "maximumItems": 65536,
+          "maximumCopyBytes": 1048576,
+          "maximumCapacityBytes": 8388608,
+          "maximumReleaseBytes": 16777216,
+          "maximumDepth": 256
+        },
+        "turn": {
+          "maximumItems": 1,
+          "maximumCopyBytes": 64,
+          "maximumCapacityBytes": 1048576,
+          "maximumReleaseBytes": 1048576,
+          "maximumDepth": 256
+        }
+      }
+    }
+  }
+}

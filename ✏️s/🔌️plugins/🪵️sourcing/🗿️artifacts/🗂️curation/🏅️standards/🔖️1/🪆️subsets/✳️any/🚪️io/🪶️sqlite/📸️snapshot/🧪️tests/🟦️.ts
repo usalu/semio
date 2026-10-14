@@ -12,7 +12,7 @@ import ioSchema from"../../../../../../../../../../../../../🧰️framework/�
 import childSchema from"../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json";
 import semioChildSchema from"../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary32,binary64,type Binary32,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32,binary64,type Binary32,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type{ArtifactSqliteOptions}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 type Geometry={kind:"box";width:Binary64;height:Binary64;depth:Binary64}|{kind:"frame";width:Binary64;height:Binary64;depth:Binary64;profile:Binary64}|{kind:"slab";width:Binary64;depth:Binary64;thickness:Binary64}|{kind:"mesh";positions:Binary32[];normals:Binary32[];indices:number[]}|{kind:"glb";url:string;extent:Binary64};

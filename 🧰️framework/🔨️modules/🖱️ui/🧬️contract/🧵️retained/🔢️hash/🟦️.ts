@@ -1,5 +1,5 @@
 //#region 🧬️SnapshotHashContract
-import type { NumericIndexGrant } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";
 import type { OwnedUiNode, UiNodeRetirement, UiSurfaceByteView } from "../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";

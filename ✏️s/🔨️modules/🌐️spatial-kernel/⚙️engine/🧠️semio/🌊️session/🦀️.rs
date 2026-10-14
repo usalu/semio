@@ -632,6 +632,9 @@ semio_framework_value::artifact_retire_struct!(AuthorityClaims {handles,active})
 type MeshCache=HistoryFoldIndex<(String,u64),CachedMesh>;
 type FamilyClaims=HistoryFoldIndex<u64,AuthorityClaims>;
 type FamilyRetirement=ControlledRetirement<(Brep,MeshCache,FamilyClaims)>;
+#[path="🏗️construction/🦀️.rs"]
+mod construction;
+pub use construction::{SessionConstructionCursor,SessionConstructionStep};
 #[path="♻️retention/🦀️.rs"]
 mod retained_membership;
 use retained_membership::SessionRetention;
@@ -1079,6 +1082,11 @@ pub fn with_kernel<T>(&self, f: impl FnOnce(&mut Brep) -> Result<T, EvalError>) 
     claims.entry(self.state.authority).or_default().extend(guard.live_handles().difference(&before).cloned());self.claims_changed();
     result
 }
+/// 🎟️ Drives the genuine retained Boolean job under the same original context without whole registry snapshots.
+pub fn step_boolean_job(&self,job:&mut semio_framework_3d_brep_engine::BrepBooleanJob,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_3d_brep_engine::BrepBooleanStep,semio_framework_job::OriginalTurnFailure>{
+    if self.is_closed(){return Err(ownership_busy().into())}
+    let mut kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;kernel.step_boolean_job_sync(job,cx)
+}
 pub fn with_kernel_read<T>(&self, f: impl FnOnce(&Brep) -> Result<T, EvalError>) -> Result<T, EvalError> {
     let guard = self.kernel().try_lock().map_err(|_| EvalError::InvalidInput("brep kernel owner busy".into()))?;
     if self.is_closed() { return Err(EvalError::InvalidInput("geometry.session-closed".into())); }
@@ -1245,40 +1253,7 @@ pub fn cached_mesh_payload_bytes(&self, handle: &str, tolerance: f64) -> usize {
 fn tessellation_work_units(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64)->usize {
     self.tessellation_jobs().try_lock().ok().and_then(|owner|owner.original().and_then(|registry|registry.jobs.iter().find(|(key,_)|key.0==handle&&key.1==tolerance.to_bits()&&key.2==identity.operation&&key.3==identity.generation).map(|(_,row)|row.source_units+row.job.progress().units_done+if row.validated{row.validation_units}else{0}))).unwrap_or(0)
 }
-pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> TessellationStepOutcome {
-    if self.is_closed() { return TessellationStepOutcome::Failed { message: "geometry.session-closed".into() }; }
-    let mut claims = self.state.claims.try_lock().expect("geometry claims");
-    if self.is_closed() { return TessellationStepOutcome::Failed { message: "geometry.session-closed".into() }; }
-    claims.entry(self.state.authority).or_default().insert(handle.into());self.claims_changed();
-    if let Some(mesh) = self.cached_mesh_at_or_finer(handle, tolerance) {
-        return TessellationStepOutcome::Ready { units_total: 0, faces_total: 0, mesh };
-    }
-    let key = (handle.to_string(), tolerance.to_bits(),0,0);
-    let Ok(guard) = self.kernel().try_lock() else {
-        return TessellationStepOutcome::Failed { message: "brep kernel owner busy".to_string() };
-    };
-    let geometry = GeometryHandle(handle.to_string());
-    let Ok(mut job_owner) = self.tessellation_jobs().try_lock() else {
-        return TessellationStepOutcome::Failed { message: "tessellation job registry owner busy".to_string() };
-    };
-    let Some(registry)=job_owner.original_mut() else {return TessellationStepOutcome::Cancelled};
-    if registry.jobs.get(&key).is_some_and(|row|row.retired) {return TessellationStepOutcome::Cancelled;}
-    if !registry.jobs.contains_key(&key) {
-        let job = match guard.tessellate_job_sync(&geometry, tolerance) {
-            Ok(job) => job,
-            Err(error) => return TessellationStepOutcome::Failed { message: error.to_string() },
-        };
-        if registry.jobs.len()>=TESSELLATION_JOB_CAPACITY {return TessellationStepOutcome::Failed {message:"tessellation retirement admission is required before another retained job".into()};}
-        let clock = registry.clock;
-        let validation_units=usize::from(matches!(guard.kind_sync(&geometry),Ok(GeometryKind::Solid|GeometryKind::Shell|GeometryKind::Compound)));
-        registry.jobs.insert(key.clone(),RetainedTessellation {identity:semio_framework_os_flow::geometry::GeometryWorkIdentity{operation:0,generation:0},source:0,length:0,source_units:0,geometry:None,admission_claim:String::new(),validation_units,validation:(validation_units!=0).then(||semio_framework_3d_brep_queries::validation::BodyValidationJob::new(guard.tessellation_body())),validated:validation_units==0,job,last_step:clock,retired:false,output:None,previous_mesh:None});
-    }
-    registry.clock += 1;let clock=registry.clock;
-    let retained=registry.jobs.get_mut(&key).expect("original admitted tessellation row");retained.last_step=clock;
-    let outcome=self.step_tessellation_row(&guard,&key,retained,Some(&geometry),budget);
-    if !matches!(outcome,TessellationStepOutcome::Working{..}){registry.retire_slot=0;}
-    outcome
-}
+
 fn step_tessellation_row(&self,guard:&Brep,key:&TessellationJobKey,retained:&mut RetainedTessellation,geometry:Option<&GeometryHandle>,budget:usize)->TessellationStepOutcome{
     let Some(geometry)=geometry.or(retained.geometry.as_ref())else{return TessellationStepOutcome::Failed{message:"original tessellation row has no retained geometry source".into()};};
     let mut remaining=budget;
@@ -1313,80 +1288,6 @@ fn step_tessellation_row(&self,guard:&Brep,key:&TessellationJobKey,retained:&mut
     }
 }
 
-pub fn tessellate_geometry(&self, handle: &str, tolerance: f64) -> Result<semio_framework::MeshData, String> {
-    self.retire_tessellations_cold()?;
-    loop {
-        match self.tessellate_step(handle, tolerance, usize::MAX) {
-            TessellationStepOutcome::Ready { mesh, .. } => return Ok(mesh),
-            TessellationStepOutcome::Working { .. } => continue,
-            TessellationStepOutcome::Cancelled => return Err("tessellation cancelled".to_string()),
-            TessellationStepOutcome::Failed { message } => return Err(message),
-            TessellationStepOutcome::Invalid { issues } => {
-                let joined = issues.iter().map(|issue| format!("[{}] {}: {}", issue.code, issue.entity, issue.message)).collect::<Vec<_>>().join("; ");
-                return Err(format!("validation rejected the solid before tessellation: {joined}"));
-            }
-        }
-    }
-}
-pub fn tessellate_step_envelope_json(&self, handle: &str, tolerance: f64, budget: usize, wall_micros: u64, chunk: usize) -> String {
-    use semio_framework_pack_json::{object, Value};
-    let deadline = semio_framework_job::default_now_us().map(|now| now.saturating_add(wall_micros));
-    let mut outcome = self.tessellate_step(handle, tolerance, budget);
-    while matches!(outcome, TessellationStepOutcome::Working { .. }) {
-        let Some(deadline) = deadline else { break };
-        if semio_framework_job::default_now_us().is_none_or(|now| now >= deadline) {
-            break;
-        }
-        outcome = self.tessellate_step(handle, tolerance, budget);
-    }
-    let envelope = match outcome {
-        TessellationStepOutcome::Working { units_done, units_total, faces_done, faces_total, phase } => object([
-            ("done".to_string(), Value::Bool(false)),
-            ("cancellable".to_string(), Value::Bool(true)),
-            ("phase".to_string(), Value::String(phase.to_string())),
-            ("unitsDone".to_string(), Value::from(units_done as u64)),
-            ("unitsTotal".to_string(), Value::from(units_total as u64)),
-            ("facesDone".to_string(), Value::from(faces_done as u64)),
-            ("facesTotal".to_string(), Value::from(faces_total as u64)),
-        ]),
-        TessellationStepOutcome::Ready { mesh, units_total, faces_total } => {
-            let body = match encode_mesh_pack(&mesh) {
-                Ok(bytes) => bytes,
-                Err(message) => return failed_envelope_json("tessellate.encode", &message),
-            };
-            let chunks = chunk_mesh_base64(&encode_base64(&body));
-            let index = chunk.min(chunks.len().saturating_sub(1));
-            object([
-                ("done".to_string(), Value::Bool(true)),
-                ("cancellable".to_string(), Value::Bool(false)),
-                ("phase".to_string(), Value::String("complete".to_string())),
-                ("unitsDone".to_string(), Value::from(units_total as u64)),
-                ("unitsTotal".to_string(), Value::from(units_total as u64)),
-                ("facesDone".to_string(), Value::from(faces_total as u64)),
-                ("facesTotal".to_string(), Value::from(faces_total as u64)),
-                ("chunk".to_string(), Value::from(index as u64)),
-                ("chunks".to_string(), Value::from(chunks.len() as u64)),
-                ("packBytes".to_string(), Value::from(body.len() as u64)),
-                ("meshPack".to_string(), Value::String(chunks[index].clone())),
-            ])
-        }
-        TessellationStepOutcome::Cancelled => object([("done".to_string(), Value::Bool(true)), ("cancellable".to_string(), Value::Bool(false)), ("phase".to_string(), Value::String("cancelled".to_string()))]),
-        TessellationStepOutcome::Invalid { issues } => object([
-            ("done".to_string(), Value::Bool(true)),
-            ("cancellable".to_string(), Value::Bool(false)),
-            ("phase".to_string(), Value::String("invalid".to_string())),
-            ("diagnostics".to_string(), Value::Array(issues.iter().map(|issue| object([("entity".to_string(), Value::String(issue.entity.clone())), ("code".to_string(), Value::String(issue.code.clone())), ("message".to_string(), Value::String(issue.message.clone()))])).collect())),
-        ]),
-        TessellationStepOutcome::Failed { message } => return failed_envelope_json("tessellate.failed", &message),
-    };
-    semio_framework_pack_json::to_string(&envelope)
-}
-pub fn tessellate_geometry_json_for_wasm(&self, handle: &str, tolerance: f64) -> String {
-    match self.tessellate_geometry(handle, tolerance) {
-        Ok(mesh) => semio_framework_pack_json::to_json_string(&mesh),
-        Err(error) => semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(error))])),
-    }
-}
 pub fn dispose_geometry(&self, handle: &str) -> Result<(), String> {
     let mut claims = self.state.claims.try_lock().map_err(|_| "geometry claims owner busy")?;
     if self.is_closed() { return Err("geometry.session-closed".into()); }
@@ -1673,9 +1574,9 @@ impl semio_framework_os_flow::geometry::GeometryPort for SessionPort {
     fn retain_step_progress(&self)->RetainedCloneProgress{self.retain_receipt}
     fn retain_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retain_receipt=Default::default();let Some(owner)=self.retaining.get_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(self.authority.session.as_ref().ok_or_else(ownership_busy)?,grant);self.retain_receipt=owner.normal_step_progress();let step=result?;if owner.terminal_is_empty(){*self.retaining.get_mut()=None;Ok(RetainedCloneStep::Complete(step.progress()))}else{Ok(RetainedCloneStep::Progress(step.progress()))}}
     fn tessellation_demands(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.tessellation_demands(identity,handle,tolerance,copy)}
-    fn tessellate_step(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(semio_framework_os_flow::geometry::GeometryStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_framework_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.tessellate_step_funded(identity,handle,tolerance,units,grant)}
+    fn tessellate_step(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_os_flow::geometry::GeometryStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_framework_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.tessellate_step(identity,handle,tolerance,cx)}
     fn cancel_tessellation_demands(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.cancel_tessellation_demands(identity,handle,tolerance,copy)}
-    fn cancel_tessellation_step(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(RetainedCloneStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_framework_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.cancel_tessellation_step(identity,handle,tolerance,units,grant)}
+    fn cancel_tessellation_step(&self,identity:semio_framework_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(RetainedCloneStep,semio_framework_os_flow::geometry::GeometryWorkProgress),semio_framework_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_framework_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.cancel_tessellation_step(identity,handle,tolerance,cx)}
     fn dispose(&self,handle:&str)->Result<(),String> {self.authority.session.as_ref().ok_or("geometry session is closed")?.dispose_geometry(handle)}
     fn begin_cancel(&mut self)->Result<(),ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.begin_cancel()?;if let Some(owner)=self.retaining.get_mut(){owner.cancel();}Ok(())}
     fn cancel_terminal_is_empty(&self)->bool{self.retain_terminal_is_empty()&&self.authority.session.as_ref().is_none_or(Session::cancel_terminal_is_empty)}
@@ -1708,7 +1609,6 @@ mod browser {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self { Self {session:super::SessionCapture::owned(super::Session::new())} }
         pub fn brep_invoke(&self, method: &str, arguments: &str) -> String { self.session.session.as_ref().map_or_else(||"{\"error\":\"geometry.session-closed\"}".into(),|session|session.brep_invoke_json(method,arguments)) }
-        pub fn tessellate(&self, handle: &str, tolerance: f64) -> String { self.session.session.as_ref().map_or_else(||"{\"error\":\"geometry.session-closed\"}".into(),|session|session.tessellate_geometry_json_for_wasm(handle,tolerance)) }
         pub fn dispose(&self, handle: &str) -> Result<(), JsValue> { self.session.session.as_ref().ok_or_else(||JsValue::from_str("geometry.session-closed"))?.dispose_geometry(handle).map_err(|error|JsValue::from_str(&error)) }
         pub fn begin_close(&self) { self.session.begin_close(); }
         pub fn cancel_close(&self) { self.session.cancel_close(); }
@@ -1749,28 +1649,24 @@ fn retired_analytic_mesh_metadata_obeys_exact_byte_grants() {
 #[cfg(test)]
 mod physical_session_custody {
     use super::*;
-    use std::alloc::{GlobalAlloc,Layout,System};
-    thread_local! {static EVENTS:std::cell::Cell<(bool,usize,usize)>=const {std::cell::Cell::new((false,0,0))};}
-    struct Observer;
-    fn event(birth:usize,release:usize) {let _=EVENTS.try_with(|events|{let(active,born,freed)=events.get();if active {events.set((true,born+birth,freed+release));}});}
-    unsafe impl GlobalAlloc for Observer {
-        unsafe fn alloc(&self,layout:Layout)->*mut u8 {let pointer=unsafe {System.alloc(layout)};if !pointer.is_null() {event(layout.size(),0);}pointer}
-        unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout) {event(0,layout.size());unsafe {System.dealloc(pointer,layout)}}
-        unsafe fn realloc(&self,pointer:*mut u8,layout:Layout,size:usize)->*mut u8 {let result=unsafe {System.realloc(pointer,layout,size)};if !result.is_null() {event(size,layout.size());}result}
-    }
     #[global_allocator]
-    static SYSTEM:Observer=Observer;
-    pub(super) fn observe<T>(work:impl FnOnce()->T)->(T,(usize,usize)) {EVENTS.with(|events|events.set((true,0,0)));let value=work();let counts=EVENTS.with(|events|{let(_,born,freed)=events.replace((false,0,0));(born,freed)});(value,counts)}
+    static SYSTEM:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+    pub(super) fn observe<T>(work:impl FnOnce()->T)->(T,(usize,usize)) {let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,(heap.requested_bytes,heap.released_bytes))}
     #[test]
     fn original_session_capture_keeps_same_allocation_until_full_typed_grants() {
         let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
         let row=&fixture["box"];let custody=&fixture["physicalCustody"];
+        let identity=semio_framework_os_flow::geometry::GeometryWorkIdentity{operation:61,generation:1};
+        let mut caller=super::original_tessellation_authority_tests::original_geometry_caller(identity);
+        let stock=super::original_tessellation_authority_tests::original_geometry_source_grant();
         let (mut capture,factory)=observe(|| {
             let source=Session::new();let handle=source.with_kernel(|kernel|kernel.box_prim_sync(row["width"].as_f64().unwrap(),row["depth"].as_f64().unwrap(),row["height"].as_f64().unwrap()).map_err(|error|map_kernel_error(&error))).unwrap();
-            assert!(matches!(source.tessellate_step(handle.as_str(),0.05,0),TessellationStepOutcome::Working {..}));
+            let probe=caller.turn(stock,|cx|{let mut result=None;cx.with_original_work_loan(0,cx.deadline_us(),|same|{result=Some(source.tessellate_step(identity,handle.as_str(),0.05,same));Ok(())})?;Ok(result.unwrap())}).unwrap().unwrap();
+            assert!(matches!(probe.0,semio_framework_os_flow::geometry::GeometryStep::Working {..}));
             let mut warmed=false;
             for _ in 0..custody["maximumWarmTurns"].as_u64().unwrap() {
-                match source.tessellate_step(handle.as_str(),0.05,1) {TessellationStepOutcome::Working {faces_done,..}=>{if faces_done>=custody["warmFaces"].as_u64().unwrap() as usize {warmed=true;break;}},other=>panic!("original partial tessellation did not remain owned: {other:?}")}
+                let(step,_)=caller.turn(stock,|cx|Ok(source.tessellate_step(identity,handle.as_str(),0.05,cx))).unwrap().unwrap();
+                match step {semio_framework_os_flow::geometry::GeometryStep::Working {..}=>{let owner=source.tessellation_jobs().try_lock().unwrap();let registry=owner.original().unwrap();let faces=registry.jobs.iter().find(|(key,_)|key.0==handle.0&&key.1==0.05f64.to_bits()).map_or(0,|(_,row)|row.job.progress().faces_done);if faces>=custody["warmFaces"].as_u64().unwrap()as usize {warmed=true;break}},other=>panic!("original partial tessellation did not remain owned: {other:?}")}
             }
             assert!(warmed,"original job must retain sampled edges and a partial mesh");
             let capture=source.capture();drop(handle);drop(source);capture
@@ -1794,6 +1690,7 @@ mod physical_session_custody {
             if parent && capture.terminal_is_empty() {assert!(matches!(step,RetainedCloneStep::Complete(_)));assert_eq!(heap.1,release);final_shell+=1;}
         }
         assert_eq!(retained+born,freed);assert_eq!(final_shell,1);assert!(refusals>0);
+        caller.retire(stock);
         println!("[DEBUG] Original Session actualWeakPin=true warmedPartialMesh=true retainedSource={retained} admittedBirth={born} physicalRelease={freed} repeatedEightByteRefusals={refusals} turns={turns} separateFinalShell={final_shell}");
     }
 }

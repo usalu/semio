@@ -1,0 +1,23 @@
+/** 🧩️ Specific Semio/Jack composition laws retain full typed children and independent SQLite witnesses. */
+import {expect,test} from "bun:test";
+import {Database} from "bun:sqlite";
+import * as owner from "./../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🟦️.ts";
+import {bindSemioJackGraph} from "../🟦️.ts";
+test("Jack published inference propagates retained child refusal and reads full raw graph",async()=>{
+ const contract=await Bun.file(new URL("./🧫️fixtures/🧭️topology.json",import.meta.url)).json();
+ const vector=await Bun.file(new URL("./🧫️fixtures/🪆️retained.json",import.meta.url)).json(),parent=owner.parseJackJsonValue(vector.parent),raw=JSON.parse(JSON.stringify(vector.childSnapshot),(key,value)=>key==="bits"?BigInt("0x"+value):value);
+
+ const save=(value:unknown)=>JSON.stringify(value,(_,value)=>typeof value==="bigint"?value.toString():value);
+ for(const example of contract.cases){const child={...raw,edges:example.edgeOrdinals.map((ordinal:number)=>raw.edges[ordinal])},before=save(child),db=new Database(":memory:");try{db.exec("CREATE TABLE node(id INTEGER PRIMARY KEY,literal TEXT NOT NULL UNIQUE); CREATE TABLE edge(source INTEGER NOT NULL REFERENCES node(id),target INTEGER NOT NULL REFERENCES node(id))");for(const[index,node]of child.nodes.entries())db.run("INSERT INTO node VALUES(?,?)",[index+1,node.id.value]);for(const edge of child.edges)db.run("INSERT INTO edge SELECT s.id,t.id FROM node s,node t WHERE s.literal=? AND t.literal=?",[edge.source.value,edge.target.value]);const rows=db.query("WITH RECURSIVE walk(id,depth) AS (SELECT id,0 FROM node n WHERE NOT EXISTS(SELECT 1 FROM edge e WHERE e.target=n.id) UNION ALL SELECT e.target,w.depth+1 FROM walk w JOIN edge e ON e.source=w.id) SELECT n.literal,MAX(w.depth) AS depth FROM walk w JOIN node n ON n.id=w.id GROUP BY n.id ORDER BY depth,n.literal COLLATE BINARY").all() as {literal:string;depth:number}[];expect(rows.map(row=>row.literal)).toEqual(example.expected.topoOrder);expect(Object.fromEntries(rows.map(row=>[row.literal,row.depth]))).toEqual(example.expected.depth);expect(owner.inferJackTopology(parent,new Map([[parent.content.childId,bindSemioJackGraph(parent.content,child)]]))).toEqual(example.expected);expect(save(child)).toBe(before);}finally{db.close();}}
+ const refused=(parent:any,children:any)=>{try{owner.inferJackTopology(parent,children);throw Error("accepted refused child");}catch(error){expect((error as {kind:string}).kind).toBe(contract.refusalKind);}};
+ refused(parent,new Map());refused({...parent,content:{...parent.content,target:{...parent.content.target,dialect:{artifactKind:"s.stdio.semio",standard:"v1",subset:"base"}}}},new Map([[parent.content.childId,bindSemioJackGraph(parent.content,raw)]]));refused(parent,new Map([[parent.content.childId,bindSemioJackGraph(parent.content,{...raw,edges:[{...raw.edges[0],target:{value:"absent"}}]})]]));
+});
+
+test("Jack published flattened positions retain typed child and refuse invalid offset family",async()=>{
+ const contract=await Bun.file(new URL("./🧫️fixtures/🎛️flat.json",import.meta.url)).json();
+ const vector=await Bun.file(new URL("./🧫️fixtures/🪆️retained.json",import.meta.url)).json(),parent=owner.parseJackJsonValue(vector.parent),raw=JSON.parse(JSON.stringify(vector.childSnapshot),(key,value)=>key==="bits"?BigInt("0x"+value):value);
+
+ for(const example of contract.cases){const child={...raw,edges:[{...raw.edges[0],properties:example.properties}]},before=JSON.stringify(child,(_,value)=>typeof value==="bigint"?value.toString():value),db=new Database(":memory:");try{db.exec("CREATE TABLE offset(id TEXT PRIMARY KEY,u REAL NOT NULL,v REAL NOT NULL)");db.run("INSERT INTO offset VALUES('a',0,0)");db.run("INSERT INTO offset SELECT 'b',u+?,v+? FROM offset WHERE id='a'",[Number(example.properties.find((entry:any)=>entry.key==="u")?.value.lexeme??0),Number(example.properties.find((entry:any)=>entry.key==="v")?.value.lexeme??0)]);const expected=Object.fromEntries((db.query("SELECT id,u,v FROM offset ORDER BY id COLLATE BINARY").all() as any[]).map(({id,u,v})=>[id,{u,v}]));expect(expected).toEqual(example.expected);expect(owner.inferJackFlatPosition(parent,new Map([[parent.content.childId,bindSemioJackGraph(parent.content,child)]]))).toEqual({positions:expected});expect(JSON.stringify(child,(_,value)=>typeof value==="bigint"?value.toString():value)).toBe(before);}finally{db.close();}}
+ try{owner.inferJackFlatPosition(parent,new Map([[parent.content.childId,bindSemioJackGraph(parent.content,{...raw,edges:[{...raw.edges[0],properties:[contract.refusal]}]})]]));throw Error("accepted invalid typed offset");}catch(error){expect((error as {kind:string}).kind).toBe(contract.refusalKind);}
+});
+

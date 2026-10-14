@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "original": {
+    "operation": 71,
+    "generation": 3,
+    "epoch": 23,
+    "fuel": 17,
+    "deadlineUs": 123456,
+    "cancelled": true
+  },
+  "methods": [
+    {
+      "name": "start_job",
+      "reply": "OriginalJobStartReply",
+      "wire": "job-start-call",
+      "source": true
+    },
+    {
+      "name": "step_job",
+      "reply": "OriginalJobStepReply<OriginalJobOutcome>",
+      "wire": "job-step-call",
+      "source": false
+    },
+    {
+      "name": "read_job_output",
+      "reply": "OriginalJobOutputReply",
+      "wire": "job-output-call",
+      "source": false
+    },
+    {
+      "name": "acknowledge_job_output",
+      "reply": "OriginalJobOutputAckReply",
+      "wire": "job-output-ack-call",
+      "source": false
+    },
+    {
+      "name": "cancel_job",
+      "reply": "OriginalJobCancelReply",
+      "wire": "job-cancel-call",
+      "source": false
+    },
+    {
+      "name": "close_jobs",
+      "reply": "OriginalJobCancelReply",
+      "wire": "job-cancel-call",
+      "source": false
+    }
+  ],
+  "receiptFields": [
+    "input",
+    "spent",
+    "work_units_spent"
+  ],
+  "retainedFailure": [
+    "authority",
+    "semantic"
+  ],
+  "closeCuts": [
+    {
+      "items": 0,
+      "copy": 64,
+      "depth": 1,
+      "fuel": 1,
+      "demand": 24,
+      "moves": false
+    },
+    {
+      "items": 1,
+      "copy": 23,
+      "depth": 1,
+      "fuel": 1,
+      "demand": 24,
+      "moves": false
+    },
+    {
+      "items": 1,
+      "copy": 24,
+      "depth": 0,
+      "fuel": 1,
+      "demand": 24,
+      "moves": false
+    },
+    {
+      "items": 1,
+      "copy": 24,
+      "depth": 1,
+      "fuel": 0,
+      "demand": 24,
+      "moves": false
+    },
+    {
+      "items": 1,
+      "copy": 24,
+      "depth": 1,
+      "fuel": 1,
+      "demand": 24,
+      "moves": true
+    }
+  ],
+  "ownedCalls": [
+    {
+      "name": "step_job",
+      "parameters": 12,
+      "resultBytes": 160
+    },
+    {
+      "name": "read_job_output",
+      "parameters": 12,
+      "resultBytes": 160
+    },
+    {
+      "name": "acknowledge_job_output",
+      "parameters": 12,
+      "resultBytes": 160
+    },
+    {
+      "name": "cancel_job",
+      "parameters": 12,
+      "resultBytes": 160
+    },
+    {
+      "name": "close_jobs",
+      "parameters": 11,
+      "resultBytes": 160
+    }
+  ],
+  "cleanupCuts": [
+    {
+      "id": "pending-paid",
+      "complete": false,
+      "postedItems": 1,
+      "items": 1,
+      "copyBytes": 8,
+      "advance": false,
+      "additionalItems": 0
+    },
+    {
+      "id": "terminal-paid",
+      "complete": true,
+      "postedItems": 1,
+      "items": 1,
+      "copyBytes": 8,
+      "advance": false,
+      "additionalItems": 0
+    },
+    {
+      "id": "empty-paid-cursor",
+      "complete": true,
+      "postedItems": 0,
+      "items": 1,
+      "copyBytes": 8,
+      "advance": true,
+      "additionalItems": 1
+    },
+    {
+      "id": "empty-denied-items",
+      "complete": true,
+      "postedItems": 0,
+      "items": 0,
+      "copyBytes": 8,
+      "advance": false,
+      "additionalItems": 0
+    },
+    {
+      "id": "empty-denied-copy",
+      "complete": true,
+      "postedItems": 0,
+      "items": 1,
+      "copyBytes": 7,
+      "advance": false,
+      "additionalItems": 0
+    }
+  ]
+}

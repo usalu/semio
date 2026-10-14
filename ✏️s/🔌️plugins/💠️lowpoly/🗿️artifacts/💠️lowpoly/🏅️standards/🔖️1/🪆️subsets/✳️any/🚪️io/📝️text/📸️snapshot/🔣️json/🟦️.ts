@@ -1,7 +1,7 @@
 /** 🔣️ Declared Lowpoly JSON wire fields lower into exact canonical scalars and intrinsic octets. */
 import{parseLowpolyArtifact,lowpolyLowpolyArtifactGuardObject as object,lowpolyLowpolyArtifactGuardArray as array,lowpolyLowpolyArtifactGuardNumber as number,lowpolyLowpolyArtifactGuardString as text}from"../../../../🧬️schema/🟦️.ts";
 import type{LowpolySnapshot}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary32} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{base64StandardDecode}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 import {decodeLowpolyMeshJson} from "../🕸️mesh/🔣️json/🟦️.ts";
 function vector(value:unknown):ReturnType<typeof binary32>[] {return array(value,"vector",{minItems:3,maxItems:3}).map(value=>binary32(number(value,"component")));}

@@ -44,7 +44,7 @@ async fn stable_cell_action_fixture_roundtrips_exact_text_through_parser_and_bin
     const FIXTURE: &str = include_str!("../🧫️fixtures/📊️stable-cell-edit/🔣️.json");
     let oracle: serde_json::Value = serde_json::from_str(FIXTURE).expect("third-party JSON oracle parses the action fixture");
     let args = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("DSL JSON parses the action fixture");
-    let command = XlsxEditor::command_from_action("set-cell", Some(&args)).expect("stable cell action parses");
+    let command = XlsxEditor::command_from_action("set-cell", Some((args).clone()), None).expect("stable cell action parses");
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(native) = &command else { panic!("expected native command") };
     assert_eq!(
         native,

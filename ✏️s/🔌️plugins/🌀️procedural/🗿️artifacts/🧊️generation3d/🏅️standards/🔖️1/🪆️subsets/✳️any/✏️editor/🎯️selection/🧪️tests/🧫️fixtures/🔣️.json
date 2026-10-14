@@ -353,5 +353,34 @@
       },
       "accepted": false
     }
-  ]
+  ],
+  "quickActionParameters": {
+    "amount": 0.1,
+    "cuts": 1,
+    "dx": 0,
+    "dy": 0,
+    "dz": 0,
+    "width": 0.1,
+    "segments": 1,
+    "mergeMode": "center",
+    "tolerance": 0.0001,
+    "radius": 1,
+    "grid": 1,
+    "center": [
+      0,
+      0,
+      0
+    ],
+    "angle": 0.1,
+    "pullDirection": [
+      0,
+      0,
+      1
+    ],
+    "neutralPoint": [
+      0,
+      0,
+      0
+    ]
+  }
 }

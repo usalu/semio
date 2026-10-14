@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "faults": [
+    {
+      "phase": "stage",
+      "at": 1,
+      "originalCode": "ENOSPC",
+      "priorPreserved": true,
+      "childDispatch": false,
+      "leaseRefused": true,
+      "leaseReleased": true
+    },
+    {
+      "phase": "stage",
+      "at": 2,
+      "originalCode": "ENOSPC",
+      "priorPreserved": true,
+      "childDispatch": false,
+      "leaseRefused": true,
+      "leaseReleased": true
+    },
+    {
+      "phase": "stage",
+      "at": 3,
+      "originalCode": "ENOSPC",
+      "priorPreserved": true,
+      "childDispatch": false,
+      "leaseRefused": true,
+      "leaseReleased": true
+    },
+    {
+      "phase": "commit",
+      "at": 1,
+      "originalCode": "EACCES",
+      "priorPreserved": true,
+      "childDispatch": false,
+      "leaseRefused": true,
+      "leaseReleased": true
+    },
+    {
+      "phase": "commit",
+      "at": 2,
+      "originalCode": "EACCES",
+      "priorPreserved": true,
+      "childDispatch": false,
+      "leaseRefused": true,
+      "leaseReleased": true
+    },
+    {
+      "phase": "commit",
+      "at": 3,
+      "originalCode": "EACCES",
+      "priorPreserved": true,
+      "childDispatch": false,
+      "leaseRefused": true,
+      "leaseReleased": true
+    }
+  ],
+  "cohortRefused": true,
+  "rollbackCauseHeld": true,
+  "rollbackBackupRetained": true,
+  "generationRefused": true,
+  "interruptionRefused": true,
+  "unchangedGeneration": {
+    "preserved": true,
+    "changedPublished": true,
+    "receiptPreserved": true
+  },
+  "producerOwnership": {
+    "callbackHeld": true,
+    "minted": true,
+    "leaseReleased": true,
+    "expiredLeaseRefused": true,
+    "wrongOwnPidRefused": true,
+    "missingOwnRefused": true,
+    "ownSymlinkRefused": true,
+    "forgedLeaseRefused": true,
+    "foreignControlRefused": true
+  }
+}

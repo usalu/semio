@@ -10,9 +10,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun nx run @semio-tech/trinity-rewriting:build",
-    "check": "bun nx run @semio-tech/trinity-rewriting:check",
-    "test": "bun nx run @semio-tech/trinity-rewriting:test"
+    "build": "bun repo run @semio-tech/trinity-rewriting:build",
+    "check": "bun repo run @semio-tech/trinity-rewriting:check",
+    "test": "bun repo run @semio-tech/trinity-rewriting:test"
   },
   "exports": {
     ".": {

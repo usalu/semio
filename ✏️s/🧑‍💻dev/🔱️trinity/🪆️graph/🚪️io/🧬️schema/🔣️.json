@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:s.dev.trinity.jack.archive",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "archive"
+  ],
+  "properties": {
+    "schema": {
+      "const": "s.dev.trinity.jack.archive.v1"
+    },
+    "archive": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{2})+$",
+      "maxLength": 8388608
+    }
+  }
+}

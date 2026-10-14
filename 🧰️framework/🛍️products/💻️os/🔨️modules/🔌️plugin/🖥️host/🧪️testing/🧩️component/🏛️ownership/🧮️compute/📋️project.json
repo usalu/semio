@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/framework-plugin-host-test-component-compute-ownership",
-  "$schema": "../../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

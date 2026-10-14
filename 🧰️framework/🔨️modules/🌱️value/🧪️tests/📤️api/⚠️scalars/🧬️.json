@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "ownerName", "sdkName", "removedRoots", "facets", "refusal", "ieee", "capture", "invalidWords"],
+  "properties": {
+    "version": { "const": 1 },
+    "ownerName": { "const": "@semio-tech/value-ts" },
+    "sdkName": { "const": "@semio-tech/framework" },
+    "removedRoots": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "facets": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/facet" } },
+    "refusal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kinds", "invalid", "message", "path", "display", "receipt"],
+      "properties": {
+        "kinds": { "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true, "items": { "enum": ["invalidValue", "canceled", "ownershipLimit", "allocationFailed", "workLimit", "depthLimit", "unsupportedOwner", "invariantViolated"] } },
+        "invalid": { "type": "array", "minItems": 1 },
+        "message": { "type": "string" },
+        "path": { "type": "array", "items": { "type": ["string", "integer"] } },
+        "display": { "type": "string" },
+        "receipt": { "type": "object", "additionalProperties": false, "required": ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes"], "properties": { "copiedItems": { "$ref": "#/$defs/count" }, "copiedBytes": { "$ref": "#/$defs/count" }, "retainedCapacityBytes": { "$ref": "#/$defs/count" }, "releasedBytes": { "$ref": "#/$defs/count" } } }
+      }
+    },
+    "ieee": { "type": "array", "minItems": 14, "items": { "type": "object", "additionalProperties": false, "required": ["width", "bits", "value"], "properties": { "width": { "enum": [32, 64] }, "bits": { "type": "string", "pattern": "^(?:[0-9a-f]{8}|[0-9a-f]{16})$" }, "value": { "enum": ["positiveZero", "negativeZero", "finite", "positiveInfinity", "negativeInfinity", "nan"] } } } },
+    "capture": { "type": "array", "minItems": 1, "items": { "type": "number" } },
+    "invalidWords": { "type": "array", "minItems": 1 }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "names": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "facet": { "type": "object", "additionalProperties": false, "required": ["ownerExport", "sdkExport", "runtime", "types"], "properties": { "ownerExport": { "enum": ["./refusal", "./ieee754"] }, "sdkExport": { "enum": ["./value/refusal", "./value/ieee754"] }, "runtime": { "$ref": "#/$defs/names" }, "types": { "$ref": "#/$defs/names" } } }
+  }
+}

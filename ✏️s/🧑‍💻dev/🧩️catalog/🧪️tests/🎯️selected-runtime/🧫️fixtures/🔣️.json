@@ -1,0 +1,76 @@
+{
+  "variants": [
+    {
+      "variant": "puzzle3d",
+      "engines": [
+        "@semio-tech/puzzle-plugin:wasm"
+      ],
+      "forbiddenProjects": [
+        "@semio-tech/framework-editor-rs",
+        "@semio-tech/framework-surface-rs"
+      ]
+    },
+    {
+      "variant": "puzzle5d",
+      "engines": [
+        "@semio-tech/puzzle-plugin:wasm"
+      ],
+      "forbiddenProjects": []
+    },
+    {
+      "variant": "writer",
+      "engines": [],
+      "forbiddenProjects": [
+        "@semio-tech/puzzle-plugin"
+      ]
+    },
+    {
+      "variant": "s",
+      "engines": [],
+      "forbiddenProjects": []
+    },
+    {
+      "variant": "flow",
+      "engines": [
+        "semio-framework-os-flow-core:wasm"
+      ],
+      "forbiddenProjects": [
+        "@semio-tech/puzzle-plugin"
+      ]
+    },
+    {
+      "variant": "puzzle2d",
+      "engines": [
+        "@semio-tech/puzzle-plugin:wasm"
+      ],
+      "forbiddenProjects": []
+    }
+  ],
+  "profiles": [
+    "prototype",
+    "release"
+  ],
+  "renderers": [
+    "react",
+    "wgpu"
+  ],
+  "sharedEngines": [
+    "semio-framework-os-flow-core:wasm"
+  ],
+  "fontTool": {
+    "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+    "project": "semio-framework-canvas-font-assets",
+    "crates": [
+      "semio-framework-canvas-font-assets",
+      "typst-assets"
+    ],
+    "commands": [
+      "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "forbiddenInputs": [
+      "/🔌️plugin/",
+      "/🧪️tests/"
+    ]
+  }
+}

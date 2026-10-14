@@ -1,4 +1,4 @@
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { developmentRuntimeRoot, parseActivationReceipt, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
@@ -6,7 +6,7 @@ import { demonstratorRuntimeComponentIds } from "../📦️assets/🟦️.ts";
 import { demonstratorRuntimeBuildVariants, demonstratorRuntimePluginId } from "../🟦️.ts";
 import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 import { moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 //#region 🔖️DemonstratorActivationLanes
@@ -78,7 +78,7 @@ export function mergeDemonstratorActivationReceipts(lanes: readonly Demonstrator
     for (const row of receipt.plugins) {
       const previous = rows.get(row.pluginId);
       if (!previous) { rows.set(row.pluginId, { lane, row }); continue; }
-      if (previous.row.artifactSha256 !== row.artifactSha256) throw new Error(`Stale Demonstrator activation lane: ${row.pluginId} is ${previous.row.artifactSha256} in ${previous.lane} but ${row.artifactSha256} in ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
+      if (previous.row.artifactSha256 !== row.artifactSha256) throw new Error(`Stale Demonstrator activation lane: ${row.pluginId} is ${previous.row.artifactSha256} in ${previous.lane} but ${row.artifactSha256} in ${lane} (run bun repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
       if (row.rebuiltAt < previous.row.rebuiltAt) rows.set(row.pluginId, { lane, row });
     }
   }
@@ -93,7 +93,7 @@ function readDemonstratorActivationLane(workspace: string, lane: string): Demons
   try { return { lane, receipt: readActivationReceipt(demonstratorActivationLaneReceiptDirectory(workspace, lane)) }; }
   catch (error) {
     if ((error as NodeJS.ErrnoException | undefined)?.code !== "ENOENT") throw error;
-    throw new Error(`Missing Demonstrator activation lane receipt: ${lane} (run bun nx run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
+    throw new Error(`Missing Demonstrator activation lane receipt: ${lane} (run bun repo run @semio-tech/framework-os-dev:activate-${lane}-react-prototype)`);
   }
 }
 

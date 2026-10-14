@@ -2,7 +2,7 @@
   "name": "@semio-tech/schema-source-closure-ts",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -17,7 +17,7 @@
       }
     },
     "test-absence": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

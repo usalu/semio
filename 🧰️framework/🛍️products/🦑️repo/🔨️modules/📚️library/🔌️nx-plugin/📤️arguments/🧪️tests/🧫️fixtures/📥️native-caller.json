@@ -278,5 +278,11 @@
         "normal:source"
       ]
     }
-  ]
+  ],
+  "ownerHandoff": {
+    "manifest": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+    "maximumElapsedMilliseconds": 10000,
+    "parentOwner": "original-native-owner-handoff",
+    "staleMode": "foreign"
+  }
 }

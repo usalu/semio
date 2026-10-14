@@ -32,7 +32,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static> VcsArtifactApp<A,M>
    }
    if let Some(group)=self.tool_operations.get(id).unwrap().owned_child_group{
     if self.private_child_groups.get(group).is_some(){
-     let step=self.close_private_child_group_operation_step(group,grant)?;
+     let step=self.close_private_child_group_operation_step(group,cx,grant)?;
      return Ok(RetainedCloneStep::Progress(step.progress()))
     }
     if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
@@ -46,7 +46,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static> VcsArtifactApp<A,M>
     PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Complete(progress),
     PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..}=>RetainedCloneStep::Progress(Default::default()),
    }
-  }else{owner.granted_retirement_step(grant)?};
+  }else{owner.granted_retirement_step(cx,grant)?};
   if matches!(step,RetainedCloneStep::Complete(_)){
    self.tool_operations.get(id).filter(|owner|owner.terminal_is_empty()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted removal requires every original owner terminal"))?;
    if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}

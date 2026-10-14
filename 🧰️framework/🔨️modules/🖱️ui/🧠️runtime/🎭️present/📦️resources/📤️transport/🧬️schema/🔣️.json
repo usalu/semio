@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wire",
+    "maximumChunkBytes",
+    "geometry",
+    "foreignSourceEffects",
+    "zeroWorkEffects",
+    "tokenOnWire",
+    "labelsOutsideGeometry"
+  ],
+  "properties": {
+    "wire": {
+      "const": "native-pages"
+    },
+    "maximumChunkBytes": {
+      "const": 64
+    },
+    "geometry": {
+      "type": "array",
+      "minItems": 84,
+      "maxItems": 84,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "foreignSourceEffects": {
+      "const": 0
+    },
+    "zeroWorkEffects": {
+      "const": 0
+    },
+    "tokenOnWire": {
+      "const": false
+    },
+    "labelsOutsideGeometry": {
+      "const": true
+    }
+  }
+}

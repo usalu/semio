@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/stdio-snapshot-editing-js",
-  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

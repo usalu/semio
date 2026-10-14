@@ -1,0 +1,10 @@
+{
+  "policy": {"version": 1, "maximumAttempts": 4, "retryBoundary": "before-dependency-commands", "authority": "original", "implementationChanges": "refused", "publishedOutputChanges": "refused"},
+  "cases": [
+    {"kind": "identical", "identityCalls": 1, "dependencyCalls": 2, "refused": false},
+    {"kind": "changed-once", "identityCalls": 2, "dependencyCalls": 2, "refused": false},
+    {"kind": "always-changing", "identityCalls": 4, "dependencyCalls": 0, "refused": true},
+    {"kind": "changed-after-update", "identityCalls": 1, "dependencyCalls": 1, "refused": true},
+    {"kind": "expired", "identityCalls": 1, "dependencyCalls": 0, "refused": true}
+  ]
+}

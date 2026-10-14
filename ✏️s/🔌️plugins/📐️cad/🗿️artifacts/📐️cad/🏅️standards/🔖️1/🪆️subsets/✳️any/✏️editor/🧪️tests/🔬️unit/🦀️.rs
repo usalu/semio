@@ -418,11 +418,11 @@ pub(crate) fn every_command() -> Vec<CadCommand> {
 /// that replaces the CAD document instead of falling through to the framework-only action path.
 #[semio_framework_async_macros::async_test]
 async fn production_action_bridge_loads_the_declared_example() {
-    let command = <CadPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT })))).expect("declared example action");
+    let command = <CadPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": CAD_EXAMPLE_FOREST_LEFT }))).clone()), None).expect("declared example action");
     assert!(matches!(command, CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id }) if example_id == CAD_EXAMPLE_FOREST_LEFT));
-    let contributions = <CadPlayApp as ArtifactEditor>::command_from_action("setContributions", Some(&semio_framework_pack_json::to_dsl_value(&json!({ "json": "[{\"id\":\"cad\"}]" })))).expect("declared host command");
+    let contributions = <CadPlayApp as ArtifactEditor>::command_from_action("setContributions", Some((semio_framework_pack_json::to_dsl_value(&json!({ "json": "[{\"id\":\"cad\"}]" }))).clone()), None).expect("declared host command");
     assert!(matches!(contributions, CadCommand::SetContributions(set_contributions::SetContributions { json }) if json == "[{\"id\":\"cad\"}]"));
-    assert!(<CadPlayApp as ArtifactEditor>::command_from_action("notACadAction", None).is_err());
+    assert!(<CadPlayApp as ArtifactEditor>::command_from_action("notACadAction", None, None).is_err());
 }
 
 /// 🚪️ The React shell announces the first example by dispatching `setActiveExample` through the
@@ -840,7 +840,7 @@ async fn the_pick_overlay_is_bounded_and_only_published_while_a_selection_is_acc
     let scene = forest_working_scene();
     let document = forest_play_scene();
     let idle = edit::build_world_scene_for_pane(&view(document, CadPlayRuntime::default()), CadPaneId::Building, "cad.play.scene3d/building", None, Default::default()).expect("idle scene");
-    let idle_scene: semio_framework_plugin::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: idle }).expect("projected")).expect("world scene");
+    let idle_scene: semio_framework_plugin::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(idle)).expect("projected")).expect("world scene");
     assert!(idle_scene.engagement_preview_json.is_none(), "no session, no overlay");
 
     let session = start_session("feature.extrudeWire", CadPaneId::Building).expect("extrude-wire session");
@@ -1119,7 +1119,7 @@ async fn reference_pick_selects_the_reference_and_clears_the_cad_domain() {
     let mut idle = CadDispatchCtx::new(CadInteractionSnapshot::default(), None, CadWorldWindowTransient::default());
     assert!(command.dispatch(&doc, &cfg, &mut idle).expect("reference pick").interaction_writes.is_empty(), "nothing selected, nothing to subtract");
     let view = view(scene, runtime);
-    let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: inspection::build_properties_panel(&view, cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), None, &semio_framework_plugin::TreeWindows::unhosted()).expect("panel") }).expect("projection");
+    let panel = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(inspection::build_properties_panel(&view, cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), None, &semio_framework_plugin::TreeWindows::unhosted()).expect("panel"))).expect("projection");
     assert!(panel.contains("cad-play-inspector.reference.width.grow"), "{panel}");
 }
 
@@ -1206,7 +1206,7 @@ fn reference_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
         ("setReferenceHidden", json!({ "hidden": !reference.hidden, "modelDefinitionId": CAD_MODEL_DEFINITION_ENERGY, "referenceId": reference.id.as_str() }), (|reference: &CadReference| reference.hidden) as fn(&CadReference) -> bool),
         ("setReferenceLocked", json!({ "locked": !reference.locked, "modelDefinitionId": CAD_MODEL_DEFINITION_ENERGY, "referenceId": reference.id.as_str() }), (|reference: &CadReference| reference.locked) as fn(&CadReference) -> bool),
     ] {
-        assert!(<CadPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&identity))).is_err(), "{verb} without its value must be refused");
+        assert!(<CadPlayApp as ArtifactEditor>::command_from_action(verb, Some((semio_framework_pack_json::to_dsl_value(&identity)).clone()), None).is_err(), "{verb} without its value must be refused");
         let command = command_from_action(verb, Some(&args));
         let mut ctx = CadDispatchCtx::new(CadInteractionSnapshot::default(), None, CadWorldWindowTransient::default());
         let first = command.dispatch(&ArtifactView::new(&scene, &history), &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
@@ -1237,7 +1237,7 @@ fn a_reference_row_names_its_set_verbs_over_one_target_that_asks_for_the_inverse
         _ => None,
     });
     assert_eq!((asked("hidden"), asked("locked")), (Some(!reference.hidden), Some(!reference.locked)), "the row asks for the inverse of hidden={} locked={}", reference.hidden, reference.locked);
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: row }).expect("the reference row retires");
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(row)).expect("the reference row retires");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1421,7 +1421,7 @@ async fn engagement_hud_no_longer_carries_utility_switcher_options() {
 
 #[semio_framework_async_macros::async_test]
 async fn utility_switch_has_no_plugin_command_or_config_lane() {
-    assert!(<CadPlayApp as ArtifactEditor>::command_from_action(SET_ACTIVE_UTILITY_ACTION_ID, None).is_err());
+    assert!(<CadPlayApp as ArtifactEditor>::command_from_action(SET_ACTIVE_UTILITY_ACTION_ID, None, None).is_err());
     assert!(!CAD_RETAINED_TOOL_IDS.contains(&SET_ACTIVE_UTILITY_ACTION_ID));
     assert!(!every_command().iter().any(|command| command.command_id() == SET_ACTIVE_UTILITY_ACTION_ID));
 }

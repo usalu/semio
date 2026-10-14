@@ -3,7 +3,8 @@
     "version": 1,
     "storage": {
       "version": 1,
-      "directory": "/owner/resource-leases"
+      "directory": "/owner/resource-leases",
+      "program": "/original/📜️script.ts"
     },
     "command": {
       "version": 1,

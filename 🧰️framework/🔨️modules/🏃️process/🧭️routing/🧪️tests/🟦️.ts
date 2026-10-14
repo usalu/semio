@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import findUp from "find-up";
 import { findWorkspaceRoot } from "../🟦️.ts";
@@ -146,9 +146,9 @@ for (const row of corpus.workspaceCases) test(row.id, () => {
     mkdirSync(resolve(root, row.start), { recursive: true });
     for (const marker of row.markers) {
       mkdirSync(resolve(root, marker.directory), { recursive: true });
-      for (const filename of marker.files) writeFileSync(resolve(root, marker.directory, filename), "{}");
+      for (const filename of marker.files) writeFileSync(resolve(root, marker.directory, filename), JSON.stringify(filename === "package.json" && !("workspace" in marker && marker.workspace === false) ? { workspaces: [] } : {}));
     }
-    const oracle = findUp.sync((directory: string) => existsSync(join(directory, "nx.json")) && existsSync(join(directory, "package.json")) ? "nx.json" : directory === root ? findUp.stop : undefined, { cwd: resolve(root, row.start) });
+    const oracle = findUp.sync((directory: string) => existsSync(join(directory, "📋️project.json")) && existsSync(join(directory, "package.json")) && Object.hasOwn(JSON.parse(readFileSync(join(directory, "package.json"), "utf8")), "workspaces") ? "📋️project.json" : directory === root ? findUp.stop : undefined, { cwd: resolve(root, row.start) });
     const expected = row.expected === null ? undefined : resolve(root, row.expected);
     expect(oracle === undefined ? undefined : dirname(oracle)).toBe(expected);
     if (expected === undefined) expect(() => findWorkspaceRoot(resolve(root, row.start), { stopAt: root })).toThrow("workspace root");

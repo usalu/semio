@@ -1,0 +1,13 @@
+{
+  "schema": "semio.test.hub-os-consumer-contracts/v1",
+  "source": "🏗️bootstrap/🦀️.rs",
+  "mount": {
+    "start": "async fn ensure_document(&self",
+    "end": "fn bearer(",
+    "required": ["self.db.ensure_document(id).await", "rejected.retry_close().await"],
+    "forbidden": ["self.db.create_document", "self.db.document(id)"]
+  },
+  "session": {
+    "required": ["directory_event_page_session_binding_v1(&caller)", "Json<DirectorySessionAuthorityV1>"]
+  }
+}

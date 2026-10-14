@@ -19,7 +19,7 @@ fn run(id: &str, values: Vec<(&str, GeometryValue)>, fuel: usize) -> (usize, Wid
     let kind = support::kind_of(id);
     let values: BTreeMap<String, GeometryValue> = values.into_iter().map(|(port, value)| (port.to_string(), value)).collect();
     let entry = COMPUTES.iter().find(|entry| entry.id == id).expect("registered");
-    support::slices((entry.start)(kind, WidgetInputs::new("w", kind, values)), fuel)
+    support::slices((entry.start)(kind, WidgetInputs::new_cold("w", kind, values)), fuel)
 }
 
 #[test]
@@ -60,13 +60,13 @@ fn decomposition_exports_one_component_per_unit_of_fuel() {
 fn the_label_is_the_root_label_of_the_value() {
     let input = cube(2.0);
     let (_, evaluation) = run("brep.topology.label", vec![("shape", GeometryValue::Shape(input.clone()))], 1);
-    assert_eq!(evaluation.outputs["label"], GeometryValue::Text(input.label().expect("label").0.to_string()));
+    assert_eq!*(evaluation.outputs.get("label").unwrap(), GeometryValue::Text(input.label().expect("label").0.to_string()));
 }
 
 #[test]
 fn a_vertex_widget_places_the_vertex_at_the_point() {
     let (_, evaluation) = run("brep.topology.vertex", vec![("point", GeometryValue::Point([1.0, 2.0, 3.0]))], 1);
-    let GeometryValue::Shape(vertex) = &evaluation.outputs["shape"] else { panic!("shape") };
+    let GeometryValue::Shape(vertex) = &*evaluation.outputs.get("shape").unwrap() else { panic!("shape") };
     let semio_framework_3d_brep_engine::ShapeRoot::Vertex(id) = vertex.root else { panic!("vertex") };
     let position = vertex.body.vertices.get(id).expect("vertex").position;
     assert_eq!([position.x, position.y, position.z], [1.0, 2.0, 3.0]);

@@ -14,7 +14,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -58,7 +58,7 @@ class PreparationScript extends BundleScript {
     if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");
     const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
     const healthy = healthyPreparedComponents(verdicts, playground.pluginId);
-    for (const line of preparedComponentReportLines(healthy.excluded, `bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
+    for (const line of preparedComponentReportLines(healthy.excluded, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
     if (healthy.refusal) throw new Error(healthy.refusal);
     for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
     const fonts = validateFontAsset(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)));

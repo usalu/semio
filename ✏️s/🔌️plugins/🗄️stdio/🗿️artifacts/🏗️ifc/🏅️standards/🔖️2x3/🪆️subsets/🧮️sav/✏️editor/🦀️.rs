@@ -253,7 +253,9 @@ impl ArtifactEditor for Ifc2x3SavEditor {
 
     fn command_id(command: &Self::Command) -> &'static str { ifc2x3_sav_editor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { ifc2x3_sav_editor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref(); ifc2x3_sav_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Ifc2x3Snapshot {
         <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).expect("valid authored IFC2x3 sav initial owner")

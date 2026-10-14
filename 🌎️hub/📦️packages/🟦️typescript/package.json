@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "os-hub-ts",
   "version": "0.1.0",
   "description": "hub · e2e — Bun integration-test harness that boots the real os-hub binary and drives it with two independent clients to prove the collaboration contract (directory commands, presence-per-surface, document-scoped command relay, admin kick, restart persistence)",
@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run os-hub-ts:test"
+    "test": "bun repo run os-hub-ts:test"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*"

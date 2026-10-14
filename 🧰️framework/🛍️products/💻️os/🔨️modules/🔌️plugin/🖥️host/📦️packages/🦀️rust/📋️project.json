@@ -10,7 +10,7 @@
   ],
   "targets": {
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts check",
         "cwd": "{projectRoot}",
@@ -18,7 +18,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test",
         "cwd": "{projectRoot}",
@@ -36,7 +36,7 @@
       ]
     },
     "service-operation-conversion-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts service-operation-conversion-check",
         "cwd": "{projectRoot}"
@@ -44,7 +44,7 @@
       "outputs": []
     },
     "lifecycle-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts lifecycle-check",
         "cwd": "{projectRoot}"
@@ -52,7 +52,7 @@
       "outputs": []
     },
     "guest-fault-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts guest-fault-check",
         "cwd": "{projectRoot}",
@@ -61,7 +61,7 @@
       "outputs": []
     },
     "ui-patch-marshalling-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun 📜️script.ts ui-patch-marshalling-check",
@@ -70,7 +70,7 @@
       "outputs": []
     },
     "ui-patch-marshalling-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun 📜️script.ts ui-patch-marshalling-check --native",
@@ -83,7 +83,7 @@
       "outputs": []
     },
     "owned-instance-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts owned-instance-check",
         "cwd": "{projectRoot}"
@@ -105,7 +105,7 @@
       "cache": false
     },
     "count-component-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts count-component-check",
         "cwd": "{projectRoot}"
@@ -121,7 +121,7 @@
       "cache": false
     },
     "sqlite-observation-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts sqlite-observation-check",
         "cwd": "{projectRoot}",
@@ -135,7 +135,7 @@
       }
     },
     "router-effect-source-custody": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts router-effect-source-custody",
         "cwd": "{projectRoot}",
@@ -143,8 +143,16 @@
       },
       "outputs": []
     },
+    "runtime-ports-check": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts runtime-ports-check",
+        "cwd": "{projectRoot}"
+      },
+      "outputs": []
+    },
     "test-original-driver-policy-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-original-driver-policy-native",
         "cwd": "{projectRoot}",
@@ -152,6 +160,23 @@
       },
       "cache": false,
       "outputs": []
+    },
+    "test-original-actor-boundary-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-actor-boundary-source",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
     }
   },
   "implicitDependencies": [

@@ -1,4 +1,4 @@
-import { acquireCargoBuildLeaseV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { acquireCargoProfileMaintenanceLeaseV1 } from "../../../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import { test,expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFile, mkdir } from "node:fs/promises";
@@ -50,9 +50,9 @@ test("real refusal conserves exact partial capture and stopped process owners",a
 },30000);
 
 test("real compiler lease stays owned until shutdown and cancels in the queue",async()=>{
-  const compiler={buildDirectory:policy.compilerStorage.buildDirectory,leaseDirectory:policy.compilerStorage.leaseDirectory};
+  const compiler={buildDirectory:policy.compilerStorage.buildDirectory,targetDirectory:policy.compilerStorage.targetDirectory,leaseDirectory:policy.compilerStorage.leaseDirectory};
   for(const row of fixture.leases){
-    const w=new MutationInventoryProcessWorkspace(),op=operation(w),held=row.kind==="held"?await acquireCargoBuildLeaseV1({directory:compiler.leaseDirectory,buildDirectory:compiler.buildDirectory,args:[],signal:new AbortController().signal,onWait:()=>{}}):undefined;
+    const w=new MutationInventoryProcessWorkspace(),op=operation(w),held=row.kind==="held"?await acquireCargoProfileMaintenanceLeaseV1({directory:compiler.leaseDirectory,buildDirectory:compiler.buildDirectory,args:[],signal:new AbortController().signal,onWait:()=>{}}):undefined;
     let queued=false;op.onProgress=async(progress:{stage:string})=>{if(progress.stage==="waiting"&&w.directory&&!w.process)queued=true;};
     try{
       const result=await runMutationInventoryProcess({...request("void 0"),command:"cargo",argv:["--version"],compiler,budgetMs:row.budgetMs??policy.budgetMs},op);

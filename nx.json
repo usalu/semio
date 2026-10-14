@@ -82,30 +82,10 @@
   },
   "plugins": [
     {
-      "plugin": "@nx/js",
-      "options": {
-        "analyzePackageJson": false,
-        "analyzeSourceFiles": false
-      }
-    },
-    {
-      "plugin": "@nxlv/python",
-      "options": {}
-    },
-    {
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
       "include": [
-        "**/📋️project.json",
-        "**/Cargo.toml",
-        "bun.lock",
-        "**/*.patch"
+        "📋️project.json"
       ],
-      "options": {
-        "analyzeLockfile": true
-      }
-    },
-    {
-      "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
       "options": {}
     }
   ],

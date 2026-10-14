@@ -1,0 +1,5 @@
+common --enable_bzlmod
+common --enable_workspace=false
+common --color=no
+common --curses=no
+build --symlink_prefix=/

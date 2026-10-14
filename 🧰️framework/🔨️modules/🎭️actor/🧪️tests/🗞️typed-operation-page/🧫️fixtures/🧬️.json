@@ -1,0 +1,279 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "why",
+    "page",
+    "lanes",
+    "invalidTags",
+    "terminalTag",
+    "faultTag",
+    "shellMessageStream"
+  ],
+  "properties": {
+    "why": {
+      "type": "string"
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pageMagic",
+        "ackMagic",
+        "headerBytes",
+        "tokenBytes",
+        "laneOffset",
+        "lengthOffset",
+        "maxPayloadBytes",
+        "pageMagicFirstByte",
+        "why"
+      ],
+      "properties": {
+        "pageMagic": {
+          "const": "semio.typed-operation-page.v1\u0000"
+        },
+        "ackMagic": {
+          "const": "semio.typed-operation-ack.v1\u0000"
+        },
+        "headerBytes": {
+          "const": 30
+        },
+        "tokenBytes": {
+          "const": 25
+        },
+        "laneOffset": {
+          "const": 25
+        },
+        "lengthOffset": {
+          "const": 26
+        },
+        "maxPayloadBytes": {
+          "const": 4096
+        },
+        "pageMagicFirstByte": {
+          "const": 115
+        },
+        "why": {
+          "type": "string"
+        }
+      }
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "tag"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 14
+          }
+        }
+      }
+    },
+    "invalidTags": {
+      "const": [
+        15,
+        255
+      ]
+    },
+    "terminalTag": {
+      "const": 10
+    },
+    "faultTag": {
+      "const": 11
+    },
+    "shellMessageStream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "why",
+        "instanceId",
+        "token",
+        "messages",
+        "expect"
+      ],
+      "properties": {
+        "why": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "token": {
+          "$ref": "#/definitions/token"
+        },
+        "messages": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/definitions/message"
+          }
+        },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "appFrames",
+            "pages",
+            "acknowledgements",
+            "terminal",
+            "faults",
+            "why"
+          ],
+          "properties": {
+            "appFrames": {
+              "const": 2
+            },
+            "pages": {
+              "const": 3
+            },
+            "acknowledgements": {
+              "const": 3
+            },
+            "terminal": {
+              "const": true
+            },
+            "faults": {
+              "const": 0
+            },
+            "why": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receiver",
+        "operation",
+        "generation",
+        "sequence",
+        "attempt"
+      ],
+      "properties": {
+        "receiver": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "operation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "page",
+            "appFrame"
+          ]
+        },
+        "lane": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 14
+        },
+        "payload": {
+          "type": "string"
+        },
+        "appFrameTag": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "instanceId": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "page"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "lane",
+              "payload"
+            ],
+            "properties": {
+              "lane": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 14
+              },
+              "payload": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "appFrame"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "appFrameTag"
+            ],
+            "properties": {
+              "appFrameTag": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

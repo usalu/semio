@@ -1,0 +1,44 @@
+# Original Document Fixture Caller Adoption
+
+The following existing receiver functions borrow one canonical OriginalFixtureCaller context from the initiating test entry through source creation, maintenance, publication, and close. Test entries own and physically retire that caller. No helper constructs a replacement context. Source qualification requires original native compilation and runtime laws.
+
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs assert_parent_restore_case
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_fixture
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_fixture_at_revision
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs composed_replacement_candidate
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs composed_maintenance_turn
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs composed_close_turn
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs drive_composed_replacement_to
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs close_recursive_replacement_app
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs drive_recursive_document_archive_load
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_recursive_replacement_fixture
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs drive_recursive_replacement_step
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs drive_recursive_replacement_to
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs maintenance_answers_idle_only_when_every_stage_is_idle
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_publishes_parent_members_view_graph_window_and_retires_displaced_bundle_atomically
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_cancellation_during_open_closure_and_view_preparation_preserves_the_live_bundle
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_close_query_forwards_whole_member_page_extent
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_terminal_store_box_requires_whole_physical_grant
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_candidate_projection_is_the_apps_own_answer
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_composed_replacement_rejects_a_real_live_child_generation_change_before_publication
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_window_input_recursive_replacement_publishes_the_complete_nested_bundle_atomically
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_window_input_recursive_document_archive_round_trips_the_complete_owned_closure
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_window_input_recursive_document_archive_cancel_retires_the_exact_input_before_acknowledgement
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs verify_recursive_rejection_case
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_window_input_recursive_replacement_rejects_missing_extra_and_duplicate_members_after_bounded_retirement
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs verify_recursive_cancellation_case
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs verify_recursive_stale_authority_case
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs retained_window_input_recursive_replacement_cancellation_and_stale_authority_preserve_the_live_bundle
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs install_slow_envelope_decode
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs pump_envelope_decode_worker_close
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs drain_envelope_decode
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs advance_artifact_envelope_load_reports_a_live_decode_as_pending_not_fault
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🦀️.rs one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs drive_single_document_archive
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs a_childless_whole_document_archive_replaces_the_live_document
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs the_refresh_poll_lane_stamps_the_load_document_it_emits
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs an_unstamped_whole_document_archive_is_refused_by_parent_hydration
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs a_refused_whole_document_archive_names_the_leg_that_refused_it
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs a_whole_document_archive_with_supersessions_loads_its_superseded_state
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs a_document_archive_round_trip_lists_every_history_row_of_its_source
+- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs original_lifecycle_archive_pending_status_observation_preserves_retained_source

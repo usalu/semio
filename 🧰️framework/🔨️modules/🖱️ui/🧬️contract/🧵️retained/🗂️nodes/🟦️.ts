@@ -1,5 +1,5 @@
 //#region 🧬️OwnedIndexContract
-import { NumericIndex, type NumericIndexGrant, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexOrdinal } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import { NumericIndex, type NumericIndexGrant, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexOrdinal } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { OwnedUiNode, type UiNodeRetirement } from "../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 

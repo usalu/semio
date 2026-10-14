@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-replication",
   "version": "0.1.0",
   "description": "framework · replication — product-neutral wire contract (lane-tagged frames, causal envelopes, presence peers); TypeScript twin of the Rust protocol crate",
@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework-replication:test"
+    "test": "bun repo run @semio-tech/framework-replication:test"
   },
   "devDependencies": {
     "fast-check": "3.23.2",

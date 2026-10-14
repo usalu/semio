@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cache Command Source Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "owners", "contexts", "consumers", "inventory", "route", "coordinates"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "owners": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["path", "declarations"], "properties": {"path": {"$ref": "#/definitions/Text"}, "declarations": {"$ref": "#/definitions/Texts"}}}},
+    "contexts": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["directoryName", "parentKindId", "kindId"], "properties": {"directoryName": {"$ref": "#/definitions/Text"}, "parentKindId": {"$ref": "#/definitions/Text"}, "kindId": {"$ref": "#/definitions/Text"}}}},
+    "consumers": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "owners"], "properties": {"path": {"$ref": "#/definitions/Text"}, "owners": {"$ref": "#/definitions/Texts"}}}},
+    "inventory": {"type": "object", "additionalProperties": false, "required": ["projects", "sources", "files", "texts", "expected"], "properties": {"projects": {"type": "array", "items": {"type": "object", "required": ["name", "root", "targets"], "additionalProperties": false, "properties": {"name": {"$ref": "#/definitions/Text"}, "root": {"$ref": "#/definitions/Text"}, "targets": {"type": "object"}}}}, "sources": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": {"type": "string"}}}, "files": {"$ref": "#/definitions/Texts"}, "texts": {"type": "object", "additionalProperties": {"type": "string"}}, "expected": {"type": "object", "additionalProperties": false, "required": ["commands", "artifacts", "consumer", "violationRules"], "properties": {"commands": {"type": "integer", "minimum": 0}, "artifacts": {"type": "integer", "minimum": 0}, "consumer": {"$ref": "#/definitions/Text"}, "violationRules": {"$ref": "#/definitions/Texts"}}}}},
+    "route": {"type": "object", "additionalProperties": false, "required": ["target", "command", "namedInput"], "properties": {"target": {"const": "test-cache-command-source"}, "command": {"const": "bun ./📜️script.ts test cache-command-source"}, "namedInput": {"const": "cacheCommandSources"}}},
+    "coordinates": {"type": "object", "additionalProperties": false, "required": ["policy", "bootstrap", "rootPruneConsumer"], "properties": {"policy": {"const": "🔣️policy.json"}, "bootstrap": {"const": "🚀️bootstrap/📜️script.ts"}, "rootPruneConsumer": {"$ref": "#/definitions/Text"}}}
+  },
+  "definitions": {
+    "Text": {"type": "string", "minLength": 1},
+    "Texts": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/Text"}}
+  }
+}

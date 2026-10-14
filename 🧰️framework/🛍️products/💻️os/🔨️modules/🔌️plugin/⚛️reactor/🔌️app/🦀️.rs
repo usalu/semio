@@ -129,6 +129,8 @@ pub trait PluginApp: Send + 'static {
     fn store_constructor_is_pending(&self) -> bool;
     /// 🧱️ Transfers one original constructor kind and full receipt without inventing a job.
     fn take_constructor_receipt(&mut self) -> Option<(ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>;
+    /// 🎟️ Retains the actual app creation parent until its canonical cancellation issuer is paid and ready.
+    fn admit_cancellation_issuer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     /// 👥️ This instance's tool run summary for the local `PresencePeer.tool_run` (contract §3.4).
     fn tool_run_presence(&self) -> Option<protocol::PresenceToolRun> {
         None
@@ -220,7 +222,7 @@ pub trait PluginApp: Send + 'static {
     /// fallback this used to carry (`ArtifactApp::handle_action` no longer exists; an app's own
     /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
     /// An unrecognized `action` id is a hard error pointing at the typed channel.
-    async fn handle_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    async fn handle_action(&mut self, action: &str, args: &mut Option<DslValue>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>;
     /// 🕰️ Hands one host-driven framework-reserved spawn-job to the app's reserved-commit queue,
     /// whose units the typed-operation continuation then drives across turns. Answers `false` for a
     /// job the app never admitted. Default is a no-op so only `VcsArtifactApp` owns the queue.
@@ -237,24 +239,27 @@ pub trait PluginApp: Send + 'static {
         None
     }
     /// 📍️ Validates and dispatches a window-instance-owned action invocation.
-    async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    async fn handle_action_invocation(&mut self, address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>;
     /// 🎯️ Dispatches the manifest protocol's structurally addressed app- or mode-owned
     /// command. This is deliberately `ManifestCommandInvocation`, not the kernel execution envelope
     /// re-exported under the same unqualified name; the active mode is mandatory for mode ownership.
-    async fn handle_command(&mut self, invocation: &ManifestCommandInvocation, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    /// 📨️ Borrows the original continuation arguments and whole fault through deferred app-command admission.
+    async fn handle_response_action(&mut self, action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure>;
+    async fn handle_command(&mut self, address: &semio_framework::manifest::CommandAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>;
     /// 🎯️ The single dispatch point `plugin_runtime::plugin_exchange` calls for every
     /// `AppCommand::Command` frame: recognizes a framework-reserved `{kind,name,args}` wire-value
     /// action envelope (routed through `handle_action` above) and otherwise decodes
     /// `command_bytes` directly as the app's typed `ArtifactApp::Command` via `OpBinary::decode_op`
     /// and calls the pure `ArtifactApp::handle`.
-    async fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    fn original_command_frame_pending(&self)->bool{false}
+    async fn handle_command_frame(&mut self, command_bytes: &[u8], meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>;
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): the single dispatch point
     /// `plugin_runtime::plugin_dispatch_intents` calls for every `UiIntent` that survived the
     /// reactor's revision guard — resolves this app's typed `Command` via
     /// `ArtifactApp::command_from_intent` and dispatches it through the SAME internal path
     /// `handle_command_frame` uses (view/shell kind discipline, the command log, undo grouping,
     /// `AsyncTask` spawning all apply automatically; no parallel dispatch path to keep in sync).
-    async fn handle_intent_frame(&mut self, intent: &UiIntent, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    async fn handle_intent_frame(&mut self, intent: &UiIntent, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>;
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes an `AsyncTask`
     /// whose future resolved with `TaskResolution::Emit` — `artifact_ops`/`config_ops`/
     /// `draft_ops` are the SAME `protocol::encode_ops_vec`/`OpBinary::encode_op`-wire triple
@@ -263,7 +268,7 @@ pub trait PluginApp: Send + 'static {
     /// into `ArtifactApp::handle` (see `TaskResolution::Emit`'s own doc for why this is
     /// deliberately narrower than a `TaskResolution::Command` resume, which goes through
     /// `handle_command_frame` above instead).
-    async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault>;
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes an `AsyncTask`
     /// whose future resolved with `TaskResolution::Command` — `command_bytes` are that
     /// resolution's own `OpBinary::encode_op` of this app's typed `Command`, re-entered through
@@ -275,7 +280,7 @@ pub trait PluginApp: Send + 'static {
     /// `TransactionPrepare`/`TransactionCommit`, and it decodes an owner-qualified
     /// `ManifestActionInvocation`, which a task resolution is not). A task follow-up is
     /// Msg-from-Cmd: it APPLIES, exactly once, against CURRENT state.
-    async fn resume_task_command(&mut self, command_bytes: Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    async fn resume_task_command(&mut self, command_bytes: Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault>;
     /// 🧾 Drains the last Emit op packs captured during `handle_command_frame` (PureCommand path).
     async fn take_last_emit_wire(&mut self) -> Option<EmitWire>;
     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains the render-plane presence outbox
@@ -320,7 +325,7 @@ pub trait PluginApp: Send + 'static {
     async fn transaction_redo(&mut self, group_id: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault>;
     /// 🫥️ Hydrates a pure command's head-only document (design §20.8): `head` is the HEAD snapshot pack without history;
     /// empty evaluates on the live document.
-    async fn hydrate_pure_head(&mut self, head: &[u8]) -> Result<(), Fault>;
+    async fn hydrate_pure_head(&mut self,head:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     /// 👥️ Packs the typed local presence snapshot, exposes both ephemeral generations, and
     /// assembles the zero-app-code declared-broadcast interaction slice — see
     /// {@link EphemeralSnapshot}'s own doc comment.
@@ -370,7 +375,7 @@ pub trait PluginApp: Send + 'static {
         Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, "recursive document archive merging is unavailable for this app"))
     }
     /// 📬️ Advances and observes one exact retained recursive archive operation.
-    async fn poll_document_archive_load(&mut self, operation: u64, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
+    async fn poll_document_archive_load(&mut self, operation: u64, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<protocol::DocumentArchiveLoadStatus, Fault> {
         Err(document_load_fault(DOCUMENT_LOAD_UNAVAILABLE_CODE, format!("recursive document archive operation {operation} is unavailable for this app")))
     }
     /// 🛑️ Requests cancellation without releasing the retained archive owner.
@@ -397,13 +402,13 @@ pub trait PluginApp: Send + 'static {
     /// 🧮️ Dispatches one binary-encoded `store::os_store::store_schema::ArtifactCommand<Self::ConfigMutation>` against the
     /// config store — the `AppCommand::ConfigCommand` wire frame's real handler (replaces the deleted
     /// `apply_config_bytes` whole-record-replace legacy path).
-    async fn dispatch_config_command(&mut self, command_bytes: &[u8], meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault>;
+    async fn dispatch_config_command(&mut self, command_bytes: &mut Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure>;
     /// 📥️ Ingests binary-encoded remote `MutationEnvelope`s (`protocol::decode_envelopes`)
     /// into the causal DAG (idempotent — duplicate mutation ids are dropped), one
     /// `crate::protocol::MergeReport` per envelope — `plugin_exchange`'s `ApplyEnvelopes` handler
     /// frames each as an unsolicited `AppFrame::MergeReport` (§C9: "pushed unsolicited after every
     /// ingest, next to `DocumentChanged`").
-    async fn ingest_operations(&mut self, mutations: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<protocol::MergeReport>, Fault>;
+    async fn ingest_operations(&mut self, mutations: &[u8], identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<protocol::MergeReport>, Fault>;
     /// 📜️ Text-DSL counterpart to {@link Self::ingest_operations}: applies one already-authored
     /// `Self::Mutation` per non-blank line (via `store::OpText::parse_op`) as a fresh local edit — unlike
     /// the JSON path (which ingests already-caused remote `MutationEnvelope`s into the causal DAG
@@ -425,12 +430,13 @@ pub trait PluginApp: Send + 'static {
     async fn document_pack(&self) -> Result<store::os_store::serialization::ArtifactPackFiles, Fault>;
     async fn attach_backbone(&mut self, backbone: store::os_store::backbone::Backbones) -> Result<(), Fault>;
     async fn attach_hot_backbone(&mut self, backbone: store::os_store::backbone::Backbones) -> Result<(), Fault>;
-    async fn tick_backbone(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<protocol::MergeReport>, Fault>;
+    async fn tick_backbone(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Vec<protocol::MergeReport>, Fault>;
     async fn detach_backbone(&mut self) -> Result<(), Fault>;
     /// 🕰️ `view_state` supplies wrapper chrome and the OS-owned render context.
     /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
     /// from `UiNode` to `ui_runtime::ComponentTree`, matching `ArtifactApp::render` above.
-    async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel) -> Result<ComponentTree, Fault>;
+    async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<()>,semio_framework_job::OriginalTurnFailure>;
+    fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<ComponentTree>,semio_framework_job::OriginalTurnFailure>;
     async fn window_engagements(&mut self, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         HashMap::new()
     }
@@ -460,19 +466,19 @@ pub trait PluginApp: Send + 'static {
     /// 🌊️ O1/§1.5 (sdk-dedyn): plain AFIT, not the old boxed `PluginAppMediaFuture` — with enum
     /// dispatch there is no object-safety pressure, so the future is `?Send` exactly when the
     /// state it holds is (R3), and no consumer moves it across threads (guest is single-threaded).
-    async fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
-        Err(MediaError::NotImplemented)
+    async fn export_media(&mut self, _port: &str,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<Media>,semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"batch media export has no original owning source receiver").into())
     }
     /// 🎬️ Submits one interactive media export without awaiting terminal completion.
-    async fn submit_media_export(&mut self, _port: &str) -> Result<ArtifactMediaExportHandle, MediaError> {
-        Err(MediaError::NotImplemented)
+    async fn submit_media_export(&mut self, _port: &str,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportHandle>,semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media submission has no owning source receiver").into())
     }
-    async fn submit_media_export_checked(&mut self, _port: &str, _expected_parent_document_id: &str, _expected_base_revision: u64) -> Result<ArtifactMediaExportHandle, MediaError> {
-        Err(MediaError::NotImplemented)
+    async fn submit_media_export_checked(&mut self, _port: &str, _expected_parent_document_id: &str, _expected_base_revision: u64,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportHandle>,semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"checked media submission has no owning source receiver").into())
     }
     /// 📡️ Advances exactly one bounded worker slice and returns current progress/checkpoint/result.
-    async fn poll_media_export(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<ArtifactMediaExportPoll, MediaError> {
-        Err(MediaError::NotImplemented)
+    async fn poll_media_export(&mut self, _handle: crate::media_contract::ArtifactMediaExportHandleLoan<'_>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportPoll>,semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media polling has no owning source receiver").into())
     }
     /// 🛑️ Cancels an externally held live export handle.
     async fn cancel_media_export(&mut self, _handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
@@ -490,7 +496,9 @@ pub trait PluginApp: Send + 'static {
     }
     /// 🎞️ Object-safe counterpart to `ArtifactApp::import_media` — dispatches through the same
     /// `ArtifactStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
-    async fn import_media(&mut self, _port: &str, _media: Media, _meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+    /// 🎟️ Phases original cancellation admission while the receiving command still owns its media source.
+    async fn prepare_media_import(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()).into())}
+    async fn import_media(&mut self, _port: &str, _media: Media, _meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
         Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()))
     }
     /// 🌀️ O1/§1.5 (sdk-dedyn): plain AFIT — see `export_media` above.
@@ -502,9 +510,9 @@ pub trait PluginApp: Send + 'static {
     /// `PluginApp` gets for free without declaring any `media_ports()`. Apps whose media output isn't simply their raw document
     /// (computed/derived outputs) override this directly; `port` is accepted for parity with `export_media` and ignored by the
     /// default (there is exactly one document to hand back).
-    async fn produce_media(&mut self, port: &str, _owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_,'_>) -> Result<MediaArtifact, MediaArtifactError> {
-        let archive = self.document_archive().await.map_err(|fault| MediaArtifactError::Payload(fault.message))?;
-        whole_document_media(port, self.artifact_schema().await.to_string(), &archive).await
+    async fn produce_media(&mut self, port: &str, _owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_,'_>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,crate::app_contract::MediaArtifactOperationFailure> {
+        let archive = self.document_archive().await?;
+        whole_document_media(port, self.artifact_schema().await.to_string(), &archive).await.map(Some).map_err(Into::into)
     }
     /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/📜️world.wit`'s `consume-media`).
     /// Default: a `Document{schema}` wire matching this app's own `artifact_schema()` is a whole document — the carrier
@@ -512,7 +520,7 @@ pub trait PluginApp: Send + 'static {
     /// verbatim (the source document and its members), which the runtime admits as a stepped archive load. Anything else (a
     /// foreign document schema, or a `Binary{format}` wire) has no SDK-level importer registry yet, so the default rejects it;
     /// apps that need one override this method directly.
-    async fn consume_media(&mut self, _port: &str, artifact: MediaArtifact) -> Result<MediaConsumption, MediaArtifactError> {
+    async fn consume_media(&mut self, _port: &str, artifact: MediaArtifact, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaConsumption, MediaArtifactError> {
         let schema_now = self.artifact_schema().await.to_string();
         match artifact.descriptor.wire {
             MediaWireFormat::Document { schema } if schema == schema_now => whole_document_archive(&artifact.data).await.map(MediaConsumption::DocumentLoad),

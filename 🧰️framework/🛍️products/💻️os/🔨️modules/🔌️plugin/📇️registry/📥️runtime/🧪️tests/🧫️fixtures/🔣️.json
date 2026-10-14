@@ -1,0 +1,90 @@
+{
+  "empty": {
+    "version": 1,
+    "plugins": [],
+    "playgrounds": []
+  },
+  "alternate": {
+    "version": 1,
+    "plugins": [
+      {
+        "pluginId": "drawing",
+        "cratePath": "owner/drawing",
+        "wasmOut": "drawing.wasm",
+        "role": "plugin",
+        "extends": null,
+        "capabilities": [
+          "canvas"
+        ],
+        "activationEvents": [
+          "on-artifact-kind:picture"
+        ],
+        "host": {
+          "landingAppId": "start",
+          "hostAppId": "work"
+        }
+      },
+      {
+        "pluginId": "shapes",
+        "cratePath": "owner/shapes",
+        "wasmOut": "shapes.wasm",
+        "role": "extension",
+        "extends": "drawing",
+        "capabilities": [
+          "draw"
+        ],
+        "activationEvents": [],
+        "host": null
+      }
+    ],
+    "playgrounds": [
+      {
+        "variant": "sketch",
+        "pluginId": "drawing",
+        "app": "work",
+        "aliases": [
+          "draft"
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "plugins": [
+      "drawing",
+      "shapes"
+    ],
+    "registryId": "drawing",
+    "app": "work",
+    "extensions": [
+      "shapes"
+    ],
+    "activation": [
+      "picture",
+      "drawing"
+    ]
+  },
+  "refused": [
+    {
+      "version": 2,
+      "plugins": [],
+      "playgrounds": []
+    },
+    {
+      "version": 1,
+      "plugins": "invalid",
+      "playgrounds": []
+    },
+    {
+      "version": 1,
+      "plugins": [],
+      "playgrounds": [
+        {
+          "variant": "bad",
+          "pluginId": "missing",
+          "app": null,
+          "aliases": []
+        }
+      ]
+    }
+  ]
+}

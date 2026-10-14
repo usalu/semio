@@ -1,7 +1,7 @@
 {
-  "snapshotFixture": "../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/📸️snapshot/⬅️before/🔣️.json",
-  "diffFixture": "../../../🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🔺️diff/🔣️.json",
-  "expectedChildKind": "s.stdio.semio",
+  "snapshotFixture": "../../../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/📸️snapshot/⬅️before/🔣️.json",
+  "diffFixture": "../../../🧪️tests/🧫️fixtures/🧬️mutations/🔎️set-query/🔎️replaces-the-query/🔺️diff/🔣️.json",
+  "expectedContentCapability": "s.trinity.jack.graph",
   "invalidDocuments": [
     null,
     {},
@@ -16,5 +16,6 @@
     {
       "nodes": []
     }
-  ]
+  ],
+  "expectedSelectedKind": "s.fixture.graph"
 }

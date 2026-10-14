@@ -17,7 +17,7 @@ import rasterSchema from "../../../📷️raster/🧬️schema/🔣️.json";
 import pathSchema from "../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";
 import imageSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🧬️schema/🔣️.json";
 import {DocumentSceneJob,DocumentRasterJob,rasterizeDocument,prepareDocumentScene,resolvedSceneInput} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {RasterSceneJob} from "../../../📷️raster/🟦️.ts";
 import booleanSchema from "../../../🔀️booleans/🧬️schema/🔣️.json";
 import flatSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧬️schema/🔣️.json";

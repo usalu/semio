@@ -242,7 +242,7 @@ pub fn observe_preview_eval(status_json: &str, eval_json: &str, preview_widget_i
 fn preview_eval_mesh_state(session: &FlowEvalSession, handle: &str) -> PreviewEvalMeshState {
     if session.preview_diagnostics(handle).is_some() {
         PreviewEvalMeshState::Diagnostics
-    } else if session.preview_mesh_pack(handle).is_some() {
+    } else if session.preview_mesh(handle).is_some() {
         PreviewEvalMeshState::Ready
     } else {
         PreviewEvalMeshState::Pending

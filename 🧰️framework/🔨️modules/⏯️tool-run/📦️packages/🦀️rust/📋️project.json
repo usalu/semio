@@ -1,39 +1,90 @@
 {
   "name": "@semio-tech/framework-tool-run-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/**/*", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏯️tool-run/**/*",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source"
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
-    "test-original-entities": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-entities"}},
-    "test-original-progress": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-progress"}},
-    "test-original-receiving-limits": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-limits"}},
-    "test-original-identity-receiving": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-identity-receiving"}},
-    "test-original-step-receiving": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-step-receiving"}},
-    "test-original-native-tick": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-native-tick"}},
-    "test-original-entity-column": {"executor":"nx:run-commands","options":{"cwd":"🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-entity-column"}},
+    "test-original-entities": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-entities"
+      }
+    },
+    "test-original-progress": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-progress"
+      }
+    },
+    "test-original-receiving-limits": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-receiving-limits"
+      }
+    },
+    "test-original-identity-receiving": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-identity-receiving"
+      }
+    },
+    "test-original-step-receiving": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-step-receiving"
+      }
+    },
+    "test-original-native-tick": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-native-tick"
+      }
+    },
+    "test-original-entity-column": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-entity-column"
+      }
+    },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
       }
+    },
+    "test-original-progress-receiving": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-progress-receiving"
+      }
     }
   }
 }
-                                       

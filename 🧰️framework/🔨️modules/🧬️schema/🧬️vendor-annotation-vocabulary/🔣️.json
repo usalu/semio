@@ -5,6 +5,7 @@
     "x-semio-binary": { "type": "object" },
     "x-semio-child": { "type": ["string", "object"] },
     "x-semio-child-kind": { "type": "string" },
+    "x-semio-child-capability": { "type": "string" },
     "x-semio-child-standard": { "type": "string" },
     "x-semio-child-subset": { "type": "string" },
     "x-semio-constants": { "type": "object" },

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "platform": "darwin",
+      "key": "DYLD_LIBRARY_PATH",
+      "separator": ":"
+    },
+    {
+      "platform": "linux",
+      "key": "LD_LIBRARY_PATH",
+      "separator": ":"
+    },
+    {
+      "platform": "win32",
+      "key": "Path",
+      "separator": ";"
+    }
+  ]
+}

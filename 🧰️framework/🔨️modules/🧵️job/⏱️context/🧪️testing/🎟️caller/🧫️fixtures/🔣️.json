@@ -1,0 +1,79 @@
+{
+  "operation": 941,
+  "generation": 17,
+  "clock": 1000,
+  "deadline": 2000,
+  "fuel": 13,
+  "stock": {
+    "items": 64,
+    "copy": 9,
+    "capacity": 65536,
+    "release": 65536,
+    "depth": 64
+  },
+  "actions": [
+    {
+      "copy": 0,
+      "fuel": 1,
+      "failed": false
+    },
+    {
+      "copy": 2,
+      "fuel": 2,
+      "failed": false
+    },
+    {
+      "copy": 3,
+      "fuel": 1,
+      "failed": false
+    },
+    {
+      "copy": 1,
+      "fuel": 1,
+      "failed": true
+    }
+  ],
+  "terminalDrop": 0,
+  "clockRegression": [
+    1000,
+    999,
+    1000
+  ],
+  "workLoans": [
+    {
+      "fuel": 0,
+      "deadline": 1500,
+      "spent": 0,
+      "remaining": 10,
+      "unwind": false
+    },
+    {
+      "fuel": 3,
+      "deadline": 1500,
+      "spent": 1,
+      "remaining": 9,
+      "unwind": false
+    },
+    {
+      "fuel": 99,
+      "deadline": 3000,
+      "spent": 2,
+      "remaining": 7,
+      "unwind": false
+    },
+    {
+      "fuel": 3,
+      "deadline": 1000,
+      "spent": 0,
+      "remaining": 7,
+      "unwind": false
+    },
+    {
+      "fuel": 2,
+      "deadline": 1500,
+      "spent": 1,
+      "remaining": 6,
+      "unwind": true
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "caller": {
+    "PATH": "original-pinned-runtime",
+    "NODE_PATH": "original-loaded-sdk",
+    "NX_LOAD_DOT_ENV_FILES": "false",
+    "SEMIO_BUILD_MODE": "release",
+    "SEMIO_RESOLVER_ORIGINAL_LAW": "original-resolver",
+    "SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "expected": {
+    "PATH": "original-pinned-runtime",
+    "NODE_PATH": "original-loaded-sdk",
+    "NX_LOAD_DOT_ENV_FILES": "false",
+    "SEMIO_RESOLVER_ORIGINAL_LAW": "original-resolver"
+  },
+  "absent": [
+    "SEMIO_BUILD_MODE",
+    "SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP"
+  ],
+  "ambientUnchanged": true,
+  "proofCases": [
+    {
+      "id": "exact-original-membership",
+      "value": {
+        "version": 1,
+        "sourceMembership": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "accept": true
+    },
+    {
+      "id": "absent-original-membership",
+      "value": {
+        "version": 1,
+        "sourceMembership": null
+      },
+      "accept": true
+    },
+    {
+      "id": "foreign-field",
+      "value": {
+        "version": 1,
+        "sourceMembership": null,
+        "environment": {}
+      },
+      "accept": false
+    },
+    {
+      "id": "invalid-membership",
+      "value": {
+        "version": 1,
+        "sourceMembership": "replace"
+      },
+      "accept": false
+    }
+  ],
+  "senderExpected": {
+    "reflectedMembership": false,
+    "separateMembership": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "original": true
+  },
+  "selectedScope": {
+    "version": 1,
+    "tasks": [
+      "toy:compile:release"
+    ],
+    "roots": [
+      "toy"
+    ],
+    "files": [
+      "package.json"
+    ]
+  },
+  "journalScope": {
+    "roots": [
+      "toy"
+    ],
+    "files": [
+      "package.json"
+    ]
+  },
+  "daemonFailures": [
+    {
+      "id": "closed-own-service",
+      "message": "Daemon process terminated and closed the connection",
+      "expected": {
+        "persistent": false,
+        "localDisabled": true,
+        "nextEnabled": true
+      }
+    },
+    {
+      "id": "host-watch-limit",
+      "message": "inotify_add_watch refused",
+      "expected": {
+        "persistent": false,
+        "localDisabled": true,
+        "nextEnabled": true
+      }
+    }
+  ],
+  "lockReuse": {
+    "lock": {
+      "lockfileVersion": 3,
+      "workspaces": {
+        "": {
+          "name": "original-lock-law"
+        }
+      },
+      "packages": {
+        "dep": [
+          "dep@1.0.0",
+          "",
+          {}
+        ]
+      },
+      "patchedDependencies": {
+        "dep@1.0.0": "patches/dep.patch"
+      }
+    },
+    "phases": [
+      {
+        "id": "cold",
+        "patch": "original patch",
+        "suffix": "",
+        "parseCalls": 1,
+        "changed": true
+      },
+      {
+        "id": "warm",
+        "patch": "original patch",
+        "suffix": "",
+        "parseCalls": 1,
+        "changed": false
+      },
+      {
+        "id": "patch-change",
+        "patch": "changed patch",
+        "suffix": "",
+        "parseCalls": 1,
+        "changed": true
+      },
+      {
+        "id": "lock-byte-change",
+        "patch": "changed patch",
+        "suffix": "\n",
+        "parseCalls": 2,
+        "changed": false
+      }
+    ],
+    "refusals": {
+      "invalidRefused": true,
+      "missingPatchRefused": true,
+      "restoredParseCalls": 3
+    }
+  },
+  "watchStartup": {
+    "ready": "ready",
+    "deadlineRefused": true,
+    "cancelRefused": true,
+    "markerPreserved": true
+  },
+  "daemonStartup": {
+    "clients": 2,
+    "starts": 1,
+    "accepted": 2
+  }
+}

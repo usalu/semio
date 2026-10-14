@@ -1,7 +1,7 @@
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
 import fixture from "../🧫️fixtures/🔢️numbers/🔣️.json";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { exportSqliteDatabase,importSqliteDatabase,type SqliteRow } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { DwgNumberRow,encodeDwgNumberCells,dwgUnsignedWords } from "../../🔢️number/🟦️.ts";
 

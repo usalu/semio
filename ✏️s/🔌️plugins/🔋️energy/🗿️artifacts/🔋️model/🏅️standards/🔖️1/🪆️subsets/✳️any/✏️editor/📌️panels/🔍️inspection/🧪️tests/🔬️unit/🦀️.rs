@@ -21,7 +21,7 @@ fn panel(snapshot: &EnergyModelSnapshot, ids: &[&str], locale: Locale) -> String
 
 fn panel_with(snapshot: &EnergyModelSnapshot, ids: &[&str], config: &EnergyModelConfig, locale: Locale) -> String {
     let built = render(snapshot, &selecting(ids), config, locale, &TreeWindows::unhosted()).expect("energy inspector assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: built }).expect("energy inspector projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(built)).expect("energy inspector projection")
 }
 
 fn english(ids: &[&str]) -> String {
@@ -247,7 +247,7 @@ fn bridged(control: &serde_json::Value, value: &str) -> crate::editor::model::En
     };
     entries.retain(|(key, _)| key != "value");
     entries.push(("value".to_string(), semio_framework_plugin::DslValue::String(value.to_string())));
-    <crate::editor::model::EnergyModelEditor as ArtifactEditor>::command_from_action(&action, Some(&semio_framework_plugin::DslValue::Object(entries))).unwrap_or_else(|fault| panic!("{action}: {fault:?}"))
+    <crate::editor::model::EnergyModelEditor as ArtifactEditor>::command_from_action(&action, Some((semio_framework_plugin::DslValue::Object(entries)).clone()), None).unwrap_or_else(|fault| panic!("{action}: {fault:?}"))
 }
 
 /// 📍️ Nothing selected: the document summary plus the SITE, which is a singleton with no

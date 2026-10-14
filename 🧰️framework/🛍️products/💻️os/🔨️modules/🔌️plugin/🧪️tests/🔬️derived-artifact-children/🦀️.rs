@@ -91,7 +91,7 @@ impl ArtifactComposition for ChildrenTestComposition {
     }
 }
 
-const CHILD_SLOTS: &[::semio_framework_schema_composition::ChildSlotSpec] = &[::semio_framework_schema_composition::ChildSlotSpec { name: "primaryMesh", kind: "s.stdio.mesh", many: false }];
+const CHILD_SLOTS: &[::semio_framework_schema_composition::ChildSlotSpec] = &[::semio_framework_schema_composition::ChildSlotSpec { name: "primaryMesh", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.mesh"), many: false }];
 
 struct ChildrenTestChildren;
 

@@ -187,7 +187,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
         match self.stage {
             NaturalFileImportStage::Account => {
                 cx.set_stage("natural-file-import-account");
-                let units = self.byte_length.saturating_sub(self.byte_cursor).min(cx.fuel_remaining() as usize);
+                let units = self.byte_length.saturating_sub(self.byte_cursor).min(self.contract.max_work_units_per_step as usize).min(cx.fuel_remaining() as usize);
                 self.byte_cursor = self.byte_cursor.saturating_add(units);
                 cx.consume_fuel(units as u64);
                 if self.byte_cursor >= self.byte_length {
@@ -266,7 +266,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
                     }
                     self.completed = true;
                 }
-                return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None);
+                return Ok(semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)?);
             }
         }
         Ok(None)

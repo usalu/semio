@@ -846,7 +846,9 @@ impl ArtifactEditor for ShootingPlayApp {
 })())
 }
 
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 

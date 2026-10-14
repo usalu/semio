@@ -1,0 +1,95 @@
+{
+  "contract": "actor.original-owned-job-header/v1",
+  "extent": 160,
+  "cases": [
+    {
+      "kind": "start",
+      "prefixHex": "534a483101020200",
+      "body": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "refusal": "semantic"
+    },
+    {
+      "kind": "step",
+      "prefixHex": "534a483102010000",
+      "body": [
+        99,
+        71,
+        3,
+        1,
+        257
+      ],
+      "refusal": "none"
+    },
+    {
+      "kind": "output",
+      "prefixHex": "534a483103070000",
+      "body": [
+        64,
+        0,
+        0,
+        0,
+        0
+      ],
+      "refusal": "none"
+    },
+    {
+      "kind": "acknowledge",
+      "prefixHex": "534a483104030000",
+      "body": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "refusal": "none"
+    },
+    {
+      "kind": "cancel",
+      "prefixHex": "534a483105000100",
+      "body": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "refusal": "ownershipLimit"
+    },
+    {
+      "kind": "close",
+      "prefixHex": "534a483106000000",
+      "body": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "refusal": "none"
+    }
+  ],
+  "loanHandbacks": [
+    {
+      "pointer": "original",
+      "extent": 159,
+      "accepted": false
+    },
+    {
+      "pointer": "foreign",
+      "extent": 160,
+      "accepted": false
+    },
+    {
+      "pointer": "original",
+      "extent": 160,
+      "accepted": true
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{Data, DeriveInput, Fields, Type, parse_macro_input};
+#[path="📥️owned/🦀️.rs"]
+mod owned_receiving;
 
 /// 🧬️ Derives the complete generic record construction contract.
 #[proc_macro_derive(DslRecord, attributes(dsl))]
@@ -14,6 +16,43 @@ pub fn derive_scalar(input: TokenStream) -> TokenStream { emit_scalar(parse_macr
 /// 🪆️ Derives generic tagged variants without product operation traits.
 #[proc_macro_derive(DslEnum, attributes(dsl))]
 pub fn derive_enum(input: TokenStream) -> TokenStream { emit_enum(parse_macro_input!(input as DeriveInput)).into() }
+
+/// 🫴️ Derives typed receiving with every partial authored field retained by the original owner.
+#[proc_macro_derive(DslReceiving, attributes(dsl))]
+pub fn derive_receiving(input:TokenStream)->TokenStream{emit_receiving(parse_macro_input!(input as DeriveInput)).into()}
+
+fn receiving_fields(fields:&Fields,construct:proc_macro2::TokenStream,frame:syn::Ident)->proc_macro2::TokenStream{
+ let plans=plan_fields(fields);let declared=plans.iter().filter(|plan|!plan.skip).map(|plan|plan.id);let required=plans.iter().filter(|plan|!plan.skip&&!plan.optional).map(|plan|plan.id);let members=plans.iter().map(|plan|{let ident=&plan.ident;let ty=&plan.field_ty;quote!{#ident:Option<#ty>}});let empty=plans.iter().map(|plan|{let ident=&plan.ident;quote!{#ident:None}});
+ let bindings=plans.iter().map(|plan|{
+  let FieldPlan{ident,id,kind,field_ty,block,..}=plan;
+  if plan.skip{return quote!{slot.as_mut().unwrap().#ident=Some(None);}}
+  let expression=match kind{
+   FieldKind::OptionScalar(inner)=>quote!{if matches!(value,::semio_framework_dsl_record::FieldValue::Absent){None}else{Some(<#inner as ::semio_framework_dsl_record::DslReceivingField>::receive_value(value,original)?) }},
+   _=>quote!{<#field_ty as ::semio_framework_dsl_record::DslReceivingField>::receive_value(value,original)?},
+  };
+  let expression=if *block{quote!{{let value=match value{::semio_framework_dsl_record::FieldValue::Block(inner)=>inner.as_ref(),::semio_framework_dsl_record::FieldValue::Absent=>value,_=>return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected original receiving block"))};#expression}}}else{expression};
+  quote!{let value=record.get(#id).unwrap_or(&::semio_framework_dsl_record::FieldValue::Absent);slot.as_mut().unwrap().#ident=Some(#expression);}
+ });
+ let inits=plans.iter().map(|plan|{let ident=&plan.ident;quote!{#ident:slot.as_mut().unwrap().#ident.take().unwrap()}});
+ let output=if matches!(fields,Fields::Unit){construct}else{quote!{#construct{#(#inits),*}}};
+ quote!{::semio_framework_dsl_record::receiving::work(owner,0,1)?;::semio_framework_dsl_record::receiving::owned::declared_record(record,&[#(#declared),*],&[#(#required),*])?;#[derive(::semio_framework_value::RetireOwned)]struct #frame{#(#members),*}owner.receive_nested::<#frame,Self>(|slot,original|{*slot=Some(#frame{#(#empty),*});#(#bindings)*::semio_framework_dsl_record::receiving::work(original,::std::mem::size_of::<Self>(),1)?;Ok(#output)})}
+}
+
+fn emit_receiving(input:DeriveInput)->proc_macro2::TokenStream{
+ let name=&input.ident;
+ let synchronous=match &input.data{
+  Data::Struct(data)=>{
+   if !matches!(data.fields,Fields::Named(_)|Fields::Unit){return syn::Error::new_spanned(&input,"DslReceiving records require named fields").to_compile_error()}
+   let body=receiving_fields(&data.fields,quote!{Self},quote::format_ident!("__{}ReceivingFrame",name));
+   quote!{impl ::semio_framework_dsl_record::DslReceivingRecord for #name{fn receive_record(record:&::semio_framework_dsl_record::RecordValue,owner:&mut ::semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,::semio_framework_value::ValueError>{#body}}impl ::semio_framework_dsl_record::DslReceivingField for #name{fn receive_value(value:&::semio_framework_dsl_record::FieldValue,owner:&mut ::semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,::semio_framework_value::ValueError>{match value{::semio_framework_dsl_record::FieldValue::Record(record)=><Self as ::semio_framework_dsl_record::DslReceivingRecord>::receive_record(record,owner),_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected original receiving record"))}}}}
+  },
+  Data::Enum(data)=>{
+   let arms=data.variants.iter().map(|variant|{let attrs=parse_field_attrs(&variant.attrs);let ident=&variant.ident;let keyword=attrs.key.unwrap_or_else(||to_kebab(&ident.to_string()));let body=match &variant.fields{Fields::Unnamed(fields)if fields.unnamed.len()==1=>{let ty=&fields.unnamed[0].ty;quote!{owner.receive_nested::<#ty,Self>(|slot,original|{*slot=Some(<#ty as ::semio_framework_dsl_record::DslReceivingRecord>::receive_record(record,original)?);::semio_framework_dsl_record::receiving::work(original,::std::mem::size_of::<Self>(),1)?;Ok(Self::#ident(slot.take().unwrap()))})}},fields=>receiving_fields(fields,quote!{Self::#ident},quote::format_ident!("__{}{}ReceivingFrame",name,ident))};quote!{#keyword=>{#body}}});
+   quote!{impl ::semio_framework_dsl_record::DslReceivingVariants for #name{fn receive_named_record(keyword:&str,record:&::semio_framework_dsl_record::RecordValue,owner:&mut ::semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,::semio_framework_value::ValueError>{match keyword{#(#arms,)*_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvalidValue,"unknown original receiving variant"))}}}}
+  },
+  _=>syn::Error::new_spanned(&input,"DslReceiving requires a record or tagged variants").to_compile_error(),
+ };let owned=owned_receiving::emit_owned_receiving(&input);quote!{#synchronous #owned}
+}
 
 /// 🧩️ Composes complete generic record bindings into a higher declaration.
 #[proc_macro]
@@ -46,6 +85,7 @@ struct ContainerAttrs {
 
 #[derive(Default, Clone)]
 struct FieldAttrs {
+    skip: bool,
     key: Option<String>,
     positional: bool,
     list: bool,
@@ -111,7 +151,9 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
             continue;
         }
         let _ = attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("key") {
+            if meta.path.is_ident("skip") {
+                out.skip = true;
+            } else if meta.path.is_ident("key") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.key = Some(value.value());
             } else if meta.path.is_ident("positional") {
@@ -290,6 +332,7 @@ fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
 
 //#region 🔖️RecordCodegen
 struct FieldPlan {
+    skip: bool,
     ident: syn::Ident,
     id: u16,
     key: String,
@@ -330,7 +373,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
         let (kind, elem_ty) = classify_field(&field.ty, &attrs);
         let key = attrs.key.clone().unwrap_or_else(|| to_kebab(&ident.to_string()));
         let optional = matches!(kind, FieldKind::OptionScalar(_) | FieldKind::OptionStatements(_));
-        let positional = if attrs.positional {
+        let positional = if attrs.positional && !attrs.skip {
             let p = positional_counter;
             positional_counter += 1;
             Some(p)
@@ -339,6 +382,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
         };
         let block = attrs.block && !matches!(kind, FieldKind::VecBlockStatements(_));
         out.push(FieldPlan {
+            skip: attrs.skip,
             ident,
             id: index as u16,
             key,
@@ -373,7 +417,13 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
     let mut field_idents = Vec::new();
 
     for plan in &plans {
-        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, field_ty, block, unit, angle, refs, defines, lang, lang_from, coord, dir } = plan;
+        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, field_ty, block, unit, angle, refs, defines, lang, lang_from, coord, dir, .. } = plan;
+        if plan.skip {
+            field_idents.push(ident.clone());
+            let local=field_local(ident);
+            from_value_stmts.push(quote!{let #local=None;});
+            continue;
+        }
         // A `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` scalar field's Shape is resolved at
         // spec-build time via `dsl::__rt::unit_for_derive` — same lazy-per-call pattern every other
         // `fn() -> RecordSpec`-backed Shape in this engine already uses, so an unknown unit symbol
@@ -662,7 +712,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
 /// 🏭️ Emits declared field metadata without borrowing an ordinary allocating shape factory.
 fn schema_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
     let plans=plan_fields(fields);
-    plans.iter().map(|plan|{
+    plans.iter().filter(|plan|!plan.skip).map(|plan|{
         let FieldPlan{id,key,positional,optional,kind,elem_ty,block,unit,angle,refs,defines,lang,lang_from,coord,dir,..}=plan;
         let refinement=if let Some(symbol)=unit{Some(quote!{::semio_framework_dsl_record::Shape::Quantity(::semio_framework_dsl_record::__rt::unit_for_derive(#symbol))})}else if let Some(symbol)=angle{Some(quote!{::semio_framework_dsl_record::Shape::Angle(::semio_framework_dsl_record::__rt::unit_for_derive(#symbol))})}else if let Some(kind)=refs{Some(quote!{::semio_framework_dsl_record::Shape::Ref(#kind)})}else if let Some(from)=lang_from{let key=plans.iter().find(|plan|plan.ident==from.as_str()).map_or_else(||to_kebab(from),|plan|plan.key.clone());Some(quote!{::semio_framework_dsl_record::Shape::EmbedFrom(#key)})}else if let Some(language)=lang{Some(quote!{::semio_framework_dsl_record::Shape::Embed(#language)})}else if *coord{Some(quote!{::semio_framework_dsl_record::Shape::Coord(3)})}else if *dir{Some(quote!{::semio_framework_dsl_record::Shape::Dir})}else{None};
         let shape=match kind{
@@ -687,6 +737,7 @@ fn schema_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
 fn controlled_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
     plan_fields(fields).iter().map(|plan|{
         let FieldPlan{ident,id,key,kind,elem_ty,field_ty,block,..}=plan;
+        if plan.skip {let local=field_local(ident);let retire=retire_field_codegen(plan,quote!{value});return quote!{let #local=::semio_framework_dsl_record::__rt::DecodedFieldOwner::new(None::<#elem_ty>,|value|{#retire});}}
         let expression=match kind {
             FieldKind::Scalar=>quote!{control.scoped_stage(|control|<#elem_ty as ::semio_framework_dsl_record::DslField>::from_value_controlled(value,control))?},
             FieldKind::Bytes64=>quote!{match value{::semio_framework_dsl_record::FieldValue::Bytes64(bytes)=>{control.step()?;control.copy_bytes(bytes)?},_=>return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected Bytes64"))}},
@@ -709,7 +760,7 @@ fn controlled_record_codegen(fields:&Fields)->Vec<proc_macro2::TokenStream>{
 
 /// 🛫️ Projects explicit declared fields with cumulative ownership and known workloads.
 fn encoding_record_codegen(fields:&Fields,bindings:bool)->Vec<proc_macro2::TokenStream>{
-    plan_fields(fields).iter().map(|plan|{
+    plan_fields(fields).iter().filter(|plan|!plan.skip).map(|plan|{
         let FieldPlan{ident,id,key,kind,elem_ty,block,..}=plan;
         let source=if bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
         let projection=match kind{
@@ -762,7 +813,7 @@ fn controlled_statements(inner:&Type,field_ty:&Type)->proc_macro2::TokenStream{
 
 /// 🔎️ Reads declared source slots directly for the retained native projection cursor.
 fn retained_record_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::TokenStream{
-    let plans=plan_fields(fields);let ids=plans.iter().map(|plan|plan.id);
+    let plans=plan_fields(fields);let plans=plans.iter().filter(|plan|!plan.skip).collect::<Vec<_>>();let ids=plans.iter().map(|plan|plan.id);
     let arms=plans.iter().enumerate().map(|(index,plan)|{
         let FieldPlan{ident,kind,elem_ty,block,..}=plan;
         let value=if from_bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
@@ -787,7 +838,7 @@ fn retained_record_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::Toke
 }
 
 fn retained_record_key_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::TokenStream{
-    let plans=plan_fields(fields);let arms=plans.iter().enumerate().map(|(ordinal,plan)|{
+    let plans=plan_fields(fields);let arms=plans.iter().filter(|plan|!plan.skip).enumerate().map(|(ordinal,plan)|{
         let FieldPlan{ident,kind,elem_ty,block,..}=plan;
         let value=if from_bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
         let projection=match kind{
@@ -807,7 +858,14 @@ fn retained_record_key_codegen(fields:&Fields,from_bindings:bool)->proc_macro2::
     });quote!{if path.is_empty(){return Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}match path[0]{#(#arms,)*_=>Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}}
 }
 
+/// 🫴️ Keeps skipped custody optional so decoding creates absence without an unfinanced default owner.
+fn custody_field_error(input:&DeriveInput)->Option<proc_macro2::TokenStream>{
+    let fields=match &input.data{Data::Struct(data)=>data.fields.iter().collect::<Vec<_>>(),Data::Enum(data)=>data.variants.iter().flat_map(|variant|variant.fields.iter()).collect(),_=>Vec::new()};
+    fields.into_iter().find_map(|field|{let attrs=parse_field_attrs(&field.attrs);if attrs.skip&&!matches!(classify_field(&field.ty,&attrs).0,FieldKind::OptionScalar(_)|FieldKind::OptionStatements(_)){Some(syn::Error::new_spanned(field,"dsl skip requires an optional custody field").to_compile_error())}else{None}})
+}
+
 fn emit_record(input: DeriveInput) -> proc_macro2::TokenStream {
+    if let Some(error)=custody_field_error(&input){return error;}
     let name = input.ident.clone();
     let container = parse_container_attrs(&input);
     let Data::Struct(data) = &input.data else {
@@ -924,6 +982,7 @@ fn emit_scalar(input: DeriveInput) -> proc_macro2::TokenStream {
     }
 
     let schema_count=schema_tags.len();
+    let receiver=borrowed_enum_receiver(data);
     let borrowed=borrowed_scalar_owner_codegen(&input);
     let expanded = quote! {
         #borrowed
@@ -934,9 +993,9 @@ fn emit_scalar(input: DeriveInput) -> proc_macro2::TokenStream {
             }
             fn shape_controlled<C: ::semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<::semio_framework_dsl_record::Shape,::semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(#schema_count)?;let mut variants=control.allocate_vec(#schema_count)?;#(#schema_tags)*Ok(::semio_framework_dsl_record::Shape::Enum(variants))})}
             fn to_value(&self) -> ::semio_framework_dsl_record::FieldValue {
-                ::semio_framework_dsl_record::FieldValue::Enum(match self { #(#match_to_ordinal),* })
+                ::semio_framework_dsl_record::FieldValue::Enum(match #receiver { #(#match_to_ordinal),* })
             }
-            fn projection_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{if !path.is_empty(){return Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Enum(match self{#(#match_to_ordinal),*}))}
+            fn projection_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{if !path.is_empty(){return Err(::semio_framework_dsl_record::native_encoding::projection_path_error())}Ok(::semio_framework_dsl_record::native_encoding::FieldProjectionView::Enum(match #receiver{#(#match_to_ordinal),*}))}
             fn from_value(value: &::semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
                 match value {
                     ::semio_framework_dsl_record::FieldValue::Enum(ordinal) => match *ordinal {
@@ -947,13 +1006,19 @@ fn emit_scalar(input: DeriveInput) -> proc_macro2::TokenStream {
                 }
             }
             fn from_value_controlled(value:&::semio_framework_dsl_record::FieldValue,control:&mut ::semio_framework_value::NativeDecodeControl<'_>)->Result<Self,::semio_framework_value::ValueError>{control.step()?;match value{::semio_framework_dsl_record::FieldValue::Enum(ordinal)=>match *ordinal{#(#match_from_ordinal,)*other=>Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown enum ordinal {other}")))},_=>Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,"expected declared Enum"))}}
-            fn to_value_controlled(&self,control:&mut ::semio_framework_value::NativeEncodeControl<'_>)->Result<::semio_framework_dsl_record::FieldValue,::semio_framework_value::ValueError>{control.step()?;Ok(::semio_framework_dsl_record::FieldValue::Enum(match self{#(#match_to_ordinal),*}))}
+            fn to_value_controlled(&self,control:&mut ::semio_framework_value::NativeEncodeControl<'_>)->Result<::semio_framework_dsl_record::FieldValue,::semio_framework_value::ValueError>{control.step()?;Ok(::semio_framework_dsl_record::FieldValue::Enum(match #receiver{#(#match_to_ordinal),*}))}
         }
     };
     expanded.into()
 }
 
+/// 🕳️ Borrows inhabited variants and dereferences only an impossible empty enum value.
+fn borrowed_enum_receiver(data: &syn::DataEnum) -> proc_macro2::TokenStream {
+    if data.variants.is_empty() { quote!(*self) } else { quote!(self) }
+}
+
 fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Option<&syn::Path>) -> proc_macro2::TokenStream {
+    let receiver=borrowed_enum_receiver(data);
     let mut variants_exprs = Vec::new();
     let mut schema_variant_stmts=Vec::new();
     let mut schema_methods=Vec::new();
@@ -1062,19 +1127,19 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
         impl #name{#(#schema_methods)*}
         impl ::semio_framework_dsl_record::DslVariants for #name {
             fn retire_decoded_variant(self){#retirement}
-            fn projected_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::RecordSpecProducer){match self{#(#variant_identity_arms),*}}
-            fn projected_variant_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{match self{#(#variant_projection_arms),*}}
-            fn projected_variant_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{match self{#(#variant_key_arms),*}}
+            fn projected_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::RecordSpecProducer){match #receiver{#(#variant_identity_arms),*}}
+            fn projected_variant_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{match #receiver{#(#variant_projection_arms),*}}
+            fn projected_variant_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{match #receiver{#(#variant_key_arms),*}}
             // 🚫️async: E4 — see `DslVariants::variants`'s tag on the trait.
             fn variants() -> Vec<(String, ::semio_framework_dsl_record::RecordSpecProducer)> {
                 vec![ #(#variants_exprs),* ]
             }
             fn variants_controlled<C: ::semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<Vec<(String,::semio_framework_dsl_record::RecordSpecProducer)>,::semio_framework_value::ValueError>{control.scoped_stage(|control|{control.begin_stage(#schema_variant_count)?;let mut variants=control.allocate_vec(#schema_variant_count)?;#(#schema_variant_stmts)*Ok(variants)})}
             fn to_named_record(&self) -> (String, ::semio_framework_dsl_record::RecordValue) {
-                match self { #(#to_named_arms),* }
+                match #receiver { #(#to_named_arms),* }
             }
             fn to_named_record_controlled(&self,control:&mut ::semio_framework_value::NativeEncodeControl<'_>)->Result<(String,::semio_framework_dsl_record::RecordValue),::semio_framework_value::ValueError>{
-                control.scoped_depth(64,|control|control.scoped_stage(|control|match self{#(#encoding_arms),*}))
+                control.scoped_depth(64,|control|control.scoped_stage(|control|match #receiver{#(#encoding_arms),*}))
             }
             fn from_named_record(keyword: &str, record: &::semio_framework_dsl_record::RecordValue) -> Result<Self, ::semio_framework_dsl_record::TextError> {
                 match keyword {
@@ -1092,6 +1157,7 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum, retire_with:Opt
 
 
 fn emit_enum(input: DeriveInput) -> proc_macro2::TokenStream {
+    if let Some(error)=custody_field_error(&input){return error;}
     let name = input.ident.clone();
     let Data::Enum(data) = &input.data else {
         return syn::Error::new_spanned(&input, "DslEnum only supports enums").to_compile_error();
@@ -1155,6 +1221,7 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
     let plans = plan_fields(fields);
     plans
         .iter()
+        .filter(|plan|!plan.skip)
         .map(|plan| {
             let FieldPlan { ident, id, kind, block, .. } = plan;
             let ident = &field_local(ident);
@@ -1228,6 +1295,7 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
 //#endregion 🔖️VariantHelpers
 
 fn emit_projection(input: DeriveInput, spec: syn::Ident, to: syn::Ident, from: syn::Ident) -> proc_macro2::TokenStream {
+    if let Some(error)=custody_field_error(&input){return error;}
     let name = input.ident.clone();
     let container = parse_container_attrs(&input);
     let Data::Struct(data) = &input.data else {
@@ -1276,7 +1344,7 @@ mod tests;
 /// 🧬️ Produces static field identities and finite lazy record edges from the actual authored plan.
 fn borrowed_record_codegen(fields:&Fields,owner:&syn::Ident)->Vec<proc_macro2::TokenStream>{
     let plans=plan_fields(fields);
-    plans.iter().map(|plan|{
+    plans.iter().filter(|plan|!plan.skip).map(|plan|{
         let FieldPlan{id,key,positional,optional,kind,elem_ty,block,unit,angle,refs,defines,lang,lang_from,coord,dir,..}=plan;
         let refinement=if let Some(symbol)=unit{Some(quote!{::semio_framework_dsl_record::BorrowedShape::Quantity(::semio_framework_dsl_record::borrowed_unit(#symbol))})}else if let Some(symbol)=angle{Some(quote!{::semio_framework_dsl_record::BorrowedShape::Angle(::semio_framework_dsl_record::borrowed_unit(#symbol))})}else if let Some(kind)=refs{Some(quote!{::semio_framework_dsl_record::BorrowedShape::Ref(#kind)})}else if let Some(from)=lang_from{let key=plans.iter().find(|plan|plan.ident==from.as_str()).map_or_else(||to_kebab(from),|plan|plan.key.clone());Some(quote!{::semio_framework_dsl_record::BorrowedShape::EmbedFrom(#key)})}else if let Some(lang)=lang{Some(quote!{::semio_framework_dsl_record::BorrowedShape::Embed(#lang)})}else if *coord{Some(quote!{::semio_framework_dsl_record::BorrowedShape::Coord(3)})}else if *dir{Some(quote!{::semio_framework_dsl_record::BorrowedShape::Dir})}else{None};
         let elem_ty=borrowed_owner_type(elem_ty,owner);
@@ -1336,6 +1404,7 @@ fn borrowed_scalar_owner_codegen(input:&DeriveInput)->proc_macro2::TokenStream{
 
 /// 🌿️ Preserves literal tagged identities and delegates newtypes to their actual static record owner.
 fn borrowed_variants_owner_codegen(name:&syn::Ident,data:&syn::DataEnum)->proc_macro2::TokenStream{
+    let receiver=borrowed_enum_receiver(data);
     let mut methods=Vec::new();let mut entries=Vec::new();let mut identities=Vec::new();let mut tables=Vec::new();
     for(index,variant)in data.variants.iter().enumerate(){
         let tag=&variant.ident;let attrs=parse_field_attrs(&variant.attrs);let keyword=attrs.key.unwrap_or_else(||to_kebab(&tag.to_string()));let make=quote::format_ident!("__dsl_borrowed_variant_{}",index);let spec=quote::format_ident!("__DSL_BORROWED_VARIANT_SPEC_{}",index);
@@ -1348,5 +1417,5 @@ fn borrowed_variants_owner_codegen(name:&syn::Ident,data:&syn::DataEnum)->proc_m
         methods.push(quote!{const #spec : ::semio_framework_dsl_record::BorrowedRecordSpec=#body;fn #make()->::semio_framework_dsl_record::BorrowedRecordSpec{Self::#spec}});entries.push(quote!{(#keyword,#name::#make as fn()->::semio_framework_dsl_record::BorrowedRecordSpec)});identities.push(quote!{#pattern=>(#keyword,#index,Self::#make())});
     }
     let count=entries.len();let table=borrowed_table_ident(name,"VARIANTS");
-    quote!{#(#tables)*impl #name{#(#methods)*}static #table:[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec);#count]=[#(#entries),*];impl ::semio_framework_dsl_record::BorrowedDslVariants for #name{const VARIANTS:&'static[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec)]=&#table;fn projected_borrowed_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::BorrowedRecordSpec){match self{#(#identities),*}}fn projected_borrowed_variant_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{<Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(self,path)}fn projected_borrowed_variant_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{<Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(self,path,index)}}}
+    quote!{#(#tables)*impl #name{#(#methods)*}static #table:[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec);#count]=[#(#entries),*];impl ::semio_framework_dsl_record::BorrowedDslVariants for #name{const VARIANTS:&'static[(&'static str,fn()->::semio_framework_dsl_record::BorrowedRecordSpec)]=&#table;fn projected_borrowed_variant_identity(&self)->(&'static str,usize,::semio_framework_dsl_record::BorrowedRecordSpec){match #receiver{#(#identities),*}}fn projected_borrowed_variant_view(&self,path:&[usize])->Result<::semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,::semio_framework_value::ValueError>{<Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_view(self,path)}fn projected_borrowed_variant_key(&self,path:&[usize],index:usize)->Result<&str,::semio_framework_value::ValueError>{<Self as ::semio_framework_dsl_record::DslVariants>::projected_variant_key(self,path,index)}}}
 }

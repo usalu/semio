@@ -52,7 +52,7 @@ fn tree_of(scene: CadSnapshot, view_state: &ViewModel) -> BuiltNode {
 }
 
 fn snapshot_json(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("fixture projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("fixture projection")
 }
 
 /// 🌲️ The forest document with `extra` synthetic nodes appended — an oversized container whose

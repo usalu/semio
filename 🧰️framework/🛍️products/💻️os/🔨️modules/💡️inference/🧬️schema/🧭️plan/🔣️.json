@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.inference.original-plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "nodes",
+    "links",
+    "expected",
+    "expectedDistinctEdges"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "source": "borrowed-original-graph-ordinals",
+        "comparison": "one-utf8-byte-per-original-turn",
+        "storage": "fixed-page-scalar-indices",
+        "queue": "document-order-kahn",
+        "cycles": "document-order-parentless-tail",
+        "scalarBodyBytes": 8,
+        "receipt": [
+          "items",
+          "copyBytes",
+          "capacityBytes",
+          "releaseBytes"
+        ],
+        "caller": "same-operation-generation-source-clock-deadline-recipient"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "expected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expectedDistinctEdges": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

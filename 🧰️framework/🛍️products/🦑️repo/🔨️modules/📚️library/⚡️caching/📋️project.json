@@ -3,7 +3,7 @@
   "projectType": "application",
   "targets": {
     "debug-bun-bundle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -14,7 +14,7 @@
       }
     },
     "digest-source-inventory": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -25,7 +25,7 @@
       }
     },
     "digest-source-closure": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -36,7 +36,7 @@
       }
     },
     "digest-cargo-lock": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -47,7 +47,7 @@
       }
     },
     "emit-typescript-declarations": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -58,7 +58,7 @@
       }
     },
     "ci-baseline": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -76,7 +76,7 @@
       "outputs": []
     },
     "test-cache-command-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "cacheCommandSources"
@@ -87,7 +87,7 @@
       }
     },
     "test-artifact-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "{projectRoot}/📜️script.ts",
@@ -177,7 +177,7 @@
       }
     },
     "test-cargo-provenance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "{projectRoot}/📜️script.ts",
@@ -193,7 +193,7 @@
       }
     },
     "generator-inputs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [
         "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/🔏️generator-inputs/📇️registry/🔣️.json"
@@ -203,7 +203,7 @@
       }
     },
     "toolchain": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -211,14 +211,14 @@
       }
     },
     "test-graph-revision": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test graph-revision"
       }
     },
     "test-cargo-build-lease": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -233,7 +233,7 @@
       }
     },
     "test-cache-policy": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "cacheCommandSources"
@@ -244,7 +244,7 @@
       }
     },
     "test-native-input-vocabulary": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -265,7 +265,7 @@
       }
     },
     "test-workspace-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -282,7 +282,7 @@
       }
     },
     "test-build-mode": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -290,7 +290,7 @@
       }
     },
     "test-next-runtime": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -301,7 +301,7 @@
       }
     },
     "test-web-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -309,7 +309,7 @@
       }
     },
     "test-graph-seal": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -319,15 +319,25 @@
       }
     },
     "test-next-dev-runtime": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts test next-runtime dev"
       }
     },
+    "test-graph-cache-waiter": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test graph-cache-waiter"
+      }
+    },
     "test-selected-graph": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -336,7 +346,7 @@
       }
     },
     "test-authorizers": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -347,7 +357,7 @@
       }
     },
     "test-sdk-snapshot": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -357,8 +367,65 @@
         "forwardAllArgs": false
       }
     },
+    "test-toolkit-use": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test toolkit-use",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-project-admission": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test project-admission",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-inference-observation": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test inference-observation",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
     "test-pruning": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -369,7 +436,7 @@
       }
     },
     "test-journal-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -380,7 +447,7 @@
       }
     },
     "test-daemon-journal": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -394,7 +461,7 @@
       }
     },
     "test-daemon-journal-workspace": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -407,7 +474,7 @@
       }
     },
     "cargo-prepare": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation",
@@ -415,12 +482,102 @@
       }
     },
     "cargo-synchronize": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation",
         "command": "bun ./📜️script.ts synchronize",
         "forwardAllArgs": true
+      }
+    },
+    "test-task-child": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test task-child",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-import-edges": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test import-edges",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-graph-publication": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test graph-publication",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-toolkit-retention": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test toolkit-retention",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      }
+    },
+    "test-caller-environment": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "bun ./📜️script.ts test caller-environment",
+        "forwardAllArgs": false
       }
     }
   },
@@ -440,6 +597,7 @@
       "{projectRoot}/🩺️environment/📋️inspection/🟦️.ts",
       "{projectRoot}/🔁️verification/📋️orchestration/🟦️.ts",
       "{projectRoot}/🧹️pruning/🟦️.ts",
+      "{projectRoot}/🧹️pruning/🧬️schema/🔣️.json",
       "{projectRoot}/🧹️pruning/🌐️workspace/🟦️.ts",
       "{projectRoot}/🧹️pruning/📋️orchestration/🟦️.ts",
       "{projectRoot}/📦️artifacts/🟦️.ts",
@@ -452,7 +610,7 @@
       "{projectRoot}/🦀️cargo/🟦️.ts",
       "{projectRoot}/🧪️tests/⚡️cache-contracts/🟦️.ts",
       "{projectRoot}/🧪️tests/🧱️command-source/🟦️.ts",
-      "{projectRoot}/🧬️schema/🧱️command-source/🔣️.json",
+      "{projectRoot}/🧪️tests/🧱️command-source/🧬️schema/🔣️.json",
       "{projectRoot}/🧪️tests/🧫️fixtures/🧱️command-source/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
@@ -463,7 +621,6 @@
       "{projectRoot}/📦️artifacts/🏗️native-build/🟦️.ts",
       "{projectRoot}/📦️artifacts/📋️native-orchestration/🟦️.ts",
       "{projectRoot}/🧪️tests/🧫️fixtures/command-boundaries/🧫️cases.json",
-      "{projectRoot}/🧫️fixtures/command-boundaries/🛂️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts"
     ]
   }

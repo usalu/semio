@@ -48,7 +48,7 @@ fn build(document: &Fem3dSnapshot, labels: &Fem3dLabels) -> BuiltNode {
 }
 
 fn projection(node: BuiltNode) -> String {
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: node }).expect("fixture projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(node)).expect("fixture projection")
 }
 
 fn section_node<'a>(tree: &'a BuiltNode, suffix: &str) -> &'a BuiltNode {

@@ -78,10 +78,10 @@ callable by the agent — a tool like that would let the agent approve itself.
 One binary, `semio-os-mcp`, in two profiles:
 
 ```bash
-bun nx run @semio-tech/framework-os-mcp-rs:build
+bun repo run @semio-tech/framework-os-mcp-rs:build
 # → …/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp          (debug — the dev loop)
 
-bun nx run @semio-tech/framework-os-mcp-rs:build-release
+bun repo run @semio-tech/framework-os-mcp-rs:build-release
 # → …/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp  (release — use this one)
 ```
 
@@ -278,7 +278,7 @@ also why a plausible-looking typo costs you a whole tool family with no error: w
 `PERMISSION_DENIED` because `jobs.spawn` was never granted, while `tools/list` still shows all 28
 tools. Measured against the release binary, ticket 26/09/18 `📓️rb1-release-builds-and-production-posture.md`.
 
-Run `bun nx run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
+Run `bun repo run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
 Claude Desktop after editing the file. If your `semio-os-mcp` lives elsewhere, use that path — the emoji
 directory names are literal and must be copied exactly.
 
@@ -538,7 +538,7 @@ schema of its own.
 
 `🧬️schema/🔣️.json` (draft-07, `$id: https://json.schemas.assets.semio-tech.com/os/mcp/component.json`) and
 `🧬️schema/🟦️.ts` (types plus a dependency-free `parse<ExportId>` per export) are **generated** from
-that registry by `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
+that registry by `bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs the binary's
 own `semio-os-mcp schemas` emitter; `schema-mirror-check` fails on drift, and the Rust law
 `the_json_mirror_publishes_exactly_the_registry_exports` asserts the two key sets agree.
 

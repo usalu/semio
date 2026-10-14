@@ -70,7 +70,7 @@ pub use owned_document_closure::{OWNED_DOCUMENT_MAXIMUM_MEMBERS, OwnedDocumentCl
 pub mod member_open;
 pub use member_open::{
     MemberGenesisEnvelopeEncoder, MemberGenesisEnvelopeProgress, MemberGenesisEnvelopeSource,
-    InitialMemberStoreOpen, MEMBER_OPEN_IDENTITY_BYTES, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest,
+    InitialMemberStoreOpen, MEMBER_OPEN_IDENTITY_BYTES, MemberOpenAdmissionError, MemberOpenDeclaration, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenSourceAdmission,
     admit_member_input_buffer, MemberSnapshotOpenProgress, MemberOpenStep, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen,
 };
 
@@ -414,8 +414,8 @@ impl<'a> ChildRestoreProjection<'a> {
         for (index, slot) in slots.iter().enumerate() {
             if slot.name.is_empty()
                 || slot.name.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES
-                || slot.kind.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES
-                || !semio_framework_artifact_reference::is_canonical_artifact_kind(slot.kind)
+                || slot.selection.id().len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES
+                || !match slot.selection { semio_framework_schema_composition::ChildSlotSelection::ArtifactKind(kind) => semio_framework_artifact_reference::is_canonical_artifact_kind(kind), semio_framework_schema_composition::ChildSlotSelection::Capability(capability) => semio_framework_schema_composition::is_canonical_child_capability(capability) }
                 || slots[..index].iter().any(|prior| prior.name == slot.name)
             {
                 return Err(ChildRestoreProjectionError::InvalidSlot);
@@ -485,7 +485,7 @@ impl<'a> semio_framework_schema_composition::ChildRefVisitor<'a> for ChildRestor
             return Err(Self::Error::ReferenceLimit);
         }
         let spec = self.slots.iter().find(|spec| spec.name == slot).ok_or(Self::Error::InvalidSlot)?;
-        if fields.artifact_kind != spec.kind || [fields.child_id, fields.artifact_id, fields.artifact_kind, fields.standard, fields.subset].iter().any(|field| field.is_empty() || field.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES) {
+        if !spec.selection.accepts_kind(fields.artifact_kind) || !semio_framework_artifact_reference::is_canonical_artifact_kind(fields.artifact_kind) || [fields.child_id, fields.artifact_id, fields.artifact_kind, fields.standard, fields.subset].iter().any(|field| field.is_empty() || field.len() > CHILD_RESTORE_MAXIMUM_FIELD_BYTES) {
             return Err(Self::Error::InvalidReference);
         }
         for (name, prior) in self.rows[..self.length].iter().flatten() {
@@ -11366,7 +11366,7 @@ pub trait MemberFactory: MemberVisit + Sized {
     type Open: MemberOpenOperation<Member = Self> + Send;
     fn open_birth_demand(request: &MemberOpenRequest) -> Result<RetainedCloneBirthDemand, MemberOpenDiagnostic>;
     fn member_frame_bytes(&self) -> usize;
-    fn begin_open(request: &mut Option<MemberOpenRequest>, grant: RetainedCloneGrant) -> Result<Option<Self::Open>, MemberOpenDiagnostic>;
+    fn begin_open(admission:&mut MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut semio_framework_job::StepContext<'_>,parent:&semio_framework_job::OriginalCallerSourceParent)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     async fn create(id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId) -> Result<Self, VcsError>;
     async fn open(expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId) -> Result<Self, VcsError>;
 }
@@ -11617,8 +11617,8 @@ impl MemberFactory for NoMembers {
     fn open_birth_demand(request: &MemberOpenRequest) -> Result<RetainedCloneBirthDemand, MemberOpenDiagnostic> { request.admitted_expected().map(|_| RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }) }
     fn member_frame_bytes(&self) -> usize { match *self {} }
 
-    fn begin_open(request: &mut Option<MemberOpenRequest>, grant: RetainedCloneGrant) -> Result<Option<Self::Open>, MemberOpenDiagnostic> {
-        UnsupportedMemberFactoryOpen::begin(request, grant)
+    fn begin_open(admission:&mut MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut semio_framework_job::StepContext<'_>,parent:&semio_framework_job::OriginalCallerSourceParent)->Result<bool,semio_framework_job::OriginalTurnFailure> {
+        UnsupportedMemberFactoryOpen::begin(admission,opened,cx,parent)
     }
 
     async fn create(_id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, _initial_pack: &[u8], _actor: ActorId) -> Result<Self, VcsError> {
@@ -11670,42 +11670,47 @@ macro_rules! space_members {
 
         pub enum $open_name {
             $($variant(Box<$crate::os_store::InitialMemberStoreOpen<$enum_name, $snapshot, $mutation>>)),+
+            , ReturningSource(::semio_framework_job::OriginalCallerSourceLoan), Closed
         }
 
         impl $crate::os_store::MemberOpenOperation for $open_name {
             type Member = $enum_name;
 
-            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> $crate::os_store::MemberOpenStep<Self::Member> {
-                match self {
-                    $(Self::$variant(open) => match open.step_store(cx, grant) {
+            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<$crate::os_store::MemberOpenStep<Self::Member>,::semio_framework_job::OriginalTurnFailure> {
+                Ok(match self {
+                    $(Self::$variant(open) => match open.step_store(cx, grant)? {
                         $crate::os_store::MemberOpenStep::Pending(progress) => $crate::os_store::MemberOpenStep::Pending(progress),
                         $crate::os_store::MemberOpenStep::Ready(member) => $crate::os_store::MemberOpenStep::Ready($enum_name::$variant(member)),
                         $crate::os_store::MemberOpenStep::Rejected(diagnostic) => $crate::os_store::MemberOpenStep::Rejected(diagnostic),
-                    }),+
-                }
+                    }),+,
+                    Self::ReturningSource(_) | Self::Closed => $crate::os_store::MemberOpenStep::Rejected($crate::os_store::MemberOpenDiagnostic::Stale),
+                })
             }
 
-            fn close_step(&mut self, cx: &mut ::semio_framework_job::StepContext<'_>) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_job::OriginalTurnFailure> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::close_step(open.as_mut(), cx)),+ }
+            fn close_step(&mut self,parent:&::semio_framework_job::OriginalCallerSourceParent,cx:&mut ::semio_framework_job::StepContext<'_>)->Result<::semio_framework_value::retained_clone::RetainedCloneStep,::semio_framework_job::OriginalTurnFailure>{
+                if let Self::ReturningSource(loan)=self{let step=loan.close_step(parent,cx)?;let progress=step.progress();if loan.terminal_is_empty(){*self=Self::Closed}return Ok(if matches!(self,Self::Closed){::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)}else{::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)})}
+                let extent=match self{$(Self::$variant(open)if open.payload_terminal_is_empty()=>{open.validate_source_context(cx)?;Some(::std::mem::size_of_val(open.as_ref()))},)+Self::Closed=>return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())),_=>None};
+                if let Some(extent)=extent{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<extent{return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()))}let loan=match self{$(Self::$variant(open)=>open.take_source_before_shell_return(cx)?,)+_=>unreachable!()};let original=::std::mem::replace(self,Self::ReturningSource(loan));drop(original);return $crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,released_bytes:extent,..Default::default()})))}
+                match self{$(Self::$variant(open)=>$crate::os_store::MemberOpenOperation::close_step(open.as_mut(),parent,cx).map(|step|::semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress())),)+Self::ReturningSource(_)|Self::Closed=>unreachable!()}
             }
             fn next_copy_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_copy_byte_demand(open.as_ref())),+ }
+                match self { $(Self::$variant(open) if !open.payload_terminal_is_empty() => $crate::os_store::MemberOpenOperation::next_copy_byte_demand(open.as_ref()),)+ _ => Ok(0) }
             }
             fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_capacity_byte_demand(open.as_ref(), body)),+ }
+                match self { $(Self::$variant(open) if !open.payload_terminal_is_empty() => $crate::os_store::MemberOpenOperation::next_capacity_byte_demand(open.as_ref(), body),)+ _ => Ok(0) }
             }
             fn next_release_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_release_byte_demand(open.as_ref())),+ }
+                match self { $(Self::$variant(open) => if open.payload_terminal_is_empty() { Ok(::std::mem::size_of_val(open.as_ref())) } else { $crate::os_store::MemberOpenOperation::next_release_byte_demand(open.as_ref()) },)+ Self::ReturningSource(_)|Self::Closed => Ok(0) }
             }
             fn next_depth_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::next_depth_demand(open.as_ref())),+ }
+                match self { $(Self::$variant(open) => if open.payload_terminal_is_empty() { Ok(1) } else { $crate::os_store::MemberOpenOperation::next_depth_demand(open.as_ref()) },)+ Self::ReturningSource(_) => Ok(1),Self::Closed => Ok(0) }
             }
 
             fn terminal_is_empty(&self) -> bool {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::terminal_is_empty(open.as_ref())),+ }
+                matches!(self, Self::Closed)
             }
             fn terminal_drop_byte_demand(&self) -> Option<usize> {
-                match self { $(Self::$variant(open) => $crate::os_store::MemberOpenOperation::terminal_drop_byte_demand(open.as_ref())?.checked_add(::std::mem::size_of_val(open.as_ref()))),+ }
+                matches!(self, Self::Closed).then_some(0)
             }
         }
 
@@ -11910,17 +11915,17 @@ macro_rules! space_members {
                 match self { $(Self::$variant(member) => ::std::mem::size_of_val(member.as_ref())),+ }
             }
 
-            fn begin_open(request: &mut Option<$crate::os_store::MemberOpenRequest>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self::Open>, $crate::os_store::MemberOpenDiagnostic> {
-                let retained = request.as_ref().ok_or($crate::os_store::MemberOpenDiagnostic::Stale)?;
-                let required = Self::open_birth_demand(retained)?;
-                if grant.maximum_items == 0 || grant.maximum_depth < required.depth || grant.maximum_capacity_bytes < required.capacity_bytes { return Ok(None); }
-                let dialect = &retained.admitted_expected()?.dialect;
-                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => match $crate::os_store::InitialMemberStoreOpen::begin(request.take().expect("funded member open retains its exact original request"), ::semio_framework_value::retained_clone::RetainedCloneGrant { maximum_capacity_bytes: grant.maximum_capacity_bytes - ::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self, $snapshot, $mutation>>(), maximum_depth: grant.maximum_depth - 1, ..grant }) {
-                        Ok(open) => Ok(Some($open_name::$variant(Box::new(open)))),
-                        Err(rejected) => { *request = Some(rejected.request); Err(rejected.diagnostic) }
-                    },)+
-                    _ => Err($crate::os_store::MemberOpenDiagnostic::Identity),
+            fn begin_open(admission:&mut $crate::os_store::MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut ::semio_framework_job::StepContext<'_>,parent:&::semio_framework_job::OriginalCallerSourceParent)->Result<bool,::semio_framework_job::OriginalTurnFailure>{
+                if opened.is_some(){return Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale).into())}
+                if !admission.admit_source(parent,cx)?||cx.should_yield(){return Ok(false)}
+                let retained=admission.request().ok_or_else(||$crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale))?;
+                let required=Self::open_birth_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
+                let grant=cx.retained_grant();
+                if grant.maximum_items==0||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Ok(false)}
+                let dialect=&retained.admitted_expected().map_err($crate::os_store::member_open::member_admission_diagnostic)?.dialect;
+                match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
+                    $(($kind,$standard,$subset)=>{let(open,mut progress)=$crate::os_store::InitialMemberStoreOpen::begin(admission,cx,::semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self,$snapshot,$mutation>>(),maximum_depth:grant.maximum_depth-1,..grant})?;progress.retained_capacity_bytes+=::std::mem::size_of_val(&open);*opened=Some($open_name::$variant(Box::new(open)));$crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)))?;Ok(true)},)+
+                    _=>Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Identity).into()),
                 }
             }
 

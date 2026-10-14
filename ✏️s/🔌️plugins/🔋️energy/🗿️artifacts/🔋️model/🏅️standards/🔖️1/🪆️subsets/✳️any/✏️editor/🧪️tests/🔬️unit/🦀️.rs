@@ -56,7 +56,7 @@ async fn every_declared_action_is_classified_and_resolves_to_a_command() {
         assert_ne!(action.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "action {} is unclassified", action.id);
     }
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
-        let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(tool_id, None).unwrap_or_else(|error| panic!("action {tool_id} has no command: {error:?}"));
+        let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(tool_id, None, None).unwrap_or_else(|error| panic!("action {tool_id} has no command: {error:?}"));
         assert_eq!(command.action_id(), *tool_id);
     }
 }
@@ -703,7 +703,7 @@ async fn the_simulation_is_driven_by_the_framework_tool_run_actions_and_chords_o
     for removed in fixture["lifecycle"]["removedActions"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()) {
         assert!(!ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&removed), "{removed} is still a retained tool");
         assert!(def.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&def, window)).all(|action| action.id != removed), "{removed} is still declared");
-        assert!(<EnergyModelEditor as ArtifactEditor>::command_from_action(removed, None).is_err(), "{removed} still resolves to a command");
+        assert!(<EnergyModelEditor as ArtifactEditor>::command_from_action(removed, None, None).is_err(), "{removed} still resolves to a command");
     }
 }
 
@@ -1011,7 +1011,7 @@ async fn a_zone_property_verb_refuses_the_three_bad_payloads() {
 async fn the_action_bridge_accepts_the_inspector_field_id_value_payload() {
     let text = |value: &str| semio_framework_value::DslValue::String(value.to_string());
     let args = semio_framework_value::DslValue::Object(vec![("field".to_string(), text("uValueWM2K")), ("id".to_string(), text("50")), ("value".to_string(), text("1.4"))]);
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_FENESTRATION_PROPERTY_ACTION_ID, Some(&args)).expect("the inspector payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_FENESTRATION_PROPERTY_ACTION_ID, Some((args).clone()), None).expect("the inspector payload resolves");
     assert_eq!(command, fenestration_property(50, "uValueWM2K", "1.4"));
 }
 
@@ -1274,7 +1274,7 @@ async fn a_site_control_writes_the_number_the_host_merged_not_the_bridges_defaul
     ];
     let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
     let args = host_merged(&borrowed, "30");
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SITE_ACTION_ID, Some(&args)).expect("the site payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SITE_ACTION_ID, Some((args).clone()), None).expect("the site payload resolves");
     assert_eq!(command, EnergyModelEditorCommand::SetSite { latitude_deg: None, longitude_deg: None, elevation_m: None, time_zone_hours: None, north_axis_deg: Some(30.0) });
 
     let edited = applied(&snapshot, &command);
@@ -1299,7 +1299,7 @@ async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_
         ("thermostat", thermostat.id.0.to_string()),
     ];
     let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some(&host_merged(&borrowed, "4.5"))).expect("the thermostat payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some((host_merged(&borrowed, "4.5")).clone()), None).expect("the thermostat payload resolves");
     assert_eq!(
         command,
         EnergyModelEditorCommand::SetThermostatSetpoints {
@@ -1318,7 +1318,7 @@ async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_
     let other = model.schedules.constants.iter().map(|schedule| schedule.id).find(|id| *id != thermostat.heating_setpoint_schedule_id).expect("a second constant schedule");
     let mut swapped = borrowed.clone();
     swapped[2] = ("field", "heatingSchedule");
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some(&host_merged(&swapped, &other.0.to_string()))).expect("the schedule payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some((host_merged(&swapped, &other.0.to_string())).clone()), None).expect("the schedule payload resolves");
     assert_eq!(applied(&snapshot, &command).thermostats[0].heating_setpoint_schedule_id, other);
 }
 
@@ -1330,7 +1330,7 @@ async fn picking_an_interzone_partner_makes_the_surface_interzone() {
     let snapshot = snapshot_of(&model);
     let (first, second) = (model.surfaces[0].id, model.surfaces[1].id);
     let args = host_merged(&[("field", "interzonePartner"), ("id", &first.0.to_string())], &second.0.to_string());
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SURFACE_PROPERTY_ACTION_ID, Some(&args)).expect("the partner payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SURFACE_PROPERTY_ACTION_ID, Some((args).clone()), None).expect("the partner payload resolves");
     assert_eq!(command, EnergyModelEditorCommand::SetSurfaceProperty { surface: first.0, property: "interzonePartner".into(), value: second.0.to_string(), partner_surface: 0 });
     assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-surface-boundary-condition".to_string()]);
     assert_eq!(applied(&snapshot, &command).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(second));

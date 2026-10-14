@@ -356,18 +356,26 @@ async fn compute_original_admission_refusal_retains_source_addresses_without_nat
         let(result,heap)={let mut future=std::pin::pin!(pool.run_job(&runtime,&scope,&ctx,original,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|_|panic!("refused source cannot publish a semantic loan")));semio_framework_trace::observe_heap_allocations_on_this_thread(||future.as_mut().poll(&mut Context::from_waker(std::task::Waker::noop())))};assert!(matches!(result,Poll::Ready(Ok(false))));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(completion.is_none());drop(control);assert_eq!(admission,Default::default());assert_eq!(receipt.progress,Default::default());assert_eq!(job.as_ref().unwrap()as*const _,job_pointer);assert_eq!(params.as_ref().unwrap()as*const _,params_pointer);
     }
     let BatchJobParams{cancel,..}=params.take().unwrap();let mut close=semio_framework_async::CancelTokenRetirement::from_token(cancel);let step=close.return_alias_step(&ctx.cancel,original).unwrap();assert!(step.progress().fits(original));assert!(close.terminal_is_empty());drop(close);
+    eprintln!("[DEBUG] Original Services admission denials preserve source addresses and zero native birth/free under real HeapWitness");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn cancelled_compute_driver_preserves_the_original_caller_completion_slot(){
     use semio_framework_job::{Generation,OperationId,RetainedCloneProgress,StepBudget,WorkerJobAdmissionContext};
+    let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();let denied_progress:RetainedCloneProgress=serde_json::from_value(law["zeroWorkClose"]["progress"].clone()).unwrap();
     let runtime=TokioHostRuntime::with_pool(test_pool(1));let pool=ComputePool::with_pool(1,test_pool(1));let scope=runtime.open_scope(ScopeOwner::Service("compute-original-driver"),None).await;let ctx=test_ctx(81300,scope.cancel.clone()).await;let grant=fixture_compute_grant();let mut job=Some(NeverCompleteComputeJob{closing:false});let mut params=None;let mut admission=RetainedCloneProgress::default();let mut receipt=OriginalComputeRecipient{original:grant,progress:RetainedCloneProgress::default()};let mut completion=None;
     let mut close_sequence=0;let mut close_authority=semio_framework_job::JobPayloadAuthority::admit(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),grant).unwrap().unwrap().0;
     let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,u64::MAX,grant),semio_framework_job::default_now_us,&mut admission).unwrap();assert!(ComputePool::prepare_job_params(&ctx,grant,semio_framework_job::default_now_us,&mut params,&mut control,&mut receipt).unwrap());
     {let mut driver=std::pin::pin!(pool.run_job(&runtime,&scope,&ctx,grant,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|_|panic!("nonterminal original job cannot publish completion")));assert!(matches!(driver.as_mut().poll(&mut Context::from_waker(std::task::Waker::noop())),Poll::Pending));}
-    drop(control);assert!(job.is_none()&&params.is_none());assert!(completion.is_some());let original=completion.as_ref().unwrap()as*const _;ctx.cancel.cancel().await;
+    drop(control);assert!(job.is_none()&&params.is_none());assert!(completion.is_some());let original=completion.as_ref().unwrap()as*const _;
+    let mut denied_receipt=Default::default();
+    let mut denied=semio_framework_job::StepContext::with_payload_authority(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(law["zeroWorkClose"]["work"].as_u64().unwrap(),u64::MAX,grant),&ctx.cancel,semio_framework_job::default_now_us,&mut close_sequence,&mut denied_receipt,&close_authority).unwrap();
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||completion.as_mut().unwrap().close_step(&mut denied).unwrap());
+    assert_eq!(step.progress(),denied_progress);assert_eq!((heap.requested_bytes,heap.released_bytes),(denied_progress.retained_capacity_bytes,denied_progress.released_bytes));drop(denied);assert_eq!(denied_receipt,denied_progress);assert_eq!(completion.as_ref().unwrap()as*const _==original,law["zeroWorkClose"]["originalRetained"].as_bool().unwrap());
+    ctx.cancel.cancel().await;
     while !completion.as_ref().unwrap().terminal_is_empty(){assert_eq!(completion.as_ref().unwrap()as*const _,original);let step=close_original_compute(completion.as_mut().unwrap(),&ctx,u64::MAX,&mut close_sequence,&close_authority,&mut receipt);assert!(step.progress().fits(grant));if step.progress()==Default::default(){sleep_ms(&runtime,1).await;}}
     assert!(receipt.progress.released_bytes>=admission.retained_capacity_bytes);drop(completion);assert!(close_authority.close_step(grant).unwrap().progress().fits(grant));assert!(close_authority.terminal_is_empty());
+    eprintln!("[DEBUG] Original Services completion survives driver cancellation and closes through same original context birth={} released={}",admission.retained_capacity_bytes,receipt.progress.released_bytes);
 }
 
 /// 🌀️ A self-contained cooperative yield with no tokio `rt`-feature dependency (this crate no

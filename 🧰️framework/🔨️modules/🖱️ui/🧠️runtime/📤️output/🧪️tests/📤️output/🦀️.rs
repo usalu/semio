@@ -18,7 +18,7 @@ fn ready(surface: &str, generation: u64) -> (SurfaceReconciler, Option<SurfaceRe
             semio_framework_job::default_now_us,
             &mut sequence,
         &mut actual_retained_progress);
-        match job.drive_one(&mut cx) {
+        match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
             SurfaceReconcileJobStep::Ready => return job.take_ready().unwrap_or_else(|_| panic!("exact paired output")),
             SurfaceReconcileJobStep::MoreWork => {}
             SurfaceReconcileJobStep::Fault => panic!("output producer fault"),
@@ -143,7 +143,7 @@ fn surface_output_admission_transfers_after_seal_with_no_unreserved_handback() {
             semio_framework_job::default_now_us,
             &mut sequence,
         &mut actual_retained_progress);
-        match job.drive_one(&mut cx) {
+        match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
             SurfaceReconcileJobStep::Ready => break,
             SurfaceReconcileJobStep::MoreWork => {}
             SurfaceReconcileJobStep::Fault => panic!("admitted job fault: {:?}", job.fault()),
@@ -190,7 +190,7 @@ fn surface_output_admission_inplace_transfer_retains_source_on_refusal_and_targe
             semio_framework_job::default_now_us,
             &mut sequence,
         &mut actual_retained_progress);
-        match job.drive_one(&mut cx) {
+        match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
             SurfaceReconcileJobStep::Ready => break,
             SurfaceReconcileJobStep::MoreWork => {}
             SurfaceReconcileJobStep::Fault => panic!("admitted job fault: {:?}", job.fault()),
@@ -247,7 +247,7 @@ fn surface_output_admission_ready_rechecks_cancel_generation_fuel_and_deadline_b
                 now,
                 &mut sequence,
             &mut actual_retained_progress);
-            match job.drive_one(&mut cx) {
+            match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
                 SurfaceReconcileJobStep::Ready => break,
                 SurfaceReconcileJobStep::MoreWork => {}
                 SurfaceReconcileJobStep::Fault => panic!("admitted job fault"),
@@ -268,7 +268,7 @@ fn surface_output_admission_ready_rechecks_cancel_generation_fuel_and_deadline_b
             now,
             &mut sequence,
         &mut actual_retained_progress);
-        let outcome = match job.drive_one(&mut cx) {
+        let outcome = match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
             SurfaceReconcileJobStep::Ready => "ready",
             SurfaceReconcileJobStep::MoreWork => "pending",
             SurfaceReconcileJobStep::Fault => "fault",
@@ -302,7 +302,7 @@ fn surface_output_pool_direct_job_receiver_keeps_exact_roots_across_refusal_and_
             semio_framework_job::default_now_us,
             &mut sequence,
         &mut actual_retained_progress);
-        match job.drive_one(&mut cx) {
+        match job.drive_one(cx.generation().0, &mut cx).expect("original reconcile native resource source") {
             SurfaceReconcileJobStep::Ready => break,
             SurfaceReconcileJobStep::MoreWork => {}
             SurfaceReconcileJobStep::Fault => panic!("admitted job fault"),

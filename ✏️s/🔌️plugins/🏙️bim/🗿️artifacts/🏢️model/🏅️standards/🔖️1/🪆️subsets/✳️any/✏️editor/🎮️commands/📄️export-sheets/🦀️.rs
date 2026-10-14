@@ -74,7 +74,8 @@ pub struct SheetsJob {
     format: String,
     only: Option<String>,
     instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
-    labels: TitleLabels,
+    labels:Option<TitleLabels>,
+    locale:Option<String>,
     analysis: Analysis,
     writer: Option<SheetsPdf>,
     written: usize,
@@ -82,13 +83,8 @@ pub struct SheetsJob {
 
 impl SheetsJob {
     /// 🏗️ A job writing `format` of the sheet `only` (else the first for an SVG, all for a PDF) of the document that instance `instance` shows, headed in `locale`.
-    pub fn new(format: &str, only: Option<&str>, locale: Option<&str>, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
-        Self::with_steps(format, only, locale, instance, NODES_PER_STEP)
-    }
-
-    /// 🏗️ A job that finishes at most `nodes` graph nodes per analysis step (at least one).
-    pub fn with_steps(format: &str, only: Option<&str>, locale: Option<&str>, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, nodes: usize) -> Self {
-        Self { format: format.to_string(), only: only.map(str::to_string), instance: instance.cloned(), labels: title_labels(labels_of(locale)), analysis: Analysis::new(instance, nodes), writer: None, written: 0 }
+    pub fn new(original:ExportSheets,instance:crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>)->Self{
+        Self{format:original.format,only:original.sheet,locale:original.locale,instance:None,labels:None,analysis:Analysis::new(instance),writer:None,written:0}
     }
 
     /// 📈️ How far the job is, as a fraction: the analysis counts for the first half, the sheets written for the second.
@@ -113,7 +109,13 @@ impl SheetsJob {
     }
 
     /// ⏩️ Does one bounded step against `snapshot`.
-    pub fn advance(&mut self, snapshot: &ModelSnapshot) -> Result<Advance, Fault> {
+    pub fn advance(&mut self,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<Advance,protocol::InferenceWorkFailure>{
+        if !self.analysis.is_done(){self.analysis.advance(snapshot,cx)?;return Ok(Advance::Progress("bim-export-infer"))}
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original sheet writer and output have no funded producer").into())
+    }
+
+    fn write_cold(&mut self, snapshot: &ModelSnapshot) -> Result<Advance, Fault> {
+        if self.labels.is_none(){self.labels=Some(title_labels(labels_of(self.locale.as_deref())))}
         if !FORMATS.contains(&self.format.as_str()) {
             return Err(refusal(&self.format));
         }
@@ -127,14 +129,10 @@ impl SheetsJob {
             return Err(fault("bim.export.sheets-none", "the model has no sheet to export"));
         }
         let ended = |error: protocol::InferenceError| fault("bim.export.inference", format!("the model could not be analysed: {error}"));
-        if !self.analysis.is_done() {
-            self.analysis.advance(snapshot).map_err(ended)?;
-            return Ok(Advance::Progress("bim-export-infer"));
-        }
         let name = stem(&snapshot.project.name);
         if self.format == "svg" {
             let id = &targets[0];
-            let labels = &self.labels;
+            let labels=self.labels.as_ref().unwrap();
             let document = inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| sheets::sheet_svg(snapshot, inferred, id, labels)).map_err(ended)?.ok_or_else(|| fault("bim.export.sheet-missing", format!("the sheet '{id}' has no layout")))?.map_err(|message| failed("svg", message))?;
             let number = snapshot.sheets.get(id).map_or("sheet", |row| row.number.as_str());
             return Ok(Advance::Done(Output { filename: format!("{name}-{}.svg", sheets::file_stem(number)), mime_type: "image/svg+xml", data: document, encoding: None }));
@@ -145,7 +143,7 @@ impl SheetsJob {
         }
         if self.written < targets.len() {
             let id = &targets[self.written];
-            let (labels, writer) = (&self.labels, self.writer.as_mut().expect("the writer was started"));
+            let (labels, writer) = (self.labels.as_ref().unwrap(), self.writer.as_mut().expect("the writer was started"));
             inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| match inferred.sheet_layouts.get(id) {
                 Some(layout) => writer.page(layout, &sheets::drawings(inferred), labels),
                 None => Err(format!("the sheet '{id}' has no layout")),
@@ -172,12 +170,15 @@ pub struct SheetsExportWork {
     tool_id: &'static str,
     owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     job: Option<SheetsJob>,
+    failure:Option<protocol::InferenceWorkFailure>,
+    original:Option<ExportSheets>,
+    read:Option<store::os_store::snapshot_read::SnapshotRead<ModelSnapshot>>,
 }
 
 impl SheetsExportWork {
     /// 🏗️ The work of tool `tool_id`.
     pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, owner, job: None }
+        Self { tool_id, owner, job: None,failure:None,original:None,read:None }
     }
 }
 
@@ -190,29 +191,26 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for SheetsExportWork {
         self.tool_id
     }
 
+    fn receive_original_command(&mut self,command:&mut BimCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.original.is_some(){return Ok(true)}let BimCommand::ExportSheets(payload)=command else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original sheets export command changed").into())};let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original=Some(std::mem::replace(payload,ExportSheets{format:String::new(),sheet:None,locale:None,pressed:None}));Ok(true)
+    }
+
+    fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.read.is_none()&&self.job.is_none()&&self.failure.is_none()}
+
     fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
         (self.job.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
-        let original: Result<_, Fault> = (|| {
-        let BimCommand::ExportSheets(payload) = input.command else { return Err(Fault::from("bim-export-sheets-work-mismatch")) };
-        let job = self.job.get_or_insert_with(|| SheetsJob::new(&payload.format, payload.sheet.as_deref(), payload.locale.as_deref(), Some(&self.owner)));
-        if cx.is_cancelled() {
-            job.cancel(input.snapshot);
-            return Err(fault("bim.export.cancelled", "the export was cancelled"));
-        }
-        cx.consume_fuel(1);
-        Ok(match job.advance(input.snapshot)? {
-            Advance::Progress(stage) => {
-                cx.set_stage(stage);
-                ArtifactCommandWorkStep::Progress { stage, preview: preview(stage) }
-            }
-            Advance::Done(output) => ArtifactCommandWorkStep::Complete(download(output)),
-        })
-    
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+        if let Some(original)=protocol::admit_inference_failure(&mut self.failure,cx)?{return Err(original)}
+        if self.failure.is_some(){return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}
+        let BimCommand::ExportSheets(_payload) = input.command else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original BIM sheets export command changed").into()) };
+        if self.read.is_none(){self.read=input.snapshot_read.take_current(input.operation.generation,input.operation.canonical_base_revision,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}
+        if self.job.is_none(){let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}let original=self.original.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original sheets export fields were not received"))?;self.job=Some(SheetsJob::new(original,Some(&self.owner)));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}
+        let snapshot=self.read.as_ref().unwrap().get();let job=self.job.as_mut().unwrap();if cx.is_cancelled(){job.cancel(snapshot)}
+        match job.advance(snapshot,cx){Ok(Advance::Progress(stage))=>{cx.set_stage(stage);Ok(ArtifactCommandWorkStep::Progress{stage,preview:if stage=="bim-export-infer"{INFER_PREVIEW}else{PAGE_PREVIEW}})},Ok(Advance::Done(output))=>Ok(ArtifactCommandWorkStep::Complete(download(output))),Err(original)=>{self.failure=Some(original);Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}}
+
     }
 }
 //#endregion 🔖️Work
@@ -221,9 +219,10 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for SheetsExportWork {
 pub fn handle(payload: &ExportSheets, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let instance = ctx.gestures.as_ref();
     let locale = payload.locale.clone().or_else(|| ctx.labels().map(|labels| labels.locale().as_str().to_string()));
-    let mut job = SheetsJob::new(&payload.format, payload.sheet.as_deref(), locale.as_deref(), instance);
+    let mut job=SheetsJob::new(ExportSheets{format:payload.format.clone(),sheet:payload.sheet.clone(),locale,pressed:payload.pressed},instance);
+    job.instance=instance.cloned();
     loop {
-        if let Advance::Done(output) = job.advance(doc.snapshot)? {
+        if let Advance::Done(output) = job.write_cold(doc.snapshot)? {
             return Ok(download(output));
         }
     }

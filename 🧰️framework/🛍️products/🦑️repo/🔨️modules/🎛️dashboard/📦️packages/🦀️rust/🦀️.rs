@@ -207,24 +207,18 @@ pub mod catalog {
         pub filter_from_examples: bool,
     }
 
-    /// 📁️ Resolves the canonical generated plugin-registry output directory.
-    pub(crate) fn generated_dir(root: &Path) -> PathBuf {
-        root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")
-    }
-
-    /// 📄️ Raw text of the generated playgrounds catalog (`"[]\n"` if it has never been generated) —
-    /// used by `semio catalog --json`, which passes the TS-emitted JSON straight through rather than
-    /// re-serializing the parsed `PlaygroundEntry` (single source of truth for the wire shape stays
-    /// with the TS emitter).
-    pub fn playgrounds_json_text(root: &Path) -> String {
-        fs::read_to_string(generated_dir(root).join("🚀️playgrounds.json")).unwrap_or_else(|_| "[]\n".to_string())
-    }
+    /// 📥️ Receives the caller's publication directory with an empty unconfigured contract.
+    pub(crate) fn configured_catalog_root()->Result<Option<PathBuf>,String>{match std::env::var("SEMIO_PLUGIN_CATALOG"){Ok(value) if value.is_empty()=>Err("Configured catalog path is empty".into()),Ok(value)=>{let path=PathBuf::from(value);if !path.is_absolute(){return Err("Configured catalog path must be absolute".into());}Ok(Some(path))},Err(std::env::VarError::NotPresent)=>Ok(None),Err(_)=>Err("Configured catalog path is not Unicode".into())}}
+    /// 📄️ Reads only the explicitly supplied publication; malformed or missing configured data is refused.
+    pub fn playgrounds_json_text_from_catalog(publication:Option<&Path>)->Result<String,String>{let Some(root)=publication else{return Ok("[]\n".into());};let path=root.join("🚀️playgrounds.json");let metadata=fs::symlink_metadata(&path).map_err(|error|format!("Configured playground catalog unavailable: {error}"))?;if !metadata.is_file()||metadata.file_type().is_symlink()||metadata.len()>8_388_608{return Err("Configured playground catalog file authority refused".into());}let text=fs::read_to_string(path).map_err(|error|format!("Configured playground catalog could not be read: {error}"))?;serde_json::from_str::<Vec<serde_json::Value>>(&text).map_err(|error|format!("Configured playground catalog malformed: {error}"))?;Ok(text)}
+    /// 📇️ Receives the application publication from the repository command environment.
+    pub fn playgrounds_json_text(_root:&Path)->String{let publication=configured_catalog_root().expect("Catalog publication refused");playgrounds_json_text_from_catalog(publication.as_deref()).expect("Configured playground catalog refused")}
 
     /// 📖️ Reads the committed catalog (empty if it has never been generated).
     pub fn load_playground_catalog(root: &Path) -> Vec<PlaygroundEntry> {
-        let path = generated_dir(root).join("🚀️playgrounds.json");
-        let Ok(text) = fs::read_to_string(path) else { return Vec::new() };
-        let Ok(raw) = serde_json::from_str::<Vec<serde_json::Value>>(&text) else { return Vec::new() };
+        let text=playgrounds_json_text(root);
+        let raw=serde_json::from_str::<Vec<serde_json::Value>>(&text).expect("Configured playground catalog refused");
+        for row in &raw {if row.get("variant").and_then(|value|value.as_str()).is_none()||row.get("pluginId").and_then(|value|value.as_str()).is_none()||row.get("cratePath").and_then(|value|value.as_str()).is_none()||row.get("aliases").and_then(|value|value.as_array()).is_none()||row.get("ports").and_then(|value|value.get("react")).and_then(|value|value.as_u64()).is_none()||row.get("ports").and_then(|value|value.get("wgpu")).and_then(|value|value.as_u64()).is_none(){panic!("Configured playground row schema refused");}}
         raw.into_iter()
             .filter_map(|v| {
                 Some(PlaygroundEntry {
@@ -332,7 +326,7 @@ pub mod env_contract {
         if let Lock::Individual(v) = &opts.appearance {
             env.push(("SEMIO_LOCKED_APPEARANCE".to_string(), v.clone()));
         }
-        env.push(("NX_TASKS_RUNNER_DYNAMIC_OUTPUT".to_string(), "false".to_string()));
+        env.push(("SEMIO_BUILD_DYNAMIC_OUTPUT".to_string(), "false".to_string()));
         env.extend(crate::registry::RUNNER_ENV.iter().map(|(key, value)| ((*key).to_string(), (*value).to_string())));
         env
     }

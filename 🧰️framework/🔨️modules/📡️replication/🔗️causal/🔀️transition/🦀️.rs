@@ -284,6 +284,8 @@ pub enum HistoryShape {
     Config,
 }
 
+semio_framework_value::artifact_retire_leaf!(HistoryShape,HistoryTransitionKind);
+
 impl HistoryShape {
     /// 🛂️ Whether a history of this shape holds a transition of `kind`.
     pub fn admits(self, kind: HistoryTransitionKind) -> bool {

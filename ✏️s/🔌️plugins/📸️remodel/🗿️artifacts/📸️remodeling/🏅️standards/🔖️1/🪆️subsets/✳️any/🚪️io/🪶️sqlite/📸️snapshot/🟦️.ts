@@ -2,7 +2,7 @@
 import * as model from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { ArtifactSqliteProjection, artifactSqliteTables, artifactSqliteCheckpoint, artifactSqliteOrderedRowsControlled, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import { type SqliteDatabase, type SqliteRow, type SqliteValue } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {binary32Value,binary64Value,parseBinary32,parseBinary64,type Binary32,type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32Value,binary64Value,parseBinary32,parseBinary64,type Binary32,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { NativeDecodeControl } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
 import { REMODELING_SQLITE_SCHEMA } from "./🗄️schema/🟦️.ts";
 

@@ -1,5 +1,5 @@
 //! 🎬️ Request-owned Icon World scene construction and prepared-packet publication.
-use semio_framework_job::{InteractiveJob, StepOutcome};
+use semio_framework_job::{InteractiveJob, StepContext, JobOutcomeDescriptor, JobOutcomeKind, OriginalTurnFailure};
 use std::collections::HashMap;
 use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, InputState, PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderPacket, Rect, Theme};
 
@@ -65,7 +65,6 @@ pub(crate) struct IconExportPreparedScene {
     dimensions: (u32, u32),
     format: IconExportFormat,
     closing: bool,
-    sequence: u64,
 }
 
 impl IconExportPreparedScene {
@@ -86,10 +85,11 @@ impl IconExportPreparedScene {
         self.closing = true;
     }
 
-    pub(crate) fn close_step(&mut self) -> Result<bool,infinite_world::world::WorldDynamicFault> {
+    pub(crate) fn close_step(&mut self, context: &mut StepContext<'_>) -> Result<bool,super::IconExportFault> {
+        let copy=context.retained_grant().maximum_copy_bytes;
         self.closing = true;
         if let Some(packet) = self.packet.as_mut() {
-            if !packet.retire_step() {
+            if !close_prepared(context,packet.next_close_demands(copy),|grant|packet.close_step(grant))? {
                 return Ok(false);
             }
             self.packet = None;
@@ -100,17 +100,15 @@ impl IconExportPreparedScene {
             begin_world3d_dynamic_retirement(state);
             return Ok(false);
         }
-        let mut context = scene_step_context(PREVIEW_GENERATION, 1, &mut self.sequence);
-
-        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
-        if !terrain.ownership.fits(terrain_grant) {return Err(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
+        let terrain_grant=context.retained_grant();
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,context);
+        context.consume_retained(terrain.ownership).map_err(OriginalTurnFailure::from)?;
         match terrain.step {
             infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
             infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
-            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>return Err(fault),
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>return Err(super::IconExportFault::World(fault)),
         }
-        if !step_world3d_dynamic_retirement(state, &mut context) {
+        if !step_world3d_dynamic_retirement(state, context) {
             return Ok(false);
         }
         self.state = None;
@@ -131,7 +129,7 @@ pub(crate) struct IconExportScenePreparation {
     input_rejected: Option<PreparedRenderInputRejected>,
     job: Option<PreparedRenderJob>,
     job_rejected: Option<PreparedRenderJobRejected>,
-    job_outcome: Option<StepOutcome>,
+    job_outcome: Option<JobOutcomeDescriptor>,
     packet: Option<PreparedRenderPacket>,
     world_rejected: Option<World3dBuildRejected>,
     dimensions: (u32, u32),
@@ -139,8 +137,7 @@ pub(crate) struct IconExportScenePreparation {
     viewport_mask: ui_wgpu::wgpu::SceneViewportMask3d,
     shadow_profile: infinite_world::world::World3dShadowProfile,
     scene_revision: u64,
-    sequence: u64,
-    fault: Option<super::IconExportFault>,
+    faulted: bool,
     cancelled: bool,
 }
 
@@ -203,8 +200,7 @@ impl IconExportScenePreparation {
             viewport_mask,
             shadow_profile,
             scene_revision: revision,
-            sequence: 0,
-            fault: None,
+            faulted: false,
             cancelled: false,
         })
     }
@@ -225,33 +221,35 @@ impl IconExportScenePreparation {
         }
     }
 
-    pub(crate) fn advance(&mut self) -> Result<bool, super::IconExportFault> {
+    pub(crate) fn advance(&mut self, context: &mut StepContext<'_>) -> Result<bool, super::IconExportFault> {
         if self.phase == Phase::Complete {
             return Ok(true);
         }
         if self.phase == Phase::Close {
-            return self.close_step().map_err(super::IconExportFault::World);
+            return self.close_step(context);
         }
-        if let Err(fault) = self.advance_one() {
-            self.fault = Some(super::IconExportFault::Message(fault.clone()));
+        if context.should_yield() { return Ok(false); }
+        if let Err(fault) = self.advance_one(context) {
+            self.faulted = true;
             self.phase = Phase::Close;
-            return Err(super::IconExportFault::Message(fault));
+            return Err(fault);
         }
         Ok(self.phase == Phase::Complete)
     }
 
-    fn advance_one(&mut self) -> Result<(), String> {
+    fn advance_one(&mut self, context: &mut StepContext<'_>) -> Result<(), super::IconExportFault> {
         match self.phase {
-            Phase::Paint => self.paint_step(),
-            Phase::Bridge => self.bridge_step(),
+            Phase::Paint => self.paint_step(context),
+            Phase::Bridge => self.bridge_step(context),
             Phase::Transfer => self.transfer_step(),
-            Phase::Prepare => self.prepare_step(),
-            Phase::CloseJob => self.close_job_step(),
+            Phase::Prepare => self.prepare_step(context),
+            Phase::CloseJob => self.close_job_step(context),
             Phase::Complete | Phase::Close => Ok(()),
         }
     }
 
-    fn paint_step(&mut self) -> Result<(), String> {
+    fn paint_step(&mut self, context: &mut StepContext<'_>) -> Result<(), super::IconExportFault> {
+        if !self.resources.prepare_step(context)? { return Ok(()); }
         let state = self.state.as_mut().ok_or("icon export World state was missing")?;
         let (width, height) = self.dimensions;
         let mut draw = DrawList::default();
@@ -287,27 +285,26 @@ impl IconExportScenePreparation {
             Err(rejected) => {
                 let fault = rejected.fault().to_string();
                 self.input_rejected = Some(rejected);
-                return Err(fault);
+                return Err(fault.into());
             }
         }
         Ok(())
     }
 
-    fn bridge_step(&mut self) -> Result<(), String> {
+    fn bridge_step(&mut self, context: &mut StepContext<'_>) -> Result<(), super::IconExportFault> {
         let state = self.state.as_mut().ok_or("icon export World state was missing")?;
-        let mut context = scene_step_context(PREVIEW_GENERATION, 3, &mut self.sequence);
-        match step_world3d_scene_bridge(state, &mut context) {
+        match step_world3d_scene_bridge(state, context) {
             World3dSceneBridgeStep::Fault => return Err("icon export World bridge faulted".into()),
             World3dSceneBridgeStep::Idle | World3dSceneBridgeStep::Pending | World3dSceneBridgeStep::Complete => {}
         }
-        match step_world3d_draw_rebuild(state, &mut context) {
+        match step_world3d_draw_rebuild(state, context) {
             WorldDrawRebuildStep::Fault => return Err("icon export World draw publication faulted".into()),
             WorldDrawRebuildStep::Stale => {
-                close_world3d_draw_rebuild_step(state, &mut context);
+                close_world3d_draw_rebuild_step(state, context);
             }
             WorldDrawRebuildStep::Pending | WorldDrawRebuildStep::Complete => {}
         }
-        match step_world3d_snapshot(state, &mut context) {
+        match step_world3d_snapshot(state, context) {
             World3dSnapshotApplyStep::Fault | World3dSnapshotApplyStep::Stale => return Err("icon export World snapshot faulted".into()),
             World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Pending | World3dSnapshotApplyStep::Complete => {}
         }
@@ -315,7 +312,7 @@ impl IconExportScenePreparation {
         Ok(())
     }
 
-    fn transfer_step(&mut self) -> Result<(), String> {
+    fn transfer_step(&mut self) -> Result<(), super::IconExportFault> {
         let input = self.input.as_mut().ok_or("icon export prepared input was missing")?;
         match self.resources.append_step(input) {
             Ok(true) => {
@@ -328,7 +325,7 @@ impl IconExportScenePreparation {
                     Err(rejected) => {
                         let fault = rejected.fault().to_string();
                         self.job_rejected = Some(rejected);
-                        return Err(fault);
+                        return Err(fault.into());
                     }
                 }
             }
@@ -341,44 +338,44 @@ impl IconExportScenePreparation {
         Ok(())
     }
 
-    fn prepare_step(&mut self) -> Result<(), String> {
+    fn prepare_step(&mut self, context: &mut StepContext<'_>) -> Result<(), super::IconExportFault> {
+        if self.job_outcome.is_some() { self.acknowledge_outcome(context)?; return Ok(()); }
         let job = self.job.as_mut().ok_or("icon export prepared job was missing")?;
-        let mut context = scene_step_context(PREVIEW_GENERATION, 1, &mut self.sequence);
-        match job.step(&mut context) {
-            StepOutcome::Yield => Ok(()),
-            outcome @ StepOutcome::Complete(_) => {
+        let Some(outcome) = job.step(context)?.map(|outcome|outcome.into_descriptor()) else { return Ok(()); };
+        let kind=outcome.kind();
+        self.job_outcome=Some(outcome);
+        match kind {
+            JobOutcomeKind::Yield => Ok(()),
+            JobOutcomeKind::Complete => {
                 self.packet = job.take_packet();
                 if self.packet.is_none() {
                     return Err("icon export prepared job completed without a packet".into());
                 }
-                self.job_outcome = Some(outcome);
                 InteractiveJob::begin_close(job);
                 self.phase = Phase::CloseJob;
                 Ok(())
             }
-            outcome @ (StepOutcome::Cancelled | StepOutcome::Fault(_)) => {
-                self.job_outcome = Some(outcome);
+            JobOutcomeKind::Cancelled | JobOutcomeKind::Fault => {
                 Err(job.fault().unwrap_or("icon export prepared job was cancelled").into())
             }
-            outcome => {
-                self.job_outcome = Some(outcome);
+            _ => {
                 Err("icon export prepared job returned an unsupported host outcome".into())
             }
         }
     }
 
-    fn close_job_step(&mut self) -> Result<(), String> {
-        if let Some(outcome) = self.job_outcome.as_mut() {
-            let demand = outcome.retirement_demands().map_err(|error| error.to_string())?;
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if !matches!(outcome.close_step(grant).map_err(|error| error.to_string())?, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
-                return Ok(());
-            }
-            self.job_outcome = None;
-            return Ok(());
-        }
+    fn acknowledge_outcome(&mut self, context: &mut StepContext<'_>) -> Result<bool, super::IconExportFault> {
+        let Some(outcome)=self.job_outcome.as_mut() else { return Ok(true); };
+        semio_framework_job::close_original_retained_step(context,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|Ok(outcome.acknowledge(grant)))?;
+        if !outcome.is_acknowledged() { return Ok(false); }
+        self.job_outcome=None;
+        Ok(true)
+    }
+
+    fn close_job_step(&mut self, context: &mut StepContext<'_>) -> Result<(), super::IconExportFault> {
+        if self.job_outcome.is_some() { self.acknowledge_outcome(context)?; return Ok(()); }
         if let Some(job) = self.job.as_mut() {
-            if !PreparedRenderJob::close_step(job) {
+            if !matches!(InteractiveJob::close_step(job,context)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
                 return Ok(());
             }
             self.job = None;
@@ -389,13 +386,13 @@ impl IconExportScenePreparation {
     }
 
     pub(crate) fn take_prepared(&mut self) -> Option<IconExportPreparedScene> {
-        if self.phase != Phase::Complete || self.cancelled || self.fault.is_some() || self.packet.is_none() || self.state.is_none() {
+        if self.phase != Phase::Complete || self.cancelled || self.faulted || self.packet.is_none() || self.state.is_none() {
             return None;
         }
         let packet = self.packet.take().expect("validated Icon export packet owner");
         let state = self.state.take().expect("validated Icon export World owner");
         self.phase = Phase::Close;
-        Some(IconExportPreparedScene { packet: Some(packet), state: Some(state), dimensions: self.dimensions, format: self.format, closing: false, sequence: 0 })
+        Some(IconExportPreparedScene { packet: Some(packet), state: Some(state), dimensions: self.dimensions, format: self.format, closing: false })
     }
 
     pub(crate) fn progress(&self) -> (u8, usize, usize, usize) {
@@ -407,19 +404,11 @@ impl IconExportScenePreparation {
         self.phase == Phase::Complete || (self.phase == Phase::Close && self.terminal_is_empty())
     }
 
-    fn close_step(&mut self) -> Result<bool,infinite_world::world::WorldDynamicFault> {
-        if let Some(outcome) = self.job_outcome.as_mut() {
-            let ownership = |error: semio_framework_value::ValueError| infinite_world::world::WorldDynamicFault::Ownership(error.kind);
-            let demand = outcome.retirement_demands().map_err(ownership)?;
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if !matches!(outcome.close_step(grant).map_err(ownership)?, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
-                return Ok(false);
-            }
-            self.job_outcome = None;
-            return Ok(false);
-        }
+    fn close_step(&mut self, context: &mut StepContext<'_>) -> Result<bool,super::IconExportFault> {
+        let copy=context.retained_grant().maximum_copy_bytes;
+        if self.job_outcome.is_some() { self.acknowledge_outcome(context)?; return Ok(false); }
         if let Some(packet) = self.packet.as_mut() {
-            if !packet.retire_step() {
+            if !close_prepared(context,packet.next_close_demands(copy),|grant|packet.close_step(grant))? {
                 return Ok(false);
             }
             self.packet = None;
@@ -427,41 +416,41 @@ impl IconExportScenePreparation {
         }
         if let Some(job) = self.job.as_mut() {
             InteractiveJob::begin_close(job);
-            if !PreparedRenderJob::close_step(job) {
+            if !matches!(InteractiveJob::close_step(job,context)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
                 return Ok(false);
             }
             self.job = None;
             return Ok(false);
         }
         if let Some(rejected) = self.job_rejected.as_mut() {
-            if !rejected.close_step() {
+            if !close_prepared(context,rejected.next_close_demands(copy),|grant|rejected.close_step(grant))? {
                 return Ok(false);
             }
             self.job_rejected = None;
             return Ok(false);
         }
         if let Some(input) = self.input.as_mut() {
-            if !input.close_step() {
+            if !close_prepared(context,input.next_close_demands(copy),|grant|input.close_step(grant))? {
                 return Ok(false);
             }
             self.input = None;
             return Ok(false);
         }
         if let Some(rejected) = self.input_rejected.as_mut() {
-            if !rejected.close_step() {
+            if !close_prepared(context,rejected.next_close_demands(copy),|grant|rejected.close_step(grant))? {
                 return Ok(false);
             }
             self.input_rejected = None;
             return Ok(false);
         }
         if let Some(rejected) = self.world_rejected.as_mut() {
-            if !rejected.close_step() {
+            if !close_prepared(context,rejected.next_close_demands(copy),|grant|rejected.close_step(grant))? {
                 return Ok(false);
             }
             self.world_rejected = None;
             return Ok(false);
         }
-        if !self.resources.close_step() {
+        if !matches!(self.resources.close_step(context)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
             return Ok(false);
         }
         let Some(state) = self.state.as_mut() else { return Ok(true) };
@@ -469,17 +458,15 @@ impl IconExportScenePreparation {
             begin_world3d_dynamic_retirement(state);
             return Ok(false);
         }
-        let mut context = scene_step_context(PREVIEW_GENERATION, 1, &mut self.sequence);
-
-        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,&mut context);
-        if !terrain.ownership.fits(terrain_grant) {return Err(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
+        let terrain_grant=context.retained_grant();
+        let terrain=infinite_world::world::step_world3d_terrain_retirement(state,terrain_grant,context);
+        context.consume_retained(terrain.ownership).map_err(OriginalTurnFailure::from)?;
         match terrain.step {
             infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
             infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
-            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>return Err(fault),
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>return Err(super::IconExportFault::World(fault)),
         }
-        if !step_world3d_dynamic_retirement(state, &mut context) {
+        if !step_world3d_dynamic_retirement(state, context) {
             return Ok(false);
         }
         self.state = None;
@@ -533,13 +520,10 @@ pub(super) fn validate_request(request_json: &str) -> Result<ValidatedIconExport
     Ok(ValidatedIconExportRequest { request, dimensions: (width, height), format })
 }
 
-fn scene_step_context<'a>(generation: u64, fuel: u64, sequence: &'a mut u64) -> semio_framework_job::StepContext<'a> {
-    semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(0x4943_4f4e),
-        semio_framework_job::Generation(generation),
-        semio_framework_job::StepBudget::new(fuel, u64::MAX),
-        semio_framework_job::root_cancel_token(),
-        || Some(0),
-        sequence,
-    )
+pub(crate) fn close_prepared(context:&mut StepContext<'_>,quote:Result<semio_framework_value::RetainedCloneGrant,semio_framework_value::ValueError>,close:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>)->Result<bool,super::IconExportFault>{
+    let quote=quote.map_err(|error|OriginalTurnFailure::debit_original(error,context))?;
+    let demand=semio_framework_value::RetirementDemand{copy_bytes:quote.maximum_copy_bytes,capacity_bytes:quote.maximum_capacity_bytes,release_bytes:quote.maximum_release_bytes,depth:quote.maximum_depth};
+    let mut complete=false;
+    semio_framework_job::close_original_retained_step(context,demand,|grant|close(grant).map(|step|match step{semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{complete=true;semio_framework_value::RetainedCloneStep::Complete(progress)},semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>semio_framework_value::RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>semio_framework_value::RetainedCloneStep::Progress(Default::default())}))?;
+    Ok(complete)
 }

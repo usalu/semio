@@ -1,6 +1,6 @@
 /** ♻️ Complete Rewriting state owns its rule program and composed Jack parent. */
 import {parsePropertyValue,propertyText,type PropertyValue} from "../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🟦️.ts";
-import {type Binary64,parseBinary64} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export {parsePropertyValue};export type{PropertyValue,Binary64};
 import {parseJackSnapshot,type JackSnapshot} from "./../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
 export type {JackSnapshot};

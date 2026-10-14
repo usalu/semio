@@ -1,5 +1,5 @@
 /** 🔣️ Physical member JSON representation. */
-import type{Binary32} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type{Binary32} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{IntrinsicValue}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
 import{parseSchemaRecord}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import{decodeIntrinsicJson}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️json/🟦️.ts";

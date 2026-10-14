@@ -1,6 +1,6 @@
 {
   "name": "os-hub-admin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "application",
   "namedInputs": {
     "default": [
@@ -26,7 +26,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
@@ -37,7 +37,7 @@
       "continuous": true
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
@@ -50,7 +50,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",

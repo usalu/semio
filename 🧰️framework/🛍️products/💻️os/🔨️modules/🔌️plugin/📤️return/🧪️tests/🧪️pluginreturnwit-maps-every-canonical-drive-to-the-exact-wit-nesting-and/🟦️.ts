@@ -50,8 +50,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const api = await import("../../🟦️.ts");
     const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
     const { default: schema } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧬️schema/🔣️.json");
-    const { default: lifetimeSchema } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
-    const { default: pageSchema } = await import("../../../../../../../🔨️modules/🎭️actor/📃️page/🧬️schema/🔣️.json");
+    const { actorInstanceLifecycleSchema: lifetimeSchema } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+    const { actorBytePageSchema: pageSchema } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     const { default: valueSchema } = await import("../../../../../../../🔨️modules/🌱️value/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Return")!;
@@ -87,7 +87,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("PluginReturnWit preserves all neutral page words without interpreting semantic bytes", async () => {
     const api = await import("../../🟦️.ts");
     const { default: fixture } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🧪️tests/🧫️fixtures/🔣️.json");
-    const { createActorBytePage } = await import("../../../../../../../🔨️modules/🎭️actor/📃️page/🟦️.ts");
+    const { createActorBytePage } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
     for (const row of fixture.pageResultVectors) {
       const bytes = Buffer.alloc(fixture.maximumPageBytes);
       if (row.pattern === "mod37plus11") for (let index = 0; index < row.pageLength; index++) bytes[index] = (index * 37 + 11) % 256;

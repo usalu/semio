@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-os-dev",
   "version": "0.1.0",
   "description": "Framework operating system development runner",
@@ -7,12 +7,12 @@
   "private": true,
   "bundleKind": "application",
   "scripts": {
-    "build": "bun nx run @semio-tech/framework-os-dev:build",
-    "test": "bun nx run @semio-tech/framework-os-dev:test",
-    "parity:journey": "bun nx run @semio-tech/framework-os-dev:parity-journey",
-    "distribution-output-check": "bun nx run @semio-tech/framework-os-dev:distribution-output-check",
-    "source-watch-check": "bun nx run @semio-tech/framework-os-dev:source-watch-check",
-    "test-publication": "nx run @semio-tech/framework-os-dev:test-publication"
+    "build": "bun repo run @semio-tech/framework-os-dev:build",
+    "test": "bun repo run @semio-tech/framework-os-dev:test",
+    "parity:journey": "bun repo run @semio-tech/framework-os-dev:parity-journey",
+    "distribution-output-check": "bun repo run @semio-tech/framework-os-dev:distribution-output-check",
+    "source-watch-check": "bun repo run @semio-tech/framework-os-dev:source-watch-check",
+    "test-publication": "bun repo run @semio-tech/framework-os-dev:test-publication"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

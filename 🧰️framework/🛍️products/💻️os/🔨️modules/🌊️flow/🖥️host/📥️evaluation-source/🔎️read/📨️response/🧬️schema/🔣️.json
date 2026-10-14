@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/flow/evaluation/reply/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "done",
+    "cancellable",
+    "phase",
+    "unitsDone",
+    "unitsTotal",
+    "output"
+  ],
+  "properties": {
+    "done": {
+      "type": "boolean"
+    },
+    "cancellable": {
+      "type": "boolean"
+    },
+    "phase": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "unitsDone": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unitsTotal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "output": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "done": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "cancellable": {
+            "const": true
+          },
+          "output": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "done": {
+            "const": true
+          },
+          "phase": {
+            "const": "complete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "cancellable": {
+            "const": false
+          },
+          "output": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "cancelled"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "done": {
+            "const": true
+          },
+          "cancellable": {
+            "const": false
+          },
+          "output": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "done": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "cancellable": {
+            "const": false
+          },
+          "phase": {
+            "enum": [
+              "complete",
+              "cancelled"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

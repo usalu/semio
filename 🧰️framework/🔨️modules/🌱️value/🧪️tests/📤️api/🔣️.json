@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "ownerName": "@semio-tech/value-ts",
+  "sdkName": "@semio-tech/framework",
+  "ownerExport": "./ordered/numeric",
+  "sdkExport": "./value/ordered/numeric",
+  "runtime": ["NumericIndex", "NumericIndexEdit", "NumericIndexReader", "NumericIndexRetirement"],
+  "types": ["NumericIndexGrant", "NumericIndexOrdinal", "NumericIndexReadStep", "NumericIndexStep"],
+  "removedRoots": ["✏️s", "🌎️hub", "♻️mit-bestand", "🧩️compose"],
+  "grant": { "maxItems": 1, "maxBytes": 256 },
+  "commands": [
+    { "kind": "set", "id": 5, "value": "first" },
+    { "kind": "set", "id": 2, "value": "second" },
+    { "kind": "set", "id": 5, "value": "updated" },
+    { "kind": "remove", "id": 2 },
+    { "kind": "set", "id": 2, "value": "reinserted" }
+  ],
+  "expected": [[5, "updated"], [2, "reinserted"]]
+}

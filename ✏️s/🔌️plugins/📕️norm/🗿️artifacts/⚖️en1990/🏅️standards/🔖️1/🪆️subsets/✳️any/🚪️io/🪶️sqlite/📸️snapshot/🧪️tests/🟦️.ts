@@ -10,7 +10,7 @@ import words from "./🧫️fixtures/🔢️binary64.json";
 import widths from "./🧫️fixtures/🛂️invalid-u8.json";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { EN1990_SQLITE_SCHEMA, en1990SnapshotToSqliteDatabase, en1990SnapshotFromSqliteDatabase, type En1990SqliteSnapshot } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 function ownedFixture():En1990SqliteSnapshot{

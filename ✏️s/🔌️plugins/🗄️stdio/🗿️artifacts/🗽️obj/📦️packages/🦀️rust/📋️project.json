@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/stdio-obj-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -9,7 +9,7 @@
   ],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -31,7 +31,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -49,7 +49,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -67,7 +67,7 @@
       ]
     },
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "production",
         "^production",
@@ -84,7 +84,7 @@
       }
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "production",
         "^production",
@@ -101,7 +101,7 @@
       }
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "production",
         "^production",
@@ -118,7 +118,7 @@
       }
     },
     "test-original-receiving-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "production",
         "^production",
@@ -135,7 +135,7 @@
       }
     },
     "test-original-receiving-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "production",
         "^production",

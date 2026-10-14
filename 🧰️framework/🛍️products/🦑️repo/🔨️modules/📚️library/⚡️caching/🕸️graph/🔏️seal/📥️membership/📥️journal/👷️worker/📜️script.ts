@@ -6,7 +6,7 @@ import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { createRepositoryFilesystemJournalV1, repositoryFilesystemJournalPolicyV1 } from "../🟦️.ts";
-import { loadedFilesystemJournalToolingIdentityV1, readFilesystemJournalRpcRequestV1 } from "../🌐️rpc/🟦️.ts";
+import { loadedFilesystemJournalToolingIdentityV1, readFilesystemJournalRpcRequestV1, filesystemJournalRpcRemainingMillisecondsV1 } from "../🌐️rpc/🟦️.ts";
 import { isGlobalGraphIdentityPathV1 } from "../../../🎯️selection/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
@@ -75,13 +75,13 @@ export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void
     let requested = false;
     socket.on("data", transport.consumeMessagesFromSocket(async (bytes: Uint8Array) => {
       if (requested) { socket.destroy(); return; } requested = true;
-      const stop = new AbortController(), started = performance.now(), abort = () => stop.abort(Error("Original journal request socket closed"));
+      const stop = new AbortController(), abort = () => stop.abort(Error("Original journal request socket closed"));
       socket.once("close", abort);
       try {
         const payload = transport.parseMessage(bytes);
-        if (!payload || Object.keys(payload).some(key => !["type", "version", "scope", "workspaceRoot"].includes(key)) || payload.workspaceRoot !== options.root) throw Error("Original journal workspace envelope refused");
-        const request = readFilesystemJournalRpcRequestV1({ type: payload.type, version: payload.version, scope: payload.scope });
-        const query: FilesystemJournalControlV1 = { signal: AbortSignal.any([stop.signal, lifetime.signal]), remainingMilliseconds: () => 1000 - (performance.now() - started), publish: control.publish, yieldContinuation: control.yieldContinuation };
+        if (!payload || Object.keys(payload).some(key => !["type", "version", "scope", "deadlineUnixMilliseconds", "workspaceRoot"].includes(key)) || payload.workspaceRoot !== options.root) throw Error("Original journal workspace envelope refused");
+        const request = readFilesystemJournalRpcRequestV1({ type: payload.type, version: payload.version, scope: payload.scope, deadlineUnixMilliseconds:payload.deadlineUnixMilliseconds });
+        const query: FilesystemJournalControlV1 = { signal: AbortSignal.any([stop.signal, lifetime.signal]), remainingMilliseconds: () => filesystemJournalRpcRemainingMillisecondsV1(request,Date.now()), publish: control.publish, yieldContinuation: control.yieldContinuation };
         const witness = await journal!.capture(request.scope, query);
         framing.sendMessage(socket, { version: 1, toolingIdentity: identity, witness }, "json");
       } catch (error) { parentPort?.postMessage({ type: "query-refused", reason: String(error) }); if (!socket.destroyed) framing.sendMessage(socket, null, "json"); }

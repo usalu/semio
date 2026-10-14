@@ -228,7 +228,7 @@ test("three catalog registrations use canonical registry identity without kernel
     expect(project.name).toBe(entry.name);
     expect(project.targets.test.executor).toBe("nx:run-commands");
     expect(project.targets.test.options.command).toBe("bun ./📜️script.ts test");
-    expect(entry.scripts.test.split(/\s+/).filter((part: string) => part !== "bun" && part !== "--skip-nx-cache")).toEqual(["nx", "run", project.name + ":test"]);
+    expect(entry.scripts.test.split(/\s+/).filter((part: string) => part !== "bun" && part !== "--skip-nx-cache")).toEqual(["repo", "run", project.name + ":test"]);
   }
 });
 

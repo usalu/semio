@@ -23,19 +23,25 @@ fn surface_id(text: &str) -> ui_contract::SurfaceId {
 /// `selectedIds:[]` for 150 s after a pick that settled).
 #[test]
 fn one_turn_redirties_every_acknowledged_deferred_surface() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original deferred-render fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let patches = patches::PatchTracker::new();
     let deferred = ["7:puzzle3d.play.composite", "7:puzzle3d-main-top", "7:puzzle3d-main-perspective", "7:window", "7:framework.panel.inspection", "7:puzzle.3d.play.artifact"];
     for surface in deferred {
         patches.defer(surface_id(surface)).expect("a fresh tracker's deferred ring admits every surface of one instance");
     }
     let mut dirty = DirtyPollOwners::new();
-    let taken = redirty_acknowledged_deferred_surfaces(&patches, &mut dirty).expect("the drain fits the fixed dirty authority");
+    let taken = redirty_acknowledged_deferred_surfaces(&patches, &mut dirty,cx).expect("the drain fits the fixed dirty authority");
     assert_eq!(taken, deferred.len(), "a turn that refused {} renders must re-dirty all {} of them, not one", deferred.len(), deferred.len());
     assert_eq!(dirty.surfaces.iter().count(), deferred.len(), "every re-dirtied surface reaches this turn's render pass");
     for surface in deferred {
         assert!(dirty.surfaces.iter().any(|queued| queued.0 == 7 && queued.1.as_ref() == surface), "{surface} must be queued for THIS turn's render");
     }
-    assert!(redirty_acknowledged_deferred_surfaces(&patches, &mut dirty).expect("a drained ring drains again") == 0, "the drain terminates: an entry it took can never be handed back");
+    assert!(redirty_acknowledged_deferred_surfaces(&patches, &mut dirty,cx).expect("a drained ring drains again") == 0, "the drain terminates: an entry it took can never be handed back");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original deferred-render fixture source close");result
 }
 
 /// 🧯️ Wave B48 LAW: a surface nobody deferred is never invented, and a drained ring leaves the dirty
@@ -43,11 +49,17 @@ fn one_turn_redirties_every_acknowledged_deferred_surface() {
 /// neither lose an entry nor conjure one.
 #[test]
 fn a_drain_over_an_empty_deferred_ring_dirties_nothing() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original deferred-render fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let patches = patches::PatchTracker::new();
     let mut dirty = DirtyPollOwners::new();
-    assert_eq!(redirty_acknowledged_deferred_surfaces(&patches, &mut dirty).expect("an empty drain"), 0);
+    assert_eq!(redirty_acknowledged_deferred_surfaces(&patches, &mut dirty,cx).expect("an empty drain"), 0);
     assert_eq!(dirty.surfaces.iter().count(), 0);
     patches.defer(surface_id("9:window")).expect("one deferred surface");
-    assert_eq!(redirty_acknowledged_deferred_surfaces(&patches, &mut dirty).expect("one deferred surface drains"), 1);
+    assert_eq!(redirty_acknowledged_deferred_surfaces(&patches, &mut dirty,cx).expect("one deferred surface drains"), 1);
     assert_eq!(dirty.surfaces.iter().count(), 1, "and it is queued exactly once");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original deferred-render fixture source close");result
 }

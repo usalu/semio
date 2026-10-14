@@ -379,6 +379,7 @@ dependencies = [
 name = "semio-framework-diagnostic"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "serde",
  "serde_json",
@@ -407,6 +408,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl",
+ "semio-framework-io-sqlite-snapshot",
  "semio-framework-pack-json",
  "semio-framework-value",
 ]
@@ -457,6 +459,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
  "semio-framework-trace",
  "semio-framework-value",
 ]
@@ -637,6 +640,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-hash",
  "semio-framework-io-base64",
+ "semio-framework-io-sqlite-snapshot",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
  "semio-framework-schema-registry",
@@ -779,6 +783,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
+ "semio-framework-value",
 ]
 
 [[package]]

@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "contract": "framework.job.original-owned-async-turn",
+  "sourceKind": "paid-original-parent-loan",
+  "operation": 17,
+  "generation": 9,
+  "epoch": 19,
+  "initialFuel": 7,
+  "deadlineUs": 12345,
+  "clockUs": 1000,
+  "originalGrant": [
+    16,
+    4096,
+    65536,
+    65536,
+    64
+  ],
+  "admissionReceipt": [
+    1,
+    0,
+    0,
+    0
+  ],
+  "ownedFuel": 6,
+  "guestWork": 2,
+  "remainingFuel": 4,
+  "guestReceipt": [
+    1,
+    7,
+    0,
+    0
+  ],
+  "donorRemaining": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "events": [
+    "originalSourceAdmission",
+    "linearWalletTransfer",
+    "ownedRecipientBeforeCheckout",
+    "sameContextCheckout",
+    "asyncSuspend",
+    "sameContextReceive",
+    "originalEpochReturn",
+    "paidSourceLoanReturn"
+  ],
+  "newRootOrLedger": false,
+  "copiedBudgetDto": false,
+  "freshPollingRecipientDebit": false,
+  "sameOwnedRecipientAcrossAwait": true,
+  "sameOwnedCursorAcrossAwait": true,
+  "borrowedParentKeptLive": true,
+  "deadlineRenewal": false,
+  "duplicateReturn": false,
+  "wholeFailureCustody": true,
+  "originalCursor": 73,
+  "returnedCursor": 74,
+  "foreignPollingTransfer": false,
+  "originalClockObservationRetained": true,
+  "consumingOriginalActorIssuer": true,
+  "actorReceiptRejoinedBeforePolling": true,
+  "originalIssuerRetainedWithReply": true,
+  "borrowedSourceLoanCancellation": true
+}

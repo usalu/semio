@@ -8,10 +8,9 @@ import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦�
 import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { configuredExactCargoLawPreparationPortV1, configuredExactCargoLawPolicyV1, runExactCargoLaws } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { scriptInvocationBudget } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🧩️ Runs strict schema, canonical ownership and mandatory JSON source-policy laws. */
 class ReadPolicyScript extends BundleScript {
@@ -52,10 +51,10 @@ class OwnershipScript extends BundleScript {
 class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if(segments[0]==="tree-wire"){
-      await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-pack-json",target:{kind:"lib"},laws:["original_tree_wire_source_same_pointer_two_pass_system_denial_and_full_close","original_tree_wire_cancel_retains_every_partial_typed_source_and_destination"]}]});return;
+      await runExactCargoLaws({manifestPaths:{"semio-framework-pack-json":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,env:{...process.env,CARGO_BUILD_BUILD_DIR:readCargoTestPolicyV1(process.env).buildDirectory},invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-pack-json",target:{kind:"lib"},laws:["original_tree_wire_source_same_pointer_two_pass_system_denial_and_full_close","original_tree_wire_cancel_retains_every_partial_typed_source_and_destination"]}]},configuredExactCargoLawPreparationPortV1(process.env));return;
     }
     if(segments[0]==="tree-header"){
-      await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-pack-json",target:{kind:"lib"},laws:["original_canonical_tree_constructor_moves_header_without_payload_copy","original_canonical_tree_nested_headers_preserve_body_minima_and_complete_custody"]}]});return;
+      await runExactCargoLaws({manifestPaths:{"semio-framework-pack-json":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,env:{...process.env,CARGO_BUILD_BUILD_DIR:readCargoTestPolicyV1(process.env).buildDirectory},invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-pack-json",target:{kind:"lib"},laws:["original_canonical_tree_constructor_moves_header_without_payload_copy","original_canonical_tree_nested_headers_preserve_body_minima_and_complete_custody"]}]},configuredExactCargoLawPreparationPortV1(process.env));return;
     }
     const {rest} = resolveTestLevel(segments);
     await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack-json"], cwd: this.root, extraArgs: rest, signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds()}, readCargoTestPolicyV1(process.env));

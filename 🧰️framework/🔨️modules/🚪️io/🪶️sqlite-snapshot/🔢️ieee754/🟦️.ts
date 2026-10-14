@@ -1,6 +1,6 @@
 /** 🔢️ Literal-column SQLite companions for native IEEE identities. */
 import { ValueError, type SqliteRow, type SqliteValue } from "../🟦️.ts";
-import { parseBinary64, parseBinary32, binary64Value, binary32Value, type Binary64, type Binary32 } from "../../../🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64, parseBinary32, binary64Value, binary32Value, type Binary64, type Binary32 } from "../../../🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 
 export interface Ieee754Column { readonly index: number; readonly width: 32 | 64 }
 export type Ieee754Cell = SqliteValue | Binary64 | Binary32;

@@ -5,7 +5,7 @@ import{parseFormsResponse,type FormsResponse}from"../../../../🧬️schema/📨
 import{parseFormsArtifact,type FormsArtifact}from"../../../../🧬️schema/🟦️.ts";
 import{type FormsDiff}from"../../../../🧬️schema/🔺️diff/🟦️.ts";
 import{parseFormsValue}from"../../../../🧬️schema/🌱️value/🟦️.ts";
-import {binary64,binary64Value} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{parseSchemaRecord}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 
 /** 🌱️ Decode the JSON primitive domain without treating tagged snapshot values as JSON. */

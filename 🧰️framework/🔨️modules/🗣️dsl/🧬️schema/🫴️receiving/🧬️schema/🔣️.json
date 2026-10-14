@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:framework:dsl:record:original-receiving",
+  "title": "Original Typed Record Receiving",
+  "type": "object",
+  "required": [
+    "text",
+    "items",
+    "optional",
+    "grant",
+    "laws",
+    "ownedCases",
+    "declaredCases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "text": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "optional": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "grant": {
+      "type": "object",
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "laws": {
+      "const": [
+        "sameOriginalLedger",
+        "sameOriginalCallback",
+        "sameOriginalRecipient",
+        "sameOutputAsSerdeJson",
+        "retainedPartialFields",
+        "paidRetirement"
+      ]
+    },
+    "ownedCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "items",
+          "capacityBytes",
+          "ready",
+          "sourceSame"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "text",
+              "bytes",
+              "list"
+            ]
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "capacityBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "sourceSame": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "declaredCases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "source",
+          "accepted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "normal",
+              "opaque"
+            ]
+          },
+          "source": {
+            "type": "object"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

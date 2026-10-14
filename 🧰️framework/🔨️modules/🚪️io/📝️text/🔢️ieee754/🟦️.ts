@@ -1,6 +1,6 @@
 /** 🔢️ JSON transport admission for exact IEEE scalar identities. */
-import {ValueError} from "../../../🌱️value/⚠️refusal/🟦️.ts";
-import {parseBinary64,parseBinary32,binary64,binary32,type Binary64,type Binary32} from "../../../🌱️value/🔢️ieee754/🟦️.ts";
+import {ValueError} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
+import {parseBinary64,parseBinary32,binary64,binary32,type Binary64,type Binary32} from "../../../🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 /** 🚚️ Admit a binary64 carrier as the value schema's `Binary64Transport` spells it — the exact word (`{bits}` as a bigint, or as its
  * 16 lowercase hex digits on a JSON wire) or a plain JSON number — the reader every artifact twin uses, since an editable float input
  * arrives as a number (`framework/value/schema.json#/$defs/Binary64Transport`). */

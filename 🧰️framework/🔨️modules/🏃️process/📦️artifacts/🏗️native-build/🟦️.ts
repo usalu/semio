@@ -3,7 +3,8 @@ import { checkResourceLeaseControl, requireMaterializedPathV1 } from "../../🔒
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { stageArtifacts } from "../📤️publication/🟦️.ts";
 import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
-import { startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
+import { captureOwnedCommandV1, startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
+import {acquireCargoTargetRecipeV1,cargoTargetRecipeEnvironmentV1,type CargoTargetRecipeV1,type CargoTargetRecipeLeaseV1} from "./🎯️recipe/🟦️.ts";
 import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +37,7 @@ import {
 export { cargoDepInfoChecksumsV1, cargoDepInfoSourcesV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } from "./🧾️receipt/🟦️.ts";
 
 import { buildModePolicy, type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
-import { cargoRequestedProfileV1, acquireCargoBuildLeaseV1 } from "./🔒️lease/🟦️.ts";
+import { cargoRequestedProfileV1 } from "./🔒️lease/🟦️.ts";
 
 
 /** ✍️ Re-signs a native executable on macOS, ad-hoc, and does nothing anywhere else.
@@ -165,20 +166,20 @@ export function readCargoArtifactBuildPolicyV1(environment: Readonly<Record<stri
 }
 
 /** ⚙️ Includes an owned Cargo configuration before compiler argument forwarding. */
-export function cargoConfigurationArgumentsV1(args:readonly string[],configuration?:string):string[]{
- if(configuration===undefined)return [...args];
- if(!isAbsolute(configuration)||configuration.includes("\0"))throw Error("Compiler configuration must be an absolute path");
- const delimiter=args.indexOf("--");
- for(let index=0;index<(delimiter<0?args.length:delimiter);index++)if(args[index]==="--config"&&args[index+1]===configuration||args[index]===`--config=${configuration}`)return [...args];
- return delimiter<0?[...args,"--config",configuration]:[...args.slice(0,delimiter),"--config",configuration,...args.slice(delimiter)];
+export function cargoConfigurationArgumentsV1(args:readonly string[],configuration:string|undefined,buildDirectory:string):string[]{
+ if(!isAbsolute(buildDirectory)||buildDirectory.includes("\0"))throw Error("Compiler build storage must be an absolute path");
+ if(configuration!==undefined&&(!isAbsolute(configuration)||configuration.includes("\0")))throw Error("Compiler configuration must be an absolute path");
+ const delimiter=args.indexOf("--"),head=delimiter<0?[...args]:args.slice(0,delimiter),tail=delimiter<0?[]:args.slice(delimiter);
+ if(configuration!==undefined&&!head.some((arg,index)=>arg==="--config"&&head[index+1]===configuration||arg===`--config=${configuration}`))head.push("--config",configuration);
+ return [...head,"--config",`build.build-dir=${JSON.stringify(buildDirectory)}`,...tail];
 }
 
 /** 🎚️ Declares the exact selected artifact profile and owned compiler configuration. */
-export function cargoArtifactArgumentsV1(args:readonly string[],policy:Pick<CargoArtifactBuildPolicyV1,"mode"|"compilerConfiguration">):string[]{
+export function cargoArtifactArgumentsV1(args:readonly string[],policy:Pick<CargoArtifactBuildPolicyV1,"mode"|"compilerConfiguration"|"buildDirectory">):string[]{
  const selectedProfile=cargoRequestedProfileV1(args),expected=buildModePolicy(policy.mode);
  if(selectedProfile&&selectedProfile!==expected.cargoProfile&&selectedProfile!==expected.wasmProfile&&!(policy.mode==="release"&&selectedProfile==="host-tool"))throw Error("Cargo profile conflicts with selected build mode");
  let selected=[...args];if(!selectedProfile){const delimiter=args.indexOf("--");selected=delimiter<0?[...args,"--profile",expected.cargoProfile]:[...args.slice(0,delimiter),"--profile",expected.cargoProfile,...args.slice(delimiter)];}
- return cargoConfigurationArgumentsV1(selected,policy.compilerConfiguration);
+ return cargoConfigurationArgumentsV1(selected,policy.compilerConfiguration,policy.buildDirectory);
 }
 
 /** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state.
@@ -199,9 +200,17 @@ export function cargoObservationOutputV1(value:unknown,buildDirectory:string):st
  return directory;
 }
 
-export type CargoArtifactBuildOptionsV1 = { readonly control: CompilerAdmissionControl; readonly observationOutput?: CargoObservationOutputV1; readonly command?: "build" | "rustc"; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[] }>; readonly provenance?: (receiptPath: string) => void };
+export type CargoArtifactBuildOptionsV1 = { readonly control: CompilerAdmissionControl; readonly observationOutput?: CargoObservationOutputV1; readonly command?: "build" | "rustc"; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[]; compilerIdentity:string; toolchainIdentity:string }>; readonly provenance?: (receiptPath: string) => void };
 
-/** 🚦️ Holds the shared profile lease through compiler shutdown and the copy of the final artifacts, including queue cancellation, and releases it before staging and provenance so the next compile starts while this build's receipt is still being observed. The receipt's physical recheck still refuses any input a later compile changed. */
+/** 🧭️ Observes the original compiler recipe while leaving source freshness validation to every Cargo run. */
+async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[],policy:CargoArtifactBuildPolicyV1,options:CargoArtifactBuildOptionsV1):Promise<Readonly<{recipe:CargoTargetRecipeV1;recheck:()=>Promise<void>}>>{
+ const control=options.control,environment=options.environment??process.env,port=options.commandPort,compilerIdentity=port?.compilerIdentity??await captureOwnedCommandV1("cargo",["--version","--verbose"],policy.cwd,{control,env:environment}),toolchainIdentity=port?.toolchainIdentity??await captureOwnedCommandV1("rustc",["--version","--verbose"],policy.cwd,{control,env:environment}),physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>control.signal.aborted,remainingMs:()=>checkResourceLeaseControl(control),onProgress:cargoProvenanceProgressSinkV1(row=>console.log("[cargo-target-recipe] "+JSON.stringify(row)))})),paths=new Set<string>([manifest]);
+ if(policy.compilerConfiguration)paths.add(policy.compilerConfiguration);for(let root of[policy.cwd,dirname(manifest)])for(;;){for(const name of["Cargo.toml","Cargo.lock",".cargo/config.toml",".cargo/config","rust-toolchain.toml","rust-toolchain"])paths.add(join(root,name));const parent=dirname(root);if(parent===root)break;root=parent;}const cargoHome=resolve(environment.CARGO_HOME??join(homedir(),".cargo"));for(const name of["config.toml","config"])paths.add(join(cargoHome,name));
+ const inputs=[];for(const path of[...paths].sort()){checkResourceLeaseControl(control);inputs.push({path,sha256:await physical.digest(path)??null});await control.publish({resource:"cargo-target-recipe-inputs",mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}const declared=cargoTargetRecipeEnvironmentV1(environment);
+ return{recipe:{version:1,cwd:policy.cwd,manifest,command:port?.command??"cargo",args:[...(port?.args??[]),options.command??"build","--locked","--manifest-path",manifest,...args],buildDirectory:policy.buildDirectory,compilerIdentity:compilerIdentity.trim(),toolchainIdentity:toolchainIdentity.trim(),inputs,environment:declared},recheck:()=>physical.recheck()};
+}
+
+/** 🚦️ Retains exact recipe target and shared store custody through invocation capture and provenance under the original control. */
 export async function buildCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
   policy = admitArtifactPolicy(policy);
   args = cargoArtifactArgumentsV1(args,policy);
@@ -209,16 +218,18 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   options = { ...options, ...(options.observationOutput?{}:{output: options.output ?? `dist/build/${policy.mode}`}) };
   if (!isAbsolute(manifest)) throw Error("Cargo artifact manifest must be absolute");
   const control = requestedCompilerAdmissionControlV1(options.control, policy.budgetMs);
-  const signal = control.signal;
   if (!cargoBuildOwnerAliveV1(options.environment ?? process.env)) throw Error("Original Cargo build owner exited");
-  let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined, lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
+  let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined, lease:CargoTargetRecipeLeaseV1|undefined;
   try {
+    options = { ...options, control };
+    const recipe=await cargoArtifactTargetRecipeV1(manifest,args,policy,options);
+    lease=await acquireCargoTargetRecipeV1({directory:policy.leaseDirectory,recipe:recipe.recipe,control});
     capacity = await acquireCompilerCapacityLeaseV1({ directory: policy.leaseDirectory, control, environment: options.environment });
     const environment: Record<string, string | undefined> = { ...(options.environment ?? process.env), SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(capacity.parallelism) };
     if (!environment.MAKEFLAGS && !environment.CARGO_MAKEFLAGS) environment.CARGO_BUILD_JOBS = String(capacity.parallelism);
-    options = { ...options, environment, control };
-    lease = await acquireCargoBuildLeaseV1({ directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, args, signal, control });
-    await captureCargoArtifacts(manifest, args, { ...policy, budgetMs: compilerAdmissionBudgetV1(control) }, options, () => { const held = lease, allocated = capacity; lease = undefined; capacity = undefined; held?.release(); allocated?.release(); });
+    options = { ...options, environment };
+    await recipe.recheck();
+    await captureCargoArtifacts(manifest, args, { ...policy, budgetMs: compilerAdmissionBudgetV1(control) }, options,lease.targetDirectory,() => { const allocated = capacity; capacity = undefined; allocated?.release(); });
   } finally { lease?.release(); capacity?.release(); }
 }
 
@@ -716,7 +727,7 @@ export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: str
   }
 }
 
-async function captureCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1, compilerStopped: () => void): Promise<void> {
+async function captureCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1,targetDirectory:string, compilerStopped: () => void): Promise<void> {
   options.control.signal?.throwIfAborted();
   const path = resolve(manifest);
   const sourceRoot = dirname(path);
@@ -742,7 +753,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   const commandPort = options.commandPort ?? { command: "cargo", args: [] };
   const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {
     cwd: policy.cwd,
-    env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, COMPILER_RESOURCE_DIRECTORY_V1), CARGO_TARGET_DIR: join(capture, "target"), CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
+    env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, COMPILER_RESOURCE_DIRECTORY_V1), CARGO_TARGET_DIR:targetDirectory, CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
     detached: process.platform !== "win32",
     stdio: ["inherit", "pipe", "pipe"],
   });

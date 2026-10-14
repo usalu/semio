@@ -784,12 +784,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
 struct Generation3dFlowEvalWindowWork {
     tool_id: &'static str,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    tessellate: preview_eval::PreviewTessellateReceive,
+    evaluation:preview_eval::PreviewEvalReceive,
     complete: bool,
     closing: bool,
 }
 
 impl Generation3dFlowEvalWindowWork {
-    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, complete: false, closing: false } }
+    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self { Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), complete: false, closing: false } }
 }
 
 /// 🪟️ The preview window one chain route addresses, or `None` for a route that addresses none.
@@ -832,7 +834,13 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         .flatten()
     }
 
-    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn receive_original_command(&mut self,command:&mut Generation3dCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if let Generation3dCommand::FlowTessellateResolve(payload)=command{self.tessellate.configure_scope([Some(flow_eval_tick::preview_body_key(&payload.window_kind_id)),Some(crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN)],[Some(crate::editor::generation3d::panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT),Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY)]);return self.tessellate.receive(payload,cx)}if let Generation3dCommand::FlowEvalResolve(payload)=command{self.evaluation.configure_scope([Some(flow_eval_tick::preview_body_key(&payload.window_kind_id)),Some(crate::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_BODY_MAIN)],[Some(crate::editor::generation3d::panels::artifact::GENERATION_3D_PLAY_BODY_ARTIFACT),Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY)]);return self.evaluation.receive(payload,cx)}Ok(true)
+    }
+
+    fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<Generation3dPlayApp>>,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Generation3dCommand::FlowTessellateResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.tessellate.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
+        if let Generation3dCommand::FlowEvalResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.evaluation.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
         command_work_step_demands::<EditorApp<Generation3dPlayApp>>(size_of::<Self>())
     }
 
@@ -840,7 +848,17 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        if let Generation3dCommand::FlowTessellateResolve(payload)=input.command{
+            if self.complete||self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview command work is terminal").into())}
+            if self.tessellate.is_folded(){if let Some(ui_scope)=self.tessellate.publish_scope(cx)?{self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(Emit{ui_scope,..Default::default()}))}}else{self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|owner.with_session_waking(|session|self.tessellate.step(payload,session,cx)))??;}
+            return Ok(ArtifactCommandWorkStep::Progress{stage:"previewReceive",preview:br#"{"en":"Receiving preview geometry","de":"Vorschaugeometrie wird empfangen"}"#})
+        }
+        if let Generation3dCommand::FlowEvalResolve(payload)=input.command{
+            if self.complete||self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview command work is terminal").into())}
+            if self.evaluation.is_folded(){if let Some(ui_scope)=self.evaluation.publish_scope(cx)?{self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(Emit{ui_scope,..Default::default()}))}}else{self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|owner.with_session_waking(|session|self.evaluation.step(payload,session,cx)))??;}
+            return Ok(ArtifactCommandWorkStep::Progress{stage:"previewReceive",preview:br#"{"en":"Receiving evaluation output","de":"Auswertungsergebnis wird empfangen"}"#})
+        }
         let original: Result<_, Fault> = (|| {
         if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal")); }
         let turn_started_us = semio_framework_job::default_now_us();
@@ -862,8 +880,8 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
                 let doc = ArtifactView::with_operation(overlay.as_ref().unwrap_or(input.snapshot), input.history, input.operation.clone());
                 owner.with_session_waking(|session| match input.command {
                     Generation3dCommand::FlowEvalTick(_) => flow_eval_tick::evaluate(window.window_id(), window.window_kind_id(), &doc, &cfg, session, retained_eval, None),
-                    Generation3dCommand::FlowEvalResolve(payload) => flow_eval_resolve::resolve(payload, &doc, &cfg, session, retained_eval, turn_started_us),
-                    Generation3dCommand::FlowTessellateResolve(payload) => flow_tessellate_resolve::resolve(payload, &doc, &cfg, session, retained_eval, turn_started_us),
+                    Generation3dCommand::FlowEvalResolve(_) => unreachable!(),
+                    Generation3dCommand::FlowTessellateResolve(_) => unreachable!(),
                     _ => Err(Fault::from("generation3d-flow-eval-window-command-mismatch")),
                 })
             };
@@ -886,15 +904,15 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
-    fn begin_close(&mut self) { self.closing = true; }
-
-    fn close_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{Ok(if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() } } else { semio_framework_job::InteractiveJobCloseStep::Blocked })}
-
-
-    fn terminal_is_empty(&self) -> bool { self.closing }
+    fn begin_close(&mut self){self.closing=true;self.tessellate.begin_close();self.evaluation.begin_close();}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.begin_close();if !self.tessellate.terminal_is_empty(){self.tessellate.close_step(cx)}else{self.evaluation.close_step(cx)}}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.copy_bytes}else{self.evaluation.close_demands(0)?.copy_bytes})}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(copy)?.capacity_bytes}else{self.evaluation.close_demands(copy)?.capacity_bytes})}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.release_bytes}else{self.evaluation.close_demands(0)?.release_bytes})}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.depth}else{self.evaluation.close_demands(0)?.depth})}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.tessellate.terminal_is_empty()&&self.evaluation.terminal_is_empty()}
 }
 
-/// 🪞️ The document a derived view evaluates while a tool transaction is open (design §13, F-7): the committed snapshot
 /// with every open press's and typing run's provisional leaves (the framework's, as of admission) and every open gumball
 /// gesture (this instance's) folded in — `None` while nothing is open, so the committed snapshot is read as is. The
 /// overlay is retired cold by the caller, never dropped.
@@ -1069,6 +1087,9 @@ impl Generation3dSessionCommandWork {
 }
 
 impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSessionCommandWork {
+    fn receive_original_command(&mut self,command:&mut Generation3dCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if let Generation3dCommand::FlowTessellateCancelResolve(payload)=command{let g=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||g.maximum_items==0||g.maximum_depth==0{return Ok(false)}if let Some(fault)=payload.fault.take(){cx.consume_fuel(1);let original=semio_framework_job::OriginalTurnFailure::from(fault);let receipt_refusal=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).err();return Err(semio_framework_job::OriginalTurnFailure{receipt_refusal,..original})}if !payload.input_valid{cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original cancel reply routing input is malformed").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}),cx))}}Ok(true)
+    }
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -1385,7 +1406,7 @@ pub fn generation3d_document_io_contract() -> ToolExecutionContract {
 /// retained preview, and a completed import re-arms every attached preview through the same
 /// per-window latch an example switch uses.
 enum Generation3dDocumentRetirement {
-    Projection(semio_framework_dsl_record::native_encoding::RetainedFieldProjection<Generation3dSnapshot>),
+    Projection(semio_framework_dsl_record::native_encoding::RetainedFieldProjection),
     Projected(semio_framework_dsl_record::FieldValue),
     Writer(semio_framework_dsl_record::RetainedRecordWriter),
     Text(store::semio_format::RetainedTextEnvelope),
@@ -1407,7 +1428,7 @@ struct Generation3dDocumentIoWork {
     source_identity: Option<usize>,
     source_demand: Option<usize>,
     expand_admission: bool,
-    projection: Option<semio_framework_dsl_record::native_encoding::RetainedFieldProjection<Generation3dSnapshot>>,
+    projection: Option<semio_framework_dsl_record::native_encoding::RetainedFieldProjection>,
     projected: Option<semio_framework_dsl_record::FieldValue>,
     writer: Option<semio_framework_dsl_record::RetainedRecordWriter>,
     text: Option<store::semio_format::RetainedTextEnvelope>,
@@ -2376,12 +2397,27 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Generation3dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework::Fault>) -> Result<Self::Command, Fault> {
+        let mut original_fault=original_fault;if !matches!(action,"flowEvalResolve"|"flowTessellateResolve"|"flowTessellateCancelResolve"){if let Some(fault)=original_fault.take(){return Err(fault)}}
+        let mut args = args.get_or_insert(semio_framework_value::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let string_list = |key: &str| -> Vec<String> { args.get(key).and_then(|value| value.as_array()).map(|rows| rows.iter().filter_map(|row| row.as_str().map(str::to_string)).collect()).unwrap_or_default() };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
+        fn original_reply_valid(args:&semio_framework_value::DslValue,tessellate:bool,cancel:bool)->bool{
+            let semio_framework_value::DslValue::Object(rows)=args else{return false};
+            let field=|key:&str|{let mut values=rows.iter().filter(|(name,_)|name==key);let value=values.next().map(|(_,value)|value);if values.next().is_some(){None}else{value}};
+            if !["windowId","windowKindId"].iter().all(|key|field(key).and_then(|value|value.as_str()).is_some_and(|value|!value.is_empty()))||field("output").is_none(){return false}
+            if cancel{return true}
+            if field("nodeHash").and_then(semio_framework_value::DslValue::as_u64).is_none(){return false}
+            if tessellate{return field("handle").and_then(|value|value.as_str()).is_some_and(|value|!value.is_empty())&&field("tolerance").and_then(|value|value.as_f64()).is_some_and(|value|value.is_finite()&&value>0.0)}
+            let extensions=rows.iter().filter(|(key,_)|key=="extensionId").count();extensions==0||(extensions==1&&field("extensionId").and_then(|value|value.as_str()).is_some())
+        }
+        fn original_reply_text(args:&mut semio_framework_value::DslValue,key:&str,required:bool)->Result<String,Fault>{
+            let semio_framework_value::DslValue::Object(rows)=args else{return Err(Fault::from("original reply argument object is absent"))};let Some((_,source))=rows.iter_mut().find(|(name,_)|name==key)else{return if required{Err(Fault::from("original reply text is absent"))}else{Ok(String::new())}};if !matches!(source,semio_framework_value::DslValue::String(_)){return Err(Fault::from("original reply text has another type"))}let semio_framework_value::DslValue::String(value)=std::mem::replace(source,semio_framework_value::DslValue::Null)else{unreachable!()};Ok(value)
+        }
+        fn original_reply_output(args:&mut semio_framework_value::DslValue)->Result<semio_framework_value::DslValue,Fault>{let semio_framework_value::DslValue::Object(rows)=args else{return Err(Fault::from("original reply argument object is absent"))};rows.iter_mut().find(|(key,_)|key=="output").map(|(_,source)|std::mem::replace(source,semio_framework_value::DslValue::Null)).ok_or_else(||Fault::from("original reply output is absent"))}
+
         match action {
             "setActiveExample" => Ok(Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             "nodeGraphEdit" => {
@@ -2542,32 +2578,25 @@ impl ArtifactEditor for Generation3dPlayApp {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
             })),
-            "flowEvalResolve" => Ok(Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
-                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
-                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
-                node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
-                extension_id: str_arg(&["extensionId", "extension_id"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
-                fault_code: str_arg(&["faultCode", "fault_code"]).unwrap_or_default(),
-                fault_message: str_arg(&["faultMessage", "fault_message"]).unwrap_or_default(),
-            })),
-            "flowTessellateResolve" => Ok(Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve {
-                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
-                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
-                node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
-            })),
+            "flowEvalResolve" => {
+                let input_valid=original_reply_valid(&args,false,false);
+                if !input_valid{return Ok(Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,extension_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();
+                let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let extension_id=original_reply_text(&mut args,"extensionId",false).unwrap();let output=original_reply_output(&mut args).unwrap();
+                Ok(Generation3dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve{window_id,window_kind_id,node_hash,extension_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+            },
+            "flowTessellateResolve" => {
+                let input_valid=original_reply_valid(&args,true,false);
+                if !input_valid{return Ok(Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,handle:String::new(),tolerance:0.0,output:semio_framework_value::DslValue::Null,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();let tolerance=args.get("tolerance").and_then(|value|value.as_f64()).unwrap();
+                let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let handle=original_reply_text(&mut args,"handle",true).unwrap();let output=original_reply_output(&mut args).unwrap();
+                Ok(Generation3dCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve{window_id,window_kind_id,node_hash,handle,tolerance,output,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+            },
             "flowEvalRelease" => Ok(Generation3dCommand::FlowEvalRelease(flow_eval_release::FlowEvalRelease {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
             })),
-            "flowTessellateCancelResolve" => Ok(Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve {
-                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
-                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
-            })),
+            "flowTessellateCancelResolve"=>{let input_valid=original_reply_valid(&args,false,true);if !input_valid{return Ok(Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve{window_id:String::new(),window_kind_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let output=original_reply_output(&mut args).unwrap();Ok(Generation3dCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve{window_id,window_kind_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))},
             "setContributions" => Ok(Generation3dCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),
                 page: u64_arg(&["page"]).unwrap_or_default(),
@@ -2747,7 +2776,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
         let preview_eval_text = transient
             .window::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>()
             .or_else(|| transient.window::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>())
@@ -2755,7 +2785,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         let mut marks = PreviewInteractionMarks::from_interaction(interaction);
         marks.source_revision = doc.render_operation().map(|operation| operation.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect());
         let previews = matches!(body_key, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW | generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW);
-        owner
+        let rendered=owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
                 let gesture = previews.then(|| generation3d_gumball_preview(doc.snapshot, &marks, &owner.gumball)).flatten();
                 let (document, marks) = gesture.as_ref().map_or((doc.snapshot, &marks), |(document, marks)| (document, marks));
@@ -2765,7 +2795,8 @@ impl ArtifactEditor for Generation3dPlayApp {
                 }
                 rendered
             })
-            .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("generation3d.eval-session-owner", error.message))?
+            .map_err(|original|semio_framework_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?;
+        rendered.map(Some).map_err(Into::into)
     }
 
     fn window_engagements_with_request_context(_doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel, _transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>, interaction: &InteractionView<'_>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {

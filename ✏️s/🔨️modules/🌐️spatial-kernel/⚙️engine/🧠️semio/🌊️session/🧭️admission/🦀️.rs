@@ -145,8 +145,11 @@ impl Session {
         if registry.admission.as_ref().is_some_and(|admission|admission.matches(identity,handle,tolerance)){return Ok(RetirementDemand{depth:3,..Default::default()});}
         Ok(RetirementDemand{depth:registry.jobs.next_slot_depth_demand(target.slot)?.max(registry.jobs.next_extract_slot_depth_demand(target.slot)?).max(3),..Default::default()})
     }
-    pub fn cancel_tessellation_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>{
-        let mut spent=0;self.cancel_tessellation_original_step(identity,handle,tolerance,units,grant,&mut spent).map_err(|primary|GeometryWorkFailure::new(primary,spent))
+    pub fn cancel_tessellation_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>{
+        Self::check_geometry_caller(identity,cx)?;
+        if cx.should_yield(){return Ok((RetainedCloneStep::Progress(Default::default()),Default::default()))}
+        let mut spent=0;let result=self.cancel_tessellation_original_step(identity,handle,tolerance,1,cx.retained_grant(),&mut spent);
+        Self::receive_geometry_work(result.map_err(|primary|GeometryWorkFailure::new(primary,spent)),cx)
     }
     fn cancel_tessellation_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(RetainedCloneStep,GeometryWorkProgress),ValueError>{
         let demand=self.cancel_tessellation_demands(identity,handle,tolerance,grant.maximum_copy_bytes)?;
@@ -211,8 +214,22 @@ impl Session {
         row.last_step=clock;
         let outcome=self.step_tessellation_row(&kernel,key,row,None,units);if !matches!(outcome,TessellationStepOutcome::Working{..}){registry.retire_slot=0;}Ok((outcome,GeometryWorkProgress::default()))
     }
-    pub fn tessellate_step_funded(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(semio_framework_os_flow::geometry::GeometryStep,GeometryWorkProgress),GeometryWorkFailure>{
-        let mut spent=0;self.tessellate_original_step(identity,handle,tolerance,units,grant,&mut spent).map_err(|primary|GeometryWorkFailure::new(primary,spent))
+    fn check_geometry_caller(identity:GeometryWorkIdentity,cx:&semio_framework_job::StepContext<'_>)->Result<(),GeometryWorkFailure>{
+        if identity.operation!=cx.operation().0||identity.generation!=cx.generation().0{return Err(GeometryWorkFailure::new(ValueError::literal(ValueRefusalKind::InvariantViolated,"original geometry turn changed its caller identity"),0))}Ok(())
+    }
+    fn receive_geometry_work<T>(result:Result<(T,GeometryWorkProgress),GeometryWorkFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(T,GeometryWorkProgress),GeometryWorkFailure>{
+        let work=match &result{Ok((_,work))=>*work,Err(failure)=>failure.work};let fuel=cx.fuel_remaining();cx.consume_fuel(work.consumed_units as u64);let receipt_refusal=cx.consume_retained(work.retained).err();
+        match result{Err(mut failure)=>{failure.receipt_refusal=receipt_refusal;Err(failure)},Ok(original)=>{
+            if work.consumed_units as u64>fuel{return Err(GeometryWorkFailure{primary:ValueError::literal(ValueRefusalKind::WorkLimit,"original geometry event exceeds initiating fuel"),work,receipt_refusal})}
+            if let Some(primary)=receipt_refusal{return Err(GeometryWorkFailure{primary,work,receipt_refusal:None})}Ok(original)
+        }}
+    }
+    pub fn tessellate_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(semio_framework_os_flow::geometry::GeometryStep,GeometryWorkProgress),GeometryWorkFailure>{
+        Self::check_geometry_caller(identity,cx)?;
+        if cx.is_cancelled(){return Ok((semio_framework_os_flow::geometry::GeometryStep::Cancelled,Default::default()))}
+        if cx.should_yield(){return Ok((semio_framework_os_flow::geometry::GeometryStep::Working{units_done:0,units_total:0,phase:"awaiting-caller"},Default::default()))}
+        let mut spent=0;let result=self.tessellate_original_step(identity,handle,tolerance,1,cx.retained_grant(),&mut spent);
+        Self::receive_geometry_work(result.map_err(|primary|GeometryWorkFailure::new(primary,spent)),cx)
     }
     fn tessellate_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(semio_framework_os_flow::geometry::GeometryStep,GeometryWorkProgress),ValueError> {
         use semio_framework_os_flow::geometry::{GeometryStep,GeometryWorkProgress};

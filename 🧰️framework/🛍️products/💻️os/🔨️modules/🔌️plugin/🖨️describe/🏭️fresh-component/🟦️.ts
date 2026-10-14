@@ -55,7 +55,7 @@ export async function freshRun(command: string, args: string[], cwd: string, env
     observe();
     const directories = command === "cargo" ? cargoDirectories(cwd, env) : undefined;
     const observedEnv = directories ? { ...env, SEMIO_COMPILER_RESOURCE_ROOT: join(directories.build, "semio-compiler-resources") } : env;
-    if(preparation)preparation={...preparation,environment:{...preparation.environment,SEMIO_COMPILER_RESOURCE_ROOT:observedEnv.SEMIO_COMPILER_RESOURCE_ROOT}};
+    if(preparation&&directories)preparation={...preparation,environment:{...preparation.environment,SEMIO_COMPILER_RESOURCE_ROOT:join(directories.build,"semio-compiler-resources")}};
     if (preparation) {
       freshCheckpoint(control, "prepare-cargo", completed, total);
       const preparationTrace = join(trace, "preparation");
@@ -76,7 +76,7 @@ export async function freshRun(command: string, args: string[], cwd: string, env
       if (result.status !== 0 || result.signal !== null || reason !== "exit") throw new Error("fresh component preparation " + reason + " at " + stage + "; evidence=" + evidence + "\n" + (result.stderr || result.stdout).slice(-6000));
       freshCheckpoint(control, stage, completed, total);
     }
-    if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: policy.storage.directory, buildDirectory: directories!.build, args: selectedArgs, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
+    if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: policy.storage.directory, buildDirectory: directories!.build, targetDirectory: directories!.target, args: selectedArgs, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
     if (command === "cargo") freshCheckpoint(control, stage, completed, total);
     const builtAtMs = Date.now();
     const result = await captureOwnedProcess(command, argv, {
@@ -190,7 +190,7 @@ export async function captureFreshComponentInputs(
     const semantic = verifySemanticDescriptorPairBytesV1(descriptorJsonBytes, descriptorBytes);
     if (semantic.packageId !== request.componentPackageId || semantic.pluginId !== request.pluginId || semantic.version.length === 0 || semantic.role !== "plugin")
       throw new Error("fresh descriptor identity differs from the exact component request");
-    if (!Buffer.from(descriptorBytes).equals(Buffer.from(committedPack))) throw new Error(`fresh ${request.pluginId} bytes describe a different semantic descriptor than the committed pair; commit it with \`bun nx run workspace:components describe ${request.pluginId}\``);
+    if (!Buffer.from(descriptorBytes).equals(Buffer.from(committedPack))) throw new Error(`fresh ${request.pluginId} bytes describe a different semantic descriptor than the committed pair; commit it with \`bun repo run workspace:components describe ${request.pluginId}\``);
     check();
     const result = {
       componentBytes,

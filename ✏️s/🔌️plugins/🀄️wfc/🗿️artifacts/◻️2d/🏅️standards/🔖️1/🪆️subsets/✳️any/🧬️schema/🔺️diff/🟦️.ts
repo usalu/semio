@@ -1,7 +1,7 @@
 // 🔺️ WFC 2D diff — the TypeScript twin of `🦀️.rs`, ported field by field (never generated): a field-sparse, id-keyed delta whose rows
 // are positional: removed ids at their base index, inserted rows at their after index, moved ids, and per-row field patches.
 
-import type { Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type { Binary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { orderedIndex, type Wfc2dRule, type Wfc2dSlot, type Wfc2dSlotEdge, type Wfc2dSnapshot, type Wfc2dTile, type Wfc2dTileMedia } from "../📸️snapshot/🟦️.ts";
 
 /** 🎚️ An optional field set to a value or cleared — the wire shape `{ "value": … }`. */

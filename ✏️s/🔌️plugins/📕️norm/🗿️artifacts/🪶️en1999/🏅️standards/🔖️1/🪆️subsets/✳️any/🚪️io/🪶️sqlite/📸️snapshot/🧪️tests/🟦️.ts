@@ -2,7 +2,7 @@ import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
 import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
 import{en1999SnapshotToSqliteDatabase,en1999SnapshotFromSqliteDatabase,type En1999SqliteMember,type En1999SqliteSnapshot}from"../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 const f=fixture.snapshot;
 function action(a:typeof f.members[number]["actions"][number]){return{...a,gKLine:binary64(a.gKLine),qKLine:binary64(a.qKLine),nK:binary64(a.nK),vYK:binary64(a.vYK),vZK:binary64(a.vZK),mYK:binary64(a.mYK),mZK:binary64(a.mZK)}}

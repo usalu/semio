@@ -1,5 +1,5 @@
 import {encodeIeee754Cells,readBinary64,readBinary32,ieee754IsNull,type Ieee754Cell,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧱️ PLY typed element declarations, row cells and ordered list items. */
 import type { PlySnapshot, PlyProperty, PlyScalarType, PlyValue } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { artifactSqliteCheckpoint, artifactSqliteDatabase, artifactSqliteDocument, artifactSqliteDocumentReference, artifactSqliteInteger, artifactSqliteOrderedRows, artifactSqliteTables, artifactSqliteText, artifactSqliteTextBytes, artifactSqliteValueBudget, type ArtifactSqliteOptions } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";

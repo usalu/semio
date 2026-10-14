@@ -3,14 +3,14 @@ use crate::empty_trinity_graph_snapshot;
 use crate::JackWorkingScene;
 
 #[semio_framework_async_macros::async_test]
-async fn nakagin_example_dsl_round_trips() {
-    let document = parse_dsl(NAKAGIN_EXAMPLE_TEXT).expect("parse nakagin example");
+async fn selected_child_parent_dsl_round_trips() {
+    let document = <crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot();
     ::store::os_store::test_support::assert_dsl_round_trip(&document);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn empty_document_dsl_round_trips() {
-    ::store::os_store::test_support::assert_dsl_round_trip(&empty_trinity_graph_snapshot());
+    ::store::os_store::test_support::assert_dsl_round_trip(&empty_trinity_graph_snapshot::<crate::test_support::FixtureComposition>());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -20,8 +20,8 @@ async fn parse_dsl_rejects_unknown_keyword() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn dsl_round_trip_mini_and_bundled_fixtures() {
-    let nakagin = parse_dsl(NAKAGIN_EXAMPLE_TEXT).unwrap();
+async fn dsl_round_trip_selected_child_fixture() {
+    let nakagin = <crate::test_support::FixtureComposition as crate::JackComposition>::initial_snapshot();
     ::store::os_store::test_support::assert_dsl_round_trip(&nakagin);
     ::store::os_store::test_support::assert_dsl_pack_equivalence(&nakagin);
 }
@@ -34,7 +34,7 @@ async fn dsl_round_trip_mini_fixture() {
     use crate::{Camera, Edge, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
     use std::collections::BTreeMap;
 
-    let fixture = JackSnapshot::with_content(
+    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(
         JackSnapshot::SCHEMA.into(),
         "mini".into(),
         Some("nakagin".into()),

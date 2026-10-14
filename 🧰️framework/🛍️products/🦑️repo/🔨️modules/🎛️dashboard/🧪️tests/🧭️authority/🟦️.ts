@@ -5,7 +5,7 @@ import { join, relative, resolve } from "node:path";
 
 const root = resolve(import.meta.dir, "../../../../../../.."), dashboard = resolve(import.meta.dir, "../..");
 const read = (path: string) => JSON.parse(readFileSync(path, "utf8"));
-const fixture = read(join(dashboard, "🧫️fixtures/🧭️authority/🔣️.json"));
+const fixture = read(join(dashboard, "🧪️tests/🧫️fixtures/🧭️authority/🔣️.json"));
 const validate = new Ajv2020({ strict: false, allErrors: true }).compile(read(join(dashboard, "🧬️schema/🧭️authority/🔣️.json")));
 const accepts = (scripts: Record<string, unknown>) => Object.keys(scripts).length === Object.keys(fixture.scripts).length && Object.entries(fixture.scripts).every(([name, command]) => scripts[name] === command);
 
@@ -42,21 +42,21 @@ test("every active source directory is free of editor and agent launch configura
   expect(failures.sort(), "active launch configurations compete with the dashboard registry").toEqual([]);
 }, 300_000);
 
-test("root runnable commands remain owned by Nx targets and dashboard declarations", () => {
+test("root runnable commands remain owned by build targets and dashboard declarations", () => {
   const manifest = read(join(root, "📋️project.json"));
   expect(Object.keys(manifest.targets).length).toBeGreaterThan(50);
   expect(manifest.targets.setup).toBeDefined();
   expect(manifest.metadata.semio.dashboard.parameters.length).toBeGreaterThan(0);
   const registry = readFileSync(join(dashboard, "🎮️registry/🦀️.rs"), "utf8");
   expect(registry).not.toContain("workspace_scripts");
-  console.log(`[DEBUG] authority gate checked ${Object.keys(manifest.targets).length} root Nx targets`);
+  console.log(`[DEBUG] authority gate checked ${Object.keys(manifest.targets).length} root build targets`);
 });
 
-test("authored scripts use one declarative Nx entry", () => {
+test("authored scripts use one declarative build entry", () => {
   const manifest = read(join(root, "📋️project.json"));
   const tool = manifest.metadata.semio.dashboard.tools.find((tool: { id: string }) => tool.id === "run-script");
   expect(tool).toBeDefined();
-  expect(tool.command).toEqual(["bun", "nx", "exec", "--projects={project}", "--", "bun", "{workspace}/{script}"]);
+  expect(tool.command).toEqual(["bun", "repo", "exec", "--projects={project}", "--", "bun", "{workspace}/{script}"]);
   expect(tool.cwd).toBe("{directory}");
   expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "script")).toEqual({ id: "script", kind: "text", required: true });
   expect(tool.parameters.find((parameter: { id: string }) => parameter.id === "project").default).toBe("workspace");

@@ -1,5 +1,5 @@
-import { type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🔺️ ObjDiff schema facet — mirrors 🦀️.rs field-for-field. Handcrafted sparse
  * diff: four index-keyed recursive triples (vertices/texcoords/normals/faces), two name-keyed
  * triples (groups/objects), a tri-state scalar (mtllib), and three whole-vec-replace scalars

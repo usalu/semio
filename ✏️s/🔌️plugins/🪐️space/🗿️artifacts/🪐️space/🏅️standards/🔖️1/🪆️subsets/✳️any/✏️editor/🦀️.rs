@@ -364,7 +364,9 @@ impl ArtifactEditor for SpaceIndexEditor {
     /// (the new `#s-space-create-artifact` toolbar button), the members panel's invite/remove/visibility/
     /// copy-link buttons — all of it. Mirrors `HomeCommand::command_from_action`'s `str_field` idiom
     /// (`🏠️home/…/✏️editor/🦀️.rs`) field-for-field against each command payload struct.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SpaceIndexCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<SpaceIndexCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         let u64_field = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64).map(|value| value as u64);
         match action {

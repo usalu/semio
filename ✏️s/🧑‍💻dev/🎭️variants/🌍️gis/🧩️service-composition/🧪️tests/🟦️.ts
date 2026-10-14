@@ -71,7 +71,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       seams.workerPostTestSink = sink;
     }
   });
-  type ActorInstanceLifetime = import("../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
+  type ActorInstanceLifetime = import("../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
   /** 🎫️ One well-formed session capability, exactly the shape `POST /auth/sessions` mints. */
   const WORKER_LAW_CAPABILITY = `session.v1.${"c".repeat(32)}.${"4".repeat(64)}`;
   const WORKER_LAW_CAPABILITY_TWO = `session.v1.${"d".repeat(32)}.${"5".repeat(64)}`;
@@ -5142,7 +5142,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { UiDocumentStore } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
       const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts");
       const { decodeAppCommand, encodeAppFrame } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts");
-      const { readActorBytePage } = await import("../../../../../../🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts");
+      const { readActorBytePage } = await import("../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
       const { createBrowserActorAppCommandRequestV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts");
       const { createBrowserActorUiIntentRequestV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts");
       const { decodeBrowserActorHostEffectsV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts");

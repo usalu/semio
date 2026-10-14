@@ -462,6 +462,11 @@ pub const SEMIO_OWNED_DESCRIBE_EXPORT: &str = "semio_owned_describe_v1";
 pub const SEMIO_OWNED_CANCEL_JOB_EXPORT: &str = "semio_owned_cancel_job_v1";
 pub const SEMIO_OWNED_START_JOB_EXPORT: &str = "semio_owned_start_job_v1";
 pub const SEMIO_OWNED_STEP_JOB_EXPORT: &str = "semio_owned_step_job_v1";
+pub const SEMIO_OWNED_READ_JOB_OUTPUT_EXPORT: &str = "semio_owned_read_job_output_v1";
+pub const SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_EXPORT: &str = "semio_owned_acknowledge_job_output_v1";
+pub const SEMIO_OWNED_CLOSE_JOBS_EXPORT: &str = "semio_owned_close_jobs_v1";
+pub const SEMIO_OWNED_BORROW_JOB_OUTPUT_EXPORT:&str="semio_owned_borrow_job_output_v1";
+pub const SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_CHUNK_EXPORT:&str="semio_owned_acknowledge_job_output_chunk_v1";
 pub const SEMIO_OWNED_POLL_EXPORT: &str = "semio_owned_poll_v1";
 pub const SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT:&str="semio_owned_admit_actor_context_v1";
 pub const SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT:&str="semio_owned_close_actor_context_v1";
@@ -495,6 +500,11 @@ pub enum OwnedSemioExport {
     CancelJob,
     StartJob,
     StepJob,
+    ReadJobOutput,
+    AcknowledgeJobOutput,
+    CloseJobs,
+    BorrowJobOutput,
+    AcknowledgeJobOutputChunk,
     Poll,
     AdmitActorContext,
     CloseActorContext,
@@ -513,7 +523,7 @@ pub enum OwnedSemioExport {
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 24] = [
+    pub const ALL: [Self; 29] = [
         Self::Allocate,
         Self::Deallocate,
         Self::Checkpoint,
@@ -523,6 +533,11 @@ impl OwnedSemioExport {
         Self::CancelJob,
         Self::StartJob,
         Self::StepJob,
+        Self::ReadJobOutput,
+        Self::AcknowledgeJobOutput,
+        Self::CloseJobs,
+        Self::BorrowJobOutput,
+        Self::AcknowledgeJobOutputChunk,
         Self::Poll,
         Self::AdmitActorContext,
         Self::CloseActorContext,
@@ -551,6 +566,11 @@ impl OwnedSemioExport {
             Self::CancelJob => SEMIO_OWNED_CANCEL_JOB_EXPORT,
             Self::StartJob => SEMIO_OWNED_START_JOB_EXPORT,
             Self::StepJob => SEMIO_OWNED_STEP_JOB_EXPORT,
+            Self::ReadJobOutput => SEMIO_OWNED_READ_JOB_OUTPUT_EXPORT,
+            Self::AcknowledgeJobOutput => SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_EXPORT,
+            Self::CloseJobs => SEMIO_OWNED_CLOSE_JOBS_EXPORT,
+            Self::BorrowJobOutput=>SEMIO_OWNED_BORROW_JOB_OUTPUT_EXPORT,
+            Self::AcknowledgeJobOutputChunk=>SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_CHUNK_EXPORT,
             Self::Poll => SEMIO_OWNED_POLL_EXPORT,
             Self::AdmitActorContext=>SEMIO_OWNED_ADMIT_ACTOR_CONTEXT_EXPORT,
             Self::CloseActorContext=>SEMIO_OWNED_CLOSE_ACTOR_CONTEXT_EXPORT,
@@ -575,7 +595,11 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::Checkpoint | Self::Describe | Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
+            Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;12],results:vec![ValueType::I64]},
+            Self::CloseJobs => FunctionType{parameters:vec![ValueType::I64;11],results:vec![ValueType::I64]},
+            Self::BorrowJobOutput=>FunctionType{parameters:vec![ValueType::I64;5],results:vec![ValueType::I64]},
+            Self::AcknowledgeJobOutputChunk=>FunctionType{parameters:vec![ValueType::I64;14],results:vec![ValueType::I64]},
+            Self::Restore | Self::StartJob | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
                 FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
             }
         }
@@ -609,6 +633,9 @@ impl OwnedSemioArtifact {
         }
         Ok(Self { component, actor_module })
     }
+
+    /// 🪢️ The immutable module witness used by original phased opening.
+    pub fn original_actor_module(&self)->&Arc<CoreModule>{&self.actor_module}
 
     pub fn fingerprint(&self) -> u64 {
         self.component.fingerprint()
@@ -1320,6 +1347,10 @@ fn decode_block_type(decoder: &mut Decoder<'_>, types: &[FunctionType]) -> Resul
 
 //#endregion 🧭️InstructionShape
 
+#[path="🏗️instance/🦀️.rs"]
+mod original_instance_opening;
+pub use original_instance_opening::{CoreInstanceOpening,CoreOriginalInvocationCall,CoreOriginalInvocationStatus};
+
 //#region 🏗️InstanceState
 
 #[derive(Clone, Debug)]
@@ -1392,6 +1423,11 @@ enum ControlKind {
     Block,
     Loop,
     If,
+}
+
+impl CoreModule{
+    /// ▶️ The actual declared start function, without opening an instance or cloning its body.
+    pub fn original_start_function(&self)->Option<u32>{self.start}
 }
 
 impl CoreInstance {

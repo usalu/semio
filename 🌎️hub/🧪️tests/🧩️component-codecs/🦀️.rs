@@ -16,7 +16,7 @@ async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, s
     let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
     let runtime = match which {
         CodecSweepRuntime::Owned => GuestRuntimes::Owned(OwnedRuntime::new()),
-        CodecSweepRuntime::Jit => GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).await.map_err(|error| format!("engine: {error:?}"))?),
+        CodecSweepRuntime::Jit => GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.map_err(|error| format!("engine: {error:?}"))?),
     };
     let budget = match which {
         CodecSweepRuntime::Owned => codec_budget(),

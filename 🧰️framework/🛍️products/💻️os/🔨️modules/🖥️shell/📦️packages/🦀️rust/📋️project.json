@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-os-shell-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
   "namedInputs": {
     "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.rs", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*", "{projectRoot}/**/*"],
@@ -9,21 +9,21 @@
   },
   "targets": {
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "typegen": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts typegen"
@@ -32,7 +32,7 @@
       "outputs": ["{projectRoot}/../../🤖️generated"]
     },
     "schema-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts schema-check"
@@ -41,7 +41,7 @@
       "outputs": []
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"

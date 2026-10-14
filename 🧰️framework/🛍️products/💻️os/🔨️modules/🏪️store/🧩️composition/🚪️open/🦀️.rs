@@ -6,6 +6,9 @@ pub(crate) mod history;
 mod operation;
 pub use history::factory::MemberOpenDeclaration;
 pub use operation::{admit_member_input_buffer, MemberSnapshotOpenProgress, InitialMemberStoreOpen, MemberSnapshotOpenOperation, MemberSnapshotOpenStep, PackMemberSnapshotOpen, UnsupportedMemberFactoryOpen, UnsupportedMemberSnapshotOpen};
+#[path="🎟️admission/🦀️.rs"]
+mod source_admission;
+pub use source_admission::{MemberOpenSourceAdmission,diagnostic_error as member_admission_diagnostic};
 
 use super::{ErasedSnapshotRetirement, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef, SpaceMember};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
@@ -33,7 +36,8 @@ pub(crate) fn record_member_step(cx: &mut StepContext<'_>, progress: RetainedClo
     Ok(())
 }
 
-pub(crate) fn receive_member_close(cx:&mut StepContext<'_>,result:Result<RetainedCloneStep,semio_framework_value::ValueError>)->Result<RetainedCloneStep,OriginalTurnFailure>{
+/// 🧾️ Receives a generated member shell's actual paid release with its complete original refusal carrier.
+pub fn receive_member_close(cx:&mut StepContext<'_>,result:Result<RetainedCloneStep,semio_framework_value::ValueError>)->Result<RetainedCloneStep,OriginalTurnFailure>{
     let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
     cx.consume_fuel(progress.copied_items.saturating_add(progress.copied_bytes)as u64);
     let receipt_refusal=cx.consume_retained(progress).err();
@@ -108,8 +112,8 @@ pub enum MemberOpenInputStep {
 
 pub trait MemberOpenOperation {
     type Member;
-    fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberOpenStep<Self::Member>;
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<RetainedCloneStep, OriginalTurnFailure>;
+    fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<MemberOpenStep<Self::Member>,OriginalTurnFailure>;
+    fn close_step(&mut self, parent:&semio_framework_job::OriginalCallerSourceParent, cx: &mut StepContext<'_>) -> Result<RetainedCloneStep, OriginalTurnFailure>;
     fn terminal_is_empty(&self) -> bool;
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError>;
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError>;

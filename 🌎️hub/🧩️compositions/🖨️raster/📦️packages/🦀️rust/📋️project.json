@@ -1,12 +1,12 @@
 {
   "name": "@semio-tech/raster-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/🖨️raster/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

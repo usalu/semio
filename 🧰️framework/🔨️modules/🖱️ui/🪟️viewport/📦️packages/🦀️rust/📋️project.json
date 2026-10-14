@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-ui-viewport-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport",
   "namedInputs": {
     "default": [
@@ -12,7 +12,7 @@
   },
   "targets": {
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -23,7 +23,7 @@
       }
     },
     "test-binding": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "corruption": { "value": "corrupted", "computations": 2 },
   "files": { "a/one.txt": "1", "a/two.txt": "2", "b/three.txt": "3" },
   "scenarios": [
     { "id": "unchanged", "mutation": { "op": "none" }, "expected": "hit" },

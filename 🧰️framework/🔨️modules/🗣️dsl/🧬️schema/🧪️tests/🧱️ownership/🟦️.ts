@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import TOML from "@iarna/toml";
 import { Database } from "bun:sqlite";
-import { ValueError, type ValueRefusalKind } from "../../../../🌱️value/⚠️refusal/🟦️.ts";
+import { ValueError, type ValueRefusalKind } from "../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
 

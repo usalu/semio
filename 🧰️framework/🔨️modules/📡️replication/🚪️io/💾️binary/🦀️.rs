@@ -21,6 +21,21 @@ pub trait OpBinary: Sized {
     fn encode_op(&self) -> Result<Vec<u8>, crate::ProtocolError>;
     fn decode_op(bytes: &[u8]) -> Result<Self, crate::ProtocolError>;
 }
+/// 🫴️ Admits the actual stored operation cursor through one original caller grant.
+pub trait OpBinaryReceiving: OpBinary + semio_framework_value::retirement::RetireOwned {
+    type Receiving: OpBinaryReceivingCursor<Self>;
+    fn admit_receiving(source:&[u8],range:(usize,usize),grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self::Receiving,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>;
+}
+/// 🎞️ Retains original parse, typed binding and output custody across bounded native loans.
+pub trait OpBinaryReceivingCursor<M:semio_framework_value::retirement::RetireOwned>:semio_framework_value::retirement::RetireOwned{
+    fn demands(&self,source:&[u8],maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
+    fn step(&mut self,source:&[u8],native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>;
+    fn is_ready(&self)->bool;
+    fn take_into(&mut self,recipient:&mut Option<M>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>;
+    fn close_demands(&self,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>;
+    fn terminal_is_empty(&self)->bool;
+}
 //#endregion 🔖️OpBinary
 
 /// 🔺️ Deterministic binary I/O for semantic diffs.

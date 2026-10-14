@@ -60,7 +60,7 @@ function literalPrefixPattern(values) {
       branches.push(escapeRegex(prefix) + render(tail));
     }
     const suffix = branches.length > 1 ? `(?:${branches.join("|")})` : branches[0] ?? "";
-    return node.terminal && suffix ? `(?:${suffix})?` : suffix;
+    return node.terminal && suffix ? `(?:${suffix}|)` : suffix;
   };
   return render(root);
 }
@@ -197,22 +197,23 @@ function crossTechnologyRules() {
   return rules;
 }
 
-/** 🔌️ Plugins must not relative-import a sibling plugin's implementation — cross-plugin sharing goes
- * through @semio-tech packages or a framework/s module. `flow` is exempt (media-graph canvas embed). */
+/** 🔌️ Every distinct plugin pair is forbidden through physical ownership and authored package aliases. */
 function crossPluginRules() {
+  const patterns = (plugin) => {
+    const owner = `✏️s/🔌️plugins/${plugin}`;
+    const packages = WORKSPACE_PACKAGES.filter((pkg) => pkg.dir.startsWith(`${owner}/`));
+    return [sourceOwnerPattern(owner), ...packageOwnerPatterns(packages.map((pkg) => pkg.name))];
+  };
   const rules = [];
   for (const from of PLUGINS) {
     for (const to of PLUGINS) {
-      if (from === to || to === "🌊️flow") continue;
+      if (from === to) continue;
       rules.push({
         name: `no-cross-plugin-${from}-to-${to}`,
         severity: "error",
-        comment: "Relative imports must not cross plugin folders; use @semio-tech packages",
-        from: { path: `^✏️s/🔌️plugins/${from}/` },
-        to: {
-          path: `^✏️s/🔌️plugins/${to}/`,
-          dependencyTypes: ["local"],
-        },
+        comment: "Plugin owners consume neutral public contracts; no source, test, tooling or package alias may depend on a sibling plugin",
+        from: { path: patterns(from) },
+        to: { path: patterns(to) },
       });
     }
   }

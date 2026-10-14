@@ -7461,22 +7461,22 @@ pub mod board_host {
             if self.preview.take().is_some() || self.fault.take().is_some() {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} });
             }
-            let Some(state) = self.state.as_mut() else { return Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()} };
+            let Some(state) = self.state.as_mut() else { return Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()}) };
             if let Some(placement) = state.pending_placement.as_mut() {
                 if placement.handles.pop().is_some() {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} };
+                    return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} });
                 }
                 if let Some(bytes) = placement.handles.retained_page_bytes() {
                     if bytes > maximum_bytes {
-                        return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
+                        return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
                     }
                     let Some(released_bytes) = placement.handles.retire_empty_page() else {
-                        return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
+                        return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
                     };
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,released_bytes,..Default::default()} };
+                    return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,released_bytes,..Default::default()} });
                 }
-                if let Some(step)=placement.handles.retire_descriptor(grant){return step;}
-                state.pending_placement = None);
+                if let Some(step)=placement.handles.retire_descriptor(grant){return Ok(step);}
+                state.pending_placement = None;
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::RetainedCloneProgress {copied_items:1,..Default::default()} });
             }
             if state.accept_handle_template.take().is_some()
@@ -7581,7 +7581,7 @@ pub mod board_host {
 
         fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
             if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
-            let demand=(||Ok(semio_framework_value::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(cx.retained_grant().maximum_copy_bytes)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?}))().map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+            let demand=(||->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(cx.retained_grant().maximum_copy_bytes)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?})})().map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
             let mut blocked=false;
             let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_granted(grant).map(|step|match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>semio_framework_value::RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_value::RetainedCloneStep::Complete(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>{blocked=true;semio_framework_value::RetainedCloneStep::Progress(Default::default())}}))?;
             if blocked{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}

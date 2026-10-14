@@ -251,6 +251,7 @@ fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
 /// refused — while the shell lane keeps refusing the omission.
 #[semio_framework_async_macros::async_test]
 async fn an_agent_set_cell_without_a_revision_previews_against_the_document_revision_and_the_shell_lane_still_requires_it() {
+    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let source = csv_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&source).await;
     let definition = create_csv_editor();
@@ -266,12 +267,14 @@ async fn an_agent_set_cell_without_a_revision_previews_against_the_document_revi
                 .chain(revision.map(|revision| ("revision".to_string(), semio_framework_value::DslValue::String(revision)))),
         )
     };
-    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(None), &view, &mut identity).await).expect("the agent lane admits an omitted revision");
-    let bound = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some(revision)), &view, &mut identity).await).expect("the rendered cell's revision");
+    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(None), &view, &mut identity,cx).await).expect("the agent lane admits an omitted revision");
+    let bound = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some(revision)), &view, &mut identity,cx).await).expect("the rendered cell's revision");
     assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some("stale".into())), &view, &mut identity).await).is_err(), "a stale token is refused on the agent lane too");
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some("stale".into())), &view, &mut identity,cx).await).is_err(), "a stale token is refused on the agent lane too");
     assert!(dispatch_settled(&mut app, "set-cell", address(None)).await.is_err(), "the shell lane still requires the rendered cell's revision");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(),cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
 }
 //#endregion 🪟️KitVerbLaws
 

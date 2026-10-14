@@ -1,0 +1,31 @@
+{
+  "version": "6.0",
+  "nxVersion": "23.2.0",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "architecture-source-verification": [
+        {
+          "file": "nx.json",
+          "hash": "8868114196464423950"
+        },
+        {
+          "file": "package.json",
+          "hash": "14996670975681095733"
+        },
+        {
+          "file": "project.json",
+          "hash": "4012637749195805355"
+        },
+        {
+          "file": "📜️script.ts",
+          "hash": "7131489381121908710"
+        }
+      ]
+    },
+    "nonProjectFiles": []
+  },
+  "externalNodesHash": "3244421341483603138",
+  "dependencyResolutionAuthority": null
+}

@@ -27,6 +27,7 @@ testkit = ["semio-framework-async/testkit"]
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 
 [dev-dependencies]
@@ -40,3 +41,12 @@ path = "../../⚠️failure/🧪️tests/🦀️.rs"
 [[test]]
 name = "original-close-context"
 path = "../../♻️retirement/🎟️context/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-weak-return"
+path = "../../⏱️context/📦️return/🪶️weak/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-fixture-caller"
+required-features = ["testkit"]
+path = "../../⏱️context/🧪️testing/🎟️caller/🧪️tests/🦀️.rs"

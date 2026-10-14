@@ -1,7 +1,7 @@
 /** 🧊️ Complete Block3d persisted fields and literal independent child identity. */
 import * as shared from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 import * as p from "../../../../../../../../🧬️schema/🧱️shared/📐️scalar/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseArtifactChild,type ArtifactChild} from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export * from "../../../../../../../../🧬️schema/🧱️shared/🟦️.ts";
 export interface Block3dVortexKindExtra{id:string;name:string;label:string;color:string;defaultCableKind:string}

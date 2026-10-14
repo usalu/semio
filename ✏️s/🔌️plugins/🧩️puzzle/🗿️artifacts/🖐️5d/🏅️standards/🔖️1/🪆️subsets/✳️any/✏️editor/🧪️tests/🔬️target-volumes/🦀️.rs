@@ -95,7 +95,7 @@ async fn outliner_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value()
         ("setTargetVolumeHidden", "hidden", semio_framework_pack_json::json!({ "id": volume.as_str() }), semio_framework_pack_json::json!({ "hidden": true, "id": volume.as_str() })),
         ("setTargetVolumeLocked", "locked", semio_framework_pack_json::json!({ "id": volume.as_str() }), semio_framework_pack_json::json!({ "id": volume.as_str(), "locked": true })),
     ] {
-        assert!(<Puzzle5dPlayApp as ArtifactEditor>::command_from_action(verb, Some(&semio_framework_pack_json::to_dsl_value(&bare))).is_err(), "{verb} without its {flag} value must be refused");
+        assert!(<Puzzle5dPlayApp as ArtifactEditor>::command_from_action(verb, Some((semio_framework_pack_json::to_dsl_value(&bare)).clone()), None).is_err(), "{verb} without its {flag} value must be refused");
         let first = dispatch(&mut app, verb, Some(&args), None).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(edits(&first), 1, "{verb} commits exactly one document edit");
         let set = projection_of(&app);

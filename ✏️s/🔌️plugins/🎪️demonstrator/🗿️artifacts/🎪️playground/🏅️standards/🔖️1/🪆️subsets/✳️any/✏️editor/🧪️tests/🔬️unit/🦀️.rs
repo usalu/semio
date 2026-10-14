@@ -51,8 +51,8 @@ fn change_schema_admission_matches_the_language_neutral_limit_oracle() {
     let interaction = protocol::InteractionState::default();
     assert_eq!(playground_retained_extent(&accepted, &snapshot, &interaction), Some(expected_items));
     assert_eq!(playground_retained_extent(&rejected, &snapshot, &interaction), None);
-    assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&semio_framework_value::DslValue::object([("newSchema".to_string(), semio_framework_value::DslValue::String("s".repeat(maximum)))]))).is_ok());
-    assert!(PlaygroundEditor::command_from_action("changeSchema", Some(&semio_framework_value::DslValue::object([("newSchema".to_string(), semio_framework_value::DslValue::String("s".repeat(maximum + additional)))]))).is_err());
+    assert!(PlaygroundEditor::command_from_action("changeSchema", Some((semio_framework_value::DslValue::object([("newSchema".to_string(), semio_framework_value::DslValue::String("s".repeat(maximum)))])).clone()), None).is_ok());
+    assert!(PlaygroundEditor::command_from_action("changeSchema", Some((semio_framework_value::DslValue::object([("newSchema".to_string(), semio_framework_value::DslValue::String("s".repeat(maximum + additional)))])).clone()), None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,7 +79,7 @@ async fn registry_backed_editor_installs_its_exact_bounded_command_proof() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
-    assert!(PlaygroundEditor::command_from_action("noSuchAction", None).is_err());
+    assert!(PlaygroundEditor::command_from_action("noSuchAction", None, None).is_err());
 }
 
 #[test]

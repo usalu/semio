@@ -12,10 +12,10 @@ use std::path::{Path, PathBuf};
 use std::sync::{atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering}, mpsc::{self, Receiver}, Arc, Mutex};
 
 // #region 🔖️Snapshot
-const SNAPSHOT_VERSION: u32 = 5;
+const SNAPSHOT_VERSION: u32 = 7;
 const SNAPSHOT_LIMIT: u64 = 64 * 1024 * 1024;
 const STALE_TEMPORARY_SECONDS: u64 = 600;
-const GRAPH_FILE: &str = ".nx/workspace-data/project-graph.json";
+const GRAPH_FILE: &str = ".🧬semio/🦑️repo/⚡️cache/build/graph.json";
 const PROJECT_MANIFESTS: &[&str] = &["📋️project.json", "project.json"];
 const WALK_SKIP_DIRS: &[&str] = &["node_modules", "target", "dist", "build", "generated", "cache", "fixtures"];
 
@@ -42,6 +42,7 @@ struct Snapshot {
     #[serde(default)]
     graph_errors: Vec<String>,
     playgrounds: Sourced<Vec<PlaygroundFacts>>,
+    catalog_path:Option<PathBuf>,
     tickets: Vec<TicketSource>,
     folders: BTreeMap<String, Option<Fingerprint>>,
     basis: Option<GraphBasis>,
@@ -89,7 +90,7 @@ fn sweep_temporaries(directory: &Path) {
 }
 
 impl Snapshot {
-    /// 🧮️ Joins the manifests and the Nx graph into the facts the registry is built from. A manifest
+    /// 🧮️ Joins the manifests and the build graph into the facts the registry is built from. A manifest
     /// states its own project and targets; the graph adds inferred ones and what target defaults decide.
     fn facts(&self) -> Facts {
         let mut projects: BTreeMap<String, ProjectFacts> = self.graph.value.iter().map(|project| (project.name.clone(), project.clone())).collect();
@@ -134,10 +135,10 @@ impl Snapshot {
 
     /// 🔏️ Whether every source still has the fingerprint it was read at: nothing known changed,
     /// appeared in a known folder or vanished. A manifest in a folder no walk has seen is not covered.
-    fn is_current(&self) -> bool {
+    fn is_current_for(&self,publication:Option<&Path>) -> bool {
         let same = |path: &str, known: Option<Fingerprint>| Fingerprint::of(&self.root.join(path)) == known;
         self.complete
-            && same(PLAYGROUND_SOURCE, self.playgrounds.fingerprint) && same(GRAPH_FILE, self.graph.fingerprint)
+            && self.catalog_path==publication.map(|root|root.join("🚀️playgrounds.json")) && self.catalog_path.as_deref().and_then(Fingerprint::of)==self.playgrounds.fingerprint && same(GRAPH_FILE, self.graph.fingerprint)
             && self.manifests.iter().all(|(path, manifest)| same(path, Some(manifest.fingerprint)))
             && self.folders.iter().all(|(path, known)| same(path, *known))
             && self.tickets.iter().all(|ticket| same(&format!("{}/{}", ticket.facts.folder, semio_framework_repo_tickets::TICKET_DOCUMENT_NAME), ticket.document) && (!ticket.facts.open || same(&format!("{}/{TICKET_COMMANDS}", ticket.facts.folder), ticket.commands)))
@@ -181,22 +182,9 @@ impl std::io::Read for CancellationReader<'_> {
 }
 
 #[derive(Deserialize)]
-struct Graph { nodes: BTreeMap<String, GraphNode>, #[serde(default)] errors: Vec<GraphError> }
-/// 🩺️ One failure Nx recorded while it published the graph: the graph is partial when there is any.
+struct Graph { version: u32, projects: BTreeMap<String, GraphData>, #[serde(default)] errors: Vec<String> }
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct GraphError { name: String, #[serde(default)] plugin_name: Option<String>, #[serde(default)] plugin_index: Option<u64> }
-
-impl GraphError {
-    fn message(&self) -> String {
-        let plugin = self.plugin_name.clone().or_else(|| self.plugin_index.map(|index| format!("plugin index {index}"))).unwrap_or_else(|| "unknown plugin".into());
-        format!("the published project graph carries a plugin error: {} ({plugin}); re-run bun nx show projects --json for the message", self.name)
-    }
-}
-#[derive(Deserialize)]
-struct GraphNode { data: GraphData }
-#[derive(Deserialize)]
-struct GraphData { root: String, #[serde(default)] targets: BTreeMap<String, GraphTarget>, #[serde(default)] metadata: Option<GraphMetadata> }
+struct GraphData { name: String, root: String, #[serde(default)] targets: BTreeMap<String, GraphTarget>, #[serde(default)] metadata: Option<GraphMetadata> }
 #[derive(Deserialize)]
 struct GraphTarget { #[serde(default)] continuous: Option<bool>, #[serde(default)] configurations: Option<BTreeMap<String, serde::de::IgnoredAny>>, #[serde(default)] metadata: Option<GraphMetadata> }
 #[derive(Deserialize)]
@@ -204,7 +192,7 @@ struct GraphMetadata { #[serde(default)] semio: Option<serde_json::Value> }
 
 impl GraphMetadata { fn dashboard(self) -> Option<serde_json::Value> { self.semio?.get_mut("dashboard").map(serde_json::Value::take) } }
 
-/// 🕸️ Reads the project graph Nx last published, waiting out a publication in progress.
+/// 🕸️ Reads the build graph last published, waiting out a publication in progress.
 fn read_graph(root: &Path, cancelled: &AtomicBool) -> (Sourced<Vec<ProjectFacts>>, Vec<String>) {
     let path = root.join(GRAPH_FILE);
     let started = std::time::Instant::now();
@@ -216,21 +204,23 @@ fn read_graph(root: &Path, cancelled: &AtomicBool) -> (Sourced<Vec<ProjectFacts>
         let result = serde_json::from_reader::<_, Graph>(std::io::BufReader::with_capacity(1 << 20, CancellationReader { file, cancelled }));
         match result { Ok(graph) if before.is_some() && Fingerprint::of(&path) == before => break (before, graph), _ if give_up => return (Sourced::default(), Vec::new()), _ => std::thread::sleep(std::time::Duration::from_millis(20)) }
     };
+    if graph.version != 1 { return (Sourced { fingerprint, value: Vec::new() }, vec!["unsupported build graph version".into()]); }
     let graph_errors = graph.errors;
-    let mut projects = Vec::with_capacity(graph.nodes.len());
-    for (name, node) in graph.nodes {
-        let folder = Path::new(&node.data.root);
+    let mut projects = Vec::with_capacity(graph.projects.len());
+    for (name, node) in graph.projects {
+        if node.name != name { continue; }
+        let folder = Path::new(&node.root);
         if folder.is_absolute() || folder.components().any(|part| match part { std::path::Component::Normal(value) => value.to_str().is_none_or(should_skip_walk_dir), std::path::Component::CurDir => false, _ => true }) || !root.join(folder).is_dir() { continue; }
-        let targets = node.data.targets.into_iter().map(|(name, target)| TargetFacts { name, continuous: target.continuous, configurations: target.configurations.map(|configurations| configurations.into_keys().collect()).unwrap_or_default(), dashboard: target.metadata.and_then(GraphMetadata::dashboard) }).collect();
-        projects.push(ProjectFacts { name, root: relative(root, &root.join(folder)), manifest: String::new(), targets, dashboard: node.data.metadata.and_then(GraphMetadata::dashboard) });
+        let targets = node.targets.into_iter().map(|(name, target)| TargetFacts { name, continuous: target.continuous, configurations: target.configurations.map(|configurations| configurations.into_keys().collect()).unwrap_or_default(), dashboard: target.metadata.and_then(GraphMetadata::dashboard) }).collect();
+        projects.push(ProjectFacts { name, root: relative(root, &root.join(folder)), manifest: String::new(), targets, dashboard: node.metadata.and_then(GraphMetadata::dashboard) });
     }
-    let errors = graph_errors.iter().map(GraphError::message).collect();
+    let errors = graph_errors;
     (Sourced { fingerprint, value: projects }, errors)
 }
 
-fn read_playgrounds(root: &Path) -> Sourced<Vec<PlaygroundFacts>> {
-    let fingerprint = Fingerprint::of(&root.join(PLAYGROUND_SOURCE));
-    let rows: Vec<serde_json::Value> = serde_json::from_str(&crate::catalog::playgrounds_json_text(root)).unwrap_or_default();
+fn read_playgrounds(publication:Option<&Path>) -> Sourced<Vec<PlaygroundFacts>> {
+    let fingerprint = publication.and_then(|root|Fingerprint::of(&root.join("🚀️playgrounds.json")));
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&crate::catalog::playgrounds_json_text_from_catalog(publication).expect("Configured command catalog refused")).expect("Configured command catalog JSON refused");
     let ports = |row: &serde_json::Value, pointer: &str| row.pointer(pointer).and_then(serde_json::Value::as_array).map(|ports| ports.iter().filter_map(|port| u16::try_from(port.as_u64()?).ok()).collect::<Vec<_>>()).unwrap_or_default();
     let text = |row: &serde_json::Value, key: &str| row.get(key).and_then(serde_json::Value::as_str).map(str::to_string);
     let port = |row: &serde_json::Value, pointer: &str| row.pointer(pointer).and_then(serde_json::Value::as_u64).and_then(|port| u16::try_from(port).ok());
@@ -312,12 +302,13 @@ impl Progress {
 /// 🔭️ Reads every source. A source whose fingerprint equals the previous snapshot's is not read
 /// again. `stage` receives the snapshot after the known sources and again after the walk; the
 /// result is `None` when the discovery was cancelled.
-fn gather(root: &Path, previous: Option<&Snapshot>, cancelled: &AtomicBool, progress: &Progress, stage: &mut dyn FnMut(&Snapshot, Phase)) -> Option<Snapshot> {
+fn gather(root: &Path, previous: Option<&Snapshot>, cancelled: &AtomicBool, progress: &Progress, stage: &mut dyn FnMut(&Snapshot, Phase), publication:Option<&Path>) -> Option<Snapshot> {
     let stopped = || cancelled.load(Ordering::Relaxed);
     let mut snapshot = Snapshot { version: SNAPSHOT_VERSION, root: root.to_path_buf(), ..Default::default() };
     progress.phase.store(Phase::Sources as u8, Ordering::Relaxed);
     progress.expected.store(previous.map_or(0, |previous| previous.walked), Ordering::Relaxed);
-    snapshot.playgrounds = read_playgrounds(root);
+    snapshot.playgrounds = read_playgrounds(publication);
+    snapshot.catalog_path=publication.map(|root|root.join("🚀️playgrounds.json"));
     (snapshot.graph, snapshot.graph_errors) = match previous { Some(previous) if previous.graph.fingerprint.is_some() && previous.graph.fingerprint == Fingerprint::of(&root.join(GRAPH_FILE)) => (previous.graph.clone(), previous.graph_errors.clone()), _ => read_graph(root, cancelled) };
     if stopped() { return None; }
     let adopt = |snapshot: &mut Snapshot, path: String| {
@@ -349,14 +340,16 @@ fn gather(root: &Path, previous: Option<&Snapshot>, cancelled: &AtomicBool, prog
 
 /// 🧭️ Discovers the registry of a workspace from its sources alone: nothing is read from or
 /// written to the snapshot.
-pub fn discover(root: &Path, cancelled: &AtomicBool) -> Registry {
-    gather(root, None, cancelled, &Progress::default(), &mut |_, _| {}).map_or_else(|| seed(root), |snapshot| snapshot.registry())
-}
+pub fn discover(root:&Path,cancelled:&AtomicBool)->Registry{let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");discover_with_catalog(root,cancelled,publication.as_deref())}
+/// 📥️ Discovers using exactly the supplied publication owner.
+pub fn discover_with_catalog(root:&Path,cancelled:&AtomicBool,publication:Option<&Path>)->Registry{gather(root,None,cancelled,&Progress::default(),&mut |_,_|{},publication).map_or_else(||seed_with_catalog(root,publication),|snapshot|snapshot.registry())}
 
 /// 🌱️ The commands known without the graph, the walk or the ticket index: the playgrounds and
 /// what the root manifest declares.
-pub fn seed(root: &Path) -> Registry {
-    let mut snapshot = Snapshot { version: SNAPSHOT_VERSION, root: root.to_path_buf(), playgrounds: read_playgrounds(root), ..Default::default() };
+pub fn seed(root:&Path)->Registry{let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");seed_with_catalog(root,publication.as_deref())}
+/// 🌱️ Seeds the root commands and explicitly supplied playground contribution.
+pub fn seed_with_catalog(root:&Path,publication:Option<&Path>)->Registry{
+    let mut snapshot = Snapshot { version: SNAPSHOT_VERSION, root: root.to_path_buf(), playgrounds: read_playgrounds(publication),catalog_path:publication.map(|root|root.join("🚀️playgrounds.json")), ..Default::default() };
     for name in PROJECT_MANIFESTS { if let Some(manifest) = read_manifest(root, name) { snapshot.manifests.insert((*name).to_string(), manifest); } }
     snapshot.registry()
 }
@@ -366,12 +359,14 @@ pub fn seed(root: &Path) -> Registry {
 pub fn registry(root: &Path) -> Registry { registry_at(root, &cache_path(root)) }
 
 /// 🗄️ [`registry`] with the snapshot at an explicit place.
-pub fn registry_at(root: &Path, snapshot_path: &Path) -> Registry {
+pub fn registry_at(root:&Path,snapshot_path:&Path)->Registry{let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");registry_at_with_catalog(root,snapshot_path,publication.as_deref())}
+/// 🔏️ Binds snapshot freshness to the actual supplied catalog file and its fingerprint.
+pub fn registry_at_with_catalog(root:&Path,snapshot_path:&Path,publication:Option<&Path>)->Registry{
     let previous = read_snapshot(snapshot_path, root);
-    if let Some(snapshot) = previous.as_ref().filter(|snapshot| snapshot.is_current()) { return snapshot.registry(); }
-    match gather(root, previous.as_ref(), &AtomicBool::new(false), &Progress::default(), &mut |_, _| {}) {
+    if let Some(snapshot) = previous.as_ref().filter(|snapshot| snapshot.is_current_for(publication)) { return snapshot.registry(); }
+    match gather(root, previous.as_ref(), &AtomicBool::new(false), &Progress::default(), &mut |_, _| {},publication) {
         Some(snapshot) => { if let Err(error) = write_snapshot(snapshot_path, &snapshot) { eprintln!("[semio] command snapshot: {error}"); } snapshot.registry() }
-        None => seed(root),
+        None => seed_with_catalog(root,publication),
     }
 }
 // #endregion 🔖️Discovery
@@ -421,7 +416,8 @@ pub fn start_at(root: PathBuf, snapshot_path: PathBuf, refresh: bool) -> Job {
         };
         let previous = if refresh { None } else { read_snapshot(&snapshot_path, &root) };
         if !publish(previous.as_ref().map_or_else(|| seed(&root), Snapshot::registry), Phase::Known) { return; }
-        let gathered = gather(&root, previous.as_ref(), &signal, &observed, &mut |snapshot, phase| { if phase == Phase::Complete || !previous.as_ref().is_some_and(|previous| previous.same_sources(snapshot)) { publish(snapshot.registry(), phase); } });
+        let publication=crate::catalog::configured_catalog_root().expect("Command catalog location refused");
+        let gathered = gather(&root, previous.as_ref(), &signal, &observed, &mut |snapshot, phase| { if phase == Phase::Complete || !previous.as_ref().is_some_and(|previous| previous.same_sources(snapshot)) { publish(snapshot.registry(), phase); } },publication.as_deref());
         if let Some(snapshot) = gathered.filter(|snapshot| previous.as_ref() != Some(snapshot)) {
             if signal.load(Ordering::Relaxed) { let _ = sender.send(Update::Finished); return; }
             if let Err(error) = write_snapshot(&snapshot_path, &snapshot) { let _ = sender.send(Update::Failed(format!("command snapshot: {error}"))); }
@@ -443,7 +439,7 @@ pub fn starts_from_published_graph(label: &str) -> bool {
     exact.or_else(|| entries.iter().find(|entry| label.strip_prefix(entry.label.as_str()).is_some_and(|rest| rest.starts_with(" / ")))).is_some_and(|entry| !entry.long_running)
 }
 
-/// 🪞️ Whether the published Nx project graph still describes the workspace the registry was read from.
+/// 🪞️ Whether the published build graph still describes the workspace the registry was read from.
 pub fn graph_is_current(root: &Path) -> bool { published(root).is_some_and(|registry| registry.graph_is_current()) }
 // #endregion 🔖️RunPolicy
 

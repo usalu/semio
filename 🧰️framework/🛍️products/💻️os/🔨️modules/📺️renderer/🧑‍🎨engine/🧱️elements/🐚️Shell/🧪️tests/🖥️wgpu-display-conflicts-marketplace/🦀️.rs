@@ -388,7 +388,7 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
     assert_eq!((target["scope"].as_str(), target["args"]["pluginId"].as_str()), (Some("framework"), Some("space")), "🎯️ every verb fires on the row's one target: {target}");
     assert!(target.get("activation").is_none(), "🎯️ an action-only row has no activation verb");
 
-    let installable = crate::program_bridge::PLUGIN_ARTIFACT_KIND_ACTIVATIONS.iter().map(|(_, plugin_id)| *plugin_id).find(|plugin_id| *plugin_id != "space").expect("the catalogue claims a plugin this shell does not hold");
+    let installable = crate::program_bridge::plugin_artifact_kind_activations().iter().map(|(_, plugin_id)| *plugin_id).find(|plugin_id| *plugin_id != "space").expect("the catalogue claims a plugin this shell does not hold");
     marketplace_window_at(&mut shell, installable);
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui()).expect("the marketplace body projects");
     let (_, row) = marketplace_row(&records, &format!("framework.marketplace.plugin.{installable}"));
@@ -662,6 +662,7 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
 
 #[test]
 fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture = display_order_fixture();
     let mut shell = display_shell();
     let kind = shell.session.as_mut().unwrap().app.window_kinds.first_mut();
@@ -689,7 +690,7 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        assert!((0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources)));
+        assert!((0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx))));
         shell.publish_retained_hit_registry(input);
     };
     assert_eq!(fixture["displayBranchPublication"]["rules"]["huggingPanelReflowsBeforePublication"], true);
@@ -709,4 +710,6 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
         println!("[DEBUG] actual Display disclosure {id}: intrinsic={:?} accepted={:?}", crate::interpreter::retained_content_height(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID), input.hits().iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>());
     }
     assert!(input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(orthographic_id.as_str())), "actual hugging Display publishes Orthographic after one click per disclosure");
+    caller.retire_world(&mut resources);
+    caller.finish();
 }

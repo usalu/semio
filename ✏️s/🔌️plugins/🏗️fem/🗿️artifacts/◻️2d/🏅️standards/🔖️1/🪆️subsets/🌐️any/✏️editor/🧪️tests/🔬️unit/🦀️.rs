@@ -326,11 +326,11 @@ async fn every_route_declares_the_lane_its_handler_emits() {
 async fn command_from_action_resolves_every_declared_action() {
     let args = semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::float(1.0)), ("y".into(), semio_framework_value::DslValue::float(2.0)), ("exampleId".into(), semio_framework_value::DslValue::String(crate::examples::demo::ID.into()))]);
     for tool_id in FEM2D_RETAINED_TOOL_IDS {
-        let command = <Fem2dPlayApp as ArtifactEditor>::command_from_action(*tool_id, Some(&args)).unwrap_or_else(|error| panic!("action {tool_id} must resolve: {error:?}"));
+        let command = <Fem2dPlayApp as ArtifactEditor>::command_from_action(*tool_id, Some((args).clone()), None).unwrap_or_else(|error| panic!("action {tool_id} must resolve: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
     }
-    assert!(<Fem2dPlayApp as ArtifactEditor>::command_from_action("nope", None).is_err());
-    let node = <Fem2dPlayApp as ArtifactEditor>::command_from_action("addNode", Some(&args)).expect("addNode resolves");
+    assert!(<Fem2dPlayApp as ArtifactEditor>::command_from_action("nope", None, None).is_err());
+    let node = <Fem2dPlayApp as ArtifactEditor>::command_from_action("addNode", Some((args).clone()), None).expect("addNode resolves");
     assert_eq!(node, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0 }));
 }
 
@@ -341,12 +341,12 @@ async fn command_from_action_resolves_every_declared_action() {
 async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
     let f = semio_framework_value::DslValue::float;
     let legacy = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(640.0)), ("height".into(), f(480.0))]);
-    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&legacy)).expect("legacy move") else { panic!("move") };
+    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some((legacy).clone()), None).expect("legacy move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[5.0, 6.0]], "an absent `samples` is the single (x, y)");
     assert_eq!(moved.samples_or_last(), vec![(5.0, 6.0)]);
 
     let empty = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("samples".into(), semio_framework_value::DslValue::Array(Vec::new()))]);
-    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&empty)).expect("empty move") else { panic!("move") };
+    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some((empty).clone()), None).expect("empty move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[5.0, 6.0]], "an empty `samples` is the single (x, y)");
 
     let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
@@ -357,14 +357,14 @@ async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
         ("height".into(), f(480.0)),
         ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(2.0, 2.5), semio_framework_value::DslValue::String("junk".into()), pair(3.0, 4.0)])),
     ]);
-    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some(&batched)).expect("batched move") else { panic!("move") };
+    let Fem2dCommand::CanvasPointerMove(moved) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerMove", Some((batched).clone()), None).expect("batched move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[1.0, 1.5], [2.0, 2.5], [3.0, 4.0]], "every well-formed pair, in order; malformed entries are skipped");
     assert_eq!((moved.x, moved.y), (3.0, 4.0), "x/y stay the last sample");
 
-    let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some(&legacy)).expect("release") else { panic!("up") };
+    let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some((legacy).clone()), None).expect("release") else { panic!("up") };
     assert!(!released.cancelled, "an absent `cancelled` is a real release");
     let cancelled = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("cancelled".into(), semio_framework_value::DslValue::Bool(true))]);
-    let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some(&cancelled)).expect("cancel") else { panic!("up") };
+    let Fem2dCommand::CanvasPointerUp(released) = <Fem2dPlayApp as ArtifactEditor>::command_from_action("canvasPointerUp", Some((cancelled).clone()), None).expect("cancel") else { panic!("up") };
     assert!(released.cancelled);
 }
 //#endregion 🔖️RetainedRoutes

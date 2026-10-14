@@ -1,0 +1,104 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "types",
+    "productIndependent",
+    "privateBinding",
+    "sourceAdmission",
+    "binding"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context"
+    },
+    "types": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "OriginalActorAdmission",
+          "OriginalActorContextError",
+          "OriginalActorContext",
+          "OriginalActorCall",
+          "OriginalActorCallError",
+          "OriginalActorContextSlot",
+          "OriginalActorAdmissionReply",
+          "OriginalActorCloseReply"
+        ]
+      }
+    },
+    "productIndependent": {
+      "const": true
+    },
+    "privateBinding": {
+      "const": true
+    },
+    "sourceAdmission": {
+      "const": "first-party-paid-parent-seal"
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "firstEpoch",
+        "cases"
+      ],
+      "properties": {
+        "operation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "firstEpoch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "operation",
+              "generation",
+              "epoch",
+              "accepted"
+            ],
+            "properties": {
+              "operation": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "generation": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "epoch": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@ export async function runMutationInventoryCargoProducer(request:MutationInventor
   if(errors.length)throw Error("Invalid mutation inventory Cargo producer: "+errors.join("; "));
   const args=admitMutationInventoryProducerArguments(argv,policy);
   if(environment.CARGO_TARGET_DIR!==policy.compilerStorage.targetDirectory||environment.CARGO_BUILD_BUILD_DIR!==policy.compilerStorage.buildDirectory)throw Error("Cargo producer environment differs from its authored compiler storage");
-  return runMutationInventoryProcess({command:"cargo",argv:["run","--quiet","--offline","--locked","--manifest-path",request.manifestPath,"--bin",request.binary,"--features","mutation-inventory","--",...args],cwd:request.cwd,environment,captureDirectory:policy.compilerStorage.captureDirectory,budgetMs:policy.budgetMs,maximumCaptureBytes:policy.maximumCaptureBytes,compiler:{buildDirectory:policy.compilerStorage.buildDirectory,leaseDirectory:policy.compilerStorage.leaseDirectory}},operation);
+  return runMutationInventoryProcess({command:"cargo",argv:["run","--quiet","--offline","--locked","--manifest-path",request.manifestPath,"--bin",request.binary,"--features","mutation-inventory","--",...args],cwd:request.cwd,environment,captureDirectory:policy.compilerStorage.captureDirectory,budgetMs:policy.budgetMs,maximumCaptureBytes:policy.maximumCaptureBytes,compiler:{buildDirectory:policy.compilerStorage.buildDirectory,targetDirectory:policy.compilerStorage.targetDirectory,leaseDirectory:policy.compilerStorage.leaseDirectory}},operation);
 }
 /** 🖥️ Owns the CLI signal and deadline through compiler execution, capture reads and backpressured output. */
 export async function runMutationInventoryCargoProducerCommand(request:MutationInventoryCargoProducerRequest):Promise<void>{

@@ -2,7 +2,7 @@
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import {runtimeCatalogBuildInventoryV1} from "../../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -33,7 +33,7 @@ class PublishScript extends BundleScript {
         if (!entry) throw new Error(`Missing native catalog component: ${plugin.pluginId}`);
         const crate = resolve(repo, entry.cratePath), path = relative(repo, crate);
         if (isAbsolute(path) || path.split(/[\\/]/).includes("..") || !/^[a-z0-9_]+\.wasm$/.test(entry.wasmOut)) throw new Error("Invalid native component input path");
-        const page = join(pluginModulesRootIn(repo), moduleDirectoryName(plugin.pluginId, COMPONENT_MODULE_DIRECTORIES));
+        const page = join(pluginModulesRootIn(repo), moduleDirectoryName(plugin.pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories));
         return { pluginId: plugin.pluginId, wasm: join(crate, COMPONENT_PROFILE_POLICIES[SHIPPED_COMPONENT_PROFILE].directory, entry.wasmOut), descriptor: join(page, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE), descriptorPack: join(page, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE), receipt: join(page, TRUSTED_PLUGIN_MODULE_RECEIPT_FILE) };
       });
       await publishNativeRuntime(join(repo, ownerPath), variant, profile, modules, controller.signal);

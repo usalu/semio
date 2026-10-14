@@ -4,7 +4,7 @@ use super::value::WidgetEvaluation;
 use super::{Generation3dGeometry, GeometryInput};
 use crate::standards::v1::subsets::any::schema::catalogue::Catalogue;
 use crate::Generation3dSnapshot;
-use protocol::{infer_field_step, InferenceCache, InferenceCacheConfig, InferenceCacheStats, InferenceCursor, InferenceError};
+use protocol::{infer_field_step, InferenceCache, InferenceCacheConfig, InferenceCacheStats, InferenceCursor, InferenceWorkFailure};
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -24,7 +24,6 @@ pub enum CacheMode {
 pub enum EngineError {
     NotStarted,
     Busy,
-    Inference(InferenceError),
 }
 
 impl std::fmt::Display for EngineError {
@@ -32,7 +31,6 @@ impl std::fmt::Display for EngineError {
         match self {
             Self::NotStarted => write!(formatter, "the geometry engine has no run"),
             Self::Busy => write!(formatter, "the geometry engine is busy"),
-            Self::Inference(error) => write!(formatter, "{error}"),
         }
     }
 }
@@ -86,6 +84,7 @@ pub struct GeometryEngine {
     run: Option<Run>,
     previous: BTreeMap<String, Arc<WidgetEvaluation>>,
     totals: EngineTotals,
+    pub(super) failure:Option<InferenceWorkFailure>,
 }
 
 impl Drop for GeometryEngine {
@@ -101,7 +100,7 @@ impl GeometryEngine {
     /// 🏗️ An engine whose cache holds at most `budget_bytes`; a zero budget disables the cache.
     pub fn new(catalogue: Arc<Catalogue>, computes:Arc<dyn super::compute::GeometryComputeContext>, budget_bytes: usize) -> Self {
         let config = InferenceCacheConfig { enabled: budget_bytes > 0, budget_bytes, record_stats: true, ..Default::default() };
-        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), base: None, run: None, previous: BTreeMap::new(), totals: EngineTotals::default() }
+        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), base: None, run: None, previous: BTreeMap::new(), totals: EngineTotals::default(),failure:None }
     }
 
     /// 🧷️ Whether the retained run of the request with this digest is open: neither finished nor replaced. A cancelled run stays open, so continuing it reports the cancellation.
@@ -138,10 +137,10 @@ impl GeometryEngine {
     }
 
     /// 🪜️ Spends at most `fuel` units on the run. A finished run becomes the retained evaluation.
-    pub fn step(&mut self, fuel: usize) -> Result<EngineStep, EngineError> {
-        let (Some(base), Some(run)) = (self.base.as_ref(), self.run.as_mut()) else { return Err(EngineError::NotStarted) };
+    pub fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<EngineStep,InferenceWorkFailure> {
+        let (Some(base), Some(run)) = (self.base.as_ref(), self.run.as_mut()) else {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"geometry engine has no original run").into())};
         let cache = if run.bypass { None } else { Some(&mut self.cache) };
-        let report = infer_field_step::<GeometryInput<'_>, Generation3dGeometry>(&GeometryInput::new(&base.snapshot, Arc::clone(&self.catalogue),Arc::clone(&self.computes)), cache, &mut run.cursor, &mut run.values, fuel).map_err(EngineError::Inference)?;
+        let report = infer_field_step::<GeometryInput<'_>, Generation3dGeometry>(&GeometryInput::new(&base.snapshot,&self.catalogue,self.computes.as_ref()), cache, &mut run.cursor, &mut run.values,cx)?;
         self.totals.computed += report.computed as u64;
         self.totals.hits += report.hits as u64;
         if report.done {
@@ -150,6 +149,12 @@ impl GeometryEngine {
         Ok(EngineStep { done: report.done, fuel_used: report.fuel_used, computed: report.computed, hits: report.hits, completed: run.cursor.completed(), total: run.cursor.total(), fraction: report.progress })
     }
 
+    /// 🪢️ Retains the whole field refusal until the actual caller pays its original envelope handoff.
+    pub fn hold_failure(&mut self,original:InferenceWorkFailure){assert!(self.failure.is_none(),"original geometry engine already retains its field refusal");self.failure=Some(original);}
+    pub fn has_failure(&self)->bool{self.failure.is_some()}
+    pub fn admit_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
+        protocol::admit_inference_failure(&mut self.failure,cx)
+    }
     /// 🛑️ Cancels the run in flight: the in-flight widget job is cancelled and finished widgets stay valid.
     pub fn cancel(&mut self) {
         if let Some(run) = self.run.as_mut() {
@@ -208,6 +213,7 @@ impl GeometryEngine {
 
     /// 🧹️ Closes every owner the engine holds: the run, the retained evaluations, the cache and the retired base snapshot.
     pub fn retire_cold(&mut self) {
+        if self.failure.is_some(){return}
         self.run = None;
         self.previous.clear();
         semio_framework_async::poll::resolve_ready(self.cache.clear());
@@ -218,7 +224,7 @@ impl GeometryEngine {
 
     /// 🧾️ Whether the engine holds no run, no evaluation and no base.
     pub fn terminal_is_empty(&self) -> bool {
-        self.run.is_none() && self.previous.is_empty() && self.base.is_none()
+        self.failure.is_none() && self.run.is_none() && self.previous.is_empty() && self.base.is_none()
     }
 
     /// 📸️ The base snapshot of the current run.

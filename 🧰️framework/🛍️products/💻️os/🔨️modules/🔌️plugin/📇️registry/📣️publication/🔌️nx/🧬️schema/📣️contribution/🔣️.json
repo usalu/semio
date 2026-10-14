@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "publication",
+    "projectRoot",
+    "project",
+    "generateTarget",
+    "inputs"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "publication": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/publication/schema.json"
+    },
+    "projectRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+    },
+    "project": {
+      "type": "string",
+      "pattern": "^@?[a-z0-9]+(?:[a-z0-9/-]*[a-z0-9])?$"
+    },
+    "generateTarget": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "inputs": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+      }
+    }
+  }
+}

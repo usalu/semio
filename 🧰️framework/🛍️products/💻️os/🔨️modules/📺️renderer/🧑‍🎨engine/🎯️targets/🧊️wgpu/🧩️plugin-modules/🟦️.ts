@@ -1,4 +1,4 @@
-import { fetchPackageDescriptor, resolvePluginLoadOrder, type PluginCatalog, type PluginCatalogTarget, type PluginDependency, type PluginPackageDescriptor, type PlaygroundBoot } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { fetchPackageDescriptor, resolvePluginLoadOrder, type PluginCatalog, type PluginCatalogTarget, type PluginDependency, type PluginPackageDescriptor, type PlaygroundBoot, type PackageReceiptSource } from "../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import schema from "../../../🧬️schema/🧩️plugin-modules/🔣️.json";
 
 export { admitWgpuPluginModules, type WgpuPluginModule } from "./🛂️admission/🟦️.ts";
@@ -25,7 +25,7 @@ function descriptorDependencies(descriptor: PluginPackageDescriptor): readonly P
 }
 
 /** 📇️ Reads trusted descriptors in withdrawable turns and restricts the planner to supplied modules. */
-export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: readonly WgpuPluginModule[], options: { readonly signal?: AbortSignal; readonly deadlineMs?: number; readonly now?: () => number; readonly maxDescriptors?: number; readonly readDescriptor?: typeof fetchPackageDescriptor; readonly progress?: (pluginId: string, index: number, count: number) => void; readonly yieldTurn?: () => Promise<void> } = {}): Promise<WgpuPreparedPluginModules> {
+export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: readonly WgpuPluginModule[], receiptSource:PackageReceiptSource, options: { readonly signal?: AbortSignal; readonly deadlineMs?: number; readonly now?: () => number; readonly maxDescriptors?: number; readonly readDescriptor?: typeof fetchPackageDescriptor; readonly progress?: (pluginId: string, index: number, count: number) => void; readonly yieldTurn?: () => Promise<void> } = {}): Promise<WgpuPreparedPluginModules> {
   const now = options.now ?? (() => performance.now());
   const start = now(), deadline = options.deadlineMs ?? start + 30000, maximum = options.maxDescriptors ?? schema.maxItems;
   if (!Number.isFinite(start) || !Number.isFinite(deadline) || deadline > start + 30000 || !Number.isSafeInteger(maximum) || maximum < 0 || maximum > schema.maxItems || modules.length > maximum) return refused("descriptor finite authority");
@@ -47,7 +47,7 @@ export async function prepareWgpuPluginModules(catalog: PluginCatalog, modules: 
     const stopped = new Promise<never>((_, reject) => { withdraw = () => reject(signal.reason); signal.addEventListener("abort", withdraw, { once: true }); });
     let descriptor: PluginPackageDescriptor;
     try {
-      descriptor = await Promise.race([(options.readDescriptor ?? fetchPackageDescriptor)(row.pluginId, row.moduleUrl, signal, () => { check(); options.progress?.(row.pluginId, index, modules.length); }), stopped]);
+      descriptor = await Promise.race([(options.readDescriptor ?? fetchPackageDescriptor)(row.pluginId, row.moduleUrl, receiptSource, signal, () => { check(); options.progress?.(row.pluginId, index, modules.length); }), stopped]);
     } finally { if (withdraw) signal.removeEventListener("abort", withdraw); }
     check();
     if (descriptor.manifest.pluginId !== row.pluginId || typeof descriptor.manifest.version !== "string" || descriptor.manifest.version.length === 0 || descriptor.manifest.version.length > policy.maxVersionLength) return refused("descriptor identity or version");

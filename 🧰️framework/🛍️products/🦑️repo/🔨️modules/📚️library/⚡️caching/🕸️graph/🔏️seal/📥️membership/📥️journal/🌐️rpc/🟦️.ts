@@ -8,7 +8,7 @@ import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️m
 import type { FilesystemJournalScopeV1, FilesystemJournalWitnessV1 } from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
 
 /** 📥️ A closed journal request remains independent of Nx transport envelopes. */
-export type FilesystemJournalRpcRequestV1 = Readonly<{ type: "GET_SEMIO_FILESYSTEM_JOURNAL"; version: 1; scope: FilesystemJournalScopeV1 }>;
+export type FilesystemJournalRpcRequestV1 = Readonly<{ type: "GET_SEMIO_FILESYSTEM_JOURNAL"; version: 1; scope: FilesystemJournalScopeV1; deadlineUnixMilliseconds:number|null }>;
 /** 🔏️ The actual loaded immutable toolkit binds a live witness to its implementation. */
 export type FilesystemJournalRpcResponseV1 = Readonly<{ version: 1; toolingIdentity: string; witness: FilesystemJournalWitnessV1 }> | null;
 const contract = { ...schema, $defs: { ...schema.$defs, ...neutralSchema.$defs } };
@@ -17,6 +17,12 @@ const contract = { ...schema, $defs: { ...schema.$defs, ...neutralSchema.$defs }
 export function readFilesystemJournalRpcRequestV1(value: unknown): FilesystemJournalRpcRequestV1 {
   if (validateJsonSchemaSubset({ ...contract, $ref: "#/$defs/Request" }, value).length) throw Error("Closed filesystem journal request refused");
   return value as FilesystemJournalRpcRequestV1;
+}
+
+/** 🕰️ The transport consumes the exact original wall-clock deadline without renewing it. */
+export function filesystemJournalRpcRemainingMillisecondsV1(request:FilesystemJournalRpcRequestV1,now:number):number|null{
+ if(!Number.isFinite(now))throw Error("Original journal wall clock unavailable");
+ return request.deadlineUnixMilliseconds===null?null:request.deadlineUnixMilliseconds-now;
 }
 
 /** 📤️ Unwraps only witnesses from the caller's actual immutable toolkit. */

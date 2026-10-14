@@ -3,7 +3,7 @@ import sql from"./🗄️.sql"with{type:"text"};
 import type{En1991Snapshot,FloorArea,SelfWeightElement,RoofArea,WindFace}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{SqliteDatabase,SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 export type En1991SqliteFloor=Omit<FloorArea,"area"|"assumedQk"|"assumedQkConcentrated"|"assumedPartitions">&{area:Binary64;assumedQk:Binary64;assumedQkConcentrated:Binary64;assumedPartitions:Binary64};

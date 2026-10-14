@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-graph",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
   "namedInputs": {
     "generatorSources": [
@@ -45,7 +45,7 @@
   },
   "targets": {
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
@@ -57,7 +57,7 @@
       ]
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -68,14 +68,14 @@
       ]
     },
     "check-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check-generated"
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "generate"
       ],
@@ -86,7 +86,7 @@
       }
     },
     "lint": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "generate"
       ],
@@ -97,7 +97,7 @@
     },
     "test-manifest-contract": {
       "metadata": { "semio": { "execution": { "version": 1, "kind": "source" } } },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -107,7 +107,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         "generate"

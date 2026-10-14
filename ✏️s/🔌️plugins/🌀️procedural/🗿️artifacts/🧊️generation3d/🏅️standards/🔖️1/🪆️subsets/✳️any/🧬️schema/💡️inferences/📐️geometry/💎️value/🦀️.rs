@@ -4,14 +4,14 @@ use crate::standards::v1::subsets::any::schema::catalogue::{Localized, Quality, 
 use semio_framework_3d_brep_engine::{BrepError, GeometryKind, ShapeValue};
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d::mesh::HalfedgeMesh;
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::sync::Arc;
 
 pub const FAULT_PREFIX: &str = "generation3d.geometry.";
 
 //#region 🔖️Fault
 /// 🚫️ Why a widget produced no outputs: a stable code, EN+DE text and the input port it concerns.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct WidgetFault {
     pub code: String,
     pub message: Localized,
@@ -88,14 +88,14 @@ impl SelectionKind {
 }
 
 /// 🧲️ Sub-elements of a shape (B-Rep persistent label numbers) or of a mesh (component indices).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct SelectionValue {
     pub component: SelectionKind,
     pub ids: Vec<u64>,
 }
 
 /// 💎️ One value on a widget port.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub enum GeometryValue {
     Number(f64),
     Integer(i64),
@@ -214,7 +214,7 @@ pub fn shape_kind(kind: GeometryKind) -> ShapeKind {
 
 //#region 🔖️Evaluation
 /// 🧮️ Outputs by catalogue output port name.
-pub type Outputs = BTreeMap<String, GeometryValue>;
+pub type Outputs = RetainedOrderedMap<String, GeometryValue>;
 
 /// 🧮️ Builds outputs from `(port, value)` pairs.
 pub fn outputs<const N: usize>(entries: [(&str, GeometryValue); N]) -> Outputs {
@@ -222,7 +222,7 @@ pub fn outputs<const N: usize>(entries: [(&str, GeometryValue); N]) -> Outputs {
 }
 
 /// 📦️ The result of one widget: its outputs, or the fault that left it without, and the fidelity it was computed with.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct WidgetEvaluation {
     pub outputs: Outputs,
     pub fault: Option<WidgetFault>,
@@ -246,3 +246,9 @@ impl WidgetEvaluation {
     }
 }
 //#endregion 🔖️Evaluation
+
+semio_framework_value::artifact_retire_leaf!(PlaneValue, SelectionKind);
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod original_output_tests;

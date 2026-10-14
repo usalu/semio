@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
-import { runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { configuredExactCargoLawPreparationPortV1, configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runExactCargoLaws } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -26,7 +25,7 @@ class TestScript extends BundleScript {
       for(const args of [[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",file],["test",file]])await runBudgetedTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal,throwOnFailure:true});return;
     }
     if(segments[0]==="validation-planning"||segments[0]==="validation-frontier"){
-      await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-3d-brep-queries",target:{kind:"lib"},laws:segments[0]==="validation-frontier"?["original_validation_planning_quotes_actual_backing_before_entity_copy","original_validation_loop_frontier_quotes_source_and_diagnostic_events"]:["original_validation_planning_quotes_actual_backing_before_entity_copy"]}]});return;
+      await runExactCargoLaws({manifestPaths:{"semio-framework-3d-brep-queries":resolve(this.root,"../../📐️brep/💡️queries/📦️packages/🦀️rust/Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,env:{...process.env,CARGO_BUILD_BUILD_DIR:readCargoTestPolicyV1(process.env).buildDirectory},invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,buildBudgetMs()),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-3d-brep-queries",target:{kind:"lib"},laws:segments[0]==="validation-frontier"?["original_validation_planning_quotes_actual_backing_before_entity_copy","original_validation_loop_frontier_quotes_source_and_diagnostic_events","original_validation_topology_frontier_quotes_each_probe_and_utf8_finding","original_validation_same_parameter_retains_scratch_samples_and_one_original_caller"]:["original_validation_planning_quotes_actual_backing_before_entity_copy"]}]},configuredExactCargoLawPreparationPortV1(process.env));return;
     }
     const { rest } = resolveTestLevel(segments);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: SEMIO_FRAMEWORK_3D_PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));

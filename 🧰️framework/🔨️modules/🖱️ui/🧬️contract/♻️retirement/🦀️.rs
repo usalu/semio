@@ -11,7 +11,7 @@ pub(crate) use handback::{UiArenaHandback, UiArenaHandbacks};
 
 #[path = "🌲️built/🦀️.rs"]
 mod built;
-pub use built::BuiltTreeRetirement;
+pub use built::{BuiltTreeRetirement,OriginalBuiltTreeRetirement};
 
 static UI_VALUE_HANDBACKS: UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS> = UiArenaHandbacks::new();
 

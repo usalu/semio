@@ -5,7 +5,7 @@
   "type": "module",
   "bundleKind": "library",
   "scripts": {
-    "test": "bun nx run semio-framework-pixels:test"
+    "test": "bun repo run semio-framework-pixels:test"
   },
   "nx": {
     "includedScripts": []

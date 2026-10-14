@@ -144,8 +144,9 @@ async fn module_app_declares_window_kinds() {
 
 #[semio_framework_async_macros::async_test]
 async fn module_manifest_contributes_building_component() {
+    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
     let bundle = module_extension_bundle();
-    let manifest = bundle.into_manifest_cold().unwrap();
+    let manifest = bundle.into_manifest_cold(&mut cx).unwrap();
     assert_eq!(manifest.topic_contributions.len(), 2);
     let topic = &manifest.topic_contributions[0];
     assert_eq!(topic.topic, "playbook.blockKind");
@@ -153,6 +154,8 @@ async fn module_manifest_contributes_building_component() {
     assert_eq!(topic.payload.get("blockKind").and_then(DslValue::as_str), Some("buildingComponent"));
     assert_eq!(topic.payload.get("paramsBodyKey").and_then(DslValue::as_str), Some(BODY_PARAMS));
     assert_eq!(topic.payload.get("previewBodyKey").and_then(DslValue::as_str), Some(BODY_PREVIEW));
+
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");
 }
 
 #[semio_framework_async_macros::async_test]

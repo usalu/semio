@@ -4,7 +4,7 @@
   "projectType": "library",
   "targets": {
     "test-node-key-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts node-key source",
@@ -13,7 +13,7 @@
       }
     },
     "test-node-key-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts node-key native",

@@ -13,6 +13,14 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
+#[path = "../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs"]
+mod workspace_identity;
+
+/// 🏠️ Admits only a declared package workspace with regular build authority.
+fn is_repository_root(path: &std::path::Path) -> Result<bool, String> {
+    workspace_identity::is_workspace_root(path, |source| semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|value| matches!(value.get("workspaces"), Some(semio_framework_pack_json::Value::Array(_) | semio_framework_pack_json::Value::Object(_)))).map_err(|error| error.to_string()))
+}
+
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue as FromValueTrait;
 use semio_framework_value::ToValue as ToValueTrait;
@@ -5624,9 +5632,9 @@ impl FolderEventLogStorage {
         Ok(event)
     }
 
-    /// 🚫 The repository root is not a document space. An `nx.json` marker means this folder is the git workspace, and writing `.semio/events.semio` there recreates a tracked event log.
+    /// 🚫 The repository root is not a document space. Paired build authority and a package workspace declaration identify this folder as the repository workspace, and writing `.semio/events.semio` there recreates a tracked event log.
     fn refuse_repository_root(&self) -> Result<(), vcs::VcsError> {
-        if self.folder.join("nx.json").is_file() {
+        if is_repository_root(&self.folder).map_err(vcs::VcsError::Backbone)? {
             return Err(vcs::VcsError::Backbone(format!("refusing to write {} at the repository root", self.event_path().display())));
         }
         Ok(())

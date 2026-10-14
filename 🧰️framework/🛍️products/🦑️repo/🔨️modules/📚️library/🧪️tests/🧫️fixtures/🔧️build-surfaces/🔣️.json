@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "scripts": {
+    "repo": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
+    "setup": "bun repo run workspace:setup",
+    "dashboard": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream",
+    "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
+  },
+  "postCreateCommand": [
+    "bun",
+    "repo",
+    "run",
+    "workspace:setup"
+  ],
+  "contexts": [
+    {
+      "environment": {
+        "SEMIO_WORKSPACE_ROOT": "/repo/selected",
+        "REPO_ROOT": "/repo/hint"
+      },
+      "expected": "/repo/selected"
+    },
+    {
+      "environment": {
+        "REPO_ROOT": "/repo/hint"
+      },
+      "expected": "/repo/hint"
+    }
+  ],
+  "editorCommands": [
+    {
+      "labels": {
+        "en": "🛠️ Build Tools · Set Up All",
+        "de": "🛠️ Build-Werkzeuge · Alle Einrichten"
+      },
+      "args": "tools setup all",
+      "group": "0_setup",
+      "order": 20.1
+    },
+    {
+      "labels": {
+        "en": "🛠️ Build Tools · Set Up Nx",
+        "de": "🛠️ Build-Werkzeuge · Nx Einrichten"
+      },
+      "args": "tools setup nx",
+      "group": "0_setup",
+      "order": 20.2
+    },
+    {
+      "labels": {
+        "en": "🛠️ Build Tools · Set Up Bazel",
+        "de": "🛠️ Build-Werkzeuge · Bazel Einrichten"
+      },
+      "args": "tools setup bazel",
+      "group": "0_setup",
+      "order": 20.3
+    },
+    {
+      "labels": {
+        "en": "🕸️ Build Graph · Inspect",
+        "de": "🕸️ Build-Graph · Anzeigen"
+      },
+      "args": "graph",
+      "group": "4_build",
+      "order": 20.4
+    },
+    {
+      "labels": {
+        "en": "🧩️ Build Projects · List",
+        "de": "🧩️ Build-Projekte · Auflisten"
+      },
+      "args": "show projects",
+      "group": "4_build",
+      "order": 20.5
+    },
+    {
+      "labels": {
+        "en": "🎯️ Build Tasks · List",
+        "de": "🎯️ Build-Aufgaben · Auflisten"
+      },
+      "args": "show targets",
+      "group": "4_build",
+      "order": 20.6
+    },
+    {
+      "labels": {
+        "en": "🧪️ Build Tools · Bazel End To End",
+        "de": "🧪️ Build-Werkzeuge · Bazel Vollständig Prüfen"
+      },
+      "args": "run workspace:test-build-tool-bazel --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 20.7
+    },
+    {
+      "labels": {
+        "en": "🧪️ Build Tools · Bazel Bootstrap",
+        "de": "🧪️ Build-Werkzeuge · Bazel Einrichtung Prüfen"
+      },
+      "args": "run workspace:test-build-tool-bazel-bootstrap --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 20.8
+    },
+    {
+      "labels": {
+        "en": "🧪️ Build Interface · Verify",
+        "de": "🧪️ Build-Schnittstelle · Prüfen"
+      },
+      "args": "run @semio-tech/repo-lib:test-build-surfaces --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 20.9
+    },
+    {
+      "labels": {
+        "en": "🧪️ Workspace Identity · All Languages",
+        "de": "🧪️ Workspace-Identität · Alle Sprachen"
+      },
+      "args": "run @semio-tech/framework-process:test-workspace --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 21
+    }
+  ]
+}

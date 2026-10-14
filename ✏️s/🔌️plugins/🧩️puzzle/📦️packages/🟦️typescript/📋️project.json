@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/puzzle-js",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -10,7 +10,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -18,7 +18,7 @@
       }
     },
     "publication-authority-audit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts publication-authority-audit",
@@ -27,7 +27,7 @@
       "outputs": []
     },
     "test-renderer-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/**/*",
         "{workspaceRoot}/🧰️framework/**/*"

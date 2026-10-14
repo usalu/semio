@@ -33,12 +33,14 @@ pub struct AnalyseWork {
     tool_id: &'static str,
     owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     analysis: Option<Analysis>,
+    failure:Option<protocol::InferenceWorkFailure>,
+    read:Option<store::os_store::snapshot_read::SnapshotRead<ModelSnapshot>>,
 }
 
 impl AnalyseWork {
     /// 🏗️ The work of tool `tool_id`.
     pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, owner, analysis: None }
+        Self { tool_id, owner, analysis: None,failure:None,read:None }
     }
 }
 
@@ -47,38 +49,31 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
         self.tool_id
     }
 
+    fn terminal_is_empty(&self)->bool{self.read.is_none()&&self.analysis.is_none()&&self.failure.is_none()}
+
     fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
         (self.analysis.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
-        let original: Result<_, Fault> = (|| {
-        if !matches!(input.command, BimCommand::AnalyseModel(_)) {
-            return Err(Fault::from("bim-analyse-work-mismatch"));
+        if let Some(original)=protocol::admit_inference_failure(&mut self.failure,cx)?{return Err(original)}
+        if self.failure.is_some(){return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-analyse",preview:PREVIEW})}
+        if !matches!(input.command,BimCommand::AnalyseModel(_)){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original BIM analysis command changed").into())}
+        if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-analyse",preview:PREVIEW})}
+        if self.read.is_none(){self.read=input.snapshot_read.take_current(input.operation.generation,input.operation.canonical_base_revision,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-analyse",preview:PREVIEW})}
+        if self.analysis.is_none(){let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-analyse",preview:PREVIEW})}self.analysis=Some(Analysis::new(Some(&self.owner)));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-analyse",preview:PREVIEW})}
+        let snapshot=self.read.as_ref().unwrap().get();let analysis=self.analysis.as_mut().unwrap();if cx.is_cancelled(){analysis.cancel(snapshot)}
+        match analysis.advance(snapshot,cx){
+            Ok(progress)if progress.done=>Ok(ArtifactCommandWorkStep::Complete(Emit::default())),
+            Ok(_)=>{cx.set_stage("bim-analyse");Ok(ArtifactCommandWorkStep::Progress{stage:"bim-analyse",preview:PREVIEW})},
+            Err(original)=>{self.failure=Some(original);Ok(ArtifactCommandWorkStep::Progress{stage:"bim-analyse",preview:PREVIEW})},
         }
-        let analysis = self.analysis.get_or_insert_with(|| Analysis::new(Some(&self.owner), NODES_PER_STEP));
-        if cx.is_cancelled() {
-            analysis.cancel(input.snapshot);
-            return Err(fault("bim.analyse.cancelled", "the analysis was cancelled"));
-        }
-        cx.consume_fuel(1);
-        if analysis.advance(input.snapshot).map_err(ended)?.done {
-            return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
-        }
-        cx.set_stage("bim-analyse");
-        Ok(ArtifactCommandWorkStep::Progress { stage: "bim-analyse", preview: PREVIEW })
-    
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
 /// 🔎️ The synchronous path: the session settled at the document in one go.
 pub fn handle(_payload: &AnalyseModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
-    let mut analysis = Analysis::new(ctx.gestures.as_ref(), usize::MAX);
-    while !analysis.is_done() {
-        analysis.advance(doc.snapshot).map_err(ended)?;
-    }
+    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(ctx.gestures.as_ref(),doc.snapshot,|_|()).map_err(ended)?;
     Ok(Emit::default())
 }
 

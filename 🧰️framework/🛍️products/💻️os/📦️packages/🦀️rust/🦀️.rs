@@ -328,3 +328,6 @@ include!("../../🧪️tests/🔬️standalone/🦀️.rs");
 #[cfg(test)]
 #[path="../../../../🔨️modules/🌱️value/🔁️codec/🧪️tests/♻️retirement/🦀️.rs"]
 mod canonical_intrinsic_retirement_tests;
+
+#[path="../../🔨️modules/🔌️plugin/📇️registry/📥️runtime/🦀️.rs"]
+pub mod native_catalog;

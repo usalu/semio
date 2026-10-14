@@ -15,17 +15,6 @@
       "optLevel": "3"
     }
   ],
-  "platforms": [
-    "linux",
-    "macos",
-    "windows"
-  ],
-  "workspaces": [
-    "Cargo.toml",
-    "🧰️framework/Cargo.toml",
-    "🌎️hub/Cargo.toml",
-    "🎓️teaching/Cargo.toml"
-  ],
   "capacity": {
     "events": [
       "first-held",
@@ -45,13 +34,6 @@
     "source": "#include <iostream>\nint main() { std::cout << \"native-mode-runtime-ok\"; }\n",
     "stdout": "native-mode-runtime-ok"
   },
-  "cmakeEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts",
-  "cppTargets": [
-    "cpp-setup",
-    "cpp-configure",
-    "cpp-build",
-    "cpp-test"
-  ],
   "cargo": {
     "name": "native_mode",
     "source": "fn main() { print!(\"cargo-mode-runtime-ok\"); }",
@@ -63,22 +45,6 @@
     "dotnet": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
     "python": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
     "wheelModule": "🎨️styling/🐍️.py"
-  },
-  "synchronization": {
-    "actions": [
-      "initial",
-      "unchanged",
-      "manifest-changed",
-      "lock-changed",
-      "unrelated-owner"
-    ],
-    "commands": [
-      2,
-      0,
-      2,
-      2,
-      2
-    ]
   },
   "centralProfiles": {
     "prototype": {
@@ -110,7 +76,9 @@
         "--profile",
         "prototype",
         "--config",
-        "/configuration.toml"
+        "/configuration.toml",
+        "--config",
+        "build.build-dir=\"/compiler\""
       ]
     },
     {
@@ -127,15 +95,87 @@
         "--profile",
         "release",
         "--config",
-        "/configuration.toml"
+        "/configuration.toml",
+        "--config",
+        "build.build-dir=\"/compiler\""
       ]
     }
   ],
-  "originalPreparationControl": {
-    "maximumElapsedMilliseconds": 120000,
-    "transport": {
-      "maximumBytes": 1048576,
-      "maximumLines": 65536
+  "deletion": {
+    "entries": [
+      "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🏃️process/🏗️build/🧪️tests/🏗️native/🟦️.ts"
+    ],
+    "refusedOwner": "🧰️framework/🛍️products/",
+    "compilerConfiguration": "[profile.prototype]\ninherits=\"dev\"\nopt-level=0\nincremental=true\nlto=false\ncodegen-units=256\n[profile.release]\nopt-level=3\nincremental=false\nlto=\"thin\"\ncodegen-units=1\n"
+  },
+  "compilerStorageArguments": [
+    {
+      "input": [
+        "rustc",
+        "--",
+        "-C",
+        "opt-level=1"
+      ],
+      "configuration": "/configuration.toml",
+      "buildDirectory": "/compiler",
+      "expected": [
+        "rustc",
+        "--config",
+        "/configuration.toml",
+        "--config",
+        "build.build-dir=\"/compiler\"",
+        "--",
+        "-C",
+        "opt-level=1"
+      ]
+    },
+    {
+      "input": [
+        "build",
+        "--config",
+        "/configuration.toml",
+        "--config",
+        "build.build-dir=\"/foreign\""
+      ],
+      "configuration": "/configuration.toml",
+      "buildDirectory": "/compiler",
+      "expected": [
+        "build",
+        "--config",
+        "/configuration.toml",
+        "--config",
+        "build.build-dir=\"/foreign\"",
+        "--config",
+        "build.build-dir=\"/compiler\""
+      ]
+    },
+    {
+      "input": [
+        "build",
+        "--config=/configuration.toml"
+      ],
+      "configuration": "/configuration.toml",
+      "buildDirectory": "/compiler space/\"quoted\"/back\\slash",
+      "expected": [
+        "build",
+        "--config=/configuration.toml",
+        "--config",
+        "build.build-dir=\"/compiler space/\\\"quoted\\\"/back\\\\slash\""
+      ]
+    },
+    {
+      "input": [
+        "build"
+      ],
+      "configuration": null,
+      "buildDirectory": "/compiler",
+      "expected": [
+        "build",
+        "--config",
+        "build.build-dir=\"/compiler\""
+      ]
     }
-  }
+  ]
 }

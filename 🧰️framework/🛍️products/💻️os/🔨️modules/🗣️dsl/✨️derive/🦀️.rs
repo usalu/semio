@@ -27,15 +27,15 @@ struct MutationSourceAuthority {
 
 type MutationDomainOperations = Vec<(String, String)>;
 
-/// 🧭️ Workspace-relative locator of the taxonomy's generated mutation-source-authority projection (`bun nx run
+/// 🧭️ Workspace-relative locator of the taxonomy's generated mutation-source-authority projection (`bun repo run
 /// @semio-tech/dsl-derive-rs:generate`), the only authority file an expansion reads and tracks, so an edit elsewhere in the taxonomy,
-/// `nx.json` or any `📋️project.json` never invalidates a crate that derives mutations.
+/// `package.json` or any `📋️project.json` never invalidates a crate that derives mutations.
 const MUTATION_AUTHORITY_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json";
 
 /// 🪪️ Schema id the projection must declare (`MutationSourceAuthorityProjectionV1` in `🧬️schema/🔣️.json`).
 const MUTATION_AUTHORITY_SCHEMA: &str = "semio.dsl.mutation-source-authority/v1";
 
-/// 🗂️ Workspace-relative locator of the generated schema-document index (`bun nx run @semio-tech/dsl-derive-rs:generate-schema-index`).
+/// 🗂️ Workspace-relative locator of the generated schema-document index (`bun repo run @semio-tech/dsl-derive-rs:generate-schema-index`).
 const MUTATION_SCHEMA_INDEX_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json";
 
 /// 🪪️ Schema id the index must declare (`MutationSchemaDocumentIndexV1` in `🧬️schema/🔣️.json`).
@@ -73,7 +73,7 @@ fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<Mutat
     let workspace_root = mutation_authority_workspace_root(&source_path)?;
     mutation_authority_no_follow(&workspace_root, &source_path, false)?;
     let taxonomy_path = mutation_authority_locator(&workspace_root, MUTATION_AUTHORITY_LOCATOR)?;
-    mutation_authority_no_follow(&workspace_root, &taxonomy_path, false).map_err(|error| format!("mutation authority projection {MUTATION_AUTHORITY_LOCATOR}: {error}; run bun nx run @semio-tech/dsl-derive-rs:generate"))?;
+    mutation_authority_no_follow(&workspace_root, &taxonomy_path, false).map_err(|error| format!("mutation authority projection {MUTATION_AUTHORITY_LOCATOR}: {error}; run bun repo run @semio-tech/dsl-derive-rs:generate"))?;
     let authority: serde_json::Value = serde_json::from_slice(&crate::compiler_resources::read(&taxonomy_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
     if authority.get("schema").and_then(serde_json::Value::as_str) != Some(MUTATION_AUTHORITY_SCHEMA) { return Err("mutation authority projection declares another schema".to_string()); }
     let source_filename = mutation_authority_segment(&authority, "sourceFilename")?;
@@ -252,22 +252,23 @@ fn mutation_authority_raw_lexical(path: &Path) -> Result<(), String> {
 
 fn mutation_authority_workspace_root(source: &Path) -> Result<PathBuf, String> {
     for ancestor in source.parent().into_iter().flat_map(Path::ancestors) {
-        let nx = ancestor.join("nx.json");
-        let project = ancestor.join("📋️project.json");
-        match mutation_authority_node(&nx) {
+        let package = ancestor.join("package.json");
+        match mutation_authority_node(&package) {
             "missing" => continue,
-            "symlink" => return Err("workspace nx.json marker is a symlink".to_string()),
+            "symlink" => return Err("workspace package.json marker is a symlink".to_string()),
             "file" => {},
-            _ => return Err("workspace nx.json marker is not a regular file".to_string()),
+            _ => return Err("workspace package.json marker is not a regular file".to_string()),
         }
-        match mutation_authority_node(&project) {
+        let package: serde_json::Value = serde_json::from_slice(&fs::read(&package).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
+        if !matches!(package.get("workspaces"), Some(serde_json::Value::Array(_) | serde_json::Value::Object(_))) { continue; }
+        match mutation_authority_node(&ancestor.join("📋️project.json")) {
             "file" => return Ok(ancestor.to_path_buf()),
-            "missing" => return Err("workspace nx.json marker lacks paired 📋️project.json".to_string()),
+            "missing" => return Err("workspace package.json declaration lacks paired 📋️project.json".to_string()),
             "symlink" => return Err("workspace 📋️project.json marker is a symlink".to_string()),
             _ => return Err("workspace 📋️project.json marker is not a regular file".to_string()),
         }
     }
-    Err("source has no exact nx.json and 📋️project.json workspace pair".to_string())
+    Err("source has no exact package workspace declaration and 📋️project.json pair".to_string())
 }
 
 fn mutation_authority_node(path: &Path) -> &'static str {
@@ -763,7 +764,7 @@ fn mutation_schema_document_index(root: &Path) -> Result<std::rc::Rc<BTreeMap<St
     let index = mutation_schema_index(&workspace)?;
     if mutation_schema_example_collection(root) { return Ok(std::rc::Rc::new(BTreeMap::new())); }
     let key = mutation_authority_relative(&workspace, root)?;
-    index.get(&key).cloned().ok_or_else(|| format!("schema document index has no root {key}; run bun nx run @semio-tech/dsl-derive-rs:generate-schema-index"))
+    index.get(&key).cloned().ok_or_else(|| format!("schema document index has no root {key}; run bun repo run @semio-tech/dsl-derive-rs:generate-schema-index"))
 }
 
 type MutationSchemaIndex = BTreeMap<String, std::rc::Rc<BTreeMap<String, PathBuf>>>;
@@ -774,7 +775,7 @@ fn mutation_schema_index(workspace: &Path) -> Result<std::rc::Rc<MutationSchemaI
     thread_local! { static INDEX: std::cell::RefCell<CachedSchemaIndex> = const { std::cell::RefCell::new(None) }; }
     if let Some(cached) = INDEX.with(|current| current.borrow().as_ref().filter(|(root, _)| root == workspace).map(|(_, index)| index.clone())) { return Ok(cached); }
     let path = mutation_authority_locator(workspace, MUTATION_SCHEMA_INDEX_LOCATOR)?;
-    mutation_authority_no_follow(workspace, &path, false).map_err(|error| format!("schema document index {MUTATION_SCHEMA_INDEX_LOCATOR}: {error}; run bun nx run @semio-tech/dsl-derive-rs:generate-schema-index"))?;
+    mutation_authority_no_follow(workspace, &path, false).map_err(|error| format!("schema document index {MUTATION_SCHEMA_INDEX_LOCATOR}: {error}; run bun repo run @semio-tech/dsl-derive-rs:generate-schema-index"))?;
     let raw = crate::compiler_resources::read(&path).map_err(|error| error.to_string())?;
     let parsed = std::rc::Rc::new(parse_mutation_schema_document_index(workspace, &raw)?);
     INDEX.with(|current| *current.borrow_mut() = Some((workspace.to_path_buf(), parsed.clone())));

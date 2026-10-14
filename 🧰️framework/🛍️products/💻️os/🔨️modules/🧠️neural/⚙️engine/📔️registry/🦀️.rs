@@ -13,7 +13,7 @@ use std::sync::atomic::{AtomicUsize,Ordering};
 
 //#region 🔗️SharedOwnership
 struct Shell {address:usize,layout:Layout}
-struct FinalRootSlot {registry:OnceLock<ManuallyDrop<Registry>>,shell:OnceLock<Shell>}
+struct FinalRootSlot {registry:OnceLock<ManuallyDrop<Registry>>,shell:OnceLock<Shell>,registry_bytes:AtomicUsize}
 #[derive(Default)]
 struct ShellAllocator(AtomicUsize);
 impl Clone for ShellAllocator {fn clone(&self)->Self {Self(AtomicUsize::new(self.0.load(Ordering::Acquire)))}}
@@ -26,7 +26,7 @@ type FinalRoot=Arc<FinalRootSlot,ShellAllocator>;
 #[derive(Clone,Copy)]
 struct RegistryAllocator {final_root:usize}
 unsafe impl Allocator for RegistryAllocator {
-    fn allocate(&self,layout:Layout)->Result<NonNull<[u8]>,AllocError> {Global.allocate(layout)}
+    fn allocate(&self,layout:Layout)->Result<NonNull<[u8]>,AllocError> {let allocation=Global.allocate(layout)?;let root=unsafe {&*(self.final_root as*const FinalRootSlot)};root.registry_bytes.store(layout.size(),Ordering::Release);Ok(allocation)}
     unsafe fn deallocate(&self,pointer:NonNull<u8>,layout:Layout) {let root=unsafe {&*(self.final_root as *const FinalRootSlot)};assert!(root.shell.set(Shell {address:pointer.as_ptr()as usize,layout}).is_ok(),"one original registry allocation shell");}
 }
 
@@ -44,7 +44,7 @@ impl SharedRegistry {
     pub fn owner_identity(&self)->RegistryIdentity {RegistryIdentity(Arc::as_ptr(self.root.as_ref().expect("open registry reader")) as usize)}
     /// 🎟️ Creates readers and their unique retirement authority before any shared alias can escape.
     pub fn new(registry: Registry) -> (Self, RegistryRetirement) {
-        let final_root=Arc::new_in(FinalRootSlot {registry:OnceLock::new(),shell:OnceLock::new()},ShellAllocator::default());
+        let final_root=Arc::new_in(FinalRootSlot {registry:OnceLock::new(),shell:OnceLock::new(),registry_bytes:AtomicUsize::new(0)},ShellAllocator::default());
         let retirement=RegistryRetirement {final_root:ManuallyDrop::new(Some(Arc::clone(&final_root))),registry:None};
         let root=Arc::new_in(registry,RegistryAllocator {final_root:Arc::as_ptr(&final_root)as usize});
         (Self { root: Some(root), final_root }, retirement)
@@ -188,3 +188,7 @@ original_retirement_cursor!(OperatorRetirement);
 #[cfg(test)]
 #[path = "🧪️tests/📔️registry/🦀️.rs"]
 pub(crate) mod tests;
+
+#[path="🏗️admission/🦀️.rs"]
+mod admission;
+pub use admission::{SharedRegistryIssuer,SharedRegistryAdmissionStep};

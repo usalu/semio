@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-value",
   "targets": {
     "test-heap-owner": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -13,7 +13,7 @@
       }
     },
     "test-neutral-owner": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test neutral-owner",
         "forwardAllArgs": true,
@@ -28,7 +28,7 @@
       "dependsOn": []
     },
     "test-controlled-construction-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test controlled-construction",
         "forwardAllArgs": true,
@@ -43,7 +43,7 @@
       "dependsOn": []
     },
     "test-shared-unique": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -51,7 +51,7 @@
       }
     },
     "test-dynamic-retained-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -62,7 +62,7 @@
       }
     },
     "test-bulk-vec-retained-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -73,7 +73,7 @@
       }
     },
     "test-uncontrolled-owners-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -84,7 +84,7 @@
       }
     },
     "test-scalar-retained-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

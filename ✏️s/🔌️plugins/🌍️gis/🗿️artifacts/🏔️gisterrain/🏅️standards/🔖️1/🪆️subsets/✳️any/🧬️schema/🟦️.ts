@@ -3,8 +3,8 @@ import { parseSchemaRecord } from "../../../../../../../../../../🧰️framewor
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 export type { ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-import { type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseImportedMap,type ImportedMap} from "./🗺️imported-map/🟦️.ts";
 export {parseImportedMap} from "./🗺️imported-map/🟦️.ts";
 export type {ImportedMap,ImportedFeature} from "./🗺️imported-map/🟦️.ts";

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/assets",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*",
@@ -10,7 +10,7 @@
   },
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
@@ -27,7 +27,7 @@
       ]
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts preview-generated"
@@ -35,14 +35,14 @@
       "outputs": []
     },
     "check-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts check-generated"
       }
     },
     "logo": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts export-logo",
@@ -68,7 +68,7 @@
       ]
     },
     "logo-dev": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun --watch ./📜️script.ts generate-logo",
@@ -93,7 +93,7 @@
       }
     },
     "test-mesh-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -103,7 +103,7 @@
       }
     },
     "test-tile-proxy-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -113,7 +113,7 @@
       }
     },
     "test-dispatch-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -123,7 +123,7 @@
       }
     },
     "test-svg-video-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

@@ -61,14 +61,15 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  pub fn borrowed_constructor_capacity_bytes<X:RetireOwned+Sync>()->usize{constructor_capacity::<X,()>()}
  pub fn borrowed_constructor_copy_bytes<X:RetireOwned+Sync>()->usize{0}
  pub fn borrowed_constructor_demand<X:RetireOwned+Sync>()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:Self::borrowed_constructor_capacity_bytes::<X>(),depth:1}}
- fn admit_with<B:RetireOwned,F>(authority:A,extra:B,project:F,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)> where F:for<'source>FnOnce(&'source A)->&'source T{
+ fn admit_with<B:RetireOwned,F>(authority:A,extra:B,project:F,owned_header:bool,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)> where F:for<'source>FnOnce(&'source A)->&'source T{
   if !A::controlled_retirement_supported()||!B::controlled_retirement_supported(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"source or authority has no controlled typed retirement"),authority,extra));}
   let demand=Self::constructor_demand::<B>();
   if let Err(error)=demand.admit(grant){return Err((error,authority,extra));}
   let copy=Self::constructor_copy_bytes();
   if grant.maximum_copy_bytes<copy{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"source constructor exceeds admitted alias copy"),authority,extra));}
   let birth=match SealedShared::<RetainedCloneLeaseOwner>::prepare_birth(grant){Ok(birth)=>birth,Err(error)=>return Err((error,authority,extra))};
-  let owner=match SealedShared::admit(authority,SharedIssuer::owned(),grant){Ok((owner,_))=>owner,Err((error,authority))=>return Err((error,authority,extra))};
+  let mut issuer=SharedIssuer::owned();if owned_header{issuer.transfer_copy_bytes=|_|0;}
+  let owner=match SealedShared::admit(authority,issuer,grant){Ok((owner,_))=>owner,Err((error,authority))=>return Err((error,authority,extra))};
   let(alias,_)=owner.try_duplicate(grant).unwrap_or_else(|error|unreachable!("admitted source alias refused: {error}"));
   let value=NonNull::from(project(owner.get()));
   let payload=SourcePayload{source:ControlledRetirement::new(alias).unwrap_or_else(|(error,_)|unreachable!("admitted source alias lost its retirement: {error}")),authority:ControlledRetirement::new(extra).unwrap_or_else(|(error,_)|unreachable!("admitted source authority refused: {error}"))};
@@ -100,7 +101,7 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
   if let Some(owner)=self.owner_close.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){*self.owner_close=None;}return Ok(step);}
   RetainedCloneBinding::close_one(&mut self.lease,grant)
  }
- pub fn next_take_copy_byte_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::copy_demand(&self.lease)}else{Ok(size_of::<A>())}}
+ pub fn next_take_copy_byte_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::copy_demand(&self.lease)}else{self.owner.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original source authority is absent")).and_then(|owner|owner.original_transfer_demand().map(|demand|demand.copy_bytes))}}
  pub fn next_take_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::capacity_demand(&self.lease,body)}else{Ok(0)}}
  pub fn next_take_release_byte_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::release_demand(&self.lease)}else{Ok(SealedShared::<A>::birth_bytes())}}
  pub fn next_take_depth_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::depth_demand(&self.lease)}else{Ok(1)}}
@@ -133,12 +134,12 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetireOwned for RetainedCloneSource<T,A>
 impl<T:RetireOwned+Sync> RetainedCloneSource<T,T>{
  /// 🎟️ Moves one original authority and its projection into sealed custody only after one complete constructor grant.
  pub fn admit_borrowed<A:RetireOwned+Sync,F>(authority:A,project:F,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A)> where F:for<'source>FnOnce(&'source A)->&'source T{
-  RetainedCloneSource::<T,A>::admit_with(authority,(),project,grant).map_err(|(error,authority,())|(error,authority))
+  RetainedCloneSource::<T,A>::admit_with(authority,(),project,false,grant).map_err(|(error,authority,())|(error,authority))
  }
 }
 impl<A:RetireOwned+Sync> RetainedCloneSource<A,A>{
  /// 🎟️ Moves the original owner and a distinct authority into sealed custody only after one complete constructor grant.
- pub fn admit_owned<B:RetireOwned>(owner:A,authority:B,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)>{Self::admit_with(owner,authority,identity,grant)}
+ pub fn admit_owned<B:RetireOwned>(owner:A,authority:B,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)>{Self::admit_with(owner,authority,identity,true,grant)}
 }
 
 #[cfg(test)]

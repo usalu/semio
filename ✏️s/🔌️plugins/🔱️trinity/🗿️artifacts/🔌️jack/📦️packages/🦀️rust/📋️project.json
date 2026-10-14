@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/trinity-jack-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -9,7 +9,7 @@
   ],
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -28,7 +28,7 @@
       ]
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -39,7 +39,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -50,7 +50,7 @@
       ]
     },
     "verify-jack-document-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
@@ -67,7 +67,7 @@
       }
     },
     "verify-jack-query-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
@@ -83,8 +83,42 @@
         }
       }
     },
+    "verify-jack-graph-query": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify jack-graph-query",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "jack-graph-query"
+          ]
+        }
+      }
+    },
+    "verify-jack-child-selection": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify jack-child-selection",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "jack-child-selection"
+          ]
+        }
+      }
+    },
     "graph-generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
@@ -104,7 +138,7 @@
       ]
     },
     "graph-wire-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         "graph-generate"
@@ -116,7 +150,7 @@
       "outputs": []
     },
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
@@ -125,7 +159,7 @@
       }
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
@@ -134,7 +168,7 @@
       }
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
@@ -143,7 +177,7 @@
       }
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -152,11 +186,18 @@
       }
     },
     "verify-physical-codecs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts verify physical-codecs"
+      }
+    },
+    "verify-jack-native-composition": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun ./📜️script.ts verify jack-native-composition",
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
       }
     }
   }

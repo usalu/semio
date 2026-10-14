@@ -477,6 +477,8 @@ struct Generation2dFlowEvalWork {
     tool_id: &'static str,
     instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     consumed: bool,
+    receiver:Option<semio_framework_os_flow::FlowEvaluationReplyReceiver>,
+    closing:bool,
 }
 
 impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEvalWork {
@@ -499,15 +501,28 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
         generation2d_preview_target(kind).and_then(|_| generation2d_bounded_extent(command, snapshot, interaction))
     }
 
-    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
+    fn receive_original_command(&mut self,command:&mut Generation2dCommand,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let Generation2dCommand::FlowEvalResolve(payload)=command else{return Ok(true)};if self.receiver.is_some(){return Ok(true)}let g=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||g.maximum_items==0||g.maximum_depth==0{return Ok(false)}
+        if let Some(fault)=payload.fault.take(){cx.consume_fuel(1);let original=semio_framework_job::OriginalTurnFailure::from(fault);let receipt_refusal=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).err();return Err(semio_framework_job::OriginalTurnFailure{receipt_refusal,..original})}
+        if !payload.input_valid{cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation reply routing input is malformed").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}),cx))}
+        let output=std::mem::replace(&mut payload.output,semio_framework_value::DslValue::Null);match semio_framework_os_flow::FlowEvaluationReplyReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((error,source))=>{match source{semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Value(output)=>payload.output=output,semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(error)}}
+    }
+    fn work_demands(&self,input:&ArtifactCommandInputs<'_,EditorApp<Generation2dPlayApp>>,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Generation2dCommand::FlowEvalResolve(payload)=input.command{let receiver=self.receiver.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let target=generation2d_preview_target(&payload.window_kind_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation window kind is unknown"))?;
+            return self.instance_owner.inspect_original::<Generation2dInstanceOperationOwner,_>(|owner|match target{PreviewEvalTarget::Document=>owner.eval_session.as_ref(),PreviewEvalTarget::Generation=>owner.generation_session.as_ref()}.map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original evaluation session is closing")),|session|receiver.next_demands(session,body,&payload.window_id)))?.unwrap_or(Ok(Default::default()))
+        }command_work_step_demands::<EditorApp<Generation2dPlayApp>>(size_of::<Self>())
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        if let Generation2dCommand::FlowEvalResolve(payload)=input.command{
+            if self.consumed||self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original evaluation command work is terminal").into())}let target=generation2d_preview_target(&payload.window_kind_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation window kind is unknown"))?;let receiver=self.receiver.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original evaluation reply was not donated"))?;let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};
+            let received=self.instance_owner.with_mut::<Generation2dInstanceOperationOwner,_>(|owner|{let(mut sessions,link)=owner.parts()?;let result=receiver.step(sessions.get_mut(target),&address,cx);link.wake();Ok(result)})??;
+            if received{self.receiver=None;self.consumed=true;return Ok(ArtifactCommandWorkStep::Complete(Emit::default()))}return Ok(ArtifactCommandWorkStep::Progress{stage:"evaluationReceive",preview:br#"{"en":"Receiving evaluation output","de":"Auswertungsergebnis wird empfangen"}"#})
+        }
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation2d-flow-eval-work-repeated"));
@@ -530,6 +545,13 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
         })();
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
+    fn begin_close(&mut self){self.closing=true;if let Some(receiver)=self.receiver.as_mut(){receiver.begin_close()}}
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.begin_close();if let Some(receiver)=self.receiver.as_mut(){let step=receiver.close_step(cx)?;if receiver.terminal_is_empty(){self.receiver=None;}return Ok(if self.receiver.is_none(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})}Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiver.as_ref().map(|receiver|receiver.next_close_demands(0)).transpose()?.unwrap_or_default().copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiver.as_ref().map(|receiver|receiver.next_close_demands(copy)).transpose()?.unwrap_or_default().capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiver.as_ref().map(|receiver|receiver.next_close_demands(0)).transpose()?.unwrap_or_default().release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.receiver.as_ref().map(|receiver|receiver.next_close_demands(0)).transpose()?.unwrap_or_default().depth)}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.receiver.is_none()}
 }
 
 /// 🪞️ The document a derived view evaluates while a continuous tool transaction is open (design §13, F-7): the committed
@@ -587,11 +609,7 @@ pub(crate) fn generation2d_flow_eval_hop(
             };
             Ok((emit, transient))
         }
-        Generation2dCommand::FlowEvalResolve(payload) => {
-            let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
-            let extension_invocations = crate::preview_eval::resolve_eval(payload, sessions.get_mut(target), doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
-            Ok((Emit { extension_invocations, ..Default::default() }, Vec::new()))
-        }
+        Generation2dCommand::FlowEvalResolve(_) => unreachable!(),
         _ => Err(Fault::from("generation2d-flow-eval-route-rejected")),
     };
     link.wake();
@@ -1736,7 +1754,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         let work: Box<dyn ArtifactCommandWork<EditorApp<Generation2dPlayApp>>> = if contributions {
             Box::new(Generation2dContributionsWork { instance_owner: request.instance_operation_owner, consumed: false })
         } else if GENERATION2D_FLOW_EVAL_TOOL_IDS.contains(&tool_id) {
-            Box::new(Generation2dFlowEvalWork { tool_id, instance_owner: request.instance_operation_owner, consumed: false })
+            Box::new(Generation2dFlowEvalWork { tool_id, instance_owner: request.instance_operation_owner, consumed: false,receiver:None,closing:false })
         } else if GENERATION2D_PREVIEW_TOOL_IDS.contains(&tool_id) {
             Box::new(Generation2dGenerationCommandWork { tool_id, instance_owner: request.instance_operation_owner, consumed: false })
         } else {
@@ -1791,8 +1809,9 @@ impl ArtifactEditor for Generation2dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Generation2dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
-        let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework::Fault>) -> Result<Self::Command, Fault> {
+        let mut original_fault=original_fault;if !matches!(action,"flowEvalResolve"|"flowTessellateResolve"){if let Some(fault)=original_fault.take(){return Err(fault)}}
+        let mut args=args.get_or_insert(semio_framework_value::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
         let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
@@ -1814,6 +1833,20 @@ impl ArtifactEditor for Generation2dPlayApp {
             }
         };
         let pointer_cancelled = || args.get("cancelled").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false);
+        fn original_reply_valid(args:&semio_framework_value::DslValue,tessellate:bool,cancel:bool)->bool{
+            let semio_framework_value::DslValue::Object(rows)=args else{return false};
+            let field=|key:&str|{let mut values=rows.iter().filter(|(name,_)|name==key);let value=values.next().map(|(_,value)|value);if values.next().is_some(){None}else{value}};
+            if !["windowId","windowKindId"].iter().all(|key|field(key).and_then(|value|value.as_str()).is_some_and(|value|!value.is_empty()))||field("output").is_none(){return false}
+            if cancel{return true}
+            if field("nodeHash").and_then(semio_framework_value::DslValue::as_u64).is_none(){return false}
+            if tessellate{return field("handle").and_then(|value|value.as_str()).is_some_and(|value|!value.is_empty())&&field("tolerance").and_then(|value|value.as_f64()).is_some_and(|value|value.is_finite()&&value>0.0)}
+            let extensions=rows.iter().filter(|(key,_)|key=="extensionId").count();extensions==0||(extensions==1&&field("extensionId").and_then(|value|value.as_str()).is_some())
+        }
+        fn original_reply_text(args:&mut semio_framework_value::DslValue,key:&str,required:bool)->Result<String,Fault>{
+            let semio_framework_value::DslValue::Object(rows)=args else{return Err(Fault::from("original reply argument object is absent"))};let Some((_,source))=rows.iter_mut().find(|(name,_)|name==key)else{return if required{Err(Fault::from("original reply text is absent"))}else{Ok(String::new())}};if !matches!(source,semio_framework_value::DslValue::String(_)){return Err(Fault::from("original reply text has another type"))}let semio_framework_value::DslValue::String(value)=std::mem::replace(source,semio_framework_value::DslValue::Null)else{unreachable!()};Ok(value)
+        }
+        fn original_reply_output(args:&mut semio_framework_value::DslValue)->Result<semio_framework_value::DslValue,Fault>{let semio_framework_value::DslValue::Object(rows)=args else{return Err(Fault::from("original reply argument object is absent"))};rows.iter_mut().find(|(key,_)|key=="output").map(|(_,source)|std::mem::replace(source,semio_framework_value::DslValue::Null)).ok_or_else(||Fault::from("original reply output is absent"))}
+
         match action {
             "nodeGraphEdit" => {
                 semio_framework_tool_machine::node_graph_edit_rows(&args).map_err(Fault::from)?;
@@ -1854,16 +1887,13 @@ impl ArtifactEditor for Generation2dPlayApp {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
             })),
-            "flowEvalResolve" => Ok(Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
-                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
-                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
-                node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
-                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
-                extension_id: str_arg(&["extensionId", "extension_id"]).unwrap_or_default(),
-                ok: args.get("ok").and_then(semio_framework_value::DslValue::as_bool).unwrap_or(false),
-                fault_code: str_arg(&["faultCode", "fault_code"]).unwrap_or_default(),
-                fault_message: str_arg(&["faultMessage", "fault_message"]).unwrap_or_default(),
-            })),
+            "flowEvalResolve" => {
+                let input_valid=original_reply_valid(&args,false,false);
+                if !input_valid{return Ok(Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,extension_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();
+                let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let extension_id=original_reply_text(&mut args,"extensionId",false).unwrap();let output=original_reply_output(&mut args).unwrap();
+                Ok(Generation2dCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve{window_id,window_kind_id,node_hash,extension_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+            },
             "setContributions" => Ok(Generation2dCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),
                 page: u64_arg(&["page"]).unwrap_or_default(),
@@ -1975,7 +2005,9 @@ impl ArtifactEditor for Generation2dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW {
             let labels = generation2d_labels(view_state);
             let window_config = generate_preview::config::current(cfg);
@@ -1986,7 +2018,10 @@ impl ArtifactEditor for Generation2dPlayApp {
         owner
             .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation2d_render_body(body_key, doc, cfg, view_state, &marks, session)))
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("generation2d.eval-session-owner", error.message))?
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
     /// 🗂️ The marks-free entry point the framework still offers — every live right-click goes
     /// through `context_menu_with_request_context` instead, so this delegate builds the same menu
     /// against an empty selection.

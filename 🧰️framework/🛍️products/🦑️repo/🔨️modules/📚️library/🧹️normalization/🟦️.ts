@@ -118,8 +118,8 @@ export interface TaxonomyRegeneration {
   readonly id: string;
   readonly contractId: string;
   readonly cwd: string;
-  readonly command: readonly ["bun", "nx", "run", string];
-  readonly verifyCommand?: readonly ["bun", "nx", "run", string];
+  readonly command: readonly ["bun", "repo", "run", string];
+  readonly verifyCommand?: readonly ["bun", "repo", "run", string];
   readonly outputRoots: readonly string[];
   readonly inputs: readonly TaxonomyGeneratorNodeRecord[];
   readonly preOutputs: readonly TaxonomyGeneratorNodeRecord[];
@@ -1300,7 +1300,7 @@ type FixedSpecificity = readonly [literalSegments: number, literalCodePoints: nu
  * first — an unrestricted `path-pattern` scope matches anywhere, while `sibling-fixed-filename-
  * contract` and `fixed-directory-contract` additionally require another already-resolved, more
  * specific contract to independently hold. Two contracts sharing one `pathPattern` (e.g.
- * `node-package-manifest` vs `nx-owned-node-package-manifest`, both `**\/package.json`) previously
+ * `node-package-manifest` vs `build-owned-node-package-manifest`, both `**\/package.json`) previously
  * tied at equal specificity whenever both scopes matched, producing `fixed-contract-ambiguous`; this
  * grades every scope kind distinctly so the narrower one wins deterministically instead. */
 export type FixedContractScopeKind = FixedContractScope["kind"];
@@ -6877,8 +6877,8 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
       }
       const changed = retirements.length > 0 || canonicalJson(preOutputs) !== canonicalJson(outputs) || preview.manifest.staleRemovals.length > 0;
       if (inputMutation || outputMutation || changed) {
-        const command = ["bun", "nx", "run", contract.target!] as const;
-        const verifyCommand = contract.checkTarget ? (["bun", "nx", "run", contract.checkTarget] as const) : undefined;
+        const command = ["bun", "repo", "run", contract.target!] as const;
+        const verifyCommand = contract.checkTarget ? (["bun", "repo", "run", contract.checkTarget] as const) : undefined;
         const provisional = { contractId: id, cwd: contract.ownerPath!, command, verifyCommand, outputRoots: roots, inputs: freshInputs, preOutputs, outputs, preview: preview.manifest, previewManifestDigest: preview.digest, staleRemovals: preview.manifest.staleRemovals };
         regenerations.push({ id: sha256(canonicalJson(provisional)).slice(0, 24), ...provisional });
       }
@@ -7937,8 +7937,8 @@ function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy
   const contract = taxonomy.schema.generatorContracts[regeneration.contractId];
   if (!contract || contract.ownership !== "owned" || !contract.ownerPath || !contract.target || !contract.previewTarget) throw new Error(`Regeneration ${regeneration.id} does not reference an owned generator contract`);
   const roots = contract.outputRoots.map((output) => output.path).sort(generatorPathCompare);
-  if (regeneration.cwd !== contract.ownerPath || canonicalJson(regeneration.command) !== canonicalJson(["bun", "nx", "run", contract.target])) throw new Error(`Regeneration ${regeneration.id} command is not schema-owned`);
-  const expectedVerify = contract.checkTarget ? ["bun", "nx", "run", contract.checkTarget] : undefined;
+  if (regeneration.cwd !== contract.ownerPath || canonicalJson(regeneration.command) !== canonicalJson(["bun", "repo", "run", contract.target])) throw new Error(`Regeneration ${regeneration.id} command is not schema-owned`);
+  const expectedVerify = contract.checkTarget ? ["bun", "repo", "run", contract.checkTarget] : undefined;
   if (canonicalJson(regeneration.verifyCommand) !== canonicalJson(expectedVerify)) throw new Error(`Regeneration ${regeneration.id} verification command is not schema-owned`);
   if (canonicalJson([...regeneration.outputRoots].sort()) !== canonicalJson(roots)) throw new Error(`Regeneration ${regeneration.id} output roots do not match its contract`);
   assertGeneratorNodeRecords(regeneration.preOutputs, roots, `Regeneration ${regeneration.id} preOutputs`);

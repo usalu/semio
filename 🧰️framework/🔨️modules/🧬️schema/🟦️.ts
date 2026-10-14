@@ -53,13 +53,17 @@ export const JSON_SCHEMA_DERIVED_KEY = "x-semio-derived";
 //#endregion 🔖️GraphQlStatePreamble
 
 //#region 🔖️ArtifactCompositionSpec
-/** 🧒 One declared CHILD slot on an artifact snapshot — TS twin of Rust `ChildSlotSpec`. `kind` is a
- * plain canonical artifact kind id string, grammar `s.<plugin>.<artifact>` (e.g. `"s.stdio.mesh"`). */
+/** 🎯️ Exactly one authored serialization kind or consumer behavioral capability. */
+export type ChildSlotSelection = {readonly kind:"artifactKind";readonly id:string}|{readonly kind:"capability";readonly id:string};
+/** 🧒️ Explicitly selected owned child slot; runtime composition admits capability behavior. */
 export type ChildSlotSpec = {
   readonly name: string;
-  readonly kind: string;
+  readonly selection: ChildSlotSelection;
   readonly many: boolean;
 };
+
+/** 🔎️ Concrete slots constrain serialization; capability slots retain runtime admission ownership. */
+export function childSlotAcceptsArtifactKind(selection:ChildSlotSelection,kind:string):boolean{return selection.kind==="capability"||selection.id===kind;}
 
 /** 🔗 One declared LINK slot on an artifact snapshot — TS twin of Rust `LinkSlotSpec`. */
 export type LinkSlotSpec = {
@@ -71,7 +75,7 @@ export type LinkSlotSpec = {
 /** 🔗 Shared GraphQL SDL fragment for CHILD/LINK slots — TS twin of Rust `GRAPHQL_COMPOSITION_PREAMBLE`. */
 export const GRAPHQL_COMPOSITION_PREAMBLE =
   "type ArtifactLink { targetId: String! kind: String! }\n" +
-  "directive @child(kind: String!) on FIELD_DEFINITION\n" +
+  "directive @child(kind: String, capability: String) on FIELD_DEFINITION\n" +
   "directive @link(roles: [String!]) on FIELD_DEFINITION";
 //#endregion 🔖️ArtifactCompositionSpec
 

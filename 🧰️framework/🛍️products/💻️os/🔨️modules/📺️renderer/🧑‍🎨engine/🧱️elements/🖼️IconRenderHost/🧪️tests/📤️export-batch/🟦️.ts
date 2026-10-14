@@ -11,6 +11,12 @@ const fixture = read("🧪️tests/🧫️fixtures/📤️export-batch/🔣️.j
 const queueCases = fixture.queueCases as readonly { name: string; groups: readonly number[]; cancelBeforeGroup: number | null; expected: { admitted: number; failed: number; discarded: number; phase: string } }[];
 
 describe("Icon export batch admission", () => {
+  it("validates the original close's independent backing and zero-work witnesses", () => {
+    const validate = new Ajv2020({ strict: true }).compile(read("🧬️schema/📤️export-request/🎟️original-close.json"));
+    expect(validate(fixture.originalClose)).toBe(true);
+    expect(Buffer.byteLength(fixture.originalClose.text)).toBe(fixture.originalClose.expected.backingBytes);
+    expect({...fixture.originalClose.expected, backingBytes:Buffer.byteLength(fixture.originalClose.text)}).toEqual(fixture.originalClose.expected);
+  });
   
   it("rejects each invalid request independently using the schema oracle", () => {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(read("🧬️schema/📤️export-request/🔣️.json"));

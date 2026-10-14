@@ -44,7 +44,7 @@ fn geometry_compute_context_admits_every_catalogue_kind() {
 fn a_kind_without_a_compute_answers_with_a_localized_compute_missing_fault() {
     let Some(id) = missing_kinds(catalogue()).first().copied() else { return };
     let kind = catalogue().kind(id).expect("a missing kind is catalogued");
-    let mut job = start(kind, WidgetInputs::new("w", kind, Default::default()));
+    let mut job = start(kind, WidgetInputs::new_cold("w", kind, Default::default()));
     let WidgetStep::Done(evaluation) = job.step(1) else { panic!("a missing compute is already finished") };
     let fault = evaluation.fault.expect("no compute is a fault");
     assert_eq!(fault.code, format!("{FAULT_PREFIX}compute-missing"));
@@ -69,7 +69,7 @@ fn every_registered_compute_with_default_inputs_honours_the_output_contract_or_f
         let checked = contract_checked(kind, evaluation);
         match &checked.fault {
             Some(fault) => assert!(localized(fault), "{id}: {fault}"),
-            None => assert_eq!(checked.outputs.keys().map(String::as_str).collect::<BTreeSet<_>>(), kind.outputs.iter().map(|port| port.name.as_str()).collect::<BTreeSet<_>>(), "{id}"),
+            None => assert_eq!(checked.outputs.iter().map(|(port, _)| port).map(String::as_str).collect::<BTreeSet<_>>(), kind.outputs.iter().map(|port| port.name.as_str()).collect::<BTreeSet<_>>(), "{id}"),
         }
     }
 }

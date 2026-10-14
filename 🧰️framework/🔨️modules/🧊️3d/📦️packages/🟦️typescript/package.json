@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-3d-js",
   "version": "0.1.0",
   "description": "3d kernel WASM bridge and mesh contracts.",
@@ -9,7 +9,7 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework-3d-js:test"
+    "test": "bun repo run @semio-tech/framework-3d-js:test"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

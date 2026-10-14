@@ -1,0 +1,10 @@
+{
+  "graph":{"version":1,"projects":{
+    "library":{"name":"library","root":"library","targets":{"build":{"execution":{"kind":"noop"},"cache":true}}},
+    "app":{"name":"app","root":"app","targets":{"prepare":{"execution":{"kind":"noop"}},"build":{"execution":{"kind":"command","command":"bun ./📜️script.ts build"},"dependsOn":["^build","prepare"],"cache":true},"test":{"execution":{"kind":"noop"},"dependsOn":[{"target":"build","projects":"self","params":"forward"}]}}}
+  },"dependencies":[{"source":"app","target":"library","type":"static"}]},
+  "request":{"tasks":["app:test"],"args":["--seed=7"]},
+  "expected":{"selected":["app:test"],"dependencies":{"app:test":["app:build"],"app:build":["app:prepare","library:build"],"app:prepare":[],"library:build":[]},"args":{"app:test":["--seed=7"],"app:build":["--seed=7"],"app:prepare":[],"library:build":[]}},
+  "sourceIdentity":{"target":"target.txt","link":"source.txt","contents":["first","second"],"directory":"tree","cycle":"loop"},
+  "runtime":{"sourceCases":[{"source":"first","output":"FIRST","executions":1},{"source":"second","output":"SECOND","executions":2}],"nestedExecutions":2,"uncachedExecutions":4,"launchExecutions":5,"serviceExecutions":6}
+}

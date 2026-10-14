@@ -1,5 +1,5 @@
 /** 🔢️ Literal DWG numeric fields retain exact binary64 words and native SQL classes. */
-import {parseBinary64,binary64Value,binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,binary64Value,binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { sqliteValueByteLength,type SqliteValue,type SqliteRow } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import { artifactSqliteValueBudget,ArtifactSqliteProjection,artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 

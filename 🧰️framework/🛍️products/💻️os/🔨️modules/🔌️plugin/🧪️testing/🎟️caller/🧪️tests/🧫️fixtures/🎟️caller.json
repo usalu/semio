@@ -18,5 +18,6 @@
     "maximumCapacityBytes": 262144,
     "maximumReleaseBytes": 1048576,
     "maximumDepth": 4096
-  }
+  },
+  "sourceKind": "original-parent"
 }

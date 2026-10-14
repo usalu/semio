@@ -141,13 +141,14 @@ fn temp_root(name: &str) -> std::path::PathBuf {
 }
 
 fn generated_dir_under(root: &std::path::Path) -> std::path::PathBuf {
-    root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")
+    root.join("catalog")
 }
 
 #[test]
 fn playgrounds_json_text_falls_back_to_empty_array_when_missing() {
     let root = temp_root("json-text-missing");
-    assert_eq!(playgrounds_json_text(&root), "[]\n");
+    assert_eq!(crate::catalog::playgrounds_json_text_from_catalog(None).unwrap(), "[]\n");
+    assert!(crate::catalog::playgrounds_json_text_from_catalog(Some(&root)).is_err());
     std::fs::remove_dir_all(&root).ok();
 }
 
@@ -157,7 +158,7 @@ fn playgrounds_json_text_passes_generated_content_through_verbatim() {
     let out = generated_dir_under(&root);
     std::fs::create_dir_all(&out).unwrap();
     std::fs::write(out.join("🚀️playgrounds.json"), "[{\"variant\":\"x\"}]\n").unwrap();
-    assert_eq!(playgrounds_json_text(&root), "[{\"variant\":\"x\"}]\n");
+    assert_eq!(crate::catalog::playgrounds_json_text_from_catalog(Some(&out)).unwrap(), "[{\"variant\":\"x\"}]\n");
     std::fs::remove_dir_all(&root).ok();
 }
 //#endregion 🔖️CatalogConsumer

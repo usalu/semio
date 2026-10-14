@@ -269,25 +269,13 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
 /// do not re-estimate, if a larger plugin trips it.
 const DESCRIBE_FUEL_BUDGET: u64 = 32_000_000_000;
 
-/// ⏳️ How long `describe()` may make NO fuel progress at all before the build gives up. It is a
-/// stall bound, not a total-runtime bound — `OwnedDeadline::NoFuelProgress`, which
-/// `OwnedRuntime::describe_observed` selects — and the independent fuel cap above remains the
-/// deterministic runaway bound.
-///
-/// 🐛️ It used to bound TOTAL wall time, and that made a build's success a function of how busy the
-/// machine was. Measured 2026-09-21 (slice CE2): the same `🗒️note` guest described at 1 320 k
-/// fuel/s at 20:36 and at 520 k fuel/s at 22:10 under a full agent fleet; at the ≈ 210 k fuel/s the
-/// owned interpreter sustains when saturated, thirty minutes buys only ≈ 380 M of the 8 G budget.
-/// `🀄️wfc` died `DeadlineExceeded` at 373 368 646 fuel — 4.6 % of its budget, at a flat rate with no
-/// degradation across the whole run — and `🧩️puzzle` at 5 186 253 150, both while progressing
-/// normally. A guest that is genuinely wedged still dies here, because a wedged guest consumes no
-/// fuel.
+/// ⏳️ The descriptor tool root authors one absolute microsecond deadline from this duration and its program clock.
 const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 
 /// 🎟️ The one fixed turn a descriptor emission runs under: a describe call retains nothing, so its five-axis grant stays small and explicit.
 fn describe_budget() -> semio_framework::kernel::Budget {
     let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 8 };
-    semio_framework::kernel::Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant }, fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    semio_framework::kernel::Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant }, fuel: DESCRIBE_FUEL_BUDGET, deadline_us: semio_framework_job::default_now_us().expect("descriptor root clock is available").checked_add(u64::from(DESCRIBE_DEADLINE_MS)*1_000).expect("descriptor deadline fits the original clock"), max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
 /// 🛡️ Ceiling for the one artifact the emitter reads: a `wasm32-wasip2` component built either as the
@@ -436,7 +424,7 @@ async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<V
 async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<(Vec<u8>, OwnedRuntime, OwnedCompiledGuest), DescribeError> {
     let started = std::time::Instant::now();
     eprintln!("[describe] owned phase=compile bytes={} elapsed_ms=0", wasm_bytes.len());
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(wasm_bytes).map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", source.display())))?;
     eprintln!("[describe] owned phase=execute fuel=0 elapsed_ms={}", started.elapsed().as_millis());
     let descriptor = runtime
@@ -606,7 +594,7 @@ pub struct ComponentCodecRows {
 /// every other fault is an error.
 pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) -> Result<ComponentCodecRows, DescribeError> {
     let (wasm_bytes, _) = read_artifact(wasm_path, "raw component")?;
-    let runtime = OwnedRuntime::new();
+    let runtime = OwnedRuntime::new(semio_framework_job::default_now_us);
     let compiled = runtime.compile_component(&wasm_bytes).map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", wasm_path.display())))?;
     let budget = describe_budget();
     let mut rows = ComponentCodecRows { owned: Vec::with_capacity(pairs.len()), unowned: Vec::new() };

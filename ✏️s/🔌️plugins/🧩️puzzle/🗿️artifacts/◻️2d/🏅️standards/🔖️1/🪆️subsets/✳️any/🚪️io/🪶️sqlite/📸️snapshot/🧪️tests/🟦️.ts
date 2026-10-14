@@ -10,7 +10,7 @@ import fixture from"./🧫️fixtures/🔣️.json";
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type{ArtifactSqliteOptions}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 type Handle=Omit<owner.Puzzle2dHandle,"angle"|"radius"|"scale">&{angle:Binary64;radius?:Binary64;scale?:Binary64};

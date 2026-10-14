@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/stdio-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/**/*.rs",
@@ -9,7 +9,7 @@
   },
   "targets": {
     "artifact-directory-wiring-generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts artifact-directory-wiring generate jpg"
@@ -17,7 +17,7 @@
       "cache": false
     },
     "artifact-directory-wiring-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts artifact-directory-wiring check jpg"
@@ -25,7 +25,7 @@
       "outputs": []
     },
     "subset-directory-wiring-generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts subset-directory-wiring generate semio mesh"
@@ -33,7 +33,7 @@
       "cache": false
     },
     "subset-directory-wiring-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts subset-directory-wiring check semio mesh"
@@ -41,7 +41,7 @@
       "outputs": []
     },
     "flow-retained-decode-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts flow-retained-decode-check",
@@ -50,7 +50,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -58,7 +58,7 @@
       }
     },
     "native-codec-projection": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
@@ -72,7 +72,7 @@
       ]
     },
     "catalog-root": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts catalog-root",
@@ -81,7 +81,7 @@
       "cache": false
     },
     "home-io-surface-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts home-io-surface source"
@@ -89,7 +89,7 @@
       "outputs": []
     },
     "home-io-surface-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts home-io-surface native"
@@ -97,7 +97,7 @@
       "outputs": []
     },
     "editor-component-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts editor-component-check",
@@ -106,7 +106,7 @@
       "cache": false
     },
     "test-snapshot-sqlite-census-all": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite census all",
@@ -114,7 +114,7 @@
       }
     },
     "check-snapshot-sqlite-census-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite census check",
@@ -122,7 +122,7 @@
       }
     },
     "test-snapshot-sqlite-census-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite census source",
@@ -130,7 +130,7 @@
       }
     },
     "test-snapshot-sqlite-census": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite census",
@@ -138,7 +138,7 @@
       }
     },
     "test-snapshot-sqlite-catalog-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite catalog-contract",
@@ -146,7 +146,7 @@
       }
     },
     "test-snapshot-sqlite-catalog": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite catalog",
@@ -154,7 +154,7 @@
       }
     },
     "test-snapshot-sqlite-foundation": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite foundation",
@@ -162,7 +162,7 @@
       }
     },
     "test-snapshot-sqlite-geometry": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite geometry",
@@ -170,7 +170,7 @@
       }
     },
     "test-snapshot-sqlite-archives": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite archives",
@@ -178,7 +178,7 @@
       }
     },
     "test-snapshot-sqlite-archives-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite archives source",
@@ -186,7 +186,7 @@
       }
     },
     "test-snapshot-sqlite-gif": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite gif",
@@ -194,7 +194,7 @@
       }
     },
     "test-snapshot-sqlite-gif-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite gif source",
@@ -202,7 +202,7 @@
       }
     },
     "test-snapshot-sqlite-wav": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite wav",
@@ -210,7 +210,7 @@
       }
     },
     "test-snapshot-sqlite-wav-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite wav source",
@@ -218,7 +218,7 @@
       }
     },
     "test-snapshot-sqlite-jpg": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite jpg",
@@ -226,7 +226,7 @@
       }
     },
     "test-snapshot-sqlite-jpg-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite jpg source",
@@ -234,7 +234,7 @@
       }
     },
     "test-snapshot-sqlite-md": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite md",
@@ -242,7 +242,7 @@
       }
     },
     "test-snapshot-sqlite-md-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite md source",
@@ -250,7 +250,7 @@
       }
     },
     "test-snapshot-sqlite-mp3": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite mp3",
@@ -258,7 +258,7 @@
       }
     },
     "test-snapshot-sqlite-mp3-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite mp3 native",
@@ -266,7 +266,7 @@
       }
     },
     "test-snapshot-sqlite-mp3-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite mp3 source",
@@ -274,7 +274,7 @@
       }
     },
     "test-snapshot-sqlite-semio": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite semio",
@@ -282,7 +282,7 @@
       }
     },
     "test-snapshot-sqlite-semio-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite semio source",
@@ -290,7 +290,7 @@
       }
     },
     "test-snapshot-sqlite-tiff": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite tiff",
@@ -298,7 +298,7 @@
       }
     },
     "test-snapshot-sqlite-tiff-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite tiff source",
@@ -306,7 +306,7 @@
       }
     },
     "test-snapshot-sqlite-images": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite images",
@@ -314,7 +314,7 @@
       }
     },
     "test-snapshot-sqlite-images-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts snapshot-sqlite images source",
@@ -322,7 +322,7 @@
       }
     },
     "composition-prepare": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
@@ -331,7 +331,7 @@
       }
     },
     "parent-removal-test-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
@@ -340,7 +340,7 @@
       }
     },
     "parent-removal-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
@@ -349,7 +349,7 @@
       }
     },
     "mutation-inventory": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",

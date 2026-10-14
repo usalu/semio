@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/draw-js",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -12,7 +12,7 @@
       "cache": false
     },
     "publication-authority-audit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts publication-authority-audit",
@@ -21,7 +21,7 @@
       "outputs": []
     },
     "utility-action-policy": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🖍️draw/📦️packages/🟦️typescript",

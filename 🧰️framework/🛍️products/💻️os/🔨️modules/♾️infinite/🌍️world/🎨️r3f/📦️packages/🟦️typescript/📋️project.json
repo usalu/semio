@@ -1,12 +1,12 @@
 {
   "name": "@semio-tech/infinite-world-r3f",
-  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

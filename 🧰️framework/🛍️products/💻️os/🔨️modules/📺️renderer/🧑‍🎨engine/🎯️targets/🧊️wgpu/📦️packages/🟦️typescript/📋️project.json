@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-renderer-wgpu",
-  "$schema": "../../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
   "projectType": "library",
   "namedInputs": {
@@ -219,7 +219,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -233,7 +233,7 @@
       ]
     },
     "test-socket-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -248,7 +248,7 @@
       ]
     },
     "test-socket-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -263,7 +263,7 @@
       ]
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-native",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
@@ -278,7 +278,7 @@
       ]
     },
     "test-wgpu-unit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-wgpu-unit",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
@@ -293,7 +293,7 @@
       ]
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts canonical-architecture",
@@ -301,7 +301,7 @@
       }
     },
     "test-media-slots": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-media-slots",
@@ -316,7 +316,7 @@
       ]
     },
     "directory-retained-home-bootstrap-source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts directory-retained-home-bootstrap-source-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -324,7 +324,7 @@
       "outputs": []
     },
     "directory-retained-home-bootstrap-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts directory-retained-home-bootstrap-native-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -332,7 +332,7 @@
       "outputs": []
     },
     "normalized-presence-rows-source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts normalized-presence-rows-source-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -340,7 +340,7 @@
       "outputs": []
     },
     "normalized-presence-rows-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts normalized-presence-rows-native-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -348,7 +348,7 @@
       "outputs": []
     },
     "browser-dock-acceptance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default",
@@ -370,7 +370,7 @@
       }
     },
     "browser-media-acceptance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -380,7 +380,7 @@
       }
     },
     "test-browser": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "default",
         "browserBootSources",
@@ -397,7 +397,7 @@
       }
     },
     "test-browser-worker": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-browser-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -411,7 +411,7 @@
       ]
     },
     "test-preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -425,7 +425,7 @@
       ]
     },
     "check-browser-worker": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts check-browser-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -444,7 +444,7 @@
       ]
     },
     "generate-browser-boot": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "browserBootSources",
@@ -482,7 +482,15 @@
       }
     },
     "generate-frame-worker": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
       "cache": true,
       "inputs": [
         "frameWorkerSources",
@@ -511,7 +519,7 @@
       ]
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts preview-generated",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -519,7 +527,7 @@
       "outputs": []
     },
     "lockfile-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -529,14 +537,14 @@
       }
     },
     "check-frame-worker": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts check-frame-worker",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       }
     },
     "check-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "nativeSources",
@@ -556,7 +564,7 @@
       }
     },
     "wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "nativeSources",
@@ -598,7 +606,7 @@
       "defaultConfiguration": "prototype"
     },
     "native-environment-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts native-environment-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -606,7 +614,7 @@
       "outputs": []
     },
     "native-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -644,14 +652,14 @@
       "defaultConfiguration": "prototype"
     },
     "lint": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts lint",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
       }
     },
     "native-scale": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -688,7 +696,7 @@
       "defaultConfiguration": "prototype"
     },
     "generate-renderer-boot": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "browserBootSources",
@@ -726,7 +734,7 @@
       }
     },
     "browser-embedded-acceptance": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "inputs": [
@@ -743,7 +751,7 @@
       }
     },
     "check-boot-cache-inputs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [],
       "options": {
@@ -752,7 +760,7 @@
       }
     },
     "test-worker-cell": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -770,7 +778,7 @@
       }
     },
     "test-worker-receiving-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-worker-receiving-source",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -785,7 +793,7 @@
       "cache": false
     },
     "test-original-frame-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-original-frame-source",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"
@@ -793,7 +801,7 @@
       "cache": false
     },
     "test-native-entrypoint-catalog": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -806,6 +814,22 @@
             "kind": "source"
           }
         }
+      }
+    },
+    "test-original-browser-output-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-original-browser-output-source"
+      }
+    },
+    "test-original-browser-output-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-original-browser-output-native"
       }
     }
   },

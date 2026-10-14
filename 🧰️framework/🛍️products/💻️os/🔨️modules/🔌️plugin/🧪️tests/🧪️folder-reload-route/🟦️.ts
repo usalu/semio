@@ -52,6 +52,12 @@ function assertEdit(edit: Edit): void {
   else assert.ok(edit.kind === "setLabel" && typeof edit.value === "string", "a label edit carries text");
 }
 
+/** ✏️ Carries the original edit kind into its checked replacement value. */
+function replaceEditValue(edit:Edit,value:unknown):Edit{
+ if(edit.kind==="setCount"){assert.ok(typeof value==="number"&&Number.isInteger(value));return{kind:edit.kind,value}}
+ assert.ok(typeof value==="string");return{kind:edit.kind,value};
+}
+
 /** ✅️ A finalize selects an overwrite or a named alternative. */
 function assertCommit(commit: unknown): asserts commit is { choice?: "overwrite"; name?: string } {
   assert.ok(commit !== null && typeof commit === "object", "a finalize selects a choice");
@@ -106,7 +112,7 @@ export function walkAuthor(steps: readonly Step[]): Readonly<{ edits: readonly E
       draft = { target, replacement: edits[target]! };
     } else if (name === "input") {
       assert.ok(draft !== null, "an input drafts an open session");
-      draft = { target: draft.target, replacement: { ...draft.replacement, value: (argument as { value: unknown }).value } as Edit };
+      draft = { target: draft.target, replacement: replaceEditValue(draft.replacement,(argument as {value:unknown}).value) };
     } else if (name === "commit") {
       assert.ok(draft !== null, "a commit finalizes an open session");
       assertCommit(argument);

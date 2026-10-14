@@ -1,3 +1,4 @@
+const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not request a package receipt");}};
 import { devServeCommandV1 } from "../../../../🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
 import graphlib from "graphlib";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
@@ -65,7 +66,7 @@ describe("catalog worker receiving laws", () => {
   for (const row of fixture.emptyPlans) test(`empty plan ${row.selection}`, async () => {
     const catalog = pluginCatalogV1(admitPluginCatalogV1(fixture.cases[0]!.input, authority()));
     let reads = 0;
-    const prepared = await prepareWgpuPluginModules(catalog, [], { readDescriptor: async () => { reads++; throw new Error("empty inventory read descriptor"); } });
+    const prepared = await prepareWgpuPluginModules(catalog, [], authoredReceiptSource, { readDescriptor: async () => { reads++; throw new Error("empty inventory read descriptor"); } });
     const plan = resolvePlaygroundBoot(catalog, row.variant);
     let accepted = true;
     try { assertWgpuPluginPlan(plan, prepared, row.selection as "all" | "variant"); } catch { accepted = false; }
@@ -75,7 +76,7 @@ describe("catalog worker receiving laws", () => {
   test("descriptor admission deadline is checked before fetch", async () => {
     const catalog = pluginCatalogV1(admitPluginCatalogV1(fixture.cases[0]!.input, authority()));
     let reads = 0;
-    await expect(prepareWgpuPluginModules(catalog, [{ pluginId: "custom.core", moduleUrl: "https://example.test/core.js" }], { deadlineMs: 0, now: () => 0, readDescriptor: async () => { reads++; throw new Error("unexpected fetch"); } })).rejects.toThrow("deadline");
+    await expect(prepareWgpuPluginModules(catalog, [{ pluginId: "custom.core", moduleUrl: "https://example.test/core.js" }], authoredReceiptSource, { deadlineMs: 0, now: () => 0, readDescriptor: async () => { reads++; throw new Error("unexpected fetch"); } })).rejects.toThrow("deadline");
     expect(reads).toBe(0);
   });
 });

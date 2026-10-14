@@ -732,7 +732,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
 /// 🪪️ Per-invocation runtime metadata handed to the object-safe {@link PluginApp} — the local
 /// actor id, the instance id used to stamp operation handles, and optional host view context.
 /// Headless operations have no view; UI actions carry the addressed concrete window's projection.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned)]
 pub struct ActionMeta {
     pub actor: semio_framework_value::SharedUtf8,
     pub instance_id: u32,

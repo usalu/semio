@@ -9,7 +9,7 @@ import controls from"./🧫️fixtures/🎛️control.json";
 import words from"./🧫️fixtures/🔢️binary64.json";
 import choices from"./🧫️fixtures/🛂️choices.json";
 import { DIN16798_SQLITE_SCHEMA, din16798SnapshotToSqliteDatabase, din16798SnapshotFromSqliteDatabase, type Din16798SqliteSnapshot } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 test("DIN16798 complete neutral snapshot agrees with independent JSON schema",()=>{expect(new Ajv({strict:false}).validate(schema,fixture)).toBe(true)});
 test("DIN16798 owning facade exposes both semantic SQLite directions",()=>{expect(Object.hasOwn(sqliteOwner,"din16798SnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"din16798SnapshotFromSqliteDatabase")).toBe(true)});

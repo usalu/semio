@@ -39,9 +39,9 @@ targets.
 cd "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript"
 bun ./📜️script.ts test quick              # the TypeScript core
 
-bun nx run @semio-tech/quiz:test           # the same through nx
-bun nx run @semio-tech/quiz-rs:test        # the Rust core
-bun nx run @semio-tech/quiz-react:test     # the renderer
+bun repo run @semio-tech/quiz:test           # the same through nx
+bun repo run @semio-tech/quiz-rs:test        # the Rust core
+bun repo run @semio-tech/quiz-react:test     # the renderer
 ```
 
 ## Domain model

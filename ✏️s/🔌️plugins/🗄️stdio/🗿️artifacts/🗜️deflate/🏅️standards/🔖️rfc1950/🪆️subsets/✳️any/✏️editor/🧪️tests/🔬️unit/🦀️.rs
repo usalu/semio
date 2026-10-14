@@ -41,10 +41,10 @@ async fn parse_header_summary_rejects_a_missing_required_field() {
 
 #[test]
 fn text_edit_requires_source_text_and_rejects_out_of_schema_headers_atomically() {
-    assert!(<DeflateEditor as ArtifactEditor>::command_from_action("textEdit", None).is_err());
+    assert!(<DeflateEditor as ArtifactEditor>::command_from_action("textEdit", None, None).is_err());
     let text = "method=8\nwindowBits=255\nlevelHint=default\npresetDictionary=none";
     let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(text.into()))]);
-    let command = <DeflateEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("complete text argument");
+    let command = <DeflateEditor as ArtifactEditor>::command_from_action("textEdit", Some((args).clone()), None).expect("complete text argument");
     assert!(deflate_text_emit(&command, &DeflateSnapshot::default()).is_err());
 }
 
@@ -55,7 +55,7 @@ fn an_applied_summary_is_only_the_header_leaves_it_changed() {
     let base = DeflateSnapshot::default();
     let emit = |text: &str| {
         let args = semio_framework_value::DslValue::object([("text".into(), semio_framework_value::DslValue::String(text.into()))]);
-        let command = <DeflateEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("complete text argument");
+        let command = <DeflateEditor as ArtifactEditor>::command_from_action("textEdit", Some((args).clone()), None).expect("complete text argument");
         deflate_text_emit(&command, &base).expect("a valid summary")
     };
     let unchanged = emit("method=8\nwindowBits=7\nlevelHint=default\npresetDictionary=none");

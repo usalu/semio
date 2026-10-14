@@ -1,5 +1,5 @@
 //#region 🧬️Contract
-import { NumericIndex, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexGrant } from "../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import { NumericIndex, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexGrant } from "../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { AccessibilitySpec, ActionBinding, Component, PatchRejection, UiContractViolation, UiDocumentLimits, UiNodeRecord, UiPatch, UiPatchOp, UiSnapshot } from "../../../🛂️manifest/🟦️.ts";
 import { retainedUiGraphValidation, closeRetainedUiGraphFrame, type RetainedUiGraphFrontier } from "./🛡️validation/🔬️graph/🟦️.ts";
 

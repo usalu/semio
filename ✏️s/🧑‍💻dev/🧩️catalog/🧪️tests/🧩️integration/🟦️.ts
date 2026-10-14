@@ -3,14 +3,14 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
 import { auditPluginCatalogSources, auditNavbarExamplePickerCoverage, auditNavbarExampleArtifactPayload } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../🧰️framework/🔨️modules/🛂️manifest/🟦️.ts";
 import { installedScope, sourceDeploymentOwnersV1 } from "../🧩️scope/🟦️.ts";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-const composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
+const composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
 const catalog = composition.catalog;
 describe("Specific original catalog completion", () => {
   it("independently enumerates every current deployed source identity and verifies each committed descriptor pair", async () => {
@@ -99,7 +99,7 @@ describe("Specific original catalog completion", () => {
   });
 
   it("resolves a non-empty, dependency-fault-free boot plan for every admitted installed playground variant — the wgpu frame Worker resolves this graph itself at boot, so an empty plan is a dead playground", () => {
-    const deployed = readGeneratedCatalogProjection(join(getWorkspaceRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated"));
+    const deployed = readGeneratedCatalogProjection(join(getWorkspaceRoot(), "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"));
     expect(composition.rows.targets.map(row => row.pluginId).sort()).toEqual([...installedScope.installedTargetIds].sort());
     expect(composition.rows.playgrounds.map(row => row.variant).sort()).toEqual([...installedScope.installedVariants].sort());
     expect(composition.rows.playgrounds.map(row => row.variant).sort()).toEqual(deployed.playgrounds.map(row => row.variant).sort());
@@ -110,7 +110,7 @@ describe("Specific original catalog completion", () => {
     const installed = new Set(composition.rows.targets.map(row => row.pluginId));
     for (const row of PLAYGROUND_BUILD_TARGETS.filter(row => !installed.has(row.pluginId))) {
       const operation = new AbortController();
-      expect(() => resolveFrameworkOsCatalogConfigurationV1(composition.rows, row.variant, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] withheld ${row.variant} ${event.completed}/${event.total}`) }), row.variant).toThrow();
+      expect(() => resolveFrameworkOsCatalogConfigurationV1(composition.rows, row.variant, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] withheld ${row.variant} ${event.completed}/${event.total}`) }), row.variant).toThrow();
     }
   });
 

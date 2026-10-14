@@ -115,8 +115,8 @@ macro_rules! factory {
             type Open = crate::os_store::UnsupportedMemberFactoryOpen<Self>;
             fn open_birth_demand(request: &crate::os_store::MemberOpenRequest) -> Result<crate::os_store::RetainedCloneBirthDemand, crate::os_store::MemberOpenDiagnostic> { request.admitted_expected().map(|_| crate::os_store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }) }
             fn member_frame_bytes(&self) -> usize { match *self {} }
-            fn begin_open(request: &mut Option<crate::os_store::MemberOpenRequest>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self::Open>, crate::os_store::MemberOpenDiagnostic> {
-                crate::os_store::UnsupportedMemberFactoryOpen::begin(request, grant)
+            fn begin_open(admission:&mut crate::os_store::MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut semio_framework_job::StepContext<'_>,parent:&semio_framework_job::OriginalCallerSourceParent)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+                crate::os_store::UnsupportedMemberFactoryOpen::begin(admission,opened,cx,parent)
             }
             async fn create(_: &str, _: &ArtifactDialect, _: &[u8], _: crate::os_spr::ActorId) -> Result<Self, VcsError> {
                 FACTORY_CALLS.set(FACTORY_CALLS.get() + 1);

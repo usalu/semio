@@ -14,6 +14,17 @@ use std::sync::{Arc, Mutex};
 
 #[path = "🎛️operation/🦀️.rs"]
 pub mod operation;
+#[path="💼️jobs/🦀️.rs"]
+mod original_jobs;
+pub use original_jobs::OriginalGuestJobCall;
+
+#[path="🎟️call/🦀️.rs"]
+mod original_call;
+pub use original_call::{OwnedOriginalCallStatus,OwnedOriginalCallProgress,OwnedOriginalCallResult};
+
+#[path="🏗️startup/🦀️.rs"]
+mod original_startup;
+pub use original_startup::{OwnedActorStartup,OwnedActorStartupCall,OwnedActorStartupStatus};
 
 //#region 🧯️GuestFaults
 /// 🗝️ Conflicting ownership of one composer route.
@@ -40,6 +51,7 @@ pub enum PluginHostError {
     Io(std::io::Error),
     Json(String),
     NativeIo(semio_framework_value::ValueError),
+    OriginalTurn(semio_framework_job::OriginalTurnFailure),
     Wasmtime(String),
     Plugin(String),
     IoRouteConflict(Box<IoRouteConflict>),
@@ -61,6 +73,7 @@ impl std::fmt::Display for PluginHostError {
             Self::Io(error) => write!(formatter, "io: {error}"),
             Self::Json(error) => write!(formatter, "json: {error}"),
             Self::NativeIo(error)=>write!(formatter,"native io: {error}"),
+            Self::OriginalTurn(error)=>formatter.write_str(error.primary.message()),
             Self::Wasmtime(message) => write!(formatter, "wasmtime: {message}"),
             Self::Plugin(message) => write!(formatter, "plugin: {message}"),
             Self::IoRouteConflict(conflict) => write!(formatter, "io route conflict for {:?}: {} already owns it; {} cannot replace it", conflict.key, conflict.existing_plugin, conflict.incoming_plugin),
@@ -351,7 +364,10 @@ enum OwnedOperation {
     CloseActorContext,
     StartJob,
     StepJob,
+    ReadJobOutput,
+    AcknowledgeJobOutput,
     CancelJob,
+    CloseJobs,
     Checkpoint,
     Restore,
     PackSchemaHash,
@@ -378,7 +394,10 @@ impl OwnedOperation {
             Self::CloseActorContext=>OwnedSemioExport::CloseActorContext,
             Self::StartJob => OwnedSemioExport::StartJob,
             Self::StepJob => OwnedSemioExport::StepJob,
+            Self::ReadJobOutput => OwnedSemioExport::ReadJobOutput,
+            Self::AcknowledgeJobOutput => OwnedSemioExport::AcknowledgeJobOutput,
             Self::CancelJob => OwnedSemioExport::CancelJob,
+            Self::CloseJobs => OwnedSemioExport::CloseJobs,
             Self::Checkpoint => OwnedSemioExport::Checkpoint,
             Self::Restore => OwnedSemioExport::Restore,
             Self::PackSchemaHash => OwnedSemioExport::PackSchemaHash,
@@ -431,7 +450,11 @@ struct OwnedCheckpointView<'a>{pending:&'a Option<OwnedPending>,original_receipt
 pub struct OwnedGuestInstance {
     original_job_clock:Option<fn()->Option<u64>>,
     artifact: Arc<OwnedSemioArtifact>,
-    actor: OwnedSemioInstance,
+    actor: Option<OwnedSemioInstance>,
+    original_core:std::mem::ManuallyDrop<Option<crate::interpreter::CoreInstanceOpening>>,
+    original_source:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
+    original_startup_input:Option<semio_framework_actor::RetainedTurnInput>,
+    original_call:Option<original_call::OwnedOriginalCall>,
     pending: Option<OwnedPending>,
     original_receipt: Option<semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceipt>,
     /// ☠️ Set by the first guest trap. A trapped guest keeps whatever linear memory, shadow-stack
@@ -449,7 +472,17 @@ pub struct OwnedGuestInstance {
     instance_id: u32,
 }
 
+impl Drop for OwnedGuestInstance{fn drop(&mut self){assert!(std::thread::panicking()||(self.original_core.is_none()&&self.original_source.is_none()),"Owned original instance reached Drop before its paid Core and source close")}}
+
 impl OwnedGuestInstance {
+    pub fn original_core_mut(&mut self)->Result<(&Arc<crate::interpreter::CoreModule>,&mut crate::interpreter::CoreInstanceOpening),semio_framework_value::ValueError>{let core=self.original_core.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Owned call requires its genuine paid original Core holder"))?;Ok((self.artifact.original_actor_module(),core))}
+    /// 👁️ Borrows already funded original Core memory without copying or reopening its owner.
+    pub fn original_memory(&self,index:u32)->Option<&[u8]>{self.original_core.as_ref()?.resources()?.memory(index)}
+    pub fn original_startup_input(&self)->Option<semio_framework_actor::RetainedTurnInput>{self.original_startup_input}
+
+    /// 🕰️ Forwards the original caller clock without inventing an interpreter-local epoch.
+    pub fn bind_original_clock(&mut self,cx:&semio_framework_job::StepContext<'_>){self.original_job_clock=Some(cx.clock_source());}
+
     /// 🔁️ True while an owned operation has not completed — the guest yielded on its fuel or deadline and owns the host's next
     /// call.
     pub fn turn_in_flight(&self) -> bool {
@@ -474,6 +507,7 @@ impl OwnedGuestInstance {
 
     /// 🌱️ Begins `operation` on the input bytes `input` holds, taking them only once the begin is admitted.
     pub fn begin_snapshot(&mut self, operation: OwnedSnapshotOperation, input: &mut Option<Vec<u8>>) -> Result<(), TurnFault> {
+        if self.original_core.is_some(){return Err(identity_turn_fault(operation_authority::refusal(4)))}
         if self.poisoned {
             return Err(TurnFault::Trapped("owned snapshot instance is poisoned".into()));
         }
@@ -483,14 +517,13 @@ impl OwnedGuestInstance {
         let bytes = input.as_ref().ok_or_else(|| identity_turn_fault(operation_authority::refusal(4)))?;
         let length = i32::try_from(bytes.len()).map_err(|_| identity_turn_fault(operation_authority::refusal(2)))?;
         self.pending = Some(OwnedPending { retained_input: None, operation: operation.operation(), stage: OwnedStage::Allocate { input: input.take().unwrap_or_default() }, fuel_used: 0 });
-        self.actor.begin(OwnedSemioExport::Allocate, vec![Value::I32(length)])?;
+        self.actor.as_mut().ok_or_else(||identity_turn_fault(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Allocate, vec![Value::I32(length)])?;
         Ok(())
     }
 
-    /// ▶️ Resumes the in-flight `operation` under `fuel`, bounding the gap between fuel observations by `deadline_ms`
-    /// (`OwnedDeadline::NoFuelProgress`), with every original operation import answered by `receiver`.
-    pub fn resume_snapshot(&mut self, operation: OwnedSnapshotOperation, fuel: u64, deadline_ms: u32, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, receiver: &mut dyn OriginalOperationReceiving) -> Result<OwnedInvocation, TurnFault> {
-        resume_owned_operation_bound(self, operation.operation(), fuel, deadline_ms, OwnedDeadline::NoFuelProgress, progress, cancellation, Some(receiver))
+    /// ▶️ Resumes the same operation within its supplied absolute original deadline and receiving authority.
+    pub fn resume_snapshot(&mut self, operation: OwnedSnapshotOperation, fuel: u64, deadline_us: u64, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, receiver: &mut dyn OriginalOperationReceiving) -> Result<OwnedInvocation, TurnFault> {
+        resume_owned_operation_bound(self, operation.operation(), fuel, deadline_us, OwnedDeadline::Original, progress, cancellation, Some(receiver))
     }
 }
 
@@ -633,18 +666,13 @@ pub fn owned_engine_identity() -> &'static str {
 /// checkpoints and pure `codec` exports under instruction fuel. Holds no engine; instance ids are its only state.
 pub struct OwnedRuntime {
     next_instance_id: std::sync::atomic::AtomicU32,
-}
-
-impl Default for OwnedRuntime {
-    fn default() -> Self {
-        Self::new()
-    }
+    original_clock:fn()->Option<u64>,
 }
 
 impl OwnedRuntime {
     /// 🌱️ A runtime whose first instance is id 1.
-    pub fn new() -> Self {
-        Self { next_instance_id: std::sync::atomic::AtomicU32::new(1) }
+    pub fn new(original_clock:fn()->Option<u64>) -> Self {
+        Self { next_instance_id: std::sync::atomic::AtomicU32::new(1), original_clock }
     }
 
     /// 🧩️ Parses `bytes` as an owned-ABI component, ready to instantiate; no codec origin is assembled yet.
@@ -661,7 +689,7 @@ impl OwnedRuntime {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(artifact), actor: owned, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedGuestInstance { original_job_clock:Some(self.original_clock), artifact: Arc::clone(artifact), actor:Some(owned), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state).map_err(turn_fault_host)?;
         Ok(state)
     }
@@ -675,6 +703,7 @@ impl OwnedRuntime {
         let mut relayed = 0;
         let mut state = cell.lock();
         loop {
+            if original_deadline_at((self.original_clock)(),budget.deadline_us)?{return Err(TurnFault::DeadlineExceeded)}
             match &*state {
                 OwnedCodecOriginState::Ready(origin) => return Ok(OwnedCodecOriginUse { origin: Arc::clone(origin), spent_fuel: 0, reported_fuel: relayed }),
                 OwnedCodecOriginState::Absent => break,
@@ -717,22 +746,22 @@ impl OwnedRuntime {
             return Err(TurnFault::Host(PluginHostError::Plugin("owned actor has an undriven start function".to_string())));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let mut state = OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
+        let mut state = OwnedGuestInstance { original_job_clock:Some(self.original_clock), artifact: Arc::clone(&owned.artifact), actor:Some(actor), original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None, pending: None, original_receipt: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id };
         admit_owned_channel(&mut state)?;
         let encoded = serde_json::to_vec(&OwnedCodecInput { artifact_schema: OWNED_CODEC_ORIGIN_SCHEMA, document_id: "", pack: &[], spr: &[], ops: &[] }).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(&mut state, OwnedOperation::PackSchemaHash, Some(encoded))?;
-        let invocation = resume_owned_operation_observed(&mut state, OwnedOperation::PackSchemaHash, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress, cancellation)?;
+        let invocation = resume_owned_operation_observed(&mut state, OwnedOperation::PackSchemaHash, budget.fuel, budget.deadline_us, OwnedDeadline::Original, progress, cancellation)?;
         match decode_owned_result::<Vec<u8>>(&invocation.output) {
             Ok(_) | Err(TurnFault::Guest(_)) => {}
             Err(fault) => return Err(fault),
         }
-        Ok(OwnedCodecOrigin { actor: state.actor, diagnostics: state.diagnostics, context: state.context, next_resource: state.next_resource, assembly_fuel: invocation.fuel_used })
+        Ok(OwnedCodecOrigin { actor: state.actor.take().ok_or_else(||identity_turn_fault(operation_authority::refusal(4)))?, diagnostics: std::mem::take(&mut state.diagnostics), context: state.context, next_resource: state.next_resource, assembly_fuel: invocation.fuel_used })
     }
 
     /// 🧬️ A throwaway instance of `owned` in its codec origin's state.
     fn origin_instance(&self, owned: &OwnedCompiledGuest, origin: &OwnedCodecOrigin) -> OwnedGuestInstance {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        OwnedGuestInstance { original_job_clock:None, artifact: Arc::clone(&owned.artifact), actor: origin.actor.clone(), pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
+        OwnedGuestInstance { original_job_clock:Some(self.original_clock), artifact: Arc::clone(&owned.artifact), actor:Some(origin.actor.clone()),original_core:std::mem::ManuallyDrop::new(None),original_source:std::mem::ManuallyDrop::new(None),original_startup_input:None,original_call:None, pending: None, original_receipt: None, poisoned: false, diagnostics: origin.diagnostics.clone(), context: origin.context, next_resource: origin.next_resource, instance_id }
     }
 
     /// 🧬️ A throwaway instance of `compiled` in its codec origin's state, for a caller that drives its own codec operation on
@@ -744,7 +773,7 @@ impl OwnedRuntime {
 
     fn actor_context_call(&self,state:&mut OwnedGuestInstance,operation:OwnedOperation,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<original_actor_context::OriginalActorFixedCall,TurnFault>{
         if state.pending.is_none(){let encoded=identity.encode(|control|operation::input::encode_json_input(&input,control)).map_err(identity_turn_fault)?;identity.encode(|control|control.charge(encoded.len())).map_err(identity_turn_fault)?;begin_owned_operation(state,operation,Some(encoded))?;}
-        let invocation=resume_owned_operation(state,operation,budget.fuel,budget.deadline_ms)?;
+        let invocation=resume_owned_operation_observed(state,operation,budget.fuel,budget.deadline_us,OwnedDeadline::Original,|_,_|{},None)?;
         original_actor_context::OriginalActorFixedReceipt::read(&invocation.output).map_err(identity_turn_fault)
     }
 
@@ -780,11 +809,10 @@ impl OwnedRuntime {
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
         }
         let mut receiver=if fresh{semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity)}else{let receipt=state.original_receipt.take().ok_or_else(||identity_turn_fault(operation_authority::refusal(4)))?;match semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::resume(receipt,identity){Ok(receiver)=>receiver,Err((error,receipt))=>{state.original_receipt=Some(receipt);return Err(identity_turn_fault(error));}}};
-        let invocation = resume_owned_operation_authored(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms, OwnedDeadline::TotalWall, |_,_|{}, None, &mut receiver);
+        let invocation = resume_owned_operation_authored(state, OwnedOperation::Poll, budget.fuel, budget.deadline_us, OwnedDeadline::Original, |_,_|{}, None, &mut receiver);
         let receipt=receiver.pause();
         state.original_receipt=if state.pending.is_some()||invocation.is_err(){Some(receipt)}else{None};
         let invocation=invocation?;
-        if invocation.output.starts_with(b"SAC1") {let original=original_actor_context::OriginalActorFixedReceipt::read(&invocation.output).map_err(identity_turn_fault)?;return Err(TurnFault::ActorCall(original));}
         let mut result: TurnResult = decode_owned_result(&invocation.output)?;
         result.fuel_used = invocation.fuel_used;
         Ok(result)
@@ -808,7 +836,7 @@ impl OwnedRuntime {
         let state = &mut self.origin_instance(compiled, &used.origin);
         let encoded = serde_json::to_vec(input).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(state, operation, Some(encoded))?;
-        let invocation = resume_owned_operation_observed(state, operation, budget.fuel.saturating_sub(used.spent_fuel), budget.deadline_ms, OwnedDeadline::NoFuelProgress, |fuel, elapsed| progress(used.reported_fuel.saturating_add(fuel), elapsed), cancellation)?;
+        let invocation = resume_owned_operation_observed(state, operation, budget.fuel.saturating_sub(used.spent_fuel), budget.deadline_us, OwnedDeadline::Original, |fuel, elapsed| progress(used.reported_fuel.saturating_add(fuel), elapsed), cancellation)?;
         decode_owned_result(&invocation.output)
     }
 
@@ -819,7 +847,7 @@ impl OwnedRuntime {
         identity.encode(|control|control.charge(input.len())).map_err(identity_turn_fault)?;
         begin_owned_operation(state,operation,Some(input))?;
         let mut receiver=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::OriginalOperationReceiver::new(identity);
-        let invocation=resume_owned_operation_authored(state,operation,budget.fuel.saturating_sub(used.spent_fuel),budget.deadline_ms,OwnedDeadline::NoFuelProgress,|fuel,elapsed|progress(used.reported_fuel.saturating_add(fuel),elapsed),cancellation,&mut receiver)?;
+        let invocation=resume_owned_operation_authored(state,operation,budget.fuel.saturating_sub(used.spent_fuel),budget.deadline_us,OwnedDeadline::Original,|fuel,elapsed|progress(used.reported_fuel.saturating_add(fuel),elapsed),cancellation,&mut receiver)?;
         decode_owned_result(&invocation.output)
     }
 
@@ -843,7 +871,7 @@ impl OwnedRuntime {
         self.codec_pack_schema_hash_observed(compiled, artifact_schema, budget, |_, _| {}, &GuestCallCancellation::default()).await
     }
 
-    /// 🧬️ `codec.pack-schema-hash` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`].
+    /// 🧬️ `codec.pack-schema-hash` with the same original deadline and fuel observations as [`Self::codec_genesis_observed`].
     /// Catalog startup verifies every unlinked package through this call under
     /// `OperationContext::stall_bounded`; without guest fuel reaching that context a 30 s quiet span
     /// on a loaded machine looks like a wedged load (`trusted-catalog-load-stalled-before-it-finished`).
@@ -873,7 +901,7 @@ impl OwnedRuntime {
         self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, |_, _| {}, None)
     }
 
-    /// 📥️ `codec.print-mirror` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`]:
+    /// 📥️ `codec.print-mirror` with the same original deadline and fuel observations as [`Self::codec_genesis_observed`]:
     /// validating a large document's pair interprets for as long as a genesis does.
     pub async fn codec_print_mirror_observed(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentMirror, TurnFault> {
         self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, progress, Some(cancellation))
@@ -884,7 +912,7 @@ impl OwnedRuntime {
         self.codec_call_authored(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {}, None, identity)
     }
 
-    /// 🧩️ `codec.apply-ops` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`].
+    /// 🧩️ `codec.apply-ops` with the same original deadline and fuel observations as [`Self::codec_genesis_observed`].
     pub async fn codec_apply_ops_observed(&self, compiled: &OwnedCompiledGuest, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<GuestDocumentPair, TurnFault> {
         self.codec_call_authored(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress, Some(cancellation), identity)
     }
@@ -900,19 +928,19 @@ impl OwnedRuntime {
     pub async fn describe_observed(&self, compiled: &OwnedCompiledGuest, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<Vec<u8>, TurnFault> {
         let state = &mut self.instantiate_actor(compiled).map_err(TurnFault::Host)?;
         begin_owned_operation(state, OwnedOperation::Describe, None)?;
-        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress, None).map(|invocation| invocation.output)
+        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_us, OwnedDeadline::Original, progress, None).map(|invocation| invocation.output)
     }
 
     /// 🎟️ Admits the original actor context of `state` for one retained turn.
-    pub fn admit_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<original_actor_context::OriginalActorAdmissionReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::AdmitActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Admission{ready,refusal}=>Ok(original_actor_context::OriginalActorAdmissionReply{input:call.input,spent:call.spent,ready,refusal}),_=>Err(TurnFault::ActorCall(call))}}
+    pub fn admit_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::AdmitActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Admission{ready,refusal}=>Ok(semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply{input:call.input,spent:call.spent,ready,refusal}),_=>Err(TurnFault::ActorCall(call))}}
     /// ♻️ Runs one closing step of the original actor context of `state`.
-    pub fn close_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<original_actor_context::OriginalActorCloseReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::CloseActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Close{complete,blocked,refusal}=>Ok(original_actor_context::OriginalActorCloseReply{input:call.input,spent:call.spent,complete,blocked,refusal}),_=>Err(TurnFault::ActorCall(call))}}
+    pub fn close_context(&self,state:&mut OwnedGuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{let call=self.actor_context_call(state,OwnedOperation::CloseActorContext,input,budget,identity)?;match call.kind{original_actor_context::OriginalActorFixedKind::Close{complete,blocked,refusal}=>Ok(semio_framework_actor::retained_turn::context::OriginalActorCloseReply{input:call.input,spent:call.spent,complete,blocked,refusal}),_=>Err(TurnFault::ActorCall(call))}}
 
     /// 👷️ Starts guest job `job` of `kind` on `state`.
     pub fn start_actor_job(&self, state: &mut OwnedGuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
         let input = semio_framework_pack_json::to_json_string(&OwnedStartJobInput { job, kind, input }).into_bytes();
         begin_owned_operation(state, OwnedOperation::StartJob, Some(input))?;
-        let invocation = resume_owned_operation(state, OwnedOperation::StartJob, u64::MAX, 1_000)?;
+        let invocation = resume_owned_operation(state, OwnedOperation::StartJob, u64::MAX, 1_000_000)?;
         decode_owned_result(&invocation.output)
     }
 
@@ -920,7 +948,7 @@ impl OwnedRuntime {
     pub fn step_actor_job(&self, state: &mut OwnedGuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
         let input = semio_framework_pack_json::to_json_string(&OwnedStepJobInput { job, budget }).into_bytes();
         begin_owned_operation(state, OwnedOperation::StepJob, Some(input))?;
-        let invocation = resume_owned_operation(state, OwnedOperation::StepJob, budget.fuel, budget.deadline_ms)?;
+        let invocation = resume_owned_operation(state, OwnedOperation::StepJob, budget.fuel, u64::from(budget.deadline_ms)*1000)?;
         decode_owned_result(&invocation.output)
     }
 
@@ -931,7 +959,7 @@ impl OwnedRuntime {
         }
         let input = semio_framework_pack_json::to_json_string(&OwnedCancelJobInput { job }).into_bytes();
         begin_owned_operation(state, OwnedOperation::CancelJob, Some(input))?;
-        let invocation = resume_owned_operation(state, OwnedOperation::CancelJob, u64::MAX, OWNED_SLICE_DEADLINE_MS)?;
+        let invocation = resume_owned_operation(state, OwnedOperation::CancelJob, u64::MAX, u64::from(OWNED_SLICE_DEADLINE_MS)*1000)?;
         decode_owned_result(&invocation.output)
     }
 
@@ -940,7 +968,7 @@ impl OwnedRuntime {
     pub fn checkpoint_actor(&self, state: &mut OwnedGuestInstance, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<u8>, PluginHostError> {
         let guest_checkpoint = if state.pending.is_none() {
             begin_owned_operation(state, OwnedOperation::Checkpoint, None).map_err(turn_fault_host)?;
-            let invocation = match resume_owned_operation(state, OwnedOperation::Checkpoint, 100_000_000, 1_000) {
+            let invocation = match resume_owned_operation(state, OwnedOperation::Checkpoint, 100_000_000, 1_000_000) {
                 Ok(invocation) => invocation,
                 Err(fault) => {
                     cancel_owned_operation(state).map_err(turn_fault_host)?;
@@ -953,13 +981,14 @@ impl OwnedRuntime {
         };
         let metadata = OwnedCheckpointView { pending: &state.pending, original_receipt:&state.original_receipt, guest_checkpoint:&guest_checkpoint, context: state.context, next_resource: state.next_resource, instance_id: state.instance_id };
         identity.encode(|control|{
-            let layout=state.actor.checkpoint_layout(control)?;
+            let layout=state.actor.as_mut().ok_or_else(||operation_authority::refusal(4))?.checkpoint_layout(control)?;
             operation::checkpoint::encode_checkpoint_frame(&metadata,&mut|sink|layout.visit(sink),control)
         }).map_err(identity_turn_fault).map_err(turn_fault_host)
     }
 
     /// ⏮️ Restores `state` from an owned host checkpoint [`Self::checkpoint_actor`] framed.
     pub fn restore_actor(&self, state: &mut OwnedGuestInstance, checkpoint: &[u8]) -> Result<(), PluginHostError> {
+        if state.original_core.is_some(){return Err(PluginHostError::NativeIo(operation_authority::refusal(4)))}
         if checkpoint.get(..8) != Some(OWNED_CHECKPOINT_MAGIC) {
             return Err(PluginHostError::Plugin("invalid owned host checkpoint header".to_string()));
         }
@@ -974,7 +1003,7 @@ impl OwnedRuntime {
         }
         let metadata_text = std::str::from_utf8(&checkpoint[20..metadata_end]).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let metadata: OwnedCheckpointMetadata = semio_framework_pack_json::from_json_str(metadata_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        state.actor = state.artifact.restore(&checkpoint[metadata_end..]).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        state.actor = Some(state.artifact.restore(&checkpoint[metadata_end..]).map_err(|error| PluginHostError::Plugin(error.to_string()))?);
         state.pending = metadata.pending;
         state.original_receipt=metadata.original_receipt;
         state.context = metadata.context;
@@ -983,7 +1012,7 @@ impl OwnedRuntime {
         if let Some(guest_checkpoint) = metadata.guest_checkpoint {
             let input = semio_framework_pack_json::to_json_string(&OwnedRestoreInput { state: guest_checkpoint }).into_bytes();
             begin_owned_operation(state, OwnedOperation::Restore, Some(input)).map_err(turn_fault_host)?;
-            let invocation = resume_owned_operation(state, OwnedOperation::Restore, 100_000_000, 1_000).map_err(turn_fault_host)?;
+            let invocation = resume_owned_operation(state, OwnedOperation::Restore, 100_000_000, 1_000_000).map_err(turn_fault_host)?;
             decode_owned_result::<()>(&invocation.output).map_err(turn_fault_host)?;
         }
         Ok(())
@@ -991,6 +1020,7 @@ impl OwnedRuntime {
 }
 
 fn begin_owned_operation(state: &mut OwnedGuestInstance, operation: OwnedOperation, input: Option<Vec<u8>>) -> Result<(), TurnFault> {
+    if state.original_core.is_some(){return Err(identity_turn_fault(operation_authority::refusal(4)))}
     if state.poisoned {
         return Err(TurnFault::Trapped("owned actor instance is poisoned by an earlier guest trap and must be re-instantiated".to_string()));
     }
@@ -999,11 +1029,11 @@ fn begin_owned_operation(state: &mut OwnedGuestInstance, operation: OwnedOperati
     }
     let stage = match input {
         Some(input) => {
-            state.actor.begin(OwnedSemioExport::Allocate, vec![Value::I32(i32::try_from(input.len()).map_err(|_| TurnFault::Trapped("owned input exceeds wasm32 address space".to_string()))?)])?;
+            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Allocate, vec![Value::I32(i32::try_from(input.len()).map_err(|_| TurnFault::Trapped("owned input exceeds wasm32 address space".to_string()))?)])?;
             OwnedStage::Allocate { input }
         }
         None => {
-            state.actor.begin(operation.export(), Vec::new())?;
+            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(), Vec::new())?;
             OwnedStage::Call
         }
     };
@@ -1011,60 +1041,33 @@ fn begin_owned_operation(state: &mut OwnedGuestInstance, operation: OwnedOperati
     Ok(())
 }
 
-/// ⏱️ What `deadline_ms` bounds, chosen per call site because the two callers want opposite things.
-///
-/// A live turn owes the shell a frame, so its bound is TOTAL wall time: a turn that overruns is late
-/// whether or not the guest is healthy, and `Poll` therefore keeps [`Self::TotalWall`].
-///
-/// A build-time `describe()` and a `codec` call owe nobody a frame, and their runaway bound is the
-/// deterministic fuel cap (`DESCRIBE_FUEL_BUDGET`; for `codec` the caller's own `budget.fuel`). Measured on 2026-09-21 (slice CE2): the SAME `🗒️note` guest ran its
-/// describe at 1 320 k fuel/s at 20:36 and at 520 k fuel/s at 22:10 — a 2.5× swing from fleet load
-/// alone, with nothing about the guest changed. Under a saturated fleet the owned interpreter
-/// sustains ≈ 210 k fuel/s, so a 1 800 000 ms TOTAL cap buys only ≈ 380 M of the 8 G fuel budget and
-/// the WALL clock, not the guest, decides whether a build succeeds — which is how `🀄️wfc` (373 M
-/// fuel, 4.6 % of its budget, a flat rate and no degradation) and `🧩️puzzle` both died
-/// `DeadlineExceeded` while still progressing normally.
-///
-/// [`Self::NoFuelProgress`] bounds the gap BETWEEN fuel observations instead, so a describe that
-/// keeps making progress runs to its fuel cap on any machine while a guest that stops making
-/// progress still dies on a finite wall clock. Nothing is lost by this: the loop already traps a
-/// zero-fuel yield outright, and a host call that never returns blocks inside `reply_owned_host`
-/// where no deadline check can run — so a total-wall cap here never caught a runaway the fuel cap
-/// would have missed.
-///
-/// 🌱️ `codec` joined `describe` on 2026-09-22 (ticket 26/09/18 slice HC1) for the same reason, one
-/// layer further out: a hub arms `GUEST_CODEC_BUDGET` (4 G fuel, 30 000 ms) and creates the
-/// document on a DETACHED task no socket is waiting on, so nothing there owes a frame either. Under
-/// a total-wall bound the biggest staged component — `🌍️gis`, ≈ 48 MB of `wasm-release` — could not
-/// be created at all: hub 7671 failed every `POST …/artifact-creations` in 32.0 s at machine load
-/// 120, 33 and 21 alike, with the hub process burning 130–145 % CPU for the whole window
-/// (`🗑️generated/hc1-create-sampled-1.txt`). A guest running flat out and cut by the calendar is
-/// precisely what this enum exists to stop calling a fault.
+/// ⏱️ Original operations retain their supplied absolute clock boundary; duration APIs carry explicit wall durations.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum OwnedDeadline {
     TotalWall,
-    NoFuelProgress,
+    Original,
 }
 
 /// 🛂️ A refused original native admission, as the host fault every runtime reports it as.
 pub fn identity_turn_fault(error:semio_framework_value::ValueError)->TurnFault{TurnFault::Host(PluginHostError::NativeIo(error))}
 
-fn resume_owned_operation(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_ms: u32) -> Result<OwnedInvocation, TurnFault> {
-    resume_owned_operation_observed(state, operation, fuel, deadline_ms, OwnedDeadline::TotalWall, |_, _| {}, None)
+fn resume_owned_operation(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_us: u64) -> Result<OwnedInvocation, TurnFault> {
+    resume_owned_operation_observed(state, operation, fuel, deadline_us, OwnedDeadline::TotalWall, |_, _| {}, None)
 }
 
-fn resume_owned_operation_observed(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedInvocation, TurnFault> {
-    resume_owned_operation_bound(state, operation, fuel, deadline_ms, deadline, progress, cancellation, None)
+fn resume_owned_operation_observed(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_us: u64, deadline: OwnedDeadline, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedInvocation, TurnFault> {
+    resume_owned_operation_bound(state, operation, fuel, deadline_us, deadline, progress, cancellation, None)
 }
 
-fn resume_owned_operation_authored(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, receiver: &mut dyn OriginalOperationReceiving) -> Result<OwnedInvocation, TurnFault> {
-    let result=resume_owned_operation_bound(state, operation, fuel, deadline_ms, deadline, progress, cancellation, Some(receiver));
+fn resume_owned_operation_authored(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_us: u64, deadline: OwnedDeadline, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, receiver: &mut dyn OriginalOperationReceiving) -> Result<OwnedInvocation, TurnFault> {
+    let result=resume_owned_operation_bound(state, operation, fuel, deadline_us, deadline, progress, cancellation, Some(receiver));
     result.and_then(|output|{receiver.ensure_finished().map_err(identity_turn_fault)?;Ok(output)})
 }
 
-fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, mut receiver: Option<&mut dyn OriginalOperationReceiving>) -> Result<OwnedInvocation, TurnFault> {
+fn original_deadline_at(now:Option<u64>,deadline_us:u64)->Result<bool,TurnFault>{Ok(now.ok_or_else(||identity_turn_fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original interpreter deadline requires its caller clock")))?>=deadline_us)}
+
+fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: OwnedOperation, fuel: u64, deadline_us: u64, deadline: OwnedDeadline, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>, mut receiver: Option<&mut dyn OriginalOperationReceiving>) -> Result<OwnedInvocation, TurnFault> {
     let started = std::time::Instant::now();
-    let mut fuel_moved_at = started;
     let mut remaining = fuel;
     let mut next_progress_fuel = 25_000_000;
     let mut next_progress_elapsed = std::time::Duration::from_secs(5);
@@ -1074,11 +1077,11 @@ fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: Owned
             progress(fuel.saturating_sub(remaining), elapsed);
             return Err(TurnFault::Cancelled);
         }
-        let against_deadline = match deadline {
-            OwnedDeadline::TotalWall => elapsed,
-            OwnedDeadline::NoFuelProgress => fuel_moved_at.elapsed(),
+        let expired = match deadline {
+            OwnedDeadline::TotalWall => elapsed >= std::time::Duration::from_micros(deadline_us),
+            OwnedDeadline::Original => original_deadline_at(state.original_job_clock.and_then(|clock|clock()),deadline_us)?,
         };
-        if against_deadline >= std::time::Duration::from_millis(u64::from(deadline_ms)) {
+        if expired {
             progress(fuel.saturating_sub(remaining), elapsed);
             return Err(TurnFault::DeadlineExceeded);
         }
@@ -1092,9 +1095,8 @@ fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: Owned
             return Err(TurnFault::Trapped("owned operation resume type mismatch".to_string()));
         }
         let grant = remaining.min(OWNED_STEP_FUEL);
-        let remaining_before = remaining;
         let completed_fuel;
-        match state.actor.step(grant, StepControl::default()) {
+        match state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.step(grant, StepControl::default()) {
             CoreStepOutcome::Yield { fuel_used } => {
                 pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
                 remaining = remaining.saturating_sub(fuel_used);
@@ -1108,7 +1110,7 @@ fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: Owned
                 pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
                 remaining = remaining.saturating_sub(fuel_used);
                 completed_fuel = pending.fuel_used;
-                let result=reply_owned_host(state,&call,receiver.as_deref_mut()).map_err(|error|TurnFault::Trapped(error.to_string())).and_then(|results|state.actor.resume_host(call.id,Ok(results)).map_err(TurnFault::from));
+                let result=reply_owned_host(state,&call,receiver.as_deref_mut()).map_err(|error|TurnFault::Trapped(error.to_string())).and_then(|results|state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.resume_host(call.id,Ok(results)).map_err(TurnFault::from));
                 state.pending=Some(pending);
                 result?;
             }
@@ -1119,10 +1121,10 @@ fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: Owned
                 let result=(||->Result<Option<OwnedInvocation>,TurnFault>{match &mut pending.stage {
                     OwnedStage::Allocate { input } => {
                         let [Value::I32(pointer)] = values.as_slice() else { return Err(TurnFault::Trapped("owned allocator returned an invalid pointer".to_string())) };
-                        write_owned_memory(&mut state.actor,*pointer,input)?;
+                        write_owned_memory(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?,*pointer,input)?;
                         let length=input.len()as i32;
                         if matches!(operation,OwnedOperation::SqliteExport|OwnedOperation::SqliteImport|OwnedOperation::SqliteRetirement|OwnedOperation::SqliteClose|OwnedOperation::SqliteTakeFile|OwnedOperation::SqliteTakePayload){pending.retained_input=Some(std::mem::take(input));}
-                        state.actor.begin(operation.export(),vec![Value::I32(*pointer),Value::I32(length)])?;
+                        state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(operation.export(),vec![Value::I32(*pointer),Value::I32(length)])?;
                         pending.stage=OwnedStage::Call;
                         Ok(None)
                     }
@@ -1131,9 +1133,9 @@ fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: Owned
                         let pair=*pair as u64;
                         match operation_authority::owned_result::decode(pair).map_err(identity_turn_fault)?{operation_authority::owned_result::OwnedReturn::Bytes{..}=>{},operation_authority::owned_result::OwnedReturn::Refusal(kind)=>return Err(identity_turn_fault(semio_framework_value::ValueError::literal(kind,"original guest operation returned scalar refusal"))),}
                         if let Some(receiver)=receiver.as_deref_mut(){receiver.receive_output((pair>>32)as u32 as usize).map_err(identity_turn_fault)?;}
-                        let output=state.actor.read_bytes_result(&values,OWNED_RESULT_LIMIT)?;
+                        let output=state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.read_bytes_result(&values,OWNED_RESULT_LIMIT)?;
                         pending.stage=OwnedStage::Deallocate{output};
-                        state.actor.begin(OwnedSemioExport::Deallocate,vec![Value::I32(pair as u32 as i32),Value::I32((pair>>32)as u32 as i32)])?;
+                        state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.begin(OwnedSemioExport::Deallocate,vec![Value::I32(pair as u32 as i32),Value::I32((pair>>32)as u32 as i32)])?;
                         Ok(None)
                     }
                     OwnedStage::Deallocate { output } => Ok(Some(OwnedInvocation{retained_input:pending.retained_input.take(),output:std::mem::take(output),fuel_used:pending.fuel_used})),
@@ -1153,9 +1155,6 @@ fn resume_owned_operation_bound(state: &mut OwnedGuestInstance, operation: Owned
                 state.poisoned=true;
                 return Err(TurnFault::Trapped(owned_fault_text(state,&error.to_string())));
             }
-        }
-        if remaining < remaining_before {
-            fuel_moved_at = std::time::Instant::now();
         }
         let elapsed = started.elapsed();
         if completed_fuel >= next_progress_fuel || elapsed >= next_progress_elapsed {
@@ -1185,10 +1184,10 @@ fn owned_fault_text(state: &OwnedGuestInstance, error: &str) -> String {
 const OWNED_FAULT_DIAGNOSTICS_TAIL_CHARS: usize = 4_000;
 
 fn cancel_owned_operation(state: &mut OwnedGuestInstance) -> Result<(), TurnFault> {
-    match state.actor.step(1, StepControl { cancelled: true }) {
+    match state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.step(1, StepControl { cancelled: true }) {
         CoreStepOutcome::HostCall { call, .. } => {
-            state.actor.resume_host(call.id, Err("owned operation cancelled".to_string()))?;
-            if !matches!(state.actor.step(1, StepControl { cancelled: true }), CoreStepOutcome::Cancelled { .. }) {
+            state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.resume_host(call.id, Err("owned operation cancelled".to_string()))?;
+            if !matches!(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.step(1, StepControl { cancelled: true }), CoreStepOutcome::Cancelled { .. }) {
                 return Err(TurnFault::Trapped("owned interpreter did not acknowledge cancellation".to_string()));
             }
         }
@@ -1231,7 +1230,7 @@ fn reply_owned_host<'loan,'source>(state: &mut OwnedGuestInstance, call: &HostCa
             let outcome = receiver.ok_or_else(|| operation_authority::refusal(6)).and_then(|receiver| receiver.begin());
             let mut result = [0u8;16];
             match outcome { Ok(maximum) => result[8..].copy_from_slice(&(maximum as u64).to_le_bytes()), Err(error) => { result[..4].copy_from_slice(&1u32.to_le_bytes()); result[8..12].copy_from_slice(&operation_authority::refusal_code(error.kind).to_le_bytes()); } }
-            write_owned_memory(&mut state.actor, owned_argument_i32(call, 0)?, &result).map_err(turn_fault_host)?;
+            write_owned_memory(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 0)?, &result).map_err(turn_fault_host)?;
             Vec::new()
         }
         ("semio:framework/pure@1.0.0", "operation-progress" | "operation-allocation" | "operation-finish") => {
@@ -1248,7 +1247,7 @@ fn reply_owned_host<'loan,'source>(state: &mut OwnedGuestInstance, call: &HostCa
         }
         ("semio:framework/pure@1.0.0", "operation-clock-us") => {
             let mut result=[0u8;16];if let Some(now)=state.original_job_clock.and_then(|clock|clock()){result[..4].copy_from_slice(&1u32.to_le_bytes());result[8..].copy_from_slice(&now.to_le_bytes());}
-            write_owned_memory(&mut state.actor,owned_argument_i32(call,0)?,&result).map_err(turn_fault_host)?;Vec::new()
+            write_owned_memory(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?,owned_argument_i32(call,0)?,&result).map_err(turn_fault_host)?;Vec::new()
         }
         ("semio:framework/pure@1.0.0", "now-ms") => vec![Value::I64(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64))],
         ("semio:framework/pure@1.0.0", "log") | ("semio:framework/pure@1.0.0", "trace-span") => Vec::new(),
@@ -1280,41 +1279,41 @@ fn reply_owned_host<'loan,'source>(state: &mut OwnedGuestInstance, call: &HostCa
         ("wasi:clocks/monotonic-clock@0.2.0", "now") => vec![owned_wasi_monotonic_clock()?],
         ("wasi:random/insecure-seed@0.2.9", "insecure-seed") => {
             let seed = [owned_wasi_entropy()?.to_le_bytes(), owned_wasi_entropy()?.to_le_bytes()].concat();
-            write_owned_memory(&mut state.actor, owned_argument_i32(call, 0)?, &seed).map_err(turn_fault_host)?;
+            write_owned_memory(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 0)?, &seed).map_err(turn_fault_host)?;
             Vec::new()
         }
         ("wasi:random/random@0.2.9", "get-random-u64") => vec![Value::I64(i64::from_le_bytes(owned_wasi_entropy()?.to_le_bytes()))],
         ("wasi:cli/environment@0.2.0", "get-environment") => {
-            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 8)?;
+            write_owned_zeroes(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 0)?, 8)?;
             Vec::new()
         }
         ("wasi:clocks/wall-clock@0.2.0", "now") => {
-            write_owned_memory(&mut state.actor, owned_argument_i32(call, 0)?, &owned_wasi_wall_clock()?).map_err(turn_fault_host)?;
+            write_owned_memory(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 0)?, &owned_wasi_wall_clock()?).map_err(turn_fault_host)?;
             Vec::new()
         }
         ("wasi:cli/terminal-stdin@0.2.0", "get-terminal-stdin") | ("wasi:cli/terminal-stdout@0.2.0", "get-terminal-stdout") | ("wasi:cli/terminal-stderr@0.2.0", "get-terminal-stderr") => {
-            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 8)?;
+            write_owned_zeroes(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 0)?, 8)?;
             Vec::new()
         }
         ("wasi:io/poll@0.2.0", "poll") => {
-            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 2)?, 8)?;
+            write_owned_zeroes(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 2)?, 8)?;
             Vec::new()
         }
         ("wasi:io/streams@0.2.0", "[method]output-stream.check-write") => {
             let pointer = owned_argument_i32(call, 1)?;
-            write_owned_zeroes(&mut state.actor, pointer, 16)?;
-            write_owned_memory(&mut state.actor, pointer.wrapping_add(8), &65_536u64.to_le_bytes()).map_err(turn_fault_host)?;
+            write_owned_zeroes(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, pointer, 16)?;
+            write_owned_memory(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, pointer.wrapping_add(8), &65_536u64.to_le_bytes()).map_err(turn_fault_host)?;
             Vec::new()
         }
         ("wasi:io/streams@0.2.0", "[method]output-stream.write") => {
             let pointer = owned_argument_i32(call, 1)?;
             let length = owned_argument_i32(call, 2)?;
             retain_owned_guest_diagnostics(state, pointer, length)?;
-            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 3)?, 16)?;
+            write_owned_zeroes(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 3)?, 16)?;
             Vec::new()
         }
         ("wasi:io/streams@0.2.0", "[method]output-stream.blocking-flush") => {
-            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 1)?, 16)?;
+            write_owned_zeroes(state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?, owned_argument_i32(call, 1)?, 16)?;
             Vec::new()
         }
         _ => return Err(PluginHostError::Plugin(format!("owned host import {}::{} is unavailable", call.module, call.name))),
@@ -1346,7 +1345,7 @@ fn write_owned_zeroes(actor: &mut OwnedSemioInstance, pointer: i32, length: usiz
 fn retain_owned_guest_diagnostics(state: &mut OwnedGuestInstance, pointer: i32, length: i32) -> Result<(), PluginHostError> {
     let start = pointer as u32 as usize;
     let length = length as u32 as usize;
-    let memory = state.actor.memory_mut().ok_or_else(|| PluginHostError::Plugin("owned actor memory is unavailable".to_string()))?;
+    let memory = state.actor.as_mut().ok_or_else(||PluginHostError::NativeIo(operation_authority::refusal(4)))?.memory_mut().ok_or_else(|| PluginHostError::Plugin("owned actor memory is unavailable".to_string()))?;
     let end = start.checked_add(length).filter(|end| *end <= memory.len()).ok_or_else(|| PluginHostError::Plugin("owned guest diagnostics are outside guest memory".to_string()))?;
     let budget = GUEST_DIAGNOSTICS_CAPACITY_BYTES.saturating_sub(state.diagnostics.len());
     let bytes = &memory[start..end.min(start.saturating_add(budget))];
@@ -1371,14 +1370,18 @@ const OWNED_CHANNEL_VERSION_DEADLINE_MS: u32 = 5_000;
 /// so a guest of another channel is refused as `PluginHostError::Refused` (`plugin.channel-mismatch`).
 fn admit_owned_channel(state: &mut OwnedGuestInstance) -> Result<(), TurnFault> {
     begin_owned_operation(state, OwnedOperation::ChannelVersion, None)?;
-    let invocation = resume_owned_operation(state, OwnedOperation::ChannelVersion, OWNED_CHANNEL_VERSION_FUEL, OWNED_CHANNEL_VERSION_DEADLINE_MS)?;
+    let invocation = resume_owned_operation(state, OwnedOperation::ChannelVersion, OWNED_CHANNEL_VERSION_FUEL, u64::from(OWNED_CHANNEL_VERSION_DEADLINE_MS)*1000)?;
     let guest: u32 = serde_json::from_slice(&invocation.output).map_err(|error| PluginHostError::Json(error.to_string()))?;
     semio_framework_os_kernel::admit_guest_channel_version(guest, semio_framework_os_kernel::CHANNEL_VERSION).map_err(|fault| PluginHostError::Refused(Box::new(fault)))?;
     Ok(())
 }
 
-/// 📥️ Decodes an owned export's JSON `Result` envelope; its error arm is the guest's typed fault bytes.
+/// 📥️ Preserves current fixed actor receipts before decoding an owned JSON result and its typed guest fault.
 pub fn decode_owned_result<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, TurnFault> {
+    if bytes.starts_with(b"SAC2") {
+        let original = original_actor_context::OriginalActorFixedReceipt::read(bytes).map_err(identity_turn_fault)?;
+        return Err(TurnFault::ActorCall(original));
+    }
     let result: Result<T, Vec<u8>> = serde_json::from_slice(bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
     result.map_err(|error| decode_guest_fault_bytes(&error))
 }

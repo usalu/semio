@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "sourceKind",
+    "operation",
+    "generation",
+    "epoch",
+    "initialFuel",
+    "deadlineUs",
+    "clockUs",
+    "originalGrant",
+    "admissionReceipt",
+    "ownedFuel",
+    "guestWork",
+    "remainingFuel",
+    "guestReceipt",
+    "donorRemaining",
+    "events",
+    "newRootOrLedger",
+    "copiedBudgetDto",
+    "freshPollingRecipientDebit",
+    "sameOwnedRecipientAcrossAwait",
+    "sameOwnedCursorAcrossAwait",
+    "borrowedParentKeptLive",
+    "deadlineRenewal",
+    "duplicateReturn",
+    "wholeFailureCustody",
+    "originalCursor",
+    "returnedCursor",
+    "foreignPollingTransfer",
+    "originalClockObservationRetained",
+    "consumingOriginalActorIssuer",
+    "actorReceiptRejoinedBeforePolling",
+    "originalIssuerRetainedWithReply",
+    "borrowedSourceLoanCancellation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.job.original-owned-async-turn"
+    },
+    "sourceKind": {
+      "const": "paid-original-parent-loan"
+    },
+    "operation": {
+      "const": 17
+    },
+    "generation": {
+      "const": 9
+    },
+    "epoch": {
+      "const": 19
+    },
+    "initialFuel": {
+      "const": 7
+    },
+    "deadlineUs": {
+      "const": 12345
+    },
+    "clockUs": {
+      "const": 1000
+    },
+    "originalGrant": {
+      "const": [
+        16,
+        4096,
+        65536,
+        65536,
+        64
+      ]
+    },
+    "admissionReceipt": {
+      "const": [
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    "ownedFuel": {
+      "const": 6
+    },
+    "guestWork": {
+      "const": 2
+    },
+    "remainingFuel": {
+      "const": 4
+    },
+    "guestReceipt": {
+      "const": [
+        1,
+        7,
+        0,
+        0
+      ]
+    },
+    "donorRemaining": {
+      "const": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "events": {
+      "const": [
+        "originalSourceAdmission",
+        "linearWalletTransfer",
+        "ownedRecipientBeforeCheckout",
+        "sameContextCheckout",
+        "asyncSuspend",
+        "sameContextReceive",
+        "originalEpochReturn",
+        "paidSourceLoanReturn"
+      ]
+    },
+    "newRootOrLedger": {
+      "const": false
+    },
+    "copiedBudgetDto": {
+      "const": false
+    },
+    "freshPollingRecipientDebit": {
+      "const": false
+    },
+    "sameOwnedRecipientAcrossAwait": {
+      "const": true
+    },
+    "sameOwnedCursorAcrossAwait": {
+      "const": true
+    },
+    "borrowedParentKeptLive": {
+      "const": true
+    },
+    "deadlineRenewal": {
+      "const": false
+    },
+    "duplicateReturn": {
+      "const": false
+    },
+    "wholeFailureCustody": {
+      "const": true
+    },
+    "originalCursor": {
+      "const": 73
+    },
+    "returnedCursor": {
+      "const": 74
+    },
+    "foreignPollingTransfer": {
+      "const": false
+    },
+    "originalClockObservationRetained": {
+      "const": true
+    },
+    "consumingOriginalActorIssuer": {
+      "const": true
+    },
+    "actorReceiptRejoinedBeforePolling": {
+      "const": true
+    },
+    "originalIssuerRetainedWithReply": {
+      "const": true
+    },
+    "borrowedSourceLoanCancellation": {
+      "const": true
+    }
+  }
+}

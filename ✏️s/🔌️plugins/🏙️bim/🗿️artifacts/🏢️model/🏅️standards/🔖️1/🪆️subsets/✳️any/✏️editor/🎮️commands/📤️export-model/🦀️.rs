@@ -124,20 +124,14 @@ pub enum Advance {
 /// 🧵️ The export of the model as a stepped, cancellable job: analyse, then write. Cancelling it keeps every node the session finished.
 pub struct ExportJob {
     format: String,
-    instance: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
     analysis: Analysis,
     writer: Option<StagedExport>,
 }
 
 impl ExportJob {
     /// 🏗️ A job writing `format` of the document that instance `instance` shows.
-    pub fn new(format: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
-        Self::with_steps(format, instance, NODES_PER_STEP)
-    }
-
-    /// 🏗️ A job that finishes at most `nodes` graph nodes per step (at least one).
-    pub fn with_steps(format: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, nodes: usize) -> Self {
-        Self { format: format.to_string(), instance: instance.cloned(), analysis: Analysis::new(instance, nodes), writer: None }
+    pub fn new(format:String, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
+        Self { format,analysis:Analysis::new(instance),writer:None }
     }
 
     /// 📈️ How far the job is: the analysis is the first half, the families of an IFC file the second half (one once the file is written).
@@ -161,24 +155,11 @@ impl ExportJob {
     }
 
     /// ⏩️ Does one bounded step against `snapshot`.
-    pub fn advance(&mut self, snapshot: &ModelSnapshot) -> Result<Advance, Fault> {
-        if !FORMATS.contains(&self.format.as_str()) {
-            return Err(refusal(&self.format));
-        }
-        let ended = |error: protocol::InferenceError| fault("bim.export.inference", format!("the model could not be analysed: {error}"));
-        if !self.analysis.is_done() {
-            let progress = self.analysis.advance(snapshot).map_err(ended)?;
-            return Ok(Advance::Progress(if progress.done { "bim-export-encode" } else { "bim-export-infer" }));
-        }
-        let Some(schema) = schema_of(&self.format) else {
-            return inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| encode(&self.format, snapshot, inferred)).map_err(ended)?.map(Advance::Done);
-        };
-        let writer = self.writer.get_or_insert_with(|| StagedExport::new(schema, snapshot));
-        match inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| writer.step(snapshot, inferred)).map_err(ended)? {
-            Some((document, _)) => document_output(&self.format, &stem(&snapshot.project.name), document).map(Advance::Done),
-            None => Ok(Advance::Progress("bim-export-encode")),
-        }
+    pub fn advance(&mut self,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<Advance,protocol::InferenceWorkFailure>{
+        if !self.analysis.is_done(){let progress=self.analysis.advance(snapshot,cx)?;return Ok(Advance::Progress(if progress.done{"bim-export-encode"}else{"bim-export-infer"}))}
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original model export writer and output have no funded producer").into())
     }
+
 }
 //#endregion 🔖️Job
 
@@ -188,12 +169,15 @@ pub struct ModelExportWork {
     tool_id: &'static str,
     owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
     job: Option<ExportJob>,
+    failure:Option<protocol::InferenceWorkFailure>,
+    original:Option<ExportModel>,
+    read:Option<store::os_store::snapshot_read::SnapshotRead<ModelSnapshot>>,
 }
 
 impl ModelExportWork {
     /// 🏗️ The work of tool `tool_id`.
     pub fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { tool_id, owner, job: None }
+        Self { tool_id, owner, job: None,failure:None,original:None,read:None }
     }
 }
 
@@ -206,42 +190,35 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ModelExportWork {
         self.tool_id
     }
 
+    fn receive_original_command(&mut self,command:&mut BimCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.original.is_some(){return Ok(true)}let BimCommand::ExportModel(payload)=command else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original model export command changed").into())};let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original=Some(std::mem::replace(payload,ExportModel{format:String::new(),pressed:None}));Ok(true)
+    }
+
+    fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.read.is_none()&&self.job.is_none()&&self.failure.is_none()}
+
     fn extent(&self, command: &BimCommand, _snapshot: &ModelSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<BimModelApp>>>) -> Option<usize> {
         (self.job.is_none() && command.command_id() == self.tool_id).then_some(1)
     }
 
     fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<BimModelApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<BimModelApp>>, semio_framework_job::OriginalTurnFailure> {
-        let original: Result<_, Fault> = (|| {
-        let BimCommand::ExportModel(payload) = input.command else { return Err(Fault::from("bim-export-work-mismatch")) };
-        let job = self.job.get_or_insert_with(|| ExportJob::new(&payload.format, Some(&self.owner)));
-        if cx.is_cancelled() {
-            job.cancel(input.snapshot);
-            return Err(fault("bim.export.cancelled", "the export was cancelled"));
-        }
-        cx.consume_fuel(1);
-        Ok(match job.advance(input.snapshot)? {
-            Advance::Progress(stage) => {
-                cx.set_stage(stage);
-                ArtifactCommandWorkStep::Progress { stage, preview: preview(stage) }
-            }
-            Advance::Done(output) => ArtifactCommandWorkStep::Complete(download(output)),
-        })
-    
-        })();
-        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+        if let Some(original)=protocol::admit_inference_failure(&mut self.failure,cx)?{return Err(original)}
+        if self.failure.is_some(){return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}
+        let BimCommand::ExportModel(_payload)=input.command else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original BIM model export command changed").into())};
+        if self.read.is_none(){self.read=input.snapshot_read.take_current(input.operation.generation,input.operation.canonical_base_revision,cx)?;return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}
+        if self.job.is_none(){let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}let original=self.original.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original model export fields were not received"))?;self.job=Some(ExportJob::new(original.format,Some(&self.owner)));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}
+        let snapshot=self.read.as_ref().unwrap().get();let job=self.job.as_mut().unwrap();if cx.is_cancelled(){job.cancel(snapshot)}
+        match job.advance(snapshot,cx){Ok(Advance::Progress(stage))=>{cx.set_stage(stage);Ok(ArtifactCommandWorkStep::Progress{stage,preview:preview(stage)})},Ok(Advance::Done(output))=>Ok(ArtifactCommandWorkStep::Complete(download(output))),Err(original)=>{self.failure=Some(original);Ok(ArtifactCommandWorkStep::Progress{stage:"bim-export-infer",preview:INFER_PREVIEW})}}
+
     }
 }
 //#endregion 🔖️Work
 
 /// 📤️ The synchronous path: the file of the instance's inference session as one download.
 pub fn handle(payload: &ExportModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
-    let instance = ctx.gestures.as_ref();
-    let mut job = ExportJob::new(&payload.format, instance);
-    loop {
-        if let Advance::Done(output) = job.advance(doc.snapshot)? {
-            return Ok(download(output));
-        }
-    }
+    let ended=|error:protocol::InferenceError|fault("bim.export.inference",format!("the model could not be analysed: {error}"));
+    inference::try_with_inference(ctx.gestures.as_ref(),doc.snapshot,|inferred|encode(&payload.format,doc.snapshot,inferred)).map_err(ended)?.map(download)
+
 }
 
 #[cfg(test)]

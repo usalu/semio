@@ -24,6 +24,34 @@ impl GeometryWorkFailure {
     pub fn new(primary:ValueError,consumed_units:usize)->Self{Self{work:GeometryWorkProgress{retained:primary.retained_progress(),consumed_units},primary,receipt_refusal:None}}
 }
 
+impl semio_framework_job::OriginalDomainProjection for GeometryWorkFailure{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{
+  use semio_framework_job::OriginalDomainView as V;
+  match path{
+   []=>Ok(V::IntrinsicObject(3)),
+   [0,rest @ ..]=>semio_framework_job::project_original_value_error(&self.primary,rest),
+   [1]=>Ok(V::IntrinsicObject(2)),[1,0]=>Ok(V::IntrinsicObject(4)),
+   [1,0,0]=>Ok(V::UInt(self.work.retained.copied_items as u64)),[1,0,1]=>Ok(V::UInt(self.work.retained.copied_bytes as u64)),[1,0,2]=>Ok(V::UInt(self.work.retained.retained_capacity_bytes as u64)),[1,0,3]=>Ok(V::UInt(self.work.retained.released_bytes as u64)),[1,1]=>Ok(V::UInt(self.work.consumed_units as u64)),
+   [2,rest @ ..]=>match &self.receipt_refusal{Some(original)=>semio_framework_job::project_original_value_error(original,rest),None if rest.is_empty()=>Ok(V::IntrinsicNull),_=>Err(geometry_projection_refusal())},
+   _=>Err(geometry_projection_refusal()),
+  }
+ }
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match path{
+  []=>["primary","work","receiptRefusal"].get(index).copied().ok_or_else(geometry_projection_refusal),
+  [0,rest @ ..]=>semio_framework_job::key_original_value_error(&self.primary,rest,index),
+  [1]=>["retained","consumedUnits"].get(index).copied().ok_or_else(geometry_projection_refusal),
+  [1,0]=>["items","copyBytes","capacityBytes","releaseBytes"].get(index).copied().ok_or_else(geometry_projection_refusal),
+  [2,rest @ ..]=>self.receipt_refusal.as_ref().ok_or_else(geometry_projection_refusal).and_then(|original|semio_framework_job::key_original_value_error(original,rest,index)),
+  _=>Err(geometry_projection_refusal()),
+ }}
+}
+impl semio_framework_job::OriginalDomainFailure for GeometryWorkFailure{
+ fn domain_code(&self)->&str{"geometry.work"}
+ fn domain_message(&self)->&str{&self.primary.message}
+ fn domain_retained_progress(&self)->RetainedCloneProgress{self.work.retained}
+}
+fn geometry_projection_refusal()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original geometry failure projection ordinal changed")}
+
 /// 🔌️ One supplied geometry authority owns its retained jobs and handle claims until explicit close.
 pub trait GeometryPort: Send + Sync {
     fn begin_retain(&mut self, handles: Vec<String>) -> Result<(), (ValueError, Vec<String>)>;
@@ -35,9 +63,9 @@ pub trait GeometryPort: Send + Sync {
     fn retain_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn retain_step_progress(&self) -> RetainedCloneProgress;
     fn tessellation_demands(&self, identity:GeometryWorkIdentity, handle:&str, tolerance:f64, maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError>;
-    fn tessellate_step(&self, identity:GeometryWorkIdentity, handle: &str, tolerance: f64, units: usize, grant: RetainedCloneGrant) -> Result<(GeometryStep, GeometryWorkProgress), GeometryWorkFailure>;
+    fn tessellate_step(&self, identity:GeometryWorkIdentity, handle: &str, tolerance: f64, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(GeometryStep, GeometryWorkProgress), GeometryWorkFailure>;
     fn cancel_tessellation_demands(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError>;
-    fn cancel_tessellation_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>;
+    fn cancel_tessellation_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>;
     fn dispose(&self, handle: &str) -> Result<(), String>;
     fn begin_cancel(&mut self) -> Result<(), ValueError>;
     fn cancel_terminal_is_empty(&self) -> bool;

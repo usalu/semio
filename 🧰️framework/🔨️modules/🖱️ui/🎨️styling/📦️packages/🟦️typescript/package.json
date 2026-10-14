@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/ui-styling",
   "version": "0.1.0",
@@ -53,6 +53,6 @@
     "includedScripts": []
   },
   "scripts": {
-    "test-geometry": "nx run @semio-tech/ui-styling:test-geometry"
+    "test-geometry": "bun repo run @semio-tech/ui-styling:test-geometry"
   }
 }

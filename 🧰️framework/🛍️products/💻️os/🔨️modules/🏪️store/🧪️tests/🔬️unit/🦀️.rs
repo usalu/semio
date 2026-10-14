@@ -2027,8 +2027,8 @@ macro_rules! fixture_member_factory {
             type Open = UnsupportedMemberFactoryOpen<Self>;
             fn open_birth_demand(request: &MemberOpenRequest) -> Result<RetainedCloneBirthDemand, MemberOpenDiagnostic> { request.admitted_expected().map(|_| RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }) }
             fn member_frame_bytes(&self) -> usize { 0 }
-            fn begin_open(request: &mut Option<MemberOpenRequest>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<Self::Open>, MemberOpenDiagnostic> {
-                UnsupportedMemberFactoryOpen::begin(request, grant)
+            fn begin_open(admission:&mut MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut semio_framework_job::StepContext<'_>,parent:&semio_framework_job::OriginalCallerSourceParent)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+                UnsupportedMemberFactoryOpen::begin(admission,opened,cx,parent)
             }
 
             async fn create(id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId) -> Result<Self, VcsError> {
@@ -10553,7 +10553,7 @@ async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus(
     }
     impl ArtifactCompositionFields for Parent<'_> {
         fn child_slots() -> &'static [ChildSlotSpec] {
-            &[ChildSlotSpec { name: "single", kind: "s.test.member", many: false }, ChildSlotSpec { name: "many", kind: "s.test.member", many: true }, ChildSlotSpec { name: "other", kind: "s.test.member", many: false }]
+            &[ChildSlotSpec { name: "single", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.test.member"), many: false }, ChildSlotSpec { name: "many", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.test.member"), many: true }, ChildSlotSpec { name: "other", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.test.member"), many: false }]
         }
         fn visit_child_refs<'a, V: ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {
             for row in self.0 {
@@ -10573,7 +10573,8 @@ async fn member_factory_closed_dialect_parent_projection_matches_neutral_corpus(
     let slots = Parent::child_slots();
     for (actual, expected) in slots.iter().zip(fixture["projectionSlots"].as_array().unwrap()) {
         assert_eq!(actual.name, expected["name"].as_str().unwrap());
-        assert_eq!(actual.kind, expected["kind"].as_str().unwrap());
+        let semio_framework_schema_composition::ChildSlotSelection::ArtifactKind(kind)=actual.selection else{panic!("original projection fixture requires artifact kind selection")};
+        assert_eq!(kind,expected["kind"].as_str().unwrap());
         assert_eq!(actual.many, expected["many"].as_bool().unwrap());
     }
     let rows = fixture["projectionCases"].as_array().unwrap();
@@ -12313,34 +12314,18 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
     }
 }
 
-fn retire_original_member_open(open:&mut impl MemberOpenOperation)->(usize,usize,usize){
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-    let policy:RetainedCloneGrant=serde_json::from_value(fixture["snapshotInput"]["policy"].clone()).unwrap();
-    let receiving:serde_json::Value=serde_json::from_str(include_str!("../../🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🧫️receiving/🔣️.json")).unwrap();
-    let caller=&receiving["caller"];assert_eq!(caller["clockUs"],1);
-    let operation=semio_framework_job::OperationId(caller["operation"].as_u64().unwrap());let generation=semio_framework_job::Generation(caller["generation"].as_u64().unwrap());
-    let((cancel,progress),root_born,freed)=crate::test_allocation::observe_backing(||semio_framework_job::CancelToken::admit_root(policy).unwrap().unwrap());assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(root_born,freed));assert!(progress.fits(policy));
-    let((mut authority,progress),ledger_born,freed)=crate::test_allocation::observe_backing(||semio_framework_job::JobPayloadAuthority::admit(operation,generation,policy).unwrap().unwrap());assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(ledger_born,freed));assert!(progress.fits(policy));
-    let mut sequence=0;let mut born=0;let mut physical=0;let mut turns=0;
-    while !MemberOpenOperation::terminal_is_empty(open)&&turns<caller["maximumTurns"].as_u64().unwrap()as usize{
-        let((step,receipt),allocated,released)=crate::test_allocation::observe_backing(||{
-            let mut receipt=RetainedCloneProgress::default();
-            let mut cx=semio_framework_job::StepContext::with_payload_authority(operation,generation,semio_framework_job::StepBudget::new(caller["fuel"].as_u64().unwrap(),caller["deadlineUs"].as_u64().unwrap(),policy),&cancel,||Some(1),&mut sequence,&mut receipt,&authority).unwrap();
-            let step=MemberOpenOperation::close_step(open,&mut cx).unwrap();let received=cx.retained_progress();drop(cx);(step,received)
-        });
-        assert_eq!(receipt,step.progress());assert!(receipt.fits(policy));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(allocated,released));
-        assert!(receipt.copied_items>0||matches!(step,RetainedCloneStep::Complete(_)),"original Member supplier turn must advance under its existing full policy");
-        born+=allocated;physical+=released;turns+=1;
-    }
-    assert!(MemberOpenOperation::terminal_is_empty(open),"original bounded Member supplier did not finish");
-    let mut caller_released=0;
-    for _ in 0..256{if authority.terminal_is_empty(){break}let(step,allocated,released)=crate::test_allocation::observe_backing(||authority.close_step(policy).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(allocated,released));assert!(step.progress().fits(policy));caller_released+=released;}
-    assert!(authority.terminal_is_empty());
-    let mut root=semio_framework_async::CancelTokenRetirement::from_token(cancel);
-    for _ in 0..256{if root.terminal_is_empty(){break}let(step,allocated,released)=crate::test_allocation::observe_backing(||root.close_step(policy).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(allocated,released));assert!(step.progress().fits(policy));caller_released+=released;}
-    assert!(root.terminal_is_empty());assert_eq!(caller_released,root_born+ledger_born);
-    let(_,allocated,released)=crate::test_allocation::observe_backing(||drop((root,authority)));assert_eq!((allocated,released),(0,0));
-    (born,physical,turns)
+pub(super) struct OriginalMemberCaller{parent:semio_framework_job::OriginalCallerSourceParent,policy:RetainedCloneGrant,sequence:u64,fuel:u64,deadline:u64,maximum_turns:usize,born:usize}
+impl OriginalMemberCaller{
+ pub(super) fn policy(&self)->RetainedCloneGrant{self.policy}
+ pub(super) fn maximum_turns(&self)->usize{self.maximum_turns}
+ pub(super) fn new()->Self{let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["snapshotInput"]["policy"].clone()).unwrap();let receiving:serde_json::Value=serde_json::from_str(include_str!("../../🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🧫️receiving/🔣️.json")).unwrap();let caller=&receiving["caller"];assert_eq!(caller["clockUs"],1);let operation=semio_framework_job::OperationId(caller["operation"].as_u64().unwrap());let generation=semio_framework_job::Generation(caller["generation"].as_u64().unwrap());let((cancel,p),root_born,r)=crate::test_allocation::observe_backing(||semio_framework_job::CancelToken::admit_root(policy).unwrap().unwrap());assert_eq!((p.retained_capacity_bytes,p.released_bytes),(root_born,r));assert!(p.fits(policy));let((authority,p),ledger_born,r)=crate::test_allocation::observe_backing(||semio_framework_job::JobPayloadAuthority::admit(operation,generation,policy).unwrap().unwrap());assert_eq!((p.retained_capacity_bytes,p.released_bytes),(ledger_born,r));assert!(p.fits(policy));let((parent,p),parent_born,r)=crate::test_allocation::observe_backing(||semio_framework_job::OriginalCallerSourceParent::admit(authority,cancel,policy).unwrap_or_else(|_|panic!("original paid source roots")));assert_eq!((p.retained_capacity_bytes,p.released_bytes),(parent_born,r));assert!(p.fits(policy));Self{parent,policy,sequence:0,fuel:caller["fuel"].as_u64().unwrap(),deadline:caller["deadlineUs"].as_u64().unwrap(),maximum_turns:caller["maximumTurns"].as_u64().unwrap()as usize,born:root_born+ledger_born+parent_born}}
+ pub(super) fn run<T>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&semio_framework_job::OriginalCallerSourceParent,&mut semio_framework_job::StepContext<'_>)->T)->(T,RetainedCloneProgress){assert!(grant.maximum_items<=self.policy.maximum_items&&grant.maximum_copy_bytes<=self.policy.maximum_copy_bytes&&grant.maximum_capacity_bytes<=self.policy.maximum_capacity_bytes&&grant.maximum_release_bytes<=self.policy.maximum_release_bytes&&grant.maximum_depth<=self.policy.maximum_depth);let mut received=Default::default();let mut cx=self.parent.borrow_context(semio_framework_job::StepBudget::new(self.fuel,self.deadline,grant),||Some(1),&mut self.sequence,&mut received).unwrap();let result=run(&self.parent,&mut cx);let progress=cx.retained_progress();drop(cx);assert_eq!(received,progress);(result,received)}
+ pub(super) fn close(&mut self){let mut freed=0;for _ in 0..256{if self.parent.terminal_is_empty(){break}let(step,b,r)=crate::test_allocation::observe_backing(||self.parent.close_step(self.policy).unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(b,r));assert!(step.progress().fits(self.policy));freed+=r;}assert!(self.parent.terminal_is_empty());assert_eq!(freed,self.born);}
+}
+fn retire_original_member_open(open:&mut impl MemberOpenOperation,caller:&mut OriginalMemberCaller)->(usize,usize,usize){
+ let(mut born,mut physical,mut turns)=(0,0,0);
+ while !MemberOpenOperation::terminal_is_empty(open)&&turns<caller.maximum_turns{let policy=caller.policy;let((step,receipt),b,r)=crate::test_allocation::observe_backing(||caller.run(policy,|parent,cx|MemberOpenOperation::close_step(open,parent,cx).unwrap()));assert_eq!(receipt,step.progress());assert!(receipt.fits(policy));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(b,r));assert!(receipt.copied_items>0||matches!(step,RetainedCloneStep::Complete(_)),"original Member turn advances under fixed source policy");born+=b;physical+=r;turns+=1;}
+ assert!(MemberOpenOperation::terminal_is_empty(open));(born,physical,turns)
 }
 
 #[test]
@@ -12354,32 +12339,34 @@ fn member_open_constructor_requires_borrowed_birth_before_moving_original_reques
         pages.admit_page(OwnedSchemaDecodePage::try_from_slice(&[1, 97, 83]).unwrap()).unwrap();
         pages.seal().unwrap();
         let request = MemberOpenRequest::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), 1000, reference, None, pages, ActorId(row["actor"].as_str().unwrap().into())).admit(1).unwrap_or_else(|_| panic!("exact neutral constructor request"));
-        let mut request = Some(request);
+        let mut caller=OriginalMemberCaller::new();
+        let mut admission=MemberOpenSourceAdmission::new(request);
+        let mut opened=None;
         let identity = |value: &MemberOpenRequest| { let expected = value.expected(); (expected.artifact_id.as_ptr(), expected.dialect.artifact_kind.as_ptr(), expected.dialect.standard.as_ptr(), expected.dialect.subset.as_ptr(), value.actor().0.as_ptr()) };
-        let pointers = identity(request.as_ref().unwrap());
-        let (birth, query_events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::open_birth_demand(request.as_ref().unwrap()).unwrap());
+        let pointers = identity(admission.request().unwrap());
+        let (birth, query_events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::open_birth_demand(admission.request().unwrap()).unwrap());
         assert_eq!((query_events.requested_bytes, query_events.released_bytes), (0, 0));
-        assert_eq!(identity(request.as_ref().unwrap()), pointers);
+        assert_eq!(identity(admission.request().unwrap()), pointers);
         let required = birth.capacity_bytes;
         assert!(birth.depth > 0);
         assert!(required >= 4096 && required <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
         for (items, capacity, depth) in [(0, required, birth.depth), (1, 0, birth.depth), (1, required - 1, birth.depth), (1, required, birth.depth - 1)] {
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: 64, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: depth };
-            let (open, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::begin_open(&mut request, grant).unwrap());
-            assert!(open.is_none());
+            let((ready,receipt),events)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.run(grant,|parent,cx|RetainedTestMembers::begin_open(&mut admission,&mut opened,cx,parent).unwrap()));
+            assert!(!ready&&opened.is_none());assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(events.requested_bytes,events.released_bytes));
             denied_births += events.requested_bytes;
             assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
-            assert_eq!(identity(request.as_ref().unwrap()), pointers);
-            assert_eq!(request.as_ref().unwrap().retained_input_bytes(), 3);
+            assert_eq!(identity(admission.request().unwrap()), pointers);
+            assert_eq!(admission.request().unwrap().retained_input_bytes(), 3);
         }
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: required, maximum_release_bytes: 0, maximum_depth: birth.depth };
-        let (open, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedTestMembers::begin_open(&mut request, grant).unwrap().expect("exact whole constructor birth is funded"));
-        assert!(request.is_none());
+        let((ready,receipt),events)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.run(grant,|parent,cx|RetainedTestMembers::begin_open(&mut admission,&mut opened,cx,parent).unwrap()));
+        assert!(ready&&admission.terminal_is_empty());assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(events.requested_bytes,events.released_bytes));
         assert_eq!((events.requested_bytes, events.released_bytes), (required, 0));
-        let mut open = open;
+        let mut open = opened.take().unwrap();
         paid_births += events.requested_bytes;
-        let(_,_,turns)=retire_original_member_open(&mut open);
-        let(_,allocated,released)=crate::test_allocation::observe_backing(||drop(open));assert_eq!((allocated,released),(0,0));assert!(turns>0);
+        let(_,_,turns)=retire_original_member_open(&mut open,&mut caller);
+        let(_,allocated,released)=crate::test_allocation::observe_backing(||drop(open));assert_eq!((allocated,released),(0,0));assert!(turns>0);caller.close();
         println!("[DEBUG] member constructor case={} actual-paid-birth={} borrowed-query={required} zero/one-below-births=0 original-identities-retained=true dialect-clones=0 history-page4096=true original-admission262144", row["id"], events.requested_bytes);
     }
     assert_eq!(denied_births, 0);

@@ -952,7 +952,9 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// the trait's default rejects every app action outright, so without this bridge none of fem2d's
     /// nineteen declared actions can reach `dispatch`. Every key here is the `ActionArgDef.id` declared
     /// for that action in `🔖️Manifest` below.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let text = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
         let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
@@ -1187,11 +1189,16 @@ impl ArtifactEditor for Fem2dPlayApp {
         view_state: &ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, crate::editor::fem2d::transient::FemGumballTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let clock = transient.window::<results_window::transient::Fem2dResultsWindowTransientOwner>().and_then(|window| window.clock);
         let preview = transient.snapshot.preview::<Fem2dSnapshot, Fem2dMutation>(doc.snapshot);
         Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem2dInteractionSnapshot::from_interaction(interaction), clock)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_measures(_doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = fem2d_labels(view_state);

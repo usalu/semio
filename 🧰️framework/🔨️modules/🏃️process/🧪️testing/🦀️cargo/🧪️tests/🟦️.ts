@@ -19,7 +19,7 @@ test("Cargo retains failed build stdout without admitting invalid metadata", asy
   const owner = resolve(import.meta.dir, ".."), fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🚨️failed-build/🔣️.json"), "utf8"));
   const api = await import("../🟦️.ts"), base = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).policies[0];
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR!; expect(artifact).toBeTruthy(); mkdirSync(artifact, { recursive: true });
-  const temporary = mkdtempSync(join(artifact, "f-"));
+  const temporary = mkdtempSync(join(artifact, "f"));
   const program = "const fs=require('node:fs'),bytes=Buffer.from(process.env.CARGO_FAILED_STDOUT,'utf8'),split=Number(process.env.CARGO_FAILED_SPLIT);if(process.env.CARGO_FAILED_CALLS)fs.appendFileSync(process.env.CARGO_FAILED_CALLS,JSON.stringify(process.argv.slice(1))+'\\n');process.stdout.write(bytes.subarray(0,split));setImmediate(()=>{process.stdout.write(bytes.subarray(split));process.exitCode=Number(process.env.CARGO_FAILED_EXIT);});";
   try {
     for (const [index, row] of fixture.cases.entries()) {
@@ -27,7 +27,7 @@ test("Cargo retains failed build stdout without admitting invalid metadata", asy
       const environment = { ...process.env, CARGO_FAILED_STDOUT: row.stdout, CARGO_FAILED_SPLIT: String(row.splitBytes), CARGO_FAILED_EXIT: String(row.exitCode) };
       const oracle = spawnSync("node", ["-e", program], { env: environment, encoding: "utf8" });
       expect(oracle.status).toBe(row.exitCode); expect(oracle.stdout).toBe(row.stdout);
-      const calls = join(directory, "calls.jsonl"), policy = { ...base, artifactDirectory: directory, buildDirectory:join(directory,"b"),leaseDirectory:join(directory,"l"),retainArtifacts: true, buildBudgetMs: 1_000, coverageEnabled: false, coveragePath: null };
+      const calls = join(directory, "calls.jsonl"), policy = { ...base, artifactDirectory: directory, buildDirectory:join(directory,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts: true, buildBudgetMs: 1_000, coverageEnabled: false, coveragePath: null };
       await expect(api.runCargoTestsV1({ manifestPath: base.manifestPath, packages: ["owner-package"], cwd: directory, environment: { ...environment, CARGO_FAILED_CALLS: calls } }, policy, { command: "node", args: ["-e", program, "--"] })).rejects.toThrow();
       const retained = join(directory, readdirSync(directory).find(name => name.startsWith("semio-nextest-"))!);
       expect(readFileSync(join(retained, "build-failure.stdout.txt"), "utf8")).toBe(oracle.stdout);
@@ -48,7 +48,7 @@ test("Kernel package executes neutral target selections through its exact bounde
   const base=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).policies[0];
   for(const row of fixture.cases){
    process.env.SEMIO_TEST_LEVEL="fundamental";process.env.SEMIO_COVERAGE="0";
-   const environment={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...base,manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coverageEnabled:false})};let calls=0;
+   const environment:Record<string,string|undefined>={...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:target,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...base,manifestPath:manifest,targetDirectory:target,configPath:config,artifactDirectory:temporary,buildDirectory:join(temporary,"b"),leaseDirectory:join(temporary,"l"),retainArtifacts:false,coverageEnabled:false})};let calls=0;
    const Runner=runInNewContext(body+";TestScript",{BundleScript:class{},resolve,process:{env:environment},resolveTestLevel:(args:string[])=>{const resolved=levels.resolveTestLevel(args);environment.SEMIO_TEST_LEVEL=resolved.level;return resolved;},readCargoTestPolicyV1:api.readCargoTestPolicyV1,runCargo:()=>{throw Error("Kernel runner bypasses exact bounded Cargo policy");},runCargoTestsV1:async(request:Parameters<typeof api.runCargoTestsV1>[0],policy:Parameters<typeof api.runCargoTestsV1>[1])=>{calls++;expect(request.manifestPath).toBe(manifest);expect(request.packages).toEqual([fixture.packageName]);expect([...request.extraArgs!]).toEqual(row.extraArgs);expect(policy.level).toBe(row.level);await api.runCargoTestsV1({...request,environment},policy);}});
    const runner=new Runner();runner.root=temporary;await runner.run(row.arguments);expect(calls).toBe(1);console.log(`[DEBUG] kernel package neutral selection=${row.id} policy=${row.level} actual-native=true`);
   }
@@ -113,7 +113,7 @@ test("Cargo execution preserves exact owner policy and separates compilation fro
       await api.runCargoTestsV1(request,policy,{command:"node",args:["-e",program,"--"]});
       const calls=readFileSync(log,"utf8").trim().split("\n").map(line=>JSON.parse(line));
       expect(calls.length).toBe(base.coveragePath?3:2);
-      const lintLog=join(temporary,`lint-${base.level}.jsonl`);await api.runCargoLintV1({...request,extraArgs:fixture.lint.arguments,environment:{...request.environment,CARGO_PORT_LOG:lintLog}},policy,{command:"node",args:["-e",program,"--"]});expect(JSON.parse(readFileSync(lintLog,"utf8").trim())).toEqual(["clippy","--manifest-path",policy.manifestPath,"-p","owner-package","--all-targets","--features","feature-a","--","-D","warnings"]);
+      const lintLog=join(temporary,`lint-${base.level}.jsonl`);await api.runCargoLintV1({...request,extraArgs:fixture.lint.arguments,environment:{...request.environment,CARGO_PORT_LOG:lintLog}},policy,{command:"node",args:["-e",program,"--"]});expect(JSON.parse(readFileSync(lintLog,"utf8").trim())).toEqual(["clippy","--profile","prototype","--manifest-path",policy.manifestPath,"-p","owner-package","--all-targets","--features","feature-a","--","-D","warnings"]);
       const oracle=spawnSync("node",["-e","process.stdout.write(JSON.stringify(JSON.parse(process.argv[1]).map(row=>row[0])))",JSON.stringify(calls)],{encoding:"utf8"});expect(oracle.status).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(calls.map(row=>row[0]));
       if(base.nextest&&!base.coveragePath){const metadata=calls[1][calls[1].indexOf("--binaries-metadata")+1];expect(()=>readFileSync(metadata)).toThrow();}
     }
@@ -133,8 +133,8 @@ test("Cargo reporter options remain execution-owned with independent Node argume
  const program="const{parseArgs}=require('node:util');const batches=JSON.parse(process.argv[1]);process.stdout.write(JSON.stringify(batches.map(args=>parseArgs({args,options:{'status-level':{type:'string',multiple:true},'final-status-level':{type:'string',multiple:true}},strict:false,tokens:true}).tokens.filter(t=>t.kind==='option'&&(t.name==='status-level'||t.name==='final-status-level')).map(t=>[t.name,t.value]))));";
  const oracle=spawnSync("node",["-e",program,JSON.stringify(batches)],{encoding:"utf8"});expect(oracle.status).toBe(0);const answers=JSON.parse(oracle.stdout)as[string,string][][];
  for(const[index,{item,split,plan}]of cases.entries()){
-  const reported=answers[index*2]!;for(const[name,value]of reported){expect(split.executionArgs.some(arg=>arg===("--"+name)||arg===("--"+name+"="+value))).toBe(true);expect(split.buildArgs).not.toContain("--"+name);expect(split.buildArgs).not.toContain("--"+name+"="+value);expect(split.buildArgs).not.toContain(value);}
-  expect(plan[0]!.args.some(arg=>arg.startsWith("--status-level")||arg.startsWith("--final-status-level"))).toBe(false);expect(plan[0]!.budgetMs).toBe(base.buildBudgetMs);expect(plan[1]!.budgetMs).toBe(base.assertionBudgets[base.level]);
+  const reported=answers[index*2]!;for(const[name,value]of reported){expect(split.executionArgs.some((arg:string)=>arg===("--"+name)||arg===("--"+name+"="+value))).toBe(true);expect(split.buildArgs).not.toContain("--"+name);expect(split.buildArgs).not.toContain("--"+name+"="+value);expect(split.buildArgs).not.toContain(value);}
+  expect(plan[0]!.args.some((arg:string)=>arg.startsWith("--status-level")||arg.startsWith("--final-status-level"))).toBe(false);expect(plan[0]!.budgetMs).toBe(base.buildBudgetMs);expect(plan[1]!.budgetMs).toBe(base.assertionBudgets[base.level]);
   const values=answers[index*2+1]!;expect(values.filter(([name])=>name==="status-level")).toEqual([["status-level",item.status]]);expect(values.filter(([name])=>name==="final-status-level")).toEqual([["final-status-level",item.finalStatus]]);
  }
  for(const args of fixture.invalid)expect(()=>api.partitionNextestExecutionFilters(args)).toThrow();

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Independent original host execution fuel and unchanged guest job work",
+  "definitions": {
+    "Budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "fuel",
+        "deadlineUs"
+      ],
+      "properties": {
+        "input": {
+          "type": "object"
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deadlineUs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "budget",
+        "spentFuel",
+        "submitted"
+      ],
+      "properties": {
+        "budget": {
+          "$ref": "#/definitions/Budget"
+        },
+        "spentFuel": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "submitted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -7,11 +7,11 @@ import { join } from "node:path";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ownedScriptRoutes, resolveOwnedScriptRoute } from "../../🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
 import fixture from "../🧫️fixtures/🧱️owned-script-routes/🔣️.json";
+import schema from "../../🧬️schema/🧱️owned-script-routes/🔣️.json";
 
 
 test("portable command ownership matrix agrees with independent JSON schema and declarative selection", () => {
-  
-  
+  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const routes = fixture.routes.filter((route) => !row.absent.includes(route.project));
     const selected = resolveOwnedScriptRoute(routes, row.segments);
@@ -28,6 +28,7 @@ test("real contributions bind Nx package commands and root coordinator imports n
   const root = findWorkspaceRoot(import.meta.dir), routes = ownedScriptRoutes(root);
   expect(resolveOwnedScriptRoute(routes, ["verify", "fem2d-window-config-contract"])?.route.project).toBe("@semio-tech/s-fem-composition-tests");
   expect(resolveOwnedScriptRoute(routes, ["verify", "puzzle-fill-policy-self-tests"])?.route.project).toBe("@semio-tech/s-puzzle-composition-tests");
+  expect(resolveOwnedScriptRoute(routes, ["schema", "runtime-graph", "--report", "graph.json"])).toEqual({route:{command:["schema","runtime-graph"],project:"os-hub",target:"runtime-fixture-graph",packageRoot:"🌎️hub/📦️packages/🦀️rust"},args:["--report","graph.json"]});
   for (const route of routes) {
     const project = JSON.parse(readFileSync(join(root, route.packageRoot, "📋️project.json"), "utf8"));
     expect(project.name).toBe(route.project);
@@ -42,7 +43,7 @@ test("real contributions bind Nx package commands and root coordinator imports n
     ts.forEachChild(node, visit);
   };
   visit(ast);
-  expect(imports.filter((specifier) => specifier.startsWith("./✏️s") || specifier.includes("/🗿️artifacts/"))).toEqual([]);
+  expect(imports.filter((specifier) => fixture.removedOwnerPrefixes.some(owner=>specifier.startsWith("./"+owner+"/")) || specifier.includes("/🗿️artifacts/"))).toEqual([]);
 }, 60_000);
 
 test("every real contribution is reachable from a dispatcher call site and no verify route shadows a root verify command", () => {
@@ -54,8 +55,8 @@ test("every real contribution is reachable from a dispatcher call site and no ve
     const source = readFileSync(join(root, path), "utf8");
     if (!source.includes("dispatchOwnedScriptRoute(")) continue;
     const visit = (node: ts.Node): void => {
-      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "dispatchOwnedScriptRoute" && node.arguments[1] && ts.isArrayLiteralExpression(node.arguments[1])) {
-        const elements = node.arguments[1].elements, prefix: string[] = [];
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "dispatchOwnedScriptRoute" && node.arguments[2] && ts.isArrayLiteralExpression(node.arguments[2])) {
+        const elements = node.arguments[2].elements, prefix: string[] = [];
         for (const element of elements) { if (!ts.isStringLiteral(element)) break; prefix.push(element.text); }
         dispatchers.push({ prefix, open: prefix.length < elements.length, site: path });
       }
@@ -85,7 +86,7 @@ test("the neutral repository coordinator builds with every domain plugin source 
     packages: "external",
     external: ["*.wasm"],
     plugins: [{ name: "absent-domain-owners", setup(builder) {
-      builder.onLoad({ filter: /./ }, (row) => row.path.includes("/✏️s/🔌️plugins/") || row.path.includes("/✏️s/🧑‍💻dev/") ? { errors: [{ text: `Absent domain owner: ${row.path}` }] } : undefined);
+      builder.onLoad({ filter: /./ }, (row) => fixture.removedOwnerPrefixes.some(owner=>row.path.replaceAll("\\","/").startsWith(join(root,owner).replaceAll("\\","/")+"/")) ? { errors: [{ text: `Absent domain owner: ${row.path}` }] } : undefined);
     } }],
   });
   expect(output.outputFiles.length).toBeGreaterThan(0);

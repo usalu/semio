@@ -56,7 +56,10 @@ class SemanticSourcePairTestScript extends BundleScript {
 /** 🔁️ Verifies rebuild contribution admission and deletion independence. */
 class RebuildContractTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    await runVitest(this.root, ["./🧪️tests/🔁️rebuild/🟦️.ts", ...args], "./🧪️tests/🎚️config/🟦️.ts");
+    if (args.length) throw Error("test-rebuild-contract accepts no arguments");
+    const { runOwnedCommand } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
+    const { scriptInvocationBudget } = await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+    await runOwnedCommand(process.execPath, ["test", "./🧪️tests/🔁️rebuild/🟦️.ts"], this.root, "registry-rebuild-contract", scriptInvocationBudget(this.invocation, 120000), { signal: this.invocation.control.signal });
   }
 }
 
@@ -70,9 +73,9 @@ const router = new ScriptRouter(import.meta.dir)
   .registerLazy("native-catalog-selection-check", async () => (await import("./✅️catalog-verification/🟦️.ts")).NativeCatalogSelectionCheckScript)
   .registerLazy("catalog-complete", async () => (await import("./✅️catalog-verification/🟦️.ts")).CatalogCompleteScript)
   .registerLazy("check", async () => (await import("./📽️projection/🟦️.ts")).CheckScript)
+  .registerLazy("plan-check", async () => (await import("./🔁️rebuild/🟦️.ts")).RebuildPlanCheckScript)
   .registerLazy("rebuild-all", async () => (await import("./🔁️rebuild/🟦️.ts")).RebuildAllScript)
   .registerLazy("guest-framework-check", async () => (await import("./🔁️rebuild/🟦️.ts")).GuestFrameworkCheckScript)
-  .registerLazy("verify-staged", async () => (await import("./🔁️rebuild/🟦️.ts")).VerifyStagedScript)
   .registerLazy("test", async () => (await import("./✅️catalog-verification/🟦️.ts")).RegistryTestScript)
   .registerLazy("test-catalog-contract", async () => (await import("./✅️catalog-verification/🟦️.ts")).CatalogContractTestScript)
   .register("test-asset-contract", AssetContractTestScript)

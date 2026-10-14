@@ -1,17 +1,17 @@
 {
   "name": "@semio-tech/repo-hooks-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"

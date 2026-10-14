@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "extent",
+    "cases",
+    "loanHandbacks"
+  ],
+  "properties": {
+    "contract": {
+      "const": "actor.original-owned-job-header/v1"
+    },
+    "extent": {
+      "const": 160
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "prefixHex",
+          "body",
+          "refusal"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "start",
+              "step",
+              "output",
+              "acknowledge",
+              "cancel",
+              "close"
+            ]
+          },
+          "prefixHex": {
+            "type": "string",
+            "pattern": "^534a4831[0-9a-f]{8}$"
+          },
+          "body": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "refusal": {
+            "enum": [
+              "none",
+              "semantic",
+              "ownershipLimit"
+            ]
+          }
+        }
+      }
+    },
+    "loanHandbacks": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pointer",
+          "extent",
+          "accepted"
+        ],
+        "properties": {
+          "pointer": {
+            "enum": [
+              "original",
+              "foreign"
+            ]
+          },
+          "extent": {
+            "enum": [
+              159,
+              160
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

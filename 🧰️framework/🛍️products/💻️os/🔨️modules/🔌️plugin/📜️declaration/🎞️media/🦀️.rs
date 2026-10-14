@@ -100,6 +100,15 @@ impl ArtifactOutputChunks {
         Ok(maximum)
     }
 
+    pub fn original_birth_admit(maximum:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
+        if maximum==0||maximum>ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original segmented output requires its declared nonzero byte bound").into())}
+        let slots=maximum.div_ceil(ARTIFACT_OUTPUT_CHUNK_BYTES);let capacity_bytes=slots.checked_mul(size_of::<Vec<u8>>()).and_then(|bytes|bytes.checked_add(semio_framework_value::shared_retirement_allocation_bytes::<ArtifactOutputChunksInner>())).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original output slot birth footprint overflowed"))?;
+        let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity_bytes{return Ok(None)}
+        let mut chunks=std::collections::VecDeque::new();chunks.try_reserve_exact(slots).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original output slots could not retain their declared capacity"))?;
+        let owner=Self{inner:std::sync::Arc::new(ArtifactOutputChunksInner{state:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactOutputChunksState{chunks:ArtifactFixedQueue{items:chunks,capacity:slots,allocation_admitted:true}}),bytes:std::sync::atomic::AtomicUsize::new(0),bytes_remaining:std::sync::atomic::AtomicUsize::new(0),remaining:std::sync::atomic::AtomicUsize::new(0),slots,maximum,sealed:std::sync::atomic::AtomicBool::new(false)})};
+        cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(Some(owner))
+    }
+
     pub fn new(maximum: usize) -> Self {
         let slots = maximum / ARTIFACT_OUTPUT_CHUNK_BYTES + usize::from(!maximum.is_multiple_of(ARTIFACT_OUTPUT_CHUNK_BYTES));
         Self {
@@ -192,7 +201,7 @@ impl ArtifactOutputChunks {
 }
 
 /// 🎞️ Segmented structured media returned by an interactive export without a terminal String.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,semio_framework_value::RetireOwned)]
 pub struct ArtifactMediaExportResult {
     pub media_type: MediaType,
     pub schema: String,
@@ -271,39 +280,31 @@ impl ArtifactDownloadOutput {
 /// 📬️ Single-assignment result cell for one owned media-export operation.
 #[derive(Clone)]
 pub struct ArtifactMediaExportCompletion {
-    inner: std::sync::Arc<std::sync::Mutex<ArtifactMediaExportCompletionSlot>>,
+    inner: std::sync::Arc<ArtifactMediaExportCompletionInner>,
 }
 
-#[derive(Default)]
-struct ArtifactMediaExportCompletionSlot {
-    value: Option<Result<ArtifactMediaExportResult, MediaError>>,
-    chunks: Option<ArtifactOutputChunks>,
-    strings: [Option<String>; 2],
-    active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+#[derive(Default,semio_framework_value::RetireOwned)]
+struct ArtifactMediaExportCompletionSlot{value:Option<Result<ArtifactMediaExportResult,MediaError>>}
+struct ArtifactMediaExportCompletionInner{state:semio_framework_value::retirement::controlled::RetainedOwnerGate<ArtifactMediaExportCompletionSlot>}
+impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCompletionInner{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.state.into_inner())}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&*self.state.try_lock().ok()?)}
+ fn controlled_retirement_supported()->bool{<ArtifactMediaExportCompletionSlot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
-
-impl ArtifactMediaExportCompletionSlot {
-    fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.chunks.is_none() && self.strings.iter().all(Option::is_none) && self.active.is_none()
-    }
-
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        if let Some(active) = self.active.as_ref() {
-            return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body);
-        }
-        if self.value.is_some() {
-            return Ok(RetirementDemand { copy_bytes: size_of::<Result<ArtifactMediaExportResult, MediaError>>(), depth: 1, ..Default::default() });
-        }
-        if self.chunks.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.chunks);
-        }
-        Ok(self.strings.iter().flatten().next().map_or(RetirementDemand::default(), |value| RetirementDemand { release_bytes: value.capacity(), depth: 1, ..Default::default() }))
-    }
+impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCompletion{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.inner))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::shared::SharedControlledRetirement<ArtifactMediaExportCompletionInner>>())}
+ fn controlled_retirement_supported()->bool{<ArtifactMediaExportCompletionInner as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
 impl ArtifactMediaExportCompletion {
+    pub(crate) fn original_birth_admit(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
+        let capacity_bytes=semio_framework_value::shared_retirement_allocation_bytes::<ArtifactMediaExportCompletionInner>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity_bytes{return Ok(None)}
+        let owner=Self::new();cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(Some(owner))
+    }
+
     pub(crate) fn new() -> Self {
-        Self { inner: std::sync::Arc::new(std::sync::Mutex::new(ArtifactMediaExportCompletionSlot::default())) }
+        Self { inner: std::sync::Arc::new(ArtifactMediaExportCompletionInner{state:semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactMediaExportCompletionSlot::default())}) }
     }
 
     pub fn complete(&self, result: Result<ArtifactMediaExportResult, MediaError>) -> Result<(), Fault> {
@@ -316,7 +317,7 @@ impl ArtifactMediaExportCompletion {
         if error_bytes > ARTIFACT_OUTPUT_METADATA_BYTES {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-metadata"), "media completion error metadata exceeds its exact byte cap"));
         }
-        let mut slot = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut slot = self.inner.state.try_lock().map_err(|_|Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.media-completion-busy"),"media completion authority is busy"))?;
         if slot.value.is_some() {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.duplicate-media-output"), "media export job attempted to complete more than once"));
         }
@@ -325,62 +326,9 @@ impl ArtifactMediaExportCompletion {
     }
 
     pub(crate) fn take(&self) -> Result<Option<Result<ArtifactMediaExportResult, MediaError>>, Fault> {
-        self.inner.try_lock().map(|mut slot| slot.value.take()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned"))
+        self.inner.state.try_lock().map(|mut slot| slot.value.take()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned"))
     }
 
-    fn busy() -> Fault {
-        Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion disposal authority is busy or poisoned")
-    }
-
-    /// 📏️ Quotes the next completion close turn: handing the result apart, birthing the chunk retirement frame, stepping it, or releasing one metadata string.
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        self.inner.try_lock().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "media completion disposal authority is busy or poisoned"))?.retirement_demands(body)
-    }
-
-    /// 🧹 One granted close turn; `Complete` only when the result, its chunk retirement and every metadata string are gone.
-    fn close_step(&self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
-        let mut slot = self.inner.try_lock().map_err(|_| Self::busy())?;
-        if slot.terminal_is_empty() {
-            return Ok(RetainedCloneStep::Complete(Default::default()));
-        }
-        if grant.maximum_items == 0 {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        let demand = slot.retirement_demands(grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
-        if grant.maximum_depth < demand.depth {
-            return Err(plugin_sdk_fault("media completion close exceeds its admitted depth"));
-        }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        let slot = &mut *slot;
-        let progress = if slot.active.is_some() {
-            store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut slot.active, grant).map_err(|error| Fault::from(error.into_message()))?.progress()
-        } else if let Some(value) = slot.value.take() {
-            match value {
-                Ok(ArtifactMediaExportResult { media_type: _, schema, mime_type, chunks }) => {
-                    slot.chunks = Some(chunks);
-                    slot.strings = [Some(schema), Some(mime_type)];
-                }
-                Err(MediaError::UnknownPort(port)) | Err(MediaError::Incompatible { port, .. }) => slot.strings[0] = Some(port),
-                Err(MediaError::Payload(port, message)) => slot.strings = [Some(port), Some(message)],
-                Err(MediaError::NotImplemented) => {}
-            }
-            RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }
-        } else if slot.chunks.is_some() {
-            store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut slot.chunks, &mut slot.active, grant).map_err(|error| Fault::from(error.into_message()))?.progress()
-        } else {
-            let value = slot.strings.iter_mut().find_map(Option::take);
-            let released_bytes = value.as_ref().map_or(0, String::capacity);
-            drop(value);
-            RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }
-        };
-        Ok(if slot.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
-    }
-
-    fn terminal_is_empty(&self) -> Result<bool, Fault> {
-        self.inner.try_lock().map(|slot| slot.terminal_is_empty()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion terminal authority is busy or poisoned"))
-    }
 }
 
 struct ArtifactMediaExportCreditState {
@@ -396,7 +344,23 @@ pub struct ArtifactMediaExportCredit {
     state: std::sync::Arc<ArtifactMediaExportCreditState>,
 }
 
+impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCreditState{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(())}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&())}
+ fn controlled_retirement_supported()->bool{<() as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
+}
+impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCredit{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.state))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::shared::SharedControlledRetirement<ArtifactMediaExportCreditState>>())}
+ fn controlled_retirement_supported()->bool{<ArtifactMediaExportCreditState as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
+}
+
 impl ArtifactMediaExportCredit {
+    pub(crate) fn original_birth_admit(maximum:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
+        let capacity_bytes=semio_framework_value::shared_retirement_allocation_bytes::<ArtifactMediaExportCreditState>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity_bytes{return Ok(None)}
+        let owner=Self::new(maximum);cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(Some(owner))
+    }
+
     pub(crate) fn new(maximum: usize) -> Self {
         Self { maximum, state: std::sync::Arc::new(ArtifactMediaExportCreditState { bytes: std::sync::atomic::AtomicUsize::new(0), exceeded: std::sync::atomic::AtomicBool::new(false) }) }
     }
@@ -431,21 +395,15 @@ impl ArtifactMediaExportCredit {
 
 /// 🎞️ Exact live-instance and operation authority for one resumable media export.
 pub struct ArtifactMediaExportJobRequest<A: ArtifactApp> {
+    pub source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),
     pub retained:RetainedCloneGrant,
     pub operation: semio_framework_job::Operation,
-    pub controller_id: String,
     pub tool_id: String,
-    pub payload_schema_id: String,
-    pub contract: semio_framework::ToolExecutionContract,
-    pub app_instance_id: u32,
     pub parent_document_id: String,
     pub canonical_base_revision: [u8; 32],
     pub snapshot: std::sync::Arc<A::Snapshot>,
     pub snapshot_close: ArtifactSnapshotCloseLease<A::Snapshot>,
-    pub config: std::sync::Arc<A::Config>,
-    pub history: std::sync::Arc<HistoryView>,
     pub port: String,
-    pub raw_wire: Vec<u8>,
     pub output_credit: ArtifactMediaExportCredit,
     pub output_chunks: ArtifactOutputChunks,
     pub completion: ArtifactMediaExportCompletion,
@@ -459,6 +417,19 @@ pub struct ArtifactMediaExportHandle {
     pub operation_id: semio_framework_job::OperationId,
     pub base_revision: semio_framework_job::RevisionId,
     pub generation: semio_framework_job::Generation,
+}
+
+/// 🎟️ Borrows the initiating decoded command's complete media authority without copying its document identity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactMediaExportHandleLoan<'a> {
+    pub app_instance_id:u32,
+    pub parent_document_id:&'a str,
+    pub operation_id:semio_framework_job::OperationId,
+    pub base_revision:semio_framework_job::RevisionId,
+    pub generation:semio_framework_job::Generation,
+}
+impl ArtifactMediaExportHandle {
+    pub fn original_loan(&self)->ArtifactMediaExportHandleLoan<'_>{ArtifactMediaExportHandleLoan{app_instance_id:self.app_instance_id,parent_document_id:&self.parent_document_id,operation_id:self.operation_id,base_revision:self.base_revision,generation:self.generation}}
 }
 
 impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportHandle {

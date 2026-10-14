@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-job-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
   "namedInputs": {
     "default": [
@@ -10,7 +10,7 @@
   },
   "targets": {
     "test-original-turn-failure-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -18,7 +18,7 @@
       }
     },
     "test-original-turn-failure-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -26,7 +26,7 @@
       }
     },
     "test-retained-work-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -34,7 +34,7 @@
       }
     },
     "test-retained-work-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -42,14 +42,14 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "test-close-demand-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -57,7 +57,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -65,7 +65,7 @@
       }
     },
     "test-session-return-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -73,7 +73,7 @@
       }
     },
     "test-session-return-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -81,7 +81,7 @@
       }
     },
     "test-original-close-context-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -89,7 +89,7 @@
       }
     },
     "test-original-close-context-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
@@ -97,7 +97,7 @@
       }
     },
     "test-original-retained-loan-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",

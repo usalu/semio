@@ -28,7 +28,7 @@ import { faultNoticeText, fillFaultNotice, normalizeManifestExamples, type Fault
 import type { StoragePort } from "../🖥️platform/🟦️.ts";
 import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️.ts";
-import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
+import {TurnScheduler,type Backpressure,type CoalesceKey,type Lane} from "../🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 export { KernelReturnContentFraming, type KernelReturnContentMetadata, type KernelReturnContentByte } from "./📤️return/📦️content/🟦️.ts";
 export { KernelReturnUiOperationHeader, type KernelReturnUiOperationFields, type KernelReturnUiFieldName } from "./📤️return/📦️content/🟦️.ts";
 

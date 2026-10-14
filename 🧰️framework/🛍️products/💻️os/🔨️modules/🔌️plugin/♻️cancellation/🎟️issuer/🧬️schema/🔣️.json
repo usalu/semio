@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceIdentity",
+    "phases",
+    "cases",
+    "lease",
+    "renewal",
+    "retirementInlineTransfer"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sourceIdentity": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "enum": [
+          "sourceLoan",
+          "slots",
+          "keyedOperations",
+          "keyedDocuments",
+          "appChild",
+          "publication",
+          "generation",
+          "active",
+          "state",
+          "ready"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "items",
+          "capacityBytes",
+          "sourceIdentity",
+          "cancelled",
+          "expected",
+          "expectedPhases"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "capacityBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sourceIdentity": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "expected": {
+            "enum": [
+              "denied",
+              "admitted",
+              "foreign",
+              "cancelled"
+            ]
+          },
+          "expectedPhases": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "enum": [
+                "sourceLoan",
+                "slots",
+                "keyedOperations",
+                "keyedDocuments",
+                "appChild",
+                "publication",
+                "generation",
+                "active",
+                "state",
+                "ready"
+              ]
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "lease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phases",
+        "cases"
+      ],
+      "properties": {
+        "phases": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "sourceKey",
+              "documentChild",
+              "operationChild",
+              "publication",
+              "aliases",
+              "scopeAliases",
+              "publish"
+            ]
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "keys",
+              "admitted",
+              "expectedKey",
+              "expectedPublished",
+              "sourceOwners"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "keys": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "admitted": {
+                "type": "array",
+                "items": {
+                  "type": "boolean"
+                }
+              },
+              "expectedKey": {
+                "type": "integer"
+              },
+              "expectedPublished": {
+                "type": "boolean"
+              },
+              "sourceOwners": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "renewal": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "creationRoot",
+          "displacedParent",
+          "witness",
+          "expected"
+        ],
+        "properties": {
+          "creationRoot": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "displacedParent": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "witness": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "retirementInlineTransfer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capacityBytes",
+        "expectedPhysicalBirth"
+      ],
+      "properties": {
+        "capacityBytes": {
+          "const": 0
+        },
+        "expectedPhysicalBirth": {
+          "const": 0
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import {decodeJsonSyntax,type JsonSyntaxNode,type JsonSyntaxControl,type JsonSyntaxMember} from "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts";
 import {JsonMemberPolicy} from "../../../../../../../../🔨️modules/🎒️pack/🔤️json/🧩️members/🟦️.ts";
 import {NativeDecodeControl} from "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🟦️.ts";
-import {ValueError} from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import type {DagSelectionDomains,DagChannelRef,DagNodeEvaluationStatus,DagNodeStatuses,DagHoverFacts,DagWireTypeRefusal} from "../../../🧬️schema/🎯️dag-input/🟦️.ts";
 
 /** 🎛️ Carries finite raw syntax limits and cumulative logical typed-slot ownership admission. */

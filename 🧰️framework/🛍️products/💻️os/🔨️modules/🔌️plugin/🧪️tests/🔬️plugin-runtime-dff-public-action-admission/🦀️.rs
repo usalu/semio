@@ -114,32 +114,25 @@ mod dff_public_action_admission_tests {
         assert!(admit_command(&decoy, "s.draw.draw@1/*#editor").is_ok());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn public_action_and_command_entry_points_require_a_live_instance_before_decode() {
-        let runtime = PluginRuntime::<crate::plugin_app::NoPluginApp>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        let action = plugin_handle_action(&runtime, 1, &padded_action("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("an action without a live instance must reject before decoding");
-        assert!(action.message.contains("unknown instance"));
-        let command = plugin_handle_command(&runtime, 1, &padded_command("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("a command without a live instance must reject before decoding");
-        assert!(command.message.contains("unknown instance"));
+    #[test]
+    fn retained_receiver_lookup_requires_a_live_instance_without_decoding_source() {
+        let runtime=PluginRuntime::<crate::plugin_app::NoPluginApp>::new(crate::app_testing::artifact_app_laws::fixture_mounted_policy()).expect("explicit original mounted owner policy");
+        let refusal=match runtime_instance_cell(&runtime,1){Err(refusal)=>refusal,Ok(_)=>panic!("absent original instance must refuse")};
+        assert!(refusal.message.contains("unknown instance"));
+    }
 
-        let malformed = plugin_handle_command(&runtime, 1, r#"{"address":{"commandId":"setTryValue""#, "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("a malformed DFF command must be rejected before decoding");
+    #[test]
+    fn finite_invocation_admission_refuses_malformed_and_hostile_original_sources() {
+        let malformed=validate_public_command_json(r#"{"address":{"commandId":"setTryValue""#).expect_err("structurally incomplete original source");
         assert!(malformed.message.contains("structurally incomplete"));
-        let hostile = format!(r#"{{"address":{{"owner":"os","commandId":"setTryValue"}},"arguments":{{"valueJson":"{}"}}}}"#, "x".repeat(MAX_PUBLIC_ACTION_STRING_BYTES + 1));
-        let hostile = plugin_handle_command(&runtime, 1, &hostile, "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("a hostile DFF command string must be rejected before decoding");
-        assert!(hostile.message.contains("oversized string"));
+        let hostile=format!(r#"{{"address":{{"owner":"os","commandId":"setTryValue"}},"arguments":{{"valueJson":"{}"}}}}"#, "x".repeat(MAX_PUBLIC_ACTION_STRING_BYTES+1));
+        let refusal=validate_public_command_json(&hostile).expect_err("original string body admission");
+        assert!(refusal.message.contains("oversized string"));
     }
 
     #[test]
     fn action_entry_points_drive_spawn_admit_instead_of_awaiting_the_retained_job() {
         let source = include_str!("../../⚛️reactor/🏃️runtime/🦀️.rs");
-        let public_start = source.find("pub async fn plugin_handle_action").expect("public action entry point");
-        let public_end = source[public_start..].find("pub async fn plugin_handle_command").map(|offset| public_start + offset).expect("public action boundary");
-        let public_action = &source[public_start..public_end];
-        assert!(public_action.contains("runtime_instance_cell(runtime, instance_id)?"));
-        assert!(public_action.contains("drive_self_waking_ready(instance.app.handle_action_invocation"));
-        assert!(!public_action.contains("resolve_ready(instance.app.handle_action_invocation"));
-        assert!(!public_action.contains("run_framework_reserved_job"));
-
         let exchange_start = source.find("protocol::AppCommand::Command { seq, command, view_state }").expect("reactor command exchange");
         let exchange_end = source[exchange_start..].find("protocol::AppCommand::CommandText").map(|offset| exchange_start + offset).expect("reactor command exchange boundary");
         let exchange = &source[exchange_start..exchange_end];

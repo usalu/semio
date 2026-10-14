@@ -6,15 +6,15 @@
     "includedScripts": []
   },
   "scripts": {
-    "test-native-literal-refusal-source": "nx run @semio-tech/value-rs:test-native-literal-refusal-source",
-    "test-native-literal-refusal-native": "nx run @semio-tech/value-rs:test-native-literal-refusal-native",
-    "test-native-recipient-source": "nx run @semio-tech/value-rs:test-native-recipient-source",
-    "test-native-recipient": "nx run @semio-tech/value-rs:test-native-recipient",
-    "test-portable": "nx run @semio-tech/value-rs:test-portable",
-    "test-type-ownership": "nx run @semio-tech/value-rs:test-type-ownership",
-    "test-decode-ownership": "nx run @semio-tech/value-rs:test-decode-ownership",
-    "test-refusal-codec": "nx run @semio-tech/value-rs:test-refusal-codec",
-    "test-ordered-retirement-source": "nx run @semio-tech/value-rs:test-ordered-retirement-source"
+    "test-native-literal-refusal-source": "bun repo run @semio-tech/value-rs:test-native-literal-refusal-source",
+    "test-native-literal-refusal-native": "bun repo run @semio-tech/value-rs:test-native-literal-refusal-native",
+    "test-native-recipient-source": "bun repo run @semio-tech/value-rs:test-native-recipient-source",
+    "test-native-recipient": "bun repo run @semio-tech/value-rs:test-native-recipient",
+    "test-portable": "bun repo run @semio-tech/value-rs:test-portable",
+    "test-type-ownership": "bun repo run @semio-tech/value-rs:test-type-ownership",
+    "test-decode-ownership": "bun repo run @semio-tech/value-rs:test-decode-ownership",
+    "test-refusal-codec": "bun repo run @semio-tech/value-rs:test-refusal-codec",
+    "test-ordered-retirement-source": "bun repo run @semio-tech/value-rs:test-ordered-retirement-source"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

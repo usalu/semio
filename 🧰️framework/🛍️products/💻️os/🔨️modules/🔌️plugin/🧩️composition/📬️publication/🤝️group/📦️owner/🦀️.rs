@@ -38,6 +38,7 @@ struct PrivateChildGroupRow<M: SpaceMember + MemberFactory> {
     source: ManuallyDrop<Option<OwnedChildEmit>>,
     metadata: Option<PrivateChildMemberMetadata>,
     request: ManuallyDrop<Option<store::MemberOpenRequest>>,
+    opening_source: ManuallyDrop<Option<store::MemberOpenSourceAdmission>>,
     open: ManuallyDrop<Option<M::Open>>,
     member: ManuallyDrop<Option<M>>,
     raw: ManuallyDrop<Option<ChildEmit>>,
@@ -54,7 +55,7 @@ struct PrivateChildGroupRow<M: SpaceMember + MemberFactory> {
 impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
     fn new(source: OwnedChildEmit) -> Self {
         let new_member = source.metadata().is_some_and(|metadata| metadata.genesis.is_some());
-        Self { input: PrivateChildPublicationInput::new(source), source: ManuallyDrop::new(None), metadata: None, request: ManuallyDrop::new(None), open: ManuallyDrop::new(None), member: ManuallyDrop::new(None), raw: ManuallyDrop::new(None), lane: None, identity: None, entry: None, slot: None, admission: None, input_ready: false, new_member, receipt_copied: false }
+        Self { input: PrivateChildPublicationInput::new(source), source: ManuallyDrop::new(None), metadata: None, request: ManuallyDrop::new(None), opening_source: ManuallyDrop::new(None), open: ManuallyDrop::new(None), member: ManuallyDrop::new(None), raw: ManuallyDrop::new(None), lane: None, identity: None, entry: None, slot: None, admission: None, input_ready: false, new_member, receipt_copied: false }
     }
     fn key(&self) -> MemberKeyRef<'_> {
         if let Some(parts) = self.metadata.as_ref().and_then(PrivateChildMemberMetadata::parts) { return parts.key.borrowed(); }
@@ -83,34 +84,38 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         self.input.advance(parent_id, dialect, if self.new_member { None } else { existing }, actor, transaction, Some(group_id), M::OPEN_DECLARATIONS, operation, generation, expires_at_us, now_us, grant)
     }
     fn open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, Fault> {
-        self.request.as_ref().map_or(Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }), |request| M::open_birth_demand(request).map_err(|_| plugin_sdk_fault("private child factory refused its original request birth")))
+        self.request.as_ref().or_else(||self.opening_source.as_ref().and_then(|source|source.request())).map_or(Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }), |request| M::open_birth_demand(request).map_err(|_| plugin_sdk_fault("private child factory refused its original request birth")))
     }
-    fn advance_open(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, begin: fn(&mut Option<store::MemberOpenRequest>, RetainedCloneGrant) -> Result<Option<M::Open>, store::MemberOpenDiagnostic>) -> Result<bool, Fault> {
+    fn advance_open(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<bool, crate::PluginLifecycleFailure> {
         if !self.new_member || self.member.is_some() { return Ok(true); }
-        if self.request.is_some() {
-            *self.open = begin(&mut self.request, grant).map_err(|_| plugin_sdk_fault("private child factory refused its exact original open authority"))?;
+        if let Some(request)=self.request.take(){*self.opening_source=Some(store::MemberOpenSourceAdmission::new(request));return Ok(false)}
+        let parent=cx.original_source_parent()?;
+        if let Some(source)=self.opening_source.as_mut(){
+            cx.with_retained_loan(grant,|same|M::begin_open(source,&mut self.open,same,parent))?;
+            if source.terminal_is_empty(){drop(self.opening_source.take());}
             return Ok(false);
         }
         let open = self.open.as_mut().ok_or_else(|| plugin_sdk_fault("private child opening lost its admitted owner"))?;
         if !open.terminal_is_empty() {
-            match open.step(cx, grant) {
+            let mut result=None;cx.with_retained_loan(grant,|same|{result=Some(open.step(same,grant)?);Ok(())})?;
+            match result.expect("original private member turn retains its owning result") {
                 store::MemberOpenStep::Pending(_) => return Ok(false),
-                store::MemberOpenStep::Rejected(_) => return Err(plugin_sdk_fault("private child open rejected its declared request")),
+                store::MemberOpenStep::Rejected(diagnostic) => return Err(store::os_store::member_open::member_admission_diagnostic(diagnostic).into()),
                 store::MemberOpenStep::Ready(member) => { *self.member = Some(member); return Ok(false); }
             }
         }
         Ok(false)
     }
-    fn retire_open(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn retire_open(&mut self,cx:&mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,crate::PluginLifecycleFailure> {
         let Some(open) = self.open.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !open.terminal_is_empty() {
-            let step = open.close_step(grant)?;
+            let parent=cx.original_source_parent()?;let step=cx.with_retained_loan(grant,|same|open.close_step(parent,same))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(grant, step, open.terminal_is_empty(), "private member open")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         let bytes = open.terminal_drop_byte_demand().ok_or_else(|| input_owner_error("terminal private open lost its original frame demand"))?;
-        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private open frame requires admitted depth")); }
+        if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private open frame requires admitted depth").into()); }
         if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.open.take();
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }))
@@ -135,12 +140,13 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         lane.advance(member, visibility, grant).map_err(plugin_sdk_fault)?;
         Ok(false)
     }
-    fn terminal_is_empty(&self) -> bool { self.input.terminal_is_empty() && self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.open.is_none() && self.member.is_none() && self.raw.is_none() && self.lane.is_none() && self.identity.is_none() && self.entry.is_none() && self.slot.is_none() && self.admission.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.input.terminal_is_empty() && self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.opening_source.is_none() && self.open.is_none() && self.member.is_none() && self.raw.is_none() && self.lane.is_none() && self.identity.is_none() && self.entry.is_none() && self.slot.is_none() && self.admission.is_none() }
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let release = |release_bytes| RetirementDemand { release_bytes, depth: 1, ..Default::default() };
         let mut demand = if !self.input.terminal_is_empty() { self.input.retirement_demands(body)? }
         else if let Some(request) = self.request.as_ref() { RetirementDemand { copy_bytes: request.next_copy_byte_demand()?, capacity_bytes: request.next_capacity_byte_demand(body)?, release_bytes: request.next_release_byte_demand()?, depth: request.next_depth_demand()? } }
+        else if let Some(source)=self.opening_source.as_ref(){source.retirement_demands(body)?}
         else if let Some(open) = self.open.as_ref() { if open.terminal_is_empty() { release(open.terminal_drop_byte_demand().ok_or_else(|| input_owner_error("terminal open lost original frame"))?) } else { RetirementDemand { copy_bytes: open.next_copy_byte_demand()?, capacity_bytes: open.next_capacity_byte_demand(body)?, release_bytes: open.next_release_byte_demand()?, depth: open.next_depth_demand()? } } }
         else if self.admission.is_some() { release(0) }
         else if let Some(entry) = self.entry.as_ref() { release(entry.next_close_byte_demand()) }
@@ -155,51 +161,52 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "private row owner depth overflow"))?;
         Ok(demand)
     }
-    fn close(&mut self, registry: &mut ChildMemberRegistry<M>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    fn close(&mut self, registry: &mut ChildMemberRegistry<M>,cx:&mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,crate::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-        if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("private row close exceeds admitted owner depth")); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(crate::PluginLifecycleFailure::from)?;
+        if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("private row close exceeds admitted owner depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if !self.input.terminal_is_empty() { return self.input.close_granted(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string())); }
+        if !self.input.terminal_is_empty() { return self.input.close_granted(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(crate::PluginLifecycleFailure::from); }
         if let Some(request) = self.request.as_mut() {
             if request.terminal_is_empty() { self.request.take(); return Ok(group_structural()); }
-            let step = request.close_step(child).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, request.terminal_is_empty(), "private row request").map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let step = request.close_step(child).map_err(crate::PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, request.terminal_is_empty(), "private row request").map_err(crate::PluginLifecycleFailure::from)?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.open.is_some() { return self.retire_open(child).map_err(|error| plugin_sdk_fault(error.to_string())); }
+        if let Some(source)=self.opening_source.as_mut(){if source.terminal_is_empty(){drop(self.opening_source.take());return Ok(group_structural())}let parent=cx.original_source_parent()?;let step=cx.with_retained_loan(child,|same|source.close_step(parent,same))?;return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if self.open.is_some() { return self.retire_open(cx,child).map_err(crate::PluginLifecycleFailure::from); }
         if self.admission.is_some() { registry.cancel_admission(self.admission.as_ref().unwrap()); self.admission.take(); return Ok(group_structural()); }
-        if self.entry.is_some() || self.slot.is_some() { return Err(plugin_sdk_fault("private row must reclaim original prepared entry through its retained future view")); }
+        if self.entry.is_some() || self.slot.is_some() { return Err(plugin_sdk_fault("private row must reclaim original prepared entry through its retained future view").into()); }
         if let Some(lane) = self.lane.as_mut() {
             let key = self.metadata.as_ref().and_then(PrivateChildMemberMetadata::parts).unwrap().key.borrowed();
             let member = if let Some(member) = self.member.as_mut() { member } else { &mut registry.member_mut(key).ok_or_else(|| plugin_sdk_fault("private cancellation lost exact member owner"))?.member };
-            let step = lane.close_step(member, child).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, lane.terminal_is_empty(), "private row publication lane").map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let step = lane.close_step(member, child).map_err(crate::PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, lane.terminal_is_empty(), "private row publication lane").map_err(crate::PluginLifecycleFailure::from)?;
             if lane.terminal_is_empty() { self.lane = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(source) = self.source.as_mut() {
-            let step = source.close_granted(child).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, source.terminal_is_empty(), "private row source").map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let step = source.close_granted(child).map_err(crate::PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, source.terminal_is_empty(), "private row source").map_err(crate::PluginLifecycleFailure::from)?;
             if source.terminal_is_empty() { self.source.take(); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(member) = self.member.as_mut() {
             if !member.close_owned_terminal_is_empty() {
-                let step = member.close_owned_step(child).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                semio_framework_value::retained_clone::admit_retained_clone_close(child, step, member.close_owned_terminal_is_empty(), "private row member").map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let step = member.close_owned_step(child).map_err(crate::PluginLifecycleFailure::from)?;
+                semio_framework_value::retained_clone::admit_retained_clone_close(child, step, member.close_owned_terminal_is_empty(), "private row member").map_err(crate::PluginLifecycleFailure::from)?;
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
             let bytes = member.member_frame_bytes();
             self.member.take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
         }
-        if let Some(raw) = self.raw.as_mut() { let step = raw.close_one(child).map_err(ValueError::into_fault)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, raw.terminal_is_empty(), "private row original child").map_err(ValueError::into_fault)?; if raw.terminal_is_empty() { self.raw.take(); } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if let Some(raw) = self.raw.as_mut() { let step = raw.close_one(child).map_err(crate::PluginLifecycleFailure::from)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, raw.terminal_is_empty(), "private row original child").map_err(crate::PluginLifecycleFailure::from)?; if raw.terminal_is_empty() { self.raw.take(); } return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.identity.is_some() { self.metadata.as_mut().and_then(PrivateChildMemberMetadata::parts_mut).unwrap().prepared_identity = self.identity.take().unwrap(); return Ok(group_structural()); }
-        if let Some(metadata) = self.metadata.as_mut() { let step = metadata.close_granted(child).map_err(|error| plugin_sdk_fault(error.to_string()))?; if metadata.terminal_is_empty() { self.metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if let Some(metadata) = self.metadata.as_mut() { let step = metadata.close_granted(child).map_err(crate::PluginLifecycleFailure::from)?; if metadata.terminal_is_empty() { self.metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
         Ok(RetainedCloneStep::Complete(empty))
     }
 }
@@ -366,24 +373,24 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     pub(crate) fn next_open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, Fault> {
         let Some(row) = self.rows.get(self.open_cursor).and_then(Option::as_ref) else { return Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }); };
         let mut birth = row.open_birth_demand()?;
-        if row.request.is_some() { birth.depth = birth.depth.checked_add(2).ok_or_else(|| plugin_sdk_fault("original open birth row/group depth overflow"))?; }
+        if row.request.is_some()||row.opening_source.is_some() { birth.depth = birth.depth.checked_add(2).ok_or_else(|| plugin_sdk_fault("original open birth row/group depth overflow"))?; }
         Ok(birth)
     }
     /// 🚪️ Drives only the exact funded factory selected by the retained original request.
-    pub(crate) fn advance_openings(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant, begin: fn(&mut Option<store::MemberOpenRequest>, RetainedCloneGrant) -> Result<Option<M::Open>, store::MemberOpenDiagnostic>) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn advance_openings(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,crate::PluginLifecycleFailure> {
         let grant = group_grant(grant);
         if self.closing || grant.maximum_items == 0 || !self.inputs_ready() { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.open_cursor == self.count { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let row = self.rows[self.open_cursor].as_mut().unwrap();
         if row.member.is_some() && row.open.is_some() {
-            if grant.maximum_depth < 2 { return Err(plugin_sdk_fault("original open close requires its row and group depth")) }
-            return row.retire_open(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant }).map_err(|error| plugin_sdk_fault(error.to_string()));
+            if grant.maximum_depth < 2 { return Err(plugin_sdk_fault("original open close requires its row and group depth").into()) }
+            return row.retire_open(cx,RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant }).map_err(crate::PluginLifecycleFailure::from);
         }
         let birth = row.open_birth_demand()?;
         let depth = birth.depth.checked_add(2).ok_or_else(|| plugin_sdk_fault("original open birth row/group depth overflow"))?;
-        if grant.maximum_depth < depth { return Err(plugin_sdk_fault("original open birth exceeds supplied row/group depth")); }
+        if grant.maximum_depth < depth { return Err(plugin_sdk_fault("original open birth exceeds supplied row/group depth").into()); }
         if grant.maximum_capacity_bytes < birth.capacity_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if row.advance_open(cx, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant }, begin)? { self.open_cursor += 1; return Ok(group_structural()); }
+        if row.advance_open(cx, RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..grant })? { self.open_cursor += 1; return Ok(group_structural()); }
         Ok(group_structural())
     }
     pub(crate) fn next_open_retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
@@ -605,13 +612,13 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         Ok(RetirementDemand { depth: usize::from(!self.complete), ..Default::default() })
     }
     /// ♻️ Returns private reads before staged abort and preserves each independently granted original owner.
-    pub(crate) fn close_step(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, graph: &mut store::os_store::composition_coordinator::CompositionGraph, live: &ChildContentView, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    pub(crate) fn close_step(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, graph: &mut store::os_store::composition_coordinator::CompositionGraph, live: &ChildContentView,cx:&mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,crate::PluginLifecycleFailure> {
         let grant = group_grant(grant);
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-        if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("private group close exceeds admitted owner depth")); }
+        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(crate::PluginLifecycleFailure::from)?;
+        if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("private group close exceeds admitted owner depth").into()); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.closing = true;
         if !self.committed { if let Some(owner) = self.visibility_owner.as_mut() { owner.abort(); } }
@@ -620,10 +627,10 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if let Some(read) = self.parent_read.take() {
             match parent.return_prepared_snapshot_read_erased(self.parent_lane.as_mut().unwrap().publication_mut().unwrap(), self.visibility.as_ref().unwrap(), read, item) {
                 Ok(step) => return Ok(step),
-                Err((error, original)) => { *self.parent_read = Some(original); return Err(plugin_sdk_fault(error.to_string())); }
+                Err((error, original)) => { *self.parent_read = Some(original); return Err(plugin_sdk_fault(error.to_string()).into()); }
             }
         }
-        if self.displaced.iter().any(Option::is_some) { return self.close_displaced_view_step(live, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.displaced.iter().any(Option::is_some) { return self.close_displaced_view_step(live, child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(Into::into); }
         if self.future.is_some() {
             if let Some(row) = self.rows[..self.count].iter_mut().flatten().find(|row| row.entry.is_some() || row.slot.is_some()) {
                 if let Some(slot) = row.slot.as_mut() {
@@ -644,28 +651,28 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(lane) = self.parent_lane.as_mut() {
-            let step = lane.close_step(parent, child).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, lane.terminal_is_empty(), "private parent lane").map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let step = lane.close_step(parent, child).map_err(crate::PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, lane.terminal_is_empty(), "private parent lane").map_err(crate::PluginLifecycleFailure::from)?;
             if lane.terminal_is_empty() { self.parent_lane = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(index) = self.rows[..self.count].iter().position(Option::is_some) {
             let row = self.rows[index].as_mut().unwrap();
-            if !row.terminal_is_empty() { return row.close(registry, child); }
+            if !row.terminal_is_empty() { return row.close(registry,cx,child); }
             self.rows[index].take();
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: Self::row_birth_bytes(), ..empty }));
         }
         if let Some(batch) = self.parent_source.as_mut() {
-            let step = batch.close_granted(child).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, batch.terminal_is_empty(), "private group parent batch").map_err(|error| plugin_sdk_fault(error.to_string()))?;
+            let step = batch.close_granted(child).map_err(crate::PluginLifecycleFailure::from)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child, step, batch.terminal_is_empty(), "private group parent batch").map_err(crate::PluginLifecycleFailure::from)?;
             if batch.terminal_is_empty() { self.parent_source.take(); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(sources) = self.sources.as_mut() {
             if let Some(source) = sources.front_mut() {
                 let source_grant = RetainedCloneGrant { maximum_depth: child.maximum_depth - 1, ..child };
-                let step = source.close_granted(source_grant).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                semio_framework_value::retained_clone::admit_retained_clone_close(source_grant, step, source.terminal_is_empty(), "private group deque source").map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let step = source.close_granted(source_grant).map_err(crate::PluginLifecycleFailure::from)?;
+                semio_framework_value::retained_clone::admit_retained_clone_close(source_grant, step, source.terminal_is_empty(), "private group deque source").map_err(crate::PluginLifecycleFailure::from)?;
                 if source.terminal_is_empty() { sources.pop_front(); }
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
@@ -674,9 +681,9 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
         }
         if let Some(preparation) = self.graph.as_mut() { let step = graph.close_owns_group(preparation, child); if preparation.terminal_is_empty() { self.graph = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if let Some(metadata) = self.parent_metadata.as_mut() { let step = metadata.close_granted(child).map_err(|error| plugin_sdk_fault(error.to_string()))?; if metadata.terminal_is_empty() { self.parent_metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if !self.parent_issuer.terminal_is_empty() { return self.parent_issuer.close_granted(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string())); }
-        if let Some(metadata) = self.original_metadata.as_mut() { let step = metadata.close_granted(child).map_err(|error| plugin_sdk_fault(error.to_string()))?; if metadata.terminal_is_empty() { self.original_metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if let Some(metadata) = self.parent_metadata.as_mut() { let step = metadata.close_granted(child).map_err(crate::PluginLifecycleFailure::from)?; if metadata.terminal_is_empty() { self.parent_metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if !self.parent_issuer.terminal_is_empty() { return self.parent_issuer.close_granted(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(crate::PluginLifecycleFailure::from); }
+        if let Some(metadata) = self.original_metadata.as_mut() { let step = metadata.close_granted(child).map_err(crate::PluginLifecycleFailure::from)?; if metadata.terminal_is_empty() { self.original_metadata = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
         if let Some(visibility) = self.visibility.as_ref() {
             if Arc::strong_count(visibility) != 2 { return Ok(RetainedCloneStep::Progress(empty)); }
             let released_bytes = if Arc::weak_count(visibility) == 0 { Self::visibility_birth_bytes() } else { 0 };

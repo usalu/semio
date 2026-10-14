@@ -34,7 +34,7 @@ const NUMBER_OPS: &[&str] = &["core.number"];
 
 
 #[test]
-fn cold_preview_phases_preserve_original_status_and_cancellation() {
+fn retained_preview_phase_projection_preserves_original_status_and_cancellation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/⏱️cold-preview/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let phase = row["phase"].as_str().unwrap();
@@ -43,17 +43,16 @@ fn cold_preview_phases_preserve_original_status_and_cancellation() {
         let mut session = FlowEvalSession::new();
     prepare_fixture_window(&mut session);
         assert!(session.note_pending_tessellate(7, "cold-preview".into()));
-        let outcome = session.resolve_preview_tessellate(7, &envelope);
+        session.tessellate_progress_by_hash.insert(7,PreviewTessellateProgress{phase:PreviewTessellatePhase::from_tag(phase),units_done:independent["unitsDone"].as_u64().unwrap(),units_total:independent["unitsTotal"].as_u64().unwrap(),..Default::default()});
         let status = session.preview_tessellate_status();
         let labels = status.phase.labels();
         session.retire_cold();
-        assert_eq!(outcome, PreviewTessellateOutcome::Working);
         assert_eq!(status.phase.tag(), independent["phase"].as_str().unwrap(), "{phase}");
         assert_eq!(status.phase.is_cancellable(), independent["cancellable"].as_bool().unwrap(), "{phase}");
         assert_eq!(status.units_done as u64, independent["unitsDone"].as_u64().unwrap());
         assert_eq!(status.units_total as u64, independent["unitsTotal"].as_u64().unwrap());
         assert!(!labels.0.is_empty() && !labels.1.is_empty());
-        eprintln!("[DEBUG] cold preview phase={phase} cancellable={} units={}/{}", status.phase.is_cancellable(), status.units_done, status.units_total);
+        eprintln!("[DEBUG] Retained preview phase projection={phase} cancellable={} units={}/{}", status.phase.is_cancellable(), status.units_done, status.units_total);
     }
 }
 

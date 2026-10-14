@@ -1,5 +1,9 @@
 {
   "version": 1,
+  "originalClose": {
+    "text": "Icon Original",
+    "expected": {"backingBytes": 13, "deniedBytes": 0, "copiedItems": 1, "terminalDropBytes": 0}
+  },
   "invalid": [
     {
       "filename": "null.png",

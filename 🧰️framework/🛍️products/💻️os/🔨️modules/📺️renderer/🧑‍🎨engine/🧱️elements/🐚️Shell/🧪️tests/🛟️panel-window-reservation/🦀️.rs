@@ -25,6 +25,7 @@ fn fixture_shell(row: &Value) -> ShellState {
 }
 
 fn plan_through_chrome(shell: &mut ShellState, theme: &Theme) {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut cursor = ShellChromeChildCursor::default();
     let mut draw = DrawList::default();
     let mut overlay = None;
@@ -33,9 +34,11 @@ fn plan_through_chrome(shell: &mut ShellState, theme: &Theme) {
     let mut input = InputState::default();
     let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..2 {
-        shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, theme, shell.body_rect(theme), &mut world);
+        caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, theme, shell.body_rect(theme), &mut world, cx));
     }
     assert_eq!(cursor.phase, 2, "the real chrome phases published the dock plan");
+    caller.retire_world(&mut world);
+    caller.finish();
 }
 
 #[test]

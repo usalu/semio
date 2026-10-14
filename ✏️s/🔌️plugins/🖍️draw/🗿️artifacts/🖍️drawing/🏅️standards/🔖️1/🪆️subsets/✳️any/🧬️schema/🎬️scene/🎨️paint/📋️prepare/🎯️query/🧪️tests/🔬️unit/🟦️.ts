@@ -12,7 +12,7 @@ import {DocumentVectorJob} from "../../../../../📋️prepare/🟦️.ts";
 import type {DrawingArtifact} from "../../../../../../🟦️.ts";
 import {ScenePaintJob,PreparedSceneCloseJob,type PreparedScene} from "../../../🟦️.ts";
 import {PreparedScenePickJob,preparedSelectionBounds,type PreparedSceneIdentity,type PreparedScenePick} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 const identity:PreparedSceneIdentity={source:{instance:710034,base:"9007199254740993",generation:"18446744073709551615",revision:Array(32).fill(3)},build:"9007199254740993",flatness:.001};
 const lift=(v:any):any=>typeof v==="number"?binary64(v):Array.isArray(v)?v.map(lift):v&&typeof v==="object"?Object.fromEntries(Object.entries(v).map(([k,v])=>[k,lift(v)])):v;
 function scene(name:string):PreparedScene{const row=vectorRows.find(r=>r.name===name)!,doc={...row.document,layers:lift(row.document.layers)}as DrawingArtifact,vector=new DocumentVectorJob(doc,row.limits,row.algorithms);while(!vector.advance(4096).done){if(vector.needsFontSources())vector.admitFontSources(builtinFontLocations().map(source=>({family:source.family,id:source.id,bytes:new Uint8Array(readFileSync(source.url))})));}const moved=vector.intoRetirement();while(!moved.job.advance(4096).done){}const paint=new ScenePaintJob(moved.output!,.001,{maxNodes:1024,maxSegments:65536,maxPoints:262144,maxContours:65536,maxWork:1e9});while(!paint.advance(4096).done){}const ready=paint.intoRetirement();while(!ready.job.advance(4096).done){}return ready.output!;}

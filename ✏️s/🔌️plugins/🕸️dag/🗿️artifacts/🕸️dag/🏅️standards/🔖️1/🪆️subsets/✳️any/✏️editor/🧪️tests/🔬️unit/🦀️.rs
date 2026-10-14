@@ -422,15 +422,15 @@ fn command_from_action_resolves_every_flat_verb_and_decodes_every_structured_one
         ("connectMediaPorts", "dag.connect-media-ports.malformed", serde_json::json!({ "sourceNodeId": "slider", "targetNodeId": "scale" })),
     ];
     for tool_id in DAG_RETAINED_TOOL_IDS.iter().filter(|tool_id| structured.iter().all(|(verb, _, _)| verb != *tool_id)) {
-        let command = DagPlayApp::command_from_action(tool_id, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
+        let command = DagPlayApp::command_from_action(tool_id, None, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
     }
     for (verb, code, payload) in &structured {
-        let error = DagPlayApp::command_from_action(verb, None).expect_err("an absent payload must not decode into an empty edit");
+        let error = DagPlayApp::command_from_action(verb, None, None).expect_err("an absent payload must not decode into an empty edit");
         assert_eq!(error.code, FaultCode::new(*code), "{verb}");
-        let command = DagPlayApp::command_from_action(verb, Some(&semio_framework_value::DslValue::from(payload))).unwrap_or_else(|error| panic!("{verb}: {error:?}"));
+        let command = DagPlayApp::command_from_action(verb, Some((semio_framework_value::DslValue::from(payload)).clone()), None).unwrap_or_else(|error| panic!("{verb}: {error:?}"));
         assert_eq!(command.command_id(), *verb);
     }
-    assert_eq!(DagPlayApp::command_from_action("thereIsNoSuchVerb", None).expect_err("an undeclared verb").code, FaultCode::new("dag.unhandled-action"));
+    assert_eq!(DagPlayApp::command_from_action("thereIsNoSuchVerb", None, None).expect_err("an undeclared verb").code, FaultCode::new("dag.unhandled-action"));
 }
 //#endregion 🧵️RetainedToolCatalog

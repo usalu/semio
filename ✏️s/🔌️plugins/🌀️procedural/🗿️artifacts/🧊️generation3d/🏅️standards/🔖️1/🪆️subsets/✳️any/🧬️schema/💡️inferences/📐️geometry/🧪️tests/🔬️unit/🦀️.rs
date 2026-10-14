@@ -104,7 +104,7 @@ fn a_slider_driven_box_chain_evaluates_to_the_exact_solid_and_equals_the_cold_in
     assert_eq!(number_of(&values, "size", "number"), 2.5);
     let boxed = &values["box"];
     assert_eq!((boxed.fault.as_ref(), boxed.quality), (None, Quality::ExactAnalytic));
-    let GeometryValue::Shape(shape) = &boxed.outputs["shape"] else { panic!("the box output is a shape") };
+    let GeometryValue::Shape(shape) = &*boxed.outputs.get("shape").unwrap() else { panic!("the box output is a shape") };
     let (signed, oracle) = solid_volume(shape);
     assert!((signed - 15.625).abs() < 1e-6 && (oracle - 15.625).abs() < 1e-4, "volume {signed} / parry3d {oracle} must equal 2.5^3");
     assert_eq!(values["view"].outputs, values["box"].outputs, "the preview passes the wired output through");
@@ -305,11 +305,11 @@ fn widgets_of_every_other_variant_provide_pass_through_or_refuse() {
         ],
         vec![wire("e1", "slide", "number", "view", "")],
     ));
-    assert_eq!(values["slide"].outputs["number"], GeometryValue::Number(7.5));
-    assert_eq!(values["note"].outputs["text"], GeometryValue::Text("hello".into()));
-    assert_eq!(values["image"].outputs["image"], GeometryValue::Text("data:image/png;base64,AA==".into()));
-    assert_eq!(values["var"].outputs["value"], GeometryValue::Text("width".into()));
-    assert_eq!(values["view"].outputs["number"], GeometryValue::Number(7.5));
+    assert_eq!*(values["slide"].outputs.get("number").unwrap(), GeometryValue::Number(7.5));
+    assert_eq!*(values["note"].outputs.get("text").unwrap(), GeometryValue::Text("hello".into()));
+    assert_eq!*(values["image"].outputs.get("image").unwrap(), GeometryValue::Text("data:image/png;base64,AA==".into()));
+    assert_eq!*(values["var"].outputs.get("value").unwrap(), GeometryValue::Text("width".into()));
+    assert_eq!*(values["view"].outputs.get("number").unwrap(), GeometryValue::Number(7.5));
     assert!(values["act"].outputs.is_empty() && values["act"].fault.is_none() && values["out"].outputs.is_empty());
 }
 //#endregion 🧪️Faults
@@ -441,7 +441,7 @@ fn inference_reads_the_explicit_admitted_catalogue() {
     kind.quality = Quality::Approximate;
     let admitted = std::sync::Arc::new(crate::standards::v1::subsets::any::schema::catalogue::Catalogue::from_categories(definitions).expect("typed catalogue"));
     let snapshot = box_chain(2.0);
-    let context = GeometryInput::new(&snapshot, std::sync::Arc::clone(&admitted),crate::standards::v1::subsets::any::io::geometry::context());
+    let context = GeometryInput::new(&snapshot,&admitted,&crate::standards::v1::subsets::any::io::geometry::NativeGeometryComputeContext);
     let custom = infer_geometry(&context);
     let builtin = infer_geometry(&crate::test_serial::geometry_input(&snapshot));
     assert_eq!(custom["box"].quality.to_value().as_str(), fixture["quality"].as_str());
@@ -459,13 +459,13 @@ fn geometry_compute_context_injection_controls_actual_inference() {
     fn answer(kind:&Kind,_inputs:WidgetInputs)->Box<dyn WidgetJob> {compute::finish(kind,Ok(outputs([("value",GeometryValue::Number(41.0))])))}
     impl compute::GeometryComputeContext for Context {fn lookup(&self,kind_id:&str)->Option<compute::StartFn>{(kind_id=="math.number").then_some(answer as compute::StartFn)}}
     let read=document(vec![neuron("n","math.number",vec![])],vec![]);
-    let input=GeometryInput::new(&read,Arc::clone(catalogue()),Arc::new(Context));
+    let input=GeometryInput::new(&read,catalogue(),&Context);
     let inferred=infer_geometry(&input);
-    assert_eq!(inferred["n"].outputs["value"],GeometryValue::Number(41.0));
+    assert_eq!*(inferred["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
     let mut engine=GeometryEngine::new(Arc::clone(catalogue()),Arc::new(Context),0);
     engine.start("context".into(),read.into_inner(),CacheMode::Cold,"context");
     loop {if engine.step(1).unwrap().done{break;}}
-    assert_eq!(engine.evaluations()["n"].outputs["value"],GeometryValue::Number(41.0));
+    assert_eq!*(engine.evaluations()["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
     println!("[DEBUG] Procedural geometry inference and engine used the explicit injected compute capability");
 }
 

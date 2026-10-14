@@ -8,7 +8,7 @@ import {type RasterSnapshot} from "../../../../🧬️schema/📸️snapshot/�
 import {parseRasterTransform} from "../../../../🧬️schema/🟦️.ts";
 import {RASTER_SQLITE_SCHEMA,rasterSnapshotToSqliteDatabase,rasterSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import type {IntrinsicValue} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-import { parseBinary64, parseBinary32, binary64, binary32 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64, parseBinary32, binary64, binary32 } from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { parseBinary32Transport } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/📝️text/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 function intrinsic(v:any):IntrinsicValue{switch(v.kind){case"null":return{kind:"null"};case"boolean":case"text":return{kind:v.kind,value:v.value};case"signed":case"unsigned":return{kind:v.kind,value:BigInt(v.value)};case"float":return{kind:"float",value:parseBinary64({bits:BigInt('0x'+v.value)})};case"bytes":return{kind:"bytes",value:Uint8Array.from(v.value)};case"array":return{kind:"array",items:v.items.map(intrinsic)};case"object":return{kind:"object",members:v.members.map((m:any)=>({name:m.name,value:intrinsic(m.value)}))};default:throw Error("neutral intrinsic kind");}}

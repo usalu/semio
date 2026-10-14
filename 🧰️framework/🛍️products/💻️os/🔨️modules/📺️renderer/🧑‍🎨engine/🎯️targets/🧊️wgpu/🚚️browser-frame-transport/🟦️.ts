@@ -1,3 +1,4 @@
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import { OriginalBootstrapRootPort, type OriginalBootstrapRequest, type OriginalBootstrapResponse } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts";
 import type { OriginalBootstrapOwner } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";
 import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
@@ -238,6 +239,7 @@ export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEve
 
 export type BrowserFrameWorkerBoot = {
   readonly catalog: PluginCatalogRowsV1;
+  readonly nativeCatalog?: NativeCatalogV1;
   readonly plugins?: readonly WgpuPluginModule[];
   readonly pluginRegistrySelection?: WgpuPluginRegistrySelection;
   readonly kind: "boot";
@@ -388,7 +390,7 @@ export type BrowserFrameWorkerMessage =
     }
   | { readonly kind: "introspection"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly json: string | null; readonly detail?: string }
   | { readonly kind: "diagnostic"; readonly lifecycle: number; readonly channel: "world3d-accepted-frame"; readonly generation: number; readonly frameSequence: number; readonly json: string }
-  | { readonly kind: "fault"; readonly lifecycle: number; readonly code: string; readonly detail: string }
+  | { readonly kind: "fault"; readonly lifecycle: number; readonly code: string; readonly detail: string;readonly originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array} }
   | { readonly kind: "closed"; readonly lifecycle: number }
   | { readonly kind: "shard-spawn"; readonly shardIndex: number; readonly url: string }
   | { readonly kind: "shard-terminate"; readonly shardIndex: number }
@@ -435,7 +437,7 @@ export type BrowserFrameTransportOptions = {
   readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
   readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
   readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
-  readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState) => void;
+  readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState,originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array}) => void;
   /** 🐢️ Reported for every UI turn that breached its ceiling — a measured signal, never a verdict. */
   readonly onUiTurn?: (outcome: TurnOutcome) => void;
   readonly requestAnimationFrame?: (callback: FrameRequestCallback) => number;
@@ -464,7 +466,7 @@ export class BrowserFrameTransport {
   readonly lifecycle = 1;
   readonly interactiveJobs: BrowserInteractiveJobPort;
   status: BrowserFrameWorkerStatus = "booting";
-  fault: { readonly code: BrowserFrameWorkerFaultCode; readonly detail: string } | undefined;
+  fault: { readonly code: BrowserFrameWorkerFaultCode; readonly detail: string;readonly originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array} } | undefined;
   private readonly worker: BrowserFrameWorkerPort;
   private readonly shardWorkers = new Map<number, Worker>();
   private readonly shardChannels = new Map<number, MessagePort>();
@@ -481,7 +483,7 @@ export class BrowserFrameTransport {
   private workerStepOverruns = 0;
   private readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
   private readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
-  private readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState) => void;
+  private readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState,originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array}) => void;
   private readonly onUiTurn?: (outcome: TurnOutcome) => void;
   private readonly requestRaf?: (callback: FrameRequestCallback) => number;
   private readonly cancelRaf?: (handle: number) => void;
@@ -1105,7 +1107,7 @@ export class BrowserFrameTransport {
       return;
     }
     if (message.kind === "fault") {
-      this.fail(this.status === "booting" ? "worker-boot-failed" : "worker-runtime-failed", `${message.code}: ${message.detail}`);
+      this.fail(this.status === "booting" ? "worker-boot-failed" : "worker-runtime-failed", `${message.code}: ${message.detail}`,message.originalFailure);
       return;
     }
     if (message.kind === "batch-accepted") {
@@ -1158,7 +1160,7 @@ export class BrowserFrameTransport {
     }, Math.min(Math.ceil(delayMs), 2_147_483_647));
   }
 
-  private fail(code: BrowserFrameWorkerFaultCode, detail: string): void {
+  private fail(code: BrowserFrameWorkerFaultCode, detail: string,originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array}): void {
     if (this.status === "faulted" || this.status === "closed") return;
     if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
     if (this.rafHandle !== undefined) this.cancelRaf?.(this.rafHandle);
@@ -1166,10 +1168,10 @@ export class BrowserFrameTransport {
     this.interactiveJobs.close();
     this.drainInteractiveJobs();
     this.clearQueues();
-    this.fault = { code, detail };
+    this.fault = { code, detail,originalFailure };
     this.status = "faulted";
     const fallback = this.fallbackState();
-    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback));
+    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback,originalFailure));
   }
 
   private quarantine(code: BrowserFrameWorkerFaultCode, detail: string): void {

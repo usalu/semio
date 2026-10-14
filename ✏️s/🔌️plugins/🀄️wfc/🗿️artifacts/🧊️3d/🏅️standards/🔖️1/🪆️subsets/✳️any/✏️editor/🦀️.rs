@@ -599,7 +599,9 @@ impl ArtifactEditor for Wfc3dEditor {
     /// why — before this bridge existed — every Actions-pane row, the navbar example picker and every
     /// canvas gesture answered `dispatch-failed` in the live playground. Each key below is the
     /// `ActionArgDef.id` that action declares.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let text = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string);
         let number = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64);
         let flag = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_bool);
@@ -683,9 +685,14 @@ impl ArtifactEditor for Wfc3dEditor {
         _view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run())
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
         fill::build_tool_run_job(request)

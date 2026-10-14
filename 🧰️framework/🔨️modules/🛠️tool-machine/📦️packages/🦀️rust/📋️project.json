@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-tool-machine-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
   "namedInputs": {
     "default": [
@@ -10,21 +10,21 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
       }
     },
     "test-node-graph-row-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

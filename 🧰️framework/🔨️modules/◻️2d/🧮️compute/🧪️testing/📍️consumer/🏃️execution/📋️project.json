@@ -2,7 +2,7 @@
   "name": "@semio-tech/compute-ownership-runner",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

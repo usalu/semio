@@ -1,7 +1,7 @@
 /** 🫳️ Explicit DWG row ownership and bounded ordered relationship reconstruction. */
 import { artifactSqliteTables,artifactSqliteCheckpoint,type ArtifactSqliteOptions } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import { type SqliteDatabase,type SqliteRow } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { DwgNumberRow } from "../🔢️number/🟦️.ts";
 
 export class DwgReader{

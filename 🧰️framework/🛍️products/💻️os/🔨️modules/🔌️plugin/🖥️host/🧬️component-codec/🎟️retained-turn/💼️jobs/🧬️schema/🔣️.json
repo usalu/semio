@@ -1,0 +1,218 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "original",
+    "methods",
+    "receiptFields",
+    "retainedFailure",
+    "closeCuts",
+    "ownedCalls",
+    "cleanupCuts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "original": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "epoch",
+        "fuel",
+        "deadlineUs",
+        "cancelled"
+      ],
+      "properties": {
+        "operation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deadlineUs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cancelled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "methods": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "reply",
+          "wire",
+          "source"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "reply": {
+            "type": "string"
+          },
+          "wire": {
+            "type": "string"
+          },
+          "source": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "receiptFields": {
+      "const": [
+        "input",
+        "spent",
+        "work_units_spent"
+      ]
+    },
+    "retainedFailure": {
+      "const": [
+        "authority",
+        "semantic"
+      ]
+    },
+    "closeCuts": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "copy",
+          "depth",
+          "fuel",
+          "demand",
+          "moves"
+        ],
+        "properties": {
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copy": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fuel": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "demand": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "moves": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "ownedCalls": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "parameters",
+          "resultBytes"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "step_job",
+              "read_job_output",
+              "acknowledge_job_output",
+              "cancel_job",
+              "close_jobs"
+            ]
+          },
+          "parameters": {
+            "enum": [
+              11,
+              12
+            ]
+          },
+          "resultBytes": {
+            "const": 160
+          }
+        }
+      }
+    },
+    "cleanupCuts": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "complete",
+          "postedItems",
+          "items",
+          "copyBytes",
+          "advance",
+          "additionalItems"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "postedItems": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copyBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "advance": {
+            "type": "boolean"
+          },
+          "additionalItems": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

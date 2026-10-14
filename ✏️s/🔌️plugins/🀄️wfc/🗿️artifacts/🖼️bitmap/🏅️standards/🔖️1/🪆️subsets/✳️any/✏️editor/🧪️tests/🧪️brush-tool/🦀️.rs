@@ -311,7 +311,7 @@ fn two_mounted_strokes_are_two_transactions() {
 fn pointer(app: &mut BitmapApp, action: &str, args: serde_json::Value) -> InvocationResult {
     let mut args = args;
     args["surfaceId"] = serde_json::Value::from(format!("window:{WFC_BITMAP_WINDOW_INPUT}"));
-    let command = <BitmapEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some(&semio_framework_value::DslValue::from(&args))).expect("the canvas verb bridges");
+    let command = <BitmapEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some((semio_framework_value::DslValue::from(&args)).clone()), None).expect("the canvas verb bridges");
     let meta = input_meta();
     let result = block_on(app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     settle(app, result)

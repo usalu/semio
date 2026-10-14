@@ -1,0 +1,7 @@
+{
+  "type":"object","additionalProperties":false,"required":["version","roots","entries"],
+  "properties":{
+    "version":{"const":1},"roots":{"type":"array","items":{"type":"string","minLength":1}},
+    "entries":{"type":"array","items":{"type":"object","required":["path","kind","mode"],"properties":{"path":{"type":"string","minLength":1},"kind":{"enum":["directory","file","symlink"]},"mode":{"type":"integer","minimum":0,"maximum":511},"file":{"type":"string","pattern":"^[a-f0-9]{32}$"},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"link":{"type":"string"}},"additionalProperties":false}}
+  }
+}

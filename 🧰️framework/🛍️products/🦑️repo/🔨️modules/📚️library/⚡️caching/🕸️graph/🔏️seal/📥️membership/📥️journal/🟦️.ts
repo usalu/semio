@@ -54,10 +54,12 @@ export async function createRepositoryFilesystemJournalV1(root: string, observat
   if (expected && (expected === "file" ? !status.isFile() : !status.isDirectory())) throw Error("Repository journal source has the wrong physical kind");
   return status;
  };
- const reconcile = async (event: FilesystemJournalChangeV1, current: FilesystemJournalControlV1): Promise<readonly string[]> => {
+ const reconcile = async (event: FilesystemJournalChangeV1, current: FilesystemJournalControlV1, priorAffected: readonly string[]): Promise<readonly string[]> => {
   if (event.path === ".nxignore" || event.path.split("/").at(-1) === ".gitignore") throw Error("Filesystem journal census policy changed");
+  let visited = 0;
   const paths: string[] = [], walk = async (path: string): Promise<void> => {
    if (excluded(path)) return;
+   if (++visited > 200_000) throw Error("Repository journal reconciliation capacity exceeded");
    const status = await admit(path, current); if (!status) return;
    if (status.isFile()) paths.push(path);
    else if (status.isDirectory()) {
@@ -65,10 +67,15 @@ export async function createRepositoryFilesystemJournalV1(root: string, observat
    } else throw Error("Repository journal refuses nonregular source");
    if (paths.length > 2_000_000) throw Error("Repository journal subtree capacity exceeded");
   };
-  await walk(event.path); await checkpoint(current, "reconcile");
+  if (event.type === "delete" && priorAffected.some(path => path.startsWith(event.path + "/"))) {
+   const parent = event.path.split("/").slice(0,-1).join("/");
+   if (parent) { const status = await admit(parent,current,"directory"); if (status) await walk(parent); }
+   else for (const name of await readdir(workspace)) await walk(name);
+  } else await walk(event.path);
+  await checkpoint(current, "reconcile");
   if (!paths.length) return paths;
-  const effective = await observation.admittedPaths(paths, current); check(current);
-  if (effective.some(path => !paths.includes(path))) throw Error("Native journal admission returned foreign paths");
+  const physical = new Set(paths), effective = await observation.admittedPaths(paths, current); check(current);
+  if (effective.some(path => !physical.has(path))) throw Error("Native journal admission returned foreign paths");
   const admitted = await collectionManifestsFromInventory(workspace, [paths.join("\0") + "\0"], cachePolicy, ownership.collections, current.signal);
   check(current);
   return [...new Set([...effective, ...admitted, ...paths.filter(path=>collectionManifestCandidate(path,cachePolicy,ownership.collections))])].filter(path => !excluded(path));

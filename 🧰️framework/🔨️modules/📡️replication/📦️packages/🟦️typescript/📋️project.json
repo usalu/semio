@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-replication",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/🟦️.ts",
@@ -15,7 +15,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
@@ -24,7 +24,7 @@
       }
     },
     "test-index-set": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "outputs": [],
@@ -35,7 +35,7 @@
       }
     },
     "test-index-entry": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "outputs": [],
@@ -46,7 +46,7 @@
       }
     },
     "test-index-insertion": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "outputs": [],

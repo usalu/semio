@@ -1,6 +1,6 @@
 {
   "name": "os-hub-ts",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -10,14 +10,14 @@
   },
   "targets": {
     "test-build-freshness": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test build-freshness"
       }
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": true,
       "options": {
@@ -28,7 +28,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": true,
       "options": {
@@ -72,7 +72,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -116,7 +116,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -160,7 +160,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -204,7 +204,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -248,7 +248,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -286,7 +286,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -297,7 +297,7 @@
       "outputs": []
     },
     "backup-restore-drill": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -326,7 +326,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -337,7 +337,7 @@
       "outputs": []
     },
     "boot-watch": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -366,7 +366,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "cache": false,
       "options": {
@@ -415,7 +415,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
@@ -424,7 +424,7 @@
       }
     },
     "shutdown-drill": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",
@@ -433,7 +433,7 @@
       }
     },
     "docker-image-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         "workspace:prepare"
@@ -445,7 +445,7 @@
       }
     },
     "docker-image-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/📦️packages/🟦️typescript",

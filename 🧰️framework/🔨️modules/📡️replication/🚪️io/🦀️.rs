@@ -4,7 +4,7 @@
 pub mod text;
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
-pub use binary::{DiffBinary, OpBinary};
+pub use binary::{DiffBinary, OpBinary, OpBinaryReceiving,OpBinaryReceivingCursor};
 pub use text::{DiffText, OpText};
 
 /// 🧬️ Requires both native diff representations.

@@ -15,9 +15,9 @@ export function selectedTaskSelectionV1(args:readonly string[],mode:"prototype"|
 }
 
 /** 🔌️ The actual pinned SDK and immutable owned bundle remain behind closed source ports. */
-export async function selectedGraphSdkPortsV1(root:string,implementationFile:string,args:readonly string[],mode:"prototype"|"release",control:FilesystemJournalControlV1):Promise<SelectedGraphReusePortsV1>{
+export async function selectedGraphSdkPortsV1(root:string,implementationFile:string,args:readonly string[],mode:"prototype"|"release",control:FilesystemJournalControlV1,environment:Readonly<Record<string,string|undefined>>):Promise<SelectedGraphReusePortsV1>{
  const require=createRequire(implementationFile),{toolingIdentity,authorizers}=await require("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1(),{daemonClient}=require("nx/src/daemon/client/client"),native=require("nx/src/native"),selection=selectedTaskSelectionV1(args,mode),planner=authorizers.nativeSelectedTaskPlannerV1(implementationFile);
- return {toolingIdentity,environment:require("nx/src/daemon/client/daemon-environment").getDaemonEnv(),hashFile:path=>native.hashFile(path),scope:graph=>selection?authorizers.selectedTaskScopeV1(root,graph,selection,planner,control.signal):Promise.resolve(null),capture:async scope=>{control.signal.throwIfAborted();const response=await daemonClient.getSemioFilesystemJournalV1(scope,control),witness=authorizers.readFilesystemJournalRpcResponseV1(response,toolingIdentity);if(!witness)throw Error("Original live selected graph observer unavailable");return witness;}};
+ return {toolingIdentity,environment:require("nx/src/daemon/client/daemon-environment").getDaemonEnv(environment),hashFile:path=>native.hashFile(path),scope:graph=>selection?authorizers.selectedTaskScopeV1(root,graph,selection,planner,control.signal):Promise.resolve(null),capture:async scope=>{control.signal.throwIfAborted();const response=await daemonClient.getSemioFilesystemJournalV1({roots:scope.roots,files:scope.files},control),witness=authorizers.readFilesystemJournalRpcResponseV1(response,toolingIdentity);if(!witness)throw Error("Original live selected graph observer unavailable");return witness;}};
 }
 
 /** 🔐️ Every SDK phase receives the real incoming caller before rechecking the selected source handoff. */
@@ -25,7 +25,7 @@ export async function originalSelectedGraphHandoffHoldsV1(root:string,implementa
  if(process.env[SELECTED_GRAPH_HANDOFF_ENV]===undefined)return true;
  return receiveScriptProcessInvocation(process.env,async original=>{
   const requested=original.capabilities as {workspaceRoot?:unknown;arguments?:unknown;buildMode?:unknown};if(requested.workspaceRoot!==root||!Array.isArray(requested.arguments)||requested.arguments.some(value=>typeof value!=="string"))throw Error("Original selected graph caller refused");
-  const control=scriptCompilerAdmissionControlV1(original,"nx:selected-source-custody",0),ports=await selectedGraphSdkPortsV1(root,implementationFile,requested.arguments,readBuildMode(requested.buildMode),control),{authorizers}=await createRequire(implementationFile)("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();
+  const control=scriptCompilerAdmissionControlV1(original,"nx:selected-source-custody",0),ports=await selectedGraphSdkPortsV1(root,implementationFile,requested.arguments,readBuildMode(requested.buildMode),control,process.env),{authorizers}=await createRequire(implementationFile)("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();
   return authorizers.selectedGraphHandoffHoldsV1(root,process.env.NX_WORKSPACE_DATA_DIRECTORY!,process.env[SELECTED_GRAPH_HANDOFF_ENV],ports,original.control.signal);
  });
 }

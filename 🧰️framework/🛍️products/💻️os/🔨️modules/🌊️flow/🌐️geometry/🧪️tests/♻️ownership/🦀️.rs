@@ -19,9 +19,9 @@ impl GeometryPort for OriginalPort {
     fn retain_step_progress(&self)->RetainedCloneProgress{self.receipt}
     fn retain_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.receipt=Default::default();let Some(owner)=&mut self.retaining else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(grant);self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.retaining=None;}Ok(step)}
     fn tessellation_demands(&self,_:GeometryWorkIdentity,_:&str,_:f64,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
-    fn tessellate_step(&self,_:GeometryWorkIdentity,_:&str,_:f64,_:usize,_:RetainedCloneGrant)->Result<(GeometryStep,GeometryWorkProgress),GeometryWorkFailure>{Ok((GeometryStep::Cancelled,Default::default()))}
+    fn tessellate_step(&self,_:GeometryWorkIdentity,_:&str,_:f64,_:&mut semio_framework_job::StepContext<'_>)->Result<(GeometryStep,GeometryWorkProgress),GeometryWorkFailure>{Ok((GeometryStep::Cancelled,Default::default()))}
     fn cancel_tessellation_demands(&self,_identity:GeometryWorkIdentity,_handle:&str,_tolerance:f64,_copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(Default::default())}
-    fn cancel_tessellation_step(&self,_identity:GeometryWorkIdentity,_handle:&str,_tolerance:f64,_units:usize,_grant:RetainedCloneGrant)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>{Ok((RetainedCloneStep::Complete(Default::default()),Default::default()))}
+    fn cancel_tessellation_step(&self,_identity:GeometryWorkIdentity,_handle:&str,_tolerance:f64,_cx:&mut semio_framework_job::StepContext<'_>)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>{Ok((RetainedCloneStep::Complete(Default::default()),Default::default()))}
     fn dispose(&self,_:&str)->Result<(),String>{Ok(())}
     fn begin_cancel(&mut self)->Result<(),ValueError>{self.cancelling=true;Ok(())}
     fn cancel_terminal_is_empty(&self)->bool{!self.cancelling}

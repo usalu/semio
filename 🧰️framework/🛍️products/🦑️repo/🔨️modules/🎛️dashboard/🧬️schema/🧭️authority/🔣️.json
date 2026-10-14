@@ -7,13 +7,13 @@
   "properties": {
     "scripts": {
       "type": "object",
-      "required": ["nx", "setup", "dashboard", "dashboard:install"],
+      "required": ["repo", "setup", "dashboard", "dashboard:install"],
       "additionalProperties": false,
       "properties": {
-        "nx": {"const": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx"},
-        "setup": {"const": "bun nx run workspace:setup"},
-        "dashboard": {"const": "bun nx run @semio-tech/repo-dashboard-rs:run --outputStyle=stream"},
-        "dashboard:install": {"const": "bun nx run @semio-tech/repo-dashboard-rs:build --excludeTaskDependencies --skip-nx-cache --outputStyle=stream"}
+        "repo": {"const": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo"},
+        "setup": {"const": "bun repo run workspace:setup"},
+        "dashboard": {"const": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream"},
+        "dashboard:install": {"const": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"}
       }
     }
   }

@@ -933,80 +933,111 @@ impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
     }
 }
 
-pub(crate) fn drive_agent_lane_preview<J: semio_framework_job::InteractiveJob + 'static>(job: J, params: semio_framework_job::BatchJobParams, close_grant: RetainedCloneGrant, verb: &str) -> Result<u64, Fault> {
-    let now_us = params.now_us;
-    let step_grant = params.config.retained;
-    let started_us = now_us();
-    let mut session = match crate::reserved_job_session::admit_batch(job, params, step_grant) {
-        Ok(session) => session,
-        Err(mut refused) => {
-            for _ in 0..AGENT_LANE_PREVIEW_TURNS {
-                if refused.terminal_is_empty() {
-                    break;
-                }
-                let _ = refused.close_step(close_grant);
-            }
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.admission-capacity"), format!("the preview of action '{verb}' found every worker session slot in use")));
-        }
-    };
-    let lost_step =
-        |contention: semio_framework_job::WorkerJobContention| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.preview-step"), format!("the previewed job of action '{verb}' lost its caller-driven step: {contention:?}"));
-    let lost_outcome = |detail: &str| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.preview-outcome"), format!("the previewed job of action '{verb}' lost its exact outcome: {detail}"));
-    let mut outcomes = 0_u64;
-    let mut turns = 0_u64;
-    let verdict = loop {
-        turns += 1;
-        if turns > AGENT_LANE_PREVIEW_TURNS || started_us.zip(now_us()).is_some_and(|(started, now)| now.saturating_sub(started) >= AGENT_LANE_PREVIEW_WALL_US) {
-            break Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.preview-budget"), format!("the previewed job of action '{verb}' did not complete within the agent lane's budget; it runs only from the shell")));
-        }
-        match session.step(step_grant) {
-            Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {}
-            Ok(_) => continue,
-            Err(contention) => break Err(lost_step(contention)),
-        }
-        if !session.checkout_outcome() {
-            continue;
-        }
-        let Some((issued, receipt)) = session.take_checked_out_retained_step_receipt() else { break Err(lost_outcome("the step receipt is absent")) };
-        if !receipt.fits(issued) {
-            break Err(lost_outcome("the step receipt exceeds its issued grant"));
-        }
-        outcomes += 1;
-        let terminal = match session.checked_out_outcome() {
-            Ok(Some(semio_framework_job::JobOutcomeView::Complete { .. })) => Some(Ok(outcomes)),
-            Ok(Some(semio_framework_job::JobOutcomeView::Cancelled { .. })) => Some(Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("the preview of action '{verb}' was cancelled")))),
-            Ok(Some(semio_framework_job::JobOutcomeView::Fault { detail, .. })) => {
-                let payload = ArtifactBoundedToolFault::from_payload(detail);
-                Some(Err(crate::tool_contract::reducer_fault_of_detail(payload.as_bytes()).unwrap_or_else(|| decode_typed_operation_fault_page(payload.as_bytes()))))
-            }
-            Ok(Some(_)) => None,
-            Ok(None) => break Err(lost_outcome("the checked-out outcome is absent")),
-            Err(error) => break Err(lost_outcome(&error.into_message())),
-        };
-        if let Some(verdict) = terminal {
-            break verdict;
-        }
-        for _ in 0..AGENT_LANE_PREVIEW_TURNS {
-            if matches!(session.acknowledge_outcome(close_grant), RetainedCloneStep::Complete(_)) {
-                break;
-            }
-        }
-        if let Err(contention) = session.resume() {
-            break Err(lost_step(contention));
-        }
-    };
-    session.begin_close();
-    for _ in 0..AGENT_LANE_PREVIEW_TURNS {
-        if session.terminal_is_empty() {
-            return verdict;
-        }
-        let _ = session.retirement_demands(close_grant.maximum_copy_bytes).map(|demand| {
-            if close_grant.maximum_items != 0 && close_grant.maximum_copy_bytes >= demand.copy_bytes && close_grant.maximum_capacity_bytes >= demand.capacity_bytes && close_grant.maximum_release_bytes >= demand.release_bytes && close_grant.maximum_depth >= demand.depth {
-                session.close_step(close_grant);
-            }
-        });
+pub(crate) struct AgentLanePreview<A:ArtifactApp>{
+    pub(crate) key:Option<crate::tool_cancellation::ToolOperationKey>,
+    pub(crate) caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
+    pub(crate) starting:bool,
+    pub(crate) producer:Option<OriginalPreviewDrive<semio_framework::ErasedToolJob>>,
+    pub(crate) children:Option<OriginalPreviewDrive<ChildEmissionPreviewJob<A>>>,
+    pub(crate) completion:Option<ArtifactToolCompletion<A>>,
+    pub(crate) completion_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletion<A>>>,
+    pub(crate) lease:Option<crate::tool_cancellation::ToolCancellationLease>,
+    pub(crate) lease_close:Option<Box<crate::typed_operation::ToolCancellationLeaseRetirement>>,
+    pub(crate) config:semio_framework_job::BatchDriveConfig,
+    pub(crate) maximum_bytes:usize,
+    pub(crate) steps:u64,
+    pub(crate) publication:Option<ArtifactToolCompletionValue<A>>,
+    pub(crate) complete:bool,
+    pub(crate) closing:bool,
+    pub(crate) publication_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletionValue<A>>>,
+}
+impl<A:ArtifactApp> AgentLanePreview<A>{
+    pub(crate) fn retirement_demands(&self,body:usize,canonical:Option<&crate::tool_cancellation::ToolCancellationHandle>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(owner)=self.producer.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
+        if let Some(owner)=self.children.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
+        if self.completion.is_some()||self.completion_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)}
+        if self.publication.is_some()||self.publication_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.publication,&self.publication_close,body)}
+        if let Some(owner)=self.lease_close.as_ref(){return if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{release_bytes:std::mem::size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{owner.retirement_demands(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,body)}}
+        if self.lease.is_some(){return Ok(semio_framework_value::RetirementDemand{capacity_bytes:std::mem::size_of::<crate::typed_operation::ToolCancellationLeaseRetirement>(),copy_bytes:std::mem::size_of::<crate::tool_cancellation::ToolCancellationLease>(),depth:1,..Default::default()})}
+        Ok(self.caller.as_ref().map_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()},|caller|caller.retirement_demands()))
     }
-    verdict.and(Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.preview-close"), format!("the previewed job of action '{verb}' did not close; the worker-session retirement pump finishes it"))))
+    pub(crate) fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
+    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,canonical:Option<&crate::tool_cancellation::ToolCancellationHandle>)->Result<crate::PluginLifecycleStep,crate::PluginLifecycleFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        self.closing=true;if cx.should_yield(){return Ok(crate::PluginLifecycleStep::Progress(Default::default()))}
+        if let Some(owner)=self.producer.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.producer.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>crate::PluginLifecycleStep::Progress(progress),Close::Blocked=>crate::PluginLifecycleStep::Blocked{reason:"original preview producer awaits paid closure"}})}
+        if let Some(owner)=self.children.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.children.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>crate::PluginLifecycleStep::Progress(progress),Close::Blocked=>crate::PluginLifecycleStep::Blocked{reason:"original preview child producer awaits paid closure"}})}
+        let grant=cx.retained_grant();
+        let step=if self.completion.is_some()||self.completion_close.is_some(){crate::bounded_ownership::plugin_typed_owner_step(&mut self.completion,&mut self.completion_close,grant)?}
+        else if self.publication.is_some()||self.publication_close.is_some(){crate::bounded_ownership::plugin_typed_owner_step(&mut self.publication,&mut self.publication_close,grant)?}
+        else if let Some(owner)=self.lease_close.as_mut(){if owner.terminal_is_empty(){crate::typed_operation::original_lease_cursor_release(&mut self.lease_close,grant).map(RetainedCloneStep::Progress)?}else{owner.close_step(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,grant)?}}
+        else if self.lease.is_some(){let(owner,progress)=crate::typed_operation::original_lease_cursor_admit(&mut self.lease,grant)?;self.lease_close=owner;RetainedCloneStep::Progress(progress)}else if self.key.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(crate::PluginLifecycleStep::Progress(Default::default()))}self.key.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else if let Some(caller)=self.caller.as_mut(){let step=caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(crate::PluginLifecycleStep::Progress(step.progress()))}else{return Ok(crate::PluginLifecycleStep::Complete(Default::default()))};
+        cx.consume_retained(step.progress())?;Ok(crate::PluginLifecycleStep::Progress(step.progress()))
+    }
+}
+pub(crate) struct OriginalPreviewDrive<J:semio_framework_job::InteractiveJob+'static>{
+    pending:Option<crate::reserved_job_session::RefusedWorkerSource<J>>,
+    session:Option<semio_framework_job::BatchJobSession<J>>,
+    config:semio_framework_job::BatchDriveConfig,
+    source:(semio_framework_job::OperationId,semio_framework_job::Generation),
+    steps:u64,
+    acknowledgement_pending:bool,
+    resume_pending:bool,
+    closing:bool,
+    verdict:Option<Result<u64,semio_framework_job::OriginalTurnFailure>>,
+    verdict_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Result<u64,semio_framework_job::OriginalTurnFailure>>>,
+}
+impl<J:semio_framework_job::InteractiveJob+'static> OriginalPreviewDrive<J>{
+    pub(crate) fn new(job:J,config:semio_framework_job::BatchDriveConfig,cx:&semio_framework_job::StepContext<'_>)->Self{Self{pending:Some(crate::reserved_job_session::RefusedWorkerSource::pending(job,(cx.operation(),cx.generation()))),session:None,config,source:(cx.operation(),cx.generation()),steps:0,acknowledgement_pending:false,resume_pending:false,closing:false,verdict:None,verdict_close:None}}
+    pub(crate) fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(owner)=self.pending.as_ref(){return owner.retirement_demands(body)}
+        if let Some(owner)=self.session.as_ref(){return owner.retirement_demands(body).map_err(|source|match source{semio_framework_job::WorkerJobDemandError::Refused(source)=>source,semio_framework_job::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original preview producer remains checked out")})}
+        crate::bounded_ownership::plugin_typed_owner_demand(&self.verdict,&self.verdict_close,body)
+    }
+    pub(crate) fn begin_close(&mut self){self.closing=true;if let Some(session)=self.session.as_mut(){session.begin_close()}}
+    pub(crate) fn terminal_is_empty(&self)->bool{self.pending.is_none()&&self.session.is_none()}
+    pub(crate) fn cancellation_terminal_is_empty(&self)->bool{self.terminal_is_empty()&&self.verdict.is_none()&&self.verdict_close.is_none()}
+    pub(crate) fn cancel_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if !self.terminal_is_empty(){return self.close_step(cx)}
+        let step=crate::bounded_ownership::plugin_typed_owner_step(&mut self.verdict,&mut self.verdict_close,cx.retained_grant())?;cx.consume_retained(step.progress())?;
+        Ok(if self.cancellation_terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}})
+    }
+    pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::{InteractiveJobCloseStep as Close,WorkerJobCloseStep as Worker};
+        if self.source!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview close requires its original initiating source").into())}
+        if cx.should_yield(){return Ok(Close::Pending{progress:Default::default()})}
+        self.begin_close();
+        if let Some(owner)=self.pending.as_mut(){let step=owner.close_step(cx)?;if owner.terminal_is_empty(){self.pending.take();}return Ok(step)}
+        if let Some(owner)=self.session.as_mut(){let step=owner.close_step(cx)?;if owner.terminal_is_empty(){self.session.take();}return Ok(match step{Worker::Pending{progress}=>Close::Pending{progress},Worker::Complete{progress}=>Close::Complete{progress},Worker::Blocked=>Close::Blocked})}
+        Ok(Close::Complete{progress:Default::default()})
+    }
+}
+pub(crate) fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'static>(owner:&mut OriginalPreviewDrive<J>,verb:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<u64>,semio_framework_job::OriginalTurnFailure>{
+    use semio_framework_job::WorkerJobPoll as Poll;
+    if owner.source!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation requires its initiating source").into())}
+    if cx.should_yield(){return Ok(None)}
+    if owner.closing{
+        owner.close_step(cx)?;
+        if !owner.terminal_is_empty()||cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(None)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return owner.verdict.take().unwrap_or(Ok(owner.steps)).map(Some)
+    }
+    if let Some(pending)=owner.pending.as_mut(){if let Some(session)=pending.admit_pending_batch(owner.config,cx)?{owner.session=Some(session);owner.pending.take();}return Ok(None)}
+    let session=owner.session.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation lost its admitted producer"))?;
+    if owner.acknowledgement_pending{let step=session.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){owner.acknowledgement_pending=false;owner.resume_pending=true;}return Ok(None)}
+    if owner.resume_pending{session.resume().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation could not return its original outcome"))?;owner.resume_pending=false;return Ok(None)}
+    match session.step_on_original_caller(cx){Ok(Poll::Outcome|Poll::Terminal)=>{},Ok(_)=>return Ok(None),Err(failure)=>{owner.begin_close();return Err(failure)}}
+    if !session.checkout_outcome(){return Ok(None)}
+    let Some((issued,receipt))=session.take_checked_out_retained_step_receipt()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview callback receipt is absent").into())};
+    if !receipt.fits(issued){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview callback exceeded its issued receipt").into())}
+    owner.steps=owner.steps.saturating_add(1);
+    let verdict=match session.checked_out_outcome()?{
+        Some(semio_framework_job::JobOutcomeView::Complete{..})=>Some(Ok(owner.steps)),
+        Some(semio_framework_job::JobOutcomeView::Cancelled{..})=>Some(Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),format!("the preview of action '{verb}' was cancelled")).into())),
+        Some(semio_framework_job::JobOutcomeView::Fault{detail,..})=>{let original=ArtifactBoundedToolFault::from_payload(detail);Some(Err(crate::tool_contract::reducer_fault_of_detail(original.as_bytes()).unwrap_or_else(||decode_typed_operation_fault_page(original.as_bytes())).into()))},
+        Some(_)=>None,
+        None=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview outcome is absent").into()),
+    };
+    if let Some(verdict)=verdict{owner.verdict=Some(verdict);owner.begin_close()}else{owner.acknowledgement_pending=true}
+    Ok(None)
 }
 
 #[cfg(test)]

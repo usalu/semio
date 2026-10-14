@@ -253,7 +253,9 @@ impl ArtifactEditor for Ifc2x3Cv20Editor {
 
     fn command_id(command: &Self::Command) -> &'static str { ifc2x3_cv20_editor_command_id(command) }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> { ifc2x3_cv20_editor_command_from_action(action, args) }
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref(); ifc2x3_cv20_editor_command_from_action(action, args) }
 
     fn initial_snapshot() -> Ifc2x3Snapshot {
         <crate::standards::v2x3::subsets::cv20::io::Ifc2x3Cv20BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::cv20::io::Ifc2x3Cv20BuilderConstruction::new()).expect("valid authored IFC2x3 cv20 initial owner")

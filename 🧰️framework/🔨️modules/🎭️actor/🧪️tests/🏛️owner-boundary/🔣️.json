@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "owner": "🧰️framework/🔨️modules/🎭️actor",
+  "forbiddenOwner": "🧰️framework/🛍️products",
+  "sourceOwners": [
+    "🟦️.ts",
+    "📦️packages/🟦️typescript/📜️script.ts",
+    "📦️packages/🦀️rust/📜️script.ts",
+    "🎟️retained-turn/🏛️bootstrap/🧪️tests/🟦️.ts",
+    "🎟️retained-turn/🎟️supplier/🧪️tests/🟦️.ts",
+    "🧪️tests/🧬️typegen/🟦️.ts",
+    "🧪️tests/🗞️typed-operation-page/🟦️.ts",
+    "🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "📦️packages/🟦️typescript/🟦️.ts",
+    "📦️packages/🟦️typescript/📃️page/🟦️.ts",
+    "📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+    "📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+    "🧪️tests/📣️public-facets/🟦️.ts",
+    "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts"
+  ],
+  "entrypoints": [
+    "🟦️.ts",
+    "🚪️lifetime/🟦️.ts",
+    "🖼️wire-turn/🟦️.ts",
+    "📦️packages/🟦️typescript/🟦️.ts",
+    "📦️packages/🟦️typescript/📃️page/🟦️.ts",
+    "📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+    "📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+    "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts"
+  ],
+  "references": [
+    {
+      "path": "🧰️framework/🔨️modules/🎭️actor/🦀️.rs",
+      "allowed": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🟦️.ts",
+      "allowed": true
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🦀️.rs",
+      "allowed": false
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔣️taxonomy.json",
+      "allowed": false
+    }
+  ],
+  "sourceScope": {
+    "extensions": [
+      ".ts",
+      ".tsx"
+    ],
+    "excludedDirectories": [
+      "node_modules",
+      "target",
+      "pkg",
+      "dist"
+    ]
+  }
+}

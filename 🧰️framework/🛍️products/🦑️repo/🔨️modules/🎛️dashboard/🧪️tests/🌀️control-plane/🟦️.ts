@@ -37,7 +37,8 @@ test("Ajv independently validates the shared dashboard protocol vectors", () => 
 test("Nx independently schedules every inferred command discovery vector", async () => {
   const {createTaskGraph} = await import("nx/src/tasks-runner/create-task-graph.js");
   const {graph,expected} = JSON.parse(readFileSync(new URL("../🧫️fixtures/🌳️inferred-targets/🔣️.json",import.meta.url),"utf8"));
-  const tasks = expected.flatMap((id:string) => { const split=id.lastIndexOf(":"); return Object.keys(createTaskGraph(graph,{},[id.slice(0,split)],[id.slice(split+1)],undefined,{}).tasks); }).sort();
+  const reference={nodes:Object.fromEntries(Object.entries(graph.projects).map(([name,data])=>[name,{name,type:"lib",data}])),dependencies:Object.fromEntries(Object.keys(graph.projects).map(name=>[name,[]]))};
+  const tasks = expected.flatMap((id:string) => { const split=id.lastIndexOf(":"); return Object.keys(createTaskGraph(reference,{},[id.slice(0,split)],[id.slice(split+1)],undefined,{}).tasks); }).sort();
   expect(tasks).toEqual(expected);
 });
 

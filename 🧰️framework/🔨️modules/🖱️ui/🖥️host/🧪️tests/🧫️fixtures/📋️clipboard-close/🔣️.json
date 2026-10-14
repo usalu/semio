@@ -1,8 +1,44 @@
 {
-  "texts": ["", "λ🙂"],
+  "texts": [
+    "",
+    "λ🙂"
+  ],
   "reserve": 256,
   "closeItems": 1,
   "closeDepth": 1,
   "copyBytes": 0,
-  "capacityBytes": 0
+  "capacityBytes": 0,
+  "callerGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 262144,
+    "maximumDepth": 64
+  },
+  "cases": [
+    {
+      "items": 0,
+      "release": 256,
+      "depth": 1,
+      "expected": "pending"
+    },
+    {
+      "items": 1,
+      "release": 255,
+      "depth": 1,
+      "expected": "pending"
+    },
+    {
+      "items": 1,
+      "release": 256,
+      "depth": 0,
+      "expected": "pending"
+    },
+    {
+      "items": 1,
+      "release": 256,
+      "depth": 1,
+      "expected": "complete"
+    }
+  ]
 }

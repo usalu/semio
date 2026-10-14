@@ -6,8 +6,8 @@
     "includedScripts": []
   },
   "scripts": {
-    "test-controlled-metadata": "nx run @semio-tech/stdio-dwg-rs:test-controlled-metadata",
-    "test-grammar-shape": "nx run @semio-tech/stdio-dwg-rs:test-grammar-shape"
+    "test-controlled-metadata": "bun repo run @semio-tech/stdio-dwg-rs:test-controlled-metadata",
+    "test-grammar-shape": "bun repo run @semio-tech/stdio-dwg-rs:test-grammar-shape"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/stdio-las-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -8,10 +8,10 @@
     "family:stdio"
   ],
   "targets": {
-    "test-original-receiving-source":{"executor":"nx:run-commands","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-source"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
-    "test-original-receiving-native":{"executor":"nx:run-commands","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-native"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
+    "test-original-receiving-source":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-source"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
+    "test-original-receiving-native":{"executor":"repo:script","options":{"cwd":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-receiving-native"},"inputs":["default","^production","{projectRoot}/../../🏅️standards/**/*"]},
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -32,7 +32,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -49,7 +49,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -66,7 +66,7 @@
       ]
     },
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite"
@@ -83,7 +83,7 @@
       ]
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite native"
@@ -100,7 +100,7 @@
       ]
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-snapshot-sqlite source"

@@ -1,9 +1,0 @@
-dialect grammar
-grammar stdio.png.snapshot
-extension png
-start document
-comment none
-
-document = "stdio.png" snapshot
-snapshot = "schema" "=" text "bytes" "=" text
-text = STRING / IDENT / INT / FLOAT

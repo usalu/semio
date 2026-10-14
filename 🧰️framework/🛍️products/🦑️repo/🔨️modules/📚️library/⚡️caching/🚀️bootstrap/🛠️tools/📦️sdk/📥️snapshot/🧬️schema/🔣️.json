@@ -82,6 +82,34 @@
           }
         }
       }
+    },
+    "PatchPositionFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "before",
+        "after",
+        "patch",
+        "accept"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "patch": {
+          "type": "string"
+        },
+        "accept": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

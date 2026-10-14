@@ -54,11 +54,11 @@ bun ./📜️script.ts test                        # the unit suites of the Type
 bun ./📜️script.ts test quick                  # every sweep and statistical session in full (`long` runs the same amount)
 bun ./📜️script.ts test exhaustive             # more seeds, finer grids, longer sessions, and coverage
 
-bun nx run @semio-tech/pets:test              # the same through nx
-bun nx run @semio-tech/pets:typecheck         # the core, its suites, adapters
-bun nx run @semio-tech/pets-rs:test           # the Rust core
-bun nx run @semio-tech/pets-react:test        # the React target
-bun nx run @semio-tech/pets-react:typecheck   # its types
+bun repo run @semio-tech/pets:test              # the same through nx
+bun repo run @semio-tech/pets:typecheck         # the core, its suites, adapters
+bun repo run @semio-tech/pets-rs:test           # the Rust core
+bun repo run @semio-tech/pets-react:test        # the React target
+bun repo run @semio-tech/pets-react:typecheck   # its types
 bun run dashboard run @semio-tech/pets-react:dev --detach --wait-ready   # the stories gallery (prints its URL)
 
 cd "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"

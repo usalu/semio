@@ -1,0 +1,13 @@
+{
+  "source": "{\"handle\":\"original handle 源\",\"tolerance\":0.125,\"nodeHash\":18446744073709551613,\"windowId\":\"original window α\",\"windowKindId\":\"original kind\"}",
+  "nodeHashLiteral": "18446744073709551613",
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "terminalDrop": 0,
+  "earlyTerminalPayload": false,
+  "wholeRequest": true,
+  "canonicalDomains": 16
+}

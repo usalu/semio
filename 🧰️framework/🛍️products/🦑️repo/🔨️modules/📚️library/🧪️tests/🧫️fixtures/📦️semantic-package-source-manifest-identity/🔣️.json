@@ -11,7 +11,7 @@
     "identity": {
       "cargoPackageName": "semio-framework-os-renderer-wgpu",
       "nodePackageName": "@fixture/wgpu",
-      "nxProjectName": "@fixture/wgpu"
+      "projectName": "@fixture/wgpu"
     }
   },
   "facts": {

@@ -1,8 +1,8 @@
 //#region 🧬️InstanceContract
-import type { ActorInstanceLifetime } from "../../../../🎭️actor/🚪️lifetime/🟦️.ts";
-import type { ActorUiPatchReceipt } from "../../../../🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import type { ActorInstanceLifetime } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
+import type { ActorUiPatchReceipt } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, type ShardActorActivationLease } from "../../../../🎭️actor/📮️shard-client/🟦️.ts";
-import type { NumericIndexGrant } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { UiDocumentLimits } from "../../../../🛂️manifest/🟦️.ts";
 import { OwnedUiSurface, type OwnedUiSurfaceAcknowledgement, type OwnedUiSurfaceView } from "../🖼️surface/🟦️.ts";
 import { OwnedUiWirePatchCursor } from "../🩹️operations/📥️wire/🟦️.ts";

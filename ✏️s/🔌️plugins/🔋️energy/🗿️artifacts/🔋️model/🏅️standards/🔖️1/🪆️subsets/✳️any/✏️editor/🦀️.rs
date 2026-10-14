@@ -1706,7 +1706,9 @@ impl ArtifactEditor for EnergyModelEditor {
         command.action_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 
@@ -1744,9 +1746,14 @@ impl ArtifactEditor for EnergyModelEditor {
         view_state: &semio_framework_plugin::ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         render_body(body_key, doc, cfg, view_state, &EnergyModelInteractionSnapshot::from_interaction(interaction))
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 
 /// 🎨️ The one body dispatch both render entry points share, so the plain and the request-context

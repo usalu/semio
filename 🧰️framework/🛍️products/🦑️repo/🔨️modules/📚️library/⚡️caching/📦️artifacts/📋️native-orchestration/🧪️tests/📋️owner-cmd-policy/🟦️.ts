@@ -8,13 +8,13 @@ import { getWorkspaceRoot, repositoryCargoTestPolicyV1 } from "../../../../../�
 
 const root = getWorkspaceRoot();
 const owner = resolve(import.meta.dir, "../..");
-const corpus = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📋️owner-cmd-policy/🔣️.json"), "utf8")) as { version: number; cases: { id: string; manifest?: string; cwd?: string; manifestText?: string; classification: string; policy: string }[] };
+const corpus = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📋️owner-cmd-policy/🔣️.json"), "utf8")) as { version: number; cases: { id: string; manifest?: string; cwd?: string; manifestText?: string; classification: string; policy: string;callerMode:string;environmentMode:string }[] };
 const neutralCargo = join(root, "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo");
 const validatePolicy = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(neutralCargo, "🧬️schema/🔣️.json"), "utf8")));
-const foreignPolicy = JSON.parse(readFileSync(join(neutralCargo, "🧫️fixtures/🔣️.json"), "utf8")).policies[0];
+const foreignPolicy = JSON.parse(readFileSync(join(neutralCargo, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).policies[0];
 /** 📨️ Authors each original test operation before its selected owner is inspected. */
-function ownerInvocation(manifest: string, cwd: string, program: string, args: string[], artifactDirectory: string, maximumElapsedMilliseconds: number, started: number): string {
-  return JSON.stringify({ version: 1, policy: { version: 1, owner: "native-owner-command-original-law", maximumElapsedMilliseconds }, deadlineEpochMilliseconds: started + maximumElapsedMilliseconds, capabilities: { version: 1, repositoryRoot: root, artifactDirectory, command: { kind: "native-owner-command", manifest, workingDirectory: cwd, program, arguments: args }, transport: { maximumBytes: 67108864, maximumLines: 65536 }, child: { maximumElapsedMilliseconds }, network: { offline: true } } });
+function ownerInvocation(manifest: string, cwd: string, program: string, args: string[], artifactDirectory: string, maximumElapsedMilliseconds: number, started: number,mode:string): string {
+  return JSON.stringify({ version: 1, policy: { version: 1, owner: "native-owner-command-original-law", maximumElapsedMilliseconds }, deadlineEpochMilliseconds: started + maximumElapsedMilliseconds, capabilities: { version: 1, buildMode: mode, repositoryRoot: root, artifactDirectory, command: { kind: "native-owner-command", manifest, workingDirectory: cwd, program, arguments: args }, transport: { maximumBytes: 67108864, maximumLines: 65536 }, child: { maximumElapsedMilliseconds }, network: { offline: true } } });
 }
 
 const child = 'await Bun.write(process.env.SEMIO_OWNER_POLICY_RECEIPT, JSON.stringify({policy: process.env.SEMIO_CARGO_TEST_POLICY ? JSON.parse(process.env.SEMIO_CARGO_TEST_POLICY) : null, context: JSON.parse(process.env.SEMIO_PROCESS_OWNER_CONTEXT)})); console.log("[native-owner-command-policy] child=" + (process.env.SEMIO_CARGO_TEST_POLICY ? "owned" : "absent"));';
@@ -41,7 +41,7 @@ for (const row of corpus.cases) test(row.id, () => {
   const document = toml.parse(readFileSync(resolve(root, manifest!), "utf8")) as { package?: { name?: string }; workspace?: object };
   const classification = document.package?.name ? "package" : document.workspace ? "workspace" : "invalid";
   expect(classification).toBe(row.classification);
-  const env = { ...process.env, SEMIO_SCRIPT_PROCESS_INVOCATION: ownerInvocation(manifest!, cwd!, process.execPath, ["--eval", child], output, 15000, started), CARGO_TARGET_DIR: output, SEMIO_CARGO_TEST_POLICY: JSON.stringify(foreignPolicy), SEMIO_TEST_LEVEL: "fundamental", SEMIO_OWNER_POLICY_RECEIPT: receiptPath, SEMIO_TEST_ARTIFACT_DIR: output };
+  const env = { ...process.env, SEMIO_SCRIPT_PROCESS_INVOCATION: ownerInvocation(manifest!, cwd!, process.execPath, ["--eval", child], output, 15000, started,row.callerMode), SEMIO_BUILD_MODE:row.environmentMode,CARGO_TARGET_DIR: output, SEMIO_CARGO_TEST_POLICY: JSON.stringify(foreignPolicy), SEMIO_TEST_LEVEL: "fundamental", SEMIO_OWNER_POLICY_RECEIPT: receiptPath, SEMIO_TEST_ARTIFACT_DIR: output };
   const command = [process.execPath, join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"), "native", "owner-command", "--manifest", manifest!, "--cwd", cwd!, "--", process.execPath, "--eval", child];
   const result = Bun.spawnSync(command, { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   writeFileSync(join(output, "stdout.log"), result.stdout);
@@ -56,7 +56,8 @@ for (const row of corpus.cases) test(row.id, () => {
     expect(receipt.context.cwd).toBe(resolve(root, cwd!));
     if (row.policy === "owned") {
       expect(validatePolicy(receipt.policy), JSON.stringify(validatePolicy.errors)).toBe(true);
-      expect(receipt.policy).toEqual(repositoryCargoTestPolicyV1(manifest!, resolve(root, cwd!), env));
+      expect(receipt.policy).toEqual(repositoryCargoTestPolicyV1(manifest!, resolve(root, cwd!), {...env,SEMIO_BUILD_MODE:row.callerMode}));
+      expect(receipt.policy.mode).toBe(row.callerMode);
       expect(receipt.policy.manifestPath).toBe(resolve(root, manifest!));
       expect(receipt.policy).not.toEqual(foreignPolicy);
     } else expect(receipt.policy).toBeNull();
@@ -72,11 +73,11 @@ test("interactive dashboard delegates its native owner progress", () => {
 
 test("native progress follows the declared owner and preserves independent child output", async () => {
   const started = Date.now();
-  const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📣️progress/🔣️.json"),"utf8"));
+  const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📣️progress/🔣️.json"),"utf8"));
   const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
   if(!artifacts)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   const output=mkdtempSync(join(artifacts,"native-progress-"));
-  const workspace=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📋️owner-cmd-policy/🔣️.json"),"utf8")).cases.find((row:{classification:string})=>row.classification==="workspace");
+  const workspace=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📋️owner-cmd-policy/🔣️.json"),"utf8")).cases.find((row:{classification:string})=>row.classification==="workspace");
   const manifest=join(root,workspace.manifest),cwd=join(root,workspace.cwd);
   const {build}=await import("esbuild");
   const compiled=await build({stdin:{contents:`setTimeout(()=>console.log("[DEBUG] interactive-ready"),${corpus.durationMs});`,loader:"js"},write:false,platform:"node",format:"esm"});
@@ -87,7 +88,7 @@ test("native progress follows the declared owner and preserves independent child
     return {stdout,stderr,status};
   };
   const wrapper=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts");
-  const [oracle,...observed]=await Promise.all([collect(["node","--eval",code],process.env),...corpus.cases.map((row:{mode:string})=>collect([process.execPath,wrapper,"native","owner-command","--manifest",relative(root,manifest),"--cwd",relative(root,cwd)||".","--","node","--eval",code],{...process.env,SEMIO_NATIVE_OWNER_PROGRESS:row.mode,SEMIO_TEST_ARTIFACT_DIR:output,CARGO_TARGET_DIR:output,SEMIO_SCRIPT_PROCESS_INVOCATION:ownerInvocation(relative(root,manifest),relative(root,cwd)||".","node",["--eval",code],output,180000,started)}))]);
+  const [oracle,...observed]=await Promise.all([collect(["node","--eval",code],process.env),...corpus.cases.map((row:{mode:string})=>collect([process.execPath,wrapper,"native","owner-command","--manifest",relative(root,manifest),"--cwd",relative(root,cwd)||".","--","node","--eval",code],{...process.env,SEMIO_NATIVE_OWNER_PROGRESS:row.mode,SEMIO_TEST_ARTIFACT_DIR:output,CARGO_TARGET_DIR:output,SEMIO_SCRIPT_PROCESS_INVOCATION:ownerInvocation(relative(root,manifest),relative(root,cwd)||".","node",["--eval",code],output,180000,started,"prototype")}))]);
   expect(oracle.status,oracle.stderr).toBe(0);
   for(let index=0;index<corpus.cases.length;index++){
     const row=corpus.cases[index],result=observed[index]!;
@@ -99,7 +100,7 @@ test("native progress follows the declared owner and preserves independent child
 },180000);
 
 test("dashboard-selected owner tests allocate their output without manual environment setup", async () => {
-  const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/📣️progress/🔣️.json"),"utf8")),ts=(await import("typescript")).default;
+  const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/📣️progress/🔣️.json"),"utf8")),ts=(await import("typescript")).default;
   const script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"),source=ts.createSourceFile(script,readFileSync(script,"utf8"),ts.ScriptTarget.Latest,true);
   const selected=source.statements.find((node:any)=>node.name?.text==="TestScript").members.find((node:any)=>node.name?.text==="run").body.statements.find((node:any)=>ts.isIfStatement(node)&&node.expression.getText(source)==='segments[0] === "native-owner-command-policy"');
   const environmentPath=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts"),environmentSyntax=ts.createSourceFile(environmentPath,readFileSync(environmentPath,"utf8"),ts.ScriptTarget.Latest,true),environmentSource=environmentSyntax.statements.find((node:any)=>node.name?.text==="repoTestArtifactEnvironment").getText(environmentSyntax).replace(/^export /,"");
@@ -126,11 +127,11 @@ test("actual native receiving command refuses a different original caller comman
   if (!artifacts) throw Error("Caller-owned ticket output required");
   const output = mkdtempSync(join(artifacts, "native-capability-")), row = corpus.cases.find(row => row.classification === "workspace")!;
   const manifest = row.manifest!, cwd = row.cwd!, requestedManifest = relative(root, join(output, "unacquired", "Cargo.toml")), code = 'console.log("[DEBUG] foreign acquisition occurred")';
-  const wire = ownerInvocation(manifest, cwd, process.execPath, ["--eval", 'console.log("[DEBUG] original command")'], output, 15000, started);
+  const wire = ownerInvocation(manifest, cwd, process.execPath, ["--eval", 'console.log("[DEBUG] original command")'], output, 15000, started,"prototype");
   const oracle = Bun.spawnSync(["node", "--eval", 'console.log(JSON.stringify(JSON.stringify(JSON.parse(process.argv[1]).capabilities.command.arguments) === JSON.stringify(["--eval",process.argv[2]])))', wire, code]);
   expect(oracle.exitCode).toBe(0); expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toBe(false);
   const observations = ["different-command", "missing-child", "zero-child"].map(id => {
-    const original = JSON.parse(id === "different-command" ? wire : ownerInvocation(manifest, cwd, process.execPath, ["--eval", code], output, 15000, started));
+    const original = JSON.parse(id === "different-command" ? wire : ownerInvocation(manifest, cwd, process.execPath, ["--eval", code], output, 15000, started,"prototype"));
     if (id === "missing-child") delete original.capabilities.child;
     if (id === "zero-child") original.capabilities.child.maximumElapsedMilliseconds = 0;
     const actual = Bun.spawnSync([process.execPath, join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"), "native", "owner-command", "--manifest", id === "different-command" ? requestedManifest : manifest, "--cwd", cwd, "--", process.execPath, "--eval", code], { cwd: root, env: { ...process.env, SEMIO_SCRIPT_PROCESS_INVOCATION: JSON.stringify(original), CARGO_TARGET_DIR: output }, stdout: "pipe", stderr: "pipe" });

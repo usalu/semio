@@ -121,6 +121,9 @@ macro_rules! component_persistent_local {
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[doc(hidden)]
 pub mod owned_abi {
+    /// 📋️ Fixed stack authority preserves all original scalar fields and refuses malformed extents.
+    pub fn original_job_budget(arguments:[u64;11])->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{semio_framework::kernel::OriginalJobBudget::from_scalar_arguments(arguments).map_err(|error|error.kind)}
+
     use semio_framework_value_derive::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
@@ -219,7 +222,7 @@ pub mod owned_abi {
     }
 
     pub unsafe fn deallocate(pointer: u32, length: u32) {
-        if crate::reactor::original_actor_context::exports::fixed_receipt_pointer(pointer,length) { return; }
+        if crate::reactor::original_actor_context::exports::fixed_receipt_pointer(pointer,length)||crate::reactor::original_actor_context::exports::release_owned_job_receipt(pointer,length) { return; }
         let slice = std::ptr::slice_from_raw_parts_mut(pointer as usize as *mut u8, length as usize);
         drop(unsafe { Box::from_raw(slice) });
     }
@@ -291,6 +294,7 @@ pub use bounded_ownership::{PluginLifecycleFailure,PluginLifecyclePrimary};
 pub(crate) mod reserved_job_session;
 #[path = "📤️fault/🦀️.rs"]
 pub(crate) mod sdk_fault;
+pub use semio_framework_job::StepContext;
 #[path = "🧬️schema/🪶️sqlite/🦀️.rs"]
 pub mod sqlite_wire;
 #[path = "♻️lifecycle/🦀️.rs"]
@@ -433,6 +437,10 @@ pub use completion_vacant::{VacantVec,VacantDeque};
 pub(crate) mod extension_invocation_failure;
 #[path = "🎞️media/🦀️.rs"]
 pub(crate) mod media_export;
+#[path="🎞️media/⚠️turn/🦀️.rs"]
+pub(crate) mod media_operation_refusal;
+#[cfg(feature="media-turn-testing")]
+pub use media_operation_refusal::tests as media_turn_laws;
 #[path="🚪️io/🛂️authority/🦀️.rs"]
 pub mod operation_authority;
 #[path="👷️job/🧾️bytes/🦀️.rs"]
@@ -708,6 +716,7 @@ pub use app::{
     ArtifactInferenceServiceRegistry,
     ArtifactInstanceOperationOwner,
     ArtifactInstanceOperationOwnerHandle,
+    ArtifactInferenceSessionAccess,
     ArtifactInstanceOperationOwnerAliasRetirement,
     ArtifactKindSpec,
     ArtifactLocale,
@@ -715,6 +724,7 @@ pub use app::{
     ArtifactMediaExportCompletion,
     ArtifactMediaExportCredit,
     ArtifactMediaExportHandle,
+    ArtifactMediaExportHandleLoan,
     ArtifactMediaExportJobRequest,
     ArtifactMediaExportPoll,
     ArtifactMediaExportResult,
@@ -811,6 +821,8 @@ pub use app::{
     Plugin,
     PluginApp,
     PluginAssemblyError,
+    OriginalRenderFailure,
+    OriginalRenderResult,
     PluginBuilder,
     PluginLifecycleStep,
     PluginProgram,
@@ -1137,3 +1149,8 @@ macro_rules! subset {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️subset-macro/🦀️.rs"]
 mod subset_macro_tests;
+
+
+
+#[path="🎮️command/📥️ingress/🦀️.rs"]
+pub mod action_ingress;

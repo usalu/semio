@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "grant",
+    "requiredFields",
+    "counterBytes",
+    "counterLimit",
+    "stepLimit",
+    "stateOrdinals",
+    "sameFinalSlot",
+    "includesSourceAllocation",
+    "cases",
+    "interruptPolicy",
+    "allocationCeiling"
+  ],
+  "properties": {
+    "contract": {
+      "const": "original-tick-progress-receiving/v1"
+    },
+    "grant": {
+      "const": [
+        1,
+        17,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "requiredFields": {
+      "const": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        8,
+        9
+      ]
+    },
+    "counterBytes": {
+      "const": 10
+    },
+    "counterLimit": {
+      "const": 8
+    },
+    "stepLimit": {
+      "const": 64
+    },
+    "stateOrdinals": {
+      "const": 9
+    },
+    "sameFinalSlot": {
+      "const": true
+    },
+    "includesSourceAllocation": {
+      "const": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "sequence",
+          "state",
+          "stage",
+          "completed",
+          "total",
+          "counterHex",
+          "counters",
+          "unitsHex",
+          "unitsPerSecond",
+          "conflicts",
+          "stepCount",
+          "bodyHex"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "state": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8
+          },
+          "stage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "completed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "counterHex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{20}){0,8}$"
+          },
+          "counters": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "counter",
+                "value"
+              ],
+              "properties": {
+                "counter": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "unitsHex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "unitsPerSecond": {
+            "type": "number"
+          },
+          "conflicts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "stepCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "bodyHex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})+$"
+          }
+        }
+      }
+    },
+    "interruptPolicy": {
+      "const": "every-paid-frontier"
+    },
+    "allocationCeiling": {
+      "const": {
+        "sourceBytes": 24576,
+        "frameBytes": 568,
+        "progressBytes": 216,
+        "maximumTotalAllocationBytes": 25144,
+        "maximumCursorAllocationBytes": 24576
+      }
+    }
+  }
+}

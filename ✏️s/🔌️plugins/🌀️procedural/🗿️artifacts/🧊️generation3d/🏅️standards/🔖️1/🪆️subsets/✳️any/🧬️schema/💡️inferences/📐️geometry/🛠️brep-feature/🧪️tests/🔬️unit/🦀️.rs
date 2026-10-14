@@ -19,7 +19,7 @@ fn run(id: &str, values: Vec<(&str, GeometryValue)>, fuel: usize) -> (usize, Wid
     let kind = support::kind_of(id);
     let values: BTreeMap<String, GeometryValue> = values.into_iter().map(|(port, value)| (port.to_string(), value)).collect();
     let entry = COMPUTES.iter().find(|entry| entry.id == id).expect("registered");
-    support::slices((entry.start)(kind, WidgetInputs::new("w", kind, values)), fuel)
+    support::slices((entry.start)(kind, WidgetInputs::new_cold("w", kind, values)), fuel)
 }
 
 #[test]
@@ -67,7 +67,7 @@ fn every_feature_is_a_stepped_job_that_yields_before_it_finishes() {
 #[test]
 fn a_selection_taken_from_an_older_value_goes_stale_once_the_labels_are_gone() {
     let (_, rounded) = run("brep.feature.fillet", vec![("shape", GeometryValue::Shape(cube())), ("radius", GeometryValue::Number(0.25))], usize::MAX);
-    let GeometryValue::Shape(rounded) = rounded.outputs["shape"].clone() else { panic!("shape") };
+    let GeometryValue::Shape(rounded) = rounded.outputs.get("shape").unwrap().clone() else { panic!("shape") };
     let plain = cube();
     let only_in_rounded = rounded.components(semio_framework_3d_brep_engine::GeometryKind::Edge).into_iter().map(|component| component.label.0).find(|label| !plain.components(semio_framework_3d_brep_engine::GeometryKind::Edge).iter().any(|edge| edge.label.0 == *label)).expect("the fillet mints new edge labels");
     let selection = SelectionValue { component: SelectionKind::Edge, ids: vec![only_in_rounded] };
@@ -90,7 +90,7 @@ fn a_feature_never_edits_the_input_value() {
 fn cancelling_a_feature_midway_ends_in_the_cancelled_fault_without_outputs() {
     let kind = support::kind_of("brep.feature.fillet");
     let values = BTreeMap::from([("shape".to_string(), GeometryValue::Shape(cube())), ("radius".to_string(), GeometryValue::Number(0.25))]);
-    let mut job = (COMPUTES[0].start)(kind, WidgetInputs::new("w", kind, values));
+    let mut job = (COMPUTES[0].start)(kind, WidgetInputs::new_cold("w", kind, values));
     assert!(matches!(job.step(1), WidgetStep::Working { .. }));
     job.cancel();
     let WidgetStep::Done(evaluation) = job.step(1) else { panic!("finished") };

@@ -1,0 +1,65 @@
+{
+  "operation": 71,
+  "generation": 3,
+  "clock": 1000,
+  "policy": {
+    "fuel": 64,
+    "maximumElapsedMicroseconds": 500,
+    "grant": {
+      "maximumItems": 65536,
+      "maximumCopyBytes": 1048576,
+      "maximumCapacityBytes": 1048576,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 256
+    }
+  },
+  "presentationGenerations": [
+    1,
+    8,
+    55
+  ],
+  "deadline": 1500,
+  "rootAdmissionPhases": [
+    "binding",
+    "cancel",
+    "ledger",
+    "source",
+    "ready"
+  ],
+  "fault": {
+    "kind": "ownershipLimit",
+    "message": "original native root child refusal",
+    "receiptRefusal": {
+      "kind": "workLimit",
+      "message": "original native child receipt refusal"
+    },
+    "contextRefusal": {
+      "kind": "depthLimit",
+      "message": "original native child context refusal"
+    }
+  },
+  "denial": {
+    "fuel": 0,
+    "bodyCalls": 0,
+    "requestedBytes": 0,
+    "releasedBytes": 0
+  },
+  "lifecycle": {
+    "closeEventRetirementCalls": 0,
+    "transitionOwner": "frame_caller.dispatch_cleanup_step",
+    "transition": "OsHost::try_into_retirement(&mut self.host,cx)",
+    "terminalPrerequisites": [
+      "self.host.is_none()",
+      "self.retirement.is_none()"
+    ]
+  },
+  "eventSource": {
+    "constructionClock": 1000,
+    "firstEventClock": 10000,
+    "secondEventClock": 20000,
+    "birthBeforeEvent": 0,
+    "replacementWhileBorrowed": false,
+    "policyDurationChanged": false,
+    "sameStockRefill": false
+  }
+}

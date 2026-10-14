@@ -108,11 +108,11 @@ the dev ports or the dev data.
 Both run by default, side by side. Name one to run only that one, and pass anything else on to `playwright test`:
 
 ```sh
-bun nx run @teaching/architecture-quiz:test-e2e                                # both topologies
-bun nx run @teaching/architecture-quiz:test-e2e -- rehearsal                   # the release rehearsal only
-bun nx run @teaching/architecture-quiz:test-e2e -- dev --grep "leaderboard"    # one spec against the dev stack
-bun nx run @teaching/architecture-quiz:test-e2e -- --serial --keep             # one after the other; keep the run directory
-bun nx run @teaching/architecture-quiz:test-e2e -- --proctor <executable>      # run that proctor instead of building one
+bun repo run @teaching/architecture-quiz:test-e2e                                # both topologies
+bun repo run @teaching/architecture-quiz:test-e2e -- rehearsal                   # the release rehearsal only
+bun repo run @teaching/architecture-quiz:test-e2e -- dev --grep "leaderboard"    # one spec against the dev stack
+bun repo run @teaching/architecture-quiz:test-e2e -- --serial --keep             # one after the other; keep the run directory
+bun repo run @teaching/architecture-quiz:test-e2e -- --proctor <executable>      # run that proctor instead of building one
 ```
 
 The release document's Content-Security-Policy is part of the rehearsal: its `connect-src` names the baked proctor origin,
@@ -202,9 +202,9 @@ The split deployment without GitHub and without a registry: two directories, eac
 them in this order — a build of the site empties `dist`, the bundle included:
 
 ```sh
-bun nx run @teaching/architecture-quiz:publish                # 1. the site           → dist/pages/quizzes
-bun nx run @teaching/architecture-quiz:docker-image-build     # 2. the proctor image (a first build takes minutes)
-bun nx run @teaching/architecture-quiz:docker-stack-bundle    #    the stack with it  → dist/proctor
+bun repo run @teaching/architecture-quiz:publish                # 1. the site           → dist/pages/quizzes
+bun repo run @teaching/architecture-quiz:docker-image-build     # 2. the proctor image (a first build takes minutes)
+bun repo run @teaching/architecture-quiz:docker-stack-bundle    #    the stack with it  → dist/proctor
 ```
 
 Dashboard command ids: `@teaching/architecture-quiz:publish`, `@teaching/architecture-quiz:docker-image-build`,
@@ -261,7 +261,7 @@ by hand, see [Proof of concept by hand](#proof-of-concept-by-hand):
 
 | Artifact | Where it runs | Built and proven by |
 |---|---|---|
-| the site: static files with `index.html`, `404.html` (the same document, for deep links), hashed `assets/`, `robots.txt`, `manifest.webmanifest`, `CNAME`, `.nojekyll`, `_headers` | a static CDN at `https://quizze.architektur-und-technologie.de` (GitHub Pages) | `🚚️publish🎓️teaching🏛️architecture❓️quiz` (`bun nx run @teaching/architecture-quiz:publish`) |
+| the site: static files with `index.html`, `404.html` (the same document, for deep links), hashed `assets/`, `robots.txt`, `manifest.webmanifest`, `CNAME`, `.nojekyll`, `_headers` | a static CDN at `https://quizze.architektur-und-technologie.de` (GitHub Pages) | `🚚️publish🎓️teaching🏛️architecture❓️quiz` (`bun repo run @teaching/architecture-quiz:publish`) |
 | the proctor image `ghcr.io/usalu/architecture-quiz-proctor` as `sha-<commit>`, `<workspace version>` and `latest` | the university's Docker host at `https://semio.iek.uni-hannover.de`, behind Caddy | `📦️build…🐳️docker-image`, `⚖️gate…🐳️docker-image`, `⚖️gate…🐳️docker-stack`, `📦️bundle…🐳️docker-stack`, `🚚️publish…🐳️docker-image` |
 
 `🚀️deploy/🔣️.json` is the one authored source of both hosts, the image repository and the port (contract:
@@ -270,7 +270,7 @@ values because Docker, Caddy and GitHub read them there; `🧪️tests/🧪️de
 
 ### Readiness gate
 
-`⚖️gate🎓️teaching🏛️architecture❓️quiz🚀️deploy` (`bun nx run @teaching/architecture-quiz:deploy-check`) says whether the
+`⚖️gate🎓️teaching🏛️architecture❓️quiz🚀️deploy` (`bun repo run @teaching/architecture-quiz:deploy-check`) says whether the
 checkout is ready to deploy. It needs a running Docker daemon, pushes and uploads nothing, announces every step with its
 number, and stops at the first failure or at Ctrl+C (whatever a step created is removed):
 

@@ -1042,7 +1042,9 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// i.e. the whole manifest surface was dead from the host's side. Arg keys are the camelCase ids
     /// declared in `🔖️Manifest`; each is read leniently (missing → the manifest's own default) because
     /// `effective_action_args` stages defaults before dispatch and select-typed args arrive as strings.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<RemodelingCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<RemodelingCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 

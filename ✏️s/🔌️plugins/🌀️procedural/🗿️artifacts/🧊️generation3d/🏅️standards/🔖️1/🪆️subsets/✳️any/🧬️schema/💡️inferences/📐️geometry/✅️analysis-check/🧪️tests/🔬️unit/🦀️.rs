@@ -73,7 +73,7 @@ fn an_empty_intersection_is_an_answer_not_a_fault_and_has_no_shape() {
     let kind = support::kind_of("analysis.interference");
     let evaluation = support::evaluate(kind, support::inputs_of(kind, &case), COMPUTES, usize::MAX);
     assert!(evaluation.fault.is_none());
-    assert_eq!(evaluation.outputs.keys().map(String::as_str).collect::<Vec<_>>(), ["interferes", "volume"]);
+    assert_eq!(evaluation.outputs.iter().map(|(port, _)| port).map(String::as_str).collect::<Vec<_>>(), ["interferes", "volume"]);
 }
 
 #[test]
@@ -90,6 +90,6 @@ fn a_report_lists_every_kernel_finding_before_the_verdict() {
 fn a_non_mesh_input_is_a_fault_at_that_port() {
     let kind = support::kind_of("analysis.meshQuality");
     let values = BTreeMap::from([("mesh".to_string(), GeometryValue::Number(1.0))]);
-    let fault = support::drive(start_of("analysis.meshQuality")(kind, WidgetInputs::new("w", kind, values)), 1).fault.expect("a fault");
+    let fault = support::drive(start_of("analysis.meshQuality")(kind, WidgetInputs::new_cold("w", kind, values)), 1).fault.expect("a fault");
     assert_eq!((fault.code.as_str(), fault.port.as_deref()), ("generation3d.geometry.input-type", Some("mesh")));
 }

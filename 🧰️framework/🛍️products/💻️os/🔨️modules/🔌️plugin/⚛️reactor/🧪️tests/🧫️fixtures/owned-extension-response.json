@@ -1,0 +1,59 @@
+{
+  "request": {
+    "nodeHash": 41,
+    "windowId": "preview",
+    "windowKindId": "geometry-preview"
+  },
+  "fault": {
+    "origin": "extension",
+    "code": "brep.arbitrary-shape",
+    "severity": "error",
+    "message": "Original arbitrary shape failure — 原始",
+    "scope": {
+      "pluginId": "flow-extension-brep",
+      "appId": "generation3d",
+      "instanceId": "41",
+      "module": "geometry",
+      "bodyKey": "preview"
+    },
+    "source": {
+      "offset": 65539,
+      "byte": 255,
+      "depth": 13
+    },
+    "retainedProgress": {
+      "copiedItems": 3,
+      "copiedBytes": 577,
+      "retainedCapacityBytes": 7471,
+      "releasedBytes": 8537
+    },
+    "causes": [
+      {
+        "code": "brep.source",
+        "message": "Original source cause",
+        "retainedProgress": {
+          "copiedItems": 1,
+          "copiedBytes": 64,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    ],
+    "params": {
+      "shape": "arbitrary"
+    },
+    "retryable": true,
+    "domain": {
+      "nativeUnsigned": "18446744073709551615",
+      "payload": [
+        "source",
+        "geometry"
+      ]
+    }
+  },
+  "expected": {
+    "ok": false,
+    "output": null
+  },
+  "exactUnsigned": "18446744073709551615"
+}

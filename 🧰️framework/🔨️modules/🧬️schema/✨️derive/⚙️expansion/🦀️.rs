@@ -147,25 +147,29 @@ fn classify_composition_field(ty: &Type) -> CompositionFieldKind {
     }
 }
 
-/// 📎️ `#[child(kind = "s.stdio.mesh")]` — REQUIRED on every `ArtifactChild<T>` / `Vec<ArtifactChild<T>>` field.
-fn parse_child_kind(field: &syn::Field) -> syn::Result<String> {
+/// 📎️ Every child field explicitly chooses one concrete kind or one consumer capability.
+fn parse_child_selection(field: &syn::Field) -> syn::Result<(syn::Ident, String)> {
+    if field.attrs.iter().filter(|attr| attr.path().is_ident("child")).count() > 1 { return Err(syn::Error::new_spanned(field, "child requires exactly one selection attribute")); }
     for attr in &field.attrs {
         if !attr.path().is_ident("child") {
             continue;
         }
-        let mut kind = None;
+        let mut selection = None;
         attr.parse_nested_meta(|meta| {
-            if meta.path.is_ident("kind") {
+            if meta.path.is_ident("kind") || meta.path.is_ident("capability") {
+                if selection.is_some() { return Err(meta.error("child requires exactly one kind or capability")); }
                 let value: syn::LitStr = meta.value()?.parse()?;
-                kind = Some(value.value());
+                if value.value().is_empty() { return Err(meta.error("child selection identifier must not be empty")); }
+                let variant = if meta.path.is_ident("kind") { "ArtifactKind" } else { "Capability" };
+                selection = Some((syn::Ident::new(variant, value.span()), value.value()));
                 Ok(())
             } else {
                 Err(meta.error("unsupported child attribute"))
             }
         })?;
-        return kind.ok_or_else(|| syn::Error::new_spanned(attr, "child requires kind = \"…\""));
+        return selection.ok_or_else(|| syn::Error::new_spanned(attr, "child requires exactly one kind or capability"));
     }
-    Err(syn::Error::new_spanned(field, "ArtifactChild field requires #[child(kind = \"…\")]"))
+    Err(syn::Error::new_spanned(field, "ArtifactChild field requires an explicit #[child(kind = \"…\")] or #[child(capability = \"…\")]"))
 }
 
 /// 📎️ `#[link_slot(roles("base", "material"))]` — OPTIONAL on `ArtifactLink` / `Vec<ArtifactLink>` fields,
@@ -227,12 +231,12 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
         }
 
         if field.attrs.iter().any(|attr| attr.path().is_ident("child")) {
-            let kind = parse_child_kind(field)?;
-            let kind_lit = syn::LitStr::new(&kind, name.span());
+            let (selection, id) = parse_child_selection(field)?;
+            let id_lit = syn::LitStr::new(&id, name.span());
             let name_lit = syn::LitStr::new(&camel, name.span());
             let ty = &field.ty;
             child_entries.push(quote! {
-                ::semio_framework_schema_composition::ChildSlotSpec { name: #name_lit, kind: #kind_lit, many: <#ty as ::semio_framework_schema_composition::ChildFieldRefs>::MANY }
+                ::semio_framework_schema_composition::ChildSlotSpec { name: #name_lit, selection: ::semio_framework_schema_composition::ChildSlotSelection::#selection(#id_lit), many: <#ty as ::semio_framework_schema_composition::ChildFieldRefs>::MANY }
             });
             child_visits.push(quote! {
                 ::semio_framework_schema_composition::ChildFieldRefs::visit_child_field(&self.#name, #name_lit, visitor)?;
@@ -240,7 +244,7 @@ pub fn expand_artifact_schema(input: &DeriveInput) -> syn::Result<proc_macro2::T
             continue;
         }
         match classify_composition_field(&field.ty) {
-            CompositionFieldKind::Child => { parse_child_kind(field)?; }
+            CompositionFieldKind::Child => { parse_child_selection(field)?; }
             CompositionFieldKind::Link { many } => {
                 let roles = parse_link_roles(field)?;
                 let name_lit = syn::LitStr::new(&camel, name.span());

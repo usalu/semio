@@ -1,7 +1,7 @@
 import { posix } from "node:path";
 import { type RustModuleContext } from "../../../🔍️discovery/🟦️.ts";
 import { type RustCompileReference } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import type { DependencyDirectionRule } from "../🟦️.ts";
+import { dependencyDirectionPathMatches as matches, type DependencyDirectionRule } from "../🟦️.ts";
 
 
 export type RustSourceDirectionEdge = Readonly<{ rule: string; from: string; to: string; kind: RustCompileReference["kind"]; line: number; expansion?: RustCompileReference["expansion"] }>;
@@ -68,10 +68,12 @@ export function rustSourceTargets(from: string, references: readonly RustCompile
 
 /** 🏛️ Enforces the authored boundary policy on compile-time file inputs, including fixture and test edges. */
 export function rustSourceDirectionEdges(from: string, references: readonly RustCompileReference[], rules: readonly DependencyDirectionRule[], ownership: RustSourceOwnership = {}): readonly RustSourceDirectionEdge[] {
-  const matches = (patterns: readonly string[], path: string): boolean => patterns.some((pattern) => new RegExp(pattern, "u").test(path));
-  return distinctRustRows(rustSourceTargets(from, references, ownership).flatMap(({ to, reference }) => {
+  const targets=rustSourceTargets(from,references,ownership);
+  if(!targets.length)return [];
+  const applicable = rules.filter(rule=>rule.severity==="error"&&matches(rule.from.path,from)&&!matches(rule.from.pathNot??[],from));
+  return distinctRustRows(targets.flatMap(({ to, reference }) => {
     const targetMatches = (patterns: readonly string[]): boolean => matches(patterns, to) || reference.directory === true && matches(patterns, `${to}/`);
-    return rules.filter((rule) => rule.severity === "error" && matches(rule.from.path, from) && !matches(rule.from.pathNot ?? [], from) && targetMatches(rule.to.path) && !targetMatches(rule.to.pathNot ?? [])).map((rule) => ({ rule: rule.name, from, to, kind: reference.kind, line: reference.line, ...(reference.expansion ? { expansion: reference.expansion } : {}) }));
+    return applicable.filter((rule) => targetMatches(rule.to.path) && !targetMatches(rule.to.pathNot ?? [])).map((rule) => ({ rule: rule.name, from, to, kind: reference.kind, line: reference.line, ...(reference.expansion ? { expansion: reference.expansion } : {}) }));
   }));
 }
 

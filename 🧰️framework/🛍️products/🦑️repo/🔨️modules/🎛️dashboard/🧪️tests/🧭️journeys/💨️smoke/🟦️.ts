@@ -38,7 +38,7 @@ describe("real workspace smoke", () => {
     const command = "@semio-tech/ui-rs:build";
     const resolved = await run(["run", command, "--param", "cache=skip-local", "--dry-run"]);
     expect(resolved.code, resolved.stderr).toBe(0);
-    expect(JSON.parse(resolved.stdout).processes[0].args).toContain("--skip-nx-cache");
+    expect(JSON.parse(resolved.stdout).processes[0].args).toContain("--skip-cache");
     const built = await run(["run", command, "--param", "cache=skip-local"], 1_200_000);
     const output = plain(built.stdout);
     expect(built.code, `${built.stderr}\n${output.slice(-3000)}`).toBe(0);

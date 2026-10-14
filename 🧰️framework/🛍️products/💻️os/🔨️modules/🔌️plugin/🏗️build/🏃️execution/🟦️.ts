@@ -1,3 +1,4 @@
+import {runtimeCatalogBuildInventoryV1} from "../../📇️registry/📖️catalog-view/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -8,7 +9,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv, semioNxParallel } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv, semioBuildParallel } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -16,7 +17,7 @@ import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery
 
 
 
-import { DEFAULT_PLAYGROUND_VARIANT } from "../../📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+
 
 const repoRoot = getWorkspaceRoot();
 
@@ -76,14 +77,14 @@ function createConcurrencyLimiter(limit: number): { run: <T>(fn: () => Promise<T
 
 /** 🧵️ Concurrency cap for bounded-parallel plugin catalog stages — each materialize invocation is
  * a mostly-single-threaded subprocess with its own decoded wasm footprint, so the cap tracks machine
- * width via `semioNxParallel()`. `SEMIO_MATERIALIZE_CONCURRENCY` overrides for measurement. */
+ * width via `semioBuildParallel()`. `SEMIO_MATERIALIZE_CONCURRENCY` overrides for measurement. */
 function materializeConcurrencyLimit(): number {
   const override = process.env.SEMIO_MATERIALIZE_CONCURRENCY;
   if (override) {
     const parsed = Number.parseInt(override, 10);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
-  return semioNxParallel();
+  return semioBuildParallel();
 }
 
 /** 🧵️ Concurrency cap for the plugin catalog cargo stage (isolated `CARGO_TARGET_DIR` per build). */
@@ -93,7 +94,7 @@ function cargoConcurrencyLimit(): number {
     const parsed = Number.parseInt(override, 10);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
-  return semioNxParallel();
+  return semioBuildParallel();
 }
 
 /** 🛡️Rejects stale public output without deleting another task's retained files. */
@@ -156,7 +157,7 @@ export async function buildPlugins(control: CompilerAdmissionControl, filterPlug
  * build (T-P8) — a single broken crate no longer aborts the rest of the catalog either way. */
 export async function buildPluginsStreaming(control: CompilerAdmissionControl, filterPlugin?: string): Promise<void> {
   const targets = await preparePluginBuildTargets(filterPlugin);
-  const hostPluginId = resolvePlaygroundFilter(requirePlaygroundVariant(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_PLAYGROUND_VARIANT)).pluginId;
+  const hostPluginId = resolvePlaygroundFilter(requirePlaygroundVariant(filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? runtimeCatalogBuildInventoryV1().defaultVariant)).pluginId;
   const ordered = [...targets].sort((a, b) => (a.pluginId === hostPluginId ? -1 : b.pluginId === hostPluginId ? 1 : 0));
   await buildPluginCatalog(ordered, control);
 }

@@ -1,0 +1,117 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "memoryBytes",
+    "tableItems",
+    "globalValue",
+    "activeData",
+    "activeOffset",
+    "chunkBytes",
+    "cuts",
+    "inputCopy"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "memoryBytes": {
+      "type": "integer",
+      "minimum": 65536
+    },
+    "tableItems": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "globalValue": {
+      "type": "integer"
+    },
+    "activeData": {
+      "type": "string"
+    },
+    "activeOffset": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "chunkBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cuts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "capacity",
+          "required",
+          "cancelled",
+          "expired",
+          "expectedBirth"
+        ],
+        "properties": {
+          "capacity": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "required": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "expectedBirth": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "inputCopy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "offset",
+        "copyBytes",
+        "cursorBytes",
+        "expectedPhases"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cursorBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expectedPhases": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

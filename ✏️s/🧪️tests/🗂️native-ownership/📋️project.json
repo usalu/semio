@@ -1,13 +1,13 @@
 {
   "name": "@semio-tech/s-native-ownership",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "root": "✏️s/🧪️tests/🗂️native-ownership",
   "sourceRoot": "✏️s/🧪️tests/🗂️native-ownership",
   "projectType": "library",
   "tags": ["scope:s", "type:test"],
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test",

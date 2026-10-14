@@ -3,15 +3,19 @@
 use super::history::dictionary::{MemberHistoryDictionaryLimits, MemberHistoryDictionaryStep};
 use super::history::factory::{MemberFactorySelection, MemberFactorySelectionStep, SelectedMemberHistoryDictionary, SelectedMemberHistoryInput, SelectedVerifiedMemberHistory};
 use super::history::{MemberHistoryInputStep, MemberHistoryVerification};
-use super::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep};
+use super::{ErasedSnapshotRetirement, MemberOpenSourceAdmission, member_admission_diagnostic, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep};
 use semio_framework_value::{ValueError, ValueRefusalKind, RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
 use crate::os_spr::format::retained::RetainedSprLimits;
 use pack::snapshot::ArtifactPack;
 use crate::os_store::{ArtifactStore, MemberFactory, document_store_owners::MemberStoreOwner};
 use crate::{FromValue, Mutation, OpBinary, OpText, ToValue};
-use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure};
+use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure, OriginalCallerSourceParent, OriginalCallerSourceLoan};
 use std::{marker::PhantomData, mem::ManuallyDrop};
+
+#[path="🛂️receiving/🦀️.rs"]
+mod receiving;
+use receiving::MemberHistoryReceiving;
 
 /// 📥️ Funds one exact original contiguous input allocation before installing its retained owner.
 pub fn admit_member_input_buffer(source: &mut Option<Vec<u8>>, capacity: usize, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ValueError> {
@@ -254,33 +258,34 @@ impl<P> Drop for PackMemberSnapshotOpen<P> {
 }
 
 pub struct UnsupportedMemberFactoryOpen<M: Send> {
+    source_loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,
     snapshot: UnsupportedMemberSnapshotOpen<M>,
 }
 
 impl<M: Send> UnsupportedMemberFactoryOpen<M> {
-    pub fn begin(request: &mut Option<MemberOpenRequest>, grant: RetainedCloneGrant) -> Result<Option<Self>, MemberOpenDiagnostic> {
-        request.as_ref().ok_or(MemberOpenDiagnostic::Stale)?.admitted_expected()?;
-        if grant.maximum_items == 0 { return Ok(None); }
-        match UnsupportedMemberSnapshotOpen::begin(request.take().expect("funded inline member open retains its original request")) {
-            Ok(snapshot) => Ok(Some(Self { snapshot })),
-            Err(rejected) => { *request = Some(rejected.request); Err(rejected.diagnostic) }
-        }
+    pub fn begin(admission:&mut MemberOpenSourceAdmission,opened:&mut Option<Self>,cx:&mut StepContext<'_>,parent:&OriginalCallerSourceParent)->Result<bool,OriginalTurnFailure>{
+        if opened.is_some(){return Err(member_admission_diagnostic(MemberOpenDiagnostic::Stale).into())}
+        if !admission.admit_source(parent,cx)?||cx.should_yield()||cx.retained_grant().maximum_items==0{return Ok(false)}
+        let request=admission.request.take().unwrap();
+        match UnsupportedMemberSnapshotOpen::begin(request){Ok(snapshot)=>{*opened=Some(Self{snapshot,source_loan:ManuallyDrop::new(admission.source_loan.take())});super::receive_member_close(cx,Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))?;Ok(true)},Err(rejected)=>{*admission.request=Some(rejected.request);Err(member_admission_diagnostic(rejected.diagnostic).into())}}
     }
 }
 
 impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
     type Member = M;
 
-    fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> MemberOpenStep<M> {
-        match self.snapshot.step(cx, _grant) {
+    fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> Result<MemberOpenStep<M>,OriginalTurnFailure> {
+        self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
+        Ok(match self.snapshot.step(cx, _grant) {
             MemberSnapshotOpenStep::Rejected(diagnostic) => MemberOpenStep::Rejected(diagnostic),
             _ => MemberOpenStep::Rejected(MemberOpenDiagnostic::Decode),
-        }
+        })
     }
 
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<RetainedCloneStep, OriginalTurnFailure> {
+    fn close_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>) -> Result<RetainedCloneStep, OriginalTurnFailure> {
         let empty=RetainedCloneProgress::default();
-        if self.snapshot.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
+        if self.snapshot.terminal_is_empty(){if let Some(loan)=self.source_loan.as_mut(){let step=loan.close_step(parent,cx)?;let progress=step.progress();if loan.terminal_is_empty(){self.source_loan.take();}return Ok(if self.source_loan.is_none(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}return Ok(RetainedCloneStep::Complete(empty))}
+        self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
         let request=self.snapshot.request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"unsupported factory lost original request"))?;
         if cx.operation()!=request.operation()||cx.generation()!=request.generation(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"unsupported factory close changed operation identity").into())}
         let mut grant=cx.retained_grant();
@@ -290,15 +295,16 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
         grant.maximum_copy_bytes=grant.maximum_copy_bytes.min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
         let result=self.snapshot.close_step(child).and_then(|step|admit_retained_clone_close(child,step,self.snapshot.terminal_is_empty(),"unsupported factory request"));
-        super::receive_member_close(cx,result)
+        super::receive_member_close(cx,result).map(|step|RetainedCloneStep::Progress(step.progress()))
     }
-    fn terminal_is_empty(&self) -> bool { self.snapshot.terminal_is_empty() }
+    fn terminal_is_empty(&self) -> bool { self.snapshot.terminal_is_empty()&&self.source_loan.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.snapshot.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.snapshot.next_capacity_byte_demand(body) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.snapshot.next_release_byte_demand() }
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { if self.snapshot.terminal_is_empty() { return Ok(0); } self.snapshot.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "unsupported factory child depth overflow")) }
-    fn terminal_drop_byte_demand(&self) -> Option<usize> { self.snapshot.terminal_is_empty().then_some(0) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { if self.snapshot.terminal_is_empty() { return Ok(usize::from(self.source_loan.is_some())); } self.snapshot.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "unsupported factory child depth overflow")) }
+    fn terminal_drop_byte_demand(&self) -> Option<usize> { self.terminal_is_empty().then_some(0) }
 }
+impl<M:Send> Drop for UnsupportedMemberFactoryOpen<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"unsupported factory abandoned original request or source loan")}}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Phase {
@@ -308,11 +314,10 @@ enum Phase {
     Select,
     Selected,
     Dictionary,
-    CopyHistory,
+    AdmitHistory,
     DecodeHistory,
     BeginHydration,
     Hydrate,
-    RetireHistoryBytes,
     RetireInput,
     Ready,
     Rejected,
@@ -324,6 +329,7 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
+    source_loan: ManuallyDrop<Option<OriginalCallerSourceLoan>>,
     snapshot_open: ManuallyDrop<Option<P::SnapshotOpen>>,
     snapshot: ManuallyDrop<Option<P>>,
     genesis_request: ManuallyDrop<Option<MemberOpenRequest>>,
@@ -337,10 +343,8 @@ where
     rejected_history_input: ManuallyDrop<Option<super::history::VerifiedMemberHistoryInput>>,
     dictionary: ManuallyDrop<Option<SelectedMemberHistoryDictionary<F>>>,
     witness: ManuallyDrop<Option<SelectedVerifiedMemberHistory<F>>>,
-    history_bytes: ManuallyDrop<Option<Vec<u8>>>,
     history_page: Option<Box<[u8; crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES]>>,
-    history_decoder: ManuallyDrop<Option<crate::os_spr::RetainedHistoryDecode>>,
-    history_auxiliary: ManuallyDrop<Option<(Vec<String>, Vec<String>)>>,
+    history_receiving: ManuallyDrop<Option<MemberHistoryReceiving>>,
     decoded_history: ManuallyDrop<Option<crate::os_spr::HistoryLog>>,
     hydration: ManuallyDrop<Option<crate::os_store::RetainedPersistedDocumentHydration<P, M>>>,
     owners: ManuallyDrop<Option<crate::os_store::document_store_owners::DocumentStoreOwners<P, M>>>,
@@ -350,8 +354,6 @@ where
     operation: OperationId,
     generation: Generation,
     expires_at_us: u64,
-    completed_history_bytes: u64,
-    completed_history_records: u64,
     phase: Phase,
     input_buffer_progress: RetainedCloneProgress,
     diagnostic: Option<MemberOpenDiagnostic>,
@@ -363,7 +365,10 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + MemberStoreOwner<M> + semio_framework_schema_composition::ArtifactCompositionFields,
     M: Clone + ToValue + FromValue + Mutation<P>,
 {
-    fn history_page_due(&self) -> bool { self.history_page.is_some() && self.phase == Phase::Rejected }
+    fn history_page_due(&self) -> bool { self.history_page.is_some() }
+    pub fn payload_terminal_is_empty(&self)->bool{self.ownership_is_empty()&&!self.history_page_due()}
+    pub fn validate_source_context(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)}
+    pub fn take_source_before_shell_return(&mut self,cx:&StepContext<'_>)->Result<OriginalCallerSourceLoan,OriginalTurnFailure>{if !self.payload_terminal_is_empty(){return Err(member_admission_diagnostic(MemberOpenDiagnostic::Stale).into())}self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;Ok(self.source_loan.take().unwrap())}
 
     fn ownership_is_empty(&self) -> bool {
         self.snapshot_open.is_none()
@@ -376,9 +381,7 @@ where
             && self.rejected_history_input.is_none()
             && self.dictionary.is_none()
             && self.witness.is_none()
-            && self.history_bytes.is_none()
-            && self.history_decoder.is_none()
-            && self.history_auxiliary.is_none()
+            && self.history_receiving.is_none()
             && self.decoded_history.is_none()
             && self.hydration.is_none()
             && self.owners.is_none()
@@ -419,16 +422,7 @@ where
             admit_retained_clone_close(child, step, crate::os_store::SpaceMember::close_owned_terminal_is_empty(member.as_ref()), "initial member Store child")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if let Some(decoder) = self.history_decoder.as_mut() {
-            if self.decoded_history.is_none() { *self.decoded_history = decoder.take_partial(); }
-            if self.history_auxiliary.is_none() { *self.history_auxiliary = Some(decoder.take_auxiliary_owners()); }
-            if !decoder.terminal_is_empty() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "member history decoder retained an untransferred owner")); }
-            self.history_decoder.take();
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
-        }
         if self.decoded_history.is_some() { return crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.decoded_history, &mut self.active, grant); }
-        if self.history_auxiliary.is_some() { return crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.history_auxiliary, &mut self.active, grant); }
-        if self.history_bytes.is_some() { return crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.history_bytes, &mut self.active, grant); }
         macro_rules! close_field {
             ($field:ident) => {
                 if self.$field.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.$field, grant); }
@@ -475,6 +469,7 @@ where
     }
 
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(receiving)=self.history_receiving.as_ref(){return receiving.demands(body)}
         if let Some(active) = self.active.as_ref() { return crate::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
         if self.constructor_error.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.constructor_error); }
         if self.genesis_request.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.genesis_request, body); }
@@ -486,10 +481,7 @@ where
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "member Store depth overflow"))?;
             return Ok(demand);
         }
-        if self.history_decoder.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if self.decoded_history.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.decoded_history); }
-        if self.history_auxiliary.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.history_auxiliary); }
-        if self.history_bytes.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.history_bytes); }
         macro_rules! child { ($field:ident) => { if self.$field.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.$field, body); } }; }
         child!(witness); child!(dictionary); child!(selected); child!(rejected_history_input); child!(selection); child!(history); child!(snapshot_open);
         if self.snapshot.is_some() {
@@ -502,7 +494,7 @@ where
             return Ok(demand);
         }
         if self.history_page.is_some() { return Ok(RetirementDemand { release_bytes: crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, depth: 1, ..Default::default() }); }
-        Ok(Default::default())
+        Ok(RetirementDemand{depth:usize::from(self.source_loan.is_some()),..Default::default()})
     }
 
     pub fn begin_birth_demand(request: &MemberOpenRequest) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, MemberOpenDiagnostic> {
@@ -511,28 +503,34 @@ where
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: source.depth.max(1) })
     }
 
-    pub fn begin(request: MemberOpenRequest, grant: RetainedCloneGrant) -> Result<Self, MemberOpenAdmissionError> {
-        let operation = request.operation();
-        let generation = request.generation();
-        let expires_at_us = request.expires_at_us();
-        let required = match Self::begin_birth_demand(&request) { Ok(required) => required, Err(diagnostic) => return Err(MemberOpenAdmissionError { request, diagnostic }) };
-        if grant.maximum_items == 0 || grant.maximum_depth < required.depth || grant.maximum_capacity_bytes < required.capacity_bytes { return Err(MemberOpenAdmissionError { request, diagnostic: MemberOpenDiagnostic::Capacity }); }
-        let source_capacity = match P::member_store_owners_birth_demand() { Ok(source) => source.capacity_bytes, Err(_) => return Err(MemberOpenAdmissionError { request, diagnostic: MemberOpenDiagnostic::Capacity }) };
+    pub fn begin(admission:&mut MemberOpenSourceAdmission,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),OriginalTurnFailure>{
+        let request=admission.request.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?;
+        request.check_step_authority(cx).map_err(member_admission_diagnostic)?;
+        admission.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
+        let operation=request.operation();let generation=request.generation();let expires_at_us=request.expires_at_us();
+        let required=Self::begin_birth_demand(request).map_err(member_admission_diagnostic)?;
+        if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Err(member_admission_diagnostic(MemberOpenDiagnostic::Capacity).into())}
+        let snapshot_birth=P::SnapshotOpen::begin_birth_bytes(request).map_err(member_admission_diagnostic)?;
+        let source_capacity=P::member_store_owners_birth_demand()?.capacity_bytes;
         let source_grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: source_capacity, ..grant };
-        let (owners, mut diagnostic, constructor_error) = match P::member_store_owners(source_grant) {
+        let (owners, mut diagnostic, constructor_error, source_progress) = match P::member_store_owners(source_grant) {
             Ok((owners, progress)) => {
                 let diagnostic = if progress.fits(source_grant) && progress.retained_capacity_bytes == source_capacity { None } else { Some(MemberOpenDiagnostic::Capacity) };
-                (Some(owners), diagnostic, None)
+                (Some(owners), diagnostic, None, progress)
             }
-            Err(refused) => (refused.owners, Some(MemberOpenDiagnostic::Capacity), Some(refused.error)),
+            Err(refused) => (refused.owners, Some(MemberOpenDiagnostic::Capacity), Some(refused.error), refused.progress),
         };
+        let request=admission.request.take().unwrap();
+        let source_loan=admission.source_loan.take().unwrap();
         let (snapshot_open, genesis_request) = if diagnostic.is_none() {
             match P::SnapshotOpen::begin(request) {
                 Ok(snapshot_open) => (Some(snapshot_open), None),
                 Err(rejected) => { diagnostic = Some(rejected.diagnostic); (None, Some(rejected.request)) }
             }
         } else { (None, Some(request)) };
-        Ok(Self {
+        let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:source_progress.retained_capacity_bytes+usize::from(snapshot_open.is_some())*snapshot_birth+crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES,..source_progress};
+        Ok((Self {
+            source_loan: ManuallyDrop::new(Some(source_loan)),
             snapshot_open: ManuallyDrop::new(snapshot_open),
             snapshot: ManuallyDrop::new(None),
             genesis_request: ManuallyDrop::new(genesis_request),
@@ -544,10 +542,8 @@ where
             rejected_history_input: ManuallyDrop::new(None),
             dictionary: ManuallyDrop::new(None),
             witness: ManuallyDrop::new(None),
-            history_bytes: ManuallyDrop::new(None),
             history_page: Some(Box::new([0; crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES])),
-            history_decoder: ManuallyDrop::new(None),
-            history_auxiliary: ManuallyDrop::new(None),
+            history_receiving: ManuallyDrop::new(None),
             decoded_history: ManuallyDrop::new(None),
             hydration: ManuallyDrop::new(None),
             owners: ManuallyDrop::new(owners),
@@ -557,12 +553,10 @@ where
             operation,
             generation,
             expires_at_us,
-            completed_history_bytes: 0,
-            completed_history_records: 0,
             phase: if diagnostic.is_some() { Phase::Rejected } else { Phase::Snapshot },
             input_buffer_progress: Default::default(),
             diagnostic,
-        })
+        },progress))
     }
 
     fn reject(&mut self, diagnostic: MemberOpenDiagnostic) -> MemberOpenStep<Box<ArtifactStore<P, M>>> {
@@ -594,10 +588,10 @@ where
     }
 
     fn drive_active_hydration_retirement(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<bool, MemberOpenDiagnostic> {
-        if self.active.is_none() && self.history_auxiliary.is_none() { return Ok(false); }
+        if self.active.is_none() { return Ok(false); }
         if cx.should_yield() { return Ok(true); }
         let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-        let step = if self.active.is_some() { crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child) } else { crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.history_auxiliary, &mut self.active, child) }.map_err(|_| MemberOpenDiagnostic::Initialization)?;
+        let step = crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child).map_err(|_| MemberOpenDiagnostic::Initialization)?;
         let progress = match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress };
         super::record_member_step(cx, progress)?;
         Ok(true)
@@ -607,7 +601,9 @@ where
     /// keeps the selected input retained for the next step rather than rejecting the open.
     fn begin_selected_dictionary(&mut self, cx: &mut StepContext<'_>) -> MemberOpenStep<Box<ArtifactStore<P, M>>> {
         let Some(selected) = self.selected.as_mut() else { return self.reject(MemberOpenDiagnostic::Stale) };
-        match selected.begin_dictionary(MemberHistoryDictionaryLimits::default(), cx) {
+        let original=selected.history_limits();
+        let limits=MemberHistoryDictionaryLimits{dictionary_entries:original.records as usize,dictionary_bytes:u64::from(original.maximum_text_bytes),records:u64::from(original.records)};
+        match selected.begin_dictionary(limits, cx) {
             Ok(Some(dictionary)) => {
                 let selected = self.selected.take().expect("selected member history input remains retained");
                 debug_assert!(selected.terminal_is_empty());
@@ -623,7 +619,33 @@ where
         }
     }
 
-    pub fn step_store(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberOpenStep<Box<ArtifactStore<P, M>>> {
+    fn history_verification_limits()->Result<RetainedSprLimits,MemberOpenDiagnostic>{
+        if F::OPEN_DECLARATIONS.is_empty(){return Err(MemberOpenDiagnostic::Identity)}
+        F::OPEN_DECLARATIONS.iter().try_fold(RetainedSprLimits{file_bytes:0,frame_body_bytes:0,records:0},|envelope,declaration|{let original=declaration.history_limits;original.validate().map_err(|_|MemberOpenDiagnostic::Capacity)?;Ok(RetainedSprLimits{file_bytes:envelope.file_bytes.max(u64::from(original.file_bytes)),frame_body_bytes:envelope.frame_body_bytes.max(u64::from(original.frame_body_bytes)),records:envelope.records.max(u64::from(original.records))})})
+    }
+
+    fn step_original_history(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<MemberOpenStep<Box<ArtifactStore<P,M>>>,OriginalTurnFailure>{
+        if let Err(diagnostic)=self.check_witness(cx){return Ok(self.reject(diagnostic))}
+        let grant=super::member_step_grant(cx,grant);
+        cx.set_stage("member-open.history.decode");
+        if cx.should_yield(){return Ok(MemberOpenStep::Pending(self.replay_progress()))}
+        if self.history_receiving.is_none(){
+            let witness=self.witness.as_ref().unwrap();let end=usize::try_from(witness.verified_end()).map_err(|_|member_admission_diagnostic(MemberOpenDiagnostic::Capacity))?;
+            *self.history_receiving=Some(MemberHistoryReceiving::new((0,end),witness.history_limits(),witness.maximum_history_allocation_bytes()));
+            self.phase=Phase::DecodeHistory;
+        }
+        let source=self.witness.as_mut().unwrap().original_history_source(cx).map_err(member_admission_diagnostic)?;
+        let step=self.history_receiving.as_mut().unwrap().step(&source,cx,grant,&mut self.decoded_history)?;
+        match step{
+            crate::os_spr::history::RetainedHistorySourceStep::Fault=>Ok(self.reject(MemberOpenDiagnostic::Replay)),
+            crate::os_spr::history::RetainedHistorySourceStep::Ready if self.history_receiving.as_ref().unwrap().terminal_is_empty()=>{self.history_receiving.take();self.phase=Phase::BeginHydration;Ok(MemberOpenStep::Pending(self.replay_progress()))},
+            _=>Ok(MemberOpenStep::Pending(self.replay_progress())),
+        }
+    }
+
+    pub fn step_store(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<MemberOpenStep<Box<ArtifactStore<P,M>>>,OriginalTurnFailure>{self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;if matches!(self.phase,Phase::AdmitHistory|Phase::DecodeHistory){return self.step_original_history(cx,grant)}Ok(self.step_store_inner(cx,grant))}
+
+    fn step_store_inner(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberOpenStep<Box<ArtifactStore<P, M>>> {
         let grant = super::member_step_grant(cx, grant);
         self.input_buffer_progress = Default::default();
         if let Some(diagnostic) = self.diagnostic {
@@ -692,7 +714,8 @@ where
                     return MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: (offset+copied) as u64, total: total as u64 });
                 }
                 let request = self.genesis_request.take().expect("genesis copy retains request authority");
-                match MemberHistoryVerification::new(request, RetainedSprLimits::default()) {
+                let limits=match Self::history_verification_limits(){Ok(limits)=>limits,Err(diagnostic)=>{*self.genesis_request=Some(request);return self.reject(diagnostic)}};
+                match MemberHistoryVerification::new(request, limits) {
                     Ok(history) => *self.history = Some(history),
                     Err(rejected) => { *self.genesis_request = Some(rejected.request); return self.reject(rejected.diagnostic); },
                 }
@@ -743,104 +766,14 @@ where
                     Ok(Some(witness)) => {
                         self.dictionary.take();
                         *self.witness = Some(witness);
-                        self.phase = Phase::CopyHistory;
+                        self.phase = Phase::AdmitHistory;
                         MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Replay, completed: 0, total: 1 })
                     }
                     Ok(None) => MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::History, completed: 0, total: 1 }),
                     Err(diagnostic) => self.reject(diagnostic),
                 },
             },
-            Phase::CopyHistory => {
-                if let Err(diagnostic) = self.check_witness(cx) {
-                    return self.reject(diagnostic);
-                }
-                cx.set_stage("member-open.history.copy");
-                if cx.should_yield() {
-                    return MemberOpenStep::Pending(self.replay_progress());
-                }
-                let total = match usize::try_from(self.witness.as_ref().unwrap().verified_end()) {
-                    Ok(total) => total,
-                    Err(_) => return self.reject(MemberOpenDiagnostic::Capacity),
-                };
-                if self.history_bytes.is_none() {
-                    match admit_member_input_buffer(&mut self.history_bytes, total, grant) {
-                        Ok(Some(progress)) => { self.input_buffer_progress = progress; if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); } }
-                        Ok(None) => {}
-                        Err(_) => return self.reject(MemberOpenDiagnostic::Capacity),
-                    }
-                    return MemberOpenStep::Pending(self.replay_progress());
-                }
-                let offset = self.history_bytes.as_ref().unwrap().len();
-                if offset == total {
-                    let decoder = match crate::os_spr::RetainedHistoryDecode::new_persisted_document(total, RetainedSprLimits::default()) {
-                        Ok(decoder) => decoder,
-                        Err(_) => return self.reject(MemberOpenDiagnostic::Capacity),
-                    };
-                    *self.history_decoder = Some(decoder);
-                    self.phase = Phase::DecodeHistory;
-                    cx.consume_fuel(1);
-                    return MemberOpenStep::Pending(self.replay_progress());
-                }
-                if grant.maximum_items == 0 || grant.maximum_depth == 0 { return MemberOpenStep::Pending(self.replay_progress()); }
-                let maximum = total.saturating_sub(offset).min(crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).min(grant.maximum_copy_bytes / 2).min((cx.fuel_remaining().min(crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES as u64 * 2) / 2) as usize);
-                if maximum == 0 { return MemberOpenStep::Pending(self.replay_progress()); }
-                let copied = match self.witness.as_mut().unwrap().copy_verified_history_chunk(offset, &mut self.history_page.as_deref_mut().expect("live member history page")[..maximum], cx) {
-                    Ok(copied) if copied != 0 => copied,
-                    Ok(_) => return MemberOpenStep::Pending(self.replay_progress()),
-                    Err(diagnostic) => return self.reject(diagnostic),
-                };
-                self.history_bytes.as_mut().unwrap().extend_from_slice(&self.history_page.as_deref().expect("live member history page")[..copied]);
-                self.input_buffer_progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copied * 2, ..Default::default() };
-                cx.consume_fuel(copied as u64);
-                MemberOpenStep::Pending(self.replay_progress())
-            }
-            Phase::DecodeHistory => {
-                if let Err(diagnostic) = self.check_witness(cx) {
-                    return self.reject(diagnostic);
-                }
-                cx.set_stage("member-open.history.decode");
-                if cx.should_yield() {
-                    return MemberOpenStep::Pending(self.replay_progress());
-                }
-                let bytes = self.history_bytes.as_ref().expect("copied history owner remains retained");
-                let maximum_bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
-                let step = match self.history_decoder.as_mut().expect("retained history decoder remains present").step(bytes, maximum_bytes, 1) {
-                    Ok(step) => step,
-                    Err(_) => {
-                        let decoder = self.history_decoder.as_mut().expect("faulted retained history decoder remains present");
-                        let history = decoder.take_partial();
-                        let auxiliary = decoder.take_auxiliary_owners();
-                        *self.decoded_history = history;
-                        *self.history_auxiliary = Some(auxiliary);
-                        let decoder = self.history_decoder.take().expect("terminal retained history decoder remains present");
-                        assert!(decoder.terminal_is_empty());
-                        drop(decoder);
-                        return self.reject(MemberOpenDiagnostic::Replay);
-                    }
-                };
-                match step {
-                    crate::os_spr::RetainedHistoryDecodeStep::Pending { completed_bytes, decoded_records, .. } => {
-                        let consumed = completed_bytes.saturating_sub(self.completed_history_bytes).saturating_add(decoded_records.saturating_sub(self.completed_history_records)).max(1);
-                        self.completed_history_bytes = completed_bytes;
-                        self.completed_history_records = decoded_records;
-                        cx.consume_fuel(consumed.min(cx.fuel_remaining()));
-                        MemberOpenStep::Pending(self.replay_progress())
-                    }
-                    crate::os_spr::RetainedHistoryDecodeStep::Ready => {
-                        let decoder = self.history_decoder.as_mut().expect("ready retained history decoder remains present");
-                        let history = decoder.take_ready().expect("ready history remains retained");
-                        let auxiliary = decoder.take_auxiliary_owners();
-                        *self.history_auxiliary = Some(auxiliary);
-                        let decoder = self.history_decoder.take().expect("terminal retained history decoder remains present");
-                        assert!(decoder.terminal_is_empty());
-                        drop(decoder);
-                        *self.decoded_history = Some(history);
-                        self.phase = Phase::BeginHydration;
-                        cx.consume_fuel(1);
-                        MemberOpenStep::Pending(self.replay_progress())
-                    }
-                }
-            }
+            Phase::AdmitHistory | Phase::DecodeHistory => unreachable!("original History phase is received before other Member work"),
             Phase::BeginHydration => {
                 if let Err(diagnostic) = self.check_witness(cx) {
                     return self.reject(diagnostic);
@@ -888,25 +821,10 @@ where
                         assert!(hydration.terminal_is_empty());
                         drop(hydration);
                         *self.member = Some(member);
-                        self.phase = Phase::RetireHistoryBytes;
+                        self.phase = Phase::RetireInput;
                         MemberOpenStep::Pending(MemberOpenProgress { phase: MemberOpenPhase::Retire, completed: 0, total: 1 })
                     }
                 }
-            }
-            Phase::RetireHistoryBytes => {
-                if cx.should_yield() { return MemberOpenStep::Pending(self.replay_progress()); }
-                if self.history_bytes.is_some() {
-                    let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-                    let step = match crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.history_bytes, &mut self.active, child) {
-                        Ok(step) => step,
-                        Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
-                    };
-                    let progress = step.progress();
-                    if let Err(diagnostic) = super::record_member_step(cx, progress) { return self.reject(diagnostic); }
-                } else {
-                    self.phase = Phase::RetireInput;
-                }
-                MemberOpenStep::Pending(self.replay_progress())
             }
             Phase::RetireInput => {
                 if let Err(diagnostic) = self.check_authority(cx) { return self.reject(diagnostic); }
@@ -940,25 +858,34 @@ where
 {
     type Member = Box<ArtifactStore<P, M>>;
 
-    fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> MemberOpenStep<Self::Member> {
+    fn step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<MemberOpenStep<Self::Member>,OriginalTurnFailure> {
         self.step_store(cx, grant)
     }
 
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<RetainedCloneStep, OriginalTurnFailure> {
+    fn close_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<RetainedCloneStep,OriginalTurnFailure>{
+        if self.ownership_is_empty()&&!self.history_page_due(){if let Some(loan)=self.source_loan.as_mut(){let step=loan.close_step(parent,cx)?;let progress=step.progress();if loan.terminal_is_empty(){self.source_loan.take();}return Ok(if self.source_loan.is_none(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}return Ok(RetainedCloneStep::Complete(Default::default()))}
+        self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
         if cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original member close changed operation identity").into())}
         let mut grant=cx.retained_grant();
         if !self.terminal_is_empty()&&grant.maximum_items>0&&grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"initial member close exceeds original depth").into())}
         if cx.should_yield(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         grant.maximum_copy_bytes=grant.maximum_copy_bytes.min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));
-        let result=self.close_owned_field(grant).map(|step|match step{RetainedCloneStep::Complete(progress)if !self.ownership_is_empty()=>RetainedCloneStep::Progress(progress),step=>step});
+        if let Some(receiving)=self.history_receiving.as_mut(){
+            self.phase=Phase::Rejected;self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
+            let source=self.witness.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.original_history_close_source(cx).map_err(member_admission_diagnostic)?;
+            let step=receiving.close_step(&source,cx,grant)?;
+            if receiving.terminal_is_empty(){self.history_receiving.take();}
+            return Ok(RetainedCloneStep::Progress(step.progress()))
+        }
+        let result=self.close_owned_field(grant).map(|step|match step{RetainedCloneStep::Complete(progress)if !self.ownership_is_empty()||self.source_loan.is_some()=>RetainedCloneStep::Progress(progress),step=>step});
         super::receive_member_close(cx,result)
     }
-    fn terminal_is_empty(&self) -> bool { self.ownership_is_empty()&&!self.history_page_due() }
+    fn terminal_is_empty(&self) -> bool { self.ownership_is_empty()&&!self.history_page_due()&&self.source_loan.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
-    fn terminal_drop_byte_demand(&self) -> Option<usize> { self.ownership_is_empty().then(|| self.history_page.as_deref().map_or(0, |page| size_of_val(page))) }
+    fn terminal_drop_byte_demand(&self) -> Option<usize> { self.terminal_is_empty().then_some(0) }
 }
 
 impl<F, P, M> Drop for InitialMemberStoreOpen<F, P, M>
@@ -970,7 +897,7 @@ where
     /// 💣️ A panic already unwinding through a live open must not become a double panic that aborts the
     /// whole process; the drop bomb still fires for every non-unwinding drop.
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.ownership_is_empty(), "member-open operation dropped before exact member handoff or bounded close");
+        assert!(std::thread::panicking() || self.ownership_is_empty()&&self.source_loan.is_none()&&!self.history_page_due(), "member-open operation dropped before exact member handoff or bounded close");
     }
 }
 

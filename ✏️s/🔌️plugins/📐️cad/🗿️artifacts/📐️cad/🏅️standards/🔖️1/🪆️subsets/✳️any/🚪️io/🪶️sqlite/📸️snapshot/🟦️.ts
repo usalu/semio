@@ -2,7 +2,7 @@
 import sql from"./🗄️.sql"with{type:"text"};
 import type{CadSnapshot,CadReference,ArtifactChild,CadChild}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import{ValueError,sqliteOperation,type SqliteDatabase,type SqliteRow}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 /** 📎️ Exact persisted reference geometry at the semantic SQLite boundary. */

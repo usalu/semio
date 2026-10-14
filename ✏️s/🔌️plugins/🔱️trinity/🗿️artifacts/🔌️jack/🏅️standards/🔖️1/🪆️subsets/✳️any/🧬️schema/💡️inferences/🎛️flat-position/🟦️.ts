@@ -1,28 +1,18 @@
-/** 🎛️ Flattened positions use actual endpoint components and typed numeric offsets. */
+/** 🎛️ Flattened positions accumulate intrinsic displacements over retained endpoints. */
 import type {JackArtifact} from "../../🟦️.ts";
-import type {SemioGraphSnapshot, SemioGraphEdge} from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🟦️.ts";
-import {ValueError} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts";
+import type {JackFlatPosition,JackFlatPositionUv} from "../🟦️.ts";
+import {retainedJackGraph,type JackGraphQuery,type JackGraphEndpoint} from "../🪆️graph-query/🟦️.ts";
+import {ValueError} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts";
 import {inferJackTopology} from "../🧭topology/🟦️.ts";
-export interface JackFlatPositionUv {u:number;v:number}
-export interface JackFlatPosition {positions:Record<string,JackFlatPositionUv>}
-function offset(edge:SemioGraphEdge,key:string):number {
- const values=edge.properties.filter(value=>value.key===key);if(values.length>1)throw new ValueError("invalidValue","Jack flattened offset requires unique property key");const value=values[0]?.value;if(value===undefined)return 0;
- if(value.kind!=="float"&&value.kind!=="int")throw new ValueError("invalidValue","Jack flattened offset requires numeric intrinsic family");
- const text=value.lexeme.trim();
- if(value.kind==="float"&&/^nan64_[0-9a-fA-F]{16}$/.test(text)){const word=BigInt("0x"+text.slice(6));if((word&0x7ff0000000000000n)!==0x7ff0000000000000n||(word&0xfffffffffffffn)===0n)throw new ValueError("invalidValue","Jack flattened NaN word has wrong class");const bytes=new DataView(new ArrayBuffer(8));bytes.setBigUint64(0,word);return bytes.getFloat64(0);}
- if(value.kind==="int"){if(!/^-?(0|[1-9][0-9]*)$/.test(text))throw new ValueError("invalidValue","Jack flattened integer lexeme invalid");return Number(BigInt(text));}
- if(/^[+-]?(inf|infinity)$/i.test(text))return text.startsWith("-")?-Infinity:Infinity;
- if(/^[+-]?nan$/i.test(text))return NaN;
- if(!/^[+-]?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))([eE][+-]?[0-9]+)?$/.test(text))throw new ValueError("invalidValue","Jack flattened binary64 lexeme invalid");
- return Number(text);
-}
-/** 🪆️ Missing child and invalid endpoint ownership propagate before the derived position walk. */
-export function inferJackFlatPosition(parent:JackArtifact,children:ReadonlyMap<string,SemioGraphSnapshot>):JackFlatPosition {
+export type {JackFlatPosition,JackFlatPositionUv};
+/** 🧩️ Deterministic root and component walks preserve each edge's selected displacement. */
+export function inferJackFlatPosition(parent:JackArtifact,children:ReadonlyMap<string,JackGraphQuery>):JackFlatPosition {
  inferJackTopology(parent,children);
- const child=children.get(parent.content.childId)!,ids=child.nodes.map(node=>node.id.value).sort(),positions:Record<string,JackFlatPositionUv>=Object.create(null),edges=[...child.edges].sort((a,b)=>a.id.value<b.id.value?-1:a.id.value>b.id.value?1:0);
- const offsets=new Map(edges.map(edge=>[edge.id.value,{u:offset(edge,"u"),v:offset(edge,"v")}]));
- const visit=(seed:string)=>{if(Object.hasOwn(positions,seed))return;positions[seed]={u:0,v:0};const stack=[seed];while(stack.length){const source=stack.pop()!,held=positions[source]!;for(const edge of edges){if(edge.source.value!==source||Object.hasOwn(positions,edge.target.value))continue;const delta=offsets.get(edge.id.value)!;positions[edge.target.value]={u:held.u+delta.u,v:held.v+delta.v};stack.push(edge.target.value);}}};
+ const child=retainedJackGraph(parent,children),ids=[...child.nodeIds()].sort(),positions:Record<string,JackFlatPositionUv>=Object.create(null),edges=[...child.edges()].sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+ const offsets=new Map(edges.map(edge=>[edge.id,child.displacement(edge.id)])),outgoing=new Map<string,JackGraphEndpoint[]>();
+ for(const edge of edges){const held=outgoing.get(edge.source)??[];held.push(edge);outgoing.set(edge.source,held);}
+ const visit=(seed:string)=>{if(Object.hasOwn(positions,seed))return;positions[seed]={u:0,v:0};const stack=[seed];while(stack.length){const source=stack.pop()!,held=positions[source]!;for(const edge of outgoing.get(source)??[]){if(Object.hasOwn(positions,edge.target))continue;const delta=offsets.get(edge.id)!;positions[edge.target]={u:held.u+delta.u,v:held.v+delta.v};stack.push(edge.target);}}};
  if(ids.length){const seed=parent.rootNodeId??ids[0]!;if(!ids.includes(seed))throw new ValueError("invalidValue","Jack flattened root requires retained node");visit(seed);}
- while(Object.keys(positions).length<ids.length){const remaining=ids.filter(id=>!Object.hasOwn(positions,id)),seed=remaining.find(id=>!edges.some(edge=>edge.target.value===id&&remaining.includes(edge.source.value)))??remaining[0]!;visit(seed);}
+ while(Object.keys(positions).length<ids.length){const remaining=ids.filter(id=>!Object.hasOwn(positions,id)),members=new Set(remaining),targets=new Set(edges.filter(edge=>members.has(edge.source)).map(edge=>edge.target)),seed=remaining.find(id=>!targets.has(id))??remaining[0]!;visit(seed);}
  return{positions};
 }

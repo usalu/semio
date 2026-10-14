@@ -10,14 +10,14 @@ fn oversized_snapshot(nodes: usize, edges: usize) -> JackSnapshot {
         .map(|index| Node { id: format!("node-{index}"), kind: "Piece".into(), name: format!("Piece {index}"), x: index as f64, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: Vec::new() })
         .collect();
     let edges: Vec<Edge> = (0..edges).map(|index| Edge { id: format!("edge-{index}"), kind: "Connection".into(), source: format!("node-{index}"), target: format!("node-{}", index + 1), properties: PropertyBag::new() }).collect();
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "oversized".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes, edges }, None)
+    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "oversized".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes, edges }, None)
 }
 
 /// 🪟️ The panel body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(snapshot: &JackSnapshot, requests: Vec<TreeWindowRequest>) -> String {
     let view = ViewModel { tree_windows: requests, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let content = crate::jack_content_for_handle(&snapshot.content).expect("retained content child");
-    let node = render(content.snapshot(), &semio_framework_plugin::NoConfig::default(), &TrinityJackLabels::NATIVE_EN, &TreeWindows::for_body(&view, TRINITY_JACK_PLAY_BODY_ARTIFACT)).expect("render the jack document tree");
+    let node = render(content.read(), &semio_framework_plugin::NoConfig::default(), &TrinityJackLabels::NATIVE_EN, &TreeWindows::for_body(&view, TRINITY_JACK_PLAY_BODY_ARTIFACT)).expect("render the jack document tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the jack document tree")
 }
 

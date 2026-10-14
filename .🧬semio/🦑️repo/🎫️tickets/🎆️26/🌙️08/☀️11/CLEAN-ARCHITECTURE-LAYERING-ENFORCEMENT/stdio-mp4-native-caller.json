@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "repositoryRoot": "/Users/ueli/Documents/semio",
+  "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/c",
+  "command": {
+    "kind": "native-owner-command",
+    "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml",
+    "workingDirectory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust",
+    "program": "bun",
+    "arguments": [
+      "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/📜️script.ts",
+      "check",
+      "--lib",
+      "--offline"
+    ]
+  },
+  "transport": {
+    "maximumBytes": 134217728,
+    "maximumLines": 1000000
+  },
+  "child": {
+    "maximumElapsedMilliseconds": 180000
+  },
+  "network": {
+    "offline": true
+  },
+  "buildMode": "prototype"
+}

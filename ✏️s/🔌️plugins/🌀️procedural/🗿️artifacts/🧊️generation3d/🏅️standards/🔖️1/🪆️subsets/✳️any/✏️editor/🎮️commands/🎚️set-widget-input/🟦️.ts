@@ -1,17 +1,28 @@
 import {base64StandardDecodeControlled} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 import {parseChangeWidgetInput} from "../../../🚪️io/📝️text/🧬️mutations/🎛️change-widget-input/🦠️mutation/🟦️.ts";
 import type {Widget} from "../../../🧬️schema/🟦️.ts";
-import {parsePolygonMesh} from "../../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🟦️.ts";
+import {parsePolygonMesh} from "@semio-tech/framework/mesh/polygon";
 
 /** 🎚️ Portable typed input edits preserve the operator's declared schema. */
 export function editInputValue(types: string[], current: unknown, text: string, component?: string): Record<string, unknown> {
   const existing = current && typeof current === "object" ? current as Record<string, unknown> : undefined;
   const schema = typeof existing?.$schema === "string" ? existing.$schema : types[0];
-  if (!types.includes(schema) || !["number", "text", "boolean", "point", "vector"].includes(schema)) throw new Error("Connect a compatible output to this input");
+  if (!types.includes(schema) || !["number", "text", "boolean", "point", "vector", "plane"].includes(schema)) throw new Error("Connect a compatible output to this input");
   const numeric = () => {
     if (!text.trim() || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text.trim()) || !Number.isFinite(Number(text))) throw new Error("Input must be a finite number");
     return Number(text);
   };
+  if(schema==="plane"){
+    const [part,axis,...rest]=component?.split(".")??[];
+    if(rest.length||!["origin","normal"].includes(part)||!["x","y","z"].includes(axis))throw Error("Choose a plane origin or normal coordinate");
+    const coordinates=(name:string,type:string,z:number):Record<string,unknown>=>{
+      const current=existing?.[name]as Record<string,unknown>|undefined;
+      if(existing&&(!current||current.$schema!==type||!["x","y","z"].every(axis=>typeof current[axis]==="number"&&Number.isFinite(current[axis]))))throw Error("Plane input must contain a point origin and vector normal");
+      return {$schema:type,x:current?.x??0,y:current?.y??0,z:current?.z??z};
+    };
+    const plane:Record<string,unknown>={$schema:"plane",origin:coordinates("origin","point",0),normal:coordinates("normal","vector",1)};
+    (plane[part]as Record<string,unknown>)[axis]=numeric();return plane;
+  }
   if (schema === "point" || schema === "vector") {
     if (!component || !["x", "y", "z"].includes(component)) throw new Error("Choose a coordinate to edit");
     return { $schema: schema, x: 0, y: 0, z: 0, ...existing, [component]: numeric() };

@@ -1,0 +1,18 @@
+{
+  "type": "object", "additionalProperties": false, "required": ["version", "release", "distributions"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "release": { "type": "string", "pattern": "^https://releases\\.bazel\\.build/[0-9]+\\.[0-9]+\\.[0-9]+/release$" },
+    "distributions": {
+      "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["platform", "arch", "file", "bytes", "sha256"],
+        "properties": {
+          "platform": { "enum": ["win32", "darwin", "linux"] }, "arch": { "enum": ["x64", "arm64"] },
+          "file": { "type": "string", "pattern": "^bazel-[0-9]+\\.[0-9]+\\.[0-9]+-(windows|darwin|linux)-(x86_64|arm64)(\\.exe)?$" },
+          "bytes": { "type": "integer", "minimum": 1, "maximum": 268435456 }, "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    }
+  }
+}

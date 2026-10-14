@@ -1,0 +1,42 @@
+[
+  {
+    "id": "public-missing",
+    "present": false,
+    "minimumComputedAt": 0,
+    "computedAt": 0,
+    "errors": false,
+    "outcome": "missing"
+  },
+  {
+    "id": "waiter-missing",
+    "present": false,
+    "minimumComputedAt": 100,
+    "computedAt": 0,
+    "errors": false,
+    "outcome": "stale"
+  },
+  {
+    "id": "waiter-stale",
+    "present": true,
+    "minimumComputedAt": 100,
+    "computedAt": 99,
+    "errors": false,
+    "outcome": "stale"
+  },
+  {
+    "id": "waiter-current",
+    "present": true,
+    "minimumComputedAt": 100,
+    "computedAt": 101,
+    "errors": false,
+    "outcome": "current"
+  },
+  {
+    "id": "waiter-original-error",
+    "present": true,
+    "minimumComputedAt": 100,
+    "computedAt": 101,
+    "errors": true,
+    "outcome": "error"
+  }
+]

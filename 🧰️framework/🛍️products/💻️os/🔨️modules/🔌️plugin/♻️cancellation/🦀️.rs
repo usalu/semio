@@ -3,8 +3,11 @@ use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_async::{PublicationClaimHandle, PublicationClaim, PublicationPermit};
 use crate::bounded_ownership::ArtifactFixedRegistry;
 use crate::sdk_fault::plugin_sdk_fault;
-
-
+#[path="🎟️issuer/🦀️.rs"]
+mod issuer;
+pub(crate) use issuer::ToolCancellationIssuer;
+#[cfg(any(test,feature="media-turn-testing"))]
+pub(crate) use issuer::cancellation_issuer_original_creation_physical_birth_and_close;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ArtifactDocumentAuthority(pub u32);
@@ -89,40 +92,12 @@ impl ToolCancellationState {
     }
 }
 
-impl Drop for ToolCancellationState {
-    fn drop(&mut self) {}
-}
-
-#[derive(Clone)]
 pub struct ToolCancellationHandle {
-    pub(crate) state: std::sync::Arc<std::sync::Mutex<ToolCancellationState>>,
+    pub(crate) state: std::sync::Arc<semio_framework_value::retirement::controlled::RetainedOwnerGate<ToolCancellationState>>,
     pub(crate) app_scope: semio_framework_job::CancelToken,
     pub(crate) publication_scope: PublicationClaimHandle,
     pub(crate) app_generation: std::sync::Arc<std::sync::atomic::AtomicU64>,
     pub(crate) active: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-}
-
-impl Default for ToolCancellationHandle {
-    fn default() -> Self {
-        let mut slots = Vec::new();
-        let allocation_admitted = slots.try_reserve_exact(TOOL_CANCELLATION_SLOTS).is_ok();
-        if allocation_admitted {
-            slots.resize_with(TOOL_CANCELLATION_SLOTS, std::mem::MaybeUninit::uninit);
-        }
-        Self {
-            state: std::sync::Arc::new(std::sync::Mutex::new(ToolCancellationState {
-                slots: slots.into_boxed_slice(),
-                occupied: [0; TOOL_CANCELLATION_WORDS],
-                allocation_admitted,
-                keyed_operations: ArtifactFixedRegistry::new(),
-                keyed_documents: ArtifactFixedRegistry::new(),
-            })),
-            app_scope: semio_framework_job::CancelToken::root_now(),
-            publication_scope: PublicationClaim::new(),
-            app_generation: std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0)),
-            active: std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0)),
-        }
-    }
 }
 
 impl ToolCancellationHandle {
@@ -130,92 +105,14 @@ impl ToolCancellationHandle {
         document.0 as usize % TOOL_CANCELLATION_SLOTS
     }
 
-    fn try_state(&self) -> Result<std::sync::MutexGuard<'_, ToolCancellationState>, Fault> {
+    fn try_state(&self) -> Result<semio_framework_value::retirement::controlled::RetainedOwnerGateGuard<'_, ToolCancellationState>, Fault> {
         self.state.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancellation-busy"), "cancellation authority is contended or poisoned"))
     }
 
-    pub(crate) fn begin(&self, key: ToolOperationKey) -> Result<ToolCancellationLease, Fault> {
-        let document_token = self.app_scope.child_now();
-        let token = document_token.child_now();
-        let publication_claim = PublicationClaim::new();
-        let index = Self::slot(key.document);
-        let (superseded, generation) = {
-            let mut state = self.try_state()?;
-            if !state.allocation_admitted {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancellation-capacity"), "fixed cancellation slots were not admitted"));
-            }
-            if state.get(index).is_some_and(|scope| scope.document != key.document) {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancellation-collision"), "fixed cancellation authority slot collision"));
-            }
-            let superseded = state.take(index);
-            let generation = superseded.as_ref().map_or(0, |scope| scope.generation.saturating_add(1));
-            state.insert_admitted(index, ToolDocumentCancellationScope { document: key.document, generation, token: document_token, publication_claim: publication_claim.clone(), operation: key.clone() });
-            drop(state);
-            (superseded, generation)
-        };
-        if let Some(scope) = superseded {
-            scope.publication_claim.cancel();
-            scope.token.cancel_now();
-        } else {
-            self.active.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-        }
-        Ok(ToolCancellationLease { handle: self.clone(), document: key.document, document_generation: generation, key, token, publication_claim, document_claim: None, keyed: false, finished: false })
-    }
-
-    pub(crate) fn begin_keyed(&self, key: ToolOperationKey) -> Result<ToolCancellationLease, Fault> {
-        let mut state = self.try_state()?;
-        if !state.keyed_operations.can_insert(key.operation_id.0) {
-            return Err(plugin_sdk_fault("keyed cancellation operation has no exact pre-admitted slot"));
-        }
-        let document_id = u64::from(key.document.0);
-        if state.keyed_documents.get(document_id).is_none() {
-            if !state.keyed_documents.can_insert(document_id) {
-                return Err(plugin_sdk_fault("keyed cancellation document has no exact pre-admitted slot"));
-            }
-            state.keyed_documents.insert_admitted(document_id, ToolKeyedDocumentCancellationScope { token: self.app_scope.child_now(), publication_claim: PublicationClaim::new(), active: 0 });
-        }
-        let document = state.keyed_documents.get_mut(document_id).expect("exact keyed document was admitted");
-        if document.token.is_cancelled_now() {
-            document.token = self.app_scope.child_now();
-            document.publication_claim = PublicationClaim::new();
-        }
-        let token = document.token.child_now();
-        let document_claim = document.publication_claim.clone();
-        document.active += 1;
-        let publication_claim = PublicationClaim::new();
-        state
-            .keyed_operations
-            .insert_admitted(key.operation_id.0, ToolDocumentCancellationScope { document: key.document, generation: key.generation.0, token: token.clone(), publication_claim: publication_claim.clone(), operation: key.clone() });
-        self.active.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
-        Ok(ToolCancellationLease { handle: self.clone(), document: key.document, document_generation: key.generation.0, key, token, publication_claim, document_claim: Some(document_claim), keyed: true, finished: false })
-    }
-
-    #[cfg(test)]
-    fn test_begin(&self, key: ToolOperationKey) -> Result<TestToolCancellationLease, Fault> {
-        self.begin(key).map(TestToolCancellationLease)
-    }
-
     pub fn cancel(&self, key: &ToolOperationKey) -> Result<bool, Fault> {
-        let detached = {
-            let mut state = self.try_state()?;
-            if let Some(scope) = state.keyed_operations.get(key.operation_id.0).filter(|scope| scope.operation == *key) {
-                scope.publication_claim.cancel();
-                scope.token.cancel_now();
-                return Ok(true);
-            }
-            let index = Self::slot(key.document);
-            let detached = if state.get(index).is_some_and(|scope| scope.document == key.document && scope.operation == *key) { state.take(index) } else { None };
-            drop(state);
-            detached
-        };
-        if let Some(scope) = detached {
-            self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-            scope.publication_claim.cancel();
-            scope.token.cancel_now();
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        let state=self.try_state()?;
+        let scope=state.keyed_operations.get(key.operation_id.0).filter(|scope|scope.operation==*key).or_else(||state.get(Self::slot(key.document)).filter(|scope|scope.document==key.document&&scope.operation==*key));
+        if let Some(scope)=scope{scope.publication_claim.cancel();scope.token.cancel_now();Ok(true)}else{Ok(false)}
     }
 
     pub fn active_operation_count(&self) -> usize {
@@ -227,34 +124,16 @@ impl ToolCancellationHandle {
     }
 
     pub fn cancel_document(&self, document: ArtifactDocumentAuthority) -> Result<bool, Fault> {
-        let (detached, keyed) = {
-            let mut state = self.try_state()?;
-            let keyed = if let Some(scope) = state.keyed_documents.get(u64::from(document.0)) {
-                scope.publication_claim.cancel();
-                scope.token.cancel_now();
-                true
-            } else {
-                false
-            };
-            let index = Self::slot(document);
-            let detached = if state.get(index).is_some_and(|scope| scope.document == document) { state.take(index) } else { None };
-            drop(state);
-            (detached, keyed)
-        };
-        if let Some(scope) = detached {
-            self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-            scope.publication_claim.cancel();
-            scope.token.cancel_now();
-            Ok(true)
-        } else {
-            Ok(keyed)
-        }
+        let state=self.try_state()?;let mut cancelled=false;
+        if let Some(scope)=state.keyed_documents.get(u64::from(document.0)){scope.publication_claim.cancel();scope.token.cancel_now();cancelled=true;}
+        if let Some(scope)=state.get(Self::slot(document)).filter(|scope|scope.document==document){scope.publication_claim.cancel();scope.token.cancel_now();cancelled=true;}
+        Ok(cancelled)
     }
 
-    pub(crate) fn renew_scope_generation(&mut self) {
-        self.cancel_scope_generation();
-        self.app_scope = semio_framework_job::CancelToken::root_now();
-        self.publication_scope = PublicationClaim::new();
+    pub(crate) fn admit_alias(&self,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+        let bytes=size_of::<Self>();if grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
+        let alias=Self{state:std::sync::Arc::clone(&self.state),app_scope:self.app_scope.clone(),publication_scope:self.publication_scope.clone(),app_generation:std::sync::Arc::clone(&self.app_generation),active:std::sync::Arc::clone(&self.active)};
+        Ok(Some((alias,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})))
     }
 
     pub fn cancel_scope_generation(&self) {
@@ -263,75 +142,10 @@ impl ToolCancellationHandle {
         let _ = self.app_generation.try_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |generation| Some(generation.saturating_add(1)));
     }
 
-    pub(crate) fn cleanup_slot(&self, index: usize) -> Result<bool, Fault> {
-        if index >= TOOL_CANCELLATION_SLOTS {
-            let mut state = self.try_state()?;
-            let Some(operation) = state.keyed_operations.id_at(index - TOOL_CANCELLATION_SLOTS) else {
-                return Ok(false);
-            };
-            let scope = state.keyed_operations.remove(operation).expect("exact keyed cancellation cleanup slot");
-            scope.publication_claim.cancel();
-            scope.token.cancel_now();
-            let document_id = u64::from(scope.document.0);
-            let document = state.keyed_documents.get_mut(document_id).expect("keyed cancellation cleanup retains document authority");
-            document.active -= 1;
-            if document.active == 0 {
-                drop(state.keyed_documents.remove(document_id));
-            }
-            self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-            return Ok(true);
-        }
-        let detached = {
-            let mut state = self.try_state()?;
-            let detached = state.take(index);
-            drop(state);
-            detached
-        };
-        if let Some(scope) = detached {
-            self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-            scope.publication_claim.cancel();
-            scope.token.cancel_now();
-            Ok(true)
-        } else {
-            Ok(false)
-        }
-    }
 
-    pub(crate) fn cleanup_finished_slot(&self, index: usize) -> Result<Option<bool>, Fault> {
-        let mut state = match self.state.try_lock() {
-            Ok(state) => state,
-            Err(std::sync::TryLockError::WouldBlock) => return Ok(None),
-            Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_sdk_fault("finished cancellation authority is poisoned")),
-        };
-        let detached = if index < TOOL_CANCELLATION_SLOTS {
-            if !state.get(index).is_some_and(|scope| scope.publication_claim.is_finished()) {
-                return Ok(Some(false));
-            }
-            state.take(index)
-        } else {
-            let Some(operation) = state.keyed_operations.id_at(index - TOOL_CANCELLATION_SLOTS) else {
-                return Ok(Some(false));
-            };
-            if !state.keyed_operations.get(operation).is_some_and(|scope| scope.publication_claim.is_finished()) {
-                return Ok(Some(false));
-            }
-            let scope = state.keyed_operations.remove(operation).expect("finished exact keyed cancellation owner");
-            let document_id = u64::from(scope.document.0);
-            let document = state.keyed_documents.get_mut(document_id).expect("finished keyed operation retains document count");
-            document.active -= 1;
-            if document.active == 0 {
-                drop(state.keyed_documents.remove(document_id));
-            }
-            Some(scope)
-        };
-        if detached.is_some() {
-            self.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-        }
-        Ok(Some(detached.is_some()))
-    }
 }
 
-pub(crate) struct ToolCancellationLease {
+pub(crate) struct ToolCancellationLeaseOriginal {
     pub(crate) handle: ToolCancellationHandle,
     pub(crate) document: ArtifactDocumentAuthority,
     pub(crate) document_generation: u64,
@@ -343,13 +157,24 @@ pub(crate) struct ToolCancellationLease {
     pub(crate) finished: bool,
 }
 
+pub(crate) struct ToolCancellationLease{original:std::mem::ManuallyDrop<ToolCancellationLeaseOriginal>}
+impl ToolCancellationLease{
+    pub(crate) fn from_original(original:ToolCancellationLeaseOriginal)->Self{Self{original:std::mem::ManuallyDrop::new(original)}}
+    pub(crate) fn into_retirement_source(self)->ToolCancellationLeaseOriginal{
+        let original=std::mem::ManuallyDrop::new(self);
+        unsafe{std::mem::ManuallyDrop::into_inner(std::ptr::read(&original.original))}
+    }
+}
+impl std::ops::Deref for ToolCancellationLease{type Target=ToolCancellationLeaseOriginal;fn deref(&self)->&Self::Target{&self.original}}
+impl std::ops::DerefMut for ToolCancellationLease{fn deref_mut(&mut self)->&mut Self::Target{&mut self.original}}
+
 impl ToolCancellationLease {
     pub(crate) async fn is_cancelled(&self) -> bool {
         self.token.is_cancelled().await
     }
 
-    pub(crate) fn cancel_token(&self) -> semio_framework_job::CancelToken {
-        self.token.child_now()
+    pub(crate) fn cancel_token(&self) -> &semio_framework_job::CancelToken {
+        &self.token
     }
 
     pub(crate) fn cancel(&self) {
@@ -358,24 +183,24 @@ impl ToolCancellationLease {
     }
 
     pub(crate) fn rebind_keyed(&mut self, base_revision: semio_framework_job::RevisionId, generation: semio_framework_job::Generation) -> Result<bool, Fault> {
-        let mut state = match self.handle.state.try_lock() {
+        let original=&mut*self.original;
+        let mut state = match original.handle.state.try_lock() {
             Ok(state) => state,
-            Err(std::sync::TryLockError::WouldBlock) => return Ok(false),
-            Err(std::sync::TryLockError::Poisoned(_)) => return Err(plugin_sdk_fault("keyed cancellation authority is poisoned")),
+            Err(_) => return Ok(false),
         };
-        if !self.keyed || self.finished || self.publication_claim.is_cancelled() || self.token.is_cancelled_now() {
+        if !original.keyed || original.finished || original.publication_claim.is_cancelled() || original.token.is_cancelled_now() {
             return Err(plugin_sdk_fault("only a live exact keyed lease may rebind its revision"));
         }
-        let scope = state.keyed_operations.get_mut(self.key.operation_id.0).ok_or_else(|| plugin_sdk_fault("keyed rebase lost its registered cancellation authority"))?;
-        if scope.operation != self.key || !PublicationClaimHandle::same_original(&scope.publication_claim, &self.publication_claim) {
+        let scope = state.keyed_operations.get_mut(original.key.operation_id.0).ok_or_else(|| plugin_sdk_fault("keyed rebase lost its registered cancellation authority"))?;
+        if scope.operation != original.key || !PublicationClaimHandle::same_original(&scope.publication_claim, &original.publication_claim) {
             return Err(plugin_sdk_fault("keyed rebase does not own the registered cancellation authority"));
         }
         scope.operation.base_revision = base_revision;
         scope.operation.generation = generation;
         scope.generation = generation.0;
-        self.key.base_revision = base_revision;
-        self.key.generation = generation;
-        self.document_generation = generation.0;
+        original.key.base_revision = base_revision;
+        original.key.generation = generation;
+        original.document_generation = generation.0;
         Ok(true)
     }
 
@@ -389,65 +214,19 @@ impl ToolCancellationLease {
         Some(ToolPublicationScopePermit { _app: app, _document: document, _operation: operation })
     }
 
-    fn release_current(&self) {
-        let Ok(mut state) = self.handle.state.try_lock() else { return };
-        if self.keyed {
-            if !state.keyed_operations.get(self.key.operation_id.0).is_some_and(|scope| scope.operation == self.key && PublicationClaimHandle::same_original(&scope.publication_claim, &self.publication_claim)) {
-                return;
-            }
-            let detached = state.keyed_operations.remove(self.key.operation_id.0);
-            if detached.is_some() {
-                let document_id = u64::from(self.document.0);
-                let document = state.keyed_documents.get_mut(document_id).expect("keyed operation retains its exact document scope");
-                document.active -= 1;
-                if document.active == 0 {
-                    drop(state.keyed_documents.remove(document_id));
-                }
-                self.handle.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-            }
-            return;
-        }
-        let index = ToolCancellationHandle::slot(self.document);
-        let detached = if state.get(index).is_some_and(|scope| scope.document == self.document && scope.generation == self.document_generation && scope.operation == self.key) { state.take(index) } else { None };
-        drop(state);
-        if detached.is_some() {
-            self.handle.active.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-        }
-    }
-
-    pub(crate) fn finish(mut self) {
+    pub(crate) fn finish(&mut self) {
         self.publication_claim.finish();
-        self.release_current();
         self.finished = true;
     }
 
     pub(crate) fn finish_in_place(&mut self) {
         self.publication_claim.finish();
-        self.release_current();
         self.finished = true;
-    }
-}
-
-#[cfg(test)]
-struct TestToolCancellationLease(ToolCancellationLease);
-
-#[cfg(test)]
-impl TestToolCancellationLease {
-    fn cancel_token(&self) -> semio_framework_job::CancelToken {
-        self.0.cancel_token()
-    }
-
-    fn finish(self) {
-        self.0.finish();
     }
 }
 
 impl Drop for ToolCancellationLease {
     fn drop(&mut self) {
-        if !self.finished {
-            self.cancel();
-        }
-        self.publication_claim.finish();
-        self.release_current();
+        assert!(std::thread::panicking(),"original cancellation lease requires its paid terminal cursor");
     }
 }

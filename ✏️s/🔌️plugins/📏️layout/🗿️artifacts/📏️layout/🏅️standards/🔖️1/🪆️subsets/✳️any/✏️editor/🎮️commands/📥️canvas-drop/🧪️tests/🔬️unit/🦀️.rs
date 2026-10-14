@@ -49,7 +49,7 @@ fn a_drop_payload_keeps_the_native_preview_image() {
         ("width".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(800.0))),
         ("height".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(600.0))),
     ]);
-    let command = LayoutPlayApp::command_from_action("canvasDrop", Some(&args)).expect("bridge");
+    let command = LayoutPlayApp::command_from_action("canvasDrop", Some((args).clone()), None).expect("bridge");
     let crate::editor::layout::LayoutCommand::CanvasDrop(payload) = command else { panic!("drop") };
     assert_eq!(payload.kind, "png");
     assert_eq!(payload.artifact_ref, "shot");

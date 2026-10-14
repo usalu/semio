@@ -38,6 +38,15 @@ class TreeRetirementScript extends BundleScript {
   }
 }
 
+class NativeResourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("Native resource custody requires its exact original selection");
+    const left = this.invocation.control.remainingMilliseconds();
+    if (left === null || left <= 0) throw Error("Native resource custody requires finite original caller authority");
+    await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left }, manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-ui-runtime", target: { kind: "test", name: "native_resource_custody" }, laws: ["native_resource_owner_and_loan_bundle_preserve_original_pages_and_full_close"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR });
+  }
+}
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -59,6 +68,6 @@ class CheckWasmScript extends BundleScript {
 //#endregion 🔖️check-wasm
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript);
+  const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript).register("test-native-resource-custody", NativeResourceScript);
   await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

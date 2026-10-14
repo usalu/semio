@@ -270,7 +270,9 @@ impl ArtifactEditor for SemioBrepEditor {
         }
     }
 
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         editing::snapshot_editing_command_from_action(action, args, |action, args| {
             if action != "set-vertex" {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioBrepEditor")));

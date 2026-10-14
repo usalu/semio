@@ -51,16 +51,13 @@ export function geometryInferenceOracle(directory: string): number {
   const request = ajv.compile(JSON.parse(readFileSync(resolve(root, "📥️request.json"), "utf8")));
   const result = ajv.compile(JSON.parse(readFileSync(resolve(root, "📤️result.json"), "utf8")));
   assert(request(fixture.request), JSON.stringify(request.errors));
-  const { retained, ...withoutRetained } = fixture.request;
-  assert.equal(request(withoutRetained), false);
-  for (const axis of Object.keys(retained)) {
-    assert.equal(request({ ...fixture.request, retained: { ...retained, [axis]: -1 } }), false);
-    assert.equal(request({ ...fixture.request, retained: { ...retained, [axis]: 0 } }), true);
-  }
-  assert.equal(request({ ...fixture.request, retained: { ...retained, extra: 1 } }), false);
-  assert(result({ ...fixture.expected, outputJson: "{}" }), JSON.stringify(result.errors));
+  for (const field of ["neuronId","operatorId","inputJson"]) { const missing={...fixture.request};delete missing[field];assert.equal(request(missing),false); }
+  for (const field of ["retained","budget","wallMicros"]) assert.equal(request({...fixture.request,[field]:0}),false);
+  assert(result({ ...fixture.expected, output: {} }), JSON.stringify(result.errors));
   assert.equal(request({ ...fixture.request, operatorId: "math.add" }), false);
-  assert.equal(result({ ...fixture.expected, outputJson: "{}", unitsDone: -1 }), false);
+  assert.equal(result({ ...fixture.expected, outputJson: "{}" }), false);
+  assert.equal(result({ ...fixture.expected, output: "{}" }), false);
+  assert.equal(result({ ...fixture.expected, output: {}, unitsDone: -1 }), false);
   const input = JSON.parse(fixture.request.inputJson);
   const volume = (value: typeof input): number => {
     const geometry = new BoxGeometry(value.width.value, value.depth.value, value.height.value).toNonIndexed();
@@ -77,7 +74,7 @@ export function geometryInferenceOracle(directory: string): number {
   const changed = JSON.parse(fixture.changedInput.inputJson);
   assert.equal(volume(changed), fixture.changedVolume);
   assert.notDeepEqual(JSON.parse(fixture.request.dependencyJson), JSON.parse(fixture.changedDependencies.dependencyJson));
-  for (const phase of fixture.replacement.pendingPhases) assert(result({ done:false,cancellable:true,phase,unitsDone:0,unitsTotal:0,outputJson:fixture.replacement.outputJson }));
+  for (const phase of fixture.replacement.pendingPhases) assert(result({ done:false,cancellable:true,phase,unitsDone:0,unitsTotal:0,output:fixture.replacement.output }));
   assert.equal(fixture.replacement.initialUnits,fixture.expected.unitsDone);
-  return 22;
+  return 18;
 }

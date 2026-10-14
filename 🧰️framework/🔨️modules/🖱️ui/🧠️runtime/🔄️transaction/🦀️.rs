@@ -652,7 +652,7 @@ impl FrameTransaction {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(active.generation), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence,&mut actual_retained_progress);
         let before = job.transaction_usage();
-        let outcome = job.drive_one(&mut context);
+        let outcome = job.drive_one(context.generation().0, &mut context).expect("original reconcile native resource source");
         let after = job.transaction_usage();
         self.charge(1, after.nodes.checked_sub(before.nodes).expect("test job node census is monotonic"), after.bytes.checked_sub(before.bytes).expect("test job byte census is monotonic"));
         match outcome {

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "contract": "framework.os.original-opening-receiver",
+  "operation": 17,
+  "generation": 9,
+  "epoch": 19,
+  "instance": 7,
+  "activationGeneration": 3,
+  "requestSequence": 11,
+  "factoryCalls": 1,
+  "partialPaRetainedOnDenied": true,
+  "originalOpenSourceRetained": true,
+  "sameOriginalCaller": true,
+  "issuerReadyBeforeNativePublication": true,
+  "defaultCaller": false,
+  "recordIdAsOperation": false,
+  "eraseUncreatedOnDeferred": false,
+  "states": [
+    {
+      "phase": "opening",
+      "partialPa": false,
+      "nativeCreated": false
+    },
+    {
+      "phase": "factory-owned",
+      "partialPa": true,
+      "nativeCreated": false
+    },
+    {
+      "phase": "issuer-denied",
+      "partialPa": true,
+      "nativeCreated": false
+    },
+    {
+      "phase": "issuer-pending",
+      "partialPa": true,
+      "nativeCreated": false
+    },
+    {
+      "phase": "issuer-ready",
+      "partialPa": true,
+      "nativeCreated": false
+    },
+    {
+      "phase": "native-published",
+      "partialPa": false,
+      "nativeCreated": true
+    }
+  ],
+  "issuerFinalClose": true,
+  "creationLoanReturnedLast": true,
+  "cancelRetainsPartialPa": true,
+  "issuerReceiptPostedOnce": true
+}

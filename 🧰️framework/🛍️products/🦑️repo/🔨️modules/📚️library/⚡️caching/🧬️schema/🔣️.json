@@ -142,6 +142,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "pressure",
         "guardAgeMs",
         "cargo",
         "vite",
@@ -149,6 +150,18 @@
         "tests"
       ],
       "properties": {
+        "pressure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "minimumAvailableBytes", "targetAvailableBytes", "guardAgeMs", "maximumDeletionBytes"],
+          "properties": {
+            "version": {"const": 1},
+            "minimumAvailableBytes": {"type": "integer", "minimum": 1},
+            "targetAvailableBytes": {"type": "integer", "minimum": 1},
+            "guardAgeMs": {"type": "integer", "minimum": 1},
+            "maximumDeletionBytes": {"type": "integer", "minimum": 1}
+          }
+        },
         "guardAgeMs": {
           "type": "integer",
           "exclusiveMinimum": 0

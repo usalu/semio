@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceKind",
+    "loan",
+    "cases",
+    "deniedAxes",
+    "pendingSurvivesRejection",
+    "sameRecipient",
+    "cpuPostedOnce",
+    "nativeFaultKept",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "sourceKind": {
+      "const": "original-parent"
+    },
+    "loan": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "occupied",
+          "busy",
+          "faultCode"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "success",
+              "busy",
+              "duplicate"
+            ]
+          },
+          "occupied": {
+            "type": "boolean"
+          },
+          "busy": {
+            "type": "boolean"
+          },
+          "faultCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ]
+    },
+    "pendingSurvivesRejection": {
+      "const": true
+    },
+    "sameRecipient": {
+      "const": true
+    },
+    "cpuPostedOnce": {
+      "const": true
+    },
+    "nativeFaultKept": {
+      "const": true
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

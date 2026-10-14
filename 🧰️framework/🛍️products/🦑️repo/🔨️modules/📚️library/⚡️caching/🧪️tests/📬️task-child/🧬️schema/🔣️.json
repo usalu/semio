@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "daemonModes",
+    "expected",
+    "files",
+    "guardian",
+    "idle"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "daemonModes": {
+      "const": [
+        "default",
+        "false"
+      ]
+    },
+    "expected": {
+      "const": {
+        "hasProject": true,
+        "sameData": true
+      }
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "guardian": {
+      "const": {
+        "duringWitness": true,
+        "challenge": true,
+        "afterWitness": false,
+        "cohortExclusive": "refused"
+      }
+    },
+    "idle": {
+      "const": {
+        "observeMilliseconds": 250,
+        "graphBeforeRequest": false
+      }
+    }
+  }
+}

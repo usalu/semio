@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/mit-bestand-bericht",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "dependsOn": [
@@ -18,7 +18,7 @@
       }
     },
     "watch": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "continuous": true,
       "outputs": [],
@@ -32,7 +32,7 @@
       }
     },
     "build-zwischenbericht": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [
         "{projectRoot}/dist/documents/zwischenbericht"
@@ -92,7 +92,7 @@
       }
     },
     "build-forschungsbericht": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [
         "{projectRoot}/dist/documents/forschungsbericht"
@@ -152,7 +152,7 @@
       }
     },
     "build-kompaktbericht": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [
         "{projectRoot}/dist/documents/kompaktbericht"
@@ -208,7 +208,7 @@
       }
     },
     "akteursnetz-validate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
@@ -236,7 +236,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": ["build"],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
@@ -282,7 +282,7 @@
       ]
     },
     "watch-zwischenbericht": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "continuous": true,
       "outputs": [],
@@ -296,7 +296,7 @@
       }
     },
     "watch-forschungsbericht": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "continuous": true,
       "outputs": [],
@@ -310,7 +310,7 @@
       }
     },
     "watch-kompaktbericht": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "continuous": true,
       "outputs": [],
@@ -324,7 +324,7 @@
       }
     },
     "generate-actor-network": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts",
@@ -357,7 +357,7 @@
       }
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts",
@@ -381,7 +381,7 @@
       }
     },
     "check-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/👥️actor-network/📜️script.ts",

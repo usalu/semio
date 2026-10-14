@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/value-ts",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./ordered/numeric": "./🗂️ordered/🔢️numeric/🟦️.ts",
+    "./refusal": "./⚠️refusal/🟦️.ts",
+    "./ieee754": "./🔢️ieee754/🟦️.ts"
+  },
+  "scripts": {
+    "test-numeric-api": "bun repo run @semio-tech/value-ts:test-numeric-api",
+    "test-scalars-api": "bun repo run @semio-tech/value-ts:test-scalars-api"
+  },
+  "devDependencies": {
+    "@semio-tech/process": "workspace:*"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

@@ -33,8 +33,25 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 # 🐎️ The independent execution oracle of the interpreter's laws (`🧪️tests/🔬️unit`): the same Wasmtime the plugin host links, never a
 # dependency of the crate itself.
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
+
+[[test]]
+name = "original_native_frame_caller"
+path = "../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original_host_deadline"
+path = "../../../🖥️host/⏱️deadline/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original_host_root"
+path = "../../../🖥️host/🔔️wake/🎟️root/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original_actor_poll_input"
+path = "../../../⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs"

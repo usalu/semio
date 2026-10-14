@@ -8,7 +8,7 @@ import { buildRepositoryCargoArtifacts } from "../../../📚️library/⚡️cac
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (nx bridge for `repo/dashboard/rs`). */
 import { join } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { projectDashboardLaunch, ticketLaunchCommands, launchParameterArguments } from "../../🌳️command-tree/🚀️launch/🟦️.ts";
+import { normalizeDashboardLaunchBuildV1, projectDashboardLaunch, ticketLaunchCommands, launchParameterArguments } from "../../🌳️command-tree/🚀️launch/🟦️.ts";
 import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, type DashboardExecutionOptions } from "../../📦️installation/🟦️.ts";
 import { devToolingEnv, runRepositoryCargoTests, runCmd, runCmdStatus } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -38,7 +38,7 @@ class LaunchScript extends BundleScript {
     const output=join(this.repoRoot,".vscode/launch.json"),current=JSON.parse(await readFile(output,"utf8"));
     const projected=projectDashboardLaunch(current,commands,ticket);
     if(action==="check"&&JSON.stringify(current)!==JSON.stringify(projected))throw new Error("Dashboard launch projection is stale");
-    if(action==="generate")await writeFile(output,JSON.stringify(projected,null,2)+"\n");
+    if(action==="generate")await writeFile(output,JSON.stringify(normalizeDashboardLaunchBuildV1(projected),null,2)+"\n");
     console.log(`[DEBUG] dashboard launch ${action} owner=${ticket} commands=${commands.length} locales=en,de unrelatedPreserved=true`);
   }
 }

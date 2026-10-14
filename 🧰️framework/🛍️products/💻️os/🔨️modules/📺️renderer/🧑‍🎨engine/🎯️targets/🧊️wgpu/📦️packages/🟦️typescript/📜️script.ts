@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation, scriptInvocationEnvironment } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧊️ `@semio-tech/framework-renderer-wgpu` task router. */
@@ -22,7 +22,7 @@ class NativeEntrypointCatalogTestScript extends BundleScript {
   if(segments.length)throw Error("test-native-entrypoint-catalog accepts no arguments");
   const remaining=this.invocation.control.remainingMilliseconds();
   if(remaining!==null&&remaining<1)throw Error("Original native entrypoint catalog deadline exhausted");
-  await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../⌨️native-entrypoint/🧪️tests/📇️catalog/🟦️.ts")],{cwd:this.repoRoot,env:process.env,budgetMs:remaining===null?0:Math.floor(remaining),signal:this.invocation.control.signal});
+  await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../⌨️native-entrypoint/🧪️tests/📇️catalog/🟦️.ts"),resolve(this.root,"../../../../../../🔌️plugin/📇️registry/📥️runtime/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:process.env,budgetMs:remaining===null?0:Math.floor(remaining),signal:this.invocation.control.signal});
  }
 }
 
@@ -108,10 +108,19 @@ class OriginalFrameSourceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("Expected test-original-frame-source");
     const { runOwnedCommand } = await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-    const file = resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts");
-    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", file], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
-    await runOwnedCommand(process.execPath, ["test", file], this.repoRoot, "wgpu:original-frame:source", this.childBudget(), { signal: this.invocation.control.signal });
+    const files = ["🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts"].map(file=>resolve(this.repoRoot,file));
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...files], this.repoRoot, "wgpu:original-frame:types", this.childBudget(), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", ...files], this.repoRoot, "wgpu:original-frame:source", this.childBudget(), { signal: this.invocation.control.signal });
   }
+}
+
+/** 📤️ Checks exact nonempty media output and the actual original Source scalar adapter. */
+class OriginalBrowserOutputSourceScript extends BundleScript {
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-original-browser-output-source");const sources=["../../🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts","../../🎬️media-slots/📤️slot/🧪️tests/🟦️.ts","../../🎬️media-slots/📥️props/🧪️tests/🟦️.ts","../../🌐️browser-worker/📤️output/🧪️tests/🟦️.ts","../../🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","../../🎟️native-caller/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,path)).concat(resolve(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎟️presented-source/🧪️tests/🟦️.ts")),remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original browser output command authority exhausted");const execute=(args:string[])=>{const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw Error("Original browser output child authority exhausted");return runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal})};await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+}
+/** 🦀️ Runs the actual retained native output with its same finite caller and complete nonempty snapshot. */
+class OriginalBrowserOutputNativeScript extends OriginalBrowserOutputSourceScript {
+ async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests([crateName],this.repoRoot,this.invocation.control,["--offline","--lib","-E","test(original_browser_nonempty_output_same_media_system_denials_and_full_paid_close) | test(original_presented_params_same_source_native_cause_denials_and_full_paid_close) | test(original_presented_slot_exact_identity_system_denial_donation_and_full_paid_close) | test(original_presented_roster_nonempty_same_source_system_receipts_cancellation_and_full_paid_close)","--","--nocapture"]);}
 }
 
 /** 🦀️ Runs the existing budgeted Cargo tests without invoking browser tests. */
@@ -490,6 +499,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("test-socket-snapshot-sqlite",SocketSnapshotSqliteScript)
   .register("test-original-frame-source", OriginalFrameSourceScript)
+  .register("test-original-browser-output-source",OriginalBrowserOutputSourceScript)
+  .register("test-original-browser-output-native",OriginalBrowserOutputNativeScript)
   .register("test-native", NativeTestScript)
   .register("test-native-entrypoint-catalog", NativeEntrypointCatalogTestScript)
   .register("test-wgpu-unit", WgpuUnitTestScript)

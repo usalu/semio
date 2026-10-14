@@ -1,6 +1,6 @@
 //! 🚪️ IO cause retains refusal identity and authored text source data.
 use crate::IoError;
-use semio_framework_value::{ValueError,ValueRefusalKind,NativeEncodeControl};
+use semio_framework_value::{ValueError,ValueRefusalKind,NativeEncodeControl,RetainedCloneProgress};
 use semio_framework_diagnostic::{TextError,TextSpan};
 #[test]
 fn io_owned_cause_retains_kind_and_text_diagnostics() {
@@ -17,10 +17,12 @@ fn io_owned_cause_retains_kind_and_text_diagnostics() {
             assert_eq!(refusal.kind.as_str(),row["expectedKind"].as_str().unwrap());
             continue;
         }
-        let original=ValueError::new(kind,message.clone());
+        let mut original=ValueError::new(kind,message.clone());
+        if let Some(receipt)=row.get("retainedProgress") {original=original.with_retained_progress(RetainedCloneProgress{copied_items:usize::try_from(receipt["copiedItems"].as_u64().unwrap()).unwrap(),copied_bytes:usize::try_from(receipt["copiedBytes"].as_u64().unwrap()).unwrap(),retained_capacity_bytes:usize::try_from(receipt["retainedCapacityBytes"].as_u64().unwrap()).unwrap(),released_bytes:usize::try_from(receipt["releasedBytes"].as_u64().unwrap()).unwrap()});}
+        let retained=original.retained_progress();
         let pointer=original.message.as_ptr();
         let error=if operation=="text" {IoError::from_text_error_controlled(TextError::expected(kind,message.clone(),TextSpan{line:7,column:11,length:4},"required"),&mut control).unwrap()}else{IoError::from_value_error(original)};
-        if operation=="value" {assert_eq!(error.cause.message.as_ptr(),pointer);}
+        if operation=="value" {assert_eq!(error.cause.message.as_ptr(),pointer);assert_eq!(error.cause.retained_progress(),retained);}
         assert_eq!(error.cause.kind,kind);
         assert_eq!(error.cause.message,message);
         if row["operation"]=="text" {

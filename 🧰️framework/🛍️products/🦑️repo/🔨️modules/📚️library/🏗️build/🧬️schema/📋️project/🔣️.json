@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Repository Build Project",
+  "description": "Tool-independent project and task declarations projected by repository build backends.",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "name": {"type": "string", "minLength": 1},
+    "root": {"type": "string"},
+    "sourceRoot": {"type": "string"},
+    "projectType": {"enum": ["application", "library"]},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "implicitDependencies": {"type": "array", "items": {"type": "string"}},
+    "namedInputs": {"type": "object", "additionalProperties": {"type": "array"}},
+    "targets": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Task"}},
+    "metadata": {"type": "object"}
+  },
+  "$defs": {
+    "Task": {
+      "type": "object",
+      "properties": {
+        "executor": {"enum": ["repo:script", "repo:noop"]},
+        "command": {"type": "string"},
+        "options": {"type": "object"},
+        "configurations": {"type": "object", "additionalProperties": {"type": "object"}},
+        "defaultConfiguration": {"type": "string"},
+        "dependsOn": {"type": "array", "items": {"anyOf": [{"type": "string"}, {"type": "object"}]}},
+        "inputs": {"type": "array"},
+        "outputs": {"type": "array", "items": {"type": "string"}},
+        "cache": {"type": "boolean"},
+        "continuous": {"type": "boolean"},
+        "parallelism": {"type": "boolean"},
+        "metadata": {"type": "object"}
+      }
+    }
+  }
+}

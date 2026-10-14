@@ -1119,7 +1119,9 @@ impl ArtifactApp for ModuleApp {
     /// 🎯️ The bridge the React/wgpu shells still speak (`{action,args}`) — parses the two solid
     /// media actions this module dispatches into `Command`; `format` defaults to `"obj"` (matching
     /// the handlers' pre-B1 defaults) and `data` (import's file-callback payload) defaults to empty.
-    async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Command, Fault> {
+    async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let format = args.and_then(|value| value.get("format")).and_then(DslValue::as_str).unwrap_or("obj").to_string();
         match action {
             ACTION_EXPORT_SOLID => Ok(Command::ExportSolid { format }),

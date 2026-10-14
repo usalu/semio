@@ -2,12 +2,16 @@ cargo-features = [ "trim-paths" ]
 
 [workspace]
 resolver = "2"
-members = [ "🐚️shell/📦️packages/🦀️rust", "📦️packages/🦀️rust" ]
+members = [
+    "🐚️shell/📦️packages/🦀️rust",
+    "📦️packages/🦀️rust",
+]
 exclude = [
-  "**/🏅️standards/**",
-  "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**"
+    "**/🏅️standards/**",
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust",
 ]
 
 [workspace.metadata.semio.repository]
@@ -74,35 +78,15 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-csv]
-path = "../../../🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-json]
-path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-md]
-path = "../../../🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-png]
-path = "../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio-base]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio-graph]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-semio-value]
-path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-svg]
-path = "../../../🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-txt]
-path = "../../../🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-trinity-jack]
 path = "📦️packages/🦀️rust"

@@ -15,7 +15,7 @@ export async function testGeneratorOwnership(workspace: string, output: string):
   for (const [path, project] of Object.entries(fixture.projects)) {
     put(`${path}/📋️project.json`, JSON.stringify(project));
   }
-  const plugin = (await import("../../../🟨️.mjs")).default;
+  const plugin = (await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs")).default;
   const files = Object.keys(fixture.projects).map(path => `${path}/📋️project.json`);
   const results = await plugin.createNodesV2[1](files, {}, { workspaceRoot: root });
   const projects: Record<string, any> = Object.assign({}, ...results.map(([, result]: any) => result.projects));
@@ -41,7 +41,7 @@ export async function testGeneratorOwnership(workspace: string, output: string):
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const execute = async () => {
-    const child = Bun.spawn(["node", cli, "run", "package:generate", "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn(["node", cli, "run", "package:generate", "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
     assert.equal(code, 0, stdout + stderr);
   };
@@ -127,7 +127,7 @@ appendFileSync(join(root, ".runs"), name + "\\n");
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const require = createRequire(import.meta.url), cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const run = async () => {
-    const child = Bun.spawn(["node", cli, "run", "publication:package", "--outputStyle=static"], { cwd: root, env: { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn(["node", cli, "run", "publication:package", "--outputStyle=static"], { cwd: root, env: { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
     assert.equal(status, 0, stdout + stderr);
   };

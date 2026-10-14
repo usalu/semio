@@ -18,8 +18,7 @@ class InstalledServiceSourceScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw new Error("installed-service-source accepts no arguments");
     const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🔌️service/🧪️tests/🧱️io-boundary/🟦️.ts");
-    const receivers=["🌉️component-cold-map-patch","💡️inference-control","📇️native-codecs"].map(name=>join(this.repoRoot,`🌎️hub/🧩️compositions/🌍️gis/🧪️tests/${name}/🟦️.ts`));
-    await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,...receivers],this.repoRoot,"installed-service-strict",TEST_LEVEL_BUDGET_MS.long);
+    await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"installed-service-strict",TEST_LEVEL_BUDGET_MS.long);
     await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"installed-service-source",TEST_LEVEL_BUDGET_MS.long);
   }
 }
@@ -79,6 +78,11 @@ class ChannelOraclesTestScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="original-inference-caller"){
+      if(segments.length!==1)throw Error("original-inference-caller accepts no arguments");
+      const source=join(this.root,"../../🔨️modules/💡️inference/🧪️tests/🔬️unit/🟦️.ts");
+      for(const args of [[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],["test",source]])await runOwnedCommand(process.execPath,args,this.repoRoot,"original-inference-caller-source",scriptInvocationBudget(this.invocation,0),{signal:this.invocation.control.signal});return;
+    }
     const { rest } = resolveTestLevel(segments, "quick");
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }

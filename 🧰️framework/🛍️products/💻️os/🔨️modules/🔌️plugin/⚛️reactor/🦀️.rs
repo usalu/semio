@@ -560,6 +560,19 @@ impl InstanceMetadataRegistry {
     }
 }
 
+/// 📮️ Hands the exact retained opening app id into its original close slot before metadata release.
+pub(crate) fn take_original_instance_metadata_app_id(instance:u32,target:&mut Option<String>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+ if target.is_some(){return Ok(Some(false))}
+ INSTANCE_METADATA.with(|metadata|{
+  let mut metadata=metadata.try_borrow_mut().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original opening metadata source is borrowed"))?;
+  if metadata.get(instance).is_none(){return Ok(Some(true))}
+  if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(None)}
+  cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
+  *target=metadata.remove(instance).map(|metadata|metadata.app_id);
+  Ok(Some(false))
+ })
+}
+
 /// 🧵️ A resolved `AsyncTask`, erased to bytes — see `spawn_task`'s doc for why no `Mutation`/
 /// `ConfigMutation`/`DraftMutation` generic ever reaches this type. Mirrors `TaskResolution`
 /// one-for-one except `Emit` is pre-encoded (the SAME `protocol::encode_ops_vec`/`OpBinary::
@@ -717,33 +730,15 @@ pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
     REGISTRY.with(|registry| registry.for_instance(instance).drain())
 }
 
-/// 🔁️ The arguments `response_action` is dispatched with: the ORIGINAL request object's own fields
-/// (whatever correlation the app put there — a `nodeHash`, a handle, an operator id) merged with
-/// this invocation's outcome. Domain-neutral by construction: the SDK never invents a key the app
-/// did not already send, it only adds `ok` plus either `outputJson` or `faultCode`/`faultMessage`.
-///
-/// 📏️ CORRELATION, not the body: the SDK echoes the app's own request fields back so the
-/// response action can find its node/window/handle again, and a request BODY (a serialized
-/// operator input, a geometry blob) is not correlation — echoing it would carry the payload
-/// into the guest a second time, on top of the outcome
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The bound is the one every structurally
-/// addressed argument already crosses: a string the shell could not have SENT as a command
-/// argument is not a string this may hand back as one.
-///
-/// 📦️ The ABI carries the answer as a `pack` (`🔌️plugin/🧬️schema/📜️.wit`'s `type pack =
-/// list<u8>`: "no JSON string … anywhere on this ABI's data path"), so the SDK DECODES it
-/// into the response action's declared `outputJson` text. Lossy-stringifying the container
-/// bytes instead — which is what this did — handed every browser-served answer to the app as
-/// mojibake, because the shell packs (`encodePackValue(JSON.parse(outputJson))`,
-/// `🏛️ShellHost/🟦️.tsx`) while only a native fixture ever sent raw JSON
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, semio_framework::Fault>) -> semio_framework_value::DslValue {
+/// 📬️ Donates the decoded output or complete native Fault into the addressed response command.
+/// The request retains its bounded correlation fields; failures cross separately as owned headers.
+pub fn extension_response_args(request_json: &str, outcome: Result<Vec<u8>, semio_framework::Fault>) -> (semio_framework_value::DslValue, Option<semio_framework::Fault>) {
     let mut fields: Vec<(String, semio_framework_value::DslValue)> = match semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(request_json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(semio_framework_value::DslValue::Object(object)) => object,
         _ => Vec::new(),
     };
     fields.retain(|(key, value)| {
-        if key == "ok" || key == "outputJson" || key == "faultCode" || key == "faultMessage" {
+        if key == "ok" || key == "output" || key == "fault" || key == "faultCode" || key == "faultMessage" {
             return false;
         }
         let over_bound = matches!(value, semio_framework_value::DslValue::String(text) if text.chars().map(semio_framework::public_invocation_char_cost).sum::<usize>() > semio_framework::PUBLIC_INVOCATION_STRING_BYTES);
@@ -752,35 +747,37 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
         }
         !over_bound
     });
-    match outcome {
-        Ok(bytes) => match store::pack_rt::decode_wire_value(bytes) {
+    let original_fault = match outcome {
+        Ok(bytes) => match store::pack_rt::decode_wire_value(&bytes) {
             Ok(value) => {
                 fields.push(("ok".to_string(), semio_framework_value::DslValue::Bool(true)));
-                fields.push(("outputJson".to_string(), semio_framework_value::DslValue::String(semio_framework_pack_json::to_json_string(&value))));
+                fields.push(("output".to_string(), value));
+                None
             }
             Err(error) => {
                 fields.push(("ok".to_string(), semio_framework_value::DslValue::Bool(false)));
-                fields.push(("faultCode".to_string(), semio_framework_value::DslValue::String("extension.answer-not-a-pack".to_string())));
-                fields.push(("faultMessage".to_string(), semio_framework_value::DslValue::String(format!("{} answer bytes are not a pack wire value: {error}", bytes.len()))));
+                fields.push(("output".to_string(), semio_framework_value::DslValue::Null));
+                Some(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("extension.answer-not-a-pack"), format!("{} answer bytes are not a pack wire value: {error}", bytes.len())))
             }
         },
         Err(fault) => {
             fields.push(("ok".to_string(), semio_framework_value::DslValue::Bool(false)));
-            fields.push(("faultCode".to_string(), semio_framework_value::DslValue::String(fault.code.0.clone())));
-            fields.push(("faultMessage".to_string(), semio_framework_value::DslValue::String(fault.message.clone())));
+            fields.push(("output".to_string(), semio_framework_value::DslValue::Null));
+            Some(fault)
         }
-    }
-    semio_framework_value::DslValue::object(fields)
+    };
+    (semio_framework_value::DslValue::object(fields), original_fault)
 }
 
 /// 🔁️ `Event::Completed`'s continuation branch, factored out of `poll`'s event loop so it is unit
 /// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
-/// exact `(instance, action, args)` triple the follow-up dispatch uses. `None` means the id is an
+/// exact `(instance, action, args, original_fault)` the follow-up dispatch uses. An unclaimed id is an
 /// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
-pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
+pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue, Option<semio_framework::Fault>), Result<Vec<u8>, semio_framework::Fault>> {
     let Some(continuation) = REGISTRY.with(|registry| registry.take_continuation(req)) else { return Err(terminal) };
     let (instance, response_action, request_json, outcome) = continuation.into_response(terminal);
-    Ok((instance, response_action, extension_response_args(&request_json, &outcome)))
+    let (args, original_fault) = extension_response_args(&request_json, outcome);
+    Ok((instance, response_action, args, original_fault))
 }
 
 /// 📄️ Accumulates one PROLOGUE page of `req`'s answer — the door a host answer larger than one
@@ -1043,15 +1040,16 @@ fn release_cold_pair_close(key: instance_lifetime::NativeCloseKey) -> Result<(),
     COLD_PAIR_INGRESS.with(|ingress| ingress.try_borrow_mut().map_err(|_| "cold pair close release busy")?.release_close_instance(key))
 }
 
-fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
+fn step_reactor_close(cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     REACTOR_CLOSES.with(|closes| {
         let Ok(mut closes) = closes.try_borrow_mut() else { return Ok(false) };
         let start = REACTOR_CLOSE_CURSOR.with(Cell::get);
         let Some(index) = (0..PLUGIN_REACTOR_INSTANCE_SLOTS).map(|offset| (start + offset) % PLUGIN_REACTOR_INSTANCE_SLOTS).find(|index| closes.slots.get(*index).is_some_and(|state| state.active && !state.complete)) else { return Ok(false) };
         REACTOR_CLOSE_CURSOR.with(|cursor| cursor.set((index + 1) % PLUGIN_REACTOR_INSTANCE_SLOTS));
         let state = closes.slots.get_mut(index).expect("selected exact active close");
+        if !turn::original_receiving_sources_empty(state.key){return Ok(true)}
         let complete = if !state.command_ingress_complete {
-            state.command_ingress_complete = turn::close_command_ingress_step(state.key)?;
+            state.command_ingress_complete = turn::close_command_ingress_step(state.key,cx)?;
             false
         } else if !state.requests_complete {
             state.requests_complete = REGISTRY.with(|registry| registry.cancel_instance_step(&mut state.request_cursor) == requests::RequestCloseStep::Complete);

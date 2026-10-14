@@ -24,5 +24,6 @@ semio-framework = { path = "../../../../../../../🧰️framework/📦️package
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin", features = ["artifact-app-testing"] }
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

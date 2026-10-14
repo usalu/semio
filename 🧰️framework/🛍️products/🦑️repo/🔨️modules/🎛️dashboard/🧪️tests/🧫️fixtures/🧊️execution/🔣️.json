@@ -4,7 +4,7 @@
       "args": [
         "run",
         "@semio-tech/repo-dashboard-rs:run",
-        "--outputStyle=stream"
+        "--output=stream"
       ],
       "expected": []
     },
@@ -12,7 +12,7 @@
       "args": [
         "run",
         "@semio-tech/repo-dashboard-rs:run",
-        "--outputStyle=stream",
+        "--output=stream",
         "--language",
         "de"
       ],
@@ -36,7 +36,7 @@
       "args": [
         "run",
         "@semio-tech/repo-dashboard-rs:daemon",
-        "--outputStyle=stream",
+        "--output=stream",
         "--",
         "status"
       ],
@@ -283,5 +283,22 @@
   "installationModes": [
     "prototype",
     "release"
-  ]
+  ],
+  "installedRunner": {
+    "arguments": [
+      "--tool=bazel",
+      "run",
+      "@semio-tech/repo-dashboard-rs:daemon",
+      "--",
+      "status"
+    ],
+    "expected": {
+      "arguments": [
+        "status"
+      ],
+      "tool": "bazel",
+      "mode": "release"
+    },
+    "mode": "release"
+  }
 }

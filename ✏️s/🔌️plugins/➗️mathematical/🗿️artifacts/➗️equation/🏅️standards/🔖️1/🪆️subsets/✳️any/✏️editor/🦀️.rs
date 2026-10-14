@@ -1248,7 +1248,9 @@ impl ArtifactEditor for EquationPlayApp {
     /// every graph gesture died before reaching `handle`. The three block-shaped payloads
     /// (`graph`/`geometry`/`viewport`) are decoded through `semio_framework_value::FromValue::from_value`, the same codec the
     /// typed channel uses, so the shell needs no staging shim.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<EquationCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<EquationCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
         fn decode<T: semio_framework_value::FromValue>(action: &str, args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<T, Fault> {
             let value = args.and_then(|value| value.get(key)).cloned().ok_or_else(|| Fault::from(format!("equation {action} requires a '{key}' block")))?;

@@ -1,0 +1,39 @@
+{
+  "declaration": "struct Envelope { visible: String, #[dsl(skip)] source: Option<String>, count: u64 }",
+  "wireIds": [
+    0,
+    2
+  ],
+  "nativeFields": [
+    "visible",
+    "source",
+    "count"
+  ],
+  "wireKeys": [
+    "visible",
+    "count"
+  ],
+  "absentDecodedCustody": null,
+  "invalidDeclaration": "struct Invalid { #[dsl(skip)] source: String }",
+  "invalidMessage": "dsl skip requires an optional custody field",
+  "cases": [
+    {
+      "visible": "mesh",
+      "source": "original owned source — 原始",
+      "count": 16,
+      "wire": {
+        "visible": "mesh",
+        "count": 16
+      }
+    }
+  ],
+  "retirementGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 64,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
+  "maximumTurns": 4096,
+  "terminalDropBytes": 0
+}

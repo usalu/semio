@@ -149,7 +149,9 @@ impl ArtifactEditor for Pdf17Editor {
     fn agent_target_revision(_action: &str, args: &semio_framework_value::DslValue, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         crate::editor::page::page_text_agent_revision(doc.snapshot, args)
     }
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-page" => {
                 let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;
@@ -213,7 +215,9 @@ impl ArtifactEditor for Pdf17Editor {
         view_state: &semio_framework_plugin::ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == main::BODY_KEY {
             return crate::editor::page::render_selected(doc.snapshot, interaction).map(built_to_component_tree);
         }
@@ -222,7 +226,10 @@ impl ArtifactEditor for Pdf17Editor {
             return crate::editor::page::render_inspector(doc.snapshot, selected, "s.stdio.pdf@1.7/*#editor", semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?, view_state.locale).map(built_to_component_tree);
         }
         Self::render(body_key, doc, cfg, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf17Editor {

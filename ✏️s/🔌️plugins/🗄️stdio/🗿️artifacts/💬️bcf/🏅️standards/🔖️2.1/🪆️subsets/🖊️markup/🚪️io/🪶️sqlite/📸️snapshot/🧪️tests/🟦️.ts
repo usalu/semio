@@ -12,7 +12,7 @@ import controls from "./🧫️fixtures/🎛️control.json";
 import {parseBcfSnapshot,type BcfSnapshot,type BcfPoint3} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseBcfSnapshotJson} from "../../../📝️text/📸️snapshot/🔣️json/🟦️.ts";
 import {BCF_SQLITE_SCHEMA,bcfSnapshotToSqliteDatabase,bcfSnapshotFromSqliteDatabase} from "../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 const point=(value:{x:number;y:number;z:number}):BcfPoint3=>({x:binary64(value.x),y:binary64(value.y),z:binary64(value.z)});

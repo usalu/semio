@@ -1510,13 +1510,15 @@ fn runtime_dispatch_cursor_merges_retained_pointer_by_input_generation() {
     let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), ..Default::default() };
     events.discrete[0] = Some(scroll);
     events.discrete[1] = Some(key);
-    let mut cursor = RuntimeDispatchCursor::new(events);
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut cursor = RuntimeDispatchCursor::new(events,original);
 
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::Scroll { .. })));
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::PointerMove { .. })));
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::KeyDown { .. })));
     assert!(cursor.take_next().is_none());
-    assert!(cursor.terminal_is_empty());
+    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(cursor.terminal_is_empty());caller.finish();
 }
 
 #[test]
@@ -1525,12 +1527,13 @@ fn runtime_dispatch_cursor_retires_one_owned_event_per_step() {
     for (index, slot) in events.discrete.iter_mut().enumerate() {
         *slot = Some(ui_host::DiscreteEvent { event: ui_render::DispatchEvent::Paste { text: "x".repeat(4096) }, generation: ui_host::InputGeneration(index as u64) });
     }
-    let mut cursor = RuntimeDispatchCursor::new(events);
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();
+    let mut cursor = RuntimeDispatchCursor::new(events,original);
     for _ in 0..cursor.events.discrete.len() {
-        assert!(!cursor.close_step());
+        assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
     }
-    assert!(cursor.close_step());
-    assert!(cursor.terminal_is_empty());
+    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(cursor.terminal_is_empty());caller.finish();
 }
 
 #[test]
@@ -1553,7 +1556,8 @@ fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Settle)));
     assert_eq!(cursor.checkout_site(), "frame-deferred-empty");
     assert!(cursor.take_next().is_none());
-    assert!(cursor.terminal_is_empty());
+    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(cursor.terminal_is_empty());caller.finish();
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1605,10 +1609,11 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
         assert!(queue.reserve_interaction());
         queue.finish(returned_completion(141, RuntimeApply::ResumeFrameDeferred { interaction: Some(returned), cursor: Some(FrameDeferredCursor::new(handback, false, false, false, false, 141, semio_framework_job::root_cancel_token())) }));
     }
-    assert!(!runtime.close_input_step());
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    assert!(!caller.turn(|cx|runtime.close_input_step(cx)).unwrap());
     assert!(runtime.try_lock().unwrap().interaction_available());
     for step in 0..64 {
-        if runtime.close_input_step() {
+        if caller.turn(|cx|runtime.close_input_step(cx)).unwrap() {
             assert!(step > 3);
             break;
         }
@@ -1619,6 +1624,7 @@ fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_ac
     assert!(owner.frame_actions.is_empty());
     assert!(owner.interaction.as_ref().unwrap().input.terminal_is_empty());
     assert_eq!(runtime.0.completions.lock().unwrap().len(), 0);
+    caller.finish();
 }
 
 #[test]
@@ -1629,11 +1635,11 @@ fn frame_deferred_cancel_retires_one_action_per_step() {
     }
     let mut cursor = FrameDeferredCursor::new(actions, false, true, false, false, 1, semio_framework_job::root_cancel_token());
     for _ in 0..WORLD3D_DEADLINE_CAPACITY {
-        assert!(!cursor.close_step());
+        assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
     }
-    assert!(!cursor.close_step());
-    assert!(cursor.close_step());
-    assert!(cursor.terminal_is_empty());
+    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(cursor.terminal_is_empty());caller.finish();
 }
 
 #[test]
@@ -1717,12 +1723,12 @@ fn frame_deferred_cancel_token_closes_one_exact_owner_per_grant() {
     cancel.cancel_now();
     assert!(cursor.cancel.is_cancelled_now());
     cursor.begin_close();
-    assert!(!cursor.close_step());
-    assert!(!cursor.close_step());
-    assert!(!cursor.close_step());
-    assert!(!cursor.close_step());
-    assert!(cursor.close_step());
-    assert!(cursor.terminal_is_empty());
+    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(caller.turn(|cx|cursor.close_step(cx)).unwrap());
+    assert!(cursor.terminal_is_empty());caller.finish();
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1875,7 +1881,7 @@ fn interrupted_frame_maintenance_execution_restores_before_incremental_recovery(
     let Some(mut recovered) = recovered_cell.try_take() else { panic!("interrupted exact owner") };
     let Some(cursor) = recovered.cursor.as_mut() else { panic!("interrupted cursor") };
     let before = cursor.actions.len;
-    assert!(!cursor.close_step());
+    assert!(!caller.turn(|cx|cursor.close_step(cx)).unwrap());
     assert_eq!(before - cursor.actions.len, 1);
 }
 
@@ -2606,4 +2612,23 @@ fn original_engine_packet_pages_require_actual_birth_and_release_grants() {
     caller.finish();
     assert!(matches!(owner.close_backing_step(RetainedCloneGrant::default()).unwrap(), InteractiveJobCloseStep::Complete { progress } if progress == Default::default()));
     println!("[DEBUG] original engine packet array backing released={} terminal=true", layout.size());
+}
+
+/// 📬️ Cancelling the unpolled dispatch future returns every original owner before any physical event release.
+#[cfg(not(target_arch="wasm32"))]
+#[test]
+fn cancelled_dispatch_future_preserves_original_interaction_event_and_paid_source(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧪️tests/📋️clipboard-ingress/🧫️fixtures/🔣️.json")).unwrap();assert_eq!(law["dispatchCustody"][1]["event"],1);
+    let runtime=native_reference_runtime();let interaction=frame_maintenance_test_owner(511,0).interaction.take().unwrap();assert!(runtime.reserve_interaction_future());
+    let mut text=String::with_capacity(law["capacity"].as_u64().unwrap()as usize);text.push_str(law["text"].as_str().unwrap());let pointer=text.as_ptr();let capacity=text.capacity();
+    let mut events=ui_host::DrainedEvents::default();events.discrete[0]=Some(ui_host::DiscreteEvent{event:ui_render::DispatchEvent::Paste{text},generation:ui_host::InputGeneration(1)});
+    let grant=ui_contract::UI_WORKER_RETIREMENT_POLICY;let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(grant);let original=caller.turn(super::RuntimeDispatchSource::admit).unwrap().unwrap();let mut cursor=RuntimeDispatchCursor::new(events,original);
+    caller.turn(|cx|{cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).unwrap();cx.consume_fuel(1);cursor.inflight=cursor.take_next();});
+    let future=RuntimeDispatchReturn{mailbox:runtime.clone(),revision:511,cursor:Some(cursor),interaction:Some(interaction)}.run();drop(future);
+    let mut completion=runtime.0.completions.lock().unwrap().take_at(0).expect("cancellation returns exact reserved custody");let RuntimeApply::ResumeDispatch{interaction,cursor}=&mut completion.apply else{panic!("original dispatch return")};assert!(interaction.is_some());let mut cursor=cursor.take().expect("original cursor remains owned");
+    let ui_render::DispatchEvent::Paste{text}=cursor.inflight.as_ref().unwrap()else{panic!("same original event")};assert_eq!(text.as_ptr(),pointer);assert_eq!(text.capacity(),capacity);
+    assert!(!caller.turn(|cx|cx.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_release_bytes:capacity-1,..grant},|cx|cursor.close_inflight_step(cx))).unwrap());let ui_render::DispatchEvent::Paste{text}=cursor.inflight.as_ref().unwrap()else{panic!("denied original event remains owned")};assert_eq!(text.as_ptr(),pointer);assert_eq!(text.capacity(),capacity);
+    assert!(!caller.turn(|cx|cursor.close_inflight_step(cx)).unwrap());assert!(cursor.inflight.is_none());while !caller.turn(|cx|cursor.close_step(cx)).unwrap(){}assert!(cursor.terminal_is_empty());
+    runtime.try_lock().unwrap().return_interaction(interaction.take().unwrap());let mut complete=false;for _ in 0..65536{complete=caller.turn(|cx|runtime.close_input_step(cx)).unwrap();if complete{break}}assert!(complete,"original interaction input reaches paid terminal closure");caller.finish();
+    eprintln!("[DEBUG] cancelled dispatch future returned exact interaction/event/source; denied whole-capacity closure retained pointer and later original close retired event/source");
 }

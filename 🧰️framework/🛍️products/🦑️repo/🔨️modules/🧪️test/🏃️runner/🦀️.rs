@@ -1,6 +1,14 @@
 //! 🏃️ Rust native host runner. A generated cache-local crate links the committed
 //! `../🏃️runner/🦀️.rs` adapter and calls [`run_main`]; nothing else about the Rust host is generated.
 
+#[path = "../../../../../🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs"]
+mod workspace_identity;
+
+/// 🏠️ Admits only a declared package workspace with regular build authority.
+fn is_repository_root(path: &Path) -> Result<bool, String> {
+    workspace_identity::is_workspace_root(path, |source| parse_json(source).map(|value| matches!(value.get("workspaces"), Some(Json::Array(_) | Json::Object(_)))))
+}
+
 use crate::protocol::{digest, parse_json, sha256_hex, Json, Outcome, Plan, Scenario};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -179,18 +187,18 @@ fn arg(argv: &[String], flag: &str) -> Option<String> {
     argv.iter().position(|value| value == flag).and_then(|index| argv.get(index + 1)).cloned()
 }
 
-fn repo_root_from(work_dir: &str) -> PathBuf {
+fn repo_root_from(work_dir: &str) -> Result<PathBuf, String> {
     let mut dir = Path::new(work_dir).to_path_buf();
     for _ in 0..32 {
-        if dir.join("nx.json").exists() && dir.join("package.json").exists() {
-            return dir;
+        if is_repository_root(&dir)? {
+            return Ok(dir);
         }
         match dir.parent() {
             Some(parent) => dir = parent.to_path_buf(),
             None => break,
         }
     }
-    std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+    Err("workspace root with paired build and package markers was not found".to_string())
 }
 
 fn result_json(plan: &Plan, scenario: &Scenario, status: &str, duration_ms: u128, outcome: Option<&Outcome>, diagnostics: Vec<(String, String)>, raw_path: Option<String>, projection_path: Option<String>) -> Json {
@@ -285,7 +293,10 @@ pub fn run_main(adapter: Adapter) -> std::process::ExitCode {
             return std::process::ExitCode::from(2);
         }
     };
-    let repo_root = repo_root_from(&plan.work_dir);
+    let repo_root = match repo_root_from(&plan.work_dir) {
+        Ok(root) => root,
+        Err(error) => { eprintln!("{error}"); return std::process::ExitCode::from(2); }
+    };
     let work_dir = PathBuf::from(&plan.work_dir);
     let artifact_dir = if plan.artifact_dir.is_empty() { work_dir.join("📦️artifacts") } else { PathBuf::from(&plan.artifact_dir) };
     let _ = std::fs::create_dir_all(&work_dir);

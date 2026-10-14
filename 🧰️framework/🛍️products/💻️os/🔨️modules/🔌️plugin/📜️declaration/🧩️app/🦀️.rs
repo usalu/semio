@@ -425,7 +425,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// operation's text line — `#[derive(Mutations)]` is the one way an aggregate answers it.
     type Mutation: protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + ::replication::OpBinaryReceiving + 'static;
     /// 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
     type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     /// 📝️ Draft-lane operations applied to {@link store::DraftStore}.
@@ -534,7 +534,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
     /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
     /// that the shells drive must override this so chrome actions reach `handle`.
-    async fn command_from_action(action: &str, _args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    async fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(
             FaultOrigin::App,
             FaultCode::new("app.command.unsupported"),
@@ -547,29 +548,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn agent_target_revision(_action: &str, _args: &DslValue, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         Ok(None)
     }
-    /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): resolves this app's typed `Command` from a
-    /// `ui_contract::UiIntent` — the one entry point `plugin_runtime::plugin_dispatch_intents`
-    /// calls per surviving intent. Default is a COMPATIBLE bridge (no existing plugin breaks):
-    /// rejects a non-v1 `ActionId` with a `Fault` (never silently dispatches a stale contract —
-    /// `ActionFactory` only ever mints v1 ids, so this bridge cannot resolve anything else), then
-    /// folds `intent.args`/`intent.input` (`merge_ui_values`) and calls `Self::command_from_action`
-    /// — the SAME bridge every app already implements for the React/wgpu string-action shells. An
-    /// app wanting intent-specific resolution (reading `intent.node`/`intent.trigger` directly)
-    /// overrides this instead.
-    async fn command_from_intent(intent: &UiIntent) -> Result<Self::Command, Fault> {
-        if intent.action.version != 1 {
-            return Err(Fault::new(
-                FaultOrigin::App,
-                FaultCode::new("app.intent.version-mismatch"),
-                format!(
-                    "intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactApp::command_from_intent`'s own doc) — override it for a versioned contract",
-                    intent.action.name, intent.action.version
-                ),
-            ));
-        }
-        let merged = merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?;
-        Self::command_from_action(&intent.action.name, merged.as_ref()).await
-    }
+
     /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
     async fn config_spec() -> ConfigSpec {
         ConfigSpec::empty().await
@@ -658,10 +637,15 @@ pub trait ArtifactApp: Default + Send + 'static {
         view_state: &ViewModel,
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> crate::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<crate::ComponentTree>=async{
         let _ = (transient, interaction);
         Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state).await
-    }
+
+        }.await;
+        rendered.map(Some).map_err(Into::into)
+        }
     /// 🪟️ Keyed by window INSTANCE id — an app with two open instances of the same kind (e.g. split
     /// panes) returns one entry per instance so their chrome/options never collapse together. Apps with
     /// a single window kind and no splitting return `vec![kind_id]`-worth of entries either way.
@@ -986,6 +970,28 @@ pub enum MediaArtifactError {
     SchemaMismatch { expected: String, found: String },
     NoImporter(String),
 }
+
+impl semio_framework_job::OriginalDomainFailure for MediaArtifactError{
+ fn domain_code(&self)->&str{match self{Self::Payload(_)=>"media.artifact.payload",Self::Value(_)=>"media.artifact.value",Self::Export(_)=>"media.artifact.export",Self::Import(_)=>"media.artifact.import",Self::SchemaMismatch{..}=>"media.artifact.schema-mismatch",Self::NoImporter(_)=>"media.artifact.no-importer"}}
+ fn domain_message(&self)->&str{match self{Self::Payload(message)|Self::NoImporter(message)=>message,Self::Value(error)=>&error.message,Self::Import(error)=>&error.message,Self::SchemaMismatch{expected,..}=>expected,Self::Export(error)=>match error{MediaError::UnknownPort(port)|MediaError::Incompatible{port,..}=>port,MediaError::Payload(_,message)=>message,MediaError::NotImplemented=>"media ports are not implemented for this app"}}}
+ fn domain_retained_progress(&self)->RetainedCloneProgress{match self{Self::Value(error)=>error.retained_progress(),Self::Import(error)=>error.retained_progress(),_=>Default::default()}}
+}
+impl semio_framework_job::OriginalDomainProjection for MediaArtifactError{
+ fn projection_identity(&self)->usize{self as*const Self as usize}
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{use semio_framework_job::OriginalDomainView as V;match path{
+  []=>Ok(V::IntrinsicObject(2)),[0]=>Ok(V::IntrinsicText(match self{Self::Payload(_)=>"payload",Self::Value(_)=>"value",Self::Export(_)=>"export",Self::Import(_)=>"import",Self::SchemaMismatch{..}=>"schemaMismatch",Self::NoImporter(_)=>"noImporter"})),
+  [1,rest @ ..]=>match self{Self::Payload(message)|Self::NoImporter(message)if rest.is_empty()=>Ok(V::IntrinsicText(message)),Self::Value(error)=>semio_framework_job::project_original_value_error(error,rest),Self::Import(error)=>semio_framework_job::project_original_fault(error,rest),Self::Export(error)=>crate::media_operation_refusal::project_media_error(error,rest),Self::SchemaMismatch{expected,found}=>match rest{[]=>Ok(V::IntrinsicObject(2)),[0]=>Ok(V::IntrinsicText(expected)),[1]=>Ok(V::IntrinsicText(found)),_=>Err(media_projection_error())},_=>Err(media_projection_error())},_=>Err(media_projection_error())
+ }}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match path{[]=>["kind","original"].get(index).copied().ok_or_else(media_projection_error),[1,rest @ ..]=>match self{Self::Value(error)=>semio_framework_job::key_original_value_error(error,rest,index),Self::Import(error)=>semio_framework_job::key_original_fault(error,rest,index),Self::Export(error)=>crate::media_operation_refusal::key_media_error(error,rest,index),Self::SchemaMismatch{..}if rest.is_empty()=>["expected","found"].get(index).copied().ok_or_else(media_projection_error),_=>Err(media_projection_error())},_=>Err(media_projection_error())}}
+}
+
+/// 🧳️ Preserves media artifact domain refusals beside complete initiating turn failures.
+#[derive(Debug,semio_framework_value::RetireOwned)]
+pub enum MediaArtifactOperationFailure{Domain(MediaArtifactError),Original(semio_framework_job::OriginalTurnFailure)}
+impl From<MediaArtifactError> for MediaArtifactOperationFailure{fn from(source:MediaArtifactError)->Self{Self::Domain(source)}}
+impl From<semio_framework_job::OriginalTurnFailure> for MediaArtifactOperationFailure{fn from(source:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(source)}}
+impl From<ValueError> for MediaArtifactOperationFailure{fn from(source:ValueError)->Self{Self::Original(source.into())}}
+impl From<Fault> for MediaArtifactOperationFailure{fn from(source:Fault)->Self{Self::Original(source.into())}}
 
 impl std::fmt::Display for MediaArtifactError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

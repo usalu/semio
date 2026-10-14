@@ -7,7 +7,7 @@ import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process
 import { join, resolve } from "node:path";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { artifactIoArchitectureBreaches } from "../../🚪️io/🏛️architecture/🟦️.ts";
-import { dependencyDirectionEdges, dependencyDirectionSourceInventory, type DependencyDirectionGraphScope, type DependencyDirectionRule } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
+import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependencyDirectionStrictRules, type DependencyDirectionGraphScope } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
 import { loadDependencyDirectionPolicy } from "../../🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts";
 import { verifyRustSourceDirection } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 import { verifyCargoDependencyDirection } from "../../🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts";
@@ -40,11 +40,8 @@ class TypecheckScript extends BundleScript {
 /** 🧱️ Enforces the complete current framework graph without baselines or source-form exemptions. */
 async function verifyDependencyDirection(invocation: ScriptInvocation, repoRoot: string, env: NodeJS.ProcessEnv, sourceRole?: "framework-neutral"): Promise<void> {
   checkScriptInvocation(invocation);
-  const { policy, taxonomy, workspacePackages } = loadDependencyDirectionPolicy(repoRoot, { onProgress: progress => console.log(`[canonical-architecture] policy ${progress.phase}; sources=${progress.sources}`) });
-  const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", "plugins-framework-sdk-only", ...Object.keys(taxonomy.dependencyDirections.rules)];
-  const patterns = (value: string | readonly string[]): readonly string[] => typeof value === "string" ? [value] : value;
-  const rules = policy.forbidden.filter((rule) => names.includes(rule.name) || rule.name.startsWith(taxonomy.dependencyDirections.publicApi.rulePrefix) || rule.name.startsWith("plugin-no-extension-or-artifact-")).map((rule) => ({ ...rule, from: { path: patterns(rule.from.path!), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path!), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } }));
-  if (names.some((name) => !rules.some((rule) => rule.name === name))) throw new Error("Canonical architecture is missing a declared strict rule");
+  const snapshot = loadDependencyDirectionPolicy(repoRoot, { onProgress: progress => console.log(`[canonical-architecture] policy ${progress.phase}; sources=${progress.sources}`) });
+  const { policy, taxonomy, workspacePackages } = snapshot, rules = dependencyDirectionStrictRules(snapshot);
   const artifactRoot = env.SEMIO_TEST_ARTIFACT_DIR!;
   mkdirSync(artifactRoot, { recursive: true });
   const output = mkdtempSync(join(artifactRoot, "canonical-direction-"));
@@ -140,14 +137,11 @@ class TestScript extends BundleScript {
       const {targetExecutionPreparationControlV1,prepareTargetExecutionInventoryV1,verifyTargetExecutionInventoryV1}=await import("../../🔌️nx-plugin/🏃️execution/🧪️tests/📥️preparation/🟦️.ts");
       const control=targetExecutionPreparationControlV1(this.invocation,{version:1,maximumElapsedMilliseconds:120000},()=>performance.now()),env=repoTestArtifactEnvironment(this.repoRoot,"target-execution"),output=join(env.SEMIO_TEST_ARTIFACT_DIR!,`execution-inventory-${process.pid}.json`);
       const {digest}=await prepareTargetExecutionInventoryV1(this.repoRoot,output,control);
-      await runRepositoryCommand(this.invocation,process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/🏃️execution/🧪️tests/🟦️.ts")],this.repoRoot,"repository-target-execution",{version:1,maximumElapsedMilliseconds:control.remaining(),output:null},{env:{...env,SEMIO_TARGET_EXECUTION_INVENTORY_FILE:output,SEMIO_TARGET_EXECUTION_INVENTORY_SHA256:digest}});
+      await runRepositoryCommand(this.invocation,process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/🏃️execution/🧪️tests/🟦️.ts")],this.repoRoot,"repository-target-execution",{version:1,maximumElapsedMilliseconds:control.remaining(),output:{maximumBytes:16777216,maximumLines:32768}},{env:{...env,SEMIO_TARGET_EXECUTION_INVENTORY_FILE:output,SEMIO_TARGET_EXECUTION_INVENTORY_SHA256:digest}});
       await verifyTargetExecutionInventoryV1(output,digest,control);
       return;
     }
-    if (segments.length === 1 && segments[0] === "native-prerequisites") {
-      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧩️native-prerequisites/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "native-prerequisites"), budgetMs: scriptInvocationBudget(this.invocation, 120_000), signal: this.invocation.control.signal });
-      return;
-    }
+
     if (segments.length === 1 && segments[0] === "decoder-absence") {
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🛬️decoder-absence/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "decoder-absence"), budgetMs: scriptInvocationBudget(this.invocation, 120_000), signal: this.invocation.control.signal });
       return;
@@ -261,6 +255,10 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚙️native-source-ownership/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.fundamental });
       return;
     }
+    if (segments.length === 1 && segments[0] === "build-surfaces") {
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔧️build-surfaces/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "build-surfaces"), budgetMs: 120_000 });
+      return;
+    }
     if (segments.length === 1 && segments[0] === "owned-script-routes") {
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️owned-script-routes/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source, join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📂️registry-source-roots/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "owned-script-routes"), budgetMs: 120_000 });
@@ -271,6 +269,7 @@ class TestScript extends BundleScript {
       const env = repoTestArtifactEnvironment(this.repoRoot, "native-dependencies");
       mkdirSync(env.SEMIO_TEST_ARTIFACT_DIR!, { recursive: true });
       await runRepositoryTestCommand(process.execPath, [join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"), "test", "native-dependencies"], { cwd: this.repoRoot, env });
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts")], { cwd: this.repoRoot, env, budgetMs: scriptInvocationBudget(this.invocation, 120_000), signal: this.invocation.control.signal });
       console.log("[DEBUG] native-dependencies: neutral environment vectors and independent bundler/schema/Cargo/Nx oracles passed");
       return;
     }
@@ -316,7 +315,8 @@ class TestScript extends BundleScript {
       if (segments.length !== 1 && !attributes && !scopes && !graph && !participation && !roots) throw new Error("Expected test rust-source-direction [attributes|scopes|graph|participation|roots]");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction", roots ? "🪵️root/🟦️.ts" : participation ? "🔗️participation/🟦️.ts" : attributes ? "🧾️attributes/🟦️.ts" : "🟦️.ts");
       const pattern = scopes ? "^finite macro scopes require every live manifest and incoming module origin$" : graph ? "^module graph authority requires every exact physical source read$" : null;
-      await runRepositoryTestCommand(process.execPath, ["test", source, ...(pattern ? ["--test-name-pattern", pattern] : attributes ? [] : ["--concurrent", "--max-concurrency", "4"])], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-source-direction"), budgetMs: 45_000 });
+      const runtimeSources=segments.length===1?["🟦️.ts","🏘️execution/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📁️runtime/🧪️tests",path)):[];
+      await runRepositoryTestCommand(process.execPath, ["test", source, ...runtimeSources, ...(pattern ? ["--test-name-pattern", pattern] : attributes ? [] : ["--concurrent", "--max-concurrency", "4"])], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "rust-source-direction"), budgetMs: 45_000 });
       return;
     }
     if (segments[0] === "cargo-dependency-direction") {
@@ -335,10 +335,10 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "dependency-direction") {
       if (segments.length !== 1) throw new Error("Expected test dependency-direction");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️dependency-direction/🟦️.ts");
+      const sources = ["🧪️tests/🧱️dependency-direction/🟦️.ts", "🕸️dependencies/🧭️direction/🏗️construction/🧪️tests/🟦️.ts", "🕸️dependencies/🧭️direction/🧪️tests/🧾️selection/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
       const env = repoTestArtifactEnvironment(this.repoRoot, "dependency-direction");
-      await runRepositoryTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,env,budgetMs:45_000});
-      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env, budgetMs: 45_000 });
+      await runRepositoryTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--resolveJsonModule","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",...sources],{cwd:this.repoRoot,env,budgetMs:45_000});
+      await runRepositoryTestCommand(process.execPath, ["test", ...sources], { cwd: this.repoRoot, env, budgetMs: 45_000 });
       return;
     }
     if (segments[0] === "canonical-architecture") {

@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/ui-locale-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],
@@ -18,7 +18,7 @@
       }
     },
     "test-retirement": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": ["{projectRoot}/../../**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/**/*"],

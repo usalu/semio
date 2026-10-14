@@ -37,7 +37,7 @@ fn a_pipeline_imports_runs_and_exports_with_monotone_progress() {
     let (working, evaluation) = drive_all(job, 1);
     assert!(working >= 2, "three units of one fuel need at least two Working slices, saw {working}");
     assert!(evaluation.fault.is_none());
-    let GeometryValue::Shape(moved) = &evaluation.outputs["shape"] else { panic!("shape output") };
+    let GeometryValue::Shape(moved) = &*evaluation.outputs.get("shape").unwrap() else { panic!("shape output") };
     assert!((support::measures(&support::tessellate(moved, 0.1)).min[0] - 1.0).abs() < 1e-9);
 }
 
@@ -50,7 +50,7 @@ fn unbounded_fuel_finishes_in_one_slice_and_equals_the_stepped_run() {
     assert_eq!(whole_slices, 0);
     assert!(stepped_slices > 3, "a fillet of twelve edges is several units, saw {stepped_slices}");
     assert_eq!(stepped, whole);
-    assert!(volume_of(&whole.outputs["shape"]) < 8.0);
+    assert!(volume_of(&*whole.outputs.get("shape").unwrap()) < 8.0);
 }
 
 #[test]
@@ -157,7 +157,7 @@ fn several_operations_run_in_order_and_collect_their_results_in_group_zero() {
     }).export_groups().finish(|work| Ok(outputs([("both", GeometryValue::List(work.values[0].clone()))])));
     let (working, evaluation) = drive_all(job, 1);
     assert!(working > 2);
-    let GeometryValue::List(items) = &evaluation.outputs["both"] else { panic!("list") };
+    let GeometryValue::List(items) = &*evaluation.outputs.get("both").unwrap() else { panic!("list") };
     assert_eq!(items.len(), 2);
     assert!(items.iter().all(|item| volume_of(item) < 8.0));
 }

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/norm-en1996",
   "version": "0.1.0",
@@ -7,14 +7,21 @@
   "type": "module",
   "private": true,
   "sideEffects": false,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun nx run @semio-tech/norm-en1996:build",
-    "check": "bun nx run @semio-tech/norm-en1996:check",
-    "test": "bun nx run @semio-tech/norm-en1996:test"
+    "build": "bun repo run @semio-tech/norm-en1996:build",
+    "check": "bun repo run @semio-tech/norm-en1996:check",
+    "test": "bun repo run @semio-tech/norm-en1996:test"
   },
-  "exports": {".": {"types": "./dist/🟦️.d.ts", "import": "./dist/🟦️.js"}},
+  "exports": {
+    ".": {
+      "types": "./dist/🟦️.d.ts",
+      "import": "./dist/🟦️.js"
+    }
+  },
   "dependencies": {},
   "license": "LGPL-3.0-or-later",
   "repository": {
@@ -23,5 +30,7 @@
     "directory": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🟦️typescript"
   },
   "bundleKind": "library",
-  "nx": {"includedScripts": []}
+  "nx": {
+    "includedScripts": []
+  }
 }

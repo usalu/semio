@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/flow/preview-tessellation/progress/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "done",
+    "cancellable",
+    "phase",
+    "unitsDone",
+    "unitsTotal",
+    "nodeHash",
+    "windowId",
+    "windowKindId",
+    "handle",
+    "tolerance"
+  ],
+  "properties": {
+    "done": {
+      "const": false
+    },
+    "cancellable": {
+      "const": true
+    },
+    "phase": {
+      "enum": [
+        "awaitingGrant",
+        "admittingSource",
+        "validating",
+        "samplingEdges",
+        "meshingFaces",
+        "packingEdges"
+      ]
+    },
+    "unitsDone": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unitsTotal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "nodeHash": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "windowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "windowKindId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "handle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

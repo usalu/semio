@@ -389,3 +389,9 @@ export function discoverCaseDirs(workspaceRoot) {
   walk(workspaceRoot);
   return found.sort();
 }
+
+/** 🏗️ Supplies portable test-owner projects without acquiring a task-runner runtime. */
+export async function discoverTestBuildProjectsV1(files,options,context) { await testBootstrap; return testCaseProjects(files,options,context); }
+
+/** 🪢️ Supplies test-owner dependency edges from the portable project inventory. */
+export async function discoverTestBuildDependenciesV1(options,context) { await testBootstrap; return testCaseDependencies(options,context); }

@@ -126,7 +126,7 @@
     ]
   },
   "freshness": {
-    "command": "bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype",
+    "command": "bun repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype",
     "cases": [
       {
         "name": "matching content hashes are fresh even when mtimes would look stale",
@@ -165,7 +165,7 @@
           "kind": "source-changed",
           "detail": "source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa…"
         },
-        "line": "[stale] procedural: source-changed — source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa… — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+        "line": "[stale] procedural: source-changed — source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa… — run: bun repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
       },
       {
         "name": "absent content hashes stay fresh so legacy receipts do not false-stale",
@@ -198,7 +198,7 @@
           "kind": "unstaged",
           "detail": "no staged module directory"
         },
-        "line": "[stale] flow: unstaged — no staged module directory — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+        "line": "[stale] flow: unstaged — no staged module directory — run: bun repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
       },
       {
         "name": "a staged module missing from the activation receipt is reported",
@@ -214,7 +214,7 @@
           "kind": "unactivated",
           "detail": "staged 2025-09-11T14:13:20.000Z but absent from the activation receipt"
         },
-        "line": "[stale] flow: unactivated — staged 2025-09-11T14:13:20.000Z but absent from the activation receipt — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+        "line": "[stale] flow: unactivated — staged 2025-09-11T14:13:20.000Z but absent from the activation receipt — run: bun repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
       },
       {
         "name": "a materialized-but-never-published extension is never a silent no-op",
@@ -231,7 +231,7 @@
           "kind": "unpublished",
           "detail": "installed (nothing) ≠ activated b2"
         },
-        "line": "[stale] flow-extension-math: unpublished — installed (nothing) ≠ activated b2 — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+        "line": "[stale] flow-extension-math: unpublished — installed (nothing) ≠ activated b2 — run: bun repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
       },
       {
         "name": "an extension published at the activated hash is fresh",
@@ -266,7 +266,7 @@
           "kind": "unpublished",
           "detail": "installed b1 ≠ activated b2"
         },
-        "line": "[stale] flow-extension-math: unpublished — installed b1 ≠ activated b2 — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+        "line": "[stale] flow-extension-math: unpublished — installed b1 ≠ activated b2 — run: bun repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
       },
       {
         "name": "a receipt-less lane asks only the questions it can answer",
@@ -300,7 +300,7 @@
           "kind": "source-changed",
           "detail": "source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa…"
         },
-        "line": "[stale] procedural: source-changed — source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa… — run: bun nx run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
+        "line": "[stale] procedural: source-changed — source bbbbbbbbbbbb… ≠ staged aaaaaaaaaaaa… — run: bun repo run @semio-tech/framework-os-dev:activate-generation3d-react-prototype"
       }
     ],
     "walk": {

@@ -1,13 +1,13 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/mit-bestand-praesentation-projektetage",
   "version": "0.1.0",
   "description": "Entwerfen mit Bestand · 33. Projektetage der Bauforschung · Zukunft Bau ",
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:build",
-    "test": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:test"
+    "build": "bun repo run @semio-tech/mit-bestand-praesentation-projektetage:build",
+    "test": "bun repo run @semio-tech/mit-bestand-praesentation-projektetage:test"
   },
   "dependencies": {
     "@semio-tech/presentation": "workspace:*",

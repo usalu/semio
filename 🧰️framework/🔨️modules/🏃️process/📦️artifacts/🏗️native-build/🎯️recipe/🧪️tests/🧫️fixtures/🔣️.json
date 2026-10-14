@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "recipe": {
+    "version": 1,
+    "cwd": "/owner",
+    "manifest": "/owner/Cargo.toml",
+    "command": "cargo",
+    "args": [
+      "+nightly-2026-07-20",
+      "build",
+      "--profile",
+      "prototype",
+      "--config",
+      "/configuration.toml",
+      "--config",
+      "build.build-dir=\"/compiler\""
+    ],
+    "buildDirectory": "/compiler",
+    "compilerIdentity": "cargo 1.99.0-nightly (3efb1f477 2026-07-17)",
+    "toolchainIdentity": "rustc 1.99.0-nightly (fixture)",
+    "inputs": [
+      {
+        "path": "/configuration.toml",
+        "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    ],
+    "environment": [
+      {
+        "name": "RUSTFLAGS",
+        "value": "-Z threads=0"
+      }
+    ]
+  },
+  "canonical": "[1,\"/owner\",\"/owner/Cargo.toml\",\"cargo\",[\"+nightly-2026-07-20\",\"build\",\"--profile\",\"prototype\",\"--config\",\"/configuration.toml\",\"--config\",\"build.build-dir=\\\"/compiler\\\"\"],\"/compiler\",\"cargo 1.99.0-nightly (3efb1f477 2026-07-17)\",\"rustc 1.99.0-nightly (fixture)\",[{\"path\":\"/configuration.toml\",\"sha256\":\"1111111111111111111111111111111111111111111111111111111111111111\"}],[{\"name\":\"RUSTFLAGS\",\"value\":\"-Z threads=0\"}]]",
+  "sha256": "a87228688bdc2dc1ae60251d70c8c550e4d15544fd2558f665d3a4384e6a912c",
+  "changes": [
+    {
+      "field": "command",
+      "value": "other-cargo"
+    },
+    {
+      "field": "manifest",
+      "value": "/owner/another/Cargo.toml"
+    },
+    {
+      "field": "args",
+      "value": [
+        "build",
+        "--profile",
+        "release"
+      ]
+    },
+    {
+      "field": "buildDirectory",
+      "value": "/other-compiler"
+    },
+    {
+      "field": "compilerIdentity",
+      "value": "different cargo"
+    },
+    {
+      "field": "toolchainIdentity",
+      "value": "different rustc"
+    },
+    {
+      "field": "inputs",
+      "value": [
+        {
+          "path": "/configuration.toml",
+          "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ]
+    },
+    {
+      "field": "environment",
+      "value": [
+        {
+          "name": "RUSTFLAGS",
+          "value": "-Z threads=1"
+        }
+      ]
+    }
+  ],
+  "lifecycle": [
+    "first-admitted",
+    "second-waiting",
+    "captured-original",
+    "first-released",
+    "second-admitted",
+    "second-released"
+  ],
+  "privateCapture": "first-original",
+  "laterTarget": "second-overwrite",
+  "production": {
+    "name": "tr",
+    "source": "fn main(){print!(\"recipe-original\");}\n",
+    "changedSource": "fn main(){print!(\"recipe-changed\");}\n",
+    "stdout": "recipe-original",
+    "changedStdout": "recipe-changed",
+    "maximumBytes": 100000000,
+    "maximumMilliseconds": 180000,
+    "scheduling": {
+      "admissions": [
+        "one-core",
+        "all-cores"
+      ],
+      "sameTarget": true,
+      "warmFresh": true,
+      "warmRustc": 0,
+      "waitingCompilerCapacity": false
+    },
+    "targetOverride": {
+      "key": "build.target-dir",
+      "directory": "foreign-target",
+      "writesOutside": false
+    }
+  }
+}

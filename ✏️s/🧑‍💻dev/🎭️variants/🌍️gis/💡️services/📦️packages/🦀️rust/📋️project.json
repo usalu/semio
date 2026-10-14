@@ -8,7 +8,7 @@
   ],
   "targets": {
     "source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts source-check",
@@ -17,7 +17,7 @@
       }
     },
     "native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts native-check",
@@ -26,7 +26,7 @@
       }
     },
     "native-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [
         "{projectRoot}/dist/native-{options.env.SEMIO_BUILD_MODE}"
@@ -60,7 +60,7 @@
       "defaultConfiguration": "prototype"
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-native --features native-renderer",
@@ -69,7 +69,7 @@
       }
     },
     "mcp-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [
         "{projectRoot}/dist/mcp-{options.env.SEMIO_BUILD_MODE}"
@@ -103,7 +103,7 @@
       "defaultConfiguration": "prototype"
     },
     "mcp-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp --features mcp-service",
@@ -143,7 +143,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -160,7 +160,7 @@
       "outputs": []
     },
     "hub-agent-participant-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -177,7 +177,7 @@
       "outputs": []
     },
     "plugin-coverage-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -236,7 +236,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -270,7 +270,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -310,7 +310,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -327,7 +327,7 @@
       "outputs": []
     },
     "hub-edit-durability-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -344,7 +344,7 @@
       "outputs": []
     },
     "agent-reply-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -361,7 +361,7 @@
       "outputs": []
     },
     "untrusted-content-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -378,7 +378,7 @@
       }
     },
     "mcp-composition-source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
@@ -387,7 +387,7 @@
       }
     },
     "fixture-ownership-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
@@ -396,7 +396,7 @@
       }
     },
     "canonical-pair-composition-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",

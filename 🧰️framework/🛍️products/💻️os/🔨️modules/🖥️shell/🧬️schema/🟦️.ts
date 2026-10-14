@@ -6,7 +6,7 @@
  * The validator below covers exactly the draft-07 vocabulary `🔣️.json` uses (`$ref`, `type`,
  * `enum`, `const`, `properties`, `required`, `additionalProperties`, `items`, `anyOf`, `oneOf`,
  * `allOf`, `minimum`, `maximum`) — no external JSON Schema library is pulled into the runtime, per
- * CLAUDE.md. `bun nx run @semio-tech/framework-os-shell-rs:schema-check` is what keeps this file's
+ * CLAUDE.md. `bun repo run @semio-tech/framework-os-shell-rs:schema-check` is what keeps this file's
  * export set, `🔣️.json`'s `$defs` and the Rust registry in lockstep.
  *
  * @see ./🔣️.json

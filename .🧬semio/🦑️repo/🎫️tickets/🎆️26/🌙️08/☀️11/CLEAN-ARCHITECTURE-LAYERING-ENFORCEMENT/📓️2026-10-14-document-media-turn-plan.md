@@ -1,0 +1,9 @@
+# Document and Media Original Turn Plan
+
+The existing neutral pending-source and complete lifecycle-failure schemas/corpora were run before edits: eight original-source tests, 64 expectations, independent Ajv/JSONPatch oracles. They define no eager worker birth, no synthesized caller context, exact original business identity, original source retention, bounded parameter/session admission, complete primary plus independent receipt/context refusal, and physical terminal cleanup.
+
+Document decoder and initializer constructors will retain undispatched original sources. Their worker/retirement turns will receive the actual StepContext and use its own clock, cancellation, original business identity and retained receipt. Member constructor input will remain in a MemberOpenSourceAdmission until its real source parent funds the loan and constructor; source-loan cleanup will be part of the same physical ladder. Envelope return/decode coordination will forward context and complete failure without formatting.
+
+Media submission/poll/retirement will forward the actual initiating context through public methods and runtime commands. Media domain failures will retain their original enum fields through paid type erasure, with pending source slots for denied admission. Worker outcomes and child cleanup errors remain complete OriginalTurnFailure values. Generic Native Boundary owns runtime media command callers and other instance/reactor/declaration jobs; this agent owns document/media/envelope-ladder, instance envelope range 2190–2250 and media range 5780–6070 plus public implementations near 10440. Native Jack owns its typed member ports.
+
+Use original production plugin/renderer compilation to measure reachable closure errors and existing portable/native authority tests for receiver effects. Do not treat standalone source text checks or copied source as production proof.

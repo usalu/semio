@@ -1,4 +1,4 @@
-use semio_framework_schema_composition::{ChildFieldRefs,ChildRefFields,ChildRefVisitor};
+use semio_framework_schema_composition::{ChildFieldRefs,ChildRefFields,ChildRefVisitor,ChildSlotSelection};
 use serde_json::{Value,json};
 enum Node { Child(Value),Optional(Option<Nested>),List(Vec<Node>) }
 struct Nested(Box<Node>);
@@ -25,4 +25,10 @@ fn portable_child_projection_vectors_preserve_exact_admission_and_identity(){
  assert_eq!(fixture["composition"].as_array().unwrap().len(),8);
  for row in fixture["composition"].as_array().unwrap(){let mut visitor=Visitor{maximum:row["maximumSteps"].as_u64().unwrap() as usize,steps:0,rows:vec![]};let result=row["fields"].as_array().unwrap().iter().try_for_each(|field|{let slot:&'static str=Box::leak(field["slot"].as_str().unwrap().to_owned().into_boxed_str());Node::from_input(&field["value"]).visit_child_field(slot,&mut visitor)});assert_eq!(json!({"accepted":result.is_ok(),"steps":visitor.steps,"rows":visitor.rows}),row["expected"],"{}",row["id"]);}
  assert!(!<Option<Node> as ChildFieldRefs>::MANY);assert!(<Vec<Node> as ChildFieldRefs>::MANY);assert!(<Option<Vec<Node>> as ChildFieldRefs>::MANY);
+}
+
+#[test]
+fn explicit_child_selection_vectors_defer_only_capability_admission(){
+ let fixture:Value=serde_json::from_str(include_str!("../🧫️fixtures/🪆️selection/🔣️.json")).unwrap();
+ for row in fixture["cases"].as_array().unwrap(){let id=Box::leak(row["selection"]["id"].as_str().unwrap().to_owned().into_boxed_str());let selection=match row["selection"]["kind"].as_str().unwrap(){"artifactKind"=>ChildSlotSelection::ArtifactKind(id),"capability"=>ChildSlotSelection::Capability(id),_=>panic!("closed child selection")};assert_eq!(selection.id(),id);assert_eq!(selection.accepts_kind(row["artifactKind"].as_str().unwrap()),row["accepted"].as_bool().unwrap());}
 }

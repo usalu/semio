@@ -1,0 +1,358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "results",
+    "commands",
+    "jobs",
+    "helpers"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "results": {
+      "const": [
+        "i64"
+      ]
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "native"
+      ],
+      "properties": {
+        "source": {
+          "const": "test-job-exports"
+        },
+        "native": {
+          "const": "test-job-exports-native"
+        }
+      }
+    },
+    "jobs": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "wit",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "StartJob"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_START_JOB_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_start_job_v1"
+            },
+            "wit": {
+              "const": "start-job"
+            },
+            "parameters": {
+              "const": [
+                "i32",
+                "i32"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "wit",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "StepJob"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_STEP_JOB_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_step_job_v1"
+            },
+            "wit": {
+              "const": "step-job"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "wit",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "ReadJobOutput"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_READ_JOB_OUTPUT_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_read_job_output_v1"
+            },
+            "wit": {
+              "const": "read-job-output"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "wit",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "AcknowledgeJobOutput"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_acknowledge_job_output_v1"
+            },
+            "wit": {
+              "const": "acknowledge-job-output"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "wit",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "CancelJob"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_CANCEL_JOB_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_cancel_job_v1"
+            },
+            "wit": {
+              "const": "cancel-job"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "wit",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "CloseJobs"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_CLOSE_JOBS_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_close_jobs_v1"
+            },
+            "wit": {
+              "const": "close-jobs"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        }
+      ],
+      "items": false
+    },
+    "helpers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "BorrowJobOutput"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_BORROW_JOB_OUTPUT_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_borrow_job_output_v1"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "variant",
+            "constant",
+            "core",
+            "parameters"
+          ],
+          "properties": {
+            "variant": {
+              "const": "AcknowledgeJobOutputChunk"
+            },
+            "constant": {
+              "const": "SEMIO_OWNED_ACKNOWLEDGE_JOB_OUTPUT_CHUNK_EXPORT"
+            },
+            "core": {
+              "const": "semio_owned_acknowledge_job_output_chunk_v1"
+            },
+            "parameters": {
+              "const": [
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64",
+                "i64"
+              ]
+            }
+          }
+        }
+      ],
+      "items": false
+    }
+  }
+}

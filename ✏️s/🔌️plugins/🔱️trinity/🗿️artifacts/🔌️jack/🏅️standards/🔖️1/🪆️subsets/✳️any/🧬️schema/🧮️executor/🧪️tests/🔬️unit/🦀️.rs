@@ -9,16 +9,14 @@ use crate::{Camera, JackSnapshot, Manifest};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 /// 🧸️ The retained content child of a standalone snapshot — what the run-query job reads from its child view.
-fn content_of(snapshot: &JackSnapshot) -> semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot {
-    crate::jack_content_for_handle(&snapshot.content).expect("retained content child").snapshot().clone()
-}
+fn content_of(snapshot:&JackSnapshot)->std::sync::Arc<crate::JackContentOwner>{crate::jack_content_for_handle(&snapshot.content).expect("retained fixture content")}
 
 fn mini_graph() -> Graph {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
     let graph = &fixture["graph"];
     let nodes = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["nodes"].clone())).unwrap();
     let edges = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(graph["edges"].clone())).unwrap();
-    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), Some(graph["manifestId"].as_str().unwrap().into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
+    let fixture = JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), Some(graph["manifestId"].as_str().unwrap().into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: nodes, edges: edges }, Some(graph["rootNodeId"].as_str().unwrap().into()));
     Graph::from_snapshot(fixture).unwrap()
 }
 
@@ -188,7 +186,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let graph = if case["inlineManifest"] == true {
-            let mut snapshot = mini_graph().to_snapshot();
+            let mut snapshot = mini_graph().to_snapshot::<crate::test_support::FixtureComposition>();
             snapshot.manifest_id = None;
             Graph::from_snapshot(snapshot).unwrap()
         } else {
@@ -196,14 +194,14 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         };
         let query = parse(case["query"].as_str().unwrap()).unwrap();
         let expected = execute(&graph, &query).unwrap();
-        let snapshot = graph.to_snapshot();
+        let snapshot = graph.to_snapshot::<crate::test_support::FixtureComposition>();
         let content = content_of(&snapshot);
         let mut preparation = QueryExecutionPreparation::new(query);
         let mut preparation_turns = 0;
         let mut execution = loop {
             preparation_turns += 1;
             assert!(preparation_turns < 10_000);
-            match preparation.step(&snapshot, &content, 4096).expect("retained query preparation") {
+            match preparation.step(&snapshot, content.read(), 4096).expect("retained query preparation") {
                 QueryPreparationStep::Pending => {}
                 QueryPreparationStep::Complete(execution) => break execution,
             }
@@ -221,7 +219,7 @@ async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_p
         assert_eq!(actual.0.columns, expected.0.columns);
         assert_eq!(actual.0.rows, expected.0.rows);
         assert_eq!(actual.1, expected.1);
-        let graph_value = |snapshot: &Option<Box<JackSnapshot>>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
+        let graph_value = |snapshot: &Option<Box<crate::ast::JackQueryGraphSnapshot>>| snapshot.as_ref().map(|snapshot| serde_json::from_str::<serde_json::Value>(&snapshot.to_json().expect("materialized graph JSON")).expect("reference JSON"));
         assert_eq!(graph_value(&actual.0.graph_snapshot), graph_value(&expected.0.graph_snapshot));
         let packed = semio_framework_pack_json::to_json_string(&actual.0);
         assert!(packed.len() <= 1_048_576, "retained query result exceeded its emitted byte admission");
@@ -271,13 +269,13 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
     let policy = &fixture["retainedExecution"];
     let cancel_after = policy["cancelAfterWorkUnits"].as_u64().expect("cancel units") as usize;
     let maximum_bytes = policy["retirementBytesPerStep"].as_u64().expect("retirement bytes") as usize;
-    let source = mini_graph().to_snapshot();
+    let source = mini_graph().to_snapshot::<crate::test_support::FixtureComposition>();
     let source_owner = source.content.local_owner::<crate::JackContentOwner>().expect("source content owner");
     let query = parse("MATCH (a:Apartment) RETURN a.name").expect("query");
     let mut preparation = QueryExecutionPreparation::new(query);
     let content = content_of(&source);
     for _ in 0..cancel_after {
-        assert!(matches!(preparation.step(&source, &content, maximum_bytes).expect("preparation step"), QueryPreparationStep::Pending));
+        assert!(matches!(preparation.step(&source, content.read(), maximum_bytes).expect("preparation step"), QueryPreparationStep::Pending));
     }
     preparation.begin_close();
     for _ in 0..100_000 {
@@ -289,7 +287,7 @@ fn query_ownership_cancelled_preparation_closes_while_source_scene_remains_live(
         assert!(preparation.close_step(grant).expect("preparation close").progress().fits(grant));
     }
     assert!(preparation.terminal_is_empty());
-    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("source survives cancellation").snapshot().nodes.len(), source_owner.snapshot().nodes.len());
+    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("source survives cancellation").read().node_count(), source_owner.read().node_count());
     drop(preparation);
 }
 
@@ -297,7 +295,7 @@ fn query_ownership_preparation_rejection(source: &JackSnapshot) -> semio_framewo
     let mut preparation = QueryExecutionPreparation::new(parse("MATCH (a:Piece) RETURN a.name").expect("query"));
     let content = content_of(source);
     let error = (0..100_000)
-        .find_map(|_| match preparation.step(source, &content, 4_096) {
+        .find_map(|_| match preparation.step(source, content.read(), 4_096) {
             Ok(QueryPreparationStep::Pending) => None,
             Ok(QueryPreparationStep::Complete(_)) => panic!("oversized source entity was cloned"),
             Err(error) => Some(error),
@@ -322,12 +320,12 @@ fn query_ownership_preparation_rejects_oversized_node_and_edge_before_clone() {
     let property_bytes = fixture["retainedExecution"]["entityAdmission"]["oversizedPropertyBytes"].as_u64().expect("oversized property bytes") as usize;
     let mut node_graph = mini_graph();
     node_graph.nodes.get_mut("root").expect("root node").properties.insert("payload".into(), PropertyValue::String("n".repeat(property_bytes)));
-    let node_source = node_graph.to_snapshot();
+    let node_source = node_graph.to_snapshot::<crate::test_support::FixtureComposition>();
     let error=query_ownership_preparation_rejection(&node_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
     assert_eq!(node_source.nodes().expect("valid retained Jack child").iter().find(|node| node.id == "root").expect("oversized source node remains live").properties.get("payload").expect("retained payload property").as_str().map(str::len), Some(property_bytes));
     let mut edge_graph = mini_graph();
     edge_graph.edges.get_mut("e1").expect("fixture edge").properties.insert("payload".into(), PropertyValue::String("e".repeat(property_bytes)));
-    let edge_source = edge_graph.to_snapshot();
+    let edge_source = edge_graph.to_snapshot::<crate::test_support::FixtureComposition>();
     let error=query_ownership_preparation_rejection(&edge_source);assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(error.message,"query entity exceeds its byte grant");
     assert_eq!(edge_source.edges().expect("valid retained Jack child").iter().find(|edge| edge.id == "e1").expect("oversized source edge remains live").properties.get("payload").expect("retained payload property").as_str().map(str::len), Some(property_bytes));
 }

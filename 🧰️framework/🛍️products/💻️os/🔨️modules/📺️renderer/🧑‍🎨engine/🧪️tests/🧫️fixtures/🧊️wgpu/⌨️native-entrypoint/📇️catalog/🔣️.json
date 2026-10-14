@@ -38,7 +38,15 @@
     "app": "s.draw.drawing@1/*#editor",
     "brand": "fixture",
     "aliases": [],
-    "assets": []
+    "assets": [],
+    "examples": [],
+    "engines": [
+      "wgpu"
+    ],
+    "ports": {
+      "react": 3100,
+      "wgpu": 3200
+    }
   },
   "nativeProcessStatus": {
     "continuous": false,

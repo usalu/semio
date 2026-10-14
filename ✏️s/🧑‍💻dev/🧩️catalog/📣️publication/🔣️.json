@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "ownerRoot": "✏️s/🧑‍💻dev/🧩️catalog",
+  "outputRoot": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
+  "contributions": [
+    {
+      "ownerRoot": "✏️s",
+      "packageRoots": [
+        "✏️s/🔌️plugins"
+      ]
+    }
+  ]
+}

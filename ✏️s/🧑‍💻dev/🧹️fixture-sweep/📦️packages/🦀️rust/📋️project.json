@@ -11,7 +11,7 @@
   ],
   "targets": {
     "source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts source-check",
@@ -21,7 +21,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test",
@@ -31,7 +31,7 @@
       "outputs": []
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts source-check",

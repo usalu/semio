@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-compiler-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/📚️compiler",
   "namedInputs": {
     "default": [
@@ -10,7 +10,7 @@
   },
   "targets": {
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/cad-js",
   "version": "0.1.0",
@@ -7,9 +7,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/cad-js:test",
-    "generate": "bun nx run @semio-tech/cad-js:generate",
-    "fixture": "bun nx run @semio-tech/cad-js:fixture"
+    "test": "bun repo run @semio-tech/cad-js:test",
+    "generate": "bun repo run @semio-tech/cad-js:generate",
+    "fixture": "bun repo run @semio-tech/cad-js:fixture"
   },
   "exports": {
     ".": "./🟦️.ts"

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "sourceOperation",
+    "sourceGeneration",
+    "declaredMaximumBytes",
+    "sameSourceLoan",
+    "sameForwardedLedger",
+    "sameRecipient",
+    "allocationReservationIsPhysicalBirth",
+    "producerReturnsActualGrant",
+    "producerReturnsPhysicalProgress",
+    "producerReturnsRawWork",
+    "preservesOutcomeOnReceivingRefusal",
+    "closeReturnsSourceLast",
+    "closeUsesOriginalLoanAfterCancellation",
+    "rows"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.job.original-native-decode-source"
+    },
+    "sourceOperation": {
+      "const": 17
+    },
+    "sourceGeneration": {
+      "const": 9
+    },
+    "declaredMaximumBytes": {
+      "const": 128
+    },
+    "sameSourceLoan": {
+      "const": true
+    },
+    "sameForwardedLedger": {
+      "const": true
+    },
+    "sameRecipient": {
+      "const": true
+    },
+    "allocationReservationIsPhysicalBirth": {
+      "const": false
+    },
+    "producerReturnsActualGrant": {
+      "const": true
+    },
+    "producerReturnsPhysicalProgress": {
+      "const": true
+    },
+    "producerReturnsRawWork": {
+      "const": true
+    },
+    "preservesOutcomeOnReceivingRefusal": {
+      "const": true
+    },
+    "closeReturnsSourceLast": {
+      "const": true
+    },
+    "rows": {
+      "const": [
+        {
+          "kind": "denied",
+          "reservation": 64,
+          "actualCapacity": 0,
+          "copy": 0,
+          "release": 0,
+          "work": 0
+        },
+        {
+          "kind": "admitted",
+          "reservation": 64,
+          "actualCapacity": 64,
+          "copy": 0,
+          "release": 0,
+          "work": 1
+        },
+        {
+          "kind": "copy",
+          "reservation": 0,
+          "actualCapacity": 0,
+          "copy": 3,
+          "release": 0,
+          "work": 1
+        },
+        {
+          "kind": "close",
+          "reservation": 0,
+          "actualCapacity": 0,
+          "copy": 0,
+          "release": 64,
+          "work": 1
+        }
+      ]
+    },
+    "closeUsesOriginalLoanAfterCancellation": {
+      "const": true
+    }
+  }
+}

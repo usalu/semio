@@ -18,7 +18,8 @@
     "coverageEnabled",
     "targetDirectory",
     "buildDirectory",
-    "leaseDirectory"
+    "leaseDirectory",
+    "mode"
   ],
   "properties": {
     "version": {
@@ -120,6 +121,12 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
     }
   }
 }

@@ -20,7 +20,7 @@ export interface FilesystemJournalSourceV1 {
  watch(receive: (error: unknown, events: readonly FilesystemJournalChangeV1[]) => void): (() => void | Promise<void>) | Promise<() => void | Promise<void>>;
  census(control: FilesystemJournalControlV1): Promise<readonly string[]>;
  flush(): readonly FilesystemJournalChangeV1[] | Promise<readonly FilesystemJournalChangeV1[]>;
- reconcile(event: FilesystemJournalChangeV1, control: FilesystemJournalControlV1): Promise<readonly string[]>;
+ reconcile(event: FilesystemJournalChangeV1, control: FilesystemJournalControlV1, priorAffected: readonly string[]): Promise<readonly string[]>;
  admitScope(scope: FilesystemJournalScopeV1, control: FilesystemJournalControlV1): Promise<void>;
 }
 /** 🪟️ A journal authorizes reuse only while its native service remains live. */
@@ -126,16 +126,17 @@ export async function createLiveFilesystemJournalV1(options: FilesystemJournalOp
  const drain = async (current: FilesystemJournalControlV1): Promise<void> => {
   receive(null, await options.source.flush()); live(); check(current);
   while (pending.length) {
-   const event = pending[0]!;
+   const event = pending[0]!, affected = files.has(event.path) ? [event.path] : descendants(fileIndex(), event.path);
    let reconciled: readonly string[];
-   try { reconciled = await options.source.reconcile(event, current); check(current); live(); }
+   try { reconciled = await options.source.reconcile(event, current, affected); check(current); live(); }
    catch (error) { check(current); refusal = error instanceof Error ? error : Error("Filesystem journal source refused"); throw refusal; }
    pending.shift();
-   const admitted = pathsValue(reconciled).filter(path => !options.excluded(path)), retained = new Set(admitted), affected = files.has(event.path) ? [event.path] : descendants(fileIndex(), event.path);
+   const admitted = pathsValue(reconciled).filter(path => !options.excluded(path)), retained = new Set(admitted), added = admitted.filter(path => !files.has(path));
    const global = options.isGlobalIdentity(event.path) || affected.some(path => globalFiles.has(path)) || admitted.some(path => options.isGlobalIdentity(path)) || mutations.get(event.path)?.global === true;
    for (const path of affected) if (!retained.has(path)) remove(path);
    for (const path of admitted) put(path);
    mutations.set(event.path, { sequence: ++counter, event, global });
+   for (const path of added) if (path !== event.path) mutations.set(path, { sequence: ++counter, event: Object.freeze({path,type:"create"}), global: options.isGlobalIdentity(path) });
    if (files.size > options.maximumPaths || mutations.size > options.maximumEvents) { refusal = Error("Filesystem journal capacity overflow"); throw refusal; }
    await current.publish({ resource: "filesystem-journal:reconcile", mode: "shared", elapsedMs: 0 }); check(current);
    await current.yieldContinuation(); check(current);

@@ -873,7 +873,9 @@ impl ArtifactEditor for Wfc2dEditor {
     /// 🌉️ The args bridge every UI dispatch crosses — typed against `semio_framework_value::DslValue`, never
     /// `serde_json::Value`: without this override the trait's own default answers
     /// `app.command.unsupported` and every button in every pane is inert.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         Ok(match action {
             "change-seed" => Wfc2dEditorCommand::ChangeSeed { seed: arg_u64(args, "seed", 0) },
             "create-slot" => Wfc2dEditorCommand::CreateSlot {
@@ -1033,9 +1035,14 @@ impl ArtifactEditor for Wfc2dEditor {
         _view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         render_with_transient(body_key, doc, cfg, transient)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 
 /// 🫧️ The exact projection `render_with_request_context` performs, minus the two arguments a test

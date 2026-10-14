@@ -11,7 +11,8 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::JackSnapshot;
-use store::{pack::snapshot::ArtifactPack, PackError};
+use pack::snapshot::ArtifactPack;
+use store::PackError;
 
 /// 📦️ Encodes a `JackSnapshot` to its binary pack form.
 pub fn encode(document: &JackSnapshot) -> Vec<u8> {
@@ -54,11 +55,12 @@ impl pack::snapshot::ArtifactPack for JackSnapshot {
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &JackPackRecord::__dsl_spec(), options)?;
         let mut snapshot = JackPackRecord::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.into_snapshot().map_err(PackError::from)?;
-        crate::attach_bundled_content(&mut snapshot);
         Ok(snapshot)
     }
 
     
+
+    fn borrowed_record_spec_producer()->Option<semio_framework_dsl_record::BorrowedRecordSpecProducer>{Some(semio_framework_dsl_record::BorrowedRecordSpecProducer::of::<JackPackRecord>())}
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(JackPackRecord::__dsl_spec())
@@ -70,3 +72,6 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
     }
 }
 }
+
+#[path="🫴️receiving/🦀️.rs"]
+pub mod receiving;

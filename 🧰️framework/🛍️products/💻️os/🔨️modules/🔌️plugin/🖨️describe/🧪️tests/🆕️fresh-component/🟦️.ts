@@ -1,7 +1,8 @@
+import {repositoryCargoPreparationStorageV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { createHash,randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, cpSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
-import { acquireCargoBuildLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { acquireCargoBuildLeaseV1,acquireCargoProfileMaintenanceLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { readStableBuildFile } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -369,9 +370,9 @@ export function createFreshComponentTests() {
     const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
     const evidence = mkdtempSync(join(artifactRoot, "f-"));
-    const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧪️tests/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json")).default,storageSchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json")).default,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
+    const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧪️tests/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json")).default,storageSchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json")).default,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid:Record<string,unknown>={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
     const requiredRoot=join(evidence,"missing-process-owner");mkdirSync(requiredRoot);const startedOwner=performance.now();await assert.rejects(freshRun(process.execPath,["-e","process.stdout.write('[DEBUG] unauthorized owner executed')"],repoRoot,{...process.env},{diagnosticsRoot:requiredRoot,cancelled:()=>false,remainingMs:()=>Math.floor(5000-(performance.now()-startedOwner)),checkpoint:()=>{}} as unknown as FreshProcessControlV1,"missing-process-owner",0,1),/Fresh process policy required/);assert.deepEqual(readdirSync(requiredRoot),[]);
-    const processPolicy=parseFreshProcessPolicyV1({...processFixture.policy,storage:{version:1,directory:artifactRoot}});
+    const processPolicy=parseFreshProcessPolicyV1({...processFixture.policy,storage:{version:1,directory:artifactRoot,program:repositoryCargoPreparationStorageV1(process.cwd()).program}});
     for (const row of fixture.cases) {
       const root = join(evidence, row.name);
       mkdirSync(root);
@@ -445,14 +446,14 @@ export function createFreshComponentTests() {
       const root = join(evidence, row.name); mkdirSync(root);
       writeFileSync(join(root, "Cargo.toml"), `[workspace]\n[package]\nname=${JSON.stringify(fixture.cargoProvenance.name)}\nversion="0.0.0"\nedition="2021"\n`);
       const buildDirectory = join(root, "compiler");
-      const options = { directory:processPolicy.storage.directory, buildDirectory, args: ["build"], signal: new AbortController().signal };
-      const holder = await acquireCargoBuildLeaseV1(options);
+      const options = { directory:processPolicy.storage.directory, buildDirectory, targetDirectory:join(root,"target"), args: ["build"], signal: new AbortController().signal };
+      const holder = await acquireCargoProfileMaintenanceLeaseV1(options);
       const started = Date.now(), deadline = started + (row.mode === "timeout" ? 150 : 10_000), owner = new AbortController();
       if (row.mode === "cancel") setTimeout(() => owner.abort(), 150);
       const stages: string[] = [];let refusal:unknown;
       try {
         await assert.rejects(freshRun("cargo", ["build", "--manifest-path", join(root, "Cargo.toml")], root,
-          { ...process.env, CARGO_BUILD_BUILD_DIR: buildDirectory },
+          { ...process.env, CARGO_BUILD_BUILD_DIR: buildDirectory, CARGO_TARGET_DIR:join(root,"target") },
           { process:processPolicy,invocation: freshOwner(row.name, owner),diagnosticsRoot: root, cancelled: () => row.mode === "cancel" && Date.now() - started >= 150, remainingMs: () => deadline - Date.now(), checkpoint: stage => { stages.push(stage); } }, row.name, 0, 1),error=>{refusal=error;return true;});
         assert(Date.now() - started < 2000, row.name + " bounded queue retirement");
         assert(stages.includes("wait-build-lease"),row.name+" requires the actual held compiler queue; refusal="+String(refusal));
@@ -515,14 +516,14 @@ export function createFreshComponentTests() {
     assert(observed.buildScripts.some((row:any)=>row.env.some(([key,value]:[string,string])=>key===neutral.compilerEnv&&value===join(compiler,"semio-compiler-resources"))));
     const binary=join(target,"debug",neutral.name+(process.platform==="win32"?".exe":""));
     const actual=await Bun.$`${binary}`.text(); assert.equal(actual,neutral.stdout);
-    assert.equal(await crypto.subtle.digest("SHA-256",readFileSync(binary)).then(bytes=>Buffer.from(bytes).toString("hex")),observed.units.find((unit:any)=>unit.message.target.kind.includes("bin")).artifacts.find((row:any)=>row.path===binary).sha256);
+    const binaryUnit=observed.units.find((unit:any)=>unit.message.target.kind.includes("bin"));assert(binaryUnit);const binaryArtifact=binaryUnit.artifacts.find(row=>row.path===binary);assert(binaryArtifact);assert.equal(await crypto.subtle.digest("SHA-256",readFileSync(binary)).then(bytes=>Buffer.from(bytes).toString("hex")),binaryArtifact.sha256);
     const {retainTrustedCargoInvocationV1}=await import(join(repoRoot,"🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts"));
     const staged=join(cargoRoot,"staged"+ (process.platform==="win32"?".exe":""));cpSync(binary,staged,{errorOnExist:true,force:false});
     const observationStarted=Date.now(),observationSignal=new AbortController(),observationProgress:unknown[]=[],observationControl={maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>observationSignal.signal.aborted,remainingMs:()=>60_000-(Date.now()-observationStarted),onProgress:(row:unknown)=>{observationProgress.push(row);}};
     const finalReceipt=join(cargoRoot,"final-invocation.json");await retainTrustedCargoInvocationV1(invocation!,finalReceipt,new Map([[binary,staged]]),observationControl);
     const transferred=decodeCargoProvenanceV1(readFileSync(finalReceipt,"utf8"));assert(observationProgress.length>0);
     assert.deepEqual(transferred.units.map((unit:any)=>unit.message),observed.units.map((unit:any)=>unit.message));
-    for(const key of ["args","invocationInputs","buildScripts","buildResources","compilerResources"])assert.deepEqual(transferred[key],observed[key]);
+    for(const key of ["args","invocationInputs","buildScripts","buildResources","compilerResources"] as const)assert.deepEqual(transferred[key],observed[key]);
     assert.deepEqual(transferred.units.map((unit:any)=>[unit.depInfo,unit.inputs]),observed.units.map((unit:any)=>[unit.depInfo,unit.inputs]));
     const custody=transferred.units.flatMap((unit:any)=>unit.artifacts).find((row:any)=>row.path===binary);assert.equal(custody.stagedPath,staged);assert.equal(custody.stagedSha256,custody.sha256);
     rmSync(target,{recursive:true,force:true});assert.equal(await Bun.$`${staged}`.text(),neutral.stdout);assert(!existsSync(binary));

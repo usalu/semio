@@ -12,7 +12,7 @@ use super::{kinds, ModelInferenceSession, RunProgress, SessionRun, UpdateReport}
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticCode, DiagnosticIndex};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
 use crate::{ModelDiff, ModelInference, ModelMutation, ModelSnapshot};
-use protocol::{InferenceError, Mutation, MutationDiff};
+use protocol::{InferenceWorkFailure,InferenceError, Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -29,7 +29,7 @@ pub const PROBE: &str = "bim.model-graph.probe";
 /// 🧠️ Lends the session `name` of `handle` to `act`, creating it on first use. An instance whose close ladder already dropped its sessions serves `act` a throwaway session instead.
 fn lend_handle<R>(handle: &ArtifactInstanceOperationOwnerHandle, name: &'static str, act: impl FnOnce(&mut ModelInferenceSession) -> R) -> R {
     let mut act = Some(act);
-    match handle.with_inference_session(name, ModelInferenceSession::default, |session| Ok(act.take().map(|act| act(session)))) {
+    match handle.with_inference_session_cold(name, ModelInferenceSession::default, |session| Ok(act.take().map(|act| act(session)))) {
         Ok(Some(out)) => out,
         _ => act.take().map_or_else(|| unreachable!("the session closure ran without producing a value"), |act| act(&mut ModelInferenceSession::default())),
     }
@@ -113,13 +113,19 @@ pub fn begin(instance: Instance<'_>, snapshot: &ModelSnapshot) -> SessionRun {
 }
 
 /// ⏩️ Spends at most `fuel` node computes of `run`; the progress it answers never decreases.
-pub fn step(instance: Instance<'_>, run: &mut SessionRun, snapshot: &ModelSnapshot, fuel: usize) -> Result<RunProgress, InferenceError> {
-    lend(instance, DOCUMENT, |session| session.step(run, snapshot, fuel))
+pub fn step(instance:&ArtifactInstanceOperationOwnerHandle,run:&mut SessionRun,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<RunProgress,InferenceWorkFailure>{
+    let mut access=std::mem::take(&mut run.instance_access);
+    let result=instance.with_inference_session(DOCUMENT,&mut access,cx,ModelInferenceSession::new_funded,|session,cx|session.step(run,snapshot,cx));
+    run.instance_access=access;
+    result.map_err(InferenceWorkFailure::from)?.unwrap_or_else(||Ok(run.progress()))
 }
 
 /// 🏁️ Ends `run`: a finished run settles the instance's session at `snapshot`, a cancelled or failed one leaves it as it was with every finished node cached.
-pub fn finish(instance: Instance<'_>, run: SessionRun, snapshot: &ModelSnapshot) -> Result<(), InferenceError> {
-    lend(instance, DOCUMENT, |session| session.finish(run, snapshot).map(|_| ()))
+pub fn finish(instance:&ArtifactInstanceOperationOwnerHandle,run:&mut SessionRun,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,InferenceWorkFailure>{
+    let mut access=std::mem::take(&mut run.instance_access);
+    let result=instance.with_inference_session(DOCUMENT,&mut access,cx,ModelInferenceSession::new_funded,|session,cx|session.finish(run,snapshot,cx).map(|_|()));
+    run.instance_access=access;
+    result.map_err(InferenceWorkFailure::from)?.transpose()
 }
 //#endregion 🔖️Runs
 
@@ -128,17 +134,17 @@ pub fn finish(instance: Instance<'_>, run: SessionRun, snapshot: &ModelSnapshot)
 /// fuel on it, the one that finishes it settles the session. [`cancel`](Analysis::cancel) closes the run as cancelled, so the nodes it finished stay cached for the next run. An analysis without an instance
 /// settles a session of its own, so its runs belong to one session all the way.
 pub struct Analysis {
+    access:semio_framework_plugin::ArtifactInferenceSessionAccess<ModelInferenceSession>,
     instance: Option<ArtifactInstanceOperationOwnerHandle>,
     local: Option<ModelInferenceSession>,
-    fuel: usize,
     run: Option<SessionRun>,
     done: bool,
 }
 
 impl Analysis {
     /// 🏗️ An analysis of the document that `instance` shows, finishing at most `fuel` graph nodes per step (at least one).
-    pub fn new(instance: Instance<'_>, fuel: usize) -> Self {
-        Self { instance: instance.cloned(), local: None, fuel: fuel.max(1), run: None, done: false }
+    pub fn new(instance: Instance<'_>) -> Self {
+        Self { access:Default::default(),instance: instance.cloned(), local: None, run: None, done: false }
     }
 
     /// ✅️ Whether the session is settled at the snapshot.
@@ -151,45 +157,40 @@ impl Analysis {
         if self.done { 1.0 } else { self.run.as_ref().map_or(0.0, |run| run.progress().fraction) }
     }
 
-    fn session<R>(&mut self, act: impl FnOnce(&mut ModelInferenceSession, &mut Option<SessionRun>, usize) -> R) -> R {
-        let Self { instance, local, run, fuel, .. } = self;
+    fn session<R>(&mut self,cx:&mut semio_framework_job::StepContext<'_>,act:impl FnOnce(&mut ModelInferenceSession,&mut Option<SessionRun>,&mut semio_framework_job::StepContext<'_>)->R)->Result<Option<R>,InferenceWorkFailure> {
+        let Self { access,instance, local, run, .. } = self;
         match instance {
-            Some(handle) => lend_handle(handle, DOCUMENT, |session| act(session, run, *fuel)),
-            None => act(local.get_or_insert_with(ModelInferenceSession::default), run, *fuel),
+            Some(handle)=>handle.with_inference_session(DOCUMENT,access,cx,ModelInferenceSession::new_funded,|session,cx|act(session,run,cx)).map_err(InferenceWorkFailure::from),
+            None=>{if local.is_none(){*local=ModelInferenceSession::new_funded(cx)?;return Ok(None)}Ok(Some(act(local.as_mut().unwrap(),run,cx)))},
         }
     }
 
     /// ⏩️ Does one bounded step against `snapshot`; a run that fails or finishes is closed here.
-    pub fn advance(&mut self, snapshot: &ModelSnapshot) -> Result<RunProgress, InferenceError> {
+    pub fn advance(&mut self,snapshot:&ModelSnapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<RunProgress,InferenceWorkFailure> {
         if self.done {
             return Ok(RunProgress { fraction: 1.0, done: true, ..RunProgress::default() });
         }
-        let progress = self.session(|session, slot, fuel| {
-            let mut run = slot.take().unwrap_or_else(|| session.begin_sync(snapshot));
-            match session.step(&mut run, snapshot, fuel) {
-                Ok(progress) if progress.done => session.finish(run, snapshot).map(|_| progress),
+        let progress = self.session(cx,|session,slot,cx| {
+            let Some(mut run)=slot.take()else{*slot=session.begin_sync_funded(cx)?;return Ok(RunProgress::default())};
+            match session.step(&mut run,snapshot,cx) {
+                Ok(progress) if progress.done=>{let result=session.finish(&mut run,snapshot,cx).map(|_|progress);if result.is_err(){*slot=Some(run)}result},
                 Ok(progress) => {
                     *slot = Some(run);
                     Ok(progress)
                 }
                 Err(error) => {
-                    let _ = session.finish(run, snapshot);
+                    *slot=Some(run);
                     Err(error)
                 }
             }
-        })?;
+        })?.unwrap_or_else(||Ok(RunProgress::default()))?;
         self.done = progress.done;
         Ok(progress)
     }
 
     /// 🛑️ Cancels the analysis: the run is closed as cancelled and the session keeps every node it finished.
-    pub fn cancel(&mut self, snapshot: &ModelSnapshot) {
-        self.session(|session, slot, _| {
-            if let Some(mut run) = slot.take() {
-                run.cancel();
-                let _ = session.finish(run, snapshot);
-            }
-        });
+    pub fn cancel(&mut self,_snapshot:&ModelSnapshot) {
+        if let Some(run)=self.run.as_mut(){run.cancel();}
     }
 }
 //#endregion 🔖️Analysis

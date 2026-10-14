@@ -191,10 +191,10 @@ describe("architecture quiz deployment", () => {
       for (const step of job.steps) if (step.uses?.startsWith("actions/checkout@")) expect(step.with).toEqual({ "persist-credentials": false });
       for (const step of job.steps) if (step.run?.startsWith("bun install")) expect(step.run).toBe("bun install --frozen-lockfile --ignore-scripts");
     }
-    expect(siteJob.steps.filter((step) => step.run).map((step) => step.run)).toEqual(["bun install --frozen-lockfile --ignore-scripts", "bun nx run @teaching/architecture-quiz:test", "bun nx run @teaching/architecture-quiz:publish"]);
+    expect(siteJob.steps.filter((step) => step.run).map((step) => step.run)).toEqual(["bun install --frozen-lockfile --ignore-scripts", "bun repo run @teaching/architecture-quiz:test", "bun repo run @teaching/architecture-quiz:publish"]);
     expect(siteJob.steps.at(-1)!.with).toEqual({ path: `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/${QUIZ_PAGES_DIRECTORY}` });
     const release = proctor.steps.map((step) => step.run ?? step.uses!.split("@")[0]);
-    expect(release.slice(release.indexOf("bun install --frozen-lockfile --ignore-scripts"))).toEqual(["bun install --frozen-lockfile --ignore-scripts", "bun nx run @teaching/architecture-quiz:docker-image-build", "docker/login-action", "bun nx run @teaching/architecture-quiz:docker-image-publish"]);
+    expect(release.slice(release.indexOf("bun install --frozen-lockfile --ignore-scripts"))).toEqual(["bun install --frozen-lockfile --ignore-scripts", "bun repo run @teaching/architecture-quiz:docker-image-build", "docker/login-action", "bun repo run @teaching/architecture-quiz:docker-image-publish"]);
   });
 
   it("accepts exactly a document sealed for the baked proctor origin", () => {

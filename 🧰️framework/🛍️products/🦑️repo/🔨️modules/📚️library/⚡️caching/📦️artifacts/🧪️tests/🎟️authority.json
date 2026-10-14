@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "admissionMilliseconds": 100,
+  "observeMilliseconds": 200,
+  "settledBeforePublisherRelease": true,
+  "outputPublished": false
+}

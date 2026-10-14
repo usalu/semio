@@ -29,8 +29,8 @@ import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS, type TestLevel, activeTestLevel, atT
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { devToolingEnv, repoToolCacheEnv, semioNxParallel, semioNxParallelFlag } from "./🏃️process/🌿️environment/🟦️.ts";
-export { devToolingEnv, repoToolCacheEnv, semioNxParallel, semioNxParallelFlag };
+import { devToolingEnv, repoToolCacheEnv, semioBuildParallel, semioBuildParallelFlag } from "./🏃️process/🌿️environment/🟦️.ts";
+export { devToolingEnv, repoToolCacheEnv, semioBuildParallel, semioBuildParallelFlag };
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { type Dirent, chmodSync, closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readSync, realpathSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
 import { availableParallelism, tmpdir } from "node:os";

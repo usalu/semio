@@ -918,7 +918,7 @@
           "required": [
             "cargoPackageName",
             "nodePackageName",
-            "nxProjectName"
+            "projectName"
           ],
           "properties": {
             "cargoPackageName": {
@@ -927,7 +927,7 @@
             "nodePackageName": {
               "const": "@semio-tech/framework-renderer-wgpu"
             },
-            "nxProjectName": {
+            "projectName": {
               "const": "@semio-tech/framework-renderer-wgpu"
             }
           }

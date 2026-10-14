@@ -121,7 +121,7 @@ async fn widget_input_publication_supports_scalar_events_and_undo_redo() {
     let before = context::snapshot(&app);
     let id = semio_s_artifact_procedural_generation3d::widget_id(before.host_snapshot.widgets.last().unwrap()).to_string();
     let args: semio_framework_value::DslValue = serde_json::json!({"widgetId":id,"channel":"width","value":2.5}).into();
-    let command = Generation3dPlayApp::command_from_action("setWidgetInput", Some(&args)).unwrap();
+    let command = Generation3dPlayApp::command_from_action("setWidgetInput", Some((args).clone()), None).unwrap();
     context::dispatch(&mut app, command).await;
     let after = context::snapshot(&app);
     let params = after.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id: candidate, params, .. } if candidate == &id => Some(params.to_value()), _ => None }).unwrap();

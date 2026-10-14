@@ -326,10 +326,10 @@ async fn the_import_job_refuses_by_name_and_asks_the_host_for_a_missing_file() {
 #[test]
 fn the_host_file_open_import_decodes_one_chunk_and_refuses_more() {
     let args = |chunk_count: u32| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "payload": "schema os.space", "name": "studio.os", "chunk": 0, "chunkCount": chunk_count }));
-    let Ok(HomeCommand::ImportSpace(import)) = HomeApp::command_from_action("importSpace", Some(&args(1))) else { panic!("one chunk decodes into the import") };
+    let Ok(HomeCommand::ImportSpace(import)) = HomeApp::command_from_action("importSpace", Some((args(1)).clone()), None) else { panic!("one chunk decodes into the import") };
     assert_eq!(import.dsl.as_deref(), Some("schema os.space"));
-    assert!(matches!(HomeApp::command_from_action("importSpace", Some(&args(2))), Err(fault) if format!("{fault:?}").contains("s.home.import-space.oversized")));
-    assert!(matches!(HomeApp::command_from_action("importSpace", None), Ok(HomeCommand::ImportSpace(import_space::ImportSpace { dsl: None }))), "a bare import asks the host for the file");
+    assert!(matches!(HomeApp::command_from_action("importSpace", Some((args(2)).clone()), None), Err(fault) if format!("{fault:?}").contains("s.home.import-space.oversized")));
+    assert!(matches!(HomeApp::command_from_action("importSpace", None, None), Ok(HomeCommand::ImportSpace(import_space::ImportSpace { dsl: None }))), "a bare import asks the host for the file");
 }
 
 /// 🔁️ A studio's own `.os` export (`export-studio-dsl`) imports back as a new catalog studio under the same name.

@@ -6,7 +6,7 @@ import { DWG_SQLITE_SCHEMA } from "../../🟦️.ts";
 import { dwgProjectHeader,dwgReconstructHeader } from "../../🔧️header/🟦️.ts";
 import { DwgProjection } from "../../🔢️number/🟦️.ts";
 import { DwgReader } from "../../🫳️reader/🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import { exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 import { dwgHeaderFixture as header } from "../🧰️support/🔧️header/🟦️.ts";

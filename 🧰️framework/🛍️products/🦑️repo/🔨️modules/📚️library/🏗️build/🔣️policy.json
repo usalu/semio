@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "defaultTool": "nx",
+  "catalogProviders": [
+    {
+      "ownerRoot": "✏️s",
+      "sourcePath": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts"
+    }
+  ],
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "sharedGlobals": [
+      {
+        "runtime": "node -p \"process.platform.concat(process.arch)\""
+      },
+      {
+        "runtime": "bun --version"
+      },
+      {
+        "env": "SEMIO_BUILD_MODE"
+      }
+    ],
+    "schemaSources": [
+      "sharedGlobals",
+      "{workspaceRoot}/**/🧬️schema/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
+    ],
+    "production": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+      "!{projectRoot}/**/🧪️tests/**/*",
+      "!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
+      "!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*",
+      "!{projectRoot}/**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
+      "!{projectRoot}/.storybook/**"
+    ],
+    "cargo": [
+      "{projectRoot}/**/*.rs",
+      "{projectRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml"
+    ],
+    "go": [
+      "{projectRoot}/**/*.go",
+      "{projectRoot}/go.mod",
+      "{projectRoot}/go.sum",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "uv": [
+      "{projectRoot}/**/*.py",
+      "{projectRoot}/pyproject.toml",
+      "{workspaceRoot}/uv.lock"
+    ],
+    "dotnet": [
+      "{projectRoot}/**/*.cs",
+      "{projectRoot}/**/*.csproj",
+      "{workspaceRoot}/Monorepo.sln"
+    ],
+    "nativeSources": [
+      "production"
+    ],
+    "nativeTestSources": [
+      "default"
+    ]
+  }
+}

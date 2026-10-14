@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/mit-bestand-demonstrator",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -11,7 +11,7 @@
   },
   "targets": {
     "prepare-prototype": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "inputs": [
@@ -42,7 +42,7 @@
       "defaultConfiguration": "prototype"
     },
     "prepare-release": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "inputs": [
@@ -83,7 +83,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "activate-prototype"
       ],
@@ -105,7 +105,7 @@
       "outputs": []
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "prepare"
       ],
@@ -120,7 +120,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
@@ -129,7 +129,7 @@
       }
     },
     "activate-prototype": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [
         "{projectRoot}/dist/♻️activation/prototype"
@@ -155,7 +155,7 @@
       "defaultConfiguration": "prototype"
     },
     "activate-lanes-prototype": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "inputs": [
@@ -190,7 +190,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
@@ -204,7 +204,7 @@
       ]
     },
     "prepare-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -218,7 +218,7 @@
       }
     },
     "serve-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -237,7 +237,7 @@
       }
     },
     "test-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -250,7 +250,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
@@ -258,7 +258,7 @@
       }
     },
     "prepare": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "inputs": [
@@ -282,6 +282,15 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
         "forwardAllArgs": false
+      }
+    },
+    "test-runtime-catalog": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./📜️script.ts runtime-catalog-test"
       }
     }
   }

@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/procedural-js",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -27,7 +27,7 @@
       ]
     },
     "test-renderer-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
         "{workspaceRoot}/🧰️framework/**/*"
@@ -39,7 +39,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/**/*",
         "{workspaceRoot}/🧰️framework/**/*"

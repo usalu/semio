@@ -1,4 +1,5 @@
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+
 /** 🧩️ Semantic activation freshness owner. */
 
 import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
@@ -30,7 +31,7 @@ import { resolveCatalogFilterPluginId } from "../../../🔌️plugin/🏗️buil
  * activation receipt share, so "prepared" means the same thing in both. A crate that never compiled
  * leaves no directory, and an unreadable descriptor is a fact here, never a thrown error. */
 export function stagedComponentFacts(moduleRoot: string, pluginId: string): PreparedComponentFacts {
-  const directory = join(moduleRoot, moduleDirectoryName(pluginId, COMPONENT_MODULE_DIRECTORIES));
+  const directory = join(moduleRoot, moduleDirectoryName(pluginId, runtimeCatalogBuildInventoryV1().moduleDirectories));
   if (!existsSync(directory)) return { pluginId, directoryPresent: false, bridgePresent: false, artifactMarkerPresent: false };
   let descriptorPluginId: string | undefined;
   try { descriptorPluginId = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8")).manifest?.pluginId as string | undefined; } catch { descriptorPluginId = undefined; }
@@ -95,7 +96,7 @@ export async function collectStagedModuleFacts(options: {
  * restage that lands while the server runs retires its own warning. */
 export function reportStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "prototype" | "release", facts: readonly StagedModuleFacts[]): readonly StagedModuleVerdict[] {
   const verdicts = facts.map(stagedModuleVerdict);
-  const lines = stagedModuleReportLines(verdicts, `bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
+  const lines = stagedModuleReportLines(verdicts, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
   for (const line of lines) console.warn(line);
   if (lines.length === 0) console.log(`[fresh] ${facts.length} staged components match their sources and the activation receipt`);
   return verdicts;

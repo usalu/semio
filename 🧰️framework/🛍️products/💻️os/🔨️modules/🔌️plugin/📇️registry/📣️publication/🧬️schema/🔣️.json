@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ownerRoot",
+    "outputRoot",
+    "contributions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "ownerRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+    },
+    "outputRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+    },
+    "contributions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ownerRoot",
+          "packageRoots"
+        ],
+        "properties": {
+          "ownerRoot": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+          },
+          "packageRoots": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/publication/schema.json"
+}

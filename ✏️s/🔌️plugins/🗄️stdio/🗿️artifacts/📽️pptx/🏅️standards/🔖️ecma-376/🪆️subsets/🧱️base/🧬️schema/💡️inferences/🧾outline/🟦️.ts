@@ -1,6 +1,6 @@
 /** 🧾 PresentationML outline derived from the actual OPC relationships and retained XML. */
 import type {PptxSnapshot,XmlNode} from "../../📸️snapshot/🟦️.ts";
-import {ValueError} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts";
 export interface PptxOutline { slideCount:number;shapeCount:number;wordCount:number }
 type Element=Extract<XmlNode,{kind:"element"}>;
 type Scope=ReadonlyMap<string,string>;

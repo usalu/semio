@@ -2,7 +2,7 @@
   "name": "@semio-tech/value-bytes",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true,

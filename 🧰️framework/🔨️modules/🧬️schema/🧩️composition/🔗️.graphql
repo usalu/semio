@@ -1,0 +1,4 @@
+# 🧩️ Child slots select a concrete artifact kind or a consumer behavioral capability.
+enum ChildSlotSelectionKind { ARTIFACT_KIND CAPABILITY }
+type ChildSlotSelection { kind: ChildSlotSelectionKind! id: String! }
+type ChildSlotSpec { name: String! selection: ChildSlotSelection! many: Boolean! }

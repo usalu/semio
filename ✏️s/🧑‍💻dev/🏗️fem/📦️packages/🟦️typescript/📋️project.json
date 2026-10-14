@@ -4,7 +4,7 @@
   "sourceRoot": "✏️s/🧑‍💻dev/🏗️fem",
   "targets": {
     "verify-fem-pcg-publication-owners": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -21,7 +21,7 @@
       }
     },
     "verify-fem-assembly-physical-owners": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -38,7 +38,7 @@
       }
     },
     "verify-fem-numerical-page-owners": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -55,7 +55,7 @@
       }
     },
     "verify-fem-mesh-preparation-owners": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -72,7 +72,7 @@
       }
     },
     "verify-fem-scalar-owners-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -89,7 +89,7 @@
       }
     },
     "verify-fem2d-window-config-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -106,7 +106,7 @@
       }
     },
     "verify-fem3d-window-config-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -123,7 +123,7 @@
       }
     },
     "verify-fem-live-visual-publication": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
@@ -140,7 +140,7 @@
       }
     },
     "verify-fem-numerical-microcursor": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",

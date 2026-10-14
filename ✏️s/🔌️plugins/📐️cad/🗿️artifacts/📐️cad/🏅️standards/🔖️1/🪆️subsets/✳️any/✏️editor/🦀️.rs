@@ -2210,7 +2210,9 @@ impl ArtifactEditor for CadPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<CadCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<CadCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         cad_command_from_action(action, args)
     }
 
@@ -2250,9 +2252,14 @@ impl ArtifactEditor for CadPlayApp {
         view_state: &ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         Self::render_body(body_key, doc, cfg, view_state, &window_transient::current(transient), CadInteractionSnapshot::from_interaction(interaction))
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     /// 🕹️ Interaction-less twin of [`Self::window_engagements_with_request_context`] — the HUD's
     /// selected count reads `0` here, which is correct for an empty `"cad"` domain.

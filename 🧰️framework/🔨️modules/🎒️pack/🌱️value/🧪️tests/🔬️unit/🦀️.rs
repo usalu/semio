@@ -929,7 +929,15 @@ fn retained_record_body_fault_is_inline_sticky_and_closes_exactly() {
     cursor.admit_byte(cursor.offset, 0xff).expect("invalid UTF-8 pending byte");
     let before = (cursor.offset, cursor.pending, cursor.allocated_bytes());
     let expected = PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "retained-utf8", offset: 2, detail: "invalid leading byte" };
+    for _ in 0..2 {
+        let (quote, requested, released) = crate::test_allocation::observe_backing(|| cursor.source_step_demands());
+        assert_eq!(quote, Err(expected.clone()));
+        assert_eq!((requested, released), (0, 0));
+        assert!(cursor.fault.is_none());
+        assert_eq!((cursor.offset, cursor.pending, cursor.allocated_bytes()), before);
+    }
     assert_eq!(cursor.next_allocation_bytes(), Err(expected.clone()));
+    assert_eq!(cursor.fault.as_ref(), Some(&expected));
     assert_eq!((cursor.offset, cursor.pending, cursor.allocated_bytes()), before);
     assert_eq!(cursor.grant(), Err(expected));
     assert_eq!((cursor.offset, cursor.pending, cursor.allocated_bytes()), before);

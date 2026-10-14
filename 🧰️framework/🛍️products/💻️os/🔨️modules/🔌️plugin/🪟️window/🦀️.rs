@@ -28,7 +28,7 @@ pub fn built_to_tree(node: BuiltNode) -> TreeNode {
 
 /// 🌉️ Transfers a complete fixed root into the runtime tree owner.
 pub fn built_to_component_tree(node: BuiltNode) -> ComponentTree {
-    ComponentTree { root: built_to_tree(node) }
+    ComponentTree::new(built_to_tree(node))
 }
 
 /// 🧩️ One numbered text leaf of a paged text carrier. The key is explicit rather than positional

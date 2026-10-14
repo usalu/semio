@@ -2045,7 +2045,9 @@ impl ArtifactEditor for DrawingPlayApp {
 
     /// 🌉️ Shell `{action, args}` → `DrawingCommand` (see `args_bridge`); the trait default refuses
     /// every app action, which left the whole ribbon/palette dead in the React shell.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 
@@ -2097,7 +2099,9 @@ impl ArtifactEditor for DrawingPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == DRAWING_PLAY_BODY_PROPERTIES {
             return properties_panel::render(doc.snapshot, &interaction.selection(DRAWING_INTERACTION_DOMAIN).ids, semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, body_key)).map(semio_framework_plugin::built_to_component_tree);
         }
@@ -2107,7 +2111,10 @@ impl ArtifactEditor for DrawingPlayApp {
             None=>DrawingGesturePreview::default(),
         };
         render_drawing_body(body_key,doc,&canvas_window::config::current(cfg),&preview,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids,&interaction.selection(DRAWING_POINT_DOMAIN).ids,view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         status::engagements(doc.snapshot.layers.len(),0,String::new(),view_state)

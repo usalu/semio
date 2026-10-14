@@ -189,7 +189,7 @@ async fn the_hotkeys_cover_the_specified_tools_and_each_arms_an_existing_command
     let bindings = crate::editor::bim::utilities::keybindings();
     for (key, utility) in [("w", "wall"), ("c", "column"), ("b", "beam"), ("s", "slab"), ("r", "roof"), ("n", "window"), ("d", "door"), ("t", "stair"), ("l", "railing"), ("p", "space"), ("g", "grid"), ("m", "measure"), ("v", "select"), ("e", "move"), ("q", "rotate"), ("shift+s", "slab-walls"), ("shift+w", "split-wall"), ("k", "copy"), ("shift+k", "mirror"), ("y", "array"), ("shift+y", "array-radial"), ("f", "offset"), ("x", "trim"), ("shift+x", "extend"), ("z", "align"), ("shift+z", "split")] {
         let (_, action) = bindings.iter().find(|(keys, _)| *keys == key).unwrap_or_else(|| panic!("no hotkey {key}"));
-        let command = crate::editor::bim::BimModelApp::command_from_action(action, None).unwrap_or_else(|error| panic!("{action}: {}", error.message));
+        let command = crate::editor::bim::BimModelApp::command_from_action(action, None, None).unwrap_or_else(|error| panic!("{action}: {}", error.message));
         let armed = crate::editor::bim::utilities::UTILITIES.iter().find(|row| row.arm == Some(*action)).map(|row| row.id);
         assert_eq!(armed, Some(utility), "{key} arms {utility}");
         assert!(crate::editor::bim::BIM_TOOL_IDS.contains(&command.command_id()));

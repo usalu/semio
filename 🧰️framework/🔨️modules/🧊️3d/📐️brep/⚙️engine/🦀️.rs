@@ -1025,13 +1025,7 @@ impl Brep {
     pub fn boolean_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle, op: BooleanOp) -> Result<GeometryHandle, BrepError> {
         match self.boolean_job_sync(a, b, op)? {
             BrepBooleanAdmission::Answered(handle) => Ok(handle),
-            BrepBooleanAdmission::Job(mut job) => loop {
-                match self.step_boolean_job_sync(&mut job, usize::MAX)? {
-                    BrepBooleanStep::Ready(handle) => return Ok(handle),
-                    BrepBooleanStep::Cancelled(_) => return Err(BrepError::Operation("boolean cancelled".to_string())),
-                    BrepBooleanStep::Working(_) => continue,
-                }
-            },
+            BrepBooleanAdmission::Job(mut job)=>{let solid=job.job.run_to_completion(&mut self.body,&mut job.rec).map_err(|error|map_err(&error))?;Ok(self.register_solid(solid))},
         }
     }
 
@@ -1056,11 +1050,12 @@ impl Brep {
     /// nothing, so a host may retain it across turns and re-present the kernel on every step — the
     /// same contract [`Brep::tessellation_body`] states for tessellation.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn step_boolean_job_sync(&mut self, job: &mut BrepBooleanJob, budget: usize) -> Result<BrepBooleanStep, BrepError> {
-        match job.job.step(&mut self.body, &mut job.rec, budget).map_err(|error| map_err(&error))? {
-            BooleanStep::Working(progress) => Ok(BrepBooleanStep::Working(progress)),
-            BooleanStep::Cancelled(progress) => Ok(BrepBooleanStep::Cancelled(progress)),
-            BooleanStep::Done(solid) => Ok(BrepBooleanStep::Ready(self.register_solid(solid))),
+    pub fn step_boolean_job_sync(&mut self,job:&mut BrepBooleanJob,cx:&mut semio_framework_job::StepContext<'_>)->Result<BrepBooleanStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        match job.job.step(&mut self.body,&mut job.rec,cx)?{
+            BooleanStep::Working(progress)=>Ok(BrepBooleanStep::Working(progress)),
+            BooleanStep::Cancelled(progress)=>Ok(BrepBooleanStep::Cancelled(progress)),
+            BooleanStep::Done(_)=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boolean result registration has no funded producer yet").into()),
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

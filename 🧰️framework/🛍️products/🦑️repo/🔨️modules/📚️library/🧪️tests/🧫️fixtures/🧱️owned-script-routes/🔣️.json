@@ -18,6 +18,15 @@
       "project": "@fixture/optional",
       "target": "verify-detail",
       "packageRoot": "✏️s/🧑‍💻dev/🔬️optional/📦️packages/🟦️typescript"
+    },
+    {
+      "command": [
+        "schema",
+        "runtime-graph"
+      ],
+      "project": "@fixture/host",
+      "target": "runtime-fixture-graph",
+      "packageRoot": "🌎️hub/📦️packages/🦀️rust"
     }
   ],
   "cases": [
@@ -101,6 +110,38 @@
       ],
       "absent": [],
       "expected": null
+    },
+    {
+      "id": "host-authored-runtime-graph",
+      "segments": [
+        "schema",
+        "runtime-graph",
+        "--read-only"
+      ],
+      "absent": [],
+      "expected": {
+        "target": "runtime-fixture-graph",
+        "args": [
+          "--read-only"
+        ]
+      }
+    },
+    {
+      "id": "removed-host-runtime-graph",
+      "segments": [
+        "schema",
+        "runtime-graph"
+      ],
+      "absent": [
+        "@fixture/host"
+      ],
+      "expected": null
     }
+  ],
+  "removedOwnerPrefixes": [
+    "✏️s",
+    "🌎️hub",
+    "♻️mit-bestand",
+    "compose"
   ]
 }

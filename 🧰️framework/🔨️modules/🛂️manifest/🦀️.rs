@@ -3389,7 +3389,7 @@ impl From<String> for ActionRef {
 }
 
 /// 📍️ Fully qualified address of an action owned by one concrete window instance.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct ActionAddress {
     pub plugin_id: String,
@@ -3404,7 +3404,7 @@ pub struct ActionAddress {
 /// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: `arguments` used to be
 /// keyed to `serde_json::Value` (not a `ToValue`/`FromValue` target by design); `DslValue` carries
 /// the exact same schema-less-JSON shape without the serde dependency.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct ActionInvocation {
     pub address: ActionAddress,
@@ -3592,7 +3592,7 @@ impl CommandDefinition {
 }
 
 /// 📍️ Hierarchical owner of a command definition.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CommandOwnerAddress {
     Os,
@@ -3602,7 +3602,7 @@ pub enum CommandOwnerAddress {
 }
 
 /// 📍️ Fully qualified address of one command.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CommandAddress {
     pub owner: CommandOwnerAddress,
@@ -3612,12 +3612,15 @@ pub struct CommandAddress {
 /// 📨️ One addressed command invocation with named DSL-value arguments — see
 /// `ActionInvocation`'s docstring for why `arguments` is keyed to `DslValue`, not
 /// `serde_json::Value`.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct CommandInvocation {
     pub address: CommandAddress,
     pub arguments: BTreeMap<String, DslValue>,
 }
+
+/// 👓️ Plugin handlers borrow the retained semantic fields instead of materializing a second argument map.
+pub struct CommandInvocationView<'a>{pub address:&'a CommandAddress,pub arguments:&'a DslValue}
 
 /// 💻️ Operating-system command catalog shared by every renderer.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.

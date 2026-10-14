@@ -21,5 +21,6 @@ path = "../../🦀️.rs"
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+serde = { workspace = true }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }

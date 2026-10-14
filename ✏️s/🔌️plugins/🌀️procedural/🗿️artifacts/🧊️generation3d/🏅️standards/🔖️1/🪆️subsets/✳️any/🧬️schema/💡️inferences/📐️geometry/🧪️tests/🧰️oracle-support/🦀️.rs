@@ -215,7 +215,7 @@ pub fn inputs_of(kind: &Kind, case: &Value) -> WidgetInputs {
         let resolved = selection(value, shape);
         values.insert(port.name.clone(), resolved);
     }
-    WidgetInputs::new(case["name"].as_str().unwrap_or("case"), kind, values)
+    WidgetInputs::new_cold(case["name"].as_str().unwrap_or("case"), kind, values)
 }
 //#endregion 🔖️Decode
 
@@ -306,7 +306,7 @@ pub fn assert_case(case: &Value, kind: &Kind, evaluation: &WidgetEvaluation, tol
     assert!(evaluation.fault.is_none(), "{name}: unexpected fault {:?}", evaluation.fault);
     let expected = case["outputs"].as_object().unwrap_or_else(|| panic!("{name}: case states neither outputs nor a fault"));
     let unchecked: Vec<&str> = case.get("unchecked").and_then(Value::as_array).map(|ports| ports.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
-    let found: Vec<&str> = evaluation.outputs.keys().map(String::as_str).collect();
+    let found: Vec<&str> = evaluation.outputs.iter().map(|(port, _)| port).map(String::as_str).collect();
     let mut wanted: Vec<&str> = expected.keys().map(String::as_str).chain(unchecked.iter().copied()).collect();
     wanted.sort();
     assert_eq!(found, wanted, "{name}: output ports");

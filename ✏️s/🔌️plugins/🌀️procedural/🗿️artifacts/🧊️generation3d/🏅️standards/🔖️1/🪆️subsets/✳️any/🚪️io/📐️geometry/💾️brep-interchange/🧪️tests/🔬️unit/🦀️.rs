@@ -19,7 +19,7 @@ fn run(id: &str, values: Vec<(&str, GeometryValue)>, fuel: usize) -> (usize, Wid
     let kind = support::kind_of(id);
     let values: BTreeMap<String, GeometryValue> = values.into_iter().map(|(port, value)| (port.to_string(), value)).collect();
     let entry = COMPUTES.iter().find(|entry| entry.id == id).expect("registered");
-    support::slices((entry.start)(kind, WidgetInputs::new("w", kind, values)), fuel)
+    support::slices((entry.start)(kind, WidgetInputs::new_cold("w", kind, values)), fuel)
 }
 
 fn text_of(evaluation: &WidgetEvaluation, port: &str) -> String {

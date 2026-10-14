@@ -1,0 +1,17 @@
+# 🌳️ Query graph results own admitted query values; the selected rich child remains a separate source.
+scalar JackQueryNode
+scalar JackQueryEdge
+scalar JackManifest
+scalar JackCamera
+
+type JackQueryGraphSnapshot {
+  schema: String!
+  name: String!
+  manifestId: String
+  manifest: JackManifest!
+  camera: JackCamera!
+  nodes: [JackQueryNode!]!
+  edges: [JackQueryEdge!]!
+  rootNodeId: String
+  query: String!
+}

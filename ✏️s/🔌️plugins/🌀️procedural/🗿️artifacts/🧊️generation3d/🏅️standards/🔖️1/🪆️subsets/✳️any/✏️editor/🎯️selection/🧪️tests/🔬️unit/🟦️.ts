@@ -47,7 +47,7 @@ describe("mesh component selection contract", () => {
   const validate = new Ajv().compile(schema);
   const validateEdit = new Ajv().compile(editSchema);
   for (const mode of fixtures.quickActions) for (const operation of mode.operations) test(`quick action schema: ${mode.granularity}/${operation}`, () => {
-    const payload = { operation, amount: 0.1, cuts: 1, dx: 0, dy: 0, dz: 0, width: 0.1, segments: 1, mergeMode: "center", tolerance: 0.0001, radius: 1, grid: 1, center: [0, 0, 0] };
+    const payload = { operation, ...fixtures.quickActionParameters };
     expect(validateEdit(payload)).toBe(true);
     for (const cuts of [0, 257, 1.5]) expect(validateEdit({ ...payload, cuts })).toBe(false);
   });
@@ -85,3 +85,8 @@ describe("analytic selection source admission", () => {
 test("selected geometry inputs use exact labels for analytic operations", () => {
   expect(generation3dMeshSelectionSelfTests()).toBeGreaterThan(0);
 });
+
+import {generation3dWidgetInputSelfTests} from "../../../🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🟦️.ts";
+import {testGeneration3dMeshSurface,testGeneration3dPolygonImport} from "../../../../🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts";
+test("widget input edits use the neutral public polygon parser",()=>{expect(generation3dWidgetInputSelfTests()).toBeGreaterThan(0);});
+test("mesh IO consumers use the neutral public polygon contract",()=>{expect(testGeneration3dMeshSurface()).toBeGreaterThan(0);expect(testGeneration3dPolygonImport()).toBeGreaterThan(0);});

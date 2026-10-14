@@ -1,4 +1,3 @@
-import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync, existsSync as persistedExists } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -6,6 +5,38 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { observedFs } from "../👁️observation/🟨️.mjs";
 
 const { existsSync, readdirSync } = observedFs;
+
+/** 🧵️ Matches portable source globs consistently across Node and Bun without build-tool imports. */
+export function buildInputPathMatchesV1(path,pattern) {
+  const compile=(source)=>{
+    let result="";
+    for(let index=0;index<source.length;index++){
+      const character=source[index];
+      if(["!","?","+","*","@"].includes(character)&&source[index+1]==="("){
+        let depth=1,end=index+2;for(;end<source.length&&depth;end++){if(source[end]==="(")depth++;else if(source[end]===")")depth--;}
+        if(depth)throw Error("Unclosed source input glob");
+        const contents=source.slice(index+2,end-1),alternatives=[];let nested=0,start=0;
+        for(let cursor=0;cursor<=contents.length;cursor++){if(contents[cursor]==="(")nested++;else if(contents[cursor]===")")nested--;if(cursor===contents.length||contents[cursor]==="|"&&!nested){alternatives.push(compile(contents.slice(start,cursor)));start=cursor+1;}}
+        const group="(?:"+alternatives.join("|")+")";
+        if(character==="!"){const suffix=source.slice(end).split("/")[0];result+="(?!"+group+compile(suffix)+"(?:/|$))[^/]*";}
+        else result+=group+(character==="@"?"":character);
+        index=end-1;continue;
+      }
+      if(character==="{"){
+        const end=source.indexOf("}",index+1);if(end<0)throw Error("Unclosed source input alternatives");result+="(?:"+source.slice(index+1,end).split(",").map(compile).join("|")+")";index=end;continue;
+      }
+      if(character==="["){
+        const end=source.indexOf("]",index+1);if(end<0)throw Error("Unclosed source input class");result+="["+(source[index+1]==="!"?"^"+source.slice(index+2,end):source.slice(index+1,end))+"]";index=end;continue;
+      }
+      if(character==="*"&&source[index+1]==="*"){index++;if(source[index+1]==="/"){result+="(?:.*/)?";index++;}else result+=".*";}
+      else if(character==="*")result+="[^/]*";
+      else if(character==="?")result+="[^/]";
+      else result+=character.replace(/[\^$.*+?()[\]{}|]/g,"\\$&");
+    }
+    return result;
+  };
+  return new RegExp("^"+compile(pattern)+"$","u").test(path);
+}
 
 /** 🧮️ Interns equivalent project/workspace coordinates before Nx compiles native glob sets. */
 export function deduplicateProjectInputs(inputs, root) {
@@ -34,9 +65,8 @@ export function compactSourceInputs(inputs, workspaceRoot, root = ".") {
   if (exact.length < 1) return inputs;
   const projectRoot = root === "." ? "." : root, normalize = input => input.replaceAll("{projectRoot}", projectRoot).replaceAll("{workspaceRoot}/", ""), exclusions = inputs.filter(input => typeof input === "string" && input.startsWith("!") && !input.startsWith("!^"));
   if (exclusions.length) {
-    const { matchGlobPaths } = createRequire(import.meta.url)("nx/src/native");
     const paths = exact.map(normalize), excluded = paths.map(() => false);
-    for (const input of exclusions) for (const [index, matched] of matchGlobPaths([normalize(input.slice(1))], paths).entries()) excluded[index] ||= matched;
+    for (const input of exclusions) for (const [index,path] of paths.entries()) excluded[index] ||= buildInputPathMatchesV1(path,normalize(input.slice(1)));
     exact = exact.filter((input, index) => !excluded[index]);
   }
   if (exact.length < 1) return residual;

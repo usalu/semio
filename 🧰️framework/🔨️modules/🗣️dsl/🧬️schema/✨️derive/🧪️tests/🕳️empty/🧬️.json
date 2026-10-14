@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "variantCount",
+    "missingKeyword",
+    "refusal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        {
+          "mode": "Variants",
+          "declaration": "enum OriginalEmptyTagged {}",
+          "borrowedMatches": 6,
+          "ownedMatches": 1
+        },
+        {
+          "mode": "Receiving",
+          "declaration": "enum OriginalEmptyTagged {}",
+          "borrowedMatches": 7,
+          "ownedMatches": 0
+        },
+        {
+          "mode": "Scalar",
+          "declaration": "enum OriginalEmptyScalar {}",
+          "borrowedMatches": 3,
+          "ownedMatches": 0
+        }
+      ]
+    },
+    "variantCount": {
+      "const": 0
+    },
+    "missingKeyword": {
+      "const": "missing"
+    },
+    "refusal": {
+      "const": "InvalidValue"
+    }
+  }
+}

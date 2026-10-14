@@ -61,7 +61,7 @@ test("the actual root caller preserves canonical Cargo authority through process
   const method = owner?.members.find((node): node is ts.MethodDeclaration => ts.isMethodDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === "runCanonicalArchitecture");
   if (!method) throw new Error("canonical root execution owner is absent");
   const code = ts.transpileModule(`class Invocation { root = repoRoot; ${method.getText(source)} } new Invocation().runCanonicalArchitecture();`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const invoke = new Function("repoRoot", "process", "runCmd", "canonicalArchitectureEnvironment", "orchestratorBudgetOpts", "semioNxParallelFlag", "console", code);
+  const invoke = new Function("repoRoot", "process", "runCmd", "canonicalArchitectureEnvironment", "orchestratorBudgetOpts", "semioBuildParallelFlag", "console", code);
   for (const row of vectors.cases) {
     const root = resolve(artifactRoot, "portable-workspace");
     const env = { ...row.environment, ...(row.target.mode === "relative" ? { CARGO_TARGET_DIR: join(...row.target.segments) } : {}), ...(row.target.mode === "absolute" ? { CARGO_TARGET_DIR: resolve(root, ...row.target.segments) } : {}) };

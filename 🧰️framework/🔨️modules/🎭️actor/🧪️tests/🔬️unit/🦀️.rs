@@ -118,14 +118,17 @@ mod quick {
             receipt = receipt.checked_add(step.progress()).unwrap();
         }
         job.begin_close();
+        let source=job::RetainedCloneGrant{maximum_items:original.maximum_items-receipt.copied_items,maximum_copy_bytes:original.maximum_copy_bytes-receipt.copied_bytes,maximum_capacity_bytes:original.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:original.maximum_release_bytes-receipt.released_bytes,..original};
+        let mut caller=job::OriginalJobFixtureCaller::admit(bridge.operation.operation,bridge.operation.generation,source,BRIDGE_NOW_US,1000000,1000000);
         while !job.terminal_is_empty() {
             let remaining = job::RetainedCloneGrant { maximum_items: original.maximum_items - receipt.copied_items, maximum_copy_bytes: original.maximum_copy_bytes - receipt.copied_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes - receipt.retained_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes - receipt.released_bytes, ..original };
-            let step = job.close_step(remaining);
-            assert!(!matches!(step, job::InteractiveJobCloseStep::Refused { .. } | job::InteractiveJobCloseStep::Blocked));
+            let step = caller.turn(remaining,|cx|job.close_step(cx)).unwrap();
+            assert!(!matches!(step, job::InteractiveJobCloseStep::Blocked));
             assert!(step.progress().fits(remaining));
             receipt = receipt.checked_add(step.progress()).unwrap();
         }
         assert!(receipt.fits(original));
+        caller.retire(source);
     }
 
     const BRIDGE_NOW_US: fn() -> Option<u64> = || Some(10);
@@ -144,7 +147,7 @@ mod quick {
     }
 
     impl job::InteractiveJob for ScriptJob {
-        fn step<'a>(&'a mut self, cx: &mut job::StepContext<'_>) -> Result<Option<job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+        fn step<'a>(&'a mut self, cx: &mut job::StepContext<'_>) -> Result<Option<job::JobOutcomeBorrow<'a>>, job::OriginalTurnFailure> {
             self.calls += 1;
             if self.published_kind.is_some() {
                 for payload in [&mut self.pending_state, &mut self.pending_output] {
@@ -186,7 +189,7 @@ mod quick {
                 self.pending_output = Some(cx.payload_from_bytes(job::JobPayloadStream::CommitOutput, bytes).expect("fixture original page admission"));
                 cx.consume_retained(job::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes.len(), retained_capacity_bytes: job::JOB_PAYLOAD_PAGE_BYTES, ..Default::default() })?;
                 self.published_kind = Some(job::JobOutcomeKind::Complete);
-                return job::JobOutcomeBorrow::admit_complete(cx, self.pending_state.as_ref(), self.pending_output.as_ref());
+                return job::JobOutcomeBorrow::admit_complete(cx, self.pending_state.as_ref(), self.pending_output.as_ref()).map_err(Into::into);
             }
             if self.original_current.is_none() { self.original_current = self.outcomes.pop_front(); self.current_copied = false; }
             let original = self.original_current.as_ref().expect("scripted original bridge outcome");
@@ -206,7 +209,7 @@ mod quick {
             if kind == job::JobOutcomeKind::Complete {
                 let Some(JobStepOutcome::Complete { candidate }) = self.original_current.take() else { unreachable!() };
                 self.pending_complete = Some(candidate);
-                return job::JobOutcomeBorrow::admit_yield(cx);
+                return job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
             }
             self.published_kind = Some(kind);
             match kind {
@@ -217,7 +220,7 @@ mod quick {
                 job::JobOutcomeKind::CheckpointReady { applied_progress } => job::JobOutcomeBorrow::admit_checkpoint(cx, self.pending_state.as_ref().unwrap(), applied_progress),
                 job::JobOutcomeKind::Fault => job::JobOutcomeBorrow::admit_fault(cx, self.pending_state.as_ref().unwrap()),
                 _ => unreachable!(),
-            }
+            }.map_err(Into::into)
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a job::JobOutcomeDescriptor) -> Result<job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -235,39 +238,18 @@ mod quick {
             self.closing = true;
         }
 
-        fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> job::InteractiveJobCloseStep {
-            use job::InteractiveJobCloseStep;
-            self.begin_close();
-            if self.terminal_is_empty() { return InteractiveJobCloseStep::Complete { progress: Default::default() }; }
-            if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
-            let release = self.next_close_release_byte_demand().expect("original script backing");
-            let depth = self.next_close_depth_demand().expect("original script depth");
-            if grant.maximum_release_bytes < release { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
-            if grant.maximum_depth < depth { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: Default::default() }; }
-            if let Some(state) = self.pending_state.as_mut() {
-                let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step = match state.close_step(child) { Ok(step) => step, Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() } };
-                if state.terminal_is_empty() { self.pending_state = None; }
-                return if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { InteractiveJobCloseStep::Pending { progress: step.progress() } };
-            }
-            if let Some(output) = self.pending_output.as_mut() {
-                let step = match output.close_step(grant) { Ok(step) => step, Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() } };
-                if output.terminal_is_empty() { self.pending_output = None; }
-                return if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { InteractiveJobCloseStep::Pending { progress: step.progress() } };
-            }
-            if let Some(original) = self.original_current.as_mut() {
-                if let Some(bytes) = script_original_bytes(original) { drop(std::mem::take(bytes)); }
-                else { self.original_current = None; }
-            } else if let Some(candidate) = self.pending_complete.as_mut() {
-                if candidate.state.capacity() != 0 { drop(std::mem::take(&mut candidate.state)); }
-                else if candidate.output.capacity() != 0 { drop(std::mem::take(&mut candidate.output)); }
-                else { self.pending_complete = None; }
-            } else if let Some(outcome) = self.outcomes.front_mut() {
-                if let Some(bytes) = script_original_bytes(outcome) { drop(std::mem::take(bytes)); }
-                else { self.outcomes.pop_front(); }
-            } else { drop(std::mem::take(&mut self.outcomes)); }
-            let progress = semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: release, ..Default::default() };
-            if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } }
+        fn close_step(&mut self,cx:&mut job::StepContext<'_>)->Result<job::InteractiveJobCloseStep,job::OriginalTurnFailure>{
+            self.begin_close();if self.terminal_is_empty(){return Ok(job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+            let demand=semio_framework_value::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(cx.retained_grant().maximum_copy_bytes)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?};
+            job::close_original_retained_step(cx,demand,|grant|{
+                if let Some(state)=self.pending_state.as_mut(){let step=state.close_step(job::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?;if state.terminal_is_empty(){self.pending_state=None;}return Ok(step)}
+                if let Some(output)=self.pending_output.as_mut(){let step=output.close_step(job::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?;if output.terminal_is_empty(){self.pending_output=None;}return Ok(step)}
+                if let Some(original)=self.original_current.as_mut(){if let Some(bytes)=script_original_bytes(original){drop(std::mem::take(bytes));}else{self.original_current=None;}}
+                else if let Some(candidate)=self.pending_complete.as_mut(){if candidate.state.capacity()!=0{drop(std::mem::take(&mut candidate.state));}else if candidate.output.capacity()!=0{drop(std::mem::take(&mut candidate.output));}else{self.pending_complete=None;}}
+                else if let Some(outcome)=self.outcomes.front_mut(){if let Some(bytes)=script_original_bytes(outcome){drop(std::mem::take(bytes));}else{self.outcomes.pop_front();}}
+                else{drop(std::mem::take(&mut self.outcomes));}
+                let progress=job::RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()};Ok(if self.terminal_is_empty(){semio_framework_value::RetainedCloneStep::Complete(progress)}else{semio_framework_value::RetainedCloneStep::Progress(progress)})
+            })
         }
 
         fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.pending_state.as_ref().or(self.pending_output.as_ref()).map(|owner| owner.retirement_demands()).transpose()?.map_or(0, |demand| demand.copy_bytes)) }
@@ -310,18 +292,17 @@ mod quick {
     struct UnsequencedPreviewJob { original: job::RetainedJobPayload }
 
     impl job::InteractiveJob for UnsequencedPreviewJob {
-        fn step<'a>(&'a mut self, cx: &mut job::StepContext<'_>) -> Result<Option<job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { job::JobOutcomeBorrow::admit_preview(cx, &self.original) }
+        fn step<'a>(&'a mut self, cx: &mut job::StepContext<'_>) -> Result<Option<job::JobOutcomeBorrow<'a>>, job::OriginalTurnFailure> { job::JobOutcomeBorrow::admit_preview(cx, &self.original).map_err(Into::into) }
         fn borrow_outcome<'a>(&'a self, descriptor: &'a job::JobOutcomeDescriptor) -> Result<job::JobOutcomeView<'a>, semio_framework_value::ValueError> { descriptor.preview(&self.original) }
 
         fn begin_close(&mut self) {}
 
-        fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> job::InteractiveJobCloseStep {
-            job::InteractiveJobCloseStep::Complete { progress: Default::default() }
-        }
-
-        fn terminal_is_empty(&self) -> bool {
-            true
-        }
+        fn close_step(&mut self,cx:&mut job::StepContext<'_>)->Result<job::InteractiveJobCloseStep,job::OriginalTurnFailure>{let demand=self.original.retirement_demands()?;job::close_original_retained_step(cx,demand,|grant|self.original.close_step(grant))}
+        fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.original.retirement_demands()?.copy_bytes)}
+        fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.original.retirement_demands()?.capacity_bytes)}
+        fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.original.retirement_demands()?.release_bytes)}
+        fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.original.retirement_demands()?.depth)}
+        fn terminal_is_empty(&self)->bool{self.original.terminal_is_empty()}
     }
     //#endregion 🔖️Helpers
 

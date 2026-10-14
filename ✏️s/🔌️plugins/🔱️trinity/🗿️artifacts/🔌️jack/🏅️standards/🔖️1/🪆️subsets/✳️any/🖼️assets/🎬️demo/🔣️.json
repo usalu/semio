@@ -1,0 +1,8 @@
+{
+  "schema": "trinity.graph",
+  "name": "Capsule Stack",
+  "manifest": {"nodeKinds": [], "edgeKinds": [], "portKinds": []},
+  "camera": {"x": {"bits": "0000000000000000"}, "y": {"bits": "0000000000000000"}, "zoom": {"bits": "3ff0000000000000"}},
+  "content": {"childId": "jack-content-set-query-fixture", "target": {"artifactId": "jack-content-set-query-fixture", "dialect": {"artifactKind": "s.fixture.graph", "standard": "v1", "subset": "graph"}}},
+  "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label"
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "semio.plugin-registry.rebuild-chain/v1",
+  "steps": [
+    {
+      "id": "s-guest-framework",
+      "stage": "inputs",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/s-rebuild:guest-framework-check"
+      ]
+    },
+    {
+      "id": "generate-s-catalog",
+      "stage": "registry",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/s-dev-composition:generate"
+      ]
+    },
+    {
+      "id": "check-s-catalog",
+      "stage": "registry",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/s-dev-composition:check-generated"
+      ]
+    },
+    {
+      "id": "activate-s",
+      "stage": "guests",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:activate-s-react-prototype",
+        "--catalog",
+        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"
+      ]
+    },
+    {
+      "id": "verify-s",
+      "stage": "guests",
+      "command": [
+        "nx",
+        "run",
+        "@semio-tech/framework-os-dev:verify-staged",
+        "--variant",
+        "s",
+        "--catalog",
+        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"
+      ]
+    },
+    {
+      "id": "flow-core-bindings",
+      "stage": "guests",
+      "command": [
+        "nx",
+        "run",
+        "semio-framework-os-flow-core:wasm"
+      ]
+    }
+  ],
+  "guestFrameworkChecks": [
+    {
+      "target": "wasm32-wasip2",
+      "workspace": "✏️s/Cargo.toml",
+      "packages": [
+        "semio-s-plugin-stdio"
+      ],
+      "features": []
+    }
+  ]
+}

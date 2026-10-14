@@ -468,7 +468,9 @@ impl ArtifactEditor for Block5dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Block5dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let args = args.map(semio_framework_pack_json::from_dsl_value);
         let str_field = |key: &str| args.as_ref().and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {

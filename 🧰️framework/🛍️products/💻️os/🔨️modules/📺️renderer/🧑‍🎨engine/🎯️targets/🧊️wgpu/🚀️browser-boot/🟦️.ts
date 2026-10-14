@@ -1,3 +1,4 @@
+import {emptyNativeCatalogV1,readNativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import { admitPluginCatalogV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { documentBootMetaReader, resolveWgpuBootDescriptor, stripBootBrokerProof, wgpuReadinessBeacon, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN } from "../🧭️boot-descriptor/🟦️.ts";
 import { mountWgpuBrowserHost } from "../🌐️browser-host/🟦️.ts";
@@ -15,11 +16,13 @@ try {
   const inventory = document.getElementById("semio-plugin-catalog");
   const text = inventory?.textContent;
   if (!text || text.length > 2097152) throw new Error("plugin-catalog-invalid: missing or oversized supplied inventory");
-  const catalog = admitPluginCatalogV1(JSON.parse(text), { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
+  const catalog = admitPluginCatalogV1(JSON.parse(text), { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
   const descriptor = resolveWgpuBootDescriptor({ search: window.location.search, hash: window.location.hash, meta: documentBootMetaReader(document), defaultVariant: "" });
   stripBootBrokerProof(window.location, window.history);
   const locale = Locale.fromLanguageTag(descriptor.locks.locale || navigator.language).id as "en" | "de";
-  await mountWgpuBrowserHost(root, { catalog, descriptor, pluginRegistrySelection: descriptor.pluginVariant ? "variant" : "all", locale, mountId: "root", pageBindings: true });
+  const nativeText=document.getElementById("semio-native-catalog")?.textContent;
+  const nativeCatalog=readNativeCatalogV1(nativeText?JSON.parse(nativeText):emptyNativeCatalogV1());
+  await mountWgpuBrowserHost(root, { catalog, nativeCatalog, descriptor, pluginRegistrySelection: descriptor.pluginVariant ? "variant" : "all", locale, mountId: "root", pageBindings: true });
 } catch (error) {
   const detail = error instanceof Error ? error.message : String(error);
   wgpuReadinessBeacon(document.documentElement, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN).error();

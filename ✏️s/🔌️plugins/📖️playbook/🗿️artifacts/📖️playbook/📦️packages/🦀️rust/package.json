@@ -8,7 +8,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-playbook-document-contract": "bun nx run @semio-tech/playbook-playbook-rs:verify-playbook-document-contract"
+    "verify-playbook-document-contract": "bun repo run @semio-tech/playbook-playbook-rs:verify-playbook-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

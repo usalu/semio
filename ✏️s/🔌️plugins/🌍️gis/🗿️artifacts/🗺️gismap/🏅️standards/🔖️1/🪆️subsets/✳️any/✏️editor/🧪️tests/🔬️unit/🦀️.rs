@@ -431,7 +431,7 @@ async fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_tests).await;
-    assert!(Gis2dPlayApp::command_from_action("noSuchAction", None).is_err());
+    assert!(Gis2dPlayApp::command_from_action("noSuchAction", None, None).is_err());
 }
 //#endregion 🔖️CommandSurface
 

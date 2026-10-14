@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/stdio-binary-plugin",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/**/*.rs",
@@ -9,7 +9,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

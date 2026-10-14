@@ -20,7 +20,7 @@ async fn editor_declares_the_main_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn missing_set_page_payload_is_rejected() {
-    assert!(<Pdf17EEditor as ArtifactEditor>::command_from_action("set-page", None).is_err());
+    assert!(<Pdf17EEditor as ArtifactEditor>::command_from_action("set-page", None, None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -31,7 +31,7 @@ async fn explicit_nonzero_page_payload_is_preserved() {
         ("revision".into(), semio_framework_value::DslValue::String("0123456789abcdef".into())),
         ("text".into(), semio_framework_value::DslValue::String("replacement".into())),
     ]);
-    let command = <Pdf17EEditor as ArtifactEditor>::command_from_action("set-page", Some(&args)).expect("typed payload");
+    let command = <Pdf17EEditor as ArtifactEditor>::command_from_action("set-page", Some((args).clone()), None).expect("typed payload");
     assert!(matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EEditorCommand::SetPage { page: 3, item: 0, revision, text }) if revision == "0123456789abcdef" && text == "replacement"));
 }
 

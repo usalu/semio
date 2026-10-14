@@ -44,6 +44,10 @@ impl UiTypedRetirementCursor {
         Ok(step)
     }
 
+    pub(crate) fn original_release_demand<T:UiTypedRetire>(&self,root:&T)->Result<usize,&'static str>{
+        if self.complete {Ok(0)} else {root.original_release_demand(&self.path,&self.value)}
+    }
+
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.complete && self.value.is_none()
     }
@@ -52,6 +56,7 @@ impl UiTypedRetirementCursor {
 pub(crate) trait UiTypedRetire {
     const DEPTH: usize = 0;
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str>;
+    fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Err("typed source lacks its native allocation release declaration") }
 }
 
 fn done() -> UiValueRetirementStep {
@@ -76,12 +81,17 @@ macro_rules! typed_fields {
     ($type:ty {}) => {
         impl UiTypedRetire for $type {
             const DEPTH: usize = 1;
+            fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }
             fn retire_typed(&mut self, path: &mut [u8], _: &mut Option<UiValueRetirement>, _: usize) -> Result<UiValueRetirementStep, &'static str> { split(path)?; Ok(done()) }
         }
     };
     ($type:ty { $($index:literal => $field:tt : $field_type:ty),* $(,)? }) => {
         impl UiTypedRetire for $type {
             const DEPTH: usize = 1 + maximum_depth(&[$(<$field_type as UiTypedRetire>::DEPTH),*]);
+            fn original_release_demand(&self, path: &[u8], value: &Option<UiValueRetirement>) -> Result<usize, &'static str> {
+                let (index,path)=path.split_first().ok_or("typed original retirement exceeds its schema depth")?;
+                match *index { $($index => self.$field.original_release_demand(path,value),)* _ => Ok(0) }
+            }
             fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
                 let Self { $($field: _),* } = self;
                 let (index, path) = split(path)?;
@@ -98,6 +108,7 @@ macro_rules! typed_fields {
 macro_rules! typed_scalar {
     ($($type:ty),* $(,)?) => {$(
         impl UiTypedRetire for $type {
+            fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { assert_copy::<Self>(); Ok(0) }
             fn retire_typed(&mut self, _: &mut [u8], _: &mut Option<UiValueRetirement>, _: usize) -> Result<UiValueRetirementStep, &'static str> { assert_copy::<Self>(); Ok(done()) }
         }
     )*};
@@ -153,6 +164,7 @@ typed_scalar!(
 );
 
 impl UiTypedRetire for UiText {
+    fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }
     fn retire_typed(&mut self, _: &mut [u8], _: &mut Option<UiValueRetirement>, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let bytes = self.len().min(maximum_bytes);
         self.len -= bytes as u16;
@@ -161,6 +173,7 @@ impl UiTypedRetire for UiText {
 }
 
 impl UiTypedRetire for UiFixedBytes {
+    fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(if self.len==0 {self.bytes.len()} else {0}) }
     fn retire_typed(&mut self, _: &mut [u8], _: &mut Option<UiValueRetirement>, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         if self.len != 0 {
             let bytes = self.len().min(maximum_bytes);
@@ -174,6 +187,7 @@ impl UiTypedRetire for UiFixedBytes {
 }
 
 impl UiTypedRetire for UiValue {
+    fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }
     fn retire_typed(&mut self, _: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         if value.is_none() {
             *value = Some(UiValueRetirement::new(std::mem::replace(self, UiValue::Null)));
@@ -188,12 +202,18 @@ impl UiTypedRetire for UiValue {
 }
 
 impl UiTypedRetire for UiMap {
+    fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         UiValue::Map(std::mem::take(self)).retire_typed(path, value, bytes)
     }
 }
 
 impl<T: UiTypedRetire> UiTypedRetire for Option<T> {
+    fn original_release_demand(&self, path: &[u8], value: &Option<UiValueRetirement>) -> Result<usize, &'static str> {
+        let (index,path)=path.split_first().ok_or("typed original option exceeds its schema depth")?;
+        if *index==1 {return Ok(0)}
+        self.as_ref().map_or(Ok(0),|field|field.original_release_demand(path,value))
+    }
     const DEPTH: usize = 1 + T::DEPTH;
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let (index, path) = split(path)?;
@@ -213,6 +233,10 @@ impl<T: UiTypedRetire> UiTypedRetire for Option<T> {
 }
 
 impl<A: UiTypedRetire, B: UiTypedRetire> UiTypedRetire for (A, B) {
+    fn original_release_demand(&self, path: &[u8], value: &Option<UiValueRetirement>) -> Result<usize, &'static str> {
+        let (index,path)=path.split_first().ok_or("typed original pair exceeds its schema depth")?;
+        match *index {0=>self.0.original_release_demand(path,value),1=>self.1.original_release_demand(path,value),_=>Ok(0)}
+    }
     const DEPTH: usize = 1 + maximum_depth(&[A::DEPTH, B::DEPTH]);
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let (index, path) = split(path)?;
@@ -228,6 +252,11 @@ impl<A: UiTypedRetire, B: UiTypedRetire> UiTypedRetire for (A, B) {
 /// (text, bytes, values), never backing: a page release is one item of O(1) work, reported as an item with zero
 /// bytes exactly like [`UiFixedBytes`]'s emptied buffer, so no grant is too narrow to finish a list.
 impl<T: UiTypedRetire, const N: usize> UiTypedRetire for UiFixedList<T, N> {
+    fn original_release_demand(&self, path: &[u8], value: &Option<UiValueRetirement>) -> Result<usize, &'static str> {
+        let (index,path)=path.split_first().ok_or("typed original list exceeds its schema depth")?;
+        if *index==1 {return Ok(0)}
+        self.len().checked_sub(1).and_then(|index|self.get(index)).map_or_else(||self.next_release_allocation_bytes().map_err(|error|error.reason),|field|field.original_release_demand(path,value))
+    }
     const DEPTH: usize = 1 + T::DEPTH;
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let (index, path) = split(path)?;
@@ -252,6 +281,7 @@ impl<T: UiTypedRetire, const N: usize> UiTypedRetire for UiFixedList<T, N> {
 }
 
 impl<V: UiTypedRetire> UiTypedRetire for UiFixedMap<V> {
+    fn original_release_demand(&self,path:&[u8],value:&Option<UiValueRetirement>)->Result<usize,&'static str>{self.entries.original_release_demand(path,value)}
     const DEPTH: usize = <UiFixedList<(UiText, V)> as UiTypedRetire>::DEPTH;
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         self.entries.retire_typed(path, value, bytes)
@@ -261,11 +291,13 @@ impl<V: UiTypedRetire> UiTypedRetire for UiFixedMap<V> {
 
 //#region 🧬️TypedFields
 impl UiTypedRetire for Label {
+    fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         self.0.retire_typed(path, value, bytes)
     }
 }
 impl UiTypedRetire for SurfaceId {
+    fn original_release_demand(&self, _: &[u8], _: &Option<UiValueRetirement>) -> Result<usize, &'static str> { Ok(0) }
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         self.0.retire_typed(path, value, bytes)
     }
@@ -298,6 +330,31 @@ impl UiTypedRetire for Component {
         TableProps::DEPTH,
         TableRowProps::DEPTH,
     ]);
+    fn original_release_demand(&self,path:&[u8],value:&Option<UiValueRetirement>)->Result<usize,&'static str>{
+        match self {
+            Self::Container(field) => field.original_release_demand(path, value),
+            Self::Text(field) => field.original_release_demand(path, value),
+            Self::Button(field) => field.original_release_demand(path, value),
+            Self::Separator(field) => field.original_release_demand(path, value),
+            Self::Input(field) => field.original_release_demand(path, value),
+            Self::Select(field) => field.original_release_demand(path, value),
+            Self::Toggle(field) => field.original_release_demand(path, value),
+            Self::KeyValueList(field) => field.original_release_demand(path, value),
+            Self::Slider(field) => field.original_release_demand(path, value),
+            Self::NumberStepper(field) => field.original_release_demand(path, value),
+            Self::Ring(field) => field.original_release_demand(path, value),
+            Self::IconSelect(field) => field.original_release_demand(path, value),
+            Self::Progress(field) => field.original_release_demand(path, value),
+            Self::Tree(field) => field.original_release_demand(path, value),
+            Self::TreeSection(field) => field.original_release_demand(path, value),
+            Self::TreeItem(field) => field.original_release_demand(path, value),
+            Self::Image(field) => field.original_release_demand(path, value),
+            Self::Surface(field) => field.original_release_demand(path, value),
+            Self::Extension(field) => field.original_release_demand(path, value),
+            Self::Table(field) => field.original_release_demand(path, value),
+            Self::TableRow(field) => field.original_release_demand(path, value),
+        }
+    }
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         match self {
             Self::Container(field) => field.retire_typed(path, value, bytes),
@@ -327,6 +384,16 @@ impl UiTypedRetire for Component {
 
 impl UiTypedRetire for LayoutSpec {
     const DEPTH: usize = maximum_depth(&[LeafLayout::DEPTH, StackLayout::DEPTH, GridLayout::DEPTH, OverlayLayout::DEPTH, ScrollLayout::DEPTH, AbsoluteLayout::DEPTH]);
+    fn original_release_demand(&self,path:&[u8],value:&Option<UiValueRetirement>)->Result<usize,&'static str>{
+        match self {
+            Self::Leaf(field) => field.original_release_demand(path, value),
+            Self::Stack(field) => field.original_release_demand(path, value),
+            Self::Grid(field) => field.original_release_demand(path, value),
+            Self::Overlay(field) => field.original_release_demand(path, value),
+            Self::Scroll(field) => field.original_release_demand(path, value),
+            Self::Absolute(field) => field.original_release_demand(path, value),
+        }
+    }
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         match self {
             Self::Leaf(field) => field.retire_typed(path, value, bytes),

@@ -2,7 +2,7 @@
   "name": "@semio-tech/pixels",
   "targets": {
     "test-typescript": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🔲️pixels",
         "command": "bun ./📜️script.ts test typescript",

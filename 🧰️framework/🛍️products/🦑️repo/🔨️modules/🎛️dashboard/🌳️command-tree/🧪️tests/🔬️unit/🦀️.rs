@@ -17,9 +17,9 @@ fn leaves(node: &CommandNode, found: &mut Vec<Leaf>) {
 #[test]
 fn playground_renderers_and_examples_select_actual_nx_targets() {
     let root = temp_root("playgrounds");
-    fs::create_dir_all(crate::catalog::generated_dir(&root)).unwrap();
-    fs::write(crate::catalog::generated_dir(&root).join("🚀️playgrounds.json"), r#"[{"variant":"demo","pluginId":"plugin","cratePath":"plugin/rs","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
-    let registry = crate::inventory::discover(&root, &std::sync::atomic::AtomicBool::new(false));
+    fs::create_dir_all(root.join("catalog")).unwrap();
+    fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"demo","pluginId":"plugin","cratePath":"plugin/rs","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
+    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     let tree = tree(&registry, true);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🗣️launch-axes/🔣️.json")).unwrap();
     for renderer in fixture["renderers"].as_array().unwrap() {
@@ -36,7 +36,7 @@ fn playground_renderers_and_examples_select_actual_nx_targets() {
                     if example != "all" { parameters.push(("example".into(), example.into())); }
                     let launch = registry.resolve_with(&leaf.id, &Request::with_parameters(parameters), RunPolicy::default()).unwrap();
                     let process = &launch.processes[0];
-                    let mut args = vec!["nx".to_string(), "run".into(), format!("@semio-tech/framework-os-dev:{}", renderer["target"].as_str().unwrap())];
+                    let mut args = vec!["repo".to_string(), "run".into(), format!("@semio-tech/framework-os-dev:{}", renderer["target"].as_str().unwrap())];
                     if renderer["id"] == "wgpu-native" && example != "all" { args.extend(["--".into(), "--example".into(), example.into()]); }
                     assert_eq!(process.args, args);
                     let env = |key: &str| process.env.iter().find(|(name, _)| name == key).map(|(_, value)| value.as_str());
@@ -54,8 +54,8 @@ fn playground_renderers_and_examples_select_actual_nx_targets() {
 fn every_listed_command_is_a_leaf_of_the_tree_and_a_row_of_the_launcher_and_names_a_registry_command() {
     let root = temp_root("workspace");
     fs::write(root.join("📋️project.json"), r#"{"name":"workspace","targets":{"build":{},"test":{}}}"#).unwrap();
-    fs::write(root.join("package.json"), r#"{"scripts":{"nx":"bun bootstrap nx","test:quiz":"bun nx run quiz:test","dashboard":"bun nx run repo:run"}}"#).unwrap();
-    let registry = crate::inventory::discover(&root, &std::sync::atomic::AtomicBool::new(false));
+    fs::write(root.join("package.json"), r#"{"scripts":{"nx":"bun bootstrap nx","test:quiz":"bun repo run quiz:test","dashboard":"bun repo run repo:run"}}"#).unwrap();
+    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     let (mut in_tree, rows) = (Vec::new(), launcher(&registry));
     leaves(&tree(&registry, false), &mut in_tree);
     let listed: Vec<&str> = registry.entries().iter().filter(|entry| entry.listed).map(|entry| entry.id.as_str()).collect();
@@ -117,8 +117,8 @@ fn nx_inferred_targets_are_selectable_without_authored_project_rows() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
-    fs::create_dir_all(root.join(".nx/workspace-data")).unwrap();
-    fs::write(root.join(".nx/workspace-data/project-graph.json"), fixture["graph"].to_string()).unwrap();
+    fs::create_dir_all(root.join(".🧬semio/🦑️repo/⚡️cache/build")).unwrap();
+    fs::write(root.join(".🧬semio/🦑️repo/⚡️cache/build/graph.json"), fixture["graph"].to_string()).unwrap();
     let mut found = Vec::new();
     leaves(&discover(&root), &mut found);
     let mut targets: Vec<String> = found.into_iter().map(|leaf| leaf.id).filter(|id| !id.starts_with("repo:")).collect();
@@ -132,8 +132,8 @@ fn nx_inferred_targets_survive_an_in_progress_graph_publication() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred-publication");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
-    fs::create_dir_all(root.join(".nx/workspace-data")).unwrap();
-    let path = root.join(".nx/workspace-data/project-graph.json");
+    fs::create_dir_all(root.join(".🧬semio/🦑️repo/⚡️cache/build")).unwrap();
+    let path = root.join(".🧬semio/🦑️repo/⚡️cache/build/graph.json");
     fs::write(&path, "{").unwrap();
     let writer = std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(75));

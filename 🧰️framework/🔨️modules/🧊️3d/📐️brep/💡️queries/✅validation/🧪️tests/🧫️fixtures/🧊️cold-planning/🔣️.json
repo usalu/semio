@@ -172,5 +172,81 @@
       "code": "next-prev-mismatch",
       "message": "coedge 0's next/prev pointers are not symmetric with its ring neighbor"
     }
+  },
+  "retainedTopology": {
+    "itemsPerTurn": 1,
+    "bodyBytes": [
+      0,
+      1,
+      3,
+      64
+    ],
+    "cancelStops": [
+      0,
+      1,
+      3,
+      8,
+      25,
+      null
+    ],
+    "metadataCopyBytes": 0,
+    "textMinimumCopyBytes": "oneOriginalUtf8Scalar",
+    "terminalDropBytes": 0,
+    "missingPcurve": {
+      "entity": "coedge-0",
+      "code": "missing-pcurve",
+      "message": "coedge has no p-curve — every coedge must carry one for trim/same-parameter validation"
+    },
+    "tolerance": {
+      "entity": "vertex-0",
+      "code": "tolerance-containment-violated",
+      "message": "vertex-0's tolerance exceeds its containing edge-0's"
+    }
+  },
+  "retainedSameParameter": {
+    "itemsPerTurn": 1,
+    "bodyBytes": [
+      0,
+      1,
+      3,
+      64
+    ],
+    "cancelStops": [
+      0,
+      1,
+      3,
+      8,
+      25,
+      null
+    ],
+    "baseSamples": 17,
+    "maximumSamples": 129,
+    "maximumMidpoints": 64,
+    "sampleCopyBytes": 0,
+    "sortComparisonsPerEvent": 1,
+    "scratchBirth": "beforeOriginalSampleAppend",
+    "unsupportedSources": [
+      "NurbsSurface",
+      "NurbsCurve2",
+      "NurbsCurve3"
+    ],
+    "terminalDropBytes": 0,
+    "stock": {
+      "items": 100000,
+      "copy": 1000000,
+      "capacity": 4000000,
+      "release": 4000000,
+      "depth": 128
+    },
+    "policy": {
+      "items": 1,
+      "copy": 64,
+      "capacity": 65536,
+      "release": 65536,
+      "depth": 128
+    },
+    "fuel": 100000,
+    "clock": 1000,
+    "deadline": 1000000
   }
 }

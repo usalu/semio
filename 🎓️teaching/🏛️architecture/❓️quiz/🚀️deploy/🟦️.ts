@@ -958,13 +958,13 @@ export async function checkQuizDeployment(repoRoot: string, bundleRoot: string, 
       const drift = deploymentDrift(repoRoot);
       if (drift.length > 0) throw new Error(`the deployment drifted:\n- ${drift.join("\n- ")}`);
     },
-    "sources type-checked": () => runOwnedCommand("bun", ["nx", "run", `${PROJECT}:typecheck`], repoRoot, "architecture-quiz:typecheck"),
+    "sources type-checked": () => runOwnedCommand("bun", ["repo", "run", `${PROJECT}:typecheck`], repoRoot, "architecture-quiz:typecheck"),
     "catalog valid in the Rust core": () => checkQuizCatalog(repoRoot),
     "site built and verified as the CDN artifact": () => publishQuizSite(bundleRoot, build),
     "proctor image built": () => buildQuizImage(repoRoot, [...tagged, ...jobs]),
     "proctor image checked": () => checkQuizImage(repoRoot, tagged),
     "stack checked": () => checkQuizStack(tagged),
-    "end-to-end gate": () => runOwnedCommand("bun", ["nx", "run", `${PROJECT}:test-e2e`], repoRoot, "architecture-quiz:test-e2e"),
+    "end-to-end gate": () => runOwnedCommand("bun", ["repo", "run", `${PROJECT}:test-e2e`], repoRoot, "architecture-quiz:test-e2e"),
   };
   const steps = deployCheckSteps(targets);
   const { signal, release } = interruption();

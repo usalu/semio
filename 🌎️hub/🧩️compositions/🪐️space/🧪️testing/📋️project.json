@@ -4,7 +4,7 @@
   "projectType": "library",
   "tags": ["lang:typescript", "role:hub", "test-only"],
   "targets": {
-    "test-ownership": { "executor": "nx:run-commands", "cache": false, "options": { "command": "bun 📜️script.ts test-ownership", "cwd": "{projectRoot}", "forwardAllArgs": true } },
-    "test-native": { "executor": "nx:run-commands", "cache": false, "options": { "command": "bun 📜️script.ts test-native", "cwd": "{projectRoot}", "forwardAllArgs": true } }
+    "test-ownership": { "executor": "repo:script", "cache": false, "options": { "command": "bun 📜️script.ts test-ownership", "cwd": "{projectRoot}", "forwardAllArgs": true } },
+    "test-native": { "executor": "repo:script", "cache": false, "options": { "command": "bun 📜️script.ts test-native", "cwd": "{projectRoot}", "forwardAllArgs": true } }
   }
 }

@@ -1323,7 +1323,9 @@ impl ArtifactEditor for LayoutPlayApp {
     /// camelCase argument keys; every `🎮️commands/*` payload derives `FromValue` over its own
     /// snake_case field names, so this boundary folds the keys and decodes — the default trait impl
     /// refuses every app action outright, which left every panel/canvas verb dead in the shell.
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 
@@ -1528,9 +1530,14 @@ impl ArtifactEditor for LayoutPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         Self::render_body(body_key, doc, cfg, view_state, &blueprint::transient::current(transient), &LayoutInteractionSnapshot::from_interaction(interaction))
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_engagements_with_request_context(
         doc: &ArtifactView<'_, LayoutSnapshot>,

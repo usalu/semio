@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "os-hub-admin",
   "version": "0.1.0",
   "description": "hub · admin — operator SPA served at /admin (spaces, users, connections, documents, events)",
@@ -9,8 +9,8 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "build": "bun nx run os-hub-admin:build",
-    "test": "bun nx run os-hub-admin:test"
+    "build": "bun repo run os-hub-admin:build",
+    "test": "bun repo run os-hub-admin:test"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*",

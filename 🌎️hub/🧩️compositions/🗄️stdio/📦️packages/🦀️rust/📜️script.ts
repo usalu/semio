@@ -7,6 +7,8 @@ import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/�
 import { terminateOwnedChildTree } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🗄️ `@semio-tech/stdio-plugin` router: `bun ./📜️script.ts test`. */
 import { spawn } from "node:child_process";
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readSync, realpathSync, renameSync, rmSync, statSync, truncateSync, writeFileSync, writeSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,9 +19,11 @@ import { devToolingEnv, resolveWorkspaceBin, runCmd, runRepositoryExactCargoLaws
 import { runRepositoryCargoTests, runRepositoryTestCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import {prepareCargoWorkspaceInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {checkResourceLeaseControl} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
@@ -240,7 +244,7 @@ function atomicDescriptorPair(outDir: string, pack: Uint8Array, json: Uint8Array
 }
 
 async function webSha256(bytes: Uint8Array): Promise<string> {
-  return Buffer.from(await globalThis.crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+  return Buffer.from(await globalThis.crypto.subtle.digest("SHA-256", new Uint8Array(bytes))).toString("hex");
 }
 
 type WasmCoreStructure = { readonly definedFunctions: number; readonly codeBodies: number };
@@ -442,8 +446,8 @@ async function runCatalogRootContractTests(root: string, repoRoot: string): Prom
 
 class FlowRetainedDecodeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { default: assert } = await import("node:assert/strict");
-    const leb = await import("@webassemblyjs/leb128");
+    
+    const leb:{encodeU32(value:number):Uint8Array}=createRequire(import.meta.url)("@webassemblyjs/leb128");
     const base = join(this.repoRoot, ARTIFACT_OWNER, "🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot");
     const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
     assert.deepEqual(fixture.limits, { nodes: 256, edges: 512, paramsPerNode: 64, stringBytes: 4096, totalStringBytes: 1048576 });
@@ -652,7 +656,7 @@ class SubsetDirectoryWiringScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const [mode, artifact, subset] = segments;
     if ((mode !== "generate" && mode !== "check") || artifact !== "semio" || subset !== "mesh") throw new Error("subset-directory-wiring expects generate|check semio mesh");
-    const { default: assert } = await import("node:assert/strict");
+    
     const fixtureRoot = join(import.meta.dir, "../../🧪️tests/🧫️fixtures/🧭️wiring/🗂️subset-directory-wiring");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as SubsetDirectoryFixture;
     assert.equal(fixture.cases.length, 4);
@@ -708,7 +712,7 @@ function readScannedText(path: string): string | undefined {
 
 /** 🖊️ Checks codec ownership against an independent JSON Schema oracle and the framework source tree. */
 async function runDwgArtifactOwnership(root: string, repoRoot: string): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  
   const fixtureRoot = join(root, "../../🧪️tests/🧫️fixtures/🖊️dwg-artifact-ownership");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { path: string; allowed: boolean }[]; forbiddenFrameworkPatterns: string[] };
   const validate = await compileStdioScopeExport(join(root, "../.."), "StdioDwgArtifactOwnership");
@@ -764,7 +768,7 @@ class HomeIoSurfaceScript extends BundleScript {
     await runDwgArtifactOwnership(this.root, this.repoRoot);
     const mode = segments[0] ?? "source";
     if (mode !== "source" && mode !== "native") throw new Error("home-io-surface expects source|native");
-    const { default: assert } = await import("node:assert/strict");
+    
     const fixtureRoot = join(this.root, "../../🧪️tests/🧫️fixtures/🏠️home-io-surface");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as HomeIoSurfaceFixture;
     const manifest = readFileSync(join(this.root, "Cargo.toml"), "utf8");
@@ -775,14 +779,14 @@ class HomeIoSurfaceScript extends BundleScript {
     assert(!firstParty.features, "the Stdio library declares features, so it compiles once per consumer feature set");
     assert(!Object.hasOwn(firstParty.lib, "crate-type"), "the Stdio library declares crate types; a library is rlib-only and its cdylib is the component crate");
     const artifactPrefix = "semio-s-artifact-stdio-";
-    const componentSource = readFileSync(join(this.root, COMPONENT_MANIFEST), "utf8"), component = Bun.TOML.parse(componentSource) as any;
+    const componentSource = readFileSync(join(this.root, COMPONENT_MANIFEST), "utf8"), component = Bun.TOML.parse(componentSource) as typeof firstParty;
     assert.deepEqual(component, parseToml(componentSource) as unknown);
     assert.equal(component.package.name, fixture.componentPackage);
     assert.deepEqual(component.lib["crate-type"], ["cdylib"]);
     assert.deepEqual(Object.keys(component.dependencies).sort(), [fixture.libraryPackage, "semio-framework-plugin"].sort(), "the Stdio component crate links anything but its library and the plugin entry macro");
     assert(!component.features, "the Stdio component crate declares features");
     assert.match(readFileSync(join(this.root, "../../🧩️component/🦀️.rs"), "utf8"), /^semio_framework_plugin::plugin_exports!\(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, semio_hub_stdio::plugin, semio_hub_stdio::plugin::StdioApps\);$/mu);
-    const selected = [...fixture.directArtifacts, ...fixture.sharedCodecs].sort();
+    const selected:readonly string[] = [...fixture.directArtifacts, ...fixture.sharedCodecs].sort();
     const catalogManifestPath = join(this.root, "../../🔌️plugin/📇️catalog/📦️packages/🦀️rust/Cargo.toml");
     const catalogSource = readFileSync(catalogManifestPath, "utf8"), catalogCargo = Bun.TOML.parse(catalogSource) as any;
     assert.deepEqual(catalogCargo, parseToml(catalogSource) as any);
@@ -978,7 +982,7 @@ class CompositionScript extends BundleScript {
     process.on("SIGINT", interrupt);
     process.on("SIGTERM", interrupt);
     const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
-    const env = devToolingEnv({ NX_WORKSPACE_ROOT: snapshot, CARGO_TARGET_DIR: join(snapshot, "target"), CARGO_BUILD_BUILD_DIR: join(snapshot, "target", "intermediate") });
+    const env = devToolingEnv({ SEMIO_WORKSPACE_ROOT: snapshot, CARGO_TARGET_DIR: join(snapshot, "target"), CARGO_BUILD_BUILD_DIR: join(snapshot, "target", "intermediate") });
     try {
       await runControlled("cargo", [tests ? "test" : "check", "--offline", "--message-format=json-render-diagnostics", "--manifest-path", manifest, "-p", PACKAGE_NAME, ...(tests ? ["--tests", "--no-run"] : ["--lib"])], snapshot, env, control);
       compiled = true;
@@ -1012,50 +1016,43 @@ class TestScript extends BundleScript {
 /** 🧩️ Links every stdio package's own component (stdio and each `🧩️extensions` family) with the release component
  * profile, extracts its core module with JCO and validates it against the native WebAssembly parser and the component
  * function ceiling — the measured bound each family's bounded fleet must stay under. Each package's link runs within its
- * own build budget: one release link is the unit a deadline bounds. */
+ * original finite caller budget, retaining compiler admission until its private artifact capture finishes. */
 class EditorComponentCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await testEditorCatalogContract(this.root);
     const outputRoot = segments[0] ?? join(cargoTargetDirectory(this.repoRoot), "stdio-editor-components");
     if (segments.length > 1 || !isAbsolute(outputRoot)) throw new Error("editor-component-check accepts one absolute output directory");
     mkdirSync(outputRoot, { recursive: true });
-    let interrupted = false;
-    const interrupt = (): void => { interrupted = true; };
-    process.on("SIGINT", interrupt);
-    process.on("SIGTERM", interrupt);
-    const env = devToolingEnv({});
+    const admission=scriptCompilerAdmissionControlV1(this.invocation,"stdio:editor-components",buildBudgetMs()||CATALOG_DEADLINE_MS);
+    const control:CatalogControl={cancelled:()=>admission.signal.aborted,remainingMs:()=>checkResourceLeaseControl(admission)??0};
     const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
     if (!jco) throw new Error("missing workspace component tooling");
-    try {
-      const packages = stdioPackageManifests(resolve(this.root, "../.."));
-      for (const [index, { id, path, manifest }] of packages.entries()) {
-        const started = Date.now();
-        const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
-        const lib = manifest.package.name.replaceAll("-", "_");
-        const args = ["build", "--manifest-path", path, "-p", manifest.package.name, "--profile", COMPONENT_PROFILE, "--lib", "--target", "wasm32-wasip2"];
-        const controller = new AbortController();
-        const observe = (): void => { if (control.cancelled() || control.remainingMs() <= 0) controller.abort(); };
-        observe();
-        const watch = setInterval(observe, 100);
-        let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
+    const packages = stdioPackageManifests(resolve(this.root, "../.."));
+    for (const [index, { id, path, manifest }] of packages.entries()) {
+      assertControlled(control);
+      const lib = manifest.package.name.replaceAll("-", "_"),stage=mkdtempSync(join(outputRoot,".stdio-editor-")),capture=join(stage,"raw.wasm");
+      const env=devToolingEnv({CARGO_TARGET_DIR:join(stage,"target"),CARGO_BUILD_BUILD_DIR:cargoBuildDirectory(this.repoRoot)});
+      const args = ["build", "--manifest-path", path, "-p", manifest.package.name, "--profile", COMPONENT_PROFILE, "--lib", "--target", "wasm32-wasip2"];
+      let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
+      try {
         try {
-          lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(this.repoRoot, "agents", "resource-leases"), buildDirectory: cargoBuildDirectory(this.repoRoot, env), args, signal: controller.signal });
-          await runControlled("cargo", args, this.repoRoot, env, control);
-        } finally {
-          try { lease?.release(); } finally { clearInterval(watch); }
-        }
+          lease = await acquireCargoBuildLeaseV1({directory:join(this.repoRoot,".cache","framework","leases"),buildDirectory:cargoBuildDirectory(this.repoRoot,env),targetDirectory:cargoTargetDirectory(this.repoRoot,env),args,signal:admission.signal,control:admission});
+          await runRepositoryCommand(this.invocation,"cargo",args,this.repoRoot,"stdio:editor-component-link",{version:1,maximumElapsedMilliseconds:compilerAdmissionBudgetV1(admission),output:{maximumBytes:67108864,maximumLines:65536}},{env});
+          assertControlled(control);
+          await admission.publish({resource:"stdio:editor-component-capture",mode:"shared",elapsedMs:0});
+          await admission.yieldContinuation();
+          copyCatalogArtifact(join(cargoTargetDirectory(this.repoRoot,env),"wasm32-wasip2",COMPONENT_PROFILE,`${lib}.wasm`),capture,"original compiler component",control);
+          assertControlled(control);
+        } finally {lease?.release();lease=undefined;}
         const out = join(outputRoot, id);
         mkdirSync(out, { recursive: true });
         const release = join(out, `${lib}.wasm`);
-        await prepareReleaseComponent(join(cargoTargetDirectory(this.repoRoot, env), "wasm32-wasip2", COMPONENT_PROFILE, `${lib}.wasm`), release, this.repoRoot, env, control);
+        await prepareReleaseComponent(capture, release, this.repoRoot, env, control);
         await runControlled("node", [jco, "transpile", release, "-o", out, "--name", lib, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
         const core = readFileSync(join(out, `${lib}.core.wasm`));
         const structure = assertComponentizableCore(core);
         console.log(`🧩️ ${index + 1}/${packages.length} ${id} component validated: ${JSON.stringify({ ...structure, coreBytes: core.byteLength })}`);
-      }
-    } finally {
-      process.off("SIGINT", interrupt);
-      process.off("SIGTERM", interrupt);
+      } finally {rmSync(stage,{recursive:true,force:true});}
     }
   }
 }
@@ -1130,7 +1127,7 @@ class CatalogRootScript extends BundleScript {
       const packageId = componentPackageId(join(this.root, COMPONENT_MANIFEST));
       const target = componentStageTargetV1(this.repoRoot, join(this.root, COMPONENT_MANIFEST));
       const deliverable = componentDeliverableV1(target.crateRoot, target.packageName, SHIPPED_COMPONENT_PROFILE);
-      const fix = "run bun nx run workspace:release, then bun nx run workspace:components describe stdio";
+      const fix = "run bun repo run workspace:release, then bun repo run workspace:components describe stdio";
       if (!existsSync(deliverable.wasm) || !existsSync(deliverable.receipt)) throw new Error(`stdio catalog-root stages the shipped component and its receipt from ${relative(this.repoRoot, deliverable.directory)}; ${fix}`);
       const committedPack = join(target.ownerRoot, DESCRIPTOR_PACK);
       const findings = componentReceiptFindingsV1(readComponentReceiptV1(deliverable.receipt), { pluginId: PLUGIN_ID, packageId, profile: SHIPPED_COMPONENT_PROFILE }, readFileSync(deliverable.wasm), readFileSync(committedPack));
@@ -1155,14 +1152,14 @@ class CatalogRootScript extends BundleScript {
       assertControlled(control);
       renameSync(stageRoot, rowRoot);
       rowPublished = true;
-      await runControlled("bun", ["nx", "run", "@semio-tech/plugin-registry:generate"], this.repoRoot, devToolingEnv(), control);
+      await runControlled("bun", ["repo", "run", "@semio-tech/plugin-registry:generate"], this.repoRoot, devToolingEnv(), control);
       const audit = auditPluginCatalogSources(this.repoRoot, { cancelled: control.cancelled });
       const stdioIssues = audit.issues.filter((issue) => issue.pluginId === PLUGIN_ID);
       if (stdioIssues.length > 0) throw new Error(`stdio source audit failed: ${stdioIssues.map((issue) => issue.diagnostic).join("; ")}`);
       const source = audit.sources.find(({ entry }) => entry.pluginId === PLUGIN_ID);
       if (!source) throw new Error("stdio strict descriptor source was not discovered");
       if (source.entry.packageName !== COMPONENT_PACKAGE || source.entry.wasmOut !== WASM_OUT) throw new Error("stdio source identity is not bijective with Cargo component identity");
-      await runControlled("bun", ["nx", "run", "@semio-tech/plugin-registry:check-generated"], this.repoRoot, devToolingEnv(), control);
+      await runControlled("bun", ["repo", "run", "@semio-tech/plugin-registry:check-generated"], this.repoRoot, devToolingEnv(), control);
       if (source.descriptor.packageId !== packageId) throw new Error("stdio descriptor packageId does not match the Cargo component contract");
       publishCatalogCommitMarker(rowRoot, createFreshCatalogCommitMarker(source, buildRoot, { cancelled: control.cancelled }), CATALOG_COMMIT_MARKER_FILENAME);
       const strictReceipt = createFreshCatalogBuildVerifier(this.repoRoot, buildRoot).verify(source.entry, { cancelled: control.cancelled });
@@ -1200,7 +1197,7 @@ class NativeCodecProjectionScript extends BundleScript {
         const receipts: NativeCodecPublicationReceiptV1[] = [];
         console.log(`[DEBUG] native-codec-projection proving current ${artifact} compiled carrier and live codec`);
         const ownerScript=resolve(this.repoRoot,dirname(authored.definition_path),"📦️packages/🦀️rust/📜️script.ts");
-        await runRepositoryCommand(this.invocation,process.execPath,["nx", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--excludeTaskDependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"],this.repoRoot,"native-codec-publication",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); }});
+        await runRepositoryCommand(this.invocation,process.execPath,["repo", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--exclude-dependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"],this.repoRoot,"native-codec-publication",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); }});
         if (control.signal.aborted || receipts.length !== 1) throw new Error("native-codec-projection requires one successful current native receipt");
         const receipt = receipts[0];
         if (receipt.factoryId !== authored.factory_id) throw new Error("native-codec-projection native factory disagrees with its owner");
@@ -1258,7 +1255,7 @@ class SnapshotSqliteTestScript extends BundleScript {
     if (segments[0] === "catalog" || segments[0] === "catalog-contract") {
       const directory = resolve(this.root, "../../🧪️tests/🧫️fixtures/✏️editor-catalog/🪶️sqlite");
       const law = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
-      const { default: assert } = await import("node:assert/strict");
+      
       assert.deepEqual(law, { format: 1, schemaVersion: 1, minimumDomainTables: 1, integrity: [{ integrity_check: "ok" }], foreignKeys: [], nativeEncodings: ["binary", "text"] });
       console.log("[DEBUG] Stdio catalog expected physical SQLite integrity and encoding examples validated");
       if (segments[0] === "catalog-contract") return;

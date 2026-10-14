@@ -1,7 +1,7 @@
 /**
  * 🗺️ Coverage of the command registry on the real monorepo (feature: ./🥒️.feature). The Rust registry
  * answers `semio commands --json --all` and `semio run <id> --dry-run`; the independent TypeScript oracle
- * (./🔮️oracle/🟦️.ts) reads the Nx project graph, the manifests, the playground catalog and the open tickets
+ * (./🔮️oracle/🟦️.ts) reads the build graph, the manifests, the playground catalog and the open tickets
  * on its own, and Ajv validates every declaration against the registry schema.
  *
  * Environment: `SEMIO_TEST_CLI` the binary; `SEMIO_COVERAGE_FULL=1` dry-runs every id (hours with a debug
@@ -15,7 +15,7 @@ import { dashboard, pool, repository, semio, type Run } from "../🧭️journeys
 import { Oracle, compare, runArguments, type Json, type Launch, type Selection } from "./🔮️oracle/🟦️.ts";
 
 type Entry = { id: string; kind: string; verb: string; label: string; listed: boolean; longRunning: boolean; source: string; parameters: { id: string; kind: string; required: boolean; origin: string; values: string[]; default?: string }[]; ready?: { port: number; path: string; printed?: boolean } };
-const sharing = JSON.parse(readFileSync(join(dashboard, "🧫️fixtures/🗺️coverage/🔣️.json"), "utf8")) as { portSharing: Record<string, string> };
+const sharing = JSON.parse(readFileSync(join(dashboard, "🧪️tests/🧫️fixtures/🗺️coverage/🔣️.json"), "utf8")) as { portSharing: Record<string, string> };
 const width = Number(process.env.SEMIO_COVERAGE_WIDTH ?? 6);
 const cwd = repository;
 const json = (run: Run) => JSON.parse(run.stdout);
@@ -26,7 +26,7 @@ let byId: Map<string, Entry>;
 let check: Run;
 
 beforeAll(async () => {
-  oracle = new Oracle(repository);
+  oracle = new Oracle(repository,process.env.SEMIO_PLUGIN_CATALOG);
   const listed = await semio(["commands", "--json", "--all", "--refresh"], { cwd, timeoutMs: 300_000 });
   if (listed.code !== 0) throw new Error(`semio commands --json --all exited ${listed.code}: ${listed.stderr}`);
   entries = JSON.parse(listed.stdout);
@@ -40,7 +40,7 @@ const dryRun = async (selection: Selection): Promise<{ run: Run; launch?: Launch
 };
 
 describe("the registry covers the whole monorepo", () => {
-  test("Every Nx target, playground variant, declaration and open ticket command is listed", () => {
+  test("Every build target, playground variant, declaration and open ticket command is listed", () => {
     const wanted = oracle.ids();
     const missing = [...wanted.keys()].filter((id) => !byId.has(id));
     expect(missing, `${missing.length} oracle ids are not listed:\n${missing.slice(0, 40).join("\n")}`).toEqual([]);
@@ -52,10 +52,10 @@ describe("the registry covers the whole monorepo", () => {
   });
 
   test("The published project graph has no errors and no fixture manifest is a project", () => {
-    const graph = JSON.parse(readFileSync(join(repository, ".nx/workspace-data/project-graph.json"), "utf8")) as { errors?: unknown[]; nodes: Record<string, { data: { root: string } }> };
+    const graph = JSON.parse(readFileSync(join(repository, ".🧬semio/🦑️repo/⚡️cache/build/graph.json"), "utf8")) as { errors?: unknown[]; projects: Record<string, { root: string }> };
     expect(graph.errors ?? [], `the graph carries ${(graph.errors ?? []).length} errors`).toEqual([]);
-    const fixtureRoots = Object.entries(graph.nodes).filter(([, node]) => node.data.root.split("/").some((part) => /^[^\p{L}\p{N}]*fixtures$/u.test(part))).map(([name]) => name);
-    expect(fixtureRoots, "fixture manifests became Nx projects (add them to .nxignore, and never name a fixture project like a real one)").toEqual([]);
+    const fixtureRoots = Object.entries(graph.projects).filter(([, node]) => node.root.split("/").some((part) => /^[^\p{L}\p{N}]*fixtures$/u.test(part))).map(([name]) => name);
+    expect(fixtureRoots, "fixture manifests became build projects (add them to .nxignore, and never name a fixture project like a real one)").toEqual([]);
     const names = new Map<string, number>();
     for (const project of oracle.projects.values()) if (project.manifest?.name) names.set(project.manifest.name, (names.get(project.manifest.name) ?? 0) + 1);
     expect([...names].filter(([, count]) => count > 1)).toEqual([]);
@@ -102,7 +102,7 @@ describe("the registry covers the whole monorepo", () => {
         for (const target of group.targets) if (![...oracle.projects.values()].some((candidate) => candidate.targets.has(target))) dangling.push(`group:${project.name}/${group.id} target ${target}`);
         for (const pattern of group.projects as string[]) if (!/[*!]/.test(pattern) && !oracle.projects.has(pattern)) dangling.push(`group:${project.name}/${group.id} project ${pattern}`);
       }
-      for (const name of Object.keys(project.manifest?.targets ?? {})) if (project.manifest?.targets[name].metadata?.semio?.dashboard && !project.targets.has(name)) dangling.push(`${project.name}:${name} declares a dashboard block but is no Nx target`);
+      for (const name of Object.keys(project.manifest?.targets ?? {})) if (project.manifest?.targets[name].metadata?.semio?.dashboard && !project.targets.has(name)) dangling.push(`${project.name}:${name} declares a dashboard block but is no build target`);
     }
     expect(dangling, dangling.slice(0, 30).join("\n")).toEqual([]);
   });
@@ -143,7 +143,7 @@ describe("the registry covers the whole monorepo", () => {
       const local: string[] = [];
       try { failures.push(...compare(id, oracle.resolve(selection), launch, local)); } catch (error) { failures.push(`${id}: oracle refused: ${(error as Error).message}`); }
       for (const note of local) notes.set(note.split(":")[0]!, (notes.get(note.split(":")[0]!) ?? 0) + 1);
-      const walk = (item: Launch): void => { item.requires.forEach(walk); for (const process of item.processes) if (process.args[0] === "nx" && process.args[1] === "run") targets.add(process.args[2]!); };
+      const walk = (item: Launch): void => { item.requires.forEach(walk); for (const process of item.processes) if (process.args[0] === "repo" && process.args[1] === "run") targets.add(process.args[2]!); };
       walk(launch);
     });
     const unknown = [...targets].filter((target) => { const first = target.indexOf(":"); const project = oracle.project(target.slice(0, first)); return !project || !project.targets.has(target.slice(first + 1).split(":")[0]!); });
@@ -152,7 +152,7 @@ describe("the registry covers the whole monorepo", () => {
     if (kinds.size) console.log(`[coverage] differences by kind ${JSON.stringify(Object.fromEntries([...kinds].sort((a, b) => b[1] - a[1]).slice(0, 15)))}`);
     console.log(`[coverage] dry-ran ${ids.length} of ${wanted.size} ids (${special.length} declared, ${ids.length - special.length} of ${plain.length} plain); accepted equivalences ${JSON.stringify(Object.fromEntries(notes))}`);
     const problems = [
-      ...(unknown.length ? [`${unknown.length} launches name an Nx target that is not in the project graph:\n${unknown.slice(0, 20).join("\n")}`] : []),
+      ...(unknown.length ? [`${unknown.length} launches name an build target that is not in the project graph:\n${unknown.slice(0, 20).join("\n")}`] : []),
       ...(failures.length ? [`${failures.length} of ${ids.length} dry runs differ:\n${failures.slice(0, 60).join("\n")}`] : []),
     ];
     expect(problems, problems.join("\n\n")).toEqual([]);

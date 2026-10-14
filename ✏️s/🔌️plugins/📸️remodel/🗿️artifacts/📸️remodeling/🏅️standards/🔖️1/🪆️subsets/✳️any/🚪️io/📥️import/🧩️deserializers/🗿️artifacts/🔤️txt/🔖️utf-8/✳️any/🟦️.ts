@@ -2,7 +2,7 @@
 
 import {REMODELING_SNAPSHOT_SPEC, kebabOf, type FieldSpec, type RecordSpec, type RemodelingSnapshot, type ValueSpec} from "../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
-import {binary32,binary64} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32,binary64} from "../../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 
 import {base64StandardDecode} from "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts";
 

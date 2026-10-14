@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/flow-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🌎️hub/🧩️compositions/🌊️flow/**/*.rs",
@@ -9,7 +9,7 @@
   },
   "targets": {
     "add-widget-retained-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts add-widget-retained-check",
@@ -18,7 +18,7 @@
       "outputs": []
     },
     "child-edit-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts child-edit-check",
@@ -27,7 +27,7 @@
       "outputs": []
     },
     "child-identity-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts child-identity-check",
@@ -36,7 +36,7 @@
       "outputs": []
     },
     "test-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source",
@@ -44,7 +44,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -55,7 +55,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -66,7 +66,7 @@
       ]
     },
     "graph-generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
@@ -86,7 +86,7 @@
       ]
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
@@ -95,7 +95,7 @@
       "outputs": []
     },
     "graph-wire-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         "graph-generate"

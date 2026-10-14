@@ -31,9 +31,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: wire } = await import("../../🔌️wire/🔣️.json");
     const { default: schema } = await import("../../🧬️schema/🔣️.json");
     const { default: fixture } = await import("../🧫️fixtures/🔣️.json");
-    const { default: pageSchema } = await import("../../../../../🎭️actor/📃️page/🧬️schema/🔣️.json");
-    const { default: lifetimeSchema } = await import("../../../../../🎭️actor/🚪️lifetime/🧬️schema/🔣️.json");
-    const { default: patchSchema } = await import("../../../../../🎭️actor/🚪️lifetime/🩹️patch/🧬️schema/🔣️.json");
+    const { actorBytePageSchema: pageSchema } = await import("../../../../../🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
+    const { actorInstanceLifecycleSchema: lifetimeSchema } = await import("../../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+    const { actorUiPatchReceiptSchema: patchSchema } = await import("../../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
     const { default: valueSchema } = await import("../../../../../🌱️value/🧬️schema/🔣️.json");
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(pageSchema).addSchema(lifetimeSchema).addSchema(patchSchema);

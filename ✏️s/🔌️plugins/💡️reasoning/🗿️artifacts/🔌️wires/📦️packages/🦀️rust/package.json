@@ -8,8 +8,8 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-wires-document-contract": "bun nx run @semio-tech/reasoning-wires-rs:verify-wires-document-contract",
-    "verify-wires-window-transient": "bun nx run @semio-tech/reasoning-wires-rs:verify-wires-window-transient"
+    "verify-wires-document-contract": "bun repo run @semio-tech/reasoning-wires-rs:verify-wires-document-contract",
+    "verify-wires-window-transient": "bun repo run @semio-tech/reasoning-wires-rs:verify-wires-window-transient"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

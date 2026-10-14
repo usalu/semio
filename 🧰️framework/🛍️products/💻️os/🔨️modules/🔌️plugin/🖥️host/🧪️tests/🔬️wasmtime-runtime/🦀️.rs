@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn compile_accepts_a_deterministic_component_and_caches_it() {
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) };
     let compiled = runtime.compile(&package, minimal_component_without_actor_world()).await.expect("a deterministic component compiles even though it does not export the `actor` world");
     assert!(compiled.component.is_some());
@@ -10,7 +10,7 @@ async fn compile_accepts_a_deterministic_component_and_caches_it() {
 
 #[semio_framework_async_macros::async_test]
 async fn instantiate_rejects_a_component_that_does_not_export_the_actor_world() {
-    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) };
     let compiled = runtime.compile(&package, minimal_component_without_actor_world()).await.expect("compiles as a component");
     let budget = Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };

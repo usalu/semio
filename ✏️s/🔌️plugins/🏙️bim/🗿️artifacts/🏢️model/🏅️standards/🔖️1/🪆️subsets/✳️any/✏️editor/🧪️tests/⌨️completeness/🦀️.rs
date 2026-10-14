@@ -312,7 +312,7 @@ async fn every_modify_utility_is_armed_by_its_own_key_in_the_plan_and_the_3d_win
         for window in [plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID] {
             assert!(for_window(window).iter().any(|utility| utility.as_str() == id), "{id} is armed in {window}");
         }
-        let command = BimModelApp::command_from_action(arm, None).unwrap_or_else(|error| panic!("{arm}: {}", error.message));
+        let command = BimModelApp::command_from_action(arm, None, None).unwrap_or_else(|error| panic!("{arm}: {}", error.message));
         assert!(BIM_TOOL_IDS.contains(&command.command_id()), "{arm} is a tool command");
         for labels in [&BimLabels::NATIVE_EN, &BimLabels::NATIVE_DE] {
             assert!((row.label)(labels).as_str().len() > 1, "{id} has a label");
@@ -347,7 +347,7 @@ async fn moving_a_wall_between_storeys_by_menu_key_or_drop_is_one_undoable_row_a
     assert_eq!(host(&app, "w-south"), hosted, "the openings follow their host");
     history_verb(&mut app, "undo").await;
     assert_eq!(app.snapshot().expect("snapshot").walls["w-south"].storey, "st-ground");
-    let dropped = BimModelApp::command_from_action("setField", Some(&semio_framework_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (outliner_panel::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_framework_plugin::DslValue::String(value.into())))))).expect("the drop decodes");
+    let dropped = BimModelApp::command_from_action("setField", Some((semio_framework_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (outliner_panel::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_framework_plugin::DslValue::String(value.into()))))).clone()), None).expect("the drop decodes");
     assert!(dispatch(&mut app, dropped).await.edited_document());
     assert_eq!(app.snapshot().expect("snapshot").walls["w-east"].storey, "st-first", "the row dropped on a storey stands on it");
     history_verb(&mut app, "undo").await;

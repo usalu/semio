@@ -305,7 +305,7 @@ test("unit graph compilation cancellation stops its metadata child and releases 
  expect((await runStub(root,{version:1,passes:[pass]},cargo)).staged).toEqual(["unit:wasm-release"]);console.log("[DEBUG] Cancelled unit graph metadata child stops and successor reacquires admission");
 },120000);
 
-test("profile mode selection follows only admitted compiler profiles",()=>{for(const row of fixture.profileModes)expect(profileBuildModeV1(row.profile)).toBe(row.mode);for(const profile of fixture.invalidProfiles)expect(()=>profileBuildModeV1(profile)).toThrow();});
+test("profile mode selection follows only admitted compiler profiles",()=>{for(const row of fixture.profileModes)expect(profileBuildModeV1(row.profile) as string).toBe(row.mode);for(const profile of fixture.invalidProfiles)expect(()=>profileBuildModeV1(profile as Parameters<typeof profileBuildModeV1>[0])).toThrow();});
 
 test("generation roots and fixed leaves are admitted as resolved absolute paths before effects", () => {
   const law = fixture.generationPathAdmission, root = mkdtempSync(join(artifacts, "p-"));
@@ -386,7 +386,7 @@ import { resourceLeasePathV1 } from ${JSON.stringify(resourceModule)};
 import { phaseCompilerAdmissionControlV1 } from ${JSON.stringify(new URL("../../../../🏗️build/🎟️capacity/🟦️.ts", import.meta.url).href)};
 import { spawnSync } from "node:child_process";
 const signal = AbortSignal.timeout(${vector.deadlineMs - 1000});
-const lease = await acquireCargoBuildLeaseV1({ directory: ${JSON.stringify(artifacts)}, buildDirectory: process.env.CARGO_BUILD_BUILD_DIR, args: ["--profile", ${JSON.stringify(vector.profile)}], signal, control: phaseCompilerAdmissionControlV1(signal, ${vector.deadlineMs - 1000}, () => undefined, () => new Promise(done => setImmediate(done))) });
+const lease = await acquireCargoBuildLeaseV1({ directory: ${JSON.stringify(artifacts)}, buildDirectory: process.env.CARGO_BUILD_BUILD_DIR, targetDirectory: process.env.CARGO_TARGET_DIR, args: ["--profile", ${JSON.stringify(vector.profile)}], signal, control: phaseCompilerAdmissionControlV1(signal, ${vector.deadlineMs - 1000}, () => undefined, () => new Promise(done => setImmediate(done))) });
 try {
  const oracle = spawnSync("python3", ["-c", "import sqlite3,sys;d=sqlite3.connect(sys.argv[1],timeout=0);\\ntry:d.execute('begin exclusive');print('unheld')\\nexcept sqlite3.OperationalError:print('held')", resourceLeasePathV1(${JSON.stringify(artifacts)}, lease.resource)], { encoding: "utf8" });
  if (oracle.status !== 0 || oracle.stdout.trim() !== ${JSON.stringify(vector.oracle)}) throw Error("Independent state lease oracle disagrees: " + oracle.stderr);

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fuel",
+    "maximumElapsedMicroseconds",
+    "grant"
+  ],
+  "properties": {
+    "fuel": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumElapsedMicroseconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "initiatingEventSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constructionClock",
+        "firstEventClock",
+        "secondEventClock",
+        "birthBeforeEvent",
+        "replacementWhileBorrowed",
+        "policyDurationChanged",
+        "sameStockRefill"
+      ],
+      "properties": {
+        "constructionClock": {
+          "const": 1000
+        },
+        "firstEventClock": {
+          "const": 10000
+        },
+        "secondEventClock": {
+          "const": 20000
+        },
+        "birthBeforeEvent": {
+          "const": 0
+        },
+        "replacementWhileBorrowed": {
+          "const": false
+        },
+        "policyDurationChanged": {
+          "const": false
+        },
+        "sameStockRefill": {
+          "const": false
+        }
+      }
+    }
+  }
+}

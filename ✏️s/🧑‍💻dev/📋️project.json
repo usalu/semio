@@ -8,7 +8,7 @@
   ],
   "targets": {
     "composition-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts composition-check",
@@ -17,7 +17,7 @@
       }
     },
     "source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts source-check",
@@ -26,7 +26,7 @@
       }
     },
     "catalog-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts catalog-check",
@@ -34,8 +34,17 @@
         "forwardAllArgs": true
       }
     },
+    "jack-graph-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts jack-graph-check",
+        "cwd": "✏️s/🧑‍💻dev",
+        "forwardAllArgs": true
+      }
+    },
     "generate-playground-session": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [
         "{workspaceRoot}/✏️s/🧑‍💻dev/🤖️generated/🎮️playground-session/🟦️.ts"
@@ -46,7 +55,7 @@
       }
     },
     "check-playground-session": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -55,12 +64,55 @@
       }
     },
     "preview-playground-session": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
         "cwd": "✏️s/🧑‍💻dev",
         "command": "bun ./📜️script.ts playground-session preview"
+      }
+    },
+    "verify-catalog": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts catalog-publication verify"
+      }
+    },
+    "test-catalog-publication": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts catalog-publication-test"
+      }
+    },
+    "generate": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts catalog-publication generate"
+      },
+      "outputs": [
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"
+      ]
+    },
+    "check-generated": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts catalog-publication check"
+      }
+    },
+    "preview-generated": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts catalog-publication preview"
       }
     }
   }

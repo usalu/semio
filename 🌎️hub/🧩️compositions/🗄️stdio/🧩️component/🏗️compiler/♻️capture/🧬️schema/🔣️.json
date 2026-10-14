@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "profile",
+    "original",
+    "replacement",
+    "leaseSuffix",
+    "phaseOrder",
+    "denials"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "profile": {
+      "const": "wasm-release"
+    },
+    "original": {
+      "type": "string",
+      "pattern": "^[0-9a-f]+$"
+    },
+    "replacement": {
+      "type": "string",
+      "pattern": "^[0-9a-f]+$"
+    },
+    "leaseSuffix": {
+      "const": ".cache/framework/leases"
+    },
+    "phaseOrder": {
+      "const": [
+        "admit",
+        "link",
+        "capture",
+        "release",
+        "transform"
+      ]
+    },
+    "denials": {
+      "const": [
+        "cancelled",
+        "capture-refused"
+      ]
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/flow-extension-brep-rust",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/**/*.rs",
@@ -10,7 +10,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -18,7 +18,7 @@
       }
     },
     "package": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts package",
@@ -51,7 +51,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts canonical-architecture",
@@ -60,7 +60,7 @@
       "outputs": []
     },
     "test-mesh-oracle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",

@@ -1,0 +1,31 @@
+# Inactive Cargo Build Unit Maintenance
+
+The actual canonical Cargo build store was measured under the current `cache-prune` and exclusive Cargo store leases. The existing policy admits units unused for seven days, then reduces the build cache toward 80 GiB while preserving every unit accessed or modified within the two-day guard. The read-only preview identified 18,459 units, 186,973,633,101 logical bytes, and 1,549 eligible units totaling 11,082,271,999 bytes. All eligible units belonged to debug profiles, including the two Wasm target debug profiles. Recent units totaling 175,891,361,102 bytes remain protected by the guard.
+
+The first mutation attempt refused before deletion: an external Cargo process started after the process check and the actual `lsof +D` inspection observed its open compiler-store descriptors. The second attempt acquired the same exclusions, rescanned, observed no descriptors, and removed 1,397 eligible units totaling 7,277,366,447 logical bytes. It stopped immediately before the next unit when a new external Cargo process appeared. Both attempts released their leases. Neither attempt reports complete maintenance.
+
+Measured free space rose from 118 MiB to 9.4 GiB. Logical byte totals differ from physical reclaimed capacity on this filesystem. The original unit plans and actual failure/progress receipts remain under `🗑️generated/build-maintenance` and `build-maintenance-prune{1,2}.log`. No target deliverable, incremental session, SDK snapshot, input, provenance, or recent guarded unit was selected.
+
+The retained maintenance input is `build-maintenance/📜️script.ts`. It invokes the canonical asynchronous scanner, planner, deleter, original process control and shared store lease implementation; it copies no source. `headroom/📜️script.ts` and its project metadata expose actual Nx preview/prune routes, with both configurations and launch registrations. Existing cooperative cache tests supply the planner/deleter and independent filesystem oracles. This is operational use of those implementations, not a claim that the full build infrastructure has passed.
+
+The runtime refusal exposed an infrastructure limitation: external direct Cargo commands do not acquire the repository's SQLite maintenance lease. The maintenance input consequently checks physical compiler activity and open descriptors as well as repository leases. General target-store maintenance and fully bounded live cache retention remain unresolved.
+
+The native executor's actual Cargo probe subsequently established that exclusive Rust standard file locks and Python `fcntl.flock` both block live Cargo at its physical `.cargo-build-lock`, and block each other in both directions on this macOS host. The retained maintenance input now holds those physical profile locks after SQLite admission, using an owned interactive child under the original cancellation/deadline/progress ports. The actual asynchronous deleter retains the same original control. Descriptor inspection admits only those locked profile files and refuses other open paths. This temporary operational input is not a claim that cross-platform production maintenance has been qualified.
+
+`build-maintenance-physical3.log` rescanned 17,220 units totaling 181,099,772,029 bytes and found zero eligible units: all were inside the current guard. No deletion occurred. Its empty-plan handling unnecessarily attempted descriptor inspection and returned red; the input now returns a zero-byte terminal result before acquiring physical locks for an empty plan. Further shared-store headroom cannot be inferred from the earlier preview. Free space has continued to fluctuate during concurrent work, and the recent guarded footprint exceeds the configured 80 GiB budget.
+
+## Completed Owned Go Fixture Output Recovery
+
+At the next actual ENOSPC event the Nx agent could not create retention inputs. Four completed private Go fixture cache subdirectories were inspected (`g-gpGk0F/cache`, `g-B3WcXc/cache`, `g-7LTebV/cache`, `nv2/g-FQF4CD/cache`). All contained compiler output older than one hour; fresh lsof for each returned status1 with empty stdout/stderr. Only these cache output directories were removed:2,636files,268,132,672logicalbytes. Authored fixture sources, manifests, scripts and reports were retained. Actual df after deletion showed475MiB available; no assertion equates logical deletion with physical reclaim. This restores space for the guard implementation, not full-build headroom.
+
+Current storage inspection reports Nx toolkits6,030,708KiB logical across31images; Cargo target7,426,856KiB, separate canonical-architecture45,888,696KiB and sharedbuild197,281,248KiB. Existing shared-build policy finds no eligible old units. Nx namespace tooling is independently measured at17,339,972KiB logical; exact ownership and active references must be established before pruning. No shared Rust profile guard was lowered and no old preview replayed.
+# Additional Guarded Toolkit Retirement
+
+On 2026-10-14 at approximately 05:18 UTC the existing registered `tools-prune prototype` invocation completed in 14.5 seconds. It observed nine immutable SDK images and retained the current `d9bdfbb210c18abe49029a0360dcf60c03119abb17e1016062e3395848e2567c` and the newest four. The original activation/shared-use leases, fresh process/open-descriptor checks, immutable authorizer receipt, and no-follow bounded deletion remained in force. It retired exactly three inactive images and their exact default graph namespaces:
+
+- `567583b9faffe7ccf5763339c41bba55c6997d893cfaa5627334fd831c255901`: 15,223 entries.
+- `64abedf5a2b45ffc99101fda2d7971f5b039eaece3959765992b51e2f372bf3f`: 19,060 entries.
+- `a9f6b3bcb54ff9cf62bb3a08e9519790bdfda43d26e5b0c18188d920ae2c6b4c`: 15,208 entries.
+
+It again refused the old `12fc` image with a live physical reference at PID 26991, and `26cc` with a live reference at PID 92977. The latter open-file scan also conservatively returned a zero process identifier; the refusal was preserved rather than treated as permission. No live/current SDK, daemon, or compiler store was removed or reset. Actual filesystem available space changed from 1.3 GiB before the invocation to 3.3 GiB afterward; concurrent activity means this is an observed headroom change, not a measured exclusive attribution of all freed blocks.
+

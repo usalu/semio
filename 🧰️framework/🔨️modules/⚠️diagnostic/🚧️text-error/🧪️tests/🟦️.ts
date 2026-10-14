@@ -3,7 +3,7 @@ import { test } from "bun:test";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv/dist/2020.js";
 import { TextError } from "../🟦️.ts";
-import { ValueError, type ValueRefusalKind } from "../../../🌱️value/⚠️refusal/🟦️.ts";
+import { ValueError, type ValueRefusalKind } from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import diagnosticSchema from "../../🧬️schema/🎛️controlled/🔣️.json" with { type: "json" };
 import valueSchema from "../../../🌱️value/⚠️refusal/🧬️schema/🔣️.json" with { type: "json" };

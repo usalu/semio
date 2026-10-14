@@ -1,6 +1,6 @@
 //! 🎮️ The canonical command registry: every runnable thing of the workspace is one entry with an
 //! identity, a verb, a label, the parameters it accepts and the launch it resolves to. Entries come
-//! from Nx targets, the playground catalog, the `metadata.semio.dashboard` declarations of project
+//! from build targets, the playground catalog, the `metadata.semio.dashboard` declarations of project
 //! manifests, the `🎮️commands.json` of open tickets and the repo domain. Nothing else is a command.
 //!
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json
@@ -176,7 +176,7 @@ fn is_flag(text: &str) -> bool { let name = text.strip_prefix("--").or_else(|| t
 fn is_value_flag(text: &str) -> bool { let name = text.strip_suffix('=').unwrap_or(text); is_flag(name) && name.trim_start_matches('-').bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-')) }
 fn is_reference(text: &str) -> bool { text.split_once(':').is_some_and(|(head, rest)| !head.is_empty() && !rest.is_empty() && !text.contains(char::is_whitespace) && !["compound", "group"].contains(&head) && !(head == "repo" && is_action_key(rest))) }
 
-/// 🌟️ Whether a project name matches an Nx project pattern, where `*` stands for any run of characters.
+/// 🌟️ Whether a project name matches an build project pattern, where `*` stands for any run of characters.
 fn glob(pattern: &str, name: &str) -> bool {
     match pattern.split_once('*') {
         None => pattern == name,
@@ -186,7 +186,7 @@ fn glob(pattern: &str, name: &str) -> bool {
 fn is_relative(text: &str) -> bool { !text.starts_with(['/', '~', '\\']) && !text.contains(['\\', '\0']) && !(text.len() > 1 && text.as_bytes()[1] == b':' && text.as_bytes()[0].is_ascii_alphabetic()) && text.split('/').all(|part| part != "..") }
 
 /// 🚫️ The runner variables the dashboard owns; a declaration never stores them.
-pub const NOISE_ENV: &[&str] = &["NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"];
+pub const NOISE_ENV: &[&str] = &["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "SEMIO_BUILD_DYNAMIC_OUTPUT", "NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"];
 const ABSOLUTE_ROOTS: &[&str] = &["Users", "home", "root", "private", "tmp", "var", "opt", "usr", "etc", "mnt", "workspaces", "Volumes"];
 
 fn is_absolute_literal(text: &str) -> bool {
@@ -269,7 +269,7 @@ struct AppliesTo { verbs: Option<Vec<String>>, playground: Option<bool> }
 
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct ValueDeclaration { id: String, env: Option<BTreeMap<String, String>>, nx_flags: Option<Vec<String>>, args: Option<Vec<String>> }
+struct ValueDeclaration { id: String, env: Option<BTreeMap<String, String>>, build_flags: Option<Vec<String>>, args: Option<Vec<String>> }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -281,7 +281,7 @@ struct ParameterDeclaration {
     required: Option<bool>,
     values: Option<Vec<ValueDeclaration>>,
     env: Option<BTreeMap<String, String>>,
-    nx_flags: Option<Vec<String>>,
+    build_flags: Option<Vec<String>>,
     args: Option<Vec<String>>,
     value_env: Option<String>,
     value_flag: Option<String>,
@@ -369,7 +369,7 @@ pub struct Facts {
     pub problems: Vec<Problem>,
 }
 
-/// 📋️ One Nx project: its root, the file that declares it and its targets.
+/// 📋️ One build project: its root, the file that declares it and its targets.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ProjectFacts {
     pub name: String,
@@ -382,7 +382,7 @@ pub struct ProjectFacts {
     pub dashboard: Option<serde_json::Value>,
 }
 
-/// 🎯️ One Nx target with the facts the registry reads from it.
+/// 🎯️ One build target with the facts the registry reads from it.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct TargetFacts {
     pub name: String,
@@ -455,10 +455,10 @@ pub enum Kind { Target, Playground, Tool, Compound, Group, Ticket, Repo }
 #[serde(rename_all = "lowercase")]
 pub enum Origin { Axis, Target, Tool, Playground, Configuration, Member }
 
-/// 💥️ What a chosen value does to the launch: `env` joins the environment, `nx_flags` go before
+/// 💥️ What a chosen value does to the launch: `env` joins the environment, `build_flags` go before
 /// `--`, `args` after it.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Effect { pub env: Vec<(String, String)>, pub nx_flags: Vec<String>, pub args: Vec<String> }
+pub struct Effect { pub env: Vec<(String, String)>, pub build_flags: Vec<String>, pub args: Vec<String> }
 
 /// 📮️ Where typed text goes.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -483,15 +483,15 @@ pub struct Parameter {
 impl Parameter {
     fn choice(id: &str, origin: Origin, default: Option<&str>, values: Vec<(String, Effect)>) -> Self { Self { id: id.into(), kind: ParameterKind::Choice, origin, default: default.map(str::to_string), required: false, values, effect: Effect::default(), destination: Destination::Token, verbs: None, playground: false, scoped: false } }
 
-    /// 🔬️ Whether a global axis is offered on a command Nx runs.
+    /// 🔬️ Whether a global axis is offered on a command the build runner runs.
     fn applies(&self, verb: &str, playground: bool) -> bool {
         if playground { return self.playground; }
         !self.scoped || self.selects(verb)
     }
 
-    /// 🧰️ Whether a global axis is offered on a command Nx does not run: it must name the verb and
-    /// change more than the Nx flags, which such a command ignores.
-    fn applies_beyond_nx(&self, verb: &str) -> bool {
+    /// 🧰️ Whether a global axis is offered on a command outside the build runner: it must name the verb and
+    /// change more than the build flags, which such a command ignores.
+    fn applies_beyond_build(&self, verb: &str) -> bool {
         self.scoped && self.selects(verb) && (!self.effect.env.is_empty() || !self.effect.args.is_empty() || self.destination != Destination::Token || self.values.iter().any(|(_, effect)| !effect.env.is_empty() || !effect.args.is_empty()))
     }
 
@@ -585,19 +585,18 @@ impl Request {
 // #endregion 🔖️Model
 
 // #region 🔖️RunPolicy
-/// 🧵️ The variable that lets Nx start a task from its published project graph instead of rebuilding it.
-pub const GRAPH_REUSE: (&str, &str) = ("NX_FORCE_REUSE_CACHED_GRAPH", "true");
+/// 🧵️ The variable that lets the build runner start a task from its published project graph instead of rebuilding it.
+pub const GRAPH_REUSE: (&str, &str) = ("SEMIO_BUILD_REUSE_GRAPH", "true");
 /// 🖥️ The variables that keep terminal rendering and process lifecycle with the dashboard.
-pub const RUNNER_ENV: &[(&str, &str)] = &[("NX_NATIVE_COMMAND_RUNNER", "false"), ("NX_TUI", "false")];
-const GRAPH_FILE: &str = ".nx/workspace-data/project-graph.json";
-const FILE_MAP: &str = ".nx/workspace-data/file-map.json";
+pub const RUNNER_ENV: &[(&str, &str)] = &[("SEMIO_BUILD_TERMINAL", "false")];
+const GRAPH_FILE: &str = ".🧬semio/🦑️repo/⚡️cache/build/graph.json";
 /// 🧱️ The workspace files besides project manifests that define the project graph.
-pub const GRAPH_OWNERS: &[&str] = &["nx.json", "package.json"];
+pub const GRAPH_OWNERS: &[&str] = &["package.json"];
 
 /// ⚖️ What the dashboard decides for every process it starts, in one place.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RunPolicy {
-    /// ♻️ Finite Nx tasks start from the published project graph.
+    /// ♻️ Finite build tasks start from the published project graph.
     pub reuse_published_graph: bool,
     /// 🏭️ Which implementation answers the repo-domain commands.
     pub repo: RepoImplementation,
@@ -611,9 +610,9 @@ impl RunPolicy {
     /// 🌍️ The policy the environment states: `SEMIO_REPO_IMPLEMENTATION` picks the repo implementation.
     pub fn current() -> Self { Self { repo: crate::repo_domain::repo_implementation(), ..Self::default() } }
 
-    fn apply(self, env: &mut Vec<(String, String)>, nx: bool, long_running: bool) {
+    fn apply(self, env: &mut Vec<(String, String)>, build: bool, long_running: bool) {
         for (key, value) in RUNNER_ENV { set_env(env, key, value); }
-        if nx && !long_running && self.reuse_published_graph { set_env(env, GRAPH_REUSE.0, GRAPH_REUSE.1); }
+        if build && !long_running && self.reuse_published_graph { set_env(env, GRAPH_REUSE.0, GRAPH_REUSE.1); }
     }
 }
 
@@ -634,49 +633,21 @@ impl Fingerprint {
     }
 }
 
-/// 📸️ What Nx recorded when it published its project graph: the content hash of every file that
-/// defines projects. The graph is current while those files still hash to the recorded values.
+/// 📸️ A neutral graph publication and the content hashes of its manifest inputs.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct GraphBasis { pub graph: Fingerprint, pub file_map: Fingerprint, pub hashes: BTreeMap<String, u64> }
+pub struct GraphBasis { pub graph: Fingerprint, pub hashes: BTreeMap<String, u64> }
 
 impl GraphBasis {
-    /// 📖️ Reads the recorded hashes of `files` from Nx's file map next to the published graph.
+    /// 📖️ Captures inputs only when the graph publication is newer than every source.
     pub fn read(root: &Path, files: &[String]) -> Option<Self> {
-        let (graph, file_map) = (Fingerprint::of(&root.join(GRAPH_FILE))?, Fingerprint::of(&root.join(FILE_MAP))?);
-        let bytes = std::fs::read(root.join(FILE_MAP)).ok()?;
-        let wanted: HashSet<&str> = files.iter().map(String::as_str).collect();
-        let hashes = std::cell::RefCell::new(BTreeMap::new());
-        serde::de::DeserializeSeed::deserialize(FileMapSeed { depth: 0, wanted: &wanted, hashes: &hashes }, &mut serde_json::Deserializer::from_slice(&bytes)).ok()?;
-        (Fingerprint::of(&root.join(FILE_MAP)) == Some(file_map)).then(|| Self { graph, file_map, hashes: hashes.into_inner() })
-    }
-}
-
-#[derive(Clone, Copy)]
-struct FileMapSeed<'a> { depth: u8, wanted: &'a HashSet<&'a str>, hashes: &'a std::cell::RefCell<BTreeMap<String, u64>> }
-
-#[derive(Deserialize)]
-struct FileRow<'a> { #[serde(borrow)] file: std::borrow::Cow<'a, str>, #[serde(borrow)] hash: std::borrow::Cow<'a, str> }
-
-impl<'de> serde::de::DeserializeSeed<'de> for FileMapSeed<'_> {
-    type Value = ();
-    fn deserialize<D: serde::Deserializer<'de>>(self, deserializer: D) -> Result<(), D::Error> { deserializer.deserialize_any(self) }
-}
-
-impl<'de> serde::de::Visitor<'de> for FileMapSeed<'_> {
-    type Value = ();
-    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.write_str("the Nx file map") }
-    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut map: A) -> Result<(), A::Error> {
-        while let Some(key) = map.next_key::<std::borrow::Cow<'de, str>>()? {
-            let descend = match self.depth { 0 => key == "fileMap", 1 => key == "projectFileMap" || key == "nonProjectFiles", _ => true };
-            if descend { map.next_value_seed(Self { depth: self.depth + 1, ..self })?; } else { map.next_value::<serde::de::IgnoredAny>()?; }
+        let graph = Fingerprint::of(&root.join(GRAPH_FILE))?;
+        let mut hashes = BTreeMap::new();
+        for file in files {
+            let path = root.join(file);
+            if Fingerprint::of(&path)?.modified > graph.modified { return None; }
+            hashes.insert(file.clone(), xxh3_64(&std::fs::read(path).ok()?));
         }
-        Ok(())
-    }
-    fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut rows: A) -> Result<(), A::Error> {
-        while let Some(row) = rows.next_element::<FileRow<'de>>()? {
-            if self.wanted.contains(row.file.as_ref()) { if let Ok(hash) = row.hash.parse() { self.hashes.borrow_mut().insert(row.file.into_owned(), hash); } }
-        }
-        Ok(())
+        (Fingerprint::of(&root.join(GRAPH_FILE)) == Some(graph)).then_some(Self { graph, hashes })
     }
 }
 // #endregion 🔖️RunPolicy
@@ -695,7 +666,7 @@ const XXH_PRIME64: [u64; 5] = [0x9E37_79B1_85EB_CA87, 0xC2B2_AE3D_27D4_EB4F, 0x1
 const XXH_MIX: [u64; 2] = [0x1656_6791_9E37_79F9, 0x9FB2_1C65_1E98_DF25];
 
 /// #️⃣ The 64-bit XXH3 hash of a byte string with the default secret and seed 0: the content
-/// hash Nx records per workspace file.
+/// hash used for workspace source fingerprints.
 ///
 /// @see https://github.com/Cyan4973/xxHash/blob/dev/doc/xxhash_spec.md
 pub fn xxh3_64(input: &[u8]) -> u64 {
@@ -797,10 +768,10 @@ impl Scope<'_> {
         }
         env.iter().map(|(name, value)| (name.clone(), value.clone())).collect()
     }
-    fn effect(&mut self, env: Option<&BTreeMap<String, String>>, nx_flags: Option<&Vec<String>>, args: Option<&Vec<String>>) -> Effect {
-        for flag in nx_flags.into_iter().flatten() { if !is_flag(flag) { self.report(format!("nxFlags entry {flag:?} is not a flag")); } }
+    fn effect(&mut self, env: Option<&BTreeMap<String, String>>, build_flags: Option<&Vec<String>>, args: Option<&Vec<String>>) -> Effect {
+        for flag in build_flags.into_iter().flatten() { if !is_flag(flag) { self.report(format!("buildFlags entry {flag:?} is not a flag")); } }
         for arg in args.into_iter().flatten() { self.text("argument", arg); }
-        Effect { env: env.map(|env| self.env(env)).unwrap_or_default(), nx_flags: nx_flags.cloned().unwrap_or_default(), args: args.cloned().unwrap_or_default() }
+        Effect { env: env.map(|env| self.env(env)).unwrap_or_default(), build_flags: build_flags.cloned().unwrap_or_default(), args: args.cloned().unwrap_or_default() }
     }
     fn mcp(&mut self, mcp: Option<&Mcp>, parameters: &[ParameterDeclaration]) {
         let Some(mcp) = mcp else { return };
@@ -861,7 +832,7 @@ impl Scope<'_> {
             for verb in applies.verbs.iter().flatten() { if !is_verb(verb) { scope.report(format!("verb {verb:?} must be a lowercase word")); } }
             if applies.verbs.as_ref().is_some_and(Vec::is_empty) { scope.report("`appliesTo.verbs` lists no verb"); }
             let forbid = |scope: &mut Scope<'_>, kind: &str, members: &[(&str, bool)]| for (name, present) in members { if *present { scope.report(format!("a {kind} has no `{name}`")); } };
-            let (effects, values, destinations) = ([("env", declaration.env.is_some()), ("nxFlags", declaration.nx_flags.is_some()), ("args", declaration.args.is_some())], [("values", declaration.values.is_some())], [("valueEnv", declaration.value_env.is_some()), ("valueFlag", declaration.value_flag.is_some()), ("valuePositional", declaration.value_positional.is_some())]);
+            let (effects, values, destinations) = ([("env", declaration.env.is_some()), ("buildFlags", declaration.build_flags.is_some()), ("args", declaration.args.is_some())], [("values", declaration.values.is_some())], [("valueEnv", declaration.value_env.is_some()), ("valueFlag", declaration.value_flag.is_some()), ("valuePositional", declaration.value_positional.is_some())]);
             let mut parameter = Parameter { id: declaration.id.clone(), kind: declaration.kind, origin, default: None, required: declaration.required.unwrap_or(false), values: Vec::new(), effect: Effect::default(), destination: Destination::Token, verbs: applies.verbs.clone(), playground: applies.playground.unwrap_or(false), scoped: declaration.applies_to.is_some() };
             match declaration.kind {
                 ParameterKind::Choice => {
@@ -872,15 +843,15 @@ impl Scope<'_> {
                         let mut scope = scope.within(format!("values[{position}]"));
                         if value.id.is_empty() || value.id.len() > 128 || value.id.contains(|c: char| c.is_whitespace() || c == '=' || c == '\0') { scope.report(format!("value id {:?} must be one word without `=`", value.id)); }
                         if values[..position].iter().any(|known| known.id == value.id) { scope.report(format!("value {:?} is declared twice", value.id)); }
-                        let effect = scope.effect(value.env.as_ref(), value.nx_flags.as_ref(), value.args.as_ref());
+                        let effect = scope.effect(value.env.as_ref(), value.build_flags.as_ref(), value.args.as_ref());
                         parameter.values.push((value.id.clone(), effect));
                     }
                     match &declaration.default { None => {} Some(serde_json::Value::String(value)) if values.iter().any(|known| &known.id == value) => parameter.default = Some(value.clone()), Some(other) => scope.report(format!("default {other} is not one of the values")) }
                 }
                 ParameterKind::Flag => {
                     forbid(&mut scope, "flag", &values); forbid(&mut scope, "flag", &destinations);
-                    if effects.iter().all(|(_, present)| !present) { scope.report("a flag needs `env`, `nxFlags` or `args`"); }
-                    parameter.effect = scope.effect(declaration.env.as_ref(), declaration.nx_flags.as_ref(), declaration.args.as_ref());
+                    if effects.iter().all(|(_, present)| !present) { scope.report("a flag needs `env`, `buildFlags` or `args`"); }
+                    parameter.effect = scope.effect(declaration.env.as_ref(), declaration.build_flags.as_ref(), declaration.args.as_ref());
                     match &declaration.default { None | Some(serde_json::Value::Bool(false)) => {} Some(serde_json::Value::Bool(true)) => parameter.default = Some("true".into()), Some(other) => scope.report(format!("default {other} must be `true` or `false`")) }
                 }
                 ParameterKind::Text => {
@@ -928,7 +899,7 @@ pub struct Registry {
 }
 
 /// 🎠️ The generated catalog the playground commands come from.
-pub const PLAYGROUND_SOURCE: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json";
+pub const PLAYGROUND_SOURCE: &str = "catalog:playgrounds";
 const RENDERERS: &[&str] = &["react", "wgpu-wasm", "wgpu-native"];
 const PLAYGROUND_PARAMETERS: &[&str] = &["renderer", "example", "user-slot", "app-role", "hub", "data", "local-only", "language", "terminology", "appearance"];
 /// 🌱️ The environment variables of the shell contract the playground facts of the catalog are exported as.
@@ -936,11 +907,11 @@ const HUB_ENV: &str = "S_HUB_URL";
 const DATA_ENV: &str = "S_DATA_DIR";
 const LOCAL_ONLY_ENV: &str = "S_LOCAL_ONLY";
 const CONFIGURATION: &str = "configuration";
-/// 🏗️ The Nx project whose targets run a playground variant.
+/// 🏗️ The build project whose targets run a playground variant.
 const PLAYGROUND_OWNER: &str = "@semio-tech/framework-os-dev";
 const LABEL_CELLS: usize = 72;
 
-/// 🎡️ The Nx target that runs a playground variant with a renderer.
+/// 🎡️ The build target that runs a playground variant with a renderer.
 pub fn playground_target(variant: &str, renderer: &str) -> Option<String> {
     match renderer { "react" => Some(format!("dev-{variant}-react-dev")), "wgpu" | "wgpu-wasm" => Some(format!("dev-{variant}-wgpu-dev")), "wgpu-native" => Some(format!("run-{variant}-native-dev")), _ => None }
 }
@@ -1194,7 +1165,7 @@ impl Registry {
             }
             Action::Group { .. } => axes(false, &[]),
             Action::Tool { .. } => {
-                let mut parameters: Vec<Parameter> = self.axes.iter().filter(|axis| axis.applies_beyond_nx(&entry.verb) && !entry.own.iter().any(|parameter| parameter.id == axis.id) && !PLAYGROUND_PARAMETERS.contains(&axis.id.as_str()) && axis.id != CONFIGURATION).cloned().collect();
+                let mut parameters: Vec<Parameter> = self.axes.iter().filter(|axis| axis.applies_beyond_build(&entry.verb) && !entry.own.iter().any(|parameter| parameter.id == axis.id) && !PLAYGROUND_PARAMETERS.contains(&axis.id.as_str()) && axis.id != CONFIGURATION).cloned().collect();
                 parameters.extend(entry.own.iter().cloned());
                 parameters
             }
@@ -1232,29 +1203,27 @@ impl Registry {
         }
     }
 
-    /// ⚡️ Whether Nx may start a finite task from its published project graph: the graph and the
-    /// file map Nx published with it are still the ones on disk, and every project manifest, the
-    /// workspace configuration and the root package manifest still hash to what Nx recorded then.
+    /// ⚡️ Whether the published graph and the source hashes captured with it remain current.
     /// `SEMIO_DASHBOARD_GRAPH=fresh` always answers no.
     pub fn graph_is_current(&self) -> bool {
         if std::env::var("SEMIO_DASHBOARD_GRAPH").is_ok_and(|value| value == "fresh") { return false; }
-        let (Some(graph), Some(file_map)) = (Fingerprint::of(&self.root.join(GRAPH_FILE)), Fingerprint::of(&self.root.join(FILE_MAP))) else { return false };
+        let Some(graph) = Fingerprint::of(&self.root.join(GRAPH_FILE)) else { return false };
         let mut basis = self.basis.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if !basis.as_ref().is_some_and(|known| known.graph == graph && known.file_map == file_map) { *basis = GraphBasis::read(&self.root, &self.definitions); }
-        let Some(basis) = basis.as_ref().filter(|known| known.graph == graph && known.file_map == file_map) else { return false };
+        if !basis.as_ref().is_some_and(|known| known.graph == graph) { *basis = GraphBasis::read(&self.root, &self.definitions); }
+        let Some(basis) = basis.as_ref().filter(|known| known.graph == graph) else { return false };
         self.definitions.len() > GRAPH_OWNERS.len() && self.definitions.iter().all(|file| basis.hashes.get(file).is_some_and(|recorded| std::fs::read(self.root.join(file)).is_ok_and(|bytes| xxh3_64(&bytes) == *recorded)))
     }
 
-    /// 🧷️ Adopts what Nx recorded with its published graph, read ahead of the first launch.
+    /// 🧷️ Adopts what discovery captured with its published graph, read ahead of the first launch.
     pub fn adopt_basis(&self, basis: Option<GraphBasis>) { *self.basis.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = basis; }
-    /// 📌️ What Nx recorded with its published graph, as far as this registry has read it.
+    /// 📌️ What discovery captured with its published graph, as far as this registry has read it.
     pub fn basis(&self) -> Option<GraphBasis> { self.basis.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone() }
 
     /// 🏎️ Resolves a command with the request under the dashboard's current run policy.
     pub fn resolve(&self, id: &str, request: &Request) -> Result<Launch, String> {
         let policy = RunPolicy::current();
         let launch = self.resolve_with(id, request, policy)?;
-        let reuses = |launch: &Launch| launch.processes.iter().any(|process| !process.long_running && invokes_nx(&process.cmd, &process.args));
+        let reuses = |launch: &Launch| launch.processes.iter().any(|process| !process.long_running && invokes_build(&process.cmd, &process.args));
         if !(reuses(&launch) || launch.requires.iter().any(reuses)) || !self.graph_is_current() { return Ok(launch); }
         self.resolve_with(id, request, RunPolicy { reuse_published_graph: true, ..policy })
     }
@@ -1351,14 +1320,14 @@ impl Registry {
             values.push(value);
         }
         let value_of = |id: &str| parameters.iter().zip(&values).find(|(parameter, _)| parameter.id == id).and_then(|(_, value)| value.as_ref().map(|value| value.text.as_str()));
-        let (mut env, mut nx_flags, mut args): (Vec<(String, Text)>, Vec<String>, Vec<Text>) = Default::default();
+        let (mut env, mut build_flags, mut args): (Vec<(String, Text)>, Vec<String>, Vec<Text>) = Default::default();
         let put = |env: &mut Vec<(String, Text)>, key: &str, text: Text| match env.iter_mut().find(|(name, _)| name == key) { Some(pair) => pair.1 = text, None => env.push((key.to_string(), text)) };
         if let Action::Tool { env: stated, .. } = &entry.action { for (key, text) in stated { put(&mut env, key, Text::Declared(text.clone())); } }
         for (parameter, value) in parameters.iter().zip(&values) {
             let Some(Value { text: value, .. }) = value else { continue };
             let effect = match parameter.kind { ParameterKind::Choice => parameter.values.iter().find(|(known, _)| known == value).map(|(_, effect)| effect), ParameterKind::Flag => (value == "true").then_some(&parameter.effect), ParameterKind::Text => None };
             for (key, text) in effect.iter().flat_map(|effect| &effect.env) { put(&mut env, key, Text::Declared(text.clone())); }
-            nx_flags.extend(effect.iter().flat_map(|effect| effect.nx_flags.iter().cloned()));
+            build_flags.extend(effect.iter().flat_map(|effect| effect.build_flags.iter().cloned()));
             args.extend(effect.iter().flat_map(|effect| effect.args.iter().cloned().map(Text::Declared)));
             match (&parameter.destination, parameter.kind) {
                 (Destination::Env(name), ParameterKind::Text) => put(&mut env, name, Text::Literal(value.clone())),
@@ -1374,7 +1343,7 @@ impl Registry {
             put(&mut env, key, Text::Literal(expanded));
         }
         let (ready_spec, requires) = match &entry.action { Action::Target { ready, requires, .. } | Action::Tool { ready, requires, .. } => (ready.clone(), requires.clone()), _ => (None, Vec::new()) };
-        if matches!(entry.action, Action::Tool { .. }) { nx_flags.clear(); }
+        if matches!(entry.action, Action::Tool { .. }) { build_flags.clear(); }
         let mut ready = None;
         if let Some(spec) = &ready_spec {
             let stated = match spec.port_env.as_ref().and_then(|name| env.iter().find(|(key, _)| key == name).map(|(_, text)| text).cloned().or_else(|| parameters.iter().find(|parameter| &parameter.id == name).and_then(|parameter| match &parameter.destination { Destination::Env(variable) => env.iter().find(|(key, _)| key == variable).map(|(_, text)| text.clone()), _ => None })).or_else(|| value_of(name).map(|value| Text::Literal(value.to_string())))) {
@@ -1394,23 +1363,23 @@ impl Registry {
         let mut env = env.iter().map(|(key, text)| Ok((key.clone(), full(text)?))).collect::<Result<Vec<(String, String)>, String>>()?;
         let mut args = args.iter().map(&full).collect::<Result<Vec<_>, _>>()?;
         args.extend(extra.iter().cloned());
-        let tail = |mut head: Vec<String>, nx_flags: Vec<String>, args: Vec<String>| { for flag in nx_flags { if !head.contains(&flag) { head.push(flag); } } if !args.is_empty() { head.push("--".into()); head.extend(args); } head };
+        let tail = |mut head: Vec<String>, build_flags: Vec<String>, args: Vec<String>| { for flag in build_flags { if !head.contains(&flag) { head.push(flag); } } if !args.is_empty() { head.push("--".into()); head.extend(args); } head };
         let mut label = TaskLabel { verb: entry.verb.clone(), owner: entry.owner.clone(), subject: entry.subject.clone(), qualifier: entry.qualifier.clone(), parameters: Vec::new(), members: 0 };
         let mut command_id = entry.id.clone();
         let mut hidden: &[&str] = &[];
-        let (cmd, args, cwd, nx) = match &entry.action {
+        let (cmd, args, cwd, build) = match &entry.action {
             Action::Target { project, target, .. } => {
                 let configuration = value_of(CONFIGURATION).filter(|_| parameters.iter().any(|parameter| parameter.origin == Origin::Configuration));
                 if let Some(configuration) = configuration { command_id = format!("{command_id}:{configuration}"); label.qualifier = if label.qualifier.is_empty() { configuration.to_string() } else { format!("{}:{configuration}", label.qualifier) }; hidden = &[CONFIGURATION]; }
-                ("bun".to_string(), tail(vec!["nx".into(), "run".into(), configuration.map_or_else(|| format!("{project}:{target}"), |configuration| format!("{project}:{target}:{configuration}"))], nx_flags, args), self.root.clone(), true)
+                ("bun".to_string(), tail(vec!["repo".into(), "run".into(), configuration.map_or_else(|| format!("{project}:{target}"), |configuration| format!("{project}:{target}:{configuration}"))], build_flags, args), self.root.clone(), true)
             }
-            Action::Group { targets, projects } => ("bun".to_string(), tail(vec!["nx".into(), "run-many".into(), "-t".into(), targets.join(","), "-p".into(), projects.join(",")], nx_flags, args), self.root.clone(), true),
+            Action::Group { targets, projects } => ("bun".to_string(), tail(vec!["repo".into(), "run-many".into(), "-t".into(), targets.join(","), "-p".into(), projects.join(",")], build_flags, args), self.root.clone(), true),
             Action::Tool { command, cwd, .. } => {
                 let mut words = command.iter().map(|word| full(&Text::Declared(word.clone()))).collect::<Result<Vec<_>, _>>()?;
                 let cmd = words.remove(0);
                 words.extend(args);
-                let nx = invokes_nx(&cmd, &words);
-                (cmd, words, full(&Text::Declared(cwd.clone()))?.split('/').filter(|part| !part.is_empty()).fold(self.root.clone(), |path, part| path.join(part)), nx)
+                let build = invokes_build(&cmd, &words);
+                (cmd, words, full(&Text::Declared(cwd.clone()))?.split('/').filter(|part| !part.is_empty()).fold(self.root.clone(), |path, part| path.join(part)), build)
             }
             Action::Playground(playground) => {
                 let renderer = value_of("renderer").unwrap_or(RENDERERS[0]);
@@ -1438,7 +1407,7 @@ impl Registry {
                 label.subject = format!("{}·{renderer}", playground.variant);
                 label.qualifier = value_of("example").map(|example| format!("#{example}")).into_iter().chain(slot.map(|slot| format!("@{slot}"))).collect::<Vec<_>>().join(" ");
                 hidden = &["renderer", "example", "user-slot"];
-                ("bun".to_string(), tail(vec!["nx".into(), "run".into(), format!("@semio-tech/framework-os-dev:{target}")], nx_flags, args), self.root.clone(), true)
+                ("bun".to_string(), tail(vec!["repo".into(), "run".into(), format!("@semio-tech/framework-os-dev:{target}")], build_flags, args), self.root.clone(), true)
             }
             Action::Repo(action) => {
                 if !extra.is_empty() { return Err(format!("{} takes no extra arguments", entry.id)); }
@@ -1449,7 +1418,7 @@ impl Registry {
             }
             Action::Compound { .. } => return Err(format!("{}: compounds do not nest", entry.id)),
         };
-        if !matches!(entry.action, Action::Repo(_)) { policy.apply(&mut env, nx, entry.long_running); }
+        if !matches!(entry.action, Action::Repo(_)) { policy.apply(&mut env, build, entry.long_running); }
         label.parameters = parameters.iter().zip(&values).filter_map(|(parameter, value)| value.as_ref().filter(|value| value.stated && !hidden.contains(&parameter.id.as_str()) && value.text != "false" && Some(&value.text) != parameter.default.as_ref()).map(|value| (parameter.id.clone(), value.text.clone()))).collect();
         Ok((LaunchProcess { command_id, cmd, args, cwd, env, label, ready, long_running: entry.long_running }, requires))
     }
@@ -1477,7 +1446,7 @@ impl Registry {
                 for renderer in RENDERERS {
                     let Some(target) = playground_target(&playground.variant, renderer) else { continue };
                     let id = format!("{PLAYGROUND_OWNER}:{target}");
-                    if !self.index.contains_key(&id) { report(format!("renderer {renderer} resolves to the Nx target {id}, which the project graph does not have")); }
+                    if !self.index.contains_key(&id) { report(format!("renderer {renderer} resolves to the build target {id}, which the project graph does not have")); }
                 }
             }
             if entry.label.chars().count() > 240 { report(format!("label is {} characters long", entry.label.chars().count())); }
@@ -1566,7 +1535,7 @@ fn unknown_parameter(id: &str, key: &str, accepted: &[Parameter]) -> String {
     format!("{id}: unknown parameter {key:?}; it accepts {}", if accepted.is_empty() { "none".to_string() } else { accepted.iter().map(|parameter| parameter.id.as_str()).collect::<Vec<_>>().join(", ") })
 }
 
-fn invokes_nx(cmd: &str, args: &[String]) -> bool { cmd == "nx" || cmd == "bun" && args.first().is_some_and(|first| first == "nx") }
+fn invokes_build(cmd: &str, args: &[String]) -> bool { cmd == "bun" && args.first().is_some_and(|first| first == "repo") }
 // #endregion 🔖️Registry
 
 // #region 🔖️Tests

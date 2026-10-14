@@ -10,7 +10,8 @@
     "deadlineUs",
     "maximumTurns",
     "grant",
-    "retirementLoan"
+    "retirementLoan",
+    "sourceKind"
   ],
   "properties": {
     "operation": {
@@ -48,6 +49,9 @@
     },
     "retirementLoan": {
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    },
+    "sourceKind": {
+      "const": "original-parent"
     }
   }
 }

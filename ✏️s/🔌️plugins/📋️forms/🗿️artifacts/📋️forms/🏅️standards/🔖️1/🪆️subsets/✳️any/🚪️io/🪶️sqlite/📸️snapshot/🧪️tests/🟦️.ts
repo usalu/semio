@@ -6,7 +6,7 @@ import * as snapshot from"../🟦️.ts";
 import{answerError}from"../../../../🧬️schema/✅️validation/🟦️.ts";
 import{prepareResponse}from"../../../../🧬️schema/📨️response/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import {binary64Value} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{NativeDecodeControl}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts";
 function portableValue(value:any):any{
  switch(value.kind){case"null":return{kind:"null"};case"boolean":case"text":return{kind:value.kind,value:value.value};case"unsigned":case"signed":return{kind:value.kind,value:BigInt(value.value)};case"float":return{kind:"float",value:{bits:BigInt("0x"+value.bits)}};case"bytes":return{kind:"bytes",value:new Uint8Array(value.octets)};case"array":return{kind:"array",items:value.items.map(portableValue)};case"object":return{kind:"object",members:value.members.map((member:any)=>({name:member.name,value:portableValue(member.value)}))};default:throw Error("fixture variant");}

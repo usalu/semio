@@ -128,6 +128,7 @@ fn chrome_hosted_panel_owns_only_nested_rows_above_the_footer_root_toggle() {
 
 #[test]
 fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pending_panel_tab() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     shell.dock_tabs.tabs_mut(anchor).clear();
@@ -150,10 +151,10 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut panel_cursor = ShellChromeChildCursor::default();
     for _ in 0..9 {
-        assert!(!shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources), "a fresh retained panel remains stepped while its document layout is pending");
+        assert!(!caller.turn(|cx|shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)), "a fresh retained panel remains stepped while its document layout is pending");
     }
     assert_eq!(panel_cursor.phase, 1, "the real panel walk waits for accepted document layout before committing panel geometry");
-    assert!(!shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources));
+    assert!(!caller.turn(|cx|shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)));
     assert!(!panel_cursor.document.terminal_is_complete() && !panel_cursor.document.terminal_is_fault(), "the footer is rendered while the General document is still pending");
 
     let mut footer_cursor = ShellChromeChildCursor::default();
@@ -166,7 +167,7 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     assert!(input.hits().is_empty(), "an incomplete frame cannot promote even its completed footer");
     assert!(input.staged_hits().iter().all(|hit| hit.kind != HitKind::PanelTab || hit.control_id.as_deref() != Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)), "a pending panel stages no premature leaf hit");
 
-    let panel_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources));
+    let panel_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)));
     assert!(panel_complete, "the same pending panel cursor reaches accepted layout and paints");
     let mut settled_footer_cursor = ShellChromeChildCursor::default();
     let footer_complete = (0..4_096).any(|_| shell.render_footer_step(&mut settled_footer_cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, shell.screen_w, shell.screen_h));
@@ -186,10 +187,13 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
         "a panel tab is a toggle — it announces `aria-pressed` (React `PanelTabButton`), never a selection, so closing the root selects nothing"
     );
     assert!(shell.dock_tab_drag.is_none() && !input.drag.active, "the footer root gesture never arms a dock-tab drag");
+    caller.retire_world(&mut world_resources);
+    caller.finish();
 }
 
 #[test]
 fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     const SURFACE: &str = "framework.settings.general.compact-law";
     let fixture = fixture();
     let vector = &fixture["stableGeneral"];
@@ -219,7 +223,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let mut first_input = InputState::<ActionDescriptor>::default();
     let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut first_cursor = ShellChromeChildCursor::default();
-    let first_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut first_cursor, anchor, &mut first_draw, None, &mut atlas, &icons, &mut first_input, &theme, body, &mut resources));
+    let first_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_panel_step(&mut first_cursor, anchor, &mut first_draw, None, &mut atlas, &icons, &mut first_input, &theme, body, &mut resources, cx)));
     assert!(first_complete, "normal General ingress, reconcile, layout and paint complete");
     assert!(crate::interpreter::retained_root_is_tree(SURFACE), "the accepted production root remains Tree");
     let intrinsic = crate::interpreter::retained_content_height(SURFACE).expect("accepted General intrinsic height");
@@ -234,7 +238,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     draw.set_screen_height(shell.screen_h);
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources));
+    let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx)));
     assert!(complete, "a new Shell panel cursor completes against the accepted General layout");
     let compact = cursor.rect.expect("second panel rectangle");
     let glass = draw.glass_regions.first().expect("General panel glass").rect;
@@ -263,10 +267,13 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let unused = (first_panel.x + theme.gap_standard, first_panel.y + theme.gap_standard);
     assert!(!content.contains(unused.0, unused.1));
     assert!(input.hit_at(unused.0, unused.1).is_none(), "the unused former full-height band has no General target");
+    caller.retire_world(&mut resources);
+    caller.finish();
 }
 
 #[test]
 fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     const SURFACE: &str = "framework.settings.general.appearance-commit-law";
     let fixture = fixture();
     let vector = &fixture["selectCommit"];
@@ -310,7 +317,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, theme, body, &mut resources));
+        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, theme, body, &mut resources, cx)));
         assert!(complete, "General panel ingress/layout/paint completes");
         shell.publish_retained_hit_registry(input);
         draw
@@ -384,10 +391,13 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     let ordinary_actions = crate::collect_fixture_actions(&mut input);
     assert_eq!(ordinary_actions.len(), 1, "ordinary retained Buttons keep one EventRouter action path");
     assert_eq!(ordinary_actions[0].action, "runOsCommand");
+    caller.retire_world(&mut resources);
+    caller.finish();
 }
 
 #[test]
 fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_them_when_closed() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     const SURFACE: &str = "framework.settings.general.driver-retirement-law";
     let neutral = fixture();
     let geometry = &neutral["upFlowDisclosure"];
@@ -419,7 +429,7 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources));
+        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx)));
         assert!(complete, "General panel ingress/layout/paint completes");
         shell.publish_retained_hit_registry(input);
     };
@@ -448,6 +458,8 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
     paint(&mut shell, &mut input);
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(child_id.as_str())), "closing Drivers retires its child from the host hit registry");
     assert!(!shell.retained_hit_windows.contains_key(&child_id), "the atomic retained owner map retires the same child generation");
+    caller.retire_world(&mut resources);
+    caller.finish();
 }
 
 #[test]

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "mode": "Variants",
+      "declaration": "enum OriginalEmptyTagged {}",
+      "borrowedMatches": 6,
+      "ownedMatches": 1
+    },
+    {
+      "mode": "Receiving",
+      "declaration": "enum OriginalEmptyTagged {}",
+      "borrowedMatches": 7,
+      "ownedMatches": 0
+    },
+    {
+      "mode": "Scalar",
+      "declaration": "enum OriginalEmptyScalar {}",
+      "borrowedMatches": 3,
+      "ownedMatches": 0
+    }
+  ],
+  "variantCount": 0,
+  "missingKeyword": "missing",
+  "refusal": "InvalidValue"
+}

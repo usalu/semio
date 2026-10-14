@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "now": 1000,
+      "deadline": 1250,
+      "remaining": 250,
+      "wakeMs": 1
+    },
+    {
+      "now": 1249,
+      "deadline": 1250,
+      "remaining": 1,
+      "wakeMs": 1
+    },
+    {
+      "now": 1250,
+      "deadline": 1250,
+      "error": "expired"
+    },
+    {
+      "now": 1251,
+      "deadline": 1250,
+      "error": "expired"
+    },
+    {
+      "now": null,
+      "deadline": 1250,
+      "error": "missing-clock"
+    },
+    {
+      "now": 1000,
+      "deadline": 3000,
+      "remaining": 2000,
+      "wakeMs": 2
+    }
+  ]
+}

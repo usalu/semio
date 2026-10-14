@@ -294,13 +294,13 @@ export type GoalGateOptions = Readonly<{
   provide?: GoalGateProvisioner;
 }>;
 
-/** 🏗️ Stands up one provider (the default spawns `bun nx run <project>:<target> -- <args>` in its own process group and
+/** 🏗️ Stands up one provider (the default spawns `bun repo run <project>:<target> -- <args>` in its own process group and
  * waits for its url), reporting progress lines; resolves once the url answers, rejects on the bound, an early exit with
  * nothing answering, or cancellation, and hands back `stop()` that ends exactly what it started. */
 export type GoalGateProvisioner = (repoRoot: string, requirement: ProvidedRequirement, provider: GoalPlanProvider, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, signal: AbortSignal, onProgress: (line: string) => void) => Promise<Readonly<{ stop: () => Promise<void> }>>;
 
 /** 🚀️ Runs one check's command with its environment and log file and resolves its exit code. The default spawns
- * `bun nx run <project>:<target> -- <args>` in its own process group with `NX_DAEMON=false` (every nx invocation of the
+ * `bun repo run <project>:<target> -- <args>` in its own process group with `NX_DAEMON=false` (every nx invocation of the
  * gate computes its own project graph, so a wedged or foreign daemon cannot stall a check); laws substitute a scripted
  * executor. */
 export type GoalGateExecutor = (repoRoot: string, check: GoalPlanCheck, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, children: Set<ChildProcess>) => Promise<number>;
@@ -309,7 +309,7 @@ const spawnGoalGateCheck: GoalGateExecutor = (repoRoot, check, args, env, logPat
   const log = createWriteStream(logPath);
   const started = Date.now();
   return new Promise<number>((resolveExit) => {
-    const child = spawn("bun", ["nx", "run", `${check.project}:${check.target}`, ...(args.length ? ["--", ...args] : [])], { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+    const child = spawn("bun", ["repo", "run", `${check.project}:${check.target}`, ...(args.length ? ["--", ...args] : [])], { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
     children.add(child);
     child.stdout?.pipe(log, { end: false });
     child.stderr?.pipe(log, { end: false });
@@ -351,7 +351,7 @@ const provisionGoalGateRequirement: GoalGateProvisioner = async (repoRoot, requi
     return { stop: async () => {} };
   }
   const log = createWriteStream(logPath);
-  const child = spawn("bun", ["nx", "run", `${provider.project}:${provider.target}`, ...(args.length ? ["--", ...args] : [])], { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+  const child = spawn("bun", ["repo", "run", `${provider.project}:${provider.target}`, ...(args.length ? ["--", ...args] : [])], { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   child.stdout?.pipe(log, { end: false });
   child.stderr?.pipe(log, { end: false });
   const exited = new Promise<void>((resolveExit) => child.once("close", () => resolveExit()));
@@ -437,7 +437,7 @@ async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGat
   const args = check.args.map((arg) => substitute(arg, options));
   const planned = Object.entries(check.env ?? {}).map(([key, value]) => [key, substitute(value, options)] as const).filter(([, value]) => value.length > 0);
   const env = { ...process.env, ...Object.fromEntries(planned), [ACCEPTANCE_RESULT_ENV]: resultPath, NX_TUI: "false", NX_DAEMON: "false" };
-  console.log(`[goal-gate] ▶ ${check.id}: bun nx run ${check.project}:${check.target}${args.length ? ` -- ${args.join(" ")}` : ""}`);
+  console.log(`[goal-gate] ▶ ${check.id}: bun repo run ${check.project}:${check.target}${args.length ? ` -- ${args.join(" ")}` : ""}`);
   const exitCode = await (options.execute ?? spawnGoalGateCheck)(repoRoot, check, args, env, logPath, children);
   if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, { exitCode }, { en: "cancelled while running", de: "während der Ausführung abgebrochen" }, [logPath]);
   if (existsSync(resultPath)) {
@@ -545,7 +545,7 @@ async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected:
     const args = provider.args.map((arg) => substitute(arg, current));
     const env = { ...process.env, ...Object.fromEntries(Object.entries(provider.env ?? {}).map(([key, value]) => [key, substitute(value, current)])), NX_TUI: "false", NX_DAEMON: "false" };
     const logPath = join(options.outDir, `provider-${requirement}.log`);
-    console.log(`[goal-gate] ▶ provider ${requirement}: bun nx run ${provider.project}:${provider.target}${args.length ? ` -- ${args.join(" ")}` : ""} → ${provider.url}`);
+    console.log(`[goal-gate] ▶ provider ${requirement}: bun repo run ${provider.project}:${provider.target}${args.length ? ` -- ${args.join(" ")}` : ""} → ${provider.url}`);
     try {
       holders.push(await (options.provide ?? provisionGoalGateRequirement)(repoRoot, requirement, provider, args, env, logPath, options.signal, (line) => console.log(`[goal-gate] … ${line}`)));
       values[requirement] = provider.url;
@@ -594,7 +594,7 @@ export async function runGoalGate(repoRoot: string, requested: GoalGateOptions):
     let backendsReady: boolean | null = null;
     if (selected.some((step) => step.checks.some((check) => check.requires.includes("backends")))) {
       const backendsLog = join(options.outDir, "backends-up.log");
-      console.log("[goal-gate] ▶ backends: bun nx run os-hub-ts:backend-up -- all (the shared postgres + neo4j servers, zero-touch)");
+      console.log("[goal-gate] ▶ backends: bun repo run os-hub-ts:backend-up -- all (the shared postgres + neo4j servers, zero-touch)");
       backendsReady = (await (options.execute ?? spawnGoalGateCheck)(repoRoot, GOAL_GATE_BACKENDS_CHECK, ["all"], { ...process.env, NX_TUI: "false", NX_DAEMON: "false" }, backendsLog, children)) === 0;
       console.log(`[goal-gate] backends ${backendsReady ? "ready" : "NOT ready"} (${backendsLog})`);
     }
@@ -658,7 +658,7 @@ export class AcceptanceScript extends Script {
       const plan = readGoalPlan(this.repoRoot, planPath);
       for (const step of plan.steps) {
         console.log(`${step.id} (${step.mode}${step.gatesRest ? ", gates the rest" : ""}${step.optional ? ", optional" : ""}) — ${step.title.en} / ${step.title.de}`);
-        for (const check of step.checks) console.log(`  ${check.id}: bun nx run ${check.project}:${check.target}${check.args.length ? ` -- ${check.args.join(" ")}` : ""} [criteria ${check.criteria.join(",")}; needs ${check.requires.join(",") || "nothing"}; browsers ${check.browsers}]`);
+        for (const check of step.checks) console.log(`  ${check.id}: bun repo run ${check.project}:${check.target}${check.args.length ? ` -- ${check.args.join(" ")}` : ""} [criteria ${check.criteria.join(",")}; needs ${check.requires.join(",") || "nothing"}; browsers ${check.browsers}]`);
       }
       return;
     }

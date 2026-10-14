@@ -8,7 +8,7 @@ import schema from "../../🧬️schema/🔣️.json";
 import documents from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
 import traces from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
 import {DrawingPngExportJob,exportDrawingPng,DRAWING_PNG_LIMITS,drawingPngExtent} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 const lift=(value:any):any=>typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,lift(item)])):value;
 const algorithms={maxWork:1e7,trace:traces[0]!.limits,booleans:{tolerance:.005,epsilon:1e-8,maxDepth:32,maxReferences:256,maxEdges:65536,maxParameters:262144,maxAtomicEdges:65536,maxSegments:65536,maxRetainedSegments:262144,maxWork:1e7}};
 const source=(name="rectangle")=>{const row=documents.find(row=>row.name===name)!;return{row,document:{...structuredClone(row.document),layers:lift(row.document.layers),artboard:{width:binary64(2),height:binary64(1)}}};};

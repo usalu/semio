@@ -1112,7 +1112,9 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// `setActiveExample`, every Actions-pane row and every canvas pick died before reaching
     /// `handle`. The `#[dsl(block)]` payloads (`crop`/`frame`/`source`) decode through
     /// `semio_framework_value::FromValue::from_value`, the same codec the typed channel uses.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<PresentationCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<PresentationCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
         let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64)).unwrap_or_default();
         let id_list = |keys: &[&str]| match keys.iter().find_map(|key| args.and_then(|value| value.get(key))) {

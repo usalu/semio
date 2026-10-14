@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "guestFuel": 17,
+      "guestWork": 3,
+      "executionFuel": 1000,
+      "executionSpent": 127,
+      "remainingGuest": 14,
+      "remainingExecution": 873
+    },
+    {
+      "guestFuel": 17,
+      "guestWork": 0,
+      "executionFuel": 1000,
+      "executionSpent": 0,
+      "remainingGuest": 17,
+      "remainingExecution": 1000
+    }
+  ]
+}

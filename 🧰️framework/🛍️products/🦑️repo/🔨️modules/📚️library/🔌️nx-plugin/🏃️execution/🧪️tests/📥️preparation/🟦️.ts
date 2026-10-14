@@ -22,11 +22,11 @@ export function targetExecutionPreparationControlV1(invocation:ScriptInvocation,
 export async function prepareTargetExecutionInventoryV1(root:string,output:string,control:ReturnType<typeof targetExecutionPreparationControlV1>){
  const capture=await captureSourcePreparationV1(async()=>{
   for(const path of ["./🟦️.ts","../🟦️.ts","../🧫️fixtures/🔣️.json","../../📥️preparation/🧬️schema/🔣️.json","../../../../📦️packages/🟦️typescript/📜️script.ts"])observedFs.readFileSync(new URL(path,import.meta.url));
-  const {cacheInternals}=await import("../../../../🟨️.mjs"),producer=cacheInternals.implementationRevision(),manifests=await cacheInternals.walkCargoTomlControlledV1(root,control),catalog=cacheInternals.collectPlaygroundCatalog(manifests,root);
+  const {cacheInternals}=await import("../../../../🟨️.mjs"),producer=cacheInternals.implementationRevision(),manifests=await cacheInternals.walkCargoTomlControlledV1(root,control),contributions=await cacheInternals.workspaceCatalogNxContributionsV1(root),catalog=cacheInternals.collectPlaygroundCatalog(manifests,root,contributions);
   await control.advance("manifest-catalog");
   const developmentRoot="🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",printRoot="🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",printProject=JSON.parse(observedFs.readFileSync(join(root,printRoot,"📋️project.json"),"utf8"));
-  const groups:Record<string,Record<string,unknown>>={root:cacheInternals.rootCommandTargets(join(root,"📜️script.ts")),sessions:await cacheInternals.playgroundSessionTargets(manifests,root)};
-  await control.advance("sessions");groups.playgrounds=cacheInternals.playgroundPreparationTargets(manifests,root,developmentRoot);await control.advance("playgrounds");groups.documents=cacheInternals.printDocumentTargets(printProject,printRoot,root);
+  const groups:Record<string,Record<string,unknown>>={root:cacheInternals.rootCommandTargets(join(root,"📜️script.ts")),sessions:await cacheInternals.playgroundSessionTargets(manifests,root,contributions)};
+  await control.advance("sessions");groups.playgrounds=cacheInternals.playgroundPreparationTargets(manifests,root,developmentRoot,{},contributions);await control.advance("playgrounds");groups.documents=cacheInternals.printDocumentTargets(printProject,printRoot,root);
   for(const component of cacheInternals.componentCrateRoots(manifests,root)){await control.advance("component-sites");groups[`component:${component}`]=await cacheInternals.componentBuildTargets(component,root);const sites=cacheInternals.pluginSiteTargetsForCrate(component,catalog,developmentRoot,root);if(Object.keys(sites).length)groups[`sites:${component}`]=sites;}
   if(cacheInternals.implementationRevision()!==producer)throw Error("Original target execution producer changed");
   return {producer,groups};

@@ -987,7 +987,6 @@ if (import.meta.vitest) {
       TYPED_OPERATION_RESULT_PAGE_BYTES,
       TYPED_OPERATION_TOKEN_BYTES,
     },
-    { url: import.meta.url },
   );
 }
 //#endregion 🧪️Tests

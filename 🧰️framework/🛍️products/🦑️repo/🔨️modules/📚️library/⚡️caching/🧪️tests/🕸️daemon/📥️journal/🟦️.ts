@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
-import { acquireResourceLease } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { acquireResourceLease, resourceLeasePathV1, checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { readFilesystemJournalWorkerOptionsV1 } from "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/📜️script.ts";
-import { mkdir, readFile, rm, writeFile, symlink, unlink } from "node:fs/promises";
+import { mkdir, readFile, readdir, lstat, realpath, rm, writeFile, symlink, unlink } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { runOwnedCommand } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptInvocationEnvironment } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { createServer, type Socket } from "node:net";
+import { createConnection, createServer, type Socket } from "node:net";
 import { createHash } from "node:crypto";
 import type { ScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -100,7 +100,7 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     assert.ok(available >= prefix.length); process.env.NX_SOCKET_DIR = join(tmpdir(), prefix.padEnd(available, "x")); await mkdir(process.env.NX_SOCKET_DIR, { recursive: true });
   }
   const daemonRoot = process.env.SEMIO_DAEMON_FIXTURE_ROOT ?? workspace;
-  process.env.NX_WORKSPACE_ROOT_PATH = daemonRoot;
+  process.env.SEMIO_WORKSPACE_ROOT_PATH = daemonRoot;
   const require = createRequire(join(process.env.NODE_PATH!, "../package.json")), { DaemonClient } = require("nx/src/daemon/client/client"), cache = require("nx/src/daemon/cache");
   const control = scriptCompilerAdmissionControlV1(invocation, "nx:journal-transport", 90_000), stop = new AbortController(), lines: string[] = [];
   const client = new DaemonClient(), scope = { roots: [], files: ["package.json"] };
@@ -169,15 +169,54 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
   if (ownedPid) { const started = performance.now(); while (true) { try { process.kill(ownedPid, 0); } catch (error) { if ((error as { code?: string }).code === "ESRCH") break; throw error; } control.signal.throwIfAborted(); assert.ok(performance.now() - started < 5000, "Owned private daemon must exit before its socket is reused"); await new Promise(resolve => setTimeout(resolve, 10)); } }
   if (oracleResponse) {
     assert.equal(fixture.toolingLifetime.retiredExclusive, "admitted");
-    const lease = await acquireResourceLease({ directory: join(process.env.NODE_PATH!, "../../../../agents/resource-leases"), resource: fixture.toolingLifetime.resourcePrefix + (oracleResponse as { toolingIdentity: string }).toolingIdentity, mode: "exclusive", signal: control.signal, control, timeoutMs: 0 });
-    lease.release(); console.log("[DEBUG] Actual daemon retirement released its immutable toolkit lease to Bun exclusive retirement");
+    const toolingIdentity = (oracleResponse as { toolingIdentity: string }).toolingIdentity;
+    try {
+      const lease = await acquireResourceLease({ directory: join(process.env.NODE_PATH!, "../../../../agents/resource-leases"), resource: fixture.toolingLifetime.resourcePrefix + toolingIdentity, mode: "exclusive", signal: control.signal, control, timeoutMs: 0 });
+      lease.release(); console.log("[DEBUG] Actual daemon retirement released its immutable toolkit lease to Bun exclusive retirement");
+    } catch (error) {
+      if (!String(error).includes("Resource lease timed out")) throw error;
+      const schema = JSON.parse(await readFile(join(import.meta.dir, "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/🧬️schema/🔣️.json"), "utf8")), validate = new (require("ajv").default)().compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/Service" }), protectedOwners: number[] = [];
+      for (const namespace of ["tooling", "watchers"]) {
+        const directory = join(workspace, ".nx/workspace-data", namespace);
+        let names: string[]; try { names = await readdir(directory); } catch (error) { if ((error as { code?: string }).code === "ENOENT") continue; throw error; }
+        for (const name of names) {
+          control.signal.throwIfAborted(); await control.yieldContinuation();
+          if (!/^[a-f0-9]{24}$/u.test(name)) continue;
+          try {
+            const file = join(directory, name, "semio-journal/service.json"), status = await lstat(file);
+            assert.ok(status.isFile() && !status.isSymbolicLink());
+            const service = JSON.parse(await readFile(file, "utf8"));
+            if (!validate(service) || service.processId === ownedPid || service.toolingIdentity !== toolingIdentity || service.root !== workspace) continue;
+            process.kill(service.processId, 0); protectedOwners.push(service.processId);
+          } catch (error) { if (!["ENOENT", "ESRCH"].includes((error as { code?: string }).code ?? "")) throw error; }
+        }
+      }
+      const finiteSchema=JSON.parse(await readFile(join(import.meta.dir,"../../../🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json"),"utf8")),validateFinite=new(require("ajv").default)().compile(finiteSchema),finiteDirectory=join(workspace,".🧬semio/🦑️repo/⚡️cache/agents/nx-tooling-use"),toolkitRoot=await realpath(join(process.env.NODE_PATH!,".."));
+      let finiteNames:string[];try{const status=await lstat(finiteDirectory);assert.ok(status.isDirectory()&&!status.isSymbolicLink());assert.equal(await realpath(finiteDirectory),finiteDirectory);finiteNames=await readdir(finiteDirectory)}catch(error){if((error as{code?:string}).code!=="ENOENT")throw error;finiteNames=[]}
+      for(const name of finiteNames){
+        checkResourceLeaseControl(control);await control.yieldContinuation();if(!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}\.json$/u.test(name))continue;
+        try{
+          const file=join(finiteDirectory,name),status=await lstat(file);assert.ok(status.isFile()&&!status.isSymbolicLink()&&status.size<=65536);const bytes=await readFile(file,"utf8"),witness=JSON.parse(bytes);
+          if(!validateFinite(witness)||name!==witness.nonce+".json"||witness.processId===ownedPid||witness.identity!==toolingIdentity||witness.toolkitRoot!==toolkitRoot)continue;
+          const marker=join(toolkitRoot,".semio-nx-tooling.json"),markerStatus=await lstat(marker);assert.ok(markerStatus.isFile()&&!markerStatus.isSymbolicLink());assert.equal(JSON.parse(await readFile(marker,"utf8")).digest,toolingIdentity);process.kill(witness.processId,0);
+          const remaining=checkResourceLeaseControl(control),timeout=Math.min(1000,remaining??1000);
+          const reply=await new Promise<string>((accept,reject)=>{const socket=createConnection({...witness.endpoint,signal:control.signal});let response="",received=0,settled=false;const decoder=new TextDecoder("utf-8",{fatal:true});const finish=(error?:Error)=>{if(settled)return;settled=true;socket.destroy();if(error)reject(error);else accept(response)};socket.setTimeout(timeout,()=>finish(Error("finite toolkit challenge timed out")));socket.once("error",finish);socket.once("connect",()=>socket.write(witness.nonce+"\n"));socket.on("data",part=>{received+=part.length;if(received>65536){finish(Error("finite toolkit challenge response exceeded original bound"));return}try{response+=decoder.decode(part,{stream:true})}catch(error){finish(error as Error)}});socket.once("end",()=>{try{response+=decoder.decode();finish()}catch(error){finish(error as Error)}});socket.once("close",()=>{if(!settled)finish(Error("finite toolkit challenge ended without its owned reply"))})});
+          checkResourceLeaseControl(control);if(!reply)continue;const actual=JSON.parse(reply);assert.equal(validateFinite(actual),true);assert.deepEqual(actual,witness);assert.equal(await readFile(file,"utf8"),bytes);process.kill(witness.processId,0);
+          const {Database}=await import("bun:sqlite"),database=new Database(resourceLeasePathV1(join(process.env.NODE_PATH!,"../../../../agents/resource-leases"),fixture.toolingLifetime.resourcePrefix+toolingIdentity),{readwrite:true,create:false});try{database.exec("PRAGMA busy_timeout=0");assert.throws(()=>database.exec("BEGIN EXCLUSIVE"),/locked|busy/iu)}finally{database.close()}
+          protectedOwners.push(witness.processId);console.log("[DEBUG] Actual finite immutable toolkit nonce challenge and independent SQL exclusive refusal validated PID="+witness.processId+" identity="+toolingIdentity);
+        }catch(error){if(["ENOENT","ESRCH","ECONNREFUSED","ECONNRESET"].includes((error as{code?:string}).code??""))continue;throw error}
+      }
+      assert.equal(fixture.toolingLifetime.otherLiveOwnerExclusive, "refused");
+      assert.ok(protectedOwners.length, "Only an actual live immutable journal owner or challenged original finite SDK owner may preserve toolkit protection after the exact fixture PID exited");
+      console.log("[DEBUG] Exact private daemon exited; actual other live immutable journal or challenged finite original owners=" + JSON.stringify(protectedOwners) + " correctly preserved independent SQL exclusive toolkit refusal");
+    }
   }
   const socketPath = require("nx/src/daemon/socket-utils").getFullOsSocketPath();
   if (process.platform !== "win32") await unlink(socketPath).catch(error => { if (error.code !== "ENOENT") throw error; });
-  let replaceGeneration = false;
+  let replaceGeneration = false, delayedReply = false;
   const sockets = new Set<Socket>(), slow = createServer(socket => {
     sockets.add(socket); socket.once("close", () => sockets.delete(socket));
-    socket.on("data", () => { if (!replaceGeneration) return; replaceGeneration = false; setTimeout(() => { void (async () => { const file = join(process.env.NX_WORKSPACE_DATA_DIRECTORY!, "semio-journal/service.json"), metadata = JSON.parse(await readFile(file, "utf8")); await writeFile(file, JSON.stringify({ ...metadata, generation: "b".repeat(32) })); require("nx/src/daemon/socket-utils").sendMessage(socket, oracleResponse, "json"); })(); }, 50); });
+    socket.on("data", () => { if(delayedReply){delayedReply=false;setTimeout(()=>require("nx/src/daemon/socket-utils").sendMessage(socket,oracleResponse,"json"),fixture.deadline.workMilliseconds);return;} if (!replaceGeneration) return; replaceGeneration = false; setTimeout(() => { void (async () => { const file = join(process.env.NX_WORKSPACE_DATA_DIRECTORY!, "semio-journal/service.json"), metadata = JSON.parse(await readFile(file, "utf8")); await writeFile(file, JSON.stringify({ ...metadata, generation: "b".repeat(32) })); require("nx/src/daemon/socket-utils").sendMessage(socket, oracleResponse, "json"); })(); }, 50); });
   });
   await new Promise<void>((accept, reject) => { slow.once("error", reject); slow.listen(socketPath, accept); });
   const identity = (await import("../../../🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts")).loadedFilesystemJournalToolingIdentityV1(dirname(require.resolve("nx/src/daemon/client/client")));
@@ -189,9 +228,10 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     replaceGeneration = true;
     assert.equal(await client.getSemioFilesystemJournalV1(scope, control), null, "An old in-flight observer response cannot authorize a replacement generation");
     console.log("[DEBUG] Actual SDK JSON response refused after its service generation changed while in flight");
-    const started = performance.now();
-    assert.equal(await client.getSemioFilesystemJournalV1(scope, control), null);
-    assert.ok(performance.now() - started >= 900 && performance.now() - started < 2000, "Optional daemon probe must be bounded to 1 second");
+    delayedReply=true;const started=performance.now();
+    const delayed=await client.getSemioFilesystemJournalV1(scope,scriptCompilerAdmissionControlV1(invocation,"nx:rpc-original-delayed",fixture.deadline.deadlineUnixMilliseconds-fixture.deadline.now));
+    assert.deepEqual(delayed,oracleResponse,"An authentic response after 1 second remains admitted by its original longer deadline");
+    assert.ok(performance.now()-started>=fixture.deadline.workMilliseconds-50);
     await assert.rejects(client.getSemioFilesystemJournalV1(scope, scriptCompilerAdmissionControlV1(invocation, "nx:rpc-deadline", 100)), /deadline/);
     const cancelled = new AbortController(), probing = client.getSemioFilesystemJournalV1(scope, scriptCompilerAdmissionControlV1(invocation, "nx:rpc-mid-cancel", 5000, cancelled.signal));
     setTimeout(() => cancelled.abort(Error("RPC active caller cancelled")), 100);
@@ -200,6 +240,6 @@ async function proveDaemonTransport(workspace: string, output: string, invocatio
     assert.equal(sockets.size, 0, "Only dedicated request sockets must close after timeout/cancellation");
     assert.equal(slow.listening, true, "Request cancellation preserves service lifetime");
     invocation.control.signal.throwIfAborted();
-    console.log("[DEBUG] Installed Nx client actual stalled socket verified 1s fallback, original deadline, mid-request cancellation and socket release");
+    console.log("[DEBUG] Installed Nx client actual delayed and stalled sockets verified original deadline, mid-request cancellation and socket release");
   } finally { for (const socket of sockets) socket.destroy(); await new Promise<void>(accept => slow.close(() => accept())); }
 }

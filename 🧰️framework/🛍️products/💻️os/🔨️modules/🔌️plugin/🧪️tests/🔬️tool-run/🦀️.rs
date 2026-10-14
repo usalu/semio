@@ -620,7 +620,9 @@ fn toy_meta() -> ActionMeta {
 }
 
 async fn tool_run_action(app: &mut ToyApp, action: &str, arguments: Vec<(String, DslValue)>, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
-    app.handle_action(action, Some(&DslValue::Object(arguments)), &toy_meta(), &mut caller.identity).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}")).output
+    let mut source=Some(DslValue::Object(arguments));
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if let Some(result)=app.handle_action(action,&mut source,&toy_meta(),&mut caller.identity,caller.context).await.unwrap_or_else(|fault|panic!("{action} dispatch: {fault:?}")){return result.output}}
+    panic!("{action} did not settle under the original fixture caller")
 }
 
 async fn run_action(app: &mut ToyApp, action: &str, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> DslValue {
@@ -649,9 +651,10 @@ async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool
     panic!("{what} never settled; state {:?}", app.tool_runs.state());
 }
 
-async fn render_text(app: &mut ToyApp, body_key: &str) -> String {
-    let tree = app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
-    artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))
+async fn render_text(app: &mut ToyApp, body_key: &str, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> String {
+    let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if let Some(tree)=app.render(body_key,None,&view,caller.context).await.unwrap_or_else(|fault|panic!("render {body_key}: {fault:?}")){return artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error|panic!("project {body_key}: {error}"))}}
+    panic!("render {body_key} did not settle under the original fixture caller")
 }
 
 /// 🆔️ A fixture panel id template scoped to run `run` (`{run}` substituted).
@@ -710,11 +713,11 @@ async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_un
     let entities: Vec<u64> = expected["entities"].as_array().expect("entities").iter().map(number).collect();
     assert_eq!(app.tool_runs.provisional_entities().expect("entities").iter().copied().collect::<Vec<_>>(), entities);
     assert_eq!(app.tool_runs.trace().expect("trace").len() as u64, number(&expected["traceRecords"]));
-    let body = render_text(&mut app, "main").await;
+    let body = render_text(&mut app, "main", &mut caller).await;
     assert!(body.contains(text(&expected["mainBodyText"])), "the renderer reads committed ⊕ provisional: {body}");
     let panel_expected = &fixture["panel"];
     let run = app.tool_runs.slot().expect("slot").run;
-    let panel: Value = serde_json::from_str(&render_text(&mut app, text(&panel_expected["bodyKey"])).await).expect("panel projection parses");
+    let panel: Value = serde_json::from_str(&render_text(&mut app, text(&panel_expected["bodyKey"]), &mut caller).await).expect("panel projection parses");
     assert_eq!(panel["key"], panel_expected["rootId"]);
     let status = find_node(&panel, &panel_id(&panel_expected["status"]["id"], run)).expect("status line");
     assert_eq!(status["accessibility"]["live"], panel_expected["status"]["live"]);
@@ -731,7 +734,7 @@ async fn tool_run_ticks_render_the_overlay_while_the_committed_document_stays_un
     assert!(app.tool_run_trace_delta(None).is_some_and(|delta| !delta.is_empty() && !delta.contains(['+', '/', '='])), "trace delta is base64url");
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted), &mut caller).await;
-    assert!(render_text(&mut app, "main").await.contains(text(&expected["committedBodyText"])), "an aborted run renders the committed document again");
+    assert!(render_text(&mut app, "main", &mut caller).await.contains(text(&expected["committedBodyText"])), "an aborted run renders the committed document again");
     close(&mut app, &mut caller);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original external fixture paid terminal retirement");result
@@ -1014,7 +1017,7 @@ async fn tool_run_stale_generation_and_run_actions_are_silent_no_ops_and_an_ille
     assert_eq!(app.store.generation(), generation, "an illegal action publishes nothing");
     let busy = tool_run_action(&mut app, "toolRunStart", vec![("toolId".into(), DslValue::String(text(&fixture["toolId"]).into()))], &mut caller).await;
     assert_eq!(busy.get("rejected").and_then(DslValue::as_str), Some(text(&fixture["busy"]["code"])));
-    let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
+    let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY, &mut caller).await).expect("panel parses");
     let finalize = find_node(&panel, &panel_id(&fixture["panel"]["finalize"]["id"], slot.run)).expect("finalize button");
     assert_eq!((finalize["disabled"].as_bool().unwrap_or(false), finalize["accessibility"].get("description")), (false, None), "a running run offers finalize for the partial result it holds");
     run_action(&mut app, "toolRunAbort", &mut caller).await;
@@ -1085,11 +1088,11 @@ async fn tool_run_reconfigure_resumes_from_its_checkpoint_and_a_lowered_target_r
     let slot = app.tool_runs.slot().expect("slot");
     assert_eq!((slot.run, u64::from(slot.generation)), (run, number(&expected["generationAfterRaise"])), "reconfigure keeps the run id and bumps the generation");
     assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])), "the job resumed from its checkpoint");
-    assert!(render_text(&mut app, "main").await.contains(&format!("count={}", number(&expected["raisedTarget"]))));
+    assert!(render_text(&mut app, "main", &mut caller).await.contains(&format!("count={}", number(&expected["raisedTarget"]))));
     set_target(&mut app, number(&expected["loweredTarget"]), &mut caller).await;
     pump_until(&mut app, "lowered target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["loweredTarget"]) * ops_per_unit && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterLower"]));
-    assert!(render_text(&mut app, "main").await.contains(&format!("count={}", number(&expected["loweredTarget"]))), "the retracted tail leaves the overlay");
+    assert!(render_text(&mut app, "main", &mut caller).await.contains(&format!("count={}", number(&expected["loweredTarget"]))), "the retracted tail leaves the overlay");
     assert_eq!(app.snapshot().expect("committed").count, 0, "reconfigure never commits");
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
@@ -1166,7 +1169,7 @@ async fn tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakag
     }
     assert!(over_budget <= number(&expected["allowedPreemptedTicks"]), "{over_budget} of {ticks} overlay appends exceeded {budget:?} (worst {worst:?})");
     assert_eq!(app.tool_runs.provisional().len() as u64, ticks * 2);
-    assert!(render_text(&mut app, "main").await.contains(&format!("count={ticks}")));
+    assert!(render_text(&mut app, "main", &mut caller).await.contains(&format!("count={ticks}")));
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     close(&mut app, &mut caller);
@@ -1188,9 +1191,11 @@ fn window_view(window_id: &str, cursor: Option<ToolRunTraceCursor>) -> ViewModel
 }
 
 /// 🎬️ Renders the `world` body for `cursor` and returns its assembled scene plus the decoded trace delta.
-async fn render_world(app: &mut ToyApp, cursor: Option<ToolRunTraceCursor>) -> (World3dScene, Option<ToolRunTraceDelta>) {
+async fn render_world(app: &mut ToyApp, cursor: Option<ToolRunTraceCursor>, caller:&mut ToyFixtureCaller<'_,'_,'_>) -> (World3dScene, Option<ToolRunTraceDelta>) {
     let lane = &fixture()["traceLane"];
-    let tree = app.render(text(&lane["bodyKey"]), None, &window_view(text(&lane["windowId"]), cursor)).await.unwrap_or_else(|fault| panic!("render world: {fault:?}"));
+    let view=window_view(text(&lane["windowId"]),cursor);let mut tree=None;
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){tree=app.render(text(&lane["bodyKey"]),None,&view,caller.context).await.unwrap_or_else(|fault|panic!("render world: {fault:?}"));if tree.is_some(){break}}
+    let tree=tree.expect("world render did not settle under the original fixture caller");
     let scene = artifact_app_laws::observe_and_retire_fixture_tree(tree, |root| {
         let surface = root.children.iter().find(|child| child.key.as_str() == text(&lane["surfaceId"])).expect("the world body carries its scene surface");
         artifact_app_laws::built_surface_scene::<World3dScene>(surface).expect("the scene surface assembles")
@@ -1221,13 +1226,13 @@ async fn tool_run_scene_render_carries_the_trace_lane_and_honours_the_echoed_cur
     let fixture = fixture();
     let expected = &fixture["traceLane"];
     let mut app = toy_app(number(&expected["units"]), &mut caller).await;
-    let (idle, idle_delta) = render_world(&mut app, None).await;
+    let (idle, idle_delta) = render_world(&mut app, None, &mut caller).await;
     assert!(idle_delta.is_none() && idle.lanes.iter().all(|lane| lane.lane != text(&expected["laneName"])), "no run, no lane");
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "trace run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
     let store_pages = app.tool_runs.trace().expect("trace").next_page();
     assert!(store_pages > number(&expected["resumePage"]) as u32, "the run logged several trace pages ({store_pages})");
-    let (scene, delta) = render_world(&mut app, None).await;
+    let (scene, delta) = render_world(&mut app, None, &mut caller).await;
     let delta = delta.expect("a scene rendered during a run carries the toolRunTrace lane");
     let slot = app.tool_runs.slot().expect("slot");
     assert_eq!((delta.identity.id.run, delta.identity.generation, delta.clear, delta.next), (slot.run, slot.generation, true, store_pages), "a renderer without a cursor gets clear plus the whole log");
@@ -1235,23 +1240,23 @@ async fn tool_run_scene_render_carries_the_trace_lane_and_honours_the_echoed_cur
     let reference = scene.lanes.iter().find(|lane| lane.lane == text(&expected["laneName"])).expect("the spine names the injected lane");
     let lane_text = scene.tool_run_trace.as_deref().expect("lane text");
     assert_eq!((reference.bytes as usize, reference.hash.as_str()), (lane_text.len(), semio_framework_ui_scene::scene_lane_hash(lane_text).as_str()), "the lane ref matches its carrier exactly as split_lanes would emit it");
-    let (_, caught_up) = render_world(&mut app, Some(cursor_after(&delta))).await;
+    let (_, caught_up) = render_world(&mut app, Some(cursor_after(&delta)), &mut caller).await;
     assert!(caught_up.is_none(), "a caught-up cursor costs nothing");
     let resume = number(&expected["resumePage"]) as u32;
-    let (_, resumed) = render_world(&mut app, Some(ToolRunTraceCursor { page: resume, ..cursor_after(&delta) })).await;
+    let (_, resumed) = render_world(&mut app, Some(ToolRunTraceCursor { page: resume, ..cursor_after(&delta) }), &mut caller).await;
     let resumed = resumed.expect("a lagging cursor gets the pages after it");
     assert!(!resumed.clear && resumed.pages.first().map(|page| page.page) == Some(resume) && resumed.next == store_pages, "resume continues from the echoed page");
-    let (_, rebound) = render_world(&mut app, Some(ToolRunTraceCursor { generation: slot.generation + 1, page: resume, ..cursor_after(&delta) })).await;
+    let (_, rebound) = render_world(&mut app, Some(ToolRunTraceCursor { generation: slot.generation + 1, page: resume, ..cursor_after(&delta) }), &mut caller).await;
     let rebound = rebound.expect("a generation mismatch resends");
     assert!(rebound.clear && rebound.pages.first().map(|page| page.page) == Some(0), "a run/generation mismatch sends clear and resends from page 0");
     run_action(&mut app, "toolRunAbort", &mut caller).await;
     pump_until(&mut app, "abort settles", |app| app.tool_runs.state() == Some(ToolRunState::Aborted) && !app.tool_runs.has_pending_work(), &mut caller).await;
     assert_eq!(run_action(&mut app, "toolRunDismiss", &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("clearTrace"));
     assert!(app.tool_runs.slot().is_none(), "a dismissed run leaves no slot");
-    let (_, cleared) = render_world(&mut app, Some(cursor_after(&delta))).await;
+    let (_, cleared) = render_world(&mut app, Some(cursor_after(&delta)), &mut caller).await;
     let cleared = cleared.expect("a dismissed run clears a renderer still holding pages");
     assert!(cleared.clear && cleared.pages.is_empty() && cleared.next == 0);
-    let (_, empty) = render_world(&mut app, Some(cursor_after(&cleared))).await;
+    let (_, empty) = render_world(&mut app, Some(cursor_after(&cleared)), &mut caller).await;
     assert!(empty.is_none(), "a cleared renderer at page 0 gets nothing");
     close(&mut app, &mut caller);
 
@@ -1316,7 +1321,7 @@ async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_exclu
     let mut app = toy_app(number(&fixture["abort"]["target"]), &mut caller).await;
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
-    render_world(&mut app, None).await;
+    render_world(&mut app, None, &mut caller).await;
     let other = text(&fixture["traceLane"]["otherWindowId"]);
     let tree = app.render(text(&expected["excludedWindowBody"]), None, &window_view(other, None)).await.expect("render the unrelated window");
     artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project the unrelated window");
@@ -1397,7 +1402,7 @@ async fn tool_run_provisional_entities_ride_the_instance_records_the_producer_st
     let mut app = toy_app(number(&expected["units"]), &mut caller).await;
     start(&mut app, text(&fixture["toolId"]), &mut caller).await;
     pump_until(&mut app, "run completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
-    let (scene, _) = render_world(&mut app, None).await;
+    let (scene, _) = render_world(&mut app, None, &mut caller).await;
     let instances: Vec<Value> = serde_json::from_str(&scene.instances_json).expect("instances json");
     let flagged: Vec<&str> = instances.iter().filter(|instance| instance["provisional"] == Value::Bool(true)).map(|instance| text(&instance["id"])).collect();
     assert_eq!(flagged, expected["flaggedInstances"].as_array().expect("flagged").iter().map(text).collect::<Vec<_>>(), "ArtifactView::tool_run().provisional_entities drives the provisional instance flag");
@@ -1715,7 +1720,7 @@ async fn tool_run_reconfigure_resume_retargets_a_retargetable_job_in_place() {
     set_target(&mut app, number(&expected["loweredTarget"]), &mut caller).await;
     pump_until(&mut app, "lowered target completes", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && app.tool_runs.provisional().len() as u64 == number(&expected["loweredTarget"]) * ops_per_unit && !app.tool_runs.is_refolding(), &mut caller).await;
     assert_eq!(u64::from(app.tool_runs.slot().expect("slot").generation), number(&expected["generationAfterLower"]));
-    assert!(render_text(&mut app, "main").await.contains(&format!("count={}", number(&expected["loweredTarget"]))), "the retracted tail leaves the overlay");
+    assert!(render_text(&mut app, "main", &mut caller).await.contains(&format!("count={}", number(&expected["loweredTarget"]))), "the retracted tail leaves the overlay");
     assert_eq!(app.tool_runs.progress().expect("progress").counters.first().map(|counter| counter.value), Some(number(&expected["resumedFrom"])));
     ingest_remote_count(&mut app, &mut probe, "tool-run-retarget-remote", number(&expected["remoteCount"]), &mut caller).await;
     set_target(&mut app, number(&expected["raisedTarget"]), &mut caller).await;
@@ -1746,14 +1751,14 @@ async fn tool_run_retract_keeps_the_previous_overlay_until_the_job_reaches_its_c
     let counts: Vec<u64> = expected["compactCounts"].as_array().expect("counts").iter().map(number).collect();
     for (index, _) in counts.iter().enumerate() {
         pump_until(&mut app, "a compaction page landed and was folded", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && app.tool_runs.provisional().len() == index + 1 && !app.tool_runs.has_pending_work(), &mut caller).await;
-        let body = render_text(&mut app, "main").await;
+        let body = render_text(&mut app, "main", &mut caller).await;
         println!("[STATS] compact page {index}: rendered {body}");
         assert!(app.tool_runs.is_refolding(), "page {index}: the retract refold waits for its boundary");
         assert!(body.contains(text(&expected["renderedWhileCompacting"])), "page {index}: the previous overlay stays rendered: {body}");
         app.tool_runs.port().expect("the run's port").wake();
     }
     pump_until(&mut app, "the compaction checkpoint swaps the overlay", |app| app.tool_runs.state() == Some(ToolRunState::Complete) && !app.tool_runs.is_refolding(), &mut caller).await;
-    let body = render_text(&mut app, "main").await;
+    let body = render_text(&mut app, "main", &mut caller).await;
     assert!(body.contains(text(&expected["renderedAfterCheckpoint"])), "the refolded overlay replaces the previous one at the boundary: {body}");
     abort_and_close(&mut app, &mut caller).await;
 
@@ -2018,7 +2023,7 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     let mut app = toy_app(number(&expected["target"]), &mut caller).await;
     start(&mut app, text(&expected["toolId"]), &mut caller).await;
     pump_until(&mut app, "job admitted", |app| app.tool_runs.state() == Some(ToolRunState::Running), &mut caller).await;
-    render_world(&mut app, None).await;
+    render_world(&mut app, None, &mut caller).await;
     app.flush_tool_run_ui_dirty();
     while app.take_typed_operation_ui_scope().is_some() {}
     let before = app.tool_runs.provisional().len();
@@ -2036,7 +2041,7 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     let payload = view.payload.as_deref().map(Vec::as_slice).and_then(|payload| payload.try_into().ok()).map(u32::from_le_bytes).expect("the latest tick payload");
     assert_eq!(u64::from(payload), view.progress.completed, "the payload is the latest tick's: the toy writes its completed units");
     assert!(view.progress.total.is_some_and(|total| total == number(&expected["target"])));
-    let body = render_text(&mut app, "main").await;
+    let body = render_text(&mut app, "main", &mut caller).await;
     println!("[STATS] reader body {body}");
     assert!(body.contains(&format!("completed={} steps={} payload={payload}", view.progress.completed, view.progress.steps.len())), "the reader body renders the run state it reads: {body}");
     abort_and_close(&mut app, &mut caller).await;
@@ -2085,7 +2090,7 @@ async fn read_only_runs_in_two_windows_run_concurrently_and_a_second_mutating_st
     assert_eq!(start_in_window(&mut app, text(&expected["mutatingToolId"]), windows[0], &mut caller).await.get("toolRun").and_then(DslValue::as_str), Some("spawnJob"), "a mutating run starts beside read-only runs");
     assert_eq!(start_in_window(&mut app, text(&expected["secondMutatingToolId"]), windows[1], &mut caller).await.get("rejected").and_then(DslValue::as_str), Some(text(&expected["busy"])), "a second mutating start is busy");
     assert_eq!(app.tool_run_presence().map(|presence| presence.tool_id), Some(text(&expected["mutatingToolId"]).to_string()), "presence follows the mutating run");
-    let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
+    let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY, &mut caller).await).expect("panel parses");
     for view in app.tool_runs.views() {
         assert!(find_node(&panel, &panel_id(&fixture["panel"]["groupId"], view.identity.id.run)).is_some(), "run {} has its own panel group", view.identity.id.run);
         let delta = app
@@ -2332,7 +2337,7 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
             .await
             .expect("a retained config past one envelope page applies");
         if rendered {
-            let _ = render_text(&mut app, "main").await;
+            let _ = render_text(&mut app, "main", &mut caller).await;
         }
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         let mut turns = 0u64;
@@ -2344,9 +2349,10 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
             }
             turns += 1;
             let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original fixture close demand");
-            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, maximum_release_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..caller.policy.close };
+            assert!(demand.copy_bytes<=grant.maximum_copy_bytes && demand.capacity_bytes<=grant.maximum_capacity_bytes && demand.release_bytes<=grant.maximum_release_bytes && demand.depth<=grant.maximum_depth,"actual demand fits original independent page and caller ceilings");
             assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
-            match { let step = app.close_step(grant).expect("close step"); let _ = app.take_constructor_receipt(); step } {
+            match { let step = crate::bounded_ownership::original_lifecycle_step(caller.context,grant,demand,|same,grant|Ok((app.close_step(same,grant)?,app.close_terminal_is_empty()))).expect("original close step"); let _ = app.take_constructor_receipt(); step } {
                 crate::bounded_ownership::PluginLifecycleStep::Progress(progress) => {
                     assert!(progress.fits(grant));
                     let released_items = progress.copied_items;

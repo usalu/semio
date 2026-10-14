@@ -2,6 +2,7 @@
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
+import { scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel, testLevelBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -14,6 +15,10 @@ import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="original-presented-source-native"){
+      if(segments.length!==1)throw Error("original presented source accepts no arguments");
+      await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui"],cwd:this.root,signal:this.invocation.control.signal,remainingMilliseconds:()=>scriptInvocationBudget(this.invocation,0),extraArgs:["--offline","--features","wgpu-engine","--lib","-E","test(original_presented_tree_alias_same_caller_denials_no_owner_copy_and_paid_return)","--","--nocapture"]},readCargoTestPolicyV1(process.env));return;
+    }
     if (segments[0] === "mounted-admission-native") {
       if (segments.length !== 1) throw Error("Expected test mounted-admission-native");
       if (!process.env.SEMIO_TEST_ARTIFACT_DIR) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");

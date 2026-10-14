@@ -131,7 +131,7 @@ fn sqlite_snapshot_jack_child_coordinates_survive_attached_and_unresolved_native
         for attached in [false, true] {
             let mut value = full(0, address);
             if attached {
-                crate::materialize_jack_content(&mut value.content, Vec::new(), Vec::new())
+                crate::test_support::materialize_fixture(&mut value.content, Vec::new(), Vec::new())
             }
             let expected = Owned::new(value);
             for binary in [false, true] {
@@ -154,15 +154,15 @@ fn sqlite_snapshot_jack_actual_controlled_typed_value_construction_preserves_all
 }
 #[test]
 fn sqlite_snapshot_jack_declared_json_camera_words_are_closed_and_exact() {
-    use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any as writer, import::deserializers::artifacts::json::v_rfc8259::any as reader};
+    use crate::standards::v1::subsets::any::io::json_native;
     for word in words() {
         let expected = Owned::new(full(word, 0));
-        let bytes = writer::serialize_bytes(&expected).unwrap();
+        let mut accept=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(32<<20,&mut accept);let bytes=json_native::encode_controlled(&expected,&mut control).unwrap().into_bytes();
         let oracle: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         for field in ["x", "y", "zoom"] {
             assert_eq!(oracle["camera"][field]["bits"].as_str(), Some(format!("{word:016x}").as_str()));
         }
-        let actual = Owned::new(reader::deserialize_bytes(&bytes).unwrap());
+        let mut accept=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(32<<20,&mut accept);let actual=Owned::new(json_native::decode_controlled(std::str::from_utf8(&bytes).unwrap(),&mut control).unwrap());
         assert_full(&actual, &expected, word);
     }
 }
@@ -186,7 +186,7 @@ fn sqlite_snapshot_jack_public_json_snapshot_api_preserves_the_same_literal_owne
 }
 #[test]
 fn sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and_words() {
-    let script = r#"import{Database}from'bun:sqlite';const d=new Database(':memory:',{safeIntegers:true});d.exec(process.argv[1]);const l=JSON.parse(process.argv[2]);const rows=d.query('SELECT name FROM sqlite_schema WHERE type=\'table\'').all();if(rows.length!==13)throw Error('table count');for(const{name}of rows)if(d.query('PRAGMA table_info('+name+')').all().length!==l.tableWidths[name])throw Error(name);d.exec("INSERT INTO jack_document VALUES(1,'trinity.graph','name',NULL,'','query');INSERT INTO jack_content_child VALUES(1,1,'','independent target','s.stdio.semio','v1','graph')");for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),data=new DataView(new ArrayBuffer(8));data.setBigUint64(0,word);const f=data.getFloat64(0),kind=Number.isNaN(f)?'nan':f===Infinity?'positiveInfinity':f===-Infinity?'negativeInfinity':'finite',cells=[1n,1n,...Array(3).fill(Number.isNaN(f)?null:f),...Array.from({length:3},()=>[BigInt.asIntN(64,word),kind]).flat()];d.query('INSERT OR REPLACE INTO jack_camera VALUES('+Array(11).fill('?').join(',')+')').run(...cells);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM jack_camera').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==kind)throw Error('exact word')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('foreign keys');d.close();"#;
+    let script = r#"import{Database}from'bun:sqlite';const d=new Database(':memory:',{safeIntegers:true});d.exec(process.argv[1]);const l=JSON.parse(process.argv[2]);const rows=d.query('SELECT name FROM sqlite_schema WHERE type=\'table\'').all();if(rows.length!==13)throw Error('table count');for(const{name}of rows)if(d.query('PRAGMA table_info('+name+')').all().length!==l.tableWidths[name])throw Error(name);d.exec("INSERT INTO jack_document VALUES(1,'trinity.graph','name',NULL,'','query');INSERT INTO jack_content_child VALUES(1,1,'','independent target','s.fixture.graph','v1','graph')");for(const hex of l.binary64Bits){const word=BigInt('0x'+hex),data=new DataView(new ArrayBuffer(8));data.setBigUint64(0,word);const f=data.getFloat64(0),kind=Number.isNaN(f)?'nan':f===Infinity?'positiveInfinity':f===-Infinity?'negativeInfinity':'finite',cells=[1n,1n,...Array(3).fill(Number.isNaN(f)?null:f),...Array.from({length:3},()=>[BigInt.asIntN(64,word),kind]).flat()];d.query('INSERT OR REPLACE INTO jack_camera VALUES('+Array(11).fill('?').join(',')+')').run(...cells);const row=d.query('SELECT x_ieee754_bits,x_numeric_class FROM jack_camera').get();if(BigInt.asUintN(64,row.x_ieee754_bits).toString(16).padStart(16,'0')!==hex||row.x_numeric_class!==kind)throw Error('exact word')}if(d.query('PRAGMA foreign_key_check').all().length)throw Error('foreign keys');d.close();"#;
     let out = std::process::Command::new("bun").args(["-e", script, include_str!("../🗄️.sql"), &laws().to_string()]).output().unwrap();
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
 }
@@ -307,10 +307,10 @@ mod populated_public_owner {
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
-pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer>,semio_s_artifact_stdio_semio::SemioMembers>),}
+pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp<crate::test_support::FixtureComposition>>,store::NoMembers>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer<crate::test_support::FixtureComposition>>,store::NoMembers>),}
 }
 
-fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("trinity").label("Populated public SQLite").version("0.0.1").package_id("semio:trinity").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}
+fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("trinity").label("Populated public SQLite").version("0.0.1").package_id("semio:trinity").declare_artifact(crate::artifact::<PublicApps,crate::test_support::FixtureComposition>()).try_build().unwrap();}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_jack_populated_actual_app_public_both_forms(){
 use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_export_sqlite_snapshot,store::io::io_mechanism::io_import_sqlite_snapshot,store::io::io_mechanism::io_route};use store::io_schema::{IoFidelity,SQLITE_SNAPSHOT};

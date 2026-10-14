@@ -1,12 +1,12 @@
 {
   "name": "@semio-tech/remodel-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": ["{workspaceRoot}/🌎️hub/🧩️compositions/📸️remodel/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -14,7 +14,7 @@
       }
     },
     "regenerate-example": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts regenerate-example",

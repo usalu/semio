@@ -18,7 +18,7 @@ import choices from "./🧫️fixtures/🛂️choices.json";
 import malformed from "./🧫️fixtures/⚠️malformed.json";
 import { parseVdi3805Snapshot, type SheetAttributes, type VdiQuantityKind } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { VDI3805_SQLITE_SCHEMA, vdi3805SnapshotToSqliteDatabase, vdi3805SnapshotFromSqliteDatabase, type Vdi3805SqliteAttributes, type Vdi3805SqliteSnapshot } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 function floats<T,K extends keyof T>(value:T,keys:readonly K[]):Omit<T,K>&{[P in K]:Binary64}{const result={...value} as Omit<T,K>&{[P in K]:Binary64};for(const key of keys){if(typeof value[key]!=="number")throw Error("neutral numeric field");Object.assign(result,{[key]:binary64(value[key] as number)})}return result}
 function attributes(a:SheetAttributes):Vdi3805SqliteAttributes{switch(a.kind){case"valveHeating":return floats(a,["kvsM3S","authorityMin","authorityMax"]);case"radiator":return floats(a,["standardOutputW","heatExponentN","lengthM","heightM","depthM"]);case"pumpHeating":return floats(a,["nominalFlowM3S","nominalHeadM","motorPowerW","hydraulicEfficiency"]);case"heatGenerator":return floats(a,["nominalHeatOutputW","flowTempMaxC","returnTempMinC"]);case"generic":return a}}

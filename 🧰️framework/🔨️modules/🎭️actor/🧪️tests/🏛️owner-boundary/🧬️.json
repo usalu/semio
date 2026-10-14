@@ -1,0 +1,102 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "forbiddenOwner",
+    "sourceOwners",
+    "entrypoints",
+    "references",
+    "sourceScope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "🧰️framework/🔨️modules/🎭️actor"
+    },
+    "forbiddenOwner": {
+      "const": "🧰️framework/🛍️products"
+    },
+    "sourceOwners": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "🟦️.ts",
+          "📦️packages/🟦️typescript/📜️script.ts",
+          "📦️packages/🦀️rust/📜️script.ts",
+          "🎟️retained-turn/🏛️bootstrap/🧪️tests/🟦️.ts",
+          "🎟️retained-turn/🎟️supplier/🧪️tests/🟦️.ts",
+          "🧪️tests/🧬️typegen/🟦️.ts",
+          "🧪️tests/🗞️typed-operation-page/🟦️.ts",
+          "🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+          "📦️packages/🟦️typescript/🟦️.ts",
+          "📦️packages/🟦️typescript/📃️page/🟦️.ts",
+          "📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+          "📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+          "🧪️tests/📣️public-facets/🟦️.ts",
+          "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts"
+        ]
+      }
+    },
+    "entrypoints": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "🟦️.ts",
+          "🚪️lifetime/🟦️.ts",
+          "🖼️wire-turn/🟦️.ts",
+          "📦️packages/🟦️typescript/🟦️.ts",
+          "📦️packages/🟦️typescript/📃️page/🟦️.ts",
+          "📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
+          "📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
+          "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts"
+        ]
+      }
+    },
+    "references": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "allowed"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allowed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "sourceScope": {
+      "const": {
+        "extensions": [
+          ".ts",
+          ".tsx"
+        ],
+        "excludedDirectories": [
+          "node_modules",
+          "target",
+          "pkg",
+          "dist"
+        ]
+      }
+    }
+  }
+}

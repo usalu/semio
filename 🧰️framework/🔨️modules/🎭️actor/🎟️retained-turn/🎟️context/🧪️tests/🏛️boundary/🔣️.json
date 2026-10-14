@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "owner": "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context",
+  "types": [
+    "OriginalActorAdmission",
+    "OriginalActorContextError",
+    "OriginalActorContext",
+    "OriginalActorCall",
+    "OriginalActorCallError",
+    "OriginalActorContextSlot",
+    "OriginalActorAdmissionReply",
+    "OriginalActorCloseReply"
+  ],
+  "productIndependent": true,
+  "privateBinding": true,
+  "sourceAdmission": "first-party-paid-parent-seal",
+  "binding": {
+    "operation": 71,
+    "generation": 3,
+    "firstEpoch": 19,
+    "cases": [
+      {
+        "operation": 71,
+        "generation": 3,
+        "epoch": 20,
+        "accepted": true
+      },
+      {
+        "operation": 72,
+        "generation": 3,
+        "epoch": 21,
+        "accepted": false
+      },
+      {
+        "operation": 71,
+        "generation": 4,
+        "epoch": 21,
+        "accepted": false
+      },
+      {
+        "operation": 71,
+        "generation": 3,
+        "epoch": 20,
+        "accepted": false
+      },
+      {
+        "operation": 71,
+        "generation": 3,
+        "epoch": 0,
+        "accepted": false
+      },
+      {
+        "operation": 71,
+        "generation": 3,
+        "epoch": 21,
+        "accepted": true
+      }
+    ]
+  }
+}

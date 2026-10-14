@@ -271,7 +271,7 @@ export function AdminAccessGate(): React.ReactElement {
         <div id="admin-session-unreachable" className="flex w-full max-w-md flex-col gap-single" role="alert" aria-live="assertive">
           <h1 className="text-lg font-semibold text-emphasized">{t("admin.session.unreachableTitle")}</h1>
           <p className="text-sm text-muted-foreground">{t("admin.session.unreachableDescription")}</p>
-          <code className="rounded bg-muted px-single py-single text-xs">bun nx run os-hub:dev</code>
+          <code className="rounded bg-muted px-single py-single text-xs">bun repo run os-hub:dev</code>
           <p className="text-sm text-muted-foreground">{t("admin.session.unreachableHint")}</p>
         </div>
       </div>
@@ -283,7 +283,7 @@ export function AdminAccessGate(): React.ReactElement {
       <div className="flex w-full max-w-md flex-col gap-single" role={status === "probing" ? "status" : "alert"} aria-live={status === "probing" ? "polite" : "assertive"}>
         <h1 className="text-lg font-semibold text-emphasized">{t("admin.session.title")}</h1>
         <p className={status === "unauthorized" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>{t(status === "probing" ? "admin.session.probing" : "admin.session.error")}</p>
-        {status === "unauthorized" ? <code className="rounded bg-muted px-single py-single text-xs">bun nx run os-hub:dev-secure-admin</code> : null}
+        {status === "unauthorized" ? <code className="rounded bg-muted px-single py-single text-xs">bun repo run os-hub:dev-secure-admin</code> : null}
       </div>
     </div>
   );

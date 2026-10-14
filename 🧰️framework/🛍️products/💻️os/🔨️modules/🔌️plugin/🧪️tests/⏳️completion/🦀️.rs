@@ -201,21 +201,21 @@ impl<const RETAINED: bool, const TOOLS: u8> TestAppCommandJob<RETAINED, TOOLS> {
 }
 
 impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob for TestAppCommandJob<RETAINED, TOOLS> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
         if self.admitted {
-            return JobOutcomeBorrow::admit_complete(cx, None, None);
+            return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into);
         }
-        if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "test app retains its rejected original completion")); }
+        if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "test app retains its rejected original completion").into()); }
         if cx.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         if cx.should_yield() {
-            return JobOutcomeBorrow::admit_yield(cx);
+            return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
         if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
-            return JobOutcomeBorrow::admit_yield(cx);
+            return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
         cx.set_stage("test-command-ephemeral");
         cx.consume_fuel(1);
@@ -230,10 +230,10 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         let completion = self.completion.as_ref().expect("exact test app command completion");
         if let Err(original) = completion.complete(emit, ephemeral) {
             self.rejected = Some(original);
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "test app original completion was rejected"));
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "test app original completion was rejected").into());
         }
         self.admitted = true;
-        JobOutcomeBorrow::admit_complete(cx, None, None)
+        JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -244,35 +244,29 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        if !self.closing { return InteractiveJobCloseStep::Blocked; }
-        if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()} };
-        if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}; }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }; }
-        if let Some(raw) = self.raw.as_mut() {
-            let step = raw.close_step(grant);
-            if raw.terminal_is_empty() { self.raw.take(); }
-            return match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step };
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::{InteractiveJobCloseStep,close_original_retained_step};
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep};
+        if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        if let Some(raw)=self.raw.as_mut() {
+            if !raw.terminal_is_empty(){return close_original_retained_step(cx,demand,|grant|raw.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress())));}
+            return close_original_retained_step(cx,demand,|_|{self.raw=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))});
         }
-        let step = if self.retirement.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant) }
-            else if self.command.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command, &mut self.retirement, grant) }
-            else if self.snapshot.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.snapshot, &mut self.retirement, grant) }
-            else if self.config.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.config, &mut self.retirement, grant) }
-            else if self.history.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.history, &mut self.retirement, grant) }
-            else if self.completion.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
-            else if self.metadata.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.metadata, &mut self.retirement, grant) }
-            else if self.context.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context, &mut self.retirement, grant) }
-            else if self.residual.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.residual, &mut self.retirement, grant) }
-            else if self.snapshot_read.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot_read, &mut self.retirement, grant) }
-            else { Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
-        match step {
-            Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
-            Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-            Err(error) => InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()},
-        }
+        let step=close_original_retained_step(cx,demand,|grant|{
+            if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}
+            else if self.command.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command,&mut self.retirement,grant)}
+            else if self.snapshot.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.snapshot,&mut self.retirement,grant)}
+            else if self.config.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.config,&mut self.retirement,grant)}
+            else if self.history.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.history,&mut self.retirement,grant)}
+            else if self.completion.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.retirement,grant)}
+            else if self.metadata.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.metadata,&mut self.retirement,grant)}
+            else if self.context.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context,&mut self.retirement,grant)}
+            else if self.residual.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.residual,&mut self.retirement,grant)}
+            else if self.snapshot_read.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot_read,&mut self.retirement,grant)}
+            else{Ok(RetainedCloneStep::Complete(Default::default()))}
+        })?;
+        Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }

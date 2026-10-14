@@ -1,0 +1,6 @@
+{
+  "name": "architecture-source-verification",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "nx run architecture-source-verification:test" }
+}

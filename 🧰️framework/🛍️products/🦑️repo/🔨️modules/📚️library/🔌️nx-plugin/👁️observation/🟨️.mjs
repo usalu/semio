@@ -3,7 +3,7 @@ import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { openRecordStore, recordKey } from "../../⚡️caching/🗃️records/🟦️.ts";
 
@@ -19,7 +19,38 @@ const recordStores = new Map();
 const usedInference = new Map();
 const originalInferencePublications = new Map();
 const loadObservations = new Map();
+const projectComputations = new Map();
+const projectImages = new Map();
+const projectChecks = new WeakMap();
 let loadSealed = false;
+
+/** 📊️ Exposes owned project computation counts without influencing source admission. */
+export function projectInferenceCountsV1(){return Object.fromEntries(projectComputations);}
+
+/** 🧷️ Shares a physical validation only within the same original parent inference whose final receipt still rechecks every fact. */
+function projectObservationHoldsV1(row,parent){
+ let checks=parent&&projectChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);}
+ const key=row.kind+"\0"+row.path,fact=JSON.stringify(row.fact),previous=checks?.get(key);if(previous?.fact===fact)return previous.holds;
+ const holds=row.kind==="file"?fileFactHolds(row.path,row.fact)&&JSON.stringify(facts.file(row.path)?.sha256??null)===JSON.stringify(row.fact.sha256??null):current([row]);
+ checks?.set(key,{fact,holds});return holds;
+}
+
+/** 📦️ Admits one physical project's exact input observations through its own computation. */
+export async function observeProjectInferenceV1({cachePath,key,owner},compute){
+ const parent=scopes.getStore(),identity=createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION,key])).digest("hex"),previous=projectImages.get(cachePath);
+ const inherit=rows=>{if(parent)for(const row of rows){const key=row.kind+"\0"+row.path;if(!parent.has(key))parent.set(key,row);}};
+ if(previous?.identity===identity&&previous.observations.every(row=>projectObservationHoldsV1(row,parent))){
+  inherit(previous.observations);
+  originalInferencePublications.set(cachePath,previous.publication);
+  return JSON.parse(previous.image);
+ }
+ const value=await observeInference({cachePath,key},()=>{projectComputations.set(owner,(projectComputations.get(owner)??0)+1);const image=jsonImage(compute());if(image===undefined)throw Error("Project inference requires a language-neutral JSON image");return JSON.parse(image);});
+ const publication=originalInferencePublications.get(cachePath);
+ if(!publication)throw Error("Original project inference observations required");
+ inherit(publication.observations);
+ projectImages.set(cachePath,{identity,image:JSON.stringify(value),observations:publication.observations,publication});
+ return value;
+}
 
 /** 🧭️ Normalizes every accepted fs path argument to one absolute key. */
 function absolute(path) {
@@ -196,6 +227,20 @@ export function memoizedFileRecord(namespace, path, compute) {
   return JSON.parse(image);
 }
 
+/** 🌊️ Reads a module asynchronously only when its original settled byte fingerprint has no verified semantic record. */
+export async function memoizedFileRecordAsyncV1(namespace,path,compute){
+ const scope=recordScopes.getStore(),key=absolute(path),hint=scope?.hints.get(key);
+ if(hint){
+  let stamp;try{stamp=await statAsync(path);}catch{}
+  if(stamp&&stamp.size===hint.size&&stamp.mtimeMs===hint.mtimeMs&&stamp.ctimeMs===hint.ctimeMs&&stamp.ino===hint.ino){
+   const hit=scope.records.get(recordKey(namespace,hint.sha256));if(hit!==undefined)try{const value=JSON.parse(Buffer.from(hit).toString("utf8"));record("file",key,hint);return value;}catch{}
+  }
+ }
+ const bytes=await observedFs.readFile(path),value=compute(bytes),image=jsonImage(value);
+ if(scope&&image!==undefined&&Buffer.byteLength(image)<=1024*1024){scope.records.put(recordKey(namespace,createHash("sha256").update(bytes).digest("hex")),Buffer.from(image,"utf8"));return JSON.parse(image);}
+ return value;
+}
+
 /** 🪪️ True when a recorded file fact still names the same bytes: an unchanged stamp proves it cheaply, and a restamped file of the same size is proven by its digest, so rewrites of identical content stay hits. */
 function fileFactHolds(path, fact) {
   if (fact.error !== undefined) { try { fs.readFileSync(path); return false; } catch (error) { return fact.error === (error.code ?? "EUNKNOWN"); } }
@@ -226,7 +271,7 @@ export async function observeInference({ cachePath, key }, compute) {
   const digest = createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION, key])).digest("hex"), hints = new Map();
   try {
     const text = fs.readFileSync(cachePath, "utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));
-    if (header.digest === digest && Array.isArray(header.observations) && current(header.observations)) {
+    if (header.digest === digest && header.resultSha256 === createHash("sha256").update(text.slice(split + 1)).digest("hex") && Array.isArray(header.observations) && current(header.observations)) {
       usedInference.set(cachePath, createHash("sha256").update(text.slice(0, split)).digest("hex"));
       originalInferencePublications.set(cachePath, {path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});
       return JSON.parse(text.slice(split + 1));
@@ -246,8 +291,8 @@ export async function observeInference({ cachePath, key }, compute) {
   usedInference.set(cachePath, null);
   if (!racy && jsonExact(result) && current(rows)) {
     fs.mkdirSync(dirname(cachePath), { recursive: true });
-    const temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, authorityObservations: [...loadObservations.values()], observations: rows });
-    fs.writeFileSync(temporary, `${header}\n${JSON.stringify(result)}`);
+    const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, resultSha256:createHash("sha256").update(image).digest("hex"), authorityObservations: [...loadObservations.values()], observations: rows });
+    fs.writeFileSync(temporary, `${header}\n${image}`);
     fs.renameSync(temporary, cachePath);
     usedInference.set(cachePath, createHash("sha256").update(header).digest("hex"));
   }
@@ -261,19 +306,23 @@ export async function observeInference({ cachePath, key }, compute) {
  * facts. A receipt is published only when every input is non-racy and still holds and every inference record used was persisted; otherwise
  * any previous receipt is removed, so a seal can never pair a graph with inputs it was not computed from.
  * @template T
- * @param {{ readonly receiptPath: string }} options
+ * @param {{ readonly receiptPath: string; readonly recordDirectory?: string }} options
  * @param {() => Promise<T> | T} compute
  * @returns {Promise<T>}
  */
-export async function observeDependencies({ receiptPath }, compute) {
-  const observations = new Map(), started = Date.now();
-  const result = await scopes.run(observations, compute);
+export async function observeDependencies({ receiptPath, recordDirectory }, compute) {
+  const observations = new Map(), started = Date.now(),publicationPath=receiptPath.replace(/\.receipt\.json$/u,".publication.json"),hints=new Map();
+  if(recordDirectory)try{const previous=JSON.parse(fs.readFileSync(publicationPath,"utf8"));if(previous.version===1&&previous.revision===OBSERVATION_REVISION&&Array.isArray(previous.observations)&&Number.isSafeInteger(previous.startedAt))for(const row of previous.observations)if(row.kind==="file"&&/^[a-f0-9]{64}$/u.test(row.fact?.sha256??"")&&row.fact.mtimeMs<previous.startedAt-RACY_MS&&row.fact.ctimeMs<previous.startedAt-RACY_MS)hints.set(row.path,row.fact);}catch{}
+  let records=recordDirectory&&recordStores.get(recordDirectory);if(recordDirectory&&!records)recordStores.set(recordDirectory,records=openRecordStore(recordDirectory));
+  const run=()=>scopes.run(observations,compute),result=await(records?recordScopes.run({records,hints},run):run());
+  records?.flush();if(records&&records.stats.records>2*records.stats.accessed)records.retainAccessed();
   const rows = [...observations.values()], inference = [...usedInference].filter(([path]) => dirname(path) === dirname(receiptPath)).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
   const racy = rows.some(({ kind, fact }) => kind === "file" && typeof fact === "object" && fact !== null && (fact.mtimeMs >= started - RACY_MS || fact.ctimeMs >= started - RACY_MS));
   fs.mkdirSync(dirname(receiptPath), { recursive: true });
-  const publicationPath=receiptPath.replace(/\.receipt\.json$/u,".publication.json"),originalInference=[...originalInferencePublications.values()].filter(value=>dirname(value.path)===dirname(receiptPath)).sort((left,right)=>Buffer.compare(Buffer.from(left.path),Buffer.from(right.path)));
+  const originalInference=[...originalInferencePublications.values()].filter(value=>dirname(value.path)===dirname(receiptPath)).sort((left,right)=>Buffer.compare(Buffer.from(left.path),Buffer.from(right.path)));
   if(publicationPath===receiptPath)throw Error("Original inference receipt must have an owned publication path");
-  if(originalInference.length&&jsonImage(result)!==undefined){const temporary=publicationPath+"."+process.pid+"."+started+".tmp";fs.writeFileSync(temporary,JSON.stringify({version:1,revision:OBSERVATION_REVISION,pid:process.pid,startedAt:started,completedAt:Date.now(),inference:originalInference,observations:rows}));fs.renameSync(temporary,publicationPath);}else fs.rmSync(publicationPath,{force:true});
+  const producerPath=resolve(dirname(publicationPath),"p-"+process.pid,basename(publicationPath));
+  if(originalInference.length&&jsonImage(result)!==undefined){const image=JSON.stringify({version:1,revision:OBSERVATION_REVISION,pid:process.pid,startedAt:started,completedAt:Date.now(),inference:originalInference,observations:rows});fs.mkdirSync(dirname(producerPath),{recursive:true});for(const path of [producerPath,publicationPath]){const temporary=path+"."+process.pid+"."+started+".tmp",parent=resolve(dirname(path)),status=fs.lstatSync(parent);if(temporary.length>256||[...temporary].length>256||!status.isDirectory()||status.isSymbolicLink()||fs.realpathSync(parent)!==parent)throw Error("Original inference producer namespace refused");fs.writeFileSync(temporary,image,{flag:"wx"});fs.renameSync(temporary,path);}}else for(const path of [producerPath,publicationPath])fs.rmSync(path,{force:true});
   if (racy || inference.length === 0 || inference.some(([, digest]) => digest === null) || !current(rows)) { fs.rmSync(receiptPath, { force: true }); return result; }
   const temporary = `${receiptPath}.${process.pid}.${started}.tmp`;
   fs.writeFileSync(temporary, JSON.stringify({ format: 1, revision: OBSERVATION_REVISION, pid: process.pid, completedAt: Date.now(), inference, observations: rows }));

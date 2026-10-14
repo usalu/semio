@@ -207,6 +207,7 @@ fn retained_button_record(key: &str, binding: &str) -> ui_contract::UiNodeRecord
 }
 
 fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect, input: &mut InputState<ActionDescriptor>) {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -218,13 +219,15 @@ fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, docume
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut context = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
         let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        let done = render_ui_document_step(&mut cursor, document, body, &mut context, surface, "s.test.presented-input", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
+        let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut context, surface, "s.test.presented-input", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
         assert!(done || !cursor.terminal_is_fault(), "the retained presentation document faulted in phase {}", cursor.phase_name());
         done
     });
     assert!(complete, "the retained presentation document painted within its opportunity ceiling");
     shell.world3d_states = world3d_states;
     shell.register_retained_body_hits(surface, body, input);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
 }
 
 fn click(shell: &mut ShellState, control: &ControlFixture, input: &mut InputState<ActionDescriptor>, theme: &Theme) {

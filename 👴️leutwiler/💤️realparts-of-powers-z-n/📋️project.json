@@ -1,6 +1,6 @@
 {
   "name": "@leutwiler/realparts-of-powers-z-n",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*"
@@ -8,7 +8,7 @@
   },
   "targets": {
     "deps": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "👴️leutwiler/💤️realparts-of-powers-z-n",
@@ -16,7 +16,7 @@
       }
     },
     "build-lean": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [
         "deps"
@@ -33,7 +33,7 @@
       }
     },
     "build-notes": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [
         "deps"
@@ -52,7 +52,7 @@
       }
     },
     "build-proof": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [
         "deps"
@@ -71,7 +71,7 @@
       }
     },
     "build": {
-      "executor": "nx:noop",
+      "executor": "repo:noop",
       "dependsOn": [
         "build-lean",
         "build-notes",
@@ -79,7 +79,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [
         "build-lean"

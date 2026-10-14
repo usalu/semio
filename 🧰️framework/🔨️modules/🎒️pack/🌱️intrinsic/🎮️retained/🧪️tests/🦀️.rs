@@ -129,3 +129,22 @@ fn retained_intrinsic_document_allocator_birth_and_terminal_physical_grants_are_
  for _ in 0..1000000{if cursor.terminal_is_empty(){break}let copy=cursor.next_close_copy_byte_demand().unwrap().max(3);let release=cursor.next_close_release_byte_demand().unwrap();let capacity=cursor.next_close_capacity_byte_demand(copy.max(release)).unwrap();let depth=cursor.next_close_depth_demand().unwrap();let(result,requests,releases)=crate::test_allocation::observe_backing(||cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}));let receipt=match result.unwrap(){RetainedCloneStep::Complete(receipt)|RetainedCloneStep::Progress(receipt)=>receipt};assert_eq!(requests,receipt.retained_capacity_bytes);assert_eq!(releases,receipt.released_bytes);actual_releases+=releases;}
  assert!(cursor.terminal_is_empty());assert!(actual_releases>=admitted);eprintln!("[DEBUG] retained Document original source, inflater, catalog, chunk-reference and partial-value allocations close under independent exact receipts");
 }
+
+/// 🎟️ Actual payload births match funded frontier receipts and every denied source remains unchanged.
+#[test]
+fn original_intrinsic_paid_frontiers_preserve_bytes_and_match_json(){
+ for row in corpus()["cases"].as_array().unwrap(){
+  let bytes=hex(row["hex"].as_str().unwrap());let(mut cursor,born,released)=crate::test_allocation::observe_backing(||RetainedIntrinsicBody::new(RetainedIntrinsicInput::Borrowed(&bytes),Default::default(),1<<20).unwrap());assert_eq!((born,released),(0,0));let source=cursor.input().unwrap().as_ptr();let mut total=0;
+  for _ in 0..100000{
+   let demand=cursor.original_step_demands().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:0,maximum_depth:demand.depth};
+   for denied in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}]{
+    let before=cursor.admitted_bytes();let(call,born,released)=crate::test_allocation::observe_backing(||cursor.advance_original_step(denied,false));assert_eq!((born,released),(0,0));assert_eq!(call.progress,Default::default());assert_eq!(call.result.unwrap().units,0);assert_eq!(cursor.admitted_bytes(),before);assert_eq!(cursor.input().unwrap().as_ptr(),source);
+   }
+   if demand.capacity_bytes>0{let(call,born,released)=crate::test_allocation::observe_backing(||cursor.advance_original_step(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant},false));assert_eq!((born,released),(0,0));assert_eq!(call.progress,Default::default());assert_eq!(call.result.unwrap().units,0);}
+   if demand.copy_bytes>0{let(call,born,released)=crate::test_allocation::observe_backing(||cursor.advance_original_step(RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},false));assert_eq!((born,released),(0,0));assert_eq!(call.progress,Default::default());assert_eq!(call.result.unwrap().units,0);}
+   let(call,born,released)=crate::test_allocation::observe_backing(||cursor.advance_original_step(grant,false));assert_eq!(released,0);assert_eq!(born,call.progress.retained_capacity_bytes);assert!(call.progress.fits(grant));total+=born;if call.result.unwrap().complete{break}
+  }
+  let output=cursor.take_output().expect("original funded grammar completes");assert_eq!(Value::from(&output),row["expected"]);assert_eq!(cursor.admitted_bytes(),total);close(&mut cursor);drop(output);
+  eprintln!("[DEBUG] original intrinsic paid source={} bytes={} born={} Unicode/JSON oracle=true",row["id"],bytes.len(),total);
+ }
+}

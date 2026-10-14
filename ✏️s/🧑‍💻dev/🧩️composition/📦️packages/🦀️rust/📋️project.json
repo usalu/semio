@@ -11,7 +11,7 @@
   ],
   "targets": {
     "source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts source-check",
@@ -21,7 +21,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test",
@@ -31,7 +31,7 @@
       "outputs": []
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick",
@@ -41,7 +41,7 @@
       "outputs": []
     },
     "test-generation2d": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation2d-example-export",
@@ -51,7 +51,7 @@
       "outputs": []
     },
     "test-sequence": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick --test sequence-runtime",
@@ -61,7 +61,7 @@
       "outputs": []
     },
     "test-generation3d-geometry": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation3d-example-geometry",
@@ -71,7 +71,7 @@
       "outputs": []
     },
     "test-generation3d-incremental": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation3d-incremental-eval",
@@ -81,7 +81,7 @@
       "outputs": []
     },
     "test-generation3d-app-laws": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick --test generation3d-app-laws",
@@ -91,7 +91,7 @@
       "outputs": []
     },
     "test-generation3d-unit-laws": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test quick --test semio_s_artifact_procedural_generation3d",

@@ -7,7 +7,7 @@
  * fixture's declared order and deadlines survive it. If the platform's event loop and our model
  * disagree about a law, the law is wrong, not the runtime.
  *
- * ▶️ `bun nx run @semio-tech/framework-async:twin` (or `bun ./📜️script.ts twin` in the TS package).
+ * ▶️ `bun repo run @semio-tech/framework-async:twin` (or `bun ./📜️script.ts twin` in the TS package).
  * Exit code 0 = every case held both ways; 1 = the faults are printed, one per line.
  *
  * 🇩🇪 Node-Zwilling der Fixture-Suite: dieselben Fälle ohne Test-Framework, auf der echten

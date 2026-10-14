@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/block-js",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -11,7 +11,7 @@
       }
     },
     "publication-authority-audit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts publication-authority-audit",
@@ -20,7 +20,7 @@
       "outputs": []
     },
     "shared-schema": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript",

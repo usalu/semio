@@ -5,7 +5,7 @@ import type{ ArtifactDialect } from "../../../../../../../../../../../../🧰️
 import{sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint as checkpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteValueBudget as budget,artifactSqliteValueByteLengthControlled as measured,type ArtifactSqliteOptions}from"../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754CellByteLength} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {binary64,binary64Value,parseBinary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value,parseBinary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export const FORMS_SQLITE_SCHEMA=String.raw`CREATE TABLE forms_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, artifact_id TEXT NOT NULL, version TEXT NOT NULL, title TEXT);
 CREATE TABLE forms_structure_child (id INTEGER PRIMARY KEY REFERENCES forms_document(id), child_id TEXT NOT NULL, artifact_id TEXT NOT NULL, artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL);
 CREATE TABLE forms_results_child (id INTEGER PRIMARY KEY REFERENCES forms_document(id), child_id TEXT NOT NULL, artifact_id TEXT NOT NULL, artifact_kind TEXT NOT NULL, standard TEXT NOT NULL, subset TEXT NOT NULL);

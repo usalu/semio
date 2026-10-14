@@ -1,471 +1,99 @@
-#!/usr/bin/env python3
-"""🔌 An INDEPENDENT second implementation of the `s.trinity.jack` parent document, of its `.dsl.semio` carrier and of
-its one parent-lane mutation, `set-query`, in Python, serving as this case's differential oracle.
-
-**Scope.** The scene (nodes with ports, edges over `node@port` endpoints) lives in the composed `content` child,
-`s.stdio.semio@v1/graph`; its edits are that shared graph vocabulary's leaves (design §20.15) and are adjudicated by the
-graph subset's own oracles. This file reads the scene only to project it — the identity round trip and the scene the
-`set-query` vector starts from — and implements the parent's own algebra: `set-query` replaces the document's query,
-writing the query it already holds is an accepted no-op, and its inverse writes the previous query back.
-
-**What it was written from.** ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` (the document members),
-``…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`` (`set-query = "set-query" SP text`) and the committed `set-query`
-specification vector. No graph library reads this carrier or models the document's query member, so a second
-implementation is the reference. No Rust was read to write this; `🦀️.rs` beside this file registers the SUBJECT half only.
-"""
-
-# region 🔖️Imports
-import copy
+"""🔌️ Independent closed Jack parent/query oracle preserves every literal child-address field."""
 import json
-import re
+from semio_repo_test import Adapter, Outcome
 
-from semio_repo_test import Adapter, Context, Outcome, digest
-
-# endregion 🔖️Imports
-
-
-# region 🔖️Vocabulary
-MEMBERS = ("schema", "name", "camera", "nodes", "edges", "rootNodeId", "query")
-"""🗂️ The cross-language projection: the members BOTH committed serializations of a jack scene carry.
-
-The committed carrier writes `schema`, `name`, `manifestId`, `camera`, `nodes`, `edges`,
-`rootNodeId` and `query`; the committed specification vectors write `schema`, `name`, `manifest`, `camera` and a
-composed `content` child, and omit `nodes` and `edges` entirely because theirs are empty. Neither
-`manifest`/`manifestId` — the kind vocabulary, which no mutation in this catalog edits — nor
-`content` is therefore comparable across both, and `content` is not even declared by the snapshot
-schema. What both forms do carry, once an absent `nodes`/`edges`/`rootNodeId` is read as empty, is
-the seven members above.
-"""
-
+REQUIRED = {"schema", "name", "manifest", "camera", "content", "query"}
+OPTIONAL = {"manifestId", "rootNodeId"}
 KINDS = ("set-query",)
-"""🏷️ Every kind the catalog declares."""
-
-TAGS = {"set-query": "setQuery"}
-"""🔤️ The internally tagged `mutation` discriminator of each kind, as the committed vectors spell it."""
-
-NODE_MEMBERS = {"id", "kind", "name", "x", "y", "width", "height", "properties", "ports"}
-PORT_MEMBERS = {"id", "kind", "direction", "properties"}
-EDGE_MEMBERS = {"id", "kind", "source", "target", "properties"}
-
-# endregion 🔖️Vocabulary
-
-
-# region 🔖️Carrier
-BANNER = "semio trinity.jack.dsl v1"
-
-BARE = re.compile(r"[A-Za-z_][A-Za-z0-9_.]*")
-"""🔤️ A top-level string the carrier writes without quotes: an identifier-like token."""
-
-NUMBER = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?")
-"""#️⃣ A bare numeric token."""
-
-
-def camel(key):
-    """🐫️ The document member a kebab-case carrier key names (`root-node-id` → `rootNodeId`)."""
-    head, *rest = key.split("-")
-    return head + "".join(word[:1].upper() + word[1:] for word in rest)
-
-
-def kebab(member):
-    """🥙️ The carrier key a document member is written under (`rootNodeId` → `root-node-id`)."""
-    return re.sub(r"[A-Z]", lambda match: "-" + match.group(0).lower(), member)
-
-
-class Reader:
-    """📖️ A cursor over the record notation: `key=value` members separated by whitespace, `{ … }` records,
-    `[ … ]` lists, quoted strings with backslash escapes, bare numbers, literals and bare tokens."""
-
-    def __init__(self, text):
-        self.text, self.at = text, 0
-
-    def skip(self):
-        while self.at < len(self.text) and self.text[self.at] in " \t\r\n":
-            self.at += 1
-
-    def peek(self):
-        self.skip()
-        return self.text[self.at] if self.at < len(self.text) else ""
-
-    def members(self, closer):
-        document = {}
-        while self.peek() not in (closer, ""):
-            equals = self.text.index("=", self.at)
-            key = self.text[self.at:equals]
-            if not re.fullmatch(r"[a-z][a-z0-9-]*|[A-Za-z_][A-Za-z0-9_]*", key):
-                raise AssertionError("carrier member key %r at offset %d is not a key" % (key, self.at))
-            self.at = equals + 1
-            document[key] = self.value()
-        if closer:
-            self.at += 1
-        return document
-
-    def value(self):
-        head = self.peek()
-        if head == "{":
-            self.at += 1
-            return self.members("}")
-        if head == "[":
-            self.at += 1
-            items = []
-            while self.peek() != "]":
-                items.append(self.value())
-            self.at += 1
-            return items
-        if head == '"':
-            out, self.at = [], self.at + 1
-            while self.text[self.at] != '"':
-                if self.text[self.at] == "\\":
-                    self.at += 1
-                    out.append({"n": "\n", "t": "\t", "r": "\r"}.get(self.text[self.at], self.text[self.at]))
-                else:
-                    out.append(self.text[self.at])
-                self.at += 1
-            self.at += 1
-            return "".join(out)
-        start = self.at
-        while self.at < len(self.text) and self.text[self.at] not in " \t\r\n}]":
-            self.at += 1
-        token = self.text[start:self.at]
-        if NUMBER.fullmatch(token):
-            return float(token)
-        return {"true": True, "false": False, "null": None}.get(token, token)
-
-
-def parse_carrier(text):
-    """📖️ Reads a `trinity.jack.dsl v1` document into `(document, member-order)`.
-
-    The carrier is the record notation the scene's text codec prints: a banner line, then the scene's
-    members as `key=value` in declaration order — kebab-case keys naming the camelCase members,
-    identifier-like strings bare and every other string quoted, `camera` a `{ … }` record and `nodes` and
-    `edges` `[ … ]` lists of records whose keys appear in the order they were written. The member
-    order is kept so the document can be printed back exactly.
-    """
-    banner, _newline, body = text.partition("\n")
-    if banner != BANNER:
-        raise AssertionError("carrier banner must be %r, found %r" % (BANNER, banner))
-    members = Reader(body).members("")
-    document = {camel(key): value for key, value in members.items()}
-    validate(document)
-    return document, [camel(key) for key in members]
-
-
-def scalar(value, top):
-    """🔤️ One scalar as the carrier spells it."""
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if value is None:
-        return "null"
-    if isinstance(value, (int, float)):
-        return repr(float(value))
-    if top and BARE.fullmatch(value):
-        return value
-    return '"%s"' % value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
-
-
-def print_members(pairs, indent, top, lines, line):
-    """🖨️ Writes `key=value` members onto `line` at `indent`, breaking after every record and list the way
-    the carrier does, and flushes the last open line."""
-    pad = " " * indent
-    for key, value in pairs:
-        opener = line + (" " if line.strip() else pad if not line else "")
-        if isinstance(value, dict):
-            lines.append(opener + key + "={")
-            print_members(list(value.items()), indent + 2, False, lines, "")
-            lines.append(pad + "}")
-            line = ""
-        elif isinstance(value, list):
-            opener += key + "=["
-            for index, item in enumerate(value):
-                lines.append((opener + " {") if index == 0 else " {")
-                print_members(list(item.items()), indent + 2, False, lines, "")
-                lines.append(pad + "}")
-            if not value:
-                lines.append(opener + " ")
-            line = pad + "]"
-        else:
-            line = opener + key + "=" + scalar(value, top)
-    if line.strip():
-        lines.append(line)
-
-
-def print_carrier(document, order):
-    """🖨️ Prints a document back in the member order the carrier used."""
-    lines = [BANNER]
-    print_members([(kebab(member), document[member]) for member in order], 0, True, lines, "")
-    return "\n".join(lines) + "\n"
-
-
-# endregion 🔖️Carrier
-
-
-# region 🔖️Document
-def normalize(payload):
-    """📥️ Reads a jack scene out of either committed serialization, defaulting the members the one
-    that omits them leaves out — an absent `nodes`, `edges` or `rootNodeId` is the empty one."""
-    document = copy.deepcopy(payload)
-    document.setdefault("nodes", [])
-    document.setdefault("edges", [])
-    document.setdefault("rootNodeId", "")
-    validate(document)
-    return document
-
-
-def validate(document):
-    """✅️ Holds the document to the committed JSON Schema, and to the invariant `create-edge`'s own
-    committed rejection establishes: every edge endpoint must name a node the scene holds."""
-    for name in ("schema", "name"):
-        if not isinstance(document.get(name), str):
-            raise AssertionError("%s must be a string, found %r" % (name, document.get(name)))
-    if set(document.get("camera", {})) != {"x", "y", "zoom"}:
-        raise AssertionError("camera must carry exactly x, y and zoom, found %r" % sorted(document.get("camera", {})))
-    identifiers = set()
-    for node in document["nodes"]:
-        if set(node) != NODE_MEMBERS:
-            raise AssertionError("a node must carry exactly %r, found %r" % (sorted(NODE_MEMBERS), sorted(node)))
-        if node["id"] in identifiers:
-            raise AssertionError("the scene carries a duplicate node id %r" % node["id"])
-        identifiers.add(node["id"])
-        for port in node["ports"]:
-            if set(port) != PORT_MEMBERS:
-                raise AssertionError("a port must carry exactly %r, found %r" % (sorted(PORT_MEMBERS), sorted(port)))
-    seen = set()
-    for edge in document["edges"]:
-        if set(edge) != EDGE_MEMBERS:
-            raise AssertionError("an edge must carry exactly %r, found %r" % (sorted(EDGE_MEMBERS), sorted(edge)))
-        if edge["id"] in seen:
-            raise AssertionError("the scene carries a duplicate edge id %r" % edge["id"])
-        seen.add(edge["id"])
-        for end in ("source", "target"):
-            if endpoint_node(edge[end]) not in identifiers:
-                raise AssertionError("edge %r names %s %r, which is not a node in the scene" % (edge["id"], end, edge[end]))
-
-
-def endpoint_node(endpoint):
-    """🔌 The node half of a `node@port` endpoint."""
-    return endpoint.split("@", 1)[0]
-
-
-# endregion 🔖️Document
-
-
-# region 🔖️Mutations
-def kind_of(mutation):
-    """🏷️ The kind an internally tagged mutation payload names."""
-    if not isinstance(mutation, dict) or "mutation" not in mutation:
-        raise AssertionError("a mutation carries an internally tagged `mutation` member, found %r" % mutation)
-    for kind, tag in TAGS.items():
-        if tag == mutation["mutation"]:
-            return kind
-    raise AssertionError("unknown mutation variant %r" % mutation["mutation"])
-
-
-def apply_mutation(document, mutation):
-    """🧬️ Applies the one parent-lane mutation, returning `(document, no-op)`: writing the query the document
-    already holds is an accepted no-op."""
-    kind_of(mutation)
-    result = copy.deepcopy(document)
-    if result.get("query", "") == mutation["value"]:
-        return result, True
-    result["query"] = mutation["value"]
-    validate(result)
-    return result, False
-
-
-def inverse_mutation(document, mutation):
-    """↩️ The mutation that undoes one application: the query the document held before it."""
-    kind_of(mutation)
-    return {"mutation": TAGS["set-query"], "value": document.get("query", "")}
-
-
-# endregion 🔖️Mutations
-
-
-# region 🔖️Laws
-def observable(scenario, before, after):
-    """👁️ A real-document row must move the scene. A mutation that quietly did nothing would agree
-    with an unchanged one and report a pass having proved nothing."""
-    if before == after:
-        raise AssertionError("%s: the forward mutation left the scene untouched, so nothing was proved" % scenario)
-
-
-def restores(kind, restored, original):
-    """↩️ The metamorphic inverse law, reported by the first member and index that diverges."""
-    if restored == original:
-        return
-    for name in MEMBERS:
-        if restored.get(name) == original.get(name):
-            continue
-        if name in ("nodes", "edges"):
-            was = [item["id"] for item in original[name]]
-            now = [item["id"] for item in restored[name]]
-            if was != now:
-                raise AssertionError("inverse-%s: %s came back as %r, not %r" % (kind, name, now, was))
-            for at, (left, right) in enumerate(zip(original[name], restored[name])):
-                if left != right:
-                    raise AssertionError("inverse-%s: %s[%d] (%s) came back as %s, not %s" % (kind, name, at, left["id"], json.dumps(right, sort_keys=True), json.dumps(left, sort_keys=True)))
-        raise AssertionError("inverse-%s: %s came back as %s, not %s" % (kind, name, json.dumps(restored.get(name), sort_keys=True), json.dumps(original.get(name), sort_keys=True)))
-
-
-# endregion 🔖️Laws
-
-
-# region 🔖️Plan
-def doc_string(ctx):
-    """📜️ The scenario's doc string — the Python `Context` has no accessor of its own."""
-    for step in ctx.scenario["steps"]:
-        if step.get("docString"):
-            return step["docString"]
-    raise AssertionError("scenario %s carries no doc string" % ctx.scenario["id"])
 
 
 def uri_in(ctx, needle):
-    """🧫️ The one declared fixture URI of this scenario's steps containing `needle`."""
+    """🧫️ Selects one actual declared scenario input."""
     for step in ctx.scenario["steps"]:
         for token in step["text"].split():
             if token.startswith(("asset://", "shared://")) and needle in token:
                 return token
-    raise AssertionError("scenario %s declares no fixture URI containing %r" % (ctx.scenario["id"], needle))
+    raise AssertionError("declared parent fixture is absent: " + needle)
 
 
-def json_fixture(ctx, needle):
-    """🧫️ The declared JSON fixture this scenario names."""
+def fixture(ctx, needle):
+    """📦️ Reads an original complete declared JSON source."""
     return json.loads(ctx.input_bytes(uri_in(ctx, needle)).decode("utf-8"))
 
 
-def tower(ctx):
-    """🗼️ The real committed Nakagin Capsule Tower scene, read through its own carrier."""
-    return parse_carrier(ctx.input_bytes(uri_in(ctx, "asset://")).decode("utf-8"))
+def parent(value):
+    """🪪️ A closed parent retains its complete literal content address; no scene is reconstructed."""
+    if not isinstance(value, dict) or not REQUIRED <= value.keys() or not value.keys() <= REQUIRED | OPTIONAL:
+        raise AssertionError("closed Jack parent fields required")
+    if any(not isinstance(value[key], str) for key in ("schema", "name", "query")):
+        raise AssertionError("declared parent text required")
+    content = value["content"]
+    if set(content) != {"childId", "target"} or set(content["target"]) != {"artifactId", "dialect"} or set(content["target"]["dialect"]) != {"artifactKind", "standard", "subset"}:
+        raise AssertionError("complete literal child address required")
+    return value
 
 
-def projection_of(document):
-    """📤️ What parity compares: the seven members both committed serializations carry."""
-    return {name: document.get(name, [] if name in ("nodes", "edges") else "") for name in MEMBERS}
+def apply(source, mutation):
+    """📝️ The parent event changes only its query; every other original reference remains unchanged."""
+    if set(mutation) != {"mutation", "value"} or mutation["mutation"] != "setQuery" or not isinstance(mutation["value"], str):
+        raise AssertionError("closed set-query event required")
+    return {**source, "query": mutation["value"]}
 
 
-def outcome_of(payload):
-    """📤️ Wraps a projection with its own compact serialization as the raw artifact."""
-    return Outcome(payload, raw=json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+def outcome(value):
+    """📤️ Canonical comparison includes every parent field and the complete child address."""
+    return Outcome(value, raw=json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8"))
 
 
-# endregion 🔖️Plan
-
-
-# region 🔖️Handlers
-def mutate_handler(kind):
-    """🎯️ Applies one kind to the REAL committed Nakagin Capsule Tower scene."""
-
+def mutate_handler(_kind):
+    """🎯️ Applies the authored event to the complete neutral parent."""
     def handler(ctx):
-        document, _order = tower(ctx)
-        mutation = json.loads(doc_string(ctx))
-        if kind_of(mutation) != kind:
-            raise AssertionError("mutate-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
-        applied, noop = apply_mutation(document, mutation)
-        if noop:
-            raise AssertionError("mutate-%s: the feature's parameters were an accepted no-op, so nothing was proved" % kind)
-        observable("mutate-%s" % kind, document, applied)
-        return outcome_of(projection_of(applied))
-
+        source = parent(fixture(ctx, "asset://"))
+        changed = apply(source, json.loads(ctx.doc_string()))
+        if changed["query"] == source["query"]:
+            raise AssertionError("authored event was an unexpected no-op")
+        return outcome(changed)
     return handler
 
 
-def inverse_handler(kind):
-    """↩️ Applies one kind to the REAL tower scene and then its OWN computed inverse.
-
-    The projection carries BOTH documents; projecting only the restored one would make the row project the original
-    value and the differential would be vacuous.
-    """
-
+def inverse_handler(_kind):
+    """↩️ The original query creates the inverse and restores the complete parent."""
     def handler(ctx):
-        document, _order = tower(ctx)
-        mutation = json.loads(doc_string(ctx))
-        if kind_of(mutation) != kind:
-            raise AssertionError("inverse-%s: the feature states a %s payload" % (kind, kind_of(mutation)))
-        applied, noop = apply_mutation(document, mutation)
-        if noop:
-            raise AssertionError("inverse-%s: the feature's parameters were an accepted no-op, so nothing was proved" % kind)
-        observable("inverse-%s" % kind, document, applied)
-        restored, _noop = apply_mutation(applied, inverse_mutation(document, mutation))
-        restores(kind, restored, document)
-        return outcome_of({"mutated": projection_of(applied), "restored": projection_of(restored)})
-
+        source = parent(fixture(ctx, "asset://"))
+        changed = apply(source, json.loads(ctx.doc_string()))
+        restored = apply(changed, {"mutation": "setQuery", "value": source["query"]})
+        if restored != source:
+            raise AssertionError("inverse lost original parent fields")
+        return outcome({"mutated": changed, "restored": restored})
     return handler
 
 
-def spec_vector_handler(kind):
-    """📐️ Replays one committed handcrafted vector over the composed scene the feature names for it; the feature's
-    `verdict` column states the answer it commits to: `refused` must be refused outright, `noop` must be accepted while
-    leaving the document where it was, and `applied` must move it to the committed after-document."""
-
+def spec_handler(_kind):
+    """📐️ Replays the same complete closed parent/event/after vector as the subject."""
     def handler(ctx):
-        scene = json_fixture(ctx, ".scene.json")
-        seeded = lambda committed: normalize({**committed, "nodes": scene["nodes"], "edges": scene["edges"]})
-        before = seeded(json_fixture(ctx, "⬅️before"))
-        mutation = json_fixture(ctx, "🦠️mutation")
-        after = seeded(json_fixture(ctx, "➡️after"))
-        verdict = json.loads(doc_string(ctx))["verdict"]
-        if kind_of(mutation) != kind:
-            raise AssertionError("spec-vector-%s: the committed vector carries a %s payload" % (kind, kind_of(mutation)))
-        if verdict == "refused":
-            try:
-                apply_mutation(before, mutation)
-            except AssertionError:
-                if projection_of(before) != projection_of(after):
-                    raise AssertionError("spec-vector-%s: a refused vector must commit the same before- and after-scene" % kind)
-                return outcome_of(projection_of(before))
-            raise AssertionError("spec-vector-%s: the committed vector declares a refusal, but the mutation applied" % kind)
-        applied, noop = apply_mutation(before, mutation)
-        if verdict == "applied":
-            if noop:
-                raise AssertionError("spec-vector-%s: the committed vector declares an applied change, but the mutation was a no-op" % kind)
-        elif not noop:
-            raise AssertionError("spec-vector-%s: the committed vector declares an accepted no-op, but the mutation moved the scene" % kind)
-        if projection_of(applied) != projection_of(after):
-            raise AssertionError("spec-vector-%s: the applied scene is not the committed after-scene" % kind)
-        return outcome_of(projection_of(applied))
-
+        source = parent(fixture(ctx, "⬅️before"))
+        expected = parent(fixture(ctx, "➡️after"))
+        changed = apply(source, fixture(ctx, "🦠️mutation"))
+        if json.loads(ctx.doc_string())["verdict"] != "applied" or changed["query"] == source["query"] or changed != expected:
+            raise AssertionError("complete parent differs from its committed applied vector")
+        return outcome(changed)
     return handler
 
 
 def identity_handler(ctx):
-    """🔁️ Reads the artifact's own committed real example and prints it back byte for byte.
-
-    Byte exactness is asserted here, in role: this implementation and the committed file are two
-    independent productions of one carrier layout, so anything short of identity is a misreading.
-    The projection is the scene itself, which is what lets the two languages be compared on what
-    they each read out of the same real bytes.
-    """
-    text = ctx.input_bytes(uri_in(ctx, "asset://")).decode("utf-8")
-    document, order = parse_carrier(text)
-    if document["name"] != "Nakagin Capsule Tower" or len(document["nodes"]) != 9 or len(document["edges"]) != 6:
-        raise AssertionError("identity-round-trip: the committed example is the nine-node, six-edge Nakagin tower, read %r with %d node(s) and %d edge(s)" % (document.get("name"), len(document["nodes"]), len(document["edges"])))
-    printed = print_carrier(document, order)
-    if printed != text:
-        at = next((offset for offset, (left, right) in enumerate(zip(printed, text)) if left != right), min(len(printed), len(text)))
-        raise AssertionError("identity-round-trip: re-encoding the committed example produced %d byte(s) against %d, first difference at %d" % (len(printed.encode("utf-8")), len(text.encode("utf-8")), at))
-    reparsed, _order = parse_carrier(printed)
-    if reparsed != document:
-        raise AssertionError("identity-round-trip: printing and reparsing moved the scene")
-    return Outcome(
-        projection_of(document),
-        raw=printed.encode("utf-8"),
-        diagnostics=[{"severity": "info", "message": "committed example reproduced byte for byte: %d bytes, digest %s" % (len(printed.encode("utf-8")), digest(printed.encode("utf-8")))}],
-    )
+    """🔁️ The declared parent carrier preserves every literal field across JSON re-encoding."""
+    source = parent(fixture(ctx, "asset://"))
+    restored = parent(json.loads(json.dumps(source, ensure_ascii=False)))
+    if restored != source:
+        raise AssertionError("parent carrier lost source identity")
+    return outcome(restored)
 
 
-# endregion 🔖️Handlers
-
-
-# region 🔖️Registration
 def adapter():
-    """🧭️ Registration by FULL expanded scenario id, in the ORACLE role only — registering these
-    handlers as subjects too would make the reference its own subject and manufacture a green
-    self-comparison."""
-    built = Adapter("python")
+    """🧭️ Only oracle roles register here; the native subject remains independently owned."""
+    result = Adapter("python")
     for kind in KINDS:
-        built = built.oracle("mutate-%s" % kind, mutate_handler(kind))
-        built = built.oracle("inverse-%s" % kind, inverse_handler(kind))
-        built = built.oracle("spec-vector-%s" % kind, spec_vector_handler(kind))
-    return built.oracle("identity-round-trip", identity_handler)
-
-
-# endregion 🔖️Registration
+        result = result.oracle("mutate-" + kind, mutate_handler(kind))
+        result = result.oracle("inverse-" + kind, inverse_handler(kind))
+        result = result.oracle("spec-vector-" + kind, spec_handler(kind))
+    return result.oracle("identity-round-trip", identity_handler)

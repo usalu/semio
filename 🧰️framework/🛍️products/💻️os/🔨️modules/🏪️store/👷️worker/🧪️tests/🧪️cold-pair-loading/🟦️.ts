@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import examples from "../🧫️fixtures/🧫️cold-pair-loading/🔣️.json";
 import type { ColdDocumentPairCursor, ColdPairIngressStatus } from "../../../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
-import type { ActorInstanceLifetime } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
+import type { ActorInstanceLifetime } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 
 type Answer = "loading" | "loading-other-page" | "loading-other-transfer" | "applied" | "fault" | "cancel";
 type PolicyFields = Readonly<{ deadlineMs: number; maximumTurns: number; eagerTurns: number; backoffMs: number; maximumBackoffMs: number }>;

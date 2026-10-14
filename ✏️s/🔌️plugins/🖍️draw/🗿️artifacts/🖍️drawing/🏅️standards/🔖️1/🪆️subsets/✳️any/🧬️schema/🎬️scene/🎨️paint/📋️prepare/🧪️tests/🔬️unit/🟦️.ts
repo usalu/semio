@@ -14,7 +14,7 @@ import {DocumentVectorJob,type DocumentScenePlan} from "../../../../📋️prepa
 import type {DrawingArtifact} from "../../../../../🟦️.ts";
 import {PreparedRegionQueryJob} from "../../../🟦️.ts";
 import {ScenePaintJob,PreparedSceneCloseJob,type PaintedSceneLimits} from "../../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import vectorSchema from "../../../../📋️prepare/🧬️schema/🔣️.json";
 import rasterSchema from "../../../../📷️raster/🧬️schema/🔣️.json";
 import pathSchema from "../../../../../🧮️geometry/📷️raster/🧬️schema/🔣️.json";

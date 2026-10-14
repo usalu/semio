@@ -2,7 +2,7 @@
 import sql from"./🗄️.sql"with{type:"text"};
 import type { WorkflowSnapshot, WorkflowNode, WorkflowPort, WorkflowContract, WorkflowParameter } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,ieee754IsNull,type Ieee754Column} from "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,type Binary64} from "../../../../../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,type Binary64} from "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 import{ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import{sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue}from"../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 

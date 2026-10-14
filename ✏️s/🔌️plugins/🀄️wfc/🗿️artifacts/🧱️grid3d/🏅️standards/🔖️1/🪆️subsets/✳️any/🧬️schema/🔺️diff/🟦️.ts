@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🔺 s.wfc.grid3d diff — a field-sparse delta: scalars are optional absolute values, cell sizes are sparse axis patches, every list carries removed keys,
  * added rows (landing at their canonical position) and per-row field patches. */
 

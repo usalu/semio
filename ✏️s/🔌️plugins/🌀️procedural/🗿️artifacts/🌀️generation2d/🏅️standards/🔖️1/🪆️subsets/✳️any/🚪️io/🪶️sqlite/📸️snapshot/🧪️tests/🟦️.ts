@@ -11,7 +11,7 @@ import{parseGeneration2dArtifact}from"../../../../🧬️schema/🟦️.ts";
 import Ajv from"ajv";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
 import{diff as moveNodeDiff}from"../../../../../../../../../🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🟦️.ts";
-import {binary64,binary64Value} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{CreateWidget}from"../../../../🧬️schema/🧬️mutations/🌱️create-widget/🦠️mutation/🟦️.ts";
 import{generation2dGestureLeafTwinSelfTests}from"../../../../🧬️schema/🧬️mutations/🧪️tests/🧪️gesture-leaves/🟦️.ts";
 import{diff as create3dWidgetDiff}from"../../../../../../../../../🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🔺️diff/🟦️.ts";

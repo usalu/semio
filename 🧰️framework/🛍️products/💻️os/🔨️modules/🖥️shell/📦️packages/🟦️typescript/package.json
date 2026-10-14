@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-os-shell",
   "version": "0.1.0",
   "description": "framework · os-shell — shell UI state single source of truth (ShellState/ShellCommand/ShellEvent) and the TypeScript twin reducer",

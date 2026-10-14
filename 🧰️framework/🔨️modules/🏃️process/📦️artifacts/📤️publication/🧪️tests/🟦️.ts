@@ -11,7 +11,9 @@ import { acquireResourceLease } from "../../../🔒️leases/🟦️.ts";
 export async function testArtifactPublication(output: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "🧫️fixtures/🔣️.json"), "utf8"));
   assert.ok(new (createRequire(import.meta.url)("ajv").default)({strict:true}).validate(JSON.parse(readFileSync(resolve(import.meta.dirname,"../🧬️schema/🔣️.json"),"utf8")),fixture));
-  const root = mkdtempSync(join(output, "artifact-publication-")), staging = join(root, "dist"), leaseDirectory = join(root, "leases");
+  const root = mkdtempSync(join(output, "ap-")), staging = join(root, "dist"), leaseRoot = resolve(process.cwd(), ".cache/framework/leases");
+  mkdirSync(leaseRoot, { recursive: true });
+  const leaseDirectory = mkdtempSync(join(leaseRoot, "ap-"));
   const files = new Map<string, string>();
   for (const [name, text] of Object.entries(fixture.files)) {
     const path = join(root, "input", name); mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, String(text)); files.set(name, path);
@@ -111,5 +113,5 @@ export async function testArtifactPublication(output: string): Promise<void> {
       assert.deepEqual(readdirSync(root).filter(name => name.startsWith("dist.stage-")), []);
     } finally { mock.module("node:fs", () => native); }
 
-  } finally { lease.release(); rmSync(root, { recursive: true, force: true }); }
+  } finally { lease.release(); rmSync(root, { recursive: true, force: true }); rmSync(leaseDirectory, { recursive: true, force: true }); }
 }

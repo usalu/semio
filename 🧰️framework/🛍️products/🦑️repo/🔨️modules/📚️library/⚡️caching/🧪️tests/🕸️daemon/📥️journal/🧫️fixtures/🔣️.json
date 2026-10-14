@@ -10,7 +10,8 @@
       "files": [
         "package.json"
       ]
-    }
+    },
+    "deadlineUnixMilliseconds": 3000
   },
   "invalid": [
     {
@@ -33,6 +34,15 @@
         "files": []
       },
       "extra": true
+    },
+    {
+      "type": "GET_SEMIO_FILESYSTEM_JOURNAL",
+      "version": 1,
+      "scope": {
+        "roots": [],
+        "files": []
+      },
+      "deadlineUnixMilliseconds": -1
     }
   ],
   "source": "sample/entry.ts",
@@ -53,6 +63,14 @@
   "toolingLifetime": {
     "resourcePrefix": "nx-tooling:",
     "runningExclusive": "refused",
-    "retiredExclusive": "admitted"
+    "retiredExclusive": "admitted",
+    "otherLiveOwnerExclusive": "refused"
+  },
+  "deadline": {
+    "now": 1000,
+    "deadlineUnixMilliseconds": 4000,
+    "later": 2100,
+    "expectedRemaining": 1900,
+    "workMilliseconds": 1100
   }
 }

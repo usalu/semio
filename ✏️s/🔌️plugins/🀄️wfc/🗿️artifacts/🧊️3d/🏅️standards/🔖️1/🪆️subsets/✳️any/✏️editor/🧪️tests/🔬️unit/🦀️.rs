@@ -262,7 +262,7 @@ fn every_declared_action_bridges_through_command_from_action() {
             if skip.contains(&action.id.as_str()) {
                 continue;
             }
-            <Wfc3dEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(&action.id, None).unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
+            <Wfc3dEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(&action.id, None, None).unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
             bridged += 1;
         }
     }

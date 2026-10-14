@@ -170,6 +170,7 @@ fn a_scene_refresh_preserves_the_exact_captured_owner_until_outside_release() {
 
 #[test]
 fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let law = &fixture["siblingInsertion"];
@@ -220,7 +221,7 @@ fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
         if !crate::interpreter::ui_document_close_pending() {
             break;
         }
-        crate::interpreter::close_ui_document_one();
+        caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn");
     }
     for mut document in documents {
         while !document.close_step() {}
@@ -231,6 +232,7 @@ fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
     assert_eq!(captured, Some(current.clone()));
     assert_eq!(usize::from(released == Some(current)), law["terminalReceivers"].as_u64().unwrap() as usize);
     assert_eq!(duplicate, None);
+    caller.finish();
 }
 
 /// 🕒️ Accepted removal invalidates every old camera before the one-slot retirement lane drains.
@@ -267,7 +269,7 @@ fn renderer_canvas_multiple_accepted_removals_invalidate_every_checked_out_camer
     for rect in &rects {
         semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
             &mut interaction,
-            ui_render::DispatchEvent::Scroll { x: rect.x + rect.w * 0.5, y: rect.y + rect.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
+            &mut ui_render::DispatchEvent::Scroll { x: rect.x + rect.w * 0.5, y: rect.y + rect.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
         ));
     }
     let mut deadlines = crate::scenes::SceneCameraDispatchCursor::begin(crate::app_now_ms() + 400.0, crate::scenes::camera_fixture_grant()).unwrap().0;
@@ -328,7 +330,7 @@ fn renderer_canvas_same_host_sibling_rebase_preserves_checked_out_camera() {
             let mut mounted = pointer_interaction(shell, input);
             semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
                 &mut mounted,
-                ui_render::DispatchEvent::Scroll { x: rect.x + rect.w * 0.5, y: rect.y + rect.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
+                &mut ui_render::DispatchEvent::Scroll { x: rect.x + rect.w * 0.5, y: rect.y + rect.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
             ));
             deadline = Some(crate::scenes::SceneCameraDispatchCursor::begin(crate::app_now_ms() + 400.0, crate::scenes::camera_fixture_grant()).unwrap().0);
             shell = mounted.shell;
@@ -917,6 +919,7 @@ fn published_canvas_catalogue_document(shell: &mut ShellState, surface: &str, ra
 }
 
 fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -931,7 +934,7 @@ fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, &UiD
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
             let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-            let done = render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
+            let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the tree pointer document faulted in phase {}", cursor.phase_name());
             done
         });
@@ -940,6 +943,8 @@ fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, &UiD
     }
     shell.world3d_states = world3d_states;
     shell.publish_retained_hit_registry(&mut input);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     input
 }
 
@@ -1050,6 +1055,7 @@ fn retire_scripted_window_publication_documents(shell: &mut ShellState) {
 }
 
 pub(super) fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&str, &str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -1064,7 +1070,7 @@ pub(super) fn paint_component_pointer_documents(shell: &mut ShellState, document
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
             let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
-            let done = render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
+            let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the component pointer document faulted in phase {}", cursor.phase_name());
             done
         });
@@ -1072,6 +1078,8 @@ pub(super) fn paint_component_pointer_documents(shell: &mut ShellState, document
         shell.register_retained_body_hits(window_id, *body, &mut input);
     }
     shell.publish_retained_hit_registry(&mut input);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     input
 }
 
@@ -1354,13 +1362,13 @@ fn normalized_tab_drop_uses_shifted_destination_and_refuses_invalid_path_atomica
         let mut interaction = pointer_interaction(shell, input);
         let pointer = mouse_pointer(99);
         let modifiers = ui_render::EventModifiers::default();
-        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerDown { pointer, x: 30.0, y: 30.0, button: ui_render::PointerButton::Primary, modifiers }));
-        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerMove { pointer, x: 40.0, y: 30.0, modifiers }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::PointerDown { pointer, x: 30.0, y: 30.0, button: ui_render::PointerButton::Primary, modifiers }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::PointerMove { pointer, x: 40.0, y: 30.0, modifiers }));
         assert!(interaction.shell.dock_drag.is_some());
         assert_eq!(interaction.shell.dock.root, before);
         interaction.shell.presented_input_geometry.dock_drop_tab_bars = vec![(vec![if invalid { 4 } else { 1 }], WindowStackCorner::TopLeft, Rect::new(100.0, 20.0, 100.0, 24.0), vec![100.0])];
-        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerMove { pointer, x: 110.0, y: 30.0, modifiers }));
-        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerUp { pointer, x: 110.0, y: 30.0, button: ui_render::PointerButton::Primary, modifiers }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::PointerMove { pointer, x: 110.0, y: 30.0, modifiers }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::PointerUp { pointer, x: 110.0, y: 30.0, button: ui_render::PointerButton::Primary, modifiers }));
         assert!(interaction.shell.dock_drag.is_none());
         if invalid {
             assert_eq!(interaction.shell.dock.root, before);
@@ -1392,12 +1400,12 @@ fn normalized_dock_tab_pointer_sequence_promotes_the_drag_before_release() {
     let start = (rect.x + rect.w * 0.5, rect.y + rect.h * 0.5);
     semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
         &mut interaction,
-        ui_render::DispatchEvent::PointerDown { pointer, x: start.0, y: start.1, button: ui_render::PointerButton::Primary, modifiers: ui_render::EventModifiers::default() },
+        &mut ui_render::DispatchEvent::PointerDown { pointer, x: start.0, y: start.1, button: ui_render::PointerButton::Primary, modifiers: ui_render::EventModifiers::default() },
     ));
     assert!(interaction.shell.pending_dock_drag.as_ref().is_some_and(|(payload, origin)| payload.kind == DockDragKind::Tab && payload.window_id == "top" && *origin == start));
     assert_eq!(interaction.pointer_capture.holder(pointer.id), Some(PointerHitOwner::Chrome));
 
-    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::PointerMove { pointer, x: start.0 + 6.0, y: start.1, modifiers: ui_render::EventModifiers::default() }));
+    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::PointerMove { pointer, x: start.0 + 6.0, y: start.1, modifiers: ui_render::EventModifiers::default() }));
     assert!(interaction.shell.pending_dock_drag.is_none());
     assert!(interaction.shell.dock_drag.as_ref().is_some_and(|drag| drag.payload.kind == DockDragKind::Tab && drag.payload.window_id == "top"));
     assert_eq!(interaction.shell.dock.collect_window_ids(), vec!["top".to_string(), "perspective".to_string()], "promotion derives a ghost without mutating the committed dock");
@@ -1674,6 +1682,7 @@ fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
 /// retained reconciliation and paint, so the published Shell ingress starts a NewWindow dock drag.
 #[test]
 fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let surface = "display-transfer-host-boundary";
     let body = Rect::new(19.0, 37.0, 420.0, 300.0);
@@ -1774,7 +1783,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let mut cursor = ShellChromeChildCursor::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     crate::interpreter::begin_accessibility_visible_documents();
-    let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut body_input, &theme, bounds, &mut world_resources));
+    let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut body_input, &theme, bounds, &mut world_resources, cx)));
     assert!(painted, "the canonical Shell window walk consumes the created instance's initial body");
     assert!(body_input.staged_hits().iter().any(|hit| hit.kind == HitKind::World3d), "the canonical window walk stages the new instance's physical World3d hit target");
     shell.publish_retained_hit_registry(&mut body_input);
@@ -1812,7 +1821,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
         if !crate::interpreter::ui_document_close_pending_for("main-2") {
             break;
         }
-        assert!(crate::interpreter::close_ui_document_one());
+        assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"));
         shell = crate::os_host::finish_world_fixture_component_close(shell);
     }
     assert!(!crate::interpreter::ui_document_close_pending_for("main-2"), "the presenter maintenance lane returns the closed retained surface before its identity is reused");
@@ -1846,7 +1855,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let mut refreshed_cursor = ShellChromeChildCursor::default();
     crate::interpreter::begin_accessibility_visible_documents();
     let refreshed =
-        (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_main_window_step(&mut refreshed_cursor, &mut refreshed_draw, &mut refreshed_overlay, &mut atlas, &icons, &mut refreshed_input, &theme, bounds, &mut world_resources));
+        (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|shell.render_main_window_step(&mut refreshed_cursor, &mut refreshed_draw, &mut refreshed_overlay, &mut atlas, &icons, &mut refreshed_input, &theme, bounds, &mut world_resources, cx)));
     assert!(refreshed, "the body returned by refresh_ui enters the canonical Shell paint walk");
     assert!(refreshed_input.staged_hits().iter().any(|hit| hit.kind == HitKind::World3d));
     shell.publish_retained_hit_registry(&mut refreshed_input);
@@ -1870,6 +1879,8 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
         shell.advance_world3d_retirement_step();
     }
     assert!(shell.retired_world3d_states.is_empty(), "the refreshed owner also reaches terminal retirement");
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     while !document.close_step() {}
 }
 
@@ -2173,7 +2184,7 @@ fn renderer_canvas_wheel_burst(case_id: &str) {
     let y = body.y + fixture["wheel"]["anchor"]["y"].as_f64().unwrap() as f32;
     let mut interaction = pointer_interaction(shell, input);
     for delta in case["deltas"].as_array().unwrap() {
-        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll { x, y, delta_x: 0.0, delta_y: delta.as_f64().unwrap() as f32, modifiers: ui_render::EventModifiers::default() }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::Scroll { x, y, delta_x: 0.0, delta_y: delta.as_f64().unwrap() as f32, modifiers: ui_render::EventModifiers::default() }));
     }
     let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
     let actions: Vec<_> = actions.iter().filter(|action| action.controller_id == controller && canvas_action_args(action)["surfaceId"] == surface).collect();
@@ -2354,6 +2365,7 @@ fn escape_closes_the_palette_rather_than_committing_its_query_field() {
 /// 🪟️ Closing a Dock window retires its exact Canvas owner before a pending camera can settle.
 #[test]
 fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-closed-window";
@@ -2371,7 +2383,7 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
     let mut interaction = pointer_interaction(shell, input);
     semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
         &mut interaction,
-        ui_render::DispatchEvent::Scroll { x: body.x + 200.0, y: body.y + 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() },
+        &mut ui_render::DispatchEvent::Scroll { x: body.x + 200.0, y: body.y + 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() },
     ));
 
     assert!(interaction.shell.close_dock_window(surface));
@@ -2383,7 +2395,7 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
         if !crate::interpreter::ui_document_close_pending() {
             break;
         }
-        assert!(crate::interpreter::close_ui_document_one(), "each admitted close opportunity advances one bounded unit");
+        assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances one bounded unit");
     }
     assert!(!crate::interpreter::ui_document_close_pending(), "the bounded runtime close reaches terminal");
     let target_after_close = crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0);
@@ -2401,10 +2413,12 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
     while !cleanup.close_step() {}
 
     assert!(target_after_close.is_none(), "the complete window close retires the retained component target");
+    caller.finish();
 }
 
 #[test]
 fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-reopened-window";
@@ -2433,14 +2447,14 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
     let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-    assert!(!render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts));
+    assert!(!caller.turn(|cx|render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx)));
     assert_eq!(cursor.phase_name(), "ingress", "the successor cannot enter the old retained generation while its close is pending");
 
     for _ in 0..262_144 {
         if !crate::interpreter::ui_document_close_pending() {
             break;
         }
-        assert!(crate::interpreter::close_ui_document_one());
+        assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"));
     }
     assert!(!crate::interpreter::ui_document_close_pending());
     let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &successor, body)]);
@@ -2459,11 +2473,14 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &cleanup, body)]);
     while !successor.close_step() {}
     while !cleanup.close_step() {}
+    caller.retire_world(&mut world_resources);
+    caller.finish();
 }
 
 /// 🪟️ Sibling components retain independent cameras while sharing their document action address.
 #[test]
 fn sibling_canvas_components_mount_under_one_document_without_sharing_their_camera() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["siblingWindowLifetime"];
@@ -2506,7 +2523,7 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
     for (index, rect) in rects.iter().enumerate() {
         semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
             &mut interaction,
-            ui_render::DispatchEvent::Scroll { x: rect.x + rect.w * 0.5, y: rect.y + rect.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
+            &mut ui_render::DispatchEvent::Scroll { x: rect.x + rect.w * 0.5, y: rect.y + rect.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
         ));
         let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
         let cameras: Vec<_> = actions.iter().filter(|action| action.controller_id == controller).map(canvas_action_args).collect();
@@ -2520,25 +2537,27 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
     let survivor = interaction.input.hits().iter().find(|hit| hit.kind == ui_wgpu::wgpu::HitKind::ComponentScene).unwrap().rect;
     semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
         &mut interaction,
-        ui_render::DispatchEvent::Scroll { x: survivor.x + survivor.w * 0.5, y: survivor.y + survivor.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
+        &mut ui_render::DispatchEvent::Scroll { x: survivor.x + survivor.w * 0.5, y: survivor.y + survivor.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },
     ));
     let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
     let camera = actions.iter().find(|action| action.controller_id == controller).map(canvas_action_args).unwrap();
     assert!((camera["camera"]["zoom"].as_f64().unwrap() - law["survivingZoom"].as_f64().unwrap()).abs() < 0.0001);
     assert!(crate::interpreter::request_ui_document_close(surface));
     for _ in 0..262_144 {
-        if !crate::interpreter::close_ui_document_one() {
+        if !caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn") {
             break;
         }
     }
     assert!(!crate::interpreter::ui_document_close_pending_for(surface));
     while !document.close_step() {}
     while !successor.close_step() {}
+    caller.finish();
 }
 
 /// 🪟️ Closing each distinct window returns its retained capacity before the next window opens.
 #[test]
 fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _camera_owner = crate::scenes::camera_fixture_lease(crate::scenes::camera_fixture_grant());
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["sequentialWindowLifetime"];
@@ -2556,7 +2575,7 @@ fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
         let document = interaction.shell.publish_surface_records(&surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
         interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(&surface, controller, &document, body)]);
         assert!(crate::interpreter::retained_scene_target_at(&surface, 200.0, 150.0).is_some(), "window {index} mounts after earlier windows have closed");
-        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll { x: 200.0, y: 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() }));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::Scroll { x: 200.0, y: 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() }));
         let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
         let camera =
             actions.iter().find(|action| action.controller_id == controller && canvas_action_args(action)["surfaceId"] == surface).map(|action| canvas_action_args(action)["camera"].clone()).expect("each admitted mount retains a working camera");
@@ -2571,12 +2590,13 @@ fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
             if !crate::interpreter::ui_document_close_pending() {
                 break;
             }
-            assert!(crate::interpreter::close_ui_document_one());
+            assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"));
         }
         assert!(!crate::interpreter::ui_document_close_pending(), "window {index} closes within the bounded opportunity ceiling");
         assert!(crate::interpreter::retained_scene_target_at(&surface, 200.0, 150.0).is_none());
         assert_eq!(interaction.shell.window_ui.len(), law["liveWindowsAfterClose"].as_u64().unwrap() as usize);
     }
+    caller.finish();
 }
 
 /// 🪪️ A retained camera survives an authored refresh and remounts with a replacement key.
@@ -2596,7 +2616,7 @@ fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
         interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &document, body)]);
         semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
             &mut interaction,
-            ui_render::DispatchEvent::Scroll { x: body.x + body.w * 0.5, y: body.y + body.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() },
+            &mut ui_render::DispatchEvent::Scroll { x: body.x + body.w * 0.5, y: body.y + body.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() },
         ));
         let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
         let camera = actions.iter().find(|action| action.controller_id == controller && canvas_action_args(action)["surfaceId"] == surface).map(|action| canvas_action_args(action)["camera"].clone());
@@ -2653,7 +2673,7 @@ fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
     let original_owner = crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
     let mut interaction = pointer_interaction(shell, input);
     let scroll = || ui_render::DispatchEvent::Scroll { x: body.x + 200.0, y: body.y + 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() };
-    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, scroll()));
+    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut scroll()));
     let mut deadline = crate::scenes::SceneCameraDispatchCursor::begin(crate::app_now_ms() + 400.0, crate::scenes::camera_fixture_grant()).unwrap().0;
     let container =
         |key| tree_pointer_record(1, key, ui_contract::Component::Container(ui_contract::ContainerProps { role: Default::default(), label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }), &[], None);
@@ -2667,7 +2687,7 @@ fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
     let mut successor = interaction.shell.publish_surface_records(surface, vec![record]).unwrap();
     interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &successor, body)]);
     if replace {
-        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, scroll()));
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, &mut scroll()));
     }
     let mut actions = Vec::new();
     if close {

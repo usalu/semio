@@ -90,7 +90,7 @@ fn every_authored_action_id_maps_back_to_a_typed_command() {
     let declared: Vec<String> = definition.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
     for id in crate::mutations::KINDS.iter().copied().chain(AUTHORED.iter().copied()) {
         assert!(declared.iter().any(|declared| declared == id), "{id} is declared by no pane");
-        <Grid2dEditor as ArtifactEditor>::command_from_action(id, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        <Grid2dEditor as ArtifactEditor>::command_from_action(id, None, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
     }
 }
 
@@ -109,7 +109,7 @@ fn every_tool_job_id_is_a_declared_migrated_verb_with_a_command() {
             .find(|action| &action.id == id)
             .unwrap_or_else(|| panic!("{id} is a tool-job id no window declares"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{id}");
-        let command = <Grid2dEditor as ArtifactEditor>::command_from_action(id, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
+        let command = <Grid2dEditor as ArtifactEditor>::command_from_action(id, None, None).unwrap_or_else(|error| panic!("{id}: {error:?}"));
         assert_eq!(grid2d_command_id(&command), *id, "the command a verb decodes to must answer that verb's own id");
     }
     for kind in crate::mutations::KINDS {
@@ -119,7 +119,7 @@ fn every_tool_job_id_is_a_declared_migrated_verb_with_a_command() {
 
 #[test]
 fn an_unknown_action_is_refused_rather_than_silently_defaulted() {
-    assert!(<Grid2dEditor as ArtifactEditor>::command_from_action("not-a-verb", None).is_err());
+    assert!(<Grid2dEditor as ArtifactEditor>::command_from_action("not-a-verb", None, None).is_err());
 }
 
 #[test]
@@ -157,10 +157,10 @@ fn the_example_switcher_resolves_exactly_the_bundled_ids() {
 /// was — re-picking the boot example is not an edit.
 #[test]
 fn switching_example_loads_a_document_instead_of_journalling_an_edit() {
-    let command = <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::Object(vec![("exampleId".into(), semio_framework_value::DslValue::String("terrain".into()))]))).expect("decode");
+    let command = <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::Object(vec![("exampleId".into(), semio_framework_value::DslValue::String("terrain".into()))])).clone()), None).expect("decode");
     assert_eq!(command, Grid2dEditorCommand::SetActiveExample { example_id: "terrain".into() });
     assert_eq!(
-        <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_value::DslValue::Object(vec![("id".into(), semio_framework_value::DslValue::String("pipes".into()))]))).expect("decode"),
+        <Grid2dEditor as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::Object(vec![("id".into(), semio_framework_value::DslValue::String("pipes".into()))])).clone()), None).expect("decode"),
         Grid2dEditorCommand::SetActiveExample { example_id: "pipes".into() },
         "the navbar's alternative argument spelling decodes to the same command"
     );
@@ -186,15 +186,13 @@ fn a_canvas_press_on_the_grid_pins_the_cell_under_the_pointer() {
     assert!(!grid::owns_surface(preview::SURFACE_ID), "a press on the read-only preview surface never edits");
     assert_eq!(
         <Grid2dEditor as ArtifactEditor>::command_from_action(
-            "canvasPointerDown",
-            Some(&semio_framework_value::DslValue::Object(vec![
+            "canvasPointerDown", Some((semio_framework_value::DslValue::Object(vec![
                 ("surfaceId".into(), semio_framework_value::DslValue::String(grid::SURFACE_ID.into())),
                 ("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(400.0))),
                 ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(300.0))),
                 ("width".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(800.0))),
                 ("height".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(600.0))),
-            ]))
-        )
+            ])).clone()), None)
         .expect("decode"),
         Grid2dEditorCommand::CanvasPointerDown { surface_id: grid::SURFACE_ID.into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 }
     );
@@ -210,12 +208,12 @@ fn both_camera_spellings_decode_to_their_own_command() {
         semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(4.0))), ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0))), ("zoom".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]),
     )]);
     assert_eq!(
-        <Grid2dEditor as ArtifactEditor>::command_from_action("setCamera", Some(&nested)).expect("decode"),
+        <Grid2dEditor as ArtifactEditor>::command_from_action("setCamera", Some((nested).clone()), None).expect("decode"),
         Grid2dEditorCommand::SyncCamera { x: 4.0, y: 5.0, zoom: 2.0 }
     );
     let flat = semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(4.0))), ("y".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(5.0))), ("zoom".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(2.0)))]);
     assert_eq!(
-        <Grid2dEditor as ArtifactEditor>::command_from_action("set-camera", Some(&flat)).expect("decode"),
+        <Grid2dEditor as ArtifactEditor>::command_from_action("set-camera", Some((flat).clone()), None).expect("decode"),
         Grid2dEditorCommand::SetCamera { x: 4.0, y: 5.0, zoom: 2.0 }
     );
 }

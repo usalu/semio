@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phases",
+    "copyGrants",
+    "cancelStops",
+    "sourceReturn",
+    "partialClose",
+    "rootShells",
+    "terminalDrop",
+    "stock",
+    "fuel",
+    "clock",
+    "deadline"
+  ],
+  "properties": {
+    "phases": {
+      "const": [
+        "bindSource",
+        "birthFinalRoot",
+        "birthRegistryShell",
+        "donateOriginal",
+        "birthRetirementAlias",
+        "handoff"
+      ]
+    },
+    "copyGrants": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "cancelStops": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "sourceReturn": {
+      "const": "sameOwnedRegistry"
+    },
+    "partialClose": {
+      "const": "onlyBornShells"
+    },
+    "rootShells": {
+      "const": 2
+    },
+    "terminalDrop": {
+      "const": 0
+    },
+    "stock": {
+      "const": {
+        "items": 10000,
+        "copy": 1000000,
+        "capacity": 4000000,
+        "release": 4000000,
+        "depth": 128
+      }
+    },
+    "fuel": {
+      "const": 10000
+    },
+    "clock": {
+      "const": 1000
+    },
+    "deadline": {
+      "const": 1000000
+    }
+  }
+}

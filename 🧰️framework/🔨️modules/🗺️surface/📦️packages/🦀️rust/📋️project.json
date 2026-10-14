@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-surface-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "nativeSources": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🧩️component/**/*"
@@ -8,21 +8,21 @@
   },
   "targets": {
     "test-scene-wire-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-scene-wire-native"
       }
     },
     "test-scene-wire-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-scene-wire-source"
       }
     },
     "wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
@@ -33,7 +33,7 @@
       "cache": true
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -45,7 +45,7 @@
       ]
     },
     "test-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-source"

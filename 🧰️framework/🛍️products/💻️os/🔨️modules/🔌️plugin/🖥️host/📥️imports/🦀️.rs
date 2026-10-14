@@ -73,7 +73,7 @@ use host_async_bindings::semio::framework::{effects as wit_effects, host_async a
 // (`🛎️services/🦀️.rs`) and matches what a real instantiation would need — pinned here
 // rather than making this whole file generic, which would thread `R` through ~25 trait methods
 // with no caller yet to prove the shape against. Revisit once this world is actually wired.
-pub struct AsyncActorHostState {
+pub(crate) struct AsyncActorHostState {
     operation_slot:super::operation::slot::OperationSlot,
     router_turn_grant: semio_framework_job::RetainedCloneGrant,
     services: Arc<crate::effects::AsyncServices<TokioHostRuntime>>,

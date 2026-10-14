@@ -1,0 +1,31 @@
+{
+  "contract": "original-presented-params",
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "cases": [
+    {
+      "name": "owned-original",
+      "source": "{\"labels\":{\"audio\":\"Ton🎵\"},\"revision\":18446744073709551615,\"position\":-9223372036854775808}",
+      "result": "ready",
+      "cause": null,
+      "member": null
+    },
+    {
+      "name": "duplicate-owned-member",
+      "source": "{\"retained-origin-name\":1,\"retained-origin-name\":2}",
+      "result": "failure",
+      "cause": "duplicateMember",
+      "member": "retained-origin-name"
+    },
+    {
+      "name": "trailing-original",
+      "source": "{\"value\":1} x",
+      "result": "failure",
+      "cause": "trailingData",
+      "member": null
+    }
+  ]
+}

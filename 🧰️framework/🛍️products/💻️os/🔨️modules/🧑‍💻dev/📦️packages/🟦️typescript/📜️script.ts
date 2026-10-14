@@ -56,6 +56,7 @@ class PlaygroundSessionScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir)
+  .registerLazy("verify-staged", async () => (await import("../../🔎️verification/🧾️convergence/🟦️.ts")).VerifyStagedScript)
   .register("playground-session", PlaygroundSessionScript)
   .register("publication-check", PublicationCheckScript)
   .register("publication-worker", PublicationWorkerScript)
@@ -149,4 +150,8 @@ const router = new ScriptRouter(import.meta.dir)
     }
   });
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "dev" }) }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => {
+  const argv=process.argv.slice(2),at=argv.indexOf("--catalog");
+  if(at>=0){const path=argv[at+1];if(!path||argv.indexOf("--catalog",at+1)>=0)throw Error("One explicit catalog root required");process.env.SEMIO_PLUGIN_CATALOG=path;argv.splice(at,2);}
+  return runScriptMain(router,{invocation:original,argv,defaultCommand:"dev"});
+});

@@ -25,7 +25,7 @@ impl ExtensionInvokeStep{
 
 /// 🧳️ Owns the resources captured by extension handlers; terminal destruction must be shallow.
 pub trait ExtensionResourceOwner: Send + 'static {
-    fn invoke(&self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault>;
+    fn invoke(&mut self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault>;
     /// 💡️ The explicitly owned native context used by registered inference executables.
     fn inference_context(&self) -> Option<&dyn std::any::Any> {
         None
@@ -36,7 +36,7 @@ pub trait ExtensionResourceOwner: Send + 'static {
     }
     fn begin_close(&mut self);
     /// ♻️ Advances one owner under the complete caller grant; a turn below any demanded axis yields an empty receipt.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
+    fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>;
     fn terminal_is_empty(&self) -> bool;
     /// 📏️ The minimal grant on every independent axis that the next `close_step` needs.
     fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError>;
@@ -56,10 +56,6 @@ fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
 fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "extension retirement depth overflow"))?;
     Ok(demand)
-}
-
-fn value_fault(error: ValueError) -> Fault {
-    close_fault("extension.close-demand", &error.into_message())
 }
 
 fn close_fault(code: &str, message: &str) -> Fault {
@@ -117,7 +113,7 @@ impl ExtensionBundle {
     }
 
     /// 📨️ Invokes only an unsealed bundle through its actual registered handler.
-    pub fn invoke(&self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
+    pub fn invoke(&mut self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None})}
         if self.closing {
             return Err(close_fault("extension.closing", "extension resource retirement has sealed invocation"));
@@ -127,7 +123,7 @@ impl ExtensionBundle {
         let before=cx.retained_progress();let grant=cx.retained_grant();
         let answer=match &self.handlers[index].1 {
             ExtensionRequestHandler::Plain(handler) => handler(request,cx),
-            ExtensionRequestHandler::Owned => self.resource_owner.as_ref().ok_or_else(|| close_fault("extension.missing-owner", "extension resource owner is absent"))?.invoke(capability, request, cx),
+            ExtensionRequestHandler::Owned => self.resource_owner.as_mut().ok_or_else(|| close_fault("extension.missing-owner", "extension resource owner is absent"))?.invoke(capability, request, cx),
         }?;
         Ok(answer.admit(grant,before,cx.retained_progress()))
     }
@@ -146,14 +142,29 @@ impl ExtensionBundle {
     }
 
     /// ⏱️ Retires resource payloads, then individual handler captures, then manifest metadata.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
+        let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        if self.resource_owner.as_ref().is_some_and(|owner|!owner.terminal_is_empty()){
+            if cx.should_yield()||!crate::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
+            if self.close_cancelled{return Ok(PluginLifecycleStep::Blocked{reason:"extension close paused"})}
+            self.begin_close();let owner=self.resource_owner.as_mut().expect("quoted original extension resource remains owned");let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+            let before=cx.retained_progress();let step=cx.with_retained_loan(child,|same|owner.close_step(same))?;
+            let progress=step.progress().unwrap_or_default();let actual=crate::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
+            if !progress.fits(child)||progress!=actual{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"extension resource owner differs from its original posted receipt").into())}
+            if matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"extension resource owner reported Complete without terminal emptiness").into())}
+            return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
+        }
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
+    }
+
+    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(PluginLifecycleStep::Complete(idle));
         }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(value_fault)?;
         if grant.maximum_depth < demand.depth {
-            return Err(close_fault("extension.close-depth", "extension retirement exceeds its admitted depth"));
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"extension retirement exceeds its admitted depth").into());
         }
         if yields(grant, demand) {
             return Ok(PluginLifecycleStep::Progress(idle));
@@ -163,26 +174,14 @@ impl ExtensionBundle {
         }
         self.begin_close();
         if let Some(owner) = &mut *self.resource_owner {
-            if owner.terminal_is_empty() {
-                let released_bytes = size_of_val(owner.as_ref());
-                self.resource_owner.take();
-                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..idle }));
-            }
-            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.close_step(child)?;
-            if step.progress().is_some_and(|progress| !progress.fits(child)) {
-                return Err(close_fault("extension.close-budget", "extension resource owner exceeded its independent grant"));
-            }
-            return match step {
-                PluginLifecycleStep::Complete(_) if !owner.terminal_is_empty() => Err(close_fault("extension.close-live-owner", "extension resource owner reported Complete without terminal emptiness")),
-                PluginLifecycleStep::Complete(progress) => Ok(PluginLifecycleStep::Progress(progress)),
-                step => Ok(step),
-            };
+            assert!(owner.terminal_is_empty(),"original live resource closes through its caller context");
+            let released_bytes = size_of_val(owner.as_ref());self.resource_owner.take();
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..idle }));
         }
         if let Some(gateway)=self.inference_gateway.get_mut().expect("exclusive inference gateway").as_mut(){
             gateway.child_closed();
             if gateway.terminal_is_empty(){*self.inference_gateway.get_mut().expect("exclusive inference gateway")=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
-            return gateway.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(value_fault);
+            return gateway.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);
         }
         if !self.metadata_retirement.is_empty() {
             return match self.metadata_retirement.step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })? {
@@ -236,24 +235,24 @@ impl ExtensionBundle {
     }
 
     /// ❄️ Completes explicit disposal for cold construction and inspection callers.
-    pub fn dispose_cold(&mut self) -> Result<(), Fault> {
+    pub fn dispose_cold(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
         self.begin_close();
         self.resume_close();
         loop {
-            let demand = self.retirement_demands(0).map_err(value_fault)?;
-            match self.close_step(cold_grant(demand))? {
+            let demand = self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+            match cx.with_retained_loan(cold_grant(demand),|same|self.close_step(same))? {
                 PluginLifecycleStep::Complete(_) => return Ok(()),
                 PluginLifecycleStep::Progress(progress) if progress != RetainedCloneProgress::default() => {}
-                _ => return Err(close_fault("extension.cold-close-blocked", "cold extension disposal requires exclusive resource authority")),
+                _ => return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"cold extension disposal requires its remaining original caller authority").into()),
             }
         }
     }
 
     /// 📋️ Transfers the manifest to a cold inspector after explicitly retiring its bundle.
-    pub fn into_manifest_cold(mut self) -> Result<ExtensionManifest, Fault> {
+    pub fn into_manifest_cold(mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionManifest, semio_framework_job::OriginalTurnFailure> {
         let manifest = std::mem::replace(&mut *self.manifest, ExtensionManifest::empty());
         self.manifest_retired = true;
-        self.dispose_cold()?;
+        self.dispose_cold(cx)?;
         Ok(manifest)
     }
 }
@@ -359,12 +358,12 @@ impl ExtensionBundleRegistry {
         Ok(())
     }
 
-    pub(super) fn invoke(&self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
+    pub(super) fn invoke(&mut self, capability: &str, request: &[u8], cx:&mut semio_framework_job::StepContext<'_>) -> Result<ExtensionInvokeStep, Fault> {
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None})}
         if !self.active {
             return Err(close_fault("extension.inactive", "extension not activated"));
         }
-        self.current.as_ref().ok_or_else(|| close_fault("extension.missing", "extension bundle not installed"))?.invoke(capability, request, cx)
+        self.current.as_mut().ok_or_else(|| close_fault("extension.missing", "extension bundle not installed"))?.invoke(capability, request, cx)
     }
 
     pub(super) fn begin_close(&mut self) {
@@ -405,14 +404,26 @@ impl ExtensionBundleRegistry {
         }
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub(super) fn close_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
+        let grant=cx.retained_grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        if self.current.as_ref().is_some_and(|current|!current.terminal_is_empty()){
+            if cx.should_yield()||!crate::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
+            if self.paused{return Ok(PluginLifecycleStep::Blocked{reason:"extension close paused"})}
+            if !self.has_retirement(){self.begin_close()}
+            let current=self.current.as_mut().expect("quoted original extension bundle remains owned");let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+            return cx.with_retained_loan(child,|same|current.close_step(same)).map(|step|match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
+        }
+        crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
+    }
+
+    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,crate::PluginLifecycleFailure>{
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(PluginLifecycleStep::Complete(idle));
         }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(value_fault)?;
         if grant.maximum_depth < demand.depth {
-            return Err(close_fault("extension.close-depth", "extension registry retirement exceeds its admitted depth"));
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"extension registry retirement exceeds its admitted depth").into());
         }
         if yields(grant, demand) {
             return Ok(PluginLifecycleStep::Progress(idle));
@@ -424,13 +435,7 @@ impl ExtensionBundleRegistry {
             self.begin_close();
         }
         let current = self.current.as_mut().expect("installed extension retains a current owner");
-        if !current.terminal_is_empty() {
-            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match current.close_step(child)? {
-                PluginLifecycleStep::Complete(progress) => Ok(PluginLifecycleStep::Progress(progress)),
-                step => Ok(step),
-            };
-        }
+        assert!(current.terminal_is_empty(),"original live bundle closes through its caller context");
         self.current.take();
         if let Some(mut replacement) = self.replacement.take() {
             if self.retire_all {

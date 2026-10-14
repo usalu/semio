@@ -44,6 +44,7 @@ struct PaintedPanel {
 }
 
 fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease) -> PaintedPanel {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -57,7 +58,7 @@ fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        let done = render_ui_document_step(&mut cursor, document, Rect::new(0.0, 0.0, 360.0, 720.0), &mut ctx, surface, "s.test.tool-run", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
+        let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, Rect::new(0.0, 0.0, 360.0, 720.0), &mut ctx, surface, "s.test.tool-run", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
         assert!(done || !cursor.terminal_is_fault(), "the panel paint faulted in phase {}", cursor.phase_name());
         done
     });
@@ -65,6 +66,8 @@ fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease
     let instances = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
     shell.register_retained_body_hits(surface, Rect::new(0.0, 0.0, 360.0, 720.0), &mut input);
     shell.publish_retained_hit_registry(&mut input);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     PaintedPanel { input, instances }
 }
 
@@ -86,15 +89,17 @@ fn press(shell: &mut ShellState, painted: &mut PaintedPanel, control: &str) {
 }
 
 fn close_panel(surface: &str, document: &mut UiDocumentLease) {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(crate::interpreter::request_ui_document_close(surface));
     for _ in 0..262_144 {
         if !crate::interpreter::ui_document_close_pending_for(surface) {
             break;
         }
-        assert!(crate::interpreter::close_ui_document_one(), "each admitted ToolRun close opportunity advances");
+        assert!(caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted ToolRun close opportunity advances");
     }
     assert!(!crate::interpreter::ui_document_close_pending_for(surface));
     while !document.close_step() {}
+    caller.finish();
 }
 
 #[test]

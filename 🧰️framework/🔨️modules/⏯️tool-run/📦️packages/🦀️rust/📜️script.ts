@@ -87,7 +87,14 @@ class OriginalNativeTickTestScript extends BundleScript {
 class OriginalEntityColumnTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-original-entity-column");
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","original_native_tick_entity_column_","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","-E","test(original_native_tick_entity_column_) | test(original_native_tick_preparation_preserves_final_frame_and_every_initialized_prefix)","--","--nocapture"]},readCargoTestPolicyV1(process.env));
+ }
+}
+/** 📊️ Executes original Progress final-cell custody at every paid interruption frontier. */
+class OriginalProgressReceivingTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-original-progress-receiving");
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:[PACKAGE],cwd:this.root,extraArgs:["--lib","-E","test(original_progress_receiving_keeps_final_slot_counter_and_argument_pointers_at_every_paid_frontier)","--","--nocapture"]},readCargoTestPolicyV1(process.env));
  }
 }
 class CheckScript extends BundleScript {
@@ -97,6 +104,6 @@ class CheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-progress", OriginalProgressTestScript).register("test-original-entities",OriginalEntitiesTestScript).register("test-original-receiving-limits",OriginalReceivingLimitsTestScript).register("test-original-identity-receiving",OriginalIdentityReceivingTestScript).register("test-original-step-receiving",OriginalStepReceivingTestScript).register("test-original-native-tick",OriginalNativeTickTestScript).register("test-original-entity-column",OriginalEntityColumnTestScript).register("test-source", SourceScript).register("check", CheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-original-progress", OriginalProgressTestScript).register("test-original-entities",OriginalEntitiesTestScript).register("test-original-receiving-limits",OriginalReceivingLimitsTestScript).register("test-original-identity-receiving",OriginalIdentityReceivingTestScript).register("test-original-step-receiving",OriginalStepReceivingTestScript).register("test-original-native-tick",OriginalNativeTickTestScript).register("test-original-entity-column",OriginalEntityColumnTestScript).register("test-original-progress-receiving",OriginalProgressReceivingTestScript).register("test-source", SourceScript).register("check", CheckScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

@@ -3,6 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, w
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 const MODULE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -42,9 +44,9 @@ print(json.dumps(total))
 `;
 
 /** 🧪️ Verifies the pure age/budget/guard eviction planner against a hand-authored fixture and an independent Python oracle. */
-async function testPlanCachePrune(): Promise<{ planCachePrune: typeof import("../../🧹️pruning/🟦️.ts").planCachePrune }> {
+async function testPlanCachePrune(control:ResourceLeaseControl): Promise<{ planCachePrune: typeof import("../../🧹️pruning/🟦️.ts").planCachePrune }> {
   const require = createRequire(import.meta.url);
-  const fixtureRoot = join(MODULE_ROOT, "🧫️fixtures/cache-prune");
+  const fixtureRoot = join(MODULE_ROOT, "🧪️tests/🧫️fixtures/cache-prune");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   const pruning = await import("../../🧹️pruning/🟦️.ts");
   const plan = pruning.planCachePrune(fixture.areas, fixture.nowMs, fixture.guardAgeMs);
@@ -58,9 +60,8 @@ async function testPlanCachePrune(): Promise<{ planCachePrune: typeof import("..
   assert.deepEqual(projected, expected);
   const python = Bun.which("python3") ?? Bun.which("python");
   assert.ok(python, "Native Python eviction oracle is required");
-  const oracle = Bun.spawnSync([python, "-c", PYTHON_PLAN_ORACLE, JSON.stringify(fixture.areas), JSON.stringify(fixture.nowMs), JSON.stringify(fixture.guardAgeMs)], { stdout: "pipe", stderr: "pipe", timeout: 30000 });
-  assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
-  const oracleProjected = Object.fromEntries((JSON.parse(oracle.stdout.toString()) as any[]).map(({ name, ...row }) => [name, { ...row, ageDeletions: [...row.ageDeletions].sort(), budgetDeletions: [...row.budgetDeletions].sort() }]));
+  const oracle = await captureOwnedCommandV1(python,["-c", PYTHON_PLAN_ORACLE, JSON.stringify(fixture.areas), JSON.stringify(fixture.nowMs), JSON.stringify(fixture.guardAgeMs)],process.cwd(),{control});
+  const oracleProjected = Object.fromEntries((JSON.parse(oracle) as any[]).map(({ name, ...row }) => [name, { ...row, ageDeletions: [...row.ageDeletions].sort(), budgetDeletions: [...row.budgetDeletions].sort() }]));
   assert.deepEqual(projected, oracleProjected);
   assert.equal(pruning.formatBytes(0), "0 B");
   assert.equal(pruning.formatBytes(1536), "1.50 KiB");
@@ -69,7 +70,7 @@ async function testPlanCachePrune(): Promise<{ planCachePrune: typeof import("..
 }
 
 /** 🧪️ Verifies real-disk scanning, incremental session compaction, deletion and cancellation against a temp Cargo-shaped tree and a Python byte oracle. */
-async function testCargoDiskScan(output: string): Promise<void> {
+async function testCargoDiskScan(output: string,control:ResourceLeaseControl): Promise<void> {
   const pruning = await import("../../🧹️pruning/🟦️.ts");
   const root = mkdtempSync(join(output, "cache-prune-"));
   const buildDir = join(root, "build"), targetDir = join(root, "target"), viteRoot = join(root, "vite"), agentsRoot = join(root, "agents");
@@ -101,11 +102,10 @@ async function testCargoDiskScan(output: string): Promise<void> {
   put("vite/consumer-b/deps/_meta.json", "{}", fresh);
   put("agents/stray-session/scratch.txt", "x", old);
   put("agents/resource-leases/00000000000000000000000000000000.sqlite", "lease", fresh);
-  const signal = new AbortController().signal;
-  const buildUnits = pruning.scanCargoBuildUnits(buildDir, signal);
+  const buildUnits = await pruning.scanCargoBuildUnits(buildDir, control);
   assert.deepEqual(buildUnits.map((unit) => unit.path), ["debug/build/pkg-a/hash1"], "Compiled-unit scanning no longer descends into incremental crate dirs");
   assert.equal(buildUnits[0].kind, "cargo-build");
-  const incrementalScan = pruning.scanCargoIncrementalUnits(buildDir, signal);
+  const incrementalScan = await pruning.scanCargoIncrementalUnits(buildDir, control);
   const byPath = Object.fromEntries(incrementalScan.units.map((unit) => [unit.path, unit]));
   assert.deepEqual(Object.keys(byPath).sort(), ["debug/incremental/crate-fresh-3c4d", "debug/incremental/crate-multi-5e6f", "debug/incremental/crate-old-1a2b", "debug/incremental/crate-working-7g8h"]);
   assert.equal(byPath["debug/incremental/crate-old-1a2b"].lockHeld, false);
@@ -118,30 +118,29 @@ async function testCargoDiskScan(output: string): Promise<void> {
   assert.deepEqual(incrementalScan.staleSessions.map((unit) => unit.path), ["debug/incremental/crate-multi-5e6f/s-htestmu01-idmu0001-svhm1"], "Only crate-multi has more than one finalized session");
   assert.equal(incrementalScan.staleSessions[0].kind, "cargo-incremental-session");
   assert.equal(incrementalScan.staleSessions[0].lockHeld, false);
-  const targetUnits = pruning.scanCargoTargetUnits(targetDir, signal);
+  const targetUnits = await pruning.scanCargoTargetUnits(targetDir, control);
   assert.deepEqual(targetUnits.map((unit) => unit.path).sort(), ["debug/deps/libfoo-abcdef.rlib", "debug/examples/demo"]);
-  const viteUnits = pruning.scanDirectoryUnits(viteRoot, signal);
+  const viteUnits = await pruning.scanDirectoryUnits(viteRoot, control);
   assert.deepEqual(viteUnits.map((unit) => unit.path).sort(), ["consumer-a", "consumer-b"]);
-  const agentUnits = pruning.scanDirectoryUnits(agentsRoot, signal, new Set(["resource-leases"]));
+  const agentUnits = await pruning.scanDirectoryUnits(agentsRoot, control, new Set(["resource-leases"]));
   assert.deepEqual(agentUnits.map((unit) => unit.path), ["stray-session"]);
   const python = Bun.which("python3") ?? Bun.which("python");
   assert.ok(python, "Native Python byte oracle is required");
   for (const [scanned, path] of [[buildUnits, join(buildDir, "debug/build")], [targetUnits, targetDir]] as const) {
-    const oracle: Bun.SyncSubprocess<"pipe", "pipe"> = Bun.spawnSync([python, "-c", PYTHON_BYTES_ORACLE, path], { stdout: "pipe", stderr: "pipe", timeout: 30000 });
-    assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
-    const expectedBytes = JSON.parse(oracle.stdout.toString());
+    const oracle=await captureOwnedCommandV1(python,["-c", PYTHON_BYTES_ORACLE, path],process.cwd(),{control});
+    const expectedBytes = JSON.parse(oracle);
     const scannedBytes = scanned.reduce((sum: number, unit: { bytes: number }) => sum + unit.bytes, 0) + (scanned === targetUnits ? Buffer.byteLength("Signature: 8a477f597d28d172789f06886806bc55") : 0);
     assert.equal(scannedBytes, expectedBytes, `${path}: byte total must match Python os.walk oracle (sentinel files excluded from prune units, included in Python's raw walk)`);
   }
-  const incrementalOracle = Bun.spawnSync([python, "-c", PYTHON_BYTES_ORACLE, join(buildDir, "debug/incremental")], { stdout: "pipe", stderr: "pipe", timeout: 30000 });
-  assert.equal(incrementalOracle.exitCode, 0, incrementalOracle.stderr.toString());
-  const incrementalRawBytes = JSON.parse(incrementalOracle.stdout.toString());
+  const incrementalOracle=await captureOwnedCommandV1(python,["-c", PYTHON_BYTES_ORACLE, join(buildDir, "debug/incremental")],process.cwd(),{control});
+  const incrementalRawBytes = JSON.parse(incrementalOracle);
   const incrementalUnitsBytes = incrementalScan.units.reduce((sum, unit) => sum + unit.bytes, 0) + incrementalScan.staleSessions.reduce((sum, unit) => sum + unit.bytes, 0);
   assert.equal(incrementalUnitsBytes, incrementalRawBytes, "Compaction repartitions bytes between kept crate-dir units and stale sessions; it must never gain or lose bytes against a raw disk walk");
   const cancelled = new AbortController(); cancelled.abort(new Error("cancelled"));
-  assert.throws(() => pruning.scanCargoBuildUnits(buildDir, cancelled.signal), /cancelled/);
-  assert.throws(() => pruning.scanCargoIncrementalUnits(buildDir, cancelled.signal), /cancelled/);
-  assert.throws(() => pruning.scanDirectoryUnits(viteRoot, cancelled.signal), /cancelled/);
+  const cancelledControl={...control,signal:cancelled.signal};
+  await assert.rejects(pruning.scanCargoBuildUnits(buildDir, cancelledControl), /cancelled/);
+  await assert.rejects(pruning.scanCargoIncrementalUnits(buildDir, cancelledControl), /cancelled/);
+  await assert.rejects(pruning.scanDirectoryUnits(viteRoot, cancelledControl), /cancelled/);
   const nowMs = Date.now();
   const areas = [
     { name: "cargo", budgetBytes: null, unusedAgeMs: 5 * 24 * 3600 * 1000, units: [...buildUnits, ...targetUnits] },
@@ -157,9 +156,9 @@ async function testCargoDiskScan(output: string): Promise<void> {
   assert.deepEqual(incrementalPlan.ageDeletions.map((unit) => unit.path), ["debug/incremental/crate-old-1a2b"], "crate-working-7g8h stays despite being just as old, because it is lockHeld");
   const staleSessionsPlan = plan.areas.find((area) => area.name === "cargo-incremental-sessions")!;
   assert.deepEqual(staleSessionsPlan.ageDeletions.map((unit) => unit.path), ["debug/incremental/crate-multi-5e6f/s-htestmu01-idmu0001-svhm1"], "Stale finalized sessions are reclaimed unconditionally, independent of the crate dir's own age");
-  for (const unit of cargoPlan.ageDeletions) pruning.deleteUnit(unit.kind === "cargo-target-file" ? targetDir : buildDir, unit);
-  for (const unit of [...incrementalPlan.ageDeletions, ...staleSessionsPlan.ageDeletions]) pruning.deleteUnit(buildDir, unit);
-  for (const area of plan.areas.filter((area) => area.name === "vite" || area.name === "agents")) for (const unit of area.ageDeletions) pruning.deleteUnit(area.name === "vite" ? viteRoot : agentsRoot, unit);
+  for (const unit of cargoPlan.ageDeletions) await pruning.deleteUnit(unit.kind === "cargo-target-file" ? targetDir : buildDir, unit,control);
+  for (const unit of [...incrementalPlan.ageDeletions, ...staleSessionsPlan.ageDeletions]) await pruning.deleteUnit(buildDir, unit,control);
+  for (const area of plan.areas.filter((area) => area.name === "vite" || area.name === "agents")) for (const unit of area.ageDeletions) await pruning.deleteUnit(area.name === "vite" ? viteRoot : agentsRoot, unit,control);
   assert.equal(existsSync(join(buildDir, "debug/build/pkg-a/hash1")), false);
   assert.equal(existsSync(join(targetDir, "debug/deps/libfoo-abcdef.rlib")), false);
   assert.equal(existsSync(join(targetDir, "debug/deps")), false, "Emptied target-dir parent must be pruned");
@@ -180,7 +179,7 @@ async function testCargoDiskScan(output: string): Promise<void> {
 }
 
 /** 🧹️ Verifies the shared cache pruner: pure eviction contract, real filesystem scanning and deletion. */
-export async function testCachePrune(output: string): Promise<void> {
-  await testPlanCachePrune();
-  await testCargoDiskScan(output);
+export async function testCachePrune(output: string,control:ResourceLeaseControl): Promise<void> {
+  await testPlanCachePrune(control);
+  await testCargoDiskScan(output,control);
 }

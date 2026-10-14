@@ -1,5 +1,5 @@
 /** 🧬️ `@generated` — do NOT edit. Regenerate with
- * `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs `semio-os-mcp schemas`
+ * `bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`, which runs `semio-os-mcp schemas`
  * over `🌉️mcp/🧬️schema/🦀️.rs`'s `schemas()` — the single registry every `os.mcp` schema lives in.
  *
  * This file validates against the committed `./🔣️.json` with its own walker rather than an

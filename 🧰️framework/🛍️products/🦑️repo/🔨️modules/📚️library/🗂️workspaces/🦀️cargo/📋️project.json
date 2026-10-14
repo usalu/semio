@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/cargo-workspaces",
-  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:typescript",
@@ -8,7 +8,7 @@
   ],
   "targets": {
     "members-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
@@ -17,7 +17,7 @@
       }
     },
     "members-write": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
@@ -26,7 +26,7 @@
       }
     },
     "contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
@@ -35,7 +35,7 @@
       }
     },
     "queued-contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
@@ -43,32 +43,15 @@
       }
     },
     "bun-contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
         "command": "bun ./📜️script.ts bun-contract-check"
       }
     },
-    "prepare": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts prepare --manifest Cargo.toml"
-      }
-    },
-    "synchronize": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
-        "command": "bun ./📜️script.ts synchronize",
-        "forwardAllArgs": true
-      }
-    },
     "runtime-contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",
@@ -76,7 +59,7 @@
       }
     },
     "capability-contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo",

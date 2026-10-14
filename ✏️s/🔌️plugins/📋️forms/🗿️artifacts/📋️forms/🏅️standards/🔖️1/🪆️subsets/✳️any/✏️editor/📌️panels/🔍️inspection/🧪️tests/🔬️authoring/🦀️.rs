@@ -38,7 +38,7 @@ fn assert_bound_commands(value: &serde_json::Value) -> usize {
             let mut args = binding["args"].as_object().cloned().unwrap_or_default();
             if binding["trigger"] == "change" || binding["trigger"] == "commit" { args.insert("value".into(), serde_json::json!("Edited")); }
             let args = crate::editor::forms::unit_tests::context::action_args(&serde_json::Value::Object(args));
-            crate::editor::forms::FormsPlayApp::command_from_action(action, Some(&args)).unwrap_or_else(|error| panic!("{action}: {}", error.message));
+            crate::editor::forms::FormsPlayApp::command_from_action(action, Some((args).clone()), None).unwrap_or_else(|error| panic!("{action}: {}", error.message));
         }
     }
     match value {

@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "phases": [
+    "grammar",
+    "arguments",
+    "command",
+    "owner",
+    "plugin",
+    "app",
+    "mode",
+    "publish"
+  ],
+  "cuts": [
+    {
+      "id": "zero-items",
+      "items": 0,
+      "copyBytes": 4096,
+      "demand": 24,
+      "sourceMatches": true,
+      "advance": false
+    },
+    {
+      "id": "copy-short",
+      "items": 1,
+      "copyBytes": 23,
+      "demand": 24,
+      "sourceMatches": true,
+      "advance": false
+    },
+    {
+      "id": "foreign-source",
+      "items": 1,
+      "copyBytes": 4096,
+      "demand": 24,
+      "sourceMatches": false,
+      "advance": false
+    },
+    {
+      "id": "original-paid",
+      "items": 1,
+      "copyBytes": 4096,
+      "demand": 24,
+      "sourceMatches": true,
+      "advance": true
+    }
+  ],
+  "invocation": {
+    "address": {
+      "owner": {
+        "mode": {
+          "pluginId": "fixture",
+          "appId": "editor",
+          "modeId": "author"
+        }
+      },
+      "commandId": "setValue"
+    },
+    "arguments": {
+      "name": "Üeli",
+      "value": [
+        0,
+        1,
+        255
+      ]
+    }
+  }
+}

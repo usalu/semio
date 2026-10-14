@@ -8,7 +8,7 @@
   "files":["dist"],
   "types":"./dist/🟦️.d.ts",
   "exports":{".":{"types":"./dist/🟦️.d.ts","import":"./dist/🟦️.js"}},
-  "scripts":{"build":"bun nx run @semio-tech/energy-model:build","check":"bun nx run @semio-tech/energy-model:check","test":"bun nx run @semio-tech/energy-model:test"},
+  "scripts":{"build":"bun repo run @semio-tech/energy-model:build","check":"bun repo run @semio-tech/energy-model:check","test":"bun repo run @semio-tech/energy-model:test"},
   "dependencies":{},
   "license":"LGPL-3.0-or-later",
   "bundleKind":"library",

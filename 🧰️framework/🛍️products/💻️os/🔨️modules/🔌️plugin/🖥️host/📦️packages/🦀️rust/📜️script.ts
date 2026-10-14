@@ -10,7 +10,8 @@ import findIndex from "lodash-es/findIndex.js";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { orchestratorBudgetOpts, runCargo, runCmd, runProbe, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 //#region 🎯️Tasks
@@ -23,6 +24,23 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
+  }
+}
+
+class RuntimePortsCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    assert.equal(segments.length, 0, "runtime-ports-check takes no arguments");
+    runCmd("bun", ["test", join(import.meta.dir, "../..", "🧪️tests", "🧱️ports", "🟦️.ts")], { cwd: this.root });
+  }
+}
+
+/** 🌉️ OS integration laws remain with the product that composes the defining General authority. */
+class OriginalActorBoundarySourceScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Expected test-original-actor-boundary-source");
+    const tests = [join(this.root, "../../../⚛️reactor/🎟️context/🧪️tests/🟦️.ts"), join(this.root, "../../../⚛️reactor/🎟️context/🌉️call/🧪️tests/🟦️.ts"), join(this.root, "../../🧵️shard/🎟️grant/🧪️tests/🟦️.ts"), join(this.root, "../../🧵️shard/🎟️grant/🧪️tests/🏃️dispatch/🟦️.ts"), join(this.root, "../../🧵️shard/🎟️grant/🧪️tests/🎟️supplier/🟦️.ts"), join(this.root, "../../../🌐️browser-bundle/🏗️materialization/🧪️tests/🏛️bootstrap/🟦️.ts"), join(this.root, "../../../🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts")];
+    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.repoRoot, "plugin-host:original-actor-boundary:types", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
+    await runOwnedCommand(process.execPath, ["test", ...tests], this.repoRoot, "plugin-host:original-actor-boundary:source", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
   }
 }
 
@@ -138,13 +156,13 @@ function guestFaultOracle(): number {
     assert.equal(actual, row.eligible, row.id);
   }
   const host = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
-  const runtime = readFileSync(join(hostRoot, "⏳️runtime", "🦀️.rs"), "utf8");
+  const retained = readFileSync(join(hostRoot, "🧬️component-codec", "🎟️retained-turn", "🦀️.rs"), "utf8");
   const owned = readFileSync(join(hostRoot, "..", "🧠️interpreter", "🏃️runtime", "🦀️.rs"), "utf8");
   assert(owned.includes("Guest(semio_framework::Fault)"), "typed guest fault must survive host decode");
-  assert(host.includes("poll_result.map_err(decode_guest_plugin_error)?"), "real Wasmtime poll must use typed decoder");
+  assert(host.includes("original.map_err(retained_turn_wire::failure_from_wit)"), "real Wasmtime poll must return the original actor failure receipt");
   assert(owned.includes("result.map_err(|error| decode_guest_fault_bytes(&error))"), "owned ABI must use typed decoder");
-  assert(runtime.includes("Ok(Err(fault)) => Err(super::decode_guest_plugin_error(fault))"), "async component poll must preserve typed guest fault");
-  assert(!runtime.includes("Sender<Result<KernelTurnResult, String>>"), "poll oneshot must not stringify faults");
+  assert(retained.includes("TurnFault::ActorCall(call)"), "actor failure must retain its physical input and spending");
+  assert(retained.includes("wit_reactor::ActorCallFailure::Semantic=>None"), "semantic cause remains owned by its guest");
   return fixture.cases.length;
 }
 
@@ -170,7 +188,8 @@ function retainedLifecycleOracle(): number {
   const shard = readFileSync(join(root, "..", "🦀️.rs"), "utf8");
   assert(owner.includes("struct AdmittedAuthority"));
   assert(owner.includes("struct ShardActorAllocation"));
-  assert(shard.includes("retryable_lifecycle_turn(&fault, events)"));
+  assert(shard.includes("OriginalShardEvent::new(source_event,issued)"), "retry owns the actual originally issued event source");
+  assert(shard.includes("owner.original_event=Some(original)"), "suspension returns the same event source to its pending owner");
   assert(shard.includes("self.has_lifecycle_retry()"), "retry must permit one primed ingress frame");
   return fixture.traces.length;
 }
@@ -201,7 +220,7 @@ function activationOwnershipOracle(): number {
 /** 🎟️ Validates reservation event traces against a separate collection-based transition model. */
 function kernelReservationOracle(): number {
   const root = join(import.meta.dir, "..", "..", "..", "..", "..", "..", "..", "🔨️modules", "🎭️actor", "🎠️activation-reservation");
-  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🔣️.json", "🔣️.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   for (const row of fixture.traces) {
     let live = false,
       active = false,
@@ -309,18 +328,15 @@ class UiPatchMarshallingCheckScript extends BundleScript {
     }
     const codec = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const synchronous = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
-    const asynchronous = readFileSync(join(hostRoot, "⏳️runtime", "🦀️.rs"), "utf8");
-    const scale = readFileSync(join(this.repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧪️tests/🧫️fixtures", "⚖️scale", "🦀️.rs"), "utf8");
+    const scale = readFileSync(join(this.repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧪️testing", "⚖️scale", "🦀️.rs"), "utf8");
     for (const kind of ["Upsert", "SetComponent", "SetLayout", "SetActivity", "SetChildren", "SetStyle", "SetAccessibility", "SetBindings", "SetMenu", "Remove", "SetRoot"]) {
       assert(codec.includes(`wit_ui::PatchOp::${kind}`), `missing ${kind} reverse codec`);
     }
     assert.equal(countOccurrences(synchronous, "ui_patch::wit_ui_patches_to_kernel("), 1);
-    assert.equal(countOccurrences(asynchronous, "super::ui_patch::wit_ui_patches_to_kernel("), 1);
     assert(!synchronous.includes("let _emitted_patches"));
-    assert(!asynchronous.includes("let (emitted, _patches)"));
     assert(scale.includes("semio::framework::host_async::emit_patch(&patch)"));
     assert(scale.includes("ui_patch_receipt"));
-    console.log(`plugin-host-ui-patch-marshalling-source: ajv=1 cases=${fixture.cases.length} component=${fixture.componentCases.length} ops=${fixture.operationKinds.length} sync=1 async=1 passed`);
+    console.log(`plugin-host-ui-patch-marshalling-source: ajv=1 cases=${fixture.cases.length} component=${fixture.componentCases.length} ops=${fixture.operationKinds.length} originalAsyncRuntime=1 passed`);
     if (!segments.includes("--native")) return;
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     assert(artifactRoot, "SEMIO_TEST_ARTIFACT_DIR is required");
@@ -471,6 +487,7 @@ class OriginalDriverPolicyScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("test-original-actor-boundary-source", OriginalActorBoundarySourceScript)
   .register("test-original-driver-policy-native", OriginalDriverPolicyScript)
   .register("owned-instance-check", OwnedInstanceCheckScript)
   .register("count-component-check", CountComponentCheckScript)
@@ -478,6 +495,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("router-effect-source-custody", RouterEffectSourceCustodyScript)
   .register("service-operation-conversion-check", ServiceOperationConversionCheckScript)
   .register("lifecycle-check", LifecycleCheckScript)
+  .register("runtime-ports-check", RuntimePortsCheckScript)
   .register("guest-fault-check", GuestFaultCheckScript)
   .register("ui-patch-marshalling-check", UiPatchMarshallingCheckScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));

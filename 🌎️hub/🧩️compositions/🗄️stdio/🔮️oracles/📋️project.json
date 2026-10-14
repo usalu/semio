@@ -9,7 +9,7 @@
   ],
   "targets": {
     "test-drawing-reader": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun 📜️script.ts test-drawing-reader",
@@ -18,7 +18,7 @@
       }
     },
     "test-composition": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun 📜️script.ts test-composition",
@@ -27,7 +27,7 @@
       }
     },
     "test-native-oracles": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun 📜️script.ts test-native-oracles",
@@ -36,7 +36,7 @@
       }
     },
     "test-private-reader": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun 📜️script.ts test-private-reader",
@@ -45,7 +45,7 @@
       }
     },
     "test-native-drawing-reader": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun 📜️script.ts test-native-drawing-reader",
@@ -54,7 +54,7 @@
       }
     },
     "test-type-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -64,7 +64,7 @@
       }
     },
     "test-production-preparation": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

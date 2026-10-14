@@ -59,7 +59,7 @@ fn a_plane_through_three_points_contains_them_and_has_a_unit_normal() {
     let samples = samples();
     for triple in samples.chunks_exact(3) {
         let values = BTreeMap::from([("a".to_string(), GeometryValue::Point(triple[0])), ("b".to_string(), GeometryValue::Point(triple[1])), ("c".to_string(), GeometryValue::Point(triple[2]))]);
-        let evaluation = support::drive(start(kind, WidgetInputs::new("w", kind, values)), 1);
+        let evaluation = support::drive(start(kind, WidgetInputs::new_cold("w", kind, values)), 1);
         let Some(GeometryValue::Plane(plane)) = evaluation.outputs.get("plane") else { panic!("a plane: {evaluation:?}") };
         assert!((length(plane.normal) - 1.0).abs() < 1e-12);
         for point in triple {

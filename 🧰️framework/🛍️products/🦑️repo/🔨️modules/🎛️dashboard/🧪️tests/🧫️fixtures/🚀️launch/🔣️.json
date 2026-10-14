@@ -62,7 +62,7 @@
       "name": "Test · ticket:26/09/30/HISTORY/test-choice [EN]",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-choice",
+      "command": "bun repo run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-choice",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_DASHBOARD_INPUT_6d_6f_64_65": "${input:semio-dashboard-26-09-30-HISTORY-test-choice-mode-en}"
@@ -76,7 +76,7 @@
       "name": "Test · ticket:26/09/30/HISTORY/test-text [EN]",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-text",
+      "command": "bun repo run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-text",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_DASHBOARD_INPUT_76_61_6c_75_65": "${input:semio-dashboard-26-09-30-HISTORY-test-text-value-en}"
@@ -90,7 +90,7 @@
       "name": "Prüfen · ticket:26/09/30/HISTORY/test-choice [DE]",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-choice",
+      "command": "bun repo run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-choice",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_DASHBOARD_INPUT_6d_6f_64_65": "${input:semio-dashboard-26-09-30-HISTORY-test-choice-mode-de}"
@@ -104,7 +104,7 @@
       "name": "Prüfen · ticket:26/09/30/HISTORY/test-text [DE]",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-text",
+      "command": "bun repo run @semio-tech/repo-dashboard-rs:launch -- run ticket:26/09/30/HISTORY/test-text",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_DASHBOARD_INPUT_76_61_6c_75_65": "${input:semio-dashboard-26-09-30-HISTORY-test-text-value-de}"
@@ -146,5 +146,67 @@
       "type": "promptString",
       "description": "value [DE]"
     }
-  ]
+  ],
+  "buildNormalization": {
+    "current": {
+      "version": "0.2.0",
+      "configurations": [
+        {
+          "name": "Shared Task",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "NX_DAEMON=false bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" run p:test --skip-nx-cache --excludeTaskDependencies --outputStyle=stream",
+          "env": {
+            "NX_DAEMON": "false",
+            "SEMIO_SCRIPT_CAPABILITIES": "{\"arguments\":[\"nx\",\"run\",\"p:test\",\"--skip-nx-cache\"],\"selection\":[\"nx\",\"run\",\"p:test\",\"--excludeTaskDependencies\"],\"launches\":[[\"nx\",\"run\",\"p:test\"]],\"payload\":\"{\\\"args\\\":[\\\"bun\\\",\\\"nx\\\",\\\"exec\\\",\\\"--outputStyle=stream\\\"]}\"}"
+          }
+        },
+        {
+          "name": "Bun Package Runner",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "bun x nx run p:test --skip-nx-cache",
+          "env": {
+            "SEMIO_PROCESS_INVOCATION": "{\"launches\":[[\"bun\",\"x\",\"nx\",\"run\",\"p:test\"]]}"
+          }
+        }
+      ],
+      "inputs": [
+        {
+          "id": "tool",
+          "type": "pickString",
+          "options": [
+            "nx",
+            "bazel"
+          ]
+        }
+      ]
+    },
+    "patch": [
+      {
+        "op": "replace",
+        "path": "/configurations/0/command",
+        "value": "bun repo run p:test --skip-cache --exclude-dependencies --output=stream"
+      },
+      {
+        "op": "remove",
+        "path": "/configurations/0/env/NX_DAEMON"
+      },
+      {
+        "op": "replace",
+        "path": "/configurations/0/env/SEMIO_SCRIPT_CAPABILITIES",
+        "value": "{\"arguments\":[\"repo\",\"run\",\"p:test\",\"--skip-cache\"],\"selection\":[\"repo\",\"run\",\"p:test\",\"--exclude-dependencies\"],\"launches\":[[\"repo\",\"run\",\"p:test\"]],\"payload\":\"{\\\"args\\\":[\\\"bun\\\",\\\"repo\\\",\\\"exec\\\",\\\"--output=stream\\\"]}\"}"
+      },
+      {
+        "op": "replace",
+        "path": "/configurations/1/command",
+        "value": "bun repo run p:test --skip-cache"
+      },
+      {
+        "op": "replace",
+        "path": "/configurations/1/env/SEMIO_PROCESS_INVOCATION",
+        "value": "{\"launches\":[[\"bun\",\"repo\",\"run\",\"p:test\"]]}"
+      }
+    ]
+  }
 }

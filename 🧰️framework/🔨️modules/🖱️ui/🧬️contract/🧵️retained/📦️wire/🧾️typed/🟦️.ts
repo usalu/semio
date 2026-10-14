@@ -1,6 +1,6 @@
 //#region 🧾️TypedContract
 import type * as Contract from "../../../../../🛂️manifest/🟦️.ts";
-import type { NumericIndexGrant } from "../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { RetainedUiWireValueCursor, type RetainedUiWireStep } from "../🟦️.ts";
 import { UiSurfaceBytes, type UiSurfaceByteRetirement } from "../🔢️bytes/🟦️.ts";
 import { takeOwnedNativeBuffer } from "../🔒️transport/🟦️.ts";

@@ -2327,7 +2327,9 @@ impl ArtifactEditor for FlowPlayApp {
     /// `action 'flowEvalTick' is not a framework-reserved action` and the node graph never evaluated
     /// (16 refusal lines per boot, measured on :6016, ticket 26/09/18 slice B3c). Mirrors
     /// `Generation2dPlayApp::command_from_action`, which is why that sibling's identical eval chain runs.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let args = args.cloned().unwrap_or(semio_framework_value::DslValue::Null);
         let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
         let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
@@ -2542,7 +2544,9 @@ impl ArtifactEditor for FlowPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let config = main::config::current(cfg);
         let transient = main::transient::current(transient);
         let (graph_selection, _) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
@@ -2567,7 +2571,10 @@ impl ArtifactEditor for FlowPlayApp {
                 })
             })
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("flow.eval-session-owner", error.message))?
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_measures(_doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };

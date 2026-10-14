@@ -7,7 +7,7 @@
     "extensionId",
     "operatorId",
     "nodeHash",
-    "outputJson"
+    "output"
   ],
   "properties": {
     "neuronId": {
@@ -22,12 +22,12 @@
       "type": "string",
       "minLength": 1
     },
-    "outputJson": {
-      "type": "string"
-    },
     "nodeHash": {
       "type": "integer",
       "minimum": 0
+    },
+    "output": {
+      "type": "object"
     }
   }
 }

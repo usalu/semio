@@ -9,8 +9,38 @@
     "family:os-plugin"
   ],
   "targets": {
+    "test-original-fixture-close-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-fixture-close-source"
+      }
+    },
+    "test-original-command-receiving-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-command-receiving-source"
+      }
+    },
+    "test-original-command-receiving-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-command-receiving-native"
+      }
+    },
     "test-original-pending-worker-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -23,7 +53,7 @@
       }
     },
     "test-original-pending-worker-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -36,21 +66,21 @@
       }
     },
     "test-original-lifecycle-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-original-lifecycle-source",
         "cwd": "{projectRoot}"
       }
     },
     "test-original-lifecycle-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-original-lifecycle-native",
         "cwd": "{projectRoot}"
       }
     },
     "test-original-job-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -65,8 +95,23 @@
         "command": "bun ./📜️script.ts test-original-job-native"
       }
     },
+    "test-media-turn-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-media-turn-native"
+      }
+    },
     "test-extension-invoke-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -80,7 +125,7 @@
       }
     },
     "test-window-registry-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -95,7 +140,7 @@
       }
     },
     "test-window-registry-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -112,7 +157,7 @@
       }
     },
     "test-retained-metadata": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -127,7 +172,7 @@
       }
     },
     "test-retained-structural-refusal-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -140,7 +185,7 @@
       }
     },
     "test-retained-structural-refusal-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -153,7 +198,7 @@
       }
     },
     "test-output-retirement-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "options": {
@@ -163,7 +208,7 @@
       "outputs": []
     },
     "test-composed-child-history-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -171,7 +216,7 @@
       }
     },
     "test-snapshot-sqlite-admission": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
@@ -179,7 +224,7 @@
       }
     },
     "cooperative-host-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts cooperative-host-check",
@@ -188,7 +233,7 @@
       "outputs": []
     },
     "cooperative-host-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts cooperative-host-check --native",
@@ -197,7 +242,7 @@
       "outputs": []
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts canonical-architecture",
@@ -206,7 +251,7 @@
       "outputs": []
     },
     "document-backbone-binding-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-backbone-binding-check",
@@ -215,7 +260,7 @@
       "outputs": []
     },
     "document-backbone-binding-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-backbone-binding-check --native",
@@ -224,7 +269,7 @@
       "outputs": []
     },
     "cold-document-pair-ingress-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts cold-document-pair-ingress-check",
@@ -233,7 +278,7 @@
       "outputs": []
     },
     "cold-document-pair-ingress-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts cold-document-pair-ingress-check --native",
@@ -242,7 +287,7 @@
       "outputs": []
     },
     "artifact-admission-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts artifact-admission-check",
@@ -252,7 +297,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts check",
         "cwd": "{projectRoot}",
@@ -260,7 +305,7 @@
       }
     },
     "guest-lifecycle-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts guest-lifecycle-check",
@@ -270,7 +315,7 @@
       "outputs": []
     },
     "retained-child-close-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test --retained-child-close-exact",
@@ -279,7 +324,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test",
         "cwd": "{projectRoot}",
@@ -287,7 +332,7 @@
       }
     },
     "test-codec-send-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-codec-send-source",
@@ -297,7 +342,7 @@
       "outputs": []
     },
     "schema-document-authority-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts schema-document-authority-check",
@@ -307,7 +352,7 @@
       "outputs": []
     },
     "test-fixture-channel-interfaces": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-fixture-channel-interfaces",
@@ -324,7 +369,7 @@
       "outputs": []
     },
     "test-command-ingress-consumer": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
@@ -343,7 +388,7 @@
       ]
     },
     "test-snapshot-sqlite-refusal-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
@@ -351,7 +396,7 @@
       }
     },
     "test-snapshot-sqlite-refusal-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
@@ -359,7 +404,7 @@
       }
     },
     "test-snapshot-sqlite-refusal-host-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
@@ -367,7 +412,7 @@
       }
     },
     "test-retained-raw-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -380,7 +425,7 @@
       }
     },
     "test-retained-raw-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -393,7 +438,7 @@
       }
     },
     "test-mounted-receiving": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -403,7 +448,7 @@
       }
     },
     "test-original-failure-debit-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
@@ -411,7 +456,7 @@
       }
     },
     "test-original-failure-debit-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
@@ -419,7 +464,7 @@
       }
     },
     "test-original-paged-output-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -432,7 +477,7 @@
       }
     },
     "test-original-paged-output-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -445,7 +490,7 @@
       }
     },
     "test-original-inference-close-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -458,7 +503,7 @@
       }
     },
     "test-original-inference-close-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -468,6 +513,50 @@
       },
       "metadata": {
         "description": "Original output source identity, bounded body and paid exact acknowledgement native"
+      }
+    },
+    "test-original-media-custody-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun 📜️script.ts test-original-media-custody-source"
+      },
+      "metadata": {
+        "description": "Original output source identity, bounded body and paid exact acknowledgement native"
+      }
+    },
+    "test-original-media-custody-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun 📜️script.ts test-original-media-custody-native"
+      },
+      "metadata": {
+        "description": "Original output source identity, bounded body and paid exact acknowledgement native"
+      }
+    },
+    "test-original-reactor-receiving-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-reactor-receiving-source"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
       }
     }
   }

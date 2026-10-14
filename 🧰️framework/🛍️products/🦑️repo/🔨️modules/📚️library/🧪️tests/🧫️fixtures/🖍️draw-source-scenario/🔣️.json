@@ -177,7 +177,7 @@
             }
           ],
           "nodeType": "file",
-          "fixedFilenameContractId": "nx-project-manifest"
+          "fixedFilenameContractId": "build-project-manifest"
         },
         {
           "pathSegments": [
@@ -308,7 +308,7 @@
             }
           ],
           "nodeType": "file",
-          "fixedFilenameContractId": "nx-project-manifest"
+          "fixedFilenameContractId": "build-project-manifest"
         },
         {
           "pathSegments": [

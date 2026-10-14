@@ -7,7 +7,7 @@ type JackSnapshot {
  manifestId: String @state(class: ARTIFACT)
  manifest: Manifest! @state(class: ARTIFACT)
  camera: Camera! @state(class: ARTIFACT)
- content: ArtifactChild! @state(class: ARTIFACT)
+ content: ArtifactChild! @child(capability: "s.trinity.jack.graph") @state(class: ARTIFACT)
  rootNodeId: String @state(class: ARTIFACT)
  query: String! @state(class: ARTIFACT)
 }

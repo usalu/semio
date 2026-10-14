@@ -4,7 +4,7 @@ import {join,dirname} from "node:path";
 import Ajv from "ajv";
 import {build} from "esbuild";
 import {parsePatch,applyPatch} from "diff";
-import {assertToolingPatchV1} from "../../../🩹️patch/🟦️.ts";
+import {assertToolingPatchV1,toolPatchReceipt} from "../../../🩹️patch/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {cloneNxSdkSnapshotV1,nxSdkSnapshotIdentityV1,nxSdkSnapshotReceiptHoldsV1} from "../🟦️.ts";
@@ -49,4 +49,10 @@ test("SDK snapshot clone preserves relocatable imports and isolated writable byt
   await mkdir(join(root,"unsafe"));await expect(cloneNxSdkSnapshotV1(source,join(root,"unsafe"),{...control,signal:new AbortController().signal})).rejects.toThrow("contained");
   console.log("[DEBUG] SDK snapshot esbuild value="+fixture.expected.value+" independentWrites=true originalCancellation=true unsafeAliasRefused=true");
  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+/** 🩹️ Receipt authority requires every requested post-hunk at its exact SDK position and original context. */
+test("SDK patch receipt refuses misplaced additions and changed hunk context",async()=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original patch artifact directory required");const root=await mkdtemp(join(artifacts,"pp-")),oracle=new Ajv({strict:true}).addSchema(schema).compile({$ref:schema.$id+"#/$defs/PatchPositionFixture"});
+ try{for(const row of fixture.positions){expect(oracle(row),row.id).toBe(true);expect(applyPatch(row.before,row.patch)===row.after,row.id).toBe(row.accept);await writeFile(join(root,"source.js"),row.after);let accepted=true;try{toolPatchReceipt(root,row.patch)}catch{accepted=false}expect(accepted,row.id).toBe(row.accept)}console.log("[DEBUG] Exact SDK post-hunk context and coordinates match independent unified diff publication");}finally{await rm(root,{recursive:true,force:true})}
 });

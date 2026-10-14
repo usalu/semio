@@ -1,11 +1,11 @@
 /** 🧪️ Portable rebuild composition and schema validation against Ajv. */
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import Ajv from "ajv";
-import { composeRebuildPlansV1, parseRebuildPlanV1, readRebuildPlanV1, selectRebuildSteps, REBUILD_STAGES, guestFrameworkCheckArgs } from "../../🔁️rebuild/🟦️.ts";
+import { composeRebuildPlansV1, parseRebuildPlanV1, readRebuildPlanV1, selectRebuildSteps, REBUILD_STAGES, guestFrameworkCheckArgs, RebuildPlanCheckScript, RebuildAllScript } from "../../🔁️rebuild/🟦️.ts";
 import schema from "../../🔁️rebuild/🧬️schema/🔣️.json";
 import fixtures from "../🧫️fixtures/🔁️rebuild/🔣️.json";
-const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+const validate = new Ajv({ strict: true, strictTuples: false, allErrors: true }).compile(schema);
 
 describe("owner-authored rebuild composition", () => {
   for (const vector of fixtures.cases) it(vector.id, () => {
@@ -13,7 +13,7 @@ describe("owner-authored rebuild composition", () => {
     const plans = vector.plans.map(parseRebuildPlanV1);
     const composed = composeRebuildPlansV1(plans);
     const oracle = vector.plans.flatMap(plan => plan.steps).sort((a, b) => schema.$defs.RebuildStepV1.properties.stage.enum.indexOf(a.stage) - schema.$defs.RebuildStepV1.properties.stage.enum.indexOf(b.stage));
-    expect(composed.steps).toEqual(oracle);
+    expect(JSON.stringify(composed.steps)).toBe(JSON.stringify(oracle));
     expect(composed.steps.map(step => step.id)).toEqual(vector.expected);
     expect(validate(composed), JSON.stringify(validate.errors)).toBe(true);
   });
@@ -44,6 +44,39 @@ describe("owner-authored rebuild composition", () => {
     }
     expect(() => parseRebuildPlanV1({ ...plan, steps: [...plan.steps].reverse() })).toThrow(/stage order/);
     expect(() => parseRebuildPlanV1({ ...plan, guestFrameworkChecks: [{ ...valid, features: ["other/sync"] }] })).toThrow(/crate-qualified/);
+  });
+
+  it("observes the neutral runner plan through real runtime output", () => {
+    const controller = new AbortController();
+    const invocation = { policy: { version: 1 as const, owner: "registry-rebuild-test", maximumElapsedMilliseconds: 0 }, capabilities: {}, control: { signal: controller.signal, remainingMilliseconds: () => null, publish: () => {}, yieldContinuation: async () => {} } };
+    const script = new RebuildPlanCheckScript(process.cwd(), process.cwd(), invocation);
+    script.run([]);
+    expect(() => script.run(["unexpected"])).toThrow(/accepts no arguments/);
+  });
+
+  for (const vector of fixtures.execution) it(vector.id, async () => {
+    const controller = new AbortController(), observed: string[] = [];
+    const invocation = { policy: { version: 1 as const, owner: "registry-execution-test", maximumElapsedMilliseconds: 0 }, capabilities: {}, control: { signal: controller.signal, remainingMilliseconds: () => null, publish: () => {}, yieldContinuation: async () => {} } };
+    const plan = parseRebuildPlanV1(fixtures.cases[0]!.plans[0]);
+    const script = new RebuildAllScript(process.cwd(), process.cwd(), invocation, plan, {
+      acquire: async signal => {
+        expect(signal).toBe(controller.signal);
+        observed.push("acquired");
+        return { release: () => { observed.push("released"); } };
+      },
+      run: async (step, signal, budgetMilliseconds) => {
+        expect(signal).toBe(controller.signal);
+        expect(budgetMilliseconds).toBeGreaterThan(0);
+        observed.push(step.id);
+        if (vector.stop === step.id) {
+          if (vector.cancel) controller.abort(Error("cancelled"));
+          else throw Error("failed step");
+        }
+      },
+    });
+    if (vector.stop === null) await script.run([]);
+    else await expect(script.run([])).rejects.toThrow(vector.cancel ? "cancelled" : "failed step");
+    expect(observed).toEqual(vector.expected);
   });
 
   it("imports no downstream development or concrete owner from the neutral executor", () => {

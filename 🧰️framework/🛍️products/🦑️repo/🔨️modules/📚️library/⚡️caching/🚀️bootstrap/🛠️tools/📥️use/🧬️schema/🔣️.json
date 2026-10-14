@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "resource",
+    "mode",
+    "cases",
+    "during",
+    "after",
+    "witness"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "resource": {
+      "const": "nx-tooling:"
+    },
+    "mode": {
+      "const": "shared"
+    },
+    "cases": {
+      "const": [
+        "complete",
+        "refused"
+      ]
+    },
+    "during": {
+      "const": "refused"
+    },
+    "after": {
+      "const": "allowed"
+    },
+    "witness": {
+      "const": {
+        "version": 1,
+        "during": 1,
+        "after": 0,
+        "binding": [
+          "identity",
+          "toolkitRoot",
+          "processId",
+          "original",
+          "endpoint"
+        ]
+      }
+    }
+  }
+}

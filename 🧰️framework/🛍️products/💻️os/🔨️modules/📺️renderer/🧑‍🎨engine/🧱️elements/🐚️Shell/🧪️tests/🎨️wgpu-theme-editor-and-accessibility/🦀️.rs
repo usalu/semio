@@ -878,6 +878,7 @@ fn the_flagged_keybinding_rows_match_reacts_registry() {
 
 #[test]
 fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🪟️dock-accessible-names/🔣️.json")).expect("dock names fixture");
     for locale in fixture["locales"].as_array().expect("locales") {
         for layout in ["split", "maximized", "stacked"] {
@@ -907,15 +908,15 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
             let mut overlay = None;
             let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
             let mut cursor = ShellChromeChildCursor { phase: 1, rect: Some(bounds), ..Default::default() };
-            shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
-            shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
+            caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+            caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
             for index in 0..shell.dock_window_plan.len() {
                 cursor.item = index;
                 cursor.phase = 3;
-                shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
+                caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
             }
             cursor.phase = 5;
-            shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
+            caller.turn(|cx|shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
             assert!(shell.presented_chrome_accessibility.is_empty());
             shell.publish_retained_input_for_test(&mut input, &theme);
             let published = shell.presented_chrome_accessibility.clone();
@@ -946,12 +947,15 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
             shell.locale_id = "candidate-only".into();
             with_chrome_control_names(|names| names.clear());
             assert_eq!(shell.presented_chrome_accessibility, published, "unaccepted candidate cannot relabel the displayed frame");
+            caller.retire_world(&mut world);
         }
     }
+    caller.finish();
 }
 
 #[test]
 fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let theme = Theme::light();
     let mut input = InputState::<ActionDescriptor>::default();
@@ -981,7 +985,7 @@ fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
     let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    shell.render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world);
+    caller.turn(|cx|shell.render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world, cx)).expect("original fixture caller turn");
     assert!(with_chrome_control_names(|names| names.is_empty()));
     assert_eq!(shell.presented_chrome_accessibility, accepted);
     note_chrome_control_name("successor", Some("Successor label"));
@@ -996,6 +1000,8 @@ fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
     assert!(!shell.acknowledge_presented_input(&mut input, discarded));
     assert_eq!(shell.presented_chrome_accessibility, successor);
     assert_eq!(shell.presented_chrome_accessibility_generation, successor_generation);
+    caller.retire_world(&mut world);
+    caller.finish();
 }
 
 #[test]

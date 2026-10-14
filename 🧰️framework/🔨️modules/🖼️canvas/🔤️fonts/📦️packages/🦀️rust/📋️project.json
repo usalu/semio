@@ -19,7 +19,7 @@
         "cwd": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
         "forwardAllArgs": true
       },
-      "executor": "nx:run-commands"
+      "executor": "repo:script"
     }
   }
 }

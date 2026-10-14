@@ -10,7 +10,7 @@ import textSchema from "../../../📝️text/📸️snapshot/🔣️.json";
 import {buildSchema,graphqlSync} from "graphql";
 import type {WavSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseWavSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {binary32Value} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary32Value} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {WAV_SQLITE_SCHEMA,wavSnapshotToSqliteDatabase,wavSnapshotFromSqliteDatabase} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,SqliteOperation} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 

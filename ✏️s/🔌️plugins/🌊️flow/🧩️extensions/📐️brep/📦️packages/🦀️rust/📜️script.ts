@@ -12,6 +12,12 @@ import { runScriptMain } from "../../../../../../../🧰️framework/📦️pack
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "original-tessellation-source") {
+      if (segments.length !== 1) throw new Error("original-tessellation-source takes no arguments");
+      runBun(["test", "../../📐️tessellate/🧪️tests/🟦️.ts"], import.meta.dir);
+      console.log(`geometry-inference-oracle cases=${geometryInferenceOracle(import.meta.dir)}`);
+      return;
+    }
     console.log(`brep-extension-retirement-oracle cases=${brepExtensionRetirementOracle(import.meta.dir)}`);
     console.log(`geometry-inference-oracle cases=${geometryInferenceOracle(import.meta.dir)}`);
     console.log(`channel-identity-oracle cases=${channelIdentityOracle(import.meta.dir)}`);

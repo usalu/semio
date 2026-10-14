@@ -1,4 +1,4 @@
-import type {Binary64} from "../../../../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 /** 🏃️ Authored persisted run outcomes. */
 export type RunStatus="pending"|"running"|"succeeded"|"failed"|"canceled";
 /** 🚦️ Authored per-node run outcomes. */

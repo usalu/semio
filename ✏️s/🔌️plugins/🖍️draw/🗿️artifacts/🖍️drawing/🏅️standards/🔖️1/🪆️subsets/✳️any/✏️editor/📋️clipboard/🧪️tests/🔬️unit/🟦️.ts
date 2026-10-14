@@ -1,7 +1,7 @@
 /** 🧪️ Neutral clipboard placements are independently composed with Three.js. */
 import {expect,test} from "bun:test";
 import {Matrix3} from "three";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import Ajv from "ajv";
 import cases from "../🧫️fixtures/🔣️.json";
 import {clipboardPasteMatrix,remapDrawingClipboard,DrawingClipboardValidationJob,type DrawingClipboard,type ClipboardMatrix} from "../../🟦️.ts";

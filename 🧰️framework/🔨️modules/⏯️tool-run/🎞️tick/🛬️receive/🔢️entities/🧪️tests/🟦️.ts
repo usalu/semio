@@ -22,11 +22,11 @@ test("original Tick entity bytes preserve declared scalars, final cells and cumu
  const path=new URL("../🦀️.rs",import.meta.url);
  expect(existsSync(path)).toBe(true);
  const source=readFileSync(path,"utf8");
- for(const marker of["ToolRunEntityColumnReceiving","original_range()","allocated_bytes()","maximum_total_allocation_bytes","maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth","next_reserve_depth_demand()","reserve_one_funded(","terminal_is_empty()"])expect(source).toContain(marker);
+ for(const marker of["ToolRunEntityColumnReceiving","original_range()","allocated_bytes()","maximum_total_allocation_bytes","maximum_items","maximum_copy_bytes","maximum_capacity_bytes","maximum_release_bytes","maximum_depth","next_reserve_depth_demand()","reserve_capacity_one_funded(self.entities,g)","terminal_is_empty()"])expect(source).toContain(marker);
  for(const cold of["ToolRunTick::decode","DecodeOptions::default","collect::<Vec","to_vec()","root_now()","StepContext::new"])expect(source).not.toContain(cold);
  const native=readFileSync(new URL("../../🏗️native/🦀️.rs",import.meta.url),"utf8");
  expect(native).toContain("source.allocated_bytes().checked_add(Self::birth_bytes())");
- expect(native).toContain("if self.entity_issuer{return Default::default()}");
+ expect(native).toContain("if self.entity_issuer||self.progress_issuer{return Default::default()}");
  expect(native).toContain("column.truncate_retired_last()");
  expect(native).toContain("column.release_empty_page(g.maximum_release_bytes)");
 });

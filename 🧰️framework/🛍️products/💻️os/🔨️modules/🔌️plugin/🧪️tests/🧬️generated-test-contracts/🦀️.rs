@@ -5,23 +5,25 @@ macro_rules! __semio_plugin_descriptor_fresh_test {
         #[cfg(test)]
         #[test]
         fn descriptor_is_fresh() {
+            let mut original_caller=$crate::app::OriginalFixtureCaller::admit().expect("original descriptor caller");let mut cx=original_caller.context();
             __semio_install_plugin_bundle();
             let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
             let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| ::semio_framework_async::poll::resolve_ready($describe(runtime)));
-            $crate::plugin_runtime::extension_dispose_cold().expect("cold descriptor inspection retires any installed extension");
+            $crate::plugin_runtime::extension_dispose_cold(&mut cx).expect("original descriptor caller retires any installed extension");
             assert!($crate::plugin_runtime::extension_terminal_is_empty());
             let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
             const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning", "animate", "draw", "energy", "layout"];
             match std::fs::read(expected_path) {
                 Ok(expected) => {
                     if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::canonical_semantic_descriptor_bytes(&assembled), $crate::plugin_runtime::canonical_semantic_descriptor_bytes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — run `bun nx run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
+                        assert_eq!(assembled, expected, "{expected_path} is stale — run `bun repo run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
                     }
                 }
                 Err(_) => {
-                    assert!(!DESCRIPTOR_MIGRATED_PLUGINS.contains(&plugin_id.as_str()), "{expected_path} is missing but {plugin_id:?} is listed in DESCRIPTOR_MIGRATED_PLUGINS — run `bun nx run workspace:components describe <plugin-id>` and commit 🛂️.descriptor.semio + 🔣️.json");
+                    assert!(!DESCRIPTOR_MIGRATED_PLUGINS.contains(&plugin_id.as_str()), "{expected_path} is missing but {plugin_id:?} is listed in DESCRIPTOR_MIGRATED_PLUGINS — run `bun repo run workspace:components describe <plugin-id>` and commit 🛂️.descriptor.semio + 🔣️.json");
                 }
             }
+            let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original descriptor source close");
         }
     };
 }
@@ -33,22 +35,24 @@ macro_rules! __semio_extension_descriptor_fresh_test {
         #[cfg(test)]
         #[semio_framework_async_macros::async_test]
         async fn descriptor_is_fresh() {
+            let mut original_caller=$crate::app::OriginalFixtureCaller::admit().expect("original extension descriptor caller");let mut cx=original_caller.context();
             __semio_install_extension_bundle();
             let extension_id = $crate::plugin_runtime::extension_manifest().await.extension_id;
             let assembled = $crate::describe::describe_extension().await;
-            $crate::plugin_runtime::extension_dispose_cold().expect("cold descriptor inspection retires the installed extension");
+            $crate::plugin_runtime::extension_dispose_cold(&mut cx).expect("original descriptor caller retires the installed extension");
             let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
             const DESCRIPTOR_MIGRATED_EXTENSIONS: &[&str] = &[];
             match std::fs::read(expected_path) {
                 Ok(expected) => {
                     if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::canonical_semantic_descriptor_bytes(&assembled), $crate::plugin_runtime::canonical_semantic_descriptor_bytes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — run `bun nx run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
+                        assert_eq!(assembled, expected, "{expected_path} is stale — run `bun repo run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
                     }
                 }
                 Err(_) => {
-                    assert!(!DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()), "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `bun nx run workspace:components describe <plugin-id>` and commit 🛂️.descriptor.semio + 🔣️.json");
+                    assert!(!DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()), "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `bun repo run workspace:components describe <plugin-id>` and commit 🛂️.descriptor.semio + 🔣️.json");
                 }
             }
+            let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original descriptor source close");
         }
     };
 }

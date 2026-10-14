@@ -898,7 +898,9 @@ impl ArtifactEditor for WriterPlayApp {
     /// every Actions-pane row and every chrome control died before reaching `handle`.
     /// `setEditorSetting` carries three payload types under one manifest id, so it selects on the
     /// `setting` key the way the `app_commands!` rows split on their wire keyword.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<WriterCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<WriterCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_string));
         let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_f64));
         match action {
@@ -1048,7 +1050,9 @@ impl ArtifactEditor for WriterPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, NoTransient>,
         _interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == WRITER_PLAY_BODY_MAIN {
             let config = main::config::current(cfg).cloned().unwrap_or_default();
             let transient = main::transient::current(transient).cloned().unwrap_or_default();
@@ -1056,7 +1060,10 @@ impl ArtifactEditor for WriterPlayApp {
             return Ok(semio_framework_plugin::built_to_component_tree(node));
         }
         Self::render(body_key, doc, cfg, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn window_engagements(_doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
         use semio_framework_plugin::{WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus};

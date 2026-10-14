@@ -7,7 +7,7 @@ use crate::{Camera, Edge, Manifest, Node, Port, PortDirection};
 use store::os_store::store_schema::ArtifactCommand;
 
 fn mini_fixture() -> JackSnapshot {
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
+    JackSnapshot::with_content::<crate::test_support::FixtureComposition>(JackSnapshot::SCHEMA.into(), "mini".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), JackWorkingScene { nodes: vec![
             Node {
                 id: "root".into(),
                 kind: "Piece".into(),

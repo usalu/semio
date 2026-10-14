@@ -35,5 +35,6 @@ semio-s-plugin-imperative-logic = { path = "../../../📦️packages/🦀️rust
 semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

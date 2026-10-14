@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/animate-js",
   "version": "0.1.0",
   "description": "@semio-tech/animate-js authored owner test infrastructure.",
@@ -27,6 +27,6 @@
   },
   "bundleKind": "repo",
   "scripts": {
-    "test": "bun nx run @semio-tech/animate-js:test"
+    "test": "bun repo run @semio-tech/animate-js:test"
   }
 }

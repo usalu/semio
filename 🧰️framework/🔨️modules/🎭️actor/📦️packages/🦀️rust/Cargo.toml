@@ -54,6 +54,7 @@ semio-framework-async = { workspace = true }
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -72,3 +73,7 @@ serde_json = { workspace = true }
 # async convention) while expanding to a plain `#[test]` harness over an inline, dependency-free
 # `block_on` — see R4 clause 5 (a `#[test]` fn body is a sanctioned executor entry point).
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+[[test]]
+name = "original-owned-async-turn"
+path = "../../🎟️retained-turn/💼️job/⏸️park/🧪️tests/🦀️.rs"

@@ -371,7 +371,7 @@ async fn first_run_recomputes_every_node_second_run_is_a_no_operation() {
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
     host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
@@ -400,7 +400,7 @@ async fn editing_upstream_document_dirties_downstream_only_through_the_wire() {
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
     host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
@@ -430,7 +430,7 @@ async fn changing_a_nodes_config_alone_dirties_it_without_touching_document_or_i
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
     host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs_1 = empty_configs(&graph);
@@ -462,7 +462,7 @@ async fn parameter_overlay_alone_dirties_its_bound_node_without_changing_raw_con
     let graph = two_node_graph().await;
     let mut host = FakeHost::default();
     host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
@@ -581,7 +581,7 @@ async fn space_runner_never_overlaps_exchange_for_the_same_node_across_a_real_ru
     let graph = two_independent_solo_nodes();
     let host = RecorderHost::default();
     let recorder = host.clone();
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
@@ -604,7 +604,7 @@ async fn cancelling_the_run_token_stops_the_run_before_the_next_node() {
     let graph = two_independent_solo_nodes();
     let host = RecorderHost::default();
     let recorder = host.clone();
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let cancel = runner.cancel_token();
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
@@ -642,7 +642,7 @@ async fn a_long_history_node_document_loads_through_polls_before_any_import() {
     host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
     let progress = Arc::new(Mutex::new(Vec::new()));
     let observer = Arc::clone(&progress);
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
     let mut cache = TestMediaCache::default();
     let mut documents = empty_documents(&graph);
     let document = long_history_document(240);
@@ -675,7 +675,7 @@ async fn cancelling_the_run_during_a_document_load_restores_the_node_document_an
     let slot = Arc::new(Mutex::new(None));
     let mut host = FakeHost { fold_per_poll: 16, cancel_at_poll: Some(1), run_cancel: Arc::clone(&slot), ..FakeHost::default() };
     host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     *slot.lock().expect("run cancel slot") = Some(runner.cancel_token());
     let mut cache = TestMediaCache::default();
     let mut documents = empty_documents(&graph);
@@ -703,7 +703,7 @@ async fn a_faulted_document_load_restores_the_node_document_and_surfaces_the_gue
     let graph = two_node_graph().await;
     let mut host = FakeHost { fold_per_poll: 16, fault_at_poll: Some(2), ..FakeHost::default() };
     host.set_output("app-node-a", "node-a:out:out", "\"hello\"");
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let mut documents = empty_documents(&graph);
     documents.insert("artifacts/node-a".to_string(), long_history_document(240));
@@ -731,7 +731,7 @@ async fn a_whole_document_input_loads_through_polls_before_any_export_or_read() 
     host.set_document_output("app-node-a", "node-a:out:out", "\"source document\"");
     let progress = Arc::new(Mutex::new(Vec::new()));
     let observer = Arc::clone(&progress);
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now()).with_document_load_progress(move |step: &NodeDocumentLoadProgress| observer.lock().expect("progress").push(step.clone()));
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);
@@ -760,7 +760,7 @@ async fn cancelling_the_run_during_a_whole_document_input_restores_the_node_docu
     let slot = Arc::new(Mutex::new(None));
     let mut host = FakeHost { fold_per_poll: 16, cancel_at_poll: Some(1), run_cancel: Arc::clone(&slot), ..FakeHost::default() };
     host.set_document_output("app-node-a", "node-a:out:out", "\"source document\"");
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     *slot.lock().expect("run cancel slot") = Some(runner.cancel_token());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
@@ -798,7 +798,7 @@ async fn rejects_incompatible_edge_media_types() {
     let mut graph = two_node_graph().await;
     graph.nodes[1].inputs[0].spec.media_type = MediaType { class: MediaClass::Text, form: MediaForm::Document };
     let host = FakeHost::default();
-    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default());
+    let mut runner = SpaceRunner::new(host, Arc::new(InMemoryBlobStore::default()), protocol::MergePolicy::default(),semio_framework_async::CancelToken::root_now());
     let mut cache = TestMediaCache::default();
     let documents = empty_documents(&graph);
     let configs = empty_configs(&graph);

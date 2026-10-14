@@ -62,7 +62,7 @@ const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "catalog", "
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
   const { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName } = dependencies;
   const { describe, expect, it } = vitest;
-  const { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PLUGIN_HOST_CONFIGS } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts");
+  const { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PLUGIN_HOST_CONFIGS } = await import("../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts");
   const { dialectCoordinate } = await import("../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts");
   const appsByDirectory = descriptorAppsByDirectory(repoRoot);
   const appsByOwner = descriptorAppsByOwner(repoRoot, PLUGIN_BUILD_TARGETS);
@@ -155,7 +155,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     /** 🛂️ The law above reads apps from committed descriptors, so a plugin that commits none
      * would pass it by being invisible to it. Every plugin directory therefore MUST commit its
-     * `🔣️.json` (`bun nx run workspace:components describe <plugin-id>` writes it beside `🛂️.descriptor.semio`): a missing
+     * `🔣️.json` (`bun repo run workspace:components describe <plugin-id>` writes it beside `🛂️.descriptor.semio`): a missing
      * descriptor is a failure here, not an exemption. */
     it("reads a committed descriptor for every plugin directory", () => {
       expect([...appsByDirectory].filter(([, entry]) => entry === undefined).map(([directory]) => directory).sort()).toEqual([]);

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/gis-plugin",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs",
@@ -10,8 +10,18 @@
     ]
   },
   "targets": {
+    "installed-service-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts installed-service-source"
+      },
+      "outputs": []
+    },
     "component-cold-map-patch-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
@@ -21,7 +31,7 @@
       "outputs": []
     },
     "component-cold-map-patch-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts component-cold-map-patch-native-check",
@@ -33,7 +43,7 @@
       ]
     },
     "durable-three-store-assembly-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
@@ -43,7 +53,7 @@
       "outputs": []
     },
     "durable-three-store-assembly-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
@@ -53,7 +63,7 @@
       "outputs": []
     },
     "map-create-region-group-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
@@ -63,7 +73,7 @@
       "outputs": []
     },
     "map-create-region-group-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
@@ -73,7 +83,7 @@
       "outputs": []
     },
     "native-codec-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
@@ -83,7 +93,7 @@
       "outputs": []
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -91,7 +101,7 @@
       }
     },
     "native-codec-projection": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-codec-projection",
@@ -102,7 +112,7 @@
       ]
     },
     "inference-transport-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts inference-transport-check"
@@ -110,7 +120,7 @@
       "outputs": []
     },
     "native-codec-oracle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [],
       "options": {
@@ -121,7 +131,7 @@
       "outputs": []
     },
     "inference-discovery-oracle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",
@@ -141,7 +151,7 @@
       }
     },
     "inference-discovery-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust",

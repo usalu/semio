@@ -183,6 +183,8 @@ pub mod protocol_record {
 /// ([`super::protocol_record`]); `encode_op`/`decode_op` serve the ephemeral layers that carry no wire
 /// protocol facet, whose tag is the variant ordinal.
 /// Called explicitly from handcrafted `protocol::OpBinary` impls — never re-emitted by derive.
+#[path="🫴️receiving/🦀️.rs"]
+pub mod original_receiving;
 pub mod variants_binary {
     use super::{protocol_record, DslVariants};
     use crate::os_pack::{decode_record_body_exact, encode_record_body, write_varint_u64, ByteReader, DecodeOptions, EncodeOptions};

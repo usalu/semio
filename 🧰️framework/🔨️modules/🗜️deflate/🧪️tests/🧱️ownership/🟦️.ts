@@ -6,7 +6,7 @@ import {Database} from "bun:sqlite";
 
 import TOML from "@iarna/toml";
 import fixture from "../🧫️fixtures/⚠️refusal/🔣️.json";
-import {ValueError,type ValueRefusalKind} from "../../../🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError,type ValueRefusalKind} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 
 test("all owned callback and retained-allocation kinds have independent closed projections",()=>{
  expect(new Set(fixture.callbacks.map(row=>row.kind)).size).toBe(8);

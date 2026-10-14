@@ -1,4 +1,4 @@
-import { ExactCargoLawError, exactExecutableFingerprint, generatedOutputHasLiveLease, type ExactCargoLawPort } from "../🟦️.ts";
+import { ExactCargoLawError, exactExecutableFingerprint, generatedOutputHasLiveLease, type ExactCargoLawPort, originalNativeLibraryEnvironment } from "../🟦️.ts";
 import { test, expect } from "bun:test";
 import { readFileSync, mkdtempSync, readdirSync, renameSync, writeFileSync, mkdirSync, utimesSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -168,4 +168,11 @@ test("exact Cargo law counts match the portable schema before any compiler admis
     }
     expect(built).toBe(vector.accepted);
   }
+});
+
+test("native exact laws preserve original environment and actual toolchain libraries on every desktop platform",async()=>{
+ const {Database}=await import("bun:sqlite");const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🧰️native-runtime.json",import.meta.url),"utf8")),directory=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!,"toolchain/lib/rustlib/host/lib"),sysrootLibraries=resolve(directory,"../../.."),database=new Database(":memory:");
+ try{for(const row of law.cases){const original={[row.key]:"original-libraries",ORIGINAL_OWNER:"caller",RUST_MIN_STACK:"71"},actual=originalNativeLibraryEnvironment(original,directory,row.platform),oracle=database.query("SELECT ? || ? || ? || ? || ? AS path").get(directory,row.separator,sysrootLibraries,row.separator,original[row.key]) as {path:string};expect(actual[row.key]).toBe(oracle.path);expect(actual.ORIGINAL_OWNER).toBe("caller");expect(actual.RUST_MIN_STACK).toBe("71");expect(original[row.key]).toBe("original-libraries")}}
+ finally{database.close()}
+ console.log("[DEBUG] actual compiler runtime directory and sysroot library owner preserve original caller environment; SQLite desktop3 oracle matched");
 });

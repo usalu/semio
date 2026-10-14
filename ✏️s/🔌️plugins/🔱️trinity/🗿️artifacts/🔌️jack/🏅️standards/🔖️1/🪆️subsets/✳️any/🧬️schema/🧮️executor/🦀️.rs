@@ -14,7 +14,7 @@ pub struct Binding {
 }
 
 /// 🧮️ One effect a query applies to its working graph. A run publishes its effects as graph leaves of the document's
-/// composed `content` child (`crate::graph_leaves`), never as parent-lane leaves (design §20.15).
+/// composed `content` child through its authored effect-preparation behavior, never as parent-lane leaves (design §20.15).
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum GraphEffect {
     CreateNode(Node),
@@ -266,3 +266,5 @@ pub(crate) fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnI
     }
     QueryResult::table(columns, rows)
 }
+
+#[cfg(test)]pub(crate)use execution::{node_owned_bytes as fixture_node_owned_bytes,edge_owned_bytes as fixture_edge_owned_bytes};

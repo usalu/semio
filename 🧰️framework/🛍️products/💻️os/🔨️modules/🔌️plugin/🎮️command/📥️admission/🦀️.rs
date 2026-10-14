@@ -180,6 +180,7 @@ pub(crate) struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub(crate) admission: Option<AdmittedToolCommand>,
     pub(crate) meta: ActionMeta,
     pub(crate) operation: semio_framework_job::Operation,
+    pub(crate) source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),
     pub(crate) revision: [u8; 32],
     pub(crate) lease: Option<ToolCancellationLease>,
     pub(crate) key_copy: Option<ToolLatestWinsKeyCopy>,
@@ -190,10 +191,19 @@ pub(crate) struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub(crate) restarting: bool,
     pub(crate) closing: bool,
     pub(crate) receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,
-    pub(crate) fault:ManuallyDrop<Option<Fault>>,
+    pub(crate) fault:ManuallyDrop<Option<PluginLifecycleFailure>>,
+    pub(crate) fault_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
 }
 
 impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
+    pub(crate) fn admit_original_lease(&mut self,issuer:&mut crate::tool_cancellation::ToolCancellationIssuer,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.closing||self.lease.is_some(){return Ok(self.lease.is_some())}
+        if self.source_identity!=(cx.operation(),cx.generation()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted pending lease requires its original command caller").into())}
+        let key=crate::tool_cancellation::ToolOperationKey{app_instance_id:self.meta.instance_id,document:crate::tool_cancellation::ArtifactDocumentAuthority(self.meta.instance_id),operation_id:self.operation.operation,base_revision:self.operation.base_revision,generation:self.operation.generation};
+        self.lease=issuer.begin_keyed(&key,cx)?;
+        Ok(self.lease.is_some())
+    }
+
     pub(crate) fn record_original_receipt(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),Fault>{
         if progress!=RetainedCloneProgress::default(){if self.receipt.is_some(){return Err(plugin_sdk_fault("latest-wins original receipt awaits its caller handback").with_retained_progress(progress));}self.receipt=Some((grant,progress));}
         if !progress.fits(grant){return Err(plugin_sdk_fault("latest-wins original receipt exceeded its caller").with_retained_progress(progress));}
@@ -205,6 +215,8 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
         Ok(RetirementDemand{release_bytes:self.retired_key.as_ref().map_or(0,String::capacity),depth:usize::from(self.retired_key.is_some()),..Default::default()})
     }
     pub(crate) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.fault_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
+        if self.fault.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<PluginLifecycleFailure>(),depth:1,..Default::default()})}
         if let Some(command)=self.command.as_ref(){
             if self.disposer.terminal_is_empty(command){return Ok(RetirementDemand{release_bytes:size_of_val(command.as_ref()),depth:1,..Default::default()});}
             let mut demand=self.disposer.retirement_demands(command,body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"latest-wins command child depth overflow"))?;return Ok(demand);
@@ -217,6 +229,8 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
     pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         let idle=RetainedCloneProgress::default();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if !Self::permits(grant,demand){return Ok(PluginLifecycleStep::Progress(idle))}
+        if let Some(owner)=self.fault_retirement.as_mut(){let step=owner.close_step(grant)?;if owner.terminal_is_empty(){self.fault_retirement.take();}return Ok(PluginLifecycleStep::Progress(step.progress()))}
+        if let Some(original)=self.fault.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.fault_retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{*self.fault=Some(original);Err(error.into())}}}
         if let Some(command)=self.command.as_mut(){
             if self.disposer.terminal_is_empty(command){drop(self.command.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}))}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=self.disposer.close_step(command,child)?;let progress=step.progress().unwrap_or_default();
@@ -235,7 +249,7 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
         if let Some(key)=self.retired_key.as_ref(){let released_bytes=key.capacity();drop(self.retired_key.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..idle}))}
         Ok(PluginLifecycleStep::Complete(idle))
     }
-    pub(crate) fn command_owners_are_empty(&self)->bool{self.command.is_none()&&self.admission.is_none()&&self.key_copy.is_none()&&self.key.is_none()&&self.retired_key.is_none()&&self.fault.is_none()}
+    pub(crate) fn command_owners_are_empty(&self)->bool{self.command.is_none()&&self.admission.is_none()&&self.key_copy.is_none()&&self.key.is_none()&&self.retired_key.is_none()&&self.fault.is_none()&&self.fault_retirement.is_none()}
 }
 
 impl<A: ArtifactApp> Drop for PendingLatestWinsCommand<A> {

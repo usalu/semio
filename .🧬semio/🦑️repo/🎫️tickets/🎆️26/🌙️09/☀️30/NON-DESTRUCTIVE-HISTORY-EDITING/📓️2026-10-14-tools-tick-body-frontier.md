@@ -27,3 +27,114 @@ The canonical Job descriptor syntax selector now includes Root's new original Wo
 The entity implementation contract requires a source-bound field7/tag8/BytesLength consumer, exact u64 byte divisibility and captured item ceiling, paid reserve before consuming any scalar that lacks a final native slot, eight-byte fixed scratch and a separate metadata0 adoption turn. Every demand must include actual PagedList reserve/push/pop/release path plus its enclosing native frame. The final native frame must retain an active field issuer until that issuer returns its actual receipt and closes; neither publication nor frame closure may bypass an unfinished field issuer. Original source allocated_bytes plus frame and owned column allocation must fit the same immutable maximum_total_allocation_bytes before each prospective birth. The complete enclosing owner also must fence future lower RecordBody births against that cumulative ceiling; a column-only check does not qualify complete receiving.
 
 Actual PagedList exposes funded reservation, owned adopt_reserved, logical pop/truncate and separately quoted empty-page release. The u64 entity scalar can therefore be committed without a generic partial-T protocol. Trace's largest native Upsert still needs a real partial typed final cell or a bounded once-born owned scalar producer; accepted existing reservation alone does not supply it. All complete Progress/Trace/Tick/application/editor work remains unaccepted.
+
+## Genuine Entity RED and Authored Producer
+
+Exact normal source successor68262 reached genuine RED0/1,21expects132.24ms at2026-10-14T00:17:01Z after independent strict Ajv/SQLite/DataView validation. The failure was the intended absent producer. ToolRunEntityColumnReceiving is now authored against the actual original lower token recipient and final Box frame. Field7/tag8/BytesLength validation, captured item limits, per-octet copy1, PagedList full-depth funded reservation and metadata0 final-cell adoption are separate turns. Its active issuer prevents publication, identity/sequence mutation and frame closure. A terminal field close retains that issuer until actual receipt handback validates the original source/frame; only then can paid native frame closure progress. Duplicate field issuer admission is refused. Nonempty final entity cells and each actual empty page retire separately before the frame itself.
+
+Native source-plus-frame admission and entity reservation now compare the actual lower allocated_bytes and frame/column backing against the unchanged immutable receiving allocation bound. An additional handcrafted portable ceiling25144 with source24576/frame568/cursor24576 independently validates via SQLite and qualifies a separate authored native allocation-denial law. This narrow refusal profile is authored in the fixture, not inferred from the source extent or current demand. The original fixed grant remains1/17/65536/262144/64. The native law also asserts exact final cell pointers, each original octet cut, item/depth/copy/capacity/release denials, actual physical receipt conservation and terminalDrop0. Its actual source fixture Vec construction remains outside funded source-factory acceptance.
+
+SourceGREEN75605 and current syntaxI80803/JobE80814 are dispatched through normal Bun/Nx and remain in graph preparation. The syntax scopes are28 ToolRun/Plugin/Run/entity owners and22 Job/capture/Worker-failure owners. Normal projectionAF83246 includes488 canonical commands, new entity native control and UI-owned parent-source loan source control. The new first-party test-original-entity-column native route selects the two entity laws and the changed existing15-cut native-frame regression. No current native assertions, whole Progress/Trace/Tick assembly, paid application or447/24 editor acceptance is credited. Native execution remains under Root's coordinated lease.
+
+## Restart and Canonical Continuation
+
+Read-only ps confirms84710,84711 and83246 are no longer live although their saved sourceB/syntaxJ/projectionAF states still say running without any terminal result. These original receipts are preserved unchanged; no completion or assertion acceptance is inferred. UI reports the same stale-handle observation for its own normal syntax. Storage now has47Gi available; Tools performed no cache cleanup, process kill or state rewrite.
+
+UI consolidated the owned parent-source loan into its preexisting canonical Job context/🎟️source owner, preserving the original99241/7 plus9/64/futureclock/deadline/fuel fixture. Tools updated the newly registered source control to that actual canonical test path; there is no duplicate capture/🧳️source dependency. Current488 canonical controls parse with unique ids.
+
+Entity reservation now funds the exact declared final scalar count through existing reserve_capacity_one_funded, preserving every original payload pointer and avoiding an unused full native payload page. The original declared wire length supplies an extent, never a grant or allocation policy. Native complete rows assert final capacity equals declared entity count. Close exposes a pure full-five quote and refuses item/depth denial before returning the issuer; its pending final receipt still blocks frame retirement.
+
+Fresh current normal sourceC, finite28 syntaxK, finite22 Job syntaxF and488 projectionAG are dispatched with unchanged original caller policies after the stale-handle observation. No native Cargo is dispatched while Core's lease remains reserved. Whole Progress/Trace/Tick fields, paid application and all447/24 editor paths remain unaccepted.
+
+## Current Source, Syntax and Projection GREEN
+
+Fresh entity sourceC8100 genuinely passed1/1,44expects52.47ms at00:42:07Z after strict Ajv2020, SQLite prefix/ceiling arithmetic and DataView original scalars. Current28-owner syntaxK8104 and22-owner Job/Worker-failure syntaxF8110 genuinely parsed their exact supplied files. Normal projectionAG8116 actually generated488 commands with en,de and unrelatedPreserved=true,1.6s. This qualifies the current source guards, syntax and standard launch projection only.
+
+The existing original native entity route now has three selected laws ready under its unchanged original536870912-byte/65536-line/1800000ms/prototype caller: each original entity octet-cut/final scalar custody, authored aggregate source24576+frame568=25144 allocation refusal, and changed existing15-cut native-frame regression. Those three native assertions remain unexecuted while Core owns the sole coordinated native lease. Complete original source birth, all Progress/Trace/Tick fields, their paid application and447 native/24 browser editor paths remain unaccepted.
+
+## Enclosing Progress and Trace Representation Audit
+
+The actual canonical Progress record fields are1 identity,2 sequence,3 state ordinal,4 stage,5 completed,6 optional total,7 optional counter bytes,8 required F64 units-per-second converted to native f32,9 conflicts and10 optional Step list. Counter rows are exactly little-endian u16 followed by u64 (10bytes), at most8; the nested Step ring is64. The original full-Tick corpus already supplies sequence12/running/stage1/completed42/total100, counters0→42 and2→5, units37.5/conflicts0 and one actual warning Step. That exact corpus and canonical wire remain authoritative.
+
+The actual Trace page record fields are1 identity,2 page, then3 kind bytes,4 packed u64 keys,5 verdict bytes,6 packed u16 reasons,7 subject-kind bytes,8 packed u32 meshes,9 packed u32 shapes,10 packed u64 entity subjects and11 packed f32 floats. The canonical guards require upsert kind0/retire1/clear2; key count equals keyed operations; verdict/reason/subject counts equal upserts; subject kinds0/1/2 partition instance/placement/entity rows; float count is8 per instance plus3 per placement. Direct retained ranges can therefore precede once-paid scalar reconstruction, with no gathered column Vec or cold RecordValue. A bounded typed scalar constructor can receive each original source octet and adopt one complete native TraceOp into its funded final slot metadata0; the current independent4096 reservation law does not implement that receiver.
+
+Native Progress is currently an Option<ToolRunReceivedProgress> in the final Tick. Safe direct partial Progress initialization must use a controlled final representation with explicit header/field initialization masks and MaybeUninit custody; an invalid partially initialized Some cannot be borrowed or dropped. A complete separately assembled Progress moved into the Option would add an uncontrolled bulk native payload move under the fixed17 profile. Its final slot representation and paid partial retirement must be designed schema-first, with the actual native-frame size receipts and every fixture updated by hand after real measurement. Until that enclosing representation and root field FSM exist, the accepted Identity/Step/Entity leaves cannot qualify full Progress, Trace or Tick.
+
+## Next Progress Source Frontier
+
+Progress now has an authored strict neutral schema and handcrafted empty/full canonical cases at tick/receive/📊️progress. Its independent oracle uses Ajv2020 plus SQLite field-mask415/counter-row arithmetic and Buffer u16/u64/F64 decoding, and compares all full-case semantics against the unchanged original full Tick corpus. Canonical source control test-original-tick-progress-receiving-source is registered (489 commands); original first-party resolved source caller is captured at verification/📥️inputs/📊️tick-progress-receiving-source-caller.json. Exact normal RED21986 is dispatched before production exists. No featureRED is credited until its actual oracle reaches the absent controlled native Progress producer. Native entity3 remains queued behind the coordinated Core lease.
+
+## Progress RED and Current Tooling Prerequisite
+
+Progress sourceA21986 genuinely reached feature RED0/1,13expects550.40ms at00:49:01Z: strict Ajv/SQLite/Buffer canonical full-Tick checks all executed before the intended absent controlled native Progress producer assertion. Native Progress production is still absent; the final optional-slot representation and its paid partial retirement remain the next implementation prerequisite.
+
+Root requested its original normal Worker paired-failure source/native1 and11-owner private-group syntax controls. These are now canonically registered; the Worker exact source/native caller files preserve Root's original268435456-byte/65536-line/1800000ms/offlinefalse/prototype policy and exact native selector. The syntax control uses every literal path from Root's actual verification/📥️inputs/🎟️root-private-original-syntax.json. Canonical count is now492 unique commands.
+
+Normal projectionAH25129 terminated before generation at00:50:58Z on Tooling patch cumulative coordinates changed in assertToolingPatchV1, matching Root's separately observed WorkerSourceA25503 prerequisite refusal. This is a current patch-installation failure, distinct from Root MemberC16488's NoCachedProjectGraph refusal. Prior488 projectionAG8116 remains actual accepted standard projection; the newer492 commands are registered but not yet projected. No unchanged retry, foreign patch edit, cache cleanup or process kill was performed.
+
+UI's newer Actor sourceParent/rootcx/testkit changes postdate actual22-owner Job syntaxF8110. The current selector already includes the exact OriginalJobFixtureCaller path, but those newer source spans still need a fresh normal syntax successor after tooling qualification. Native entity3, Root Worker1 and all447/24 editor assertions remain unexecuted; Root requires CoreG actual terminal before another Cargo owner dispatches.
+
+## Actual Entity3 Native Acceptance
+
+Core G23273 genuinely passed Member2 and explicitly released the sole native lease to Tools. Unchanged Entity3 A35665 then actually passed3/3,48skipped,55ms Nextest after3m27s compilation. Its selected cumulative source/frame law passed15ms; each-octet interruption/final scalar custody law passed18ms; changed existing15-cut native-frame law passed19ms. No grant, selector resource or deadline was raised.
+
+The exact original empty/one/two-entity cases execute15 actual partial/completed rows. Cut0 has no opened lower source and conserves568 native frame bytes. Opened empty completion conserves25144. One declared final scalar reserves exactly400 additional bytes (392 metadata+8 payload), preserves its actual final pointer and conserves25544 at cuts1/7/8 and complete8-copy. Two declared final scalars reserve exactly408 additional bytes, preserve both final pointers and conserve25552 at cuts1/7/8/9/15/16 and complete16-copy. Pending partial8 scratch commits separately; the same frame remains through reservation, receipt handback and paid native closure. Independent item/depth/copy/capacity/release denials and terminalDrop0 actually execute. Source fixture Vec birth remains outside funded source-factory acceptance.
+
+The authored cumulative ceiling25144 actually includes lower source24576 plus final frame568 and refuses prospective column metadata birth with heap0 and no mutation. Original15-cut native frame regression retains its prior25144 birth/release and logical copy56, metadata0 and terminalDrop0. The actual column receiver is now qualified for this narrow original corpus; complete Progress/Trace/Tick grammar, outer lower-allocation fencing, paid application and447/24 editor acceptance remain incomplete.
+
+Tools released the sole native lease to Root immediately for its ordered paired Worker1 and informed Core. Root owns subsequent native dispatch; Tools will not overlap it.
+
+ProjectionAI38116 qualified the current tooling patch but then terminated PREgeneration on unrelated structural graph prerequisites: s-dev generate owner absent, dispatch-macros-rs test dependency project absent, renderer frame-worker generated JS producer absent and original full module graph producer required. Current commands are registered but the newer projection is still unaccepted. UI's requested canonical Job context/source/child source control is now also registered after verifying its actual schema/test path, yielding493 unique controls. No child source/native acceptance is inferred from registration.
+
+## Files Touched in This Continuation
+
+Production/fixture owners:
+
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🏗️native/🦀️.rs
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🦀️.rs
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🧬️schema/🔣️.json
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🧪️tests/🦀️.rs
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/🔢️entities/🧪️tests/🧫️fixtures/🔣️.json
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📊️progress/🧬️schema/🔣️.json
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📊️progress/🧪️tests/🟦️.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/🎞️tick/🛬️receive/📊️progress/🧪️tests/🧫️fixtures/🔣️.json
+- 🧰️framework/🔨️modules/⏯️tool-run/🦀️.rs
+- 🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/🦀️.rs
+- 🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts
+- 🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📋️project.json
+
+Ticket-owned inputs/registrations/reports:
+
+- 🎮️commands.json
+- verification/📥️inputs/🎟️job-close-abi-syntax-e.json
+- verification/📥️inputs/🎟️tool-run-close-abi-syntax-d.json
+- verification/📥️inputs/🔢️tick-entity-column-native-caller.json
+- verification/📥️inputs/🎮️projection-20261014-af.json
+- verification/📥️inputs/📊️tick-progress-receiving-source-caller.json
+- verification/📥️inputs/⚠️worker-paired-failure-source.json
+- verification/📥️inputs/⚠️worker-paired-failure-native.json
+- 📓️2026-10-13-tools-current.md
+- 📓️2026-10-14-tools-tick-body-frontier.md
+
+Normal488 projectionAG generated owned EN/DE launch entries in .vscode/launch.json through the genuine standard router. Later492/493 controls remain unprojected because the actual successor failed at structural Nx prerequisites. Original generated process receipts and input resources remain untouched; ticket is ongoing, so no generated-output cleanup or lifecycle closure is performed.
+
+## Progress Production and Current Verification at 03:10 UTC
+
+Progress source GREEN90281 genuinely passed1/1 after the original missing-producer RED21986. Normal syntax90287 parsed30 explicit current owners. The new Progress producer holds one final native `Box<MaybeUninit<ToolRunReceivedProgress>>`; three owning headers initialize separately, original Identity scalars enter that slot, counters reserve their exact declared final PagedList extent, and original Step argument backing transfers without replacement. Partial receiving quotes the actual Step argument allocation through a new pure borrowed `ToolRunStepReceiving::allocated_bytes` getter. Every capacity admission includes actual lower SourceDecode allocation, final Tick frame and existing entity column, final Progress slot, counter/Step backing, pending/adopted argument allocations and prospective birth under the original captured total. Parent issuer custody blocks frame publication and closure until the genuine receiving or publication receipt is acknowledged. Cancellation retires every initialized child/header/backing separately before terminal Drop.
+
+The independent Ajv2020/SQLite/Buffer law now contains literal empty/full Progress wire bodies and an every-paid-frontier interruption policy. Full body is checked as an exact original full-Tick substring. This exposed wire List tag12 versus authored tag11: RED91973 genuinely failed0/1,44expects34.06ms at the intended source guard; corrected source GREEN92578 genuinely passed1/1. Syntax92886 parsed31 owners including the new native law; this predates two subsequent test-only compile corrections.
+
+Native test `original_progress_receiving_keeps_final_slot_counter_and_argument_pointers_at_every_paid_frontier` is canonically authored and registered through the permanent ToolRun script/project owner. It supplies original1/17/65536/262144/64 grants, keeps the same final native slot, counter cells and Step argument allocation across every paid frontier, tests undersupplied item/depth/copy/capacity/release denial, verifies real physical birth/release receipts, and closes original lower source/frame/Progress custody before terminal Drop. Whole Progress publication first hides the recipient behind its actual receipt, then separately acknowledges the parent issuer; no doubled publication receipt is issued.
+
+Core confirmed sole native lease release and absence of foreign Cargo/Nextest/Rustc at03:07:12 UTC; Tools immediately verified those processes absent before dispatch. NativeA92969 compiled production but terminated PREassertion on two new test errors: indexing the existing StepRing and a missing semicolon after pending token retirement. Both exact test spans were corrected; unchanged nativeB93728 is currently live. This is not native Progress acceptance yet. The normal caller retains536870912 transport bytes/65536 lines/1800000ms/offlinefalse/prototype; no grant/profile/deadline was increased.
+
+Canonical registry now contains496 unique controls: UI child-source native, Value sealed metadata-transfer quote native, and Progress receiving native join the prior493. Current syntax control includes31 explicit owners. Normal source-only launch projectionAJ93594 genuinely passed at03:09:20Z and generated all496 commands/en,de with unrelated entries preserved. This supersedes the prior488 projection after actual tooling/structural prerequisites changed. No native editor447 or browser24 assertion has been executed here.
+
+New files/spans in this Progress continuation are Progress production/native test/schema/fixture/source oracle; Step actual allocation getter; native Tick issuer fence; ToolRun domain/package exports and permanent native test route/project target; commands.json; exact Progress source/native/syntax31 and projection496 input captures. Original receipts and source resources remain untouched. Complete enclosing Tick Progress-field installation, full Trace/Tick grammar, lower source-step allocation fencing and paid application remain incomplete; the final Tick currently still has its original inline optional Progress field, so this child final-slot qualification does not establish whole-Tick application.
+
+## Actual Progress Native Acceptance
+
+Progress B93728 genuinely passed1/1,51 skipped,98ms at03:09:56Z. Empty:110 paid actions/all111 interrupted prefixes, copy107, actual birth/release25360. Full:181 paid actions/all182 prefixes, copy144, actual birth/release26256. Final slot216 bytes, original counter and Step argument pointers, genuine publication receipt and paid native closure, terminalDrop0. Normal projectionAJ93594 actually generated496 en/de commands. Additional explicit original25144 ceiling schema/fixture saved; source/native assertions remain unauthored after filesystem write refusal. Read-only disk116Mi/100%, no Cargo live. No foreign cleanup/kill.
+
+At03:18 UTC, the explicit25144 source24576+frame568+prospective Progress216 ceiling schema/fixture and SQLite arithmetic assertion are authored. Direct in-place edit of the existing TS oracle succeeded and its content was checked; new-file creation was specifically refused with ENOSPC (zsh heredoc temporary file). The additional native ceiling function was not written, and no successor source/native verification was dispatched. Thus B93728 qualifies the production/all-frontier law as it ran; the later neutral ceiling extension remains unexecuted. Tools explicitly released sole native lease to Core after actual terminal and a no-Cargo process check. All496 command projection is actual accepted. Whole enclosing Tick/application and447/24 remain incomplete.

@@ -806,7 +806,7 @@ async fn declared_actions_bridge_to_commands() {
 /// real release. Generation2d keeps no canvas drag gesture, so both handlers stay no-ops either way.
 #[test]
 fn canvas_pointer_wire_defaults_samples_and_cancelled() {
-    let bridge = |action: &str, args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action(action, Some(&args)).expect("declared pointer action bridges");
+    let bridge = |action: &str, args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action(action, Some((args).clone()), None).expect("declared pointer action bridges");
     let f = semio_framework_value::DslValue::float;
     let legacy = semio_framework_value::DslValue::object([("x".into(), f(5.0)), ("y".into(), f(6.0))]);
     assert_eq!(bridge("canvasPointerMove", legacy.clone()), Generation2dCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[5.0, 6.0]] }), "an absent `samples` is the single (x, y)");
@@ -835,7 +835,7 @@ fn canvas_pointer_wire_defaults_samples_and_cancelled() {
 /// faults. The generic bridge law only exercises the absent half.
 #[test]
 fn node_graph_viewport_decodes_an_absent_viewport_as_identity_and_refuses_a_malformed_one() {
-    let decode = |args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some(&args));
+    let decode = |args: semio_framework_value::DslValue| <Generation2dPlayApp as ArtifactEditor>::command_from_action("nodeGraphViewport", Some((args).clone()), None);
     let identity = semio_framework_os_kernel::Viewport2d::default();
     assert_eq!(decode(semio_framework_value::DslValue::Object(Vec::new())).expect("an argless invocation bridges"), Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: identity }));
     let authored = semio_framework_os_kernel::Viewport2d { x: 12.0, y: -8.0, zoom: 2.0 };

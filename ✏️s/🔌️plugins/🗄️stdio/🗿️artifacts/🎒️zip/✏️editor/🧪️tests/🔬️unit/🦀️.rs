@@ -187,8 +187,8 @@ fn archive_edit_arguments_are_required_in_both_dialects() {
     let rows = fixture();
     for row in rows["rejectedArguments"].as_array().unwrap() {
         let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert!(crate::editor::zip::base::ZipAnyEditor::command_from_action("set-node", Some(&args)).is_err(), "{row}");
-        assert!(crate::editor::zip::iso21320::ZipIso21320Editor::command_from_action("set-node", Some(&args)).is_err(), "{row}");
+        assert!(crate::editor::zip::base::ZipAnyEditor::command_from_action("set-node", Some((args).clone()), None).is_err(), "{row}");
+        assert!(crate::editor::zip::iso21320::ZipIso21320Editor::command_from_action("set-node", Some((args).clone()), None).is_err(), "{row}");
     }
 }
 
@@ -295,6 +295,7 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
 /// addressed entry's own token — the same edit as with the token its draft binding carries, a stale token still refused —
 /// while the shell lane keeps refusing the omission.
 async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation = ZipMutation>>(definition: semio_framework_plugin::AppDefinition) {
+    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
     let view = semio_framework_plugin::ViewModel {
         window_instances: definition.window_kinds.iter().enumerate().map(|(index, window)| semio_framework_plugin::ViewWindowInstance { id: format!("agent-preview-{index}"), window_kind_id: window.id.clone() }).collect(),
@@ -305,7 +306,7 @@ async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Muta
     let registered = definition.clone();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition: registered, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity,cx).await).unwrap();
     let name = row["rename"]["name"].as_str().unwrap();
     let value = row["rename"]["value"].as_str().unwrap();
     let address = |revision: Option<String>| {
@@ -314,12 +315,14 @@ async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Muta
         )
     };
     assert_eq!(agent_target_revision(&original, &address(None)).unwrap(), Some(text_revision(name)), "the fill is the token the draft binding carries");
-    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None), &view, &mut identity).await).expect("the agent lane admits an omitted revision");
-    let bound = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name))), &view, &mut identity).await).expect("the draft binding's revision");
+    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(None), &view, &mut identity,cx).await).expect("the agent lane admits an omitted revision");
+    let bound = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision(name))), &view, &mut identity,cx).await).expect("the draft binding's revision");
     assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale"))), &view, &mut identity).await).is_err(), "a stale token is refused on the agent lane too");
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::agent_preview(&mut app, &definition, "set-node", &address(Some(text_revision("stale"))), &view, &mut identity,cx).await).is_err(), "a stale token is refused on the agent lane too");
     assert!(semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-node", Some(&address(None)), &artifact_app_laws::meta("local"), &mut identity).await).is_err(), "the shell lane still requires the draft binding's revision");
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(),cx);
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
 }
 
 #[semio_framework_async_macros::async_test]
@@ -364,7 +367,7 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
     let bus = ActionBus::new();
     bus.register(BoundedNativeEditToolJobFactory::<Editor>::new("zip-replay")).unwrap();
     let operation = Operation::new(OperationId(41), RevisionId(2), Generation(3), 5);
-    let wire = Editor::command_from_action("set-node", Some(&arguments)).unwrap().encode_op().unwrap();
+    let wire = Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap().encode_op().unwrap();
     let input = |bytes: &[u8]| {
         let (admission, mut input) = bus.begin_exact_wire("zip-replay", "set-node", Editor::NATIVE_PAYLOAD_SCHEMA, bytes.len()).unwrap();
         for page in bytes.chunks(TOOL_WIRE_PAGE_BYTES) {
@@ -376,7 +379,7 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
     let payload = |completion, revision| {
         ArtifactRetainedCommandPayload::<App>::new(
             ArtifactRetainedCommandInputs {
-                command: Editor::command_from_action("set-node", Some(&arguments)).unwrap(),
+                command: Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap(),
                 snapshot: snapshot.clone(),
                 config: Arc::new(Default::default()),
                 history: Arc::new(HistoryView::empty()),

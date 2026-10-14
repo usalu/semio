@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 /** 🩹️ The FRAMEWORK root, not `📦️packages/🟦️typescript`. Every in-source file this suite collects lives
  * outside that package (`🔨️modules/…`, `🧪️tests/…`), and a vitest `includeSource` glob is resolved
  * against `test.root` by a globber that cannot walk upwards — every `../../…` pattern matched nothing,
- * so `bun nx run @semio-tech/framework:test` reported "No test files found, exiting with code 1" and
+ * so `bun repo run @semio-tech/framework:test` reported "No test files found, exiting with code 1" and
  * the kernel's own `import.meta.vitest` blocks (`AppRouter`, `ActivationRegistry`,
  * `expandPluginRegistry`, `createTurnOutcomeBroadcast`, `IoEntryGraph`) had never run under the real
  * gate. Rooting here makes the same files reachable by downward globs. */

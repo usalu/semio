@@ -3,7 +3,7 @@ import sql from "./🗄️.sql" with {type:"text"};
 import type {CurationSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseCurationArtifact} from "../../../🧬️schema/🟦️.ts";
 import {encodeIeee754Cells,readBinary64,readBinary32,type Ieee754Column,type Ieee754Cell} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {ArtifactSqliteProjection,ArtifactSqliteRowIndex,artifactSqliteTables,artifactSqliteCheckpoint,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {sqliteOperation,type SqliteDatabase,type SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 /** 🧱️ Exact native geometry identities at their authored scalar widths. */

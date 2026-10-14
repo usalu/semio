@@ -38,7 +38,7 @@ export function parsePlaygroundNativeHostV1(block,fieldName="nativeHost") {
   return value;
 }
 
-/** 🧾 Reads actual Cargo and Nx identity through a bounded caller-owned source view. */
+/** 🧾 Reads Cargo and portable project identity through a bounded caller-owned source view. */
 export function nativeHostSourceFactsV1(cratePath,view) {
   const read=(path)=>{
     const parts=path.split("/");
@@ -63,7 +63,7 @@ export function nativeHostSourceFactsV1(cratePath,view) {
   read(`${cratePath}/📜️script.ts`);
   const targets=Object.keys(project.targets??{}).filter(name=>{
     const target=project.targets[name];
-    return ["prototype","release"].every(mode=>target.configurations?.[mode]?.env?.SEMIO_BUILD_MODE===mode) && target.executor==="nx:run-commands" && target.options?.cwd===cratePath && /^bun (?:\.\/)?📜️script\.ts [a-z0-9-]+(?: |$)/u.test(target.options?.command??"");
+    return ["prototype","release"].every(mode=>target.configurations?.[mode]?.env?.SEMIO_BUILD_MODE===mode) && target.executor==="repo:script" && target.options?.cwd===cratePath && /^bun (?:\.\/)?📜️script\.ts [a-z0-9-]+(?: |$)/u.test(target.options?.command??"");
   });
   return {package:packageName,project:project.name,binaries,targets,modes:Object.fromEntries(targets.map(target=>[target,["prototype","release"]])),outputs:Object.fromEntries(targets.map(name=>[name,Object.fromEntries(["prototype","release"].map(mode=>[mode,(project.targets[name].configurations[mode].outputs??project.targets[name].outputs)?.map(output=>typeof output==="string"?output.replaceAll("{options.env.SEMIO_BUILD_MODE}",mode):output)]))]))};
 }

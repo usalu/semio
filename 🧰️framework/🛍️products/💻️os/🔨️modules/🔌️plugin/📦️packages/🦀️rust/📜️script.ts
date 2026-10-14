@@ -62,6 +62,7 @@ class TestScript extends BundleScript {
     const { folderReloadRouteOracle } = await import("../../🧪️tests/🧪️folder-reload-route/🟦️.ts");
     const { composedChildHistoryOracle } = await import("../../🧪️tests/🧪️composed-child-history/🟦️.ts");
     const { checkpointActorOracle } = await import("../../⚛️reactor/📸️checkpoint/🧪️tests/🔬️unit/🟦️.ts");
+    await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🎞️media/⚠️turn/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧪️tests/🧪️history-edit-acceptance/🧪️tests/📥️action/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
     console.log(`[DEBUG] plugin-runner-oracle cases=${await pluginTestRunnerSelfTests()}`);
     console.log(`artifact-admission-oracle cases=${artifactAdmissionOracle(this.repoRoot)} firstParty=39`);
     console.log(`completion-rejection-oracle assertions=${completionRejectionOracle(this.repoRoot)}`);
@@ -101,8 +102,29 @@ class OriginalJobNativeScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-original-job-native accepts no arguments");
   const {extensionInvokeCallerOracle}=await import("../../🧩️extension/🧪️tests/📨️invoke/🟦️.ts");extensionInvokeCallerOracle(this.repoRoot);
-  const laws=["original_job_registry_cold_admission_denial_and_saturation_preserve_sources","original_job_kind_lookup_preserves_denied_frontiers_and_whole_sources","original_job_cancellation_preserves_denied_and_foreign_sources","original_job_body_failure_retains_exact_owner_and_error_until_paid_close","original_job_cancelled_context_publishes_terminal_reply_after_paid_close","original_job_body_failure_cancellation_signals_same_failed_owner","original_job_source_close_uses_exact_one_unit_caller_work","original_job_failure_projection_uses_exact_one_unit_caller_work"];
+  const laws=["media_original_domain_pending_publication_and_cancelled_close","media_original_dispatch_and_artifact_projection_preserves_operands","media_original_publication_parts_complete_physical_close","original_job_registry_cold_admission_denial_and_saturation_preserve_sources","original_job_kind_lookup_preserves_denied_frontiers_and_whole_sources","original_job_cancellation_preserves_denied_and_foreign_sources","original_job_body_failure_retains_exact_owner_and_error_until_paid_close","original_job_cancelled_context_publishes_terminal_reply_after_paid_close","original_job_body_failure_cancellation_signals_same_failed_owner","original_job_source_close_uses_exact_one_unit_caller_work","original_job_failure_projection_uses_exact_one_unit_caller_work"];
   await runRepositoryCargoTests([],this.root,this.invocation.control,["--offline","--lib","-E",laws.map(law=>`test(${law})`).join(" | "),"--","--nocapture"]);
+ }
+}
+
+/** 🎞️ Executes original media laws against the complete production library and actual heap witness. */
+class MediaTurnNativeScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-media-turn-native accepts no arguments");
+  await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../🎞️media/⚠️turn/🧪️tests/🟦️.ts"),resolve(this.root,"../../♻️cancellation/🎟️issuer/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,budgetMs:15000});
+  await runRepositoryCargoTests([],this.root,this.invocation.control,["--offline","--test","media-turn","--features","media-turn-testing","--","--nocapture"]);
+ }
+}
+
+/** 📥️ Checks actual original Opening, response, intent and window admission source contracts. */
+class OriginalReactorReceivingSourceScript extends BundleScript{
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("test-original-reactor-receiving-source accepts no arguments");
+  const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
+  const laws=["⚛️reactor/🚪️lifetime/🏗️opening/🧪️tests/🟦️.ts","⚛️reactor/🔄️turn/📥️receiving/🧪️tests/🟦️.ts","🪟️window/🫧️transient/🔁️document-replacement/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,"../..",path));
+  const remaining=()=>{const value=this.invocation.control.remainingMilliseconds();if(value===null||value<=0)throw Error("Original receiving verification requires its finite actual caller");return value};
+  await runOwnedCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",...laws],this.repoRoot,"plugin:original-receiving:strict",remaining(),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",...laws],this.repoRoot,"plugin:original-receiving:source",remaining(),{signal:this.invocation.control.signal});
  }
 }
 
@@ -515,7 +537,15 @@ class OriginalFailureDebitSource extends BundleScript{
 }
 /** 🦀️ Owning exact original cause/debit and registered job entry laws. */
 class OriginalFailureDebitNative extends OriginalFailureDebitSource{
- async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests([],this.root,this.invocation.control,["--offline","--lib","-E","test(original_guest_failure_debit_) | test(original_guest_job_loan_retains_whole_value_error_and_actual_context) | test(original_extension_) | test(original_inference_gateway_failure_all_owned_causes)","--","--nocapture"]);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests([],this.root,this.invocation.control,["--offline","--lib","-E","test(original_guest_failure_debit_) | test(original_guest_job_loan_retains_whole_value_error_and_actual_context) | test(original_extension_) | test(original_inference_gateway_failure_all_owned_causes) | test(original_plugin_fixture_caller_charges_root_finance_before_body_and_closes_same_stock) | test(original_receiving_cancelled_before_first_loan_retires_same_inputs_and_source) | test(erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority) | test(original_query_output_width_does_not_price_or_renew_its_caller_receiving_grant)","--","--nocapture"]);}
+}
+/** 📬️ Checks every original Store command receiving ordinal and partial envelope custody. */
+class OriginalCommandReceivingSource extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original command receiving takes no arguments");const sources=[resolve(this.root,"../../../🏪️store/📬️command/🛬️receiving/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🧪️tests/🟦️.ts")];const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+}
+/** 🦀️ Runs the owning lower Store command and envelope receiving laws. */
+class OriginalCommandReceivingNative extends OriginalCommandReceivingSource{
+ async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests(["semio-framework-os-kernel"],this.repoRoot,this.invocation.control,["--offline","--lib","-E","test(original_command_receiving_)","--","--nocapture"]);}
 }
 /** 🪢️ Checks the original lifecycle context and whole paired cause against independent neutral oracles. */
 class OriginalLifecycleSource extends BundleScript{async run():Promise<void>{await runRepositoryTestCommand(process.execPath,["test",resolve(import.meta.dir,"../../🏛️ownership/⚠️failure/🧪️tests/🟦️.ts"),resolve(import.meta.dir,"../../🧪️tests/🧾️document-archive-load-legs/🟦️.ts")],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});}}
@@ -532,7 +562,7 @@ class OriginalPagedOutputNative extends OriginalPagedOutputSource{
 }
 /** 🧬️ Original typed inference container and exact scalar grammar positions use independent source oracles. */
 class OriginalInferenceCloseSource extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw Error("original inference close takes no arguments");const sources=[resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts"),resolve(this.root,"../../⚛️reactor/🎟️context/🌉️call/📤️failure/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/👷️job/🧪️inference-close/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🟦️.ts")];sources.push(resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/🎟️caller/🟦️.ts"));const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original inference close takes no arguments");const sources=[resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/📬️outcome/🧪️tests/🟦️.ts"),resolve(this.root,"../../⚛️reactor/🎟️context/🌉️call/📤️failure/🧪️tests/🟦️.ts"),resolve(this.root,"../../📜️declaration/👷️job/🧪️inference-close/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🟦️.ts")];sources.push(resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/🎟️caller/🟦️.ts"));sources.push(resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts"));sources.push(resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/📤️output/🧪️tests/🟦️.ts"));sources.push(resolve(this.repoRoot,"🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧩️domain/🧪️tests/🟦️.ts"));const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
 }
 /** 🦀️ Same inference source and canonical scalar wire, real System receipts and terminal physical close. */
 class OriginalInferenceCloseNative extends OriginalInferenceCloseSource {
@@ -546,7 +576,19 @@ class OriginalPendingWorkerSource extends BundleScript {
 class OriginalPendingWorkerNative extends OriginalPendingWorkerSource {
  async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests([],this.root,this.invocation.control,["--offline","--lib","-E","test(original_reserved_pending_worker_same_source_denials_admission_cancel_and_paid_close)","--","--nocapture"]);}
 }
-const router = new ScriptRouter(import.meta.dir).register("test-original-pending-worker-source",OriginalPendingWorkerSource).register("test-original-pending-worker-native",OriginalPendingWorkerNative).register("test-original-inference-close-source",OriginalInferenceCloseSource).register("test-original-inference-close-native",OriginalInferenceCloseNative).register("test-original-paged-output-source",OriginalPagedOutputSource).register("test-original-paged-output-native",OriginalPagedOutputNative).register("test-original-lifecycle-source",OriginalLifecycleSource).register("test-original-lifecycle-native",OriginalLifecycleNative).register("test-original-failure-debit-source",OriginalFailureDebitSource).register("test-original-failure-debit-native",OriginalFailureDebitNative).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-structural-refusal",RetainedStructuralRefusalScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
+/** 🎟️ Tests original media decoded custody with an independent neutral wire oracle. */
+class OriginalMediaCustodySource extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original media custody accepts no arguments");const source=resolve(this.root,"../../⚛️reactor/🏃️runtime/🎞️command/📥️custody/🧪️tests/🟦️.ts");const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",source]);await execute(["test",source]);}
+}
+/** 🦀️ Runs the actual paid original decoded owner and complete original cause under one finite caller. */
+class OriginalMediaCustodyNative extends OriginalMediaCustodySource{
+ async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests([],this.root,this.invocation.control,["--offline","--lib","-E","test(original_failed_media_decoded_source_same_cause_denials_and_full_paid_close) | test(mounted_original_producer_shell_denials_unchanged_child_census_and_paid_terminal_release)","--","--nocapture"]);}
+}
+/** 🧯️ Original fixture completion custody and unchanged caller fuel use independent neutral oracles. */
+class OriginalFixtureCloseSource extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original fixture close takes no arguments");const sources=[resolve(this.root,"../../🧪️tests/🧬️mutation-fixtures-job-close/🧪️tests/🟦️.ts"),resolve(this.root,"../../🧵️retained-command/🧪️tests/🔬️unit/⛽️fuel/🟦️.ts")];const execute=(args:string[])=>runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,0),signal:this.invocation.control.signal});await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+}
+const router = new ScriptRouter(import.meta.dir).register("test-original-fixture-close-source",OriginalFixtureCloseSource).register("test-original-media-custody-source",OriginalMediaCustodySource).register("test-original-media-custody-native",OriginalMediaCustodyNative).register("test-original-command-receiving-source",OriginalCommandReceivingSource).register("test-original-command-receiving-native",OriginalCommandReceivingNative).register("test-original-pending-worker-source",OriginalPendingWorkerSource).register("test-original-pending-worker-native",OriginalPendingWorkerNative).register("test-original-inference-close-source",OriginalInferenceCloseSource).register("test-original-inference-close-native",OriginalInferenceCloseNative).register("test-original-paged-output-source",OriginalPagedOutputSource).register("test-original-paged-output-native",OriginalPagedOutputNative).register("test-original-lifecycle-source",OriginalLifecycleSource).register("test-original-lifecycle-native",OriginalLifecycleNative).register("test-original-failure-debit-source",OriginalFailureDebitSource).register("test-original-failure-debit-native",OriginalFailureDebitNative).register("test-window-mutation",WindowMutationScript).register("test-retained-raw",RetainedRawScript).register("test-retained-structural-refusal",RetainedStructuralRefusalScript).register("test-retained-metadata",RetainedMetadataScript).register("test-snapshot-sqlite-refusal",SnapshotSqliteRefusalScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript).register("test-command-ingress-consumer",CommandIngressConsumerScript)
   .register("test-window-registry",WindowRegistryScript)
   .register("test-window-preparation-source",WindowPreparationSourceScript)
   .register("canonical-architecture", CanonicalArchitectureScript)
@@ -561,6 +603,8 @@ const router = new ScriptRouter(import.meta.dir).register("test-original-pending
   .register("test-composed-child-history-source", ComposedChildHistorySourceScript)
   .register("test-extension-invoke-source", ExtensionInvokeSourceScript)
   .register("test-original-job-native", OriginalJobNativeScript)
+  .register("test-media-turn-native",MediaTurnNativeScript)
+  .register("test-original-reactor-receiving-source",OriginalReactorReceivingSourceScript)
   .register("test-output-retirement-native", OutputRetirementNativeScript)
   .register("test-fixture-channel-interfaces", FixtureChannelInterfacesScript)
   .register("test-codec-send-source", CodecSendSourceScript)

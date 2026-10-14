@@ -1,6 +1,6 @@
 import { admitPluginCatalogV1, pluginCatalogV1, type PluginCatalogAdmissionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl, extensionModuleUrl } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl, extensionModuleUrl } from "./🤖️generated/🧩️plugins/🟦️.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "./🤖️generated/🎮️playgrounds/🟦️.ts";
 
 /** 🧩️ Specific application assembly owns and admits its generated installed inventory. */
 export function composeSpecificOsCatalogV1(baseUrl: string, control: PluginCatalogAdmissionV1) {

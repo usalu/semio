@@ -1,6 +1,6 @@
 /** 🔷️ Scalar authored shape coordinates support sparse semantic diffs. */
 import type {DrawingLayerNode} from "../../🟦️.ts";
-import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export const SHAPE_COORDINATE_FIELDS=["rectX","rectY","rectWidth","rectHeight","ellipseCx","ellipseCy","ellipseRx","ellipseRy","circleCx","circleCy","circleR","lineX1","lineY1","lineX2","lineY2","polygonX","polygonY"] as const;
 export type ShapeCoordinateField=typeof SHAPE_COORDINATE_FIELDS[number];
 type Shape=Extract<DrawingLayerNode,{kind:"shape"}>;

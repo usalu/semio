@@ -180,6 +180,7 @@ fn map_fixture_owner(window_id: &str, surface_id: &str) -> crate::interpreter::S
 }
 
 fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_id: &str, bounds: Rect) -> InputState<ActionDescriptor> {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -192,13 +193,15 @@ fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_
     let complete = (0..(1 << 20)).any(|_| {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
         let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface_id };
-        let done = crate::interpreter::render_ui_document_step(&mut cursor, document, bounds, &mut ctx, surface_id, "map.lifecycle.fixture", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
+        let done = caller.turn(|cx|crate::interpreter::render_ui_document_step(&mut cursor, document, bounds, &mut ctx, surface_id, "map.lifecycle.fixture", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
         crate::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "Map lifecycle document faulted in phase {}", cursor.phase_name());
         done
     });
     assert!(complete, "Map lifecycle document painted within its opportunity ceiling");
     drop_world3d_states(world3d_states);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     input
 }
 
@@ -219,15 +222,17 @@ fn close_retained_map_fixture(window_id: &str) {
 }
 
 pub(super) fn close_retained_surface_fixture(window_id: &str) {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(crate::interpreter::request_ui_document_close(window_id));
     for _ in 0..262_144 {
         if !crate::interpreter::ui_document_close_pending() {
             break;
         }
-        crate::interpreter::close_ui_document_one();
+        caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn");
         crate::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
     }
     assert!(!crate::interpreter::ui_document_close_pending(), "the EngineCanvas fixture returns every retained owner");
+    caller.finish();
 }
 
 fn board2d_scene(surface_id: &str, fixture: &Value) -> UiComponentSceneNode {
@@ -329,6 +334,7 @@ pub(super) fn paint_retained_surface_scene(scene: &UiComponentSceneNode, bounds:
 }
 
 pub(super) fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bounds: Rect, window_id: &str) -> RetainedSurfacePaint {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let document = retained_document(window_id, 1, 1, vec![retained_surface_record(scene)]);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -342,7 +348,7 @@ pub(super) fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bou
     let complete = (0..(1 << 20)).any(|_| {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
         let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
-        let done = crate::interpreter::render_ui_document_step(&mut cursor, &document, bounds, &mut ctx, window_id, &scene.controller_id, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
+        let done = caller.turn(|cx|crate::interpreter::render_ui_document_step(&mut cursor, &document, bounds, &mut ctx, window_id, &scene.controller_id, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
         crate::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "retained EngineCanvas document faulted in phase {}", cursor.phase_name());
         done
@@ -352,6 +358,8 @@ pub(super) fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bou
     let owner = crate::interpreter::retained_scene_target_at(window_id, bounds.x + 1.0, bounds.y + 1.0).expect("retained EngineCanvas surface exposes its exact mounted target");
     assert_eq!(owner.surface_id, window_id);
     assert_eq!(owner.kind, scene.component_kind);
+    caller.retire_world(&mut world_resources);
+    caller.finish();
     RetainedSurfacePaint { draw, owner }
 }
 
@@ -1035,6 +1043,7 @@ fn retained_map_key_replacement_and_removal_retire_the_old_gesture_without_input
 
 #[test]
 fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
+    let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let _guard = engine_surface_law_guard();
     let contract: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).expect("scene pointer owner contract");
     let fixture = fixture();
@@ -1097,7 +1106,7 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
         if !crate::interpreter::ui_document_close_pending() {
             break;
         }
-        crate::interpreter::close_ui_document_one();
+        caller.turn(|cx|crate::interpreter::close_ui_document_one(cx)).expect("original fixture caller turn");
         crate::os_host::finish_retired_cpu_only_map_fixture_close();
     }
     assert!(!crate::interpreter::ui_document_close_pending(), "the retained Map window returns every bounded owner");
@@ -1110,6 +1119,7 @@ fn retained_map_same_host_sibling_rebase_retires_engine_interaction_owner() {
     assert!(gesture_retired, "the accepted same-host identity retires the local Map gesture");
     assert!(!gesture_live, "the accepted retirement clears the local Map gesture");
     assert!(!duplicate_retired, "the same retirement already consumed the EngineCanvas interaction owner");
+    caller.finish();
 }
 
 /// 🔗️ `map_tile_url` is React's own `urlTemplate.replace("{z}", …).replace("{x}", …).replace("{y}", …)`.

@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "operation",
+    "generation",
+    "recordHandle",
+    "storeGeneration",
+    "grant",
+    "events",
+    "parentAddressUnchanged",
+    "weakSourceAddressUnchangedOnDenial",
+    "wholeOriginalFailure",
+    "borrowedStrongSourceUntilReturn",
+    "unwindRestoresReceiver",
+    "aliasOrContextBirth",
+    "threadBoundWitness"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.job.original-scoped-weak-return"
+    },
+    "operation": {
+      "const": 17
+    },
+    "generation": {
+      "const": 9
+    },
+    "recordHandle": {
+      "const": 77
+    },
+    "storeGeneration": {
+      "const": 35
+    },
+    "grant": {
+      "const": [
+        1,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    "events": {
+      "const": [
+        {
+          "name": "missingParent",
+          "returned": false,
+          "items": 0,
+          "born": 0,
+          "freed": 0
+        },
+        {
+          "name": "foreignParent",
+          "returned": false,
+          "items": 0,
+          "born": 0,
+          "freed": 0
+        },
+        {
+          "name": "deniedItem",
+          "returned": false,
+          "items": 0,
+          "born": 0,
+          "freed": 0
+        },
+        {
+          "name": "deniedDepth",
+          "returned": false,
+          "items": 0,
+          "born": 0,
+          "freed": 0
+        },
+        {
+          "name": "crossThread",
+          "returned": false,
+          "items": 0,
+          "born": 0,
+          "freed": 0
+        },
+        {
+          "name": "originalParent",
+          "returned": true,
+          "items": 1,
+          "born": 0,
+          "freed": 0
+        },
+        {
+          "name": "scopeRestored",
+          "returned": false,
+          "items": 0,
+          "born": 0,
+          "freed": 0
+        }
+      ]
+    },
+    "parentAddressUnchanged": {
+      "const": true
+    },
+    "weakSourceAddressUnchangedOnDenial": {
+      "const": true
+    },
+    "wholeOriginalFailure": {
+      "const": true
+    },
+    "borrowedStrongSourceUntilReturn": {
+      "const": true
+    },
+    "unwindRestoresReceiver": {
+      "const": true
+    },
+    "aliasOrContextBirth": {
+      "const": false
+    },
+    "threadBoundWitness": {
+      "const": true
+    }
+  }
+}

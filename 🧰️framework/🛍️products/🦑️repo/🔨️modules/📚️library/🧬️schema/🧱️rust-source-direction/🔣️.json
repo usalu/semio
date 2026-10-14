@@ -197,7 +197,8 @@
         "references",
         "violations",
         "problems",
-        "runtime"
+        "runtime",
+        "generatedTokens"
       ],
       "properties": {
         "schemaVersion": {
@@ -274,7 +275,15 @@
                   "non-directory-ancestor",
                   "unexpected-input-kind",
                   "uncensused-source",
-                  "unresolved-template-scope"
+                  "unresolved-template-scope",
+                  "unresolved-generator-origin",
+                  "invalid-ownership-contract",
+                  "declaration-origin",
+                  "family-alias",
+                  "unproven-family-context",
+                  "unproven-family-provider",
+                  "unproven-family-binding",
+                  "unproven-family-declaration"
                 ]
               },
               "from": {
@@ -373,6 +382,35 @@
                     "type": "integer",
                     "minimum": 1
                   }
+                }
+              }
+            }
+          }
+        },
+        "generatedTokens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "output",
+              "manifests"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "output": {
+                "$ref": "#/$defs/generatedTokenOutput"
+              },
+              "manifests": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
                 }
               }
             }
@@ -759,6 +797,105 @@
           ]
         }
       ]
+    },
+    "generatedTokenOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "macro",
+        "start",
+        "end",
+        "line",
+        "origin",
+        "inputs"
+      ],
+      "properties": {
+        "macro": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "origin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "provider",
+            "symbol",
+            "kind"
+          ],
+          "properties": {
+            "provider": {
+              "const": "quote"
+            },
+            "symbol": {
+              "const": "quote"
+            },
+            "kind": {
+              "enum": [
+                "direct-import",
+                "qualified"
+              ]
+            },
+            "importStart": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "importEnd": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "expression",
+              "start",
+              "end",
+              "line"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "include",
+                  "include_str",
+                  "include_bytes"
+                ]
+              },
+              "expression": {
+                "type": "string"
+              },
+              "start": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

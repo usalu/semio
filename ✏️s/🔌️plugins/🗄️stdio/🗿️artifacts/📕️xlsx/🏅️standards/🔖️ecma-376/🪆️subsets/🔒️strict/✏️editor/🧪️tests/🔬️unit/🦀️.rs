@@ -19,11 +19,11 @@ async fn strict_editor_declares_its_dialect_and_main_window() {
 async fn strict_cell_action_preserves_unicode_and_requires_a_complete_address() {
     let fixture = serde_json::json!({ "sheetName": "Tabelle %20", "row": 4, "column": 2, "revision": "0123456789abcdef", "value": "Grüße\n\\s %20" });
     let arguments = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&fixture.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let command = XlsxStrictEditor::command_from_action("set-cell", Some(&arguments)).unwrap();
+    let command = XlsxStrictEditor::command_from_action("set-cell", Some((arguments).clone()), None).unwrap();
     let encoded = protocol::OpBinary::encode_op(&command).unwrap();
     assert_eq!(<semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand<XlsxStrictEditorCommand> as protocol::OpBinary>::decode_op(&encoded).unwrap(), command);
     let incomplete = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(r#"{"row":4,"column":2,"value":"x"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    assert!(XlsxStrictEditor::command_from_action("set-cell", Some(&incomplete)).is_err());
+    assert!(XlsxStrictEditor::command_from_action("set-cell", Some((incomplete).clone()), None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]

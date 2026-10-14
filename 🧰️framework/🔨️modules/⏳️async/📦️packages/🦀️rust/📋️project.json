@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-async-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
   "namedInputs": {
     "default": [
@@ -9,10 +9,10 @@
     ]
   },
   "targets": {
-    "test-cancel-return-source": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-cancel-return source","cwd":"{projectRoot}"},"cache":false},
-    "test-cancel-return-native": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-cancel-return native","cwd":"{projectRoot}"},"cache":false},
+    "test-cancel-return-source": {"executor":"repo:script","options":{"command":"bun ./📜️script.ts test-cancel-return source","cwd":"{projectRoot}"},"cache":false},
+    "test-cancel-return-native": {"executor":"repo:script","options":{"command":"bun ./📜️script.ts test-cancel-return native","cwd":"{projectRoot}"},"cache":false},
     "worker-pool-use-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-pool-use-check",
         "cwd": "{projectRoot}"
@@ -20,7 +20,7 @@
       "outputs": []
     },
     "worker-pool-use-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-pool-use-check --native",
         "cwd": "{projectRoot}"
@@ -28,7 +28,7 @@
       "outputs": []
     },
     "worker-parking-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-parking-check",
         "cwd": "{projectRoot}"
@@ -36,7 +36,7 @@
       "outputs": []
     },
     "worker-parking-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-parking-check --native",
         "cwd": "{projectRoot}"
@@ -44,7 +44,7 @@
       "outputs": []
     },
     "worker-deferred-wake-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-deferred-wake-check",
         "cwd": "{projectRoot}"
@@ -52,7 +52,7 @@
       "outputs": []
     },
     "worker-deferred-wake-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-deferred-wake-check --native",
         "cwd": "{projectRoot}"
@@ -60,7 +60,7 @@
       "outputs": []
     },
     "worker-maintenance-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-maintenance-check",
         "cwd": "{projectRoot}"
@@ -68,7 +68,7 @@
       "outputs": []
     },
     "worker-maintenance-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts worker-maintenance-check --native",
         "cwd": "{projectRoot}"
@@ -76,7 +76,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts check",
         "cwd": "{projectRoot}",
@@ -84,14 +84,14 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "test-publication-docs": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-publication-docs"
@@ -99,7 +99,7 @@
       "outputs": []
     },
     "typegen": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts typegen"
@@ -109,7 +109,7 @@
       ]
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"

@@ -1,0 +1,12 @@
+{
+  "version": "8.4.2",
+  "cases": [
+    { "platform": "darwin", "arch": "arm64", "file": "bazel-8.4.2-darwin-arm64" },
+    { "platform": "darwin", "arch": "x64", "file": "bazel-8.4.2-darwin-x86_64" },
+    { "platform": "linux", "arch": "arm64", "file": "bazel-8.4.2-linux-arm64" },
+    { "platform": "linux", "arch": "x64", "file": "bazel-8.4.2-linux-x86_64" },
+    { "platform": "win32", "arch": "arm64", "file": "bazel-8.4.2-windows-arm64.exe" },
+    { "platform": "win32", "arch": "x64", "file": "bazel-8.4.2-windows-x86_64.exe" }
+  ],
+  "unsupported": [{ "platform": "freebsd", "arch": "x64" }, { "platform": "linux", "arch": "ia32" }]
+}

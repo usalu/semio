@@ -10,21 +10,21 @@
   ],
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
       }
     },
     "test-snapshot-sqlite": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
@@ -33,7 +33,7 @@
       }
     },
     "test-snapshot-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
@@ -42,7 +42,7 @@
       }
     },
     "test-snapshot-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
@@ -51,7 +51,7 @@
       }
     },
     "produce-logical-owner": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
@@ -60,7 +60,7 @@
       }
     },
     "test-logical-owner": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",

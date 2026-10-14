@@ -1,16 +1,36 @@
 //! 🧩️ Canonical allocation-free child and link schema composition vocabulary.
 
-/// 🧒️ One declared CHILD slot on an artifact snapshot — an owned sub-artifact with its own document
-/// and lifecycle (`ArtifactChild<T>` / `Vec<ArtifactChild<T>>` at the field level).
-///
-/// `kind` is a plain `&'static str` holding a canonical artifact kind id, grammar `s.<plugin>.<artifact>`
-/// (e.g. `"s.stdio.mesh"`) — deliberately NOT the `ArtifactKindId` newtype from `🚪️io`'s `semio-framework`
-/// crate: this crate (`semio-framework-schema-composition`) must not gain a dependency on `semio-framework` merely to
-/// name a kind inside a slot table.
+/// 🎯️ Explicit serialization-kind or consumer-capability selection for an owned child slot.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ChildSlotSelection {
+    ArtifactKind(&'static str),
+    Capability(&'static str),
+}
+
+impl ChildSlotSelection {
+    /// 🪪️ Borrows the authored kind or capability identifier.
+    pub const fn id(self) -> &'static str { match self { Self::ArtifactKind(id) | Self::Capability(id) => id } }
+    /// 🔎️ Checks a concrete-kind constraint; a capability is admitted by its runtime composition.
+    pub fn accepts_kind(self, kind: &str) -> bool { match self { Self::ArtifactKind(id) => id == kind, Self::Capability(_) => true } }
+    /// 🗂️ Names serialization only when the slot declares a concrete serialization kind.
+    pub const fn artifact_kind(self) -> Option<&'static str> { match self { Self::ArtifactKind(id) => Some(id), Self::Capability(_) => None } }
+}
+
+/// 🔡️ Consumer capability identifiers contain two or more canonical lowercase dotted segments.
+pub fn is_canonical_child_capability(id: &str) -> bool {
+    let mut count = 0;
+    for segment in id.split('.') {
+        if segment.is_empty() || segment.starts_with('-') || segment.ends_with('-') || segment.contains("--") || !segment.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-') { return false; }
+        count += 1;
+    }
+    count >= 2
+}
+
+/// 🧒️ An explicitly selected owned sub-artifact with its own document and lifecycle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ChildSlotSpec {
     pub name: &'static str,
-    pub kind: &'static str,
+    pub selection: ChildSlotSelection,
     pub many: bool,
 }
 

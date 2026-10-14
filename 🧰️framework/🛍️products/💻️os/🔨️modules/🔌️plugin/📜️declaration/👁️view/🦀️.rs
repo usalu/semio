@@ -484,9 +484,11 @@ impl ::protocol::MutationDiff<NoConfig> for NoStateDiff {
     fn absorb(&mut self, _other: Self) {}
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum NoConfigMutation {}
+semio_framework_os_kernel::original_ordinal_operation_receiving!(NoConfigMutation);
+
 
 impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
     type Diff = NoStateDiff;

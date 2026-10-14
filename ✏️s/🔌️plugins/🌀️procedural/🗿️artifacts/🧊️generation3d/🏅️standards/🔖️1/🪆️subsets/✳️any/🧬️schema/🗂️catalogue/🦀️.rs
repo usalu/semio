@@ -11,7 +11,7 @@ fn is_false(value: &bool) -> bool {
 }
 
 /// 🗣️ A user-facing string in every supported language, English first and German second.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct Localized {
     pub en: String,
     pub de: String,
@@ -609,3 +609,5 @@ impl Catalogue {
     }
 }
 //#endregion 🔖️Findings
+
+semio_framework_value::artifact_retire_leaf!(Quality);

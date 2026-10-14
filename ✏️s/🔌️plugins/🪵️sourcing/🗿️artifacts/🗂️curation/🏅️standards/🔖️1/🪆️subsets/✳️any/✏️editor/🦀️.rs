@@ -967,7 +967,9 @@ impl ArtifactEditor for SourcingCurationApp {
     /// 🎯️ Production action bridge — see `sourcing_curation_command_from_action`. Overriding this is
     /// mandatory for any app that declares its own actions: the trait default only admits the
     /// framework-reserved ids and rejects everything else.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<SourcingCurationCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<SourcingCurationCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         sourcing_curation_command_from_action(action, args)
     }
 
@@ -1017,13 +1019,18 @@ impl ArtifactEditor for SourcingCurationApp {
         view_state: &semio_framework_plugin::ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == preview::SOURCING_CURATION_BODY_PREVIEW {
             let selected_ids = interaction.selection(SOURCING_ROWS_DOMAIN).ids.clone();
             return preview::render(doc.snapshot, &selected_ids, sourcing_curation_labels(view_state)).map(semio_framework_plugin::built_to_component_tree);
         }
         Self::render(body_key, doc, cfg, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 //#endregion 🔖️SourcingCurationApp
 

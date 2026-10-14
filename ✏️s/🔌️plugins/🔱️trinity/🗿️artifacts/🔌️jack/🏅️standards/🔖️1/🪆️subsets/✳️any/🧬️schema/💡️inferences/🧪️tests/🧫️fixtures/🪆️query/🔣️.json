@@ -196,6 +196,168 @@
           "v": 0
         }
       }
+    },
+    {
+      "name": "frontier FIFO preserves source order over globally sorted waves",
+      "nodes": [
+        "x",
+        "z",
+        "b",
+        "a"
+      ],
+      "edges": [
+        {
+          "id": "e2",
+          "source": "z",
+          "target": "b",
+          "u": 3,
+          "v": 5
+        },
+        {
+          "id": "e1",
+          "source": "a",
+          "target": "x",
+          "u": 2,
+          "v": 4
+        }
+      ],
+      "topology": {
+        "topoOrder": [
+          "a",
+          "z",
+          "x",
+          "b"
+        ],
+        "depth": {
+          "a": 0,
+          "z": 0,
+          "x": 1,
+          "b": 1
+        },
+        "cycleFree": true,
+        "nodeCount": 4
+      },
+      "positions": {
+        "a": {
+          "u": 0,
+          "v": 0
+        },
+        "x": {
+          "u": 2,
+          "v": 4
+        },
+        "z": {
+          "u": 0,
+          "v": 0
+        },
+        "b": {
+          "u": 3,
+          "v": 5
+        }
+      }
+    },
+    {
+      "name": "UTF-16 literal frontier and parallel-edge order",
+      "nodes": [
+        "a",
+        "b",
+        "",
+        "𐀀"
+      ],
+      "edges": [
+        {
+          "id": "",
+          "source": "a",
+          "target": "b",
+          "u": 99,
+          "v": 99
+        },
+        {
+          "id": "𐀀",
+          "source": "a",
+          "target": "b",
+          "u": 2,
+          "v": 3
+        }
+      ],
+      "topology": {
+        "topoOrder": [
+          "a",
+          "𐀀",
+          "",
+          "b"
+        ],
+        "depth": {
+          "a": 0,
+          "b": 1,
+          "𐀀": 0,
+          "": 0
+        },
+        "cycleFree": true,
+        "nodeCount": 4
+      },
+      "positions": {
+        "a": {
+          "u": 0,
+          "v": 0
+        },
+        "b": {
+          "u": 2,
+          "v": 3
+        },
+        "𐀀": {
+          "u": 0,
+          "v": 0
+        },
+        "": {
+          "u": 0,
+          "v": 0
+        }
+      }
+    },
+    {
+      "name": "UTF-16 implicit root in a cyclic Unicode component",
+      "nodes": [
+        "",
+        "𐀀"
+      ],
+      "edges": [
+        {
+          "id": "out",
+          "source": "𐀀",
+          "target": "",
+          "u": 2,
+          "v": 3
+        },
+        {
+          "id": "back",
+          "source": "",
+          "target": "𐀀",
+          "u": 7,
+          "v": 9
+        }
+      ],
+      "topology": {
+        "topoOrder": [],
+        "depth": {},
+        "cycleFree": false,
+        "nodeCount": 2
+      },
+      "positions": {
+        "𐀀": {
+          "u": 0,
+          "v": 0
+        },
+        "": {
+          "u": 2,
+          "v": 3
+        }
+      }
     }
-  ]
+  ],
+  "identityRefusal": {
+    "entityReads": 0,
+    "requestedBytes": 0,
+    "releasedBytes": 0
+  }
 }

@@ -20,22 +20,10 @@
     "overrideConfigFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/📐️source-policy/🟨️.mjs"
   },
   "terminal.integrated.env.windows": {
-    "NX_VERBOSE_LOGGING": "false",
-    "NX_PERF_LOGGING": "false",
-    "NX_NATIVE_LOGGING": "nx=warn",
-    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data"
   },
   "terminal.integrated.env.linux": {
-    "NX_VERBOSE_LOGGING": "false",
-    "NX_PERF_LOGGING": "false",
-    "NX_NATIVE_LOGGING": "nx=warn",
-    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data"
   },
   "terminal.integrated.env.osx": {
-    "NX_VERBOSE_LOGGING": "false",
-    "NX_PERF_LOGGING": "false",
-    "NX_NATIVE_LOGGING": "nx=warn",
-    "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.nx/workspace-data"
   },
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "eslint.workingDirectories": [

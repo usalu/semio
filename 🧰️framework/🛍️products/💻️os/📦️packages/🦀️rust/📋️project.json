@@ -10,7 +10,7 @@
   ],
   "targets": {
     "test-typed-snapshot-file-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -18,7 +18,7 @@
       }
     },
     "test-typed-snapshot-file-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -26,7 +26,7 @@
       }
     },
     "test-original-registry-alias-custody": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -34,7 +34,7 @@
       }
     },
     "test-returned-read-custody": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -42,7 +42,7 @@
       }
     },
     "test-member-group-publication-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -50,7 +50,7 @@
       }
     },
     "test-snapshot-sqlite-admission": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -58,7 +58,7 @@
       }
     },
     "test-artifact-kind": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -66,7 +66,7 @@
       }
     },
     "retained-clone-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun 📜️script.ts retained-clone-check",
@@ -75,7 +75,7 @@
       "outputs": []
     },
     "document-opening-attempt-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-opening-attempt-native-check",
@@ -84,7 +84,7 @@
       "outputs": []
     },
     "database-history-completion-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-history-completion-check",
@@ -93,7 +93,7 @@
       "outputs": []
     },
     "database-history-completion-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-history-completion-check --native",
@@ -102,7 +102,7 @@
       "outputs": []
     },
     "database-catalog-read-ownership-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts database-catalog-read-ownership-check",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -110,7 +110,7 @@
       "outputs": []
     },
     "database-catalog-read-ownership-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts database-catalog-read-ownership-check --native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
@@ -118,7 +118,7 @@
       "outputs": []
     },
     "database-capability-completion-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-capability-completion-check",
@@ -127,7 +127,7 @@
       "outputs": []
     },
     "database-capability-completion-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-capability-completion-check --native",
@@ -186,7 +186,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts reopen-storm-check",
@@ -196,7 +196,7 @@
       "outputs": []
     },
     "database-shutdown-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-shutdown-check",
@@ -205,7 +205,7 @@
       "outputs": []
     },
     "database-shutdown-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts database-shutdown-check --native",
@@ -214,7 +214,7 @@
       "outputs": []
     },
     "document-mount-single-flight-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-mount-single-flight-check",
@@ -223,7 +223,7 @@
       "outputs": []
     },
     "document-mount-single-flight-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-mount-single-flight-check --native",
@@ -232,7 +232,7 @@
       "outputs": []
     },
     "durable-owned-group-decision-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-owned-group-decision-check",
@@ -241,7 +241,7 @@
       "outputs": []
     },
     "durable-owned-group-decision-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-owned-group-decision-check --native",
@@ -250,7 +250,7 @@
       "outputs": []
     },
     "durable-group-journal-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-group-journal-check",
@@ -259,7 +259,7 @@
       "outputs": []
     },
     "durable-group-journal-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts durable-group-journal-check --native",
@@ -268,7 +268,7 @@
       "outputs": []
     },
     "wal-committed-compaction-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-compaction-check",
@@ -277,7 +277,7 @@
       "outputs": []
     },
     "wal-committed-compaction-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-compaction-check --native",
@@ -286,7 +286,7 @@
       "outputs": []
     },
     "wal-committed-transactions-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-transactions-check",
@@ -295,7 +295,7 @@
       "outputs": []
     },
     "wal-committed-transactions-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-committed-transactions-check --native",
@@ -304,7 +304,7 @@
       "outputs": []
     },
     "wal-writer-authority-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-writer-authority-check",
@@ -313,7 +313,7 @@
       "outputs": []
     },
     "wal-writer-authority-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-writer-authority-check --native",
@@ -354,7 +354,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts wal-writer-fence-live",
@@ -363,7 +363,7 @@
       "outputs": []
     },
     "wal-capacity-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-capacity-check",
@@ -372,7 +372,7 @@
       "outputs": []
     },
     "wal-capacity-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-capacity-check --native",
@@ -381,7 +381,7 @@
       "outputs": []
     },
     "wal-recovery-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-recovery-check",
@@ -390,7 +390,7 @@
       "outputs": []
     },
     "wal-recovery-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-recovery-check --native",
@@ -399,7 +399,7 @@
       "outputs": []
     },
     "directory-session-authority-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-session-authority-check",
@@ -408,7 +408,7 @@
       "outputs": []
     },
     "directory-session-authority-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-session-authority-check --native",
@@ -417,7 +417,7 @@
       "outputs": []
     },
     "directory-event-page-contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-contract-check",
@@ -425,7 +425,7 @@
       }
     },
     "directory-event-page-contract-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-contract-check --native",
@@ -433,7 +433,7 @@
       }
     },
     "directory-event-page-client-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-client-check",
@@ -442,7 +442,7 @@
       "outputs": []
     },
     "directory-event-page-client-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-client-check --native",
@@ -451,7 +451,7 @@
       "outputs": []
     },
     "directory-event-page-bootstrap-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-event-page-bootstrap-check",
@@ -460,7 +460,7 @@
       "outputs": []
     },
     "wal-segment-state-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-segment-state-check",
@@ -470,7 +470,7 @@
       "outputs": []
     },
     "wal-segment-state-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts wal-segment-state-check --native",
@@ -479,7 +479,7 @@
       "outputs": []
     },
     "test-directory-runtime-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-directory-runtime-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -487,7 +487,7 @@
       }
     },
     "test-codec-send-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-codec-send-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -495,7 +495,7 @@
       }
     },
     "test-backbone-detach-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-backbone-detach-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -503,7 +503,7 @@
       }
     },
     "test-group-visibility-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-group-visibility-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -511,7 +511,7 @@
       }
     },
     "member-dialect-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-dialect-check",
@@ -521,7 +521,7 @@
       "outputs": []
     },
     "test-member-input-census-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -529,7 +529,7 @@
       }
     },
     "test-member-dialect-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts test-member-dialect-source",
@@ -539,7 +539,7 @@
       "outputs": []
     },
     "test-space-history-sqlite-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -548,7 +548,7 @@
       }
     },
     "test-space-history-sqlite-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -557,7 +557,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-native",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -565,7 +565,7 @@
       }
     },
     "test-snapshot-receiving-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-receiving-native",
@@ -574,7 +574,7 @@
       }
     },
     "test-snapshot-codec-receiving-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-codec-receiving source",
         "cwd": "{projectRoot}",
@@ -582,7 +582,7 @@
       }
     },
     "test-snapshot-codec-receiving-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-codec-receiving native",
         "cwd": "{projectRoot}",
@@ -590,7 +590,7 @@
       }
     },
     "test-snapshot-route-admission-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-route-admission source",
         "cwd": "{projectRoot}",
@@ -598,7 +598,7 @@
       }
     },
     "test-snapshot-route-admission-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-route-admission native",
         "cwd": "{projectRoot}",
@@ -606,7 +606,7 @@
       }
     },
     "test-snapshot-native-admission": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-snapshot-native-admission",
         "cwd": "{projectRoot}",
@@ -614,14 +614,14 @@
       }
     },
     "test-scalar-wire-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-scalar-wire-source",
         "cwd": "{projectRoot}"
       }
     },
     "generate-jco-package-adapter": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts generate-jco-package-adapter",
@@ -630,7 +630,7 @@
       "outputs": []
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -639,7 +639,7 @@
       }
     },
     "check-jco-package-adapter": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts check-jco-package-adapter",
@@ -648,7 +648,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts check",
         "forwardAllArgs": true,
@@ -656,7 +656,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test",
         "forwardAllArgs": true,
@@ -664,7 +664,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts canonical-architecture",
@@ -673,7 +673,7 @@
       "outputs": []
     },
     "test-list-record-boundaries": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-list-record-boundaries",
@@ -681,21 +681,21 @@
       }
     },
     "test-ieee-payload-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-ieee-payload-native",
         "cwd": "{projectRoot}"
       }
     },
     "test-ieee-payload-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-ieee-payload-source",
         "cwd": "{projectRoot}"
       }
     },
     "paged-history-stack-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts paged-history-stack-check",
@@ -708,7 +708,7 @@
       }
     },
     "paged-history-stack-native-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts paged-history-stack-check --native",
@@ -722,7 +722,7 @@
       }
     },
     "document-http-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -739,7 +739,7 @@
       }
     },
     "test-directory-lease-fixture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -755,7 +755,7 @@
       }
     },
     "test-composed-pack-schema": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-composed-pack-schema",
         "cwd": "{projectRoot}",
@@ -763,7 +763,7 @@
       }
     },
     "test-assembly-lifetime-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -775,7 +775,7 @@
       }
     },
     "test-dsl-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -783,7 +783,7 @@
       }
     },
     "test-command-ingress-consumer": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
@@ -803,7 +803,7 @@
       ]
     },
     "test-command-transport-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-command-transport-source",
@@ -812,7 +812,7 @@
       }
     },
     "test-command-transport-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-command-transport-native",
@@ -821,7 +821,7 @@
       }
     },
     "test-borrowed-key-index-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-borrowed-key-index-native",
@@ -830,7 +830,7 @@
       }
     },
     "test-intrinsic-retirement-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-intrinsic-retirement-native",
@@ -839,7 +839,7 @@
       }
     },
     "test-directory-checkpoint-pair-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-directory-checkpoint-pair-source",
@@ -848,7 +848,7 @@
       }
     },
     "test-directory-checkpoint-pair-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-directory-checkpoint-pair-native",
@@ -857,7 +857,7 @@
       }
     },
     "test-directory-descriptor-digest-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-directory-descriptor-digest-source",
@@ -866,7 +866,7 @@
       }
     },
     "test-directory-descriptor-digest-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-directory-descriptor-digest-native",
@@ -875,7 +875,7 @@
       }
     },
     "test-canonical-preparation-control-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts test-canonical-preparation-control-source",
@@ -884,7 +884,7 @@
       }
     },
     "test-returned-read-factory-mount": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -900,7 +900,7 @@
       }
     },
     "test-original-cleanup-context-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -908,7 +908,7 @@
       }
     },
     "test-config-paged-source-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -916,7 +916,7 @@
       }
     },
     "test-config-paged-source-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -924,7 +924,7 @@
       }
     },
     "test-space-history-validation-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",
@@ -932,7 +932,7 @@
       }
     },
     "test-space-history-validation-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "{projectRoot}",

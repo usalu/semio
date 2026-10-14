@@ -75,9 +75,9 @@ class PagesScript extends BundleScript {
 class VerifyScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("verify accepts no arguments");
-    const root = resolve(this.root, "../.."), registry = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated");
+    const root = resolve(this.root, "../.."), registry = join(this.repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated");
     const { renderCatalogFiles } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts");
-    const findings = [...Object.entries(renderCatalogFiles(this.repoRoot, undefined, "refuse").files).filter(([name, content]) => !existsSync(join(registry, name)) || readFileSync(join(registry, name), "utf8") !== content).map(([name]) => `Generated catalog ${name} differs from the committed descriptors; run bun nx run @semio-tech/plugin-registry:generate`), ...playModuleCatalogFindingsV1(join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "pages"))];
+    const findings = [...Object.entries(renderCatalogFiles(this.repoRoot, undefined, "refuse").files).filter(([name, content]) => !existsSync(join(registry, name)) || readFileSync(join(registry, name), "utf8") !== content).map(([name]) => `Generated catalog ${name} differs from the committed descriptors; run bun repo run @semio-tech/plugin-registry:generate`), ...playModuleCatalogFindingsV1(join(root, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE), "pages"))];
     for (const finding of findings) console.error(finding);
     if (findings.length) throw new Error(`Play release verification failed: ${findings.length} finding(s)`);
     console.log("Play release verified: generated catalog and module catalog bind the published pages");

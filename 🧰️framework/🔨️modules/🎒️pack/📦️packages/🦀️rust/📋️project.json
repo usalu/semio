@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-pack-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "root": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
   "projectType": "library",
@@ -20,8 +20,10 @@
     ]
   },
   "targets": {
+    "test-original-record-receiving-source":{"executor":"repo:script","cache":false,"dependsOn":[],"options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-record-receiving source"}},
+    "test-original-record-receiving-native":{"executor":"repo:script","cache":false,"dependsOn":[],"options":{"cwd":"🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-original-record-receiving native"}},
     "test-occurrence-order-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-occurrence-order-source",
@@ -30,7 +32,7 @@
       "cache": false
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
@@ -42,7 +44,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -50,7 +52,7 @@
       }
     },
     "test-absolute-varint-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-absolute-varint-source",
@@ -59,7 +61,7 @@
       "cache": false
     },
     "test-absolute-varint-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-absolute-varint-native",
@@ -68,7 +70,7 @@
       "cache": false
     },
     "test-borrowed-preflight-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-borrowed-preflight-source",
@@ -77,7 +79,7 @@
       "cache": false
     },
     "test-borrowed-preflight-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-borrowed-preflight-native",
@@ -86,7 +88,7 @@
       "cache": false
     },
     "test-schema-hash-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-schema-hash-native",
@@ -95,7 +97,7 @@
       "cache": false
     },
     "test-schema-storage-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-schema-storage-native",
@@ -104,7 +106,7 @@
       "cache": false
     },
     "test-retained-intrinsic-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-retained-intrinsic-native",
@@ -113,7 +115,7 @@
       "cache": false
     },
     "test-retained-intrinsic-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-retained-intrinsic-source",
@@ -122,7 +124,7 @@
       "cache": false
     },
     "test-intrinsic-schema-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-intrinsic-schema-native",
@@ -131,7 +133,7 @@
       "cache": false
     },
     "test-original-storage-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-original-storage source",
         "forwardAllArgs": false,
@@ -140,7 +142,7 @@
       "cache": false
     },
     "test-original-storage-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test-original-storage native",
         "forwardAllArgs": false,

@@ -11,7 +11,7 @@ use semio_framework_diagnostic::TextError;
 use pack::snapshot::ArtifactDsl;
 
 #[path = "🧬️records/🦀️.rs"]
-mod records;
+pub(crate) mod records;
 pub(crate) use records::JackPackRecord;
 
 /// 🖨️ The derived text body: the same `JackPackRecord` the pack encodes, printed by the spec-driven engine.
@@ -23,7 +23,6 @@ pub(crate) fn print_pack_record_text(snapshot: &JackSnapshot) -> String {
 pub(crate) fn parse_pack_record_text(body: &str) -> Result<JackSnapshot, TextError> {
     let record = semio_framework_dsl_record::parse(body, &JackPackRecord::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
     let mut snapshot = JackPackRecord::__dsl_from_record(&record)?.into_snapshot().map_err(|error| TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-    crate::attach_bundled_content(&mut snapshot);
     Ok(snapshot)
 }
 //#endregion 🔖️PackRecord
@@ -54,7 +53,7 @@ impl ArtifactDsl for JackSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 /// 📄️ The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
-pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
+
 
 /// 📖️ Parses `.trinity` DSL text into a `JackSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<JackSnapshot, TextError> {

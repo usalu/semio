@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/repo-vscode",
-  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode",
   "namedInputs": {
     "default": [
@@ -11,7 +11,7 @@
   },
   "targets": {
     "dev": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts dev",
@@ -29,7 +29,7 @@
       "continuous": true
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -37,7 +37,7 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
@@ -61,7 +61,7 @@
       ]
     },
     "lint": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts lint",
@@ -69,7 +69,7 @@
       }
     },
     "build-vsix": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "build"
       ],
@@ -84,7 +84,7 @@
       ]
     },
     "compile-extension": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [
         "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/extension-debug"
@@ -130,7 +130,7 @@
       }
     },
     "watch-extension": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "continuous": true,
       "cache": false,
       "outputs": [

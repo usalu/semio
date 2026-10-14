@@ -3,11 +3,12 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { collectionManifestsFromInventory } from "../../../🚀️bootstrap/📥️admission/🟦️.ts";
+import policy from "../../../🔣️policy.json" with {type:"json"};
+import ownership from "../../../../🗂️workspaces/🔣️policy.json" with {type:"json"};
 
 /** 📥️ Reads exact current source membership from Git and admitted ignored structural manifests with bounded original cancellation. */
 export async function nxGraphSourceMembershipV2(root:string,signal?:AbortSignal):Promise<{files:string[];digest:string}> {
  const started=performance.now();signal?.throwIfAborted();
- const policy=JSON.parse(await readFile(new URL("../../../🔣️policy.json",import.meta.url),"utf8")),ownership=JSON.parse(await readFile(new URL("../../../../🗂️workspaces/🔣️policy.json",import.meta.url),"utf8"));
  let ignored="";try{ignored=await readFile(join(root,".nxignore"),"utf8");}catch{}
  const roots:string[]=[],names=new Set<string>(policy.generatedDirectories);for(const line of ignored.split(/\r?\n/u)){const anchored=line.trim().match(/^\/([^*?[\]!#]+)\/\*\*$/u),name=line.trim().match(/^\*\*\/([^/*?[\]!#]+)\/\*\*$/u);if(anchored)roots.push(anchored[1]);else if(name)names.add(name[1]);}
  const excluded=[...roots.map(path=>`--exclude=/${path}/`),...names].map(value=>value.startsWith("--exclude=")?value:`--exclude=**/${value}/`);

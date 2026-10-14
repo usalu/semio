@@ -8,9 +8,9 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-rewriting-document-contract": "bun nx run @semio-tech/trinity-rewriting-rs:verify-rewriting-document-contract",
-    "verify-rewriting-map-ownership": "bun nx run @semio-tech/trinity-rewriting-rs:verify-rewriting-map-ownership",
-    "verify-rewriting-window-config": "bun nx run @semio-tech/trinity-rewriting-rs:verify-rewriting-window-config"
+    "verify-rewriting-document-contract": "bun repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-document-contract",
+    "verify-rewriting-map-ownership": "bun repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-map-ownership",
+    "verify-rewriting-window-config": "bun repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-window-config"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

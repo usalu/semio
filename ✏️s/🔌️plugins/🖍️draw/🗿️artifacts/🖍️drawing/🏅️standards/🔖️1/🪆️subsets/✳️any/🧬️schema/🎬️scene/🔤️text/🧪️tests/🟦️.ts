@@ -12,7 +12,7 @@ import pathSchema from "../../../🧮️geometry/📷️raster/🧬️schema/�
 import {DocumentTextJob} from "../🟦️.ts";
 import {prepareDocumentVector} from "../../📋️prepare/🟦️.ts";
 import vectorRows from "../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportDrawingPng} from "../../../../✏️editor/🎮️commands/📤️export-document/🟦️.ts";
 import type {DocumentScenePlan} from "../../📋️prepare/🟦️.ts";
 import {preparedSceneNodes} from "../../👁️view/🟦️.ts";

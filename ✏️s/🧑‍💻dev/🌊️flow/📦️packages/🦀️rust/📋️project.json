@@ -10,7 +10,7 @@
   ],
   "targets": {
     "source-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts source-check",
@@ -19,7 +19,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
@@ -28,7 +28,7 @@
       }
     },
     "port-sides-test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts port-sides-test",
@@ -37,7 +37,7 @@
       }
     },
     "canonical-architecture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-architecture",

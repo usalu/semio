@@ -18,6 +18,7 @@ export type ExactCargoLawStage = "build" | "list" | "native";
 export type ExactCargoLawPort = {
   probe: (command: string, args: string[], options: OwnedProcessCaptureOptions) => Promise<OwnedProcessCaptureResult>;
   fingerprint: (path: string) => { path: string; sha256: string };
+  nativeLibraryDirectory?: (options:OwnedProcessCaptureOptions)=>Promise<string>;
 };
 /** 📋️ Declares actual build, discovery, assertion and output authority. */
 export type ExactCargoLawPolicyV1 = Readonly<{ version: 1; buildMilliseconds: number; listMilliseconds: number; lawMilliseconds: number; transport: Readonly<{ maximumBuildOutputBytes: number; maximumNativeOutputBytes: number }> }>;
@@ -176,8 +177,22 @@ export function exactExecutableFingerprint(path: string, control: Readonly<{ can
   }
 }
 
+/** 🧰️ Discovers the compiler's actual native standard libraries under the original process invocation. */
+export async function originalNativeLibraryDirectory(options:OwnedProcessCaptureOptions):Promise<string>{
+ const result=await captureOwnedProcess(options.env?.RUSTC??"rustc",["--print","target-libdir"],options);
+ const directory=result.stdout.trim();
+ if(result.status!==0||result.signal!==null||result.reason&&result.reason!=="exit"||!isAbsolute(directory)||directory.includes("\n")||directory.length>4096)throw Error("Original native Rust standard library discovery failed");
+ const canonical=realpathSync(directory);if(!lstatSync(canonical).isDirectory())throw Error("Original native Rust library owner is not a directory");return canonical;
+}
+/** 🔗️ Preserves original environment fields and adds only the actual compiler's native library owners. */
+export function originalNativeLibraryEnvironment(env:Readonly<Record<string,string|undefined>>,directory:string,platform:string=process.platform):Record<string,string|undefined>{
+ const key=platform==="win32"?(Object.keys(env).find(key=>key.toLowerCase()==="path")??"PATH"):platform==="darwin"?"DYLD_LIBRARY_PATH":"LD_LIBRARY_PATH",separator=platform==="win32"?";":":";
+ return {...env,[key]:[directory,resolve(directory,"../../.."),env[key]].filter(value=>value!==undefined&&value!=="").join(separator)};
+}
+const originalExactCargoPort:ExactCargoLawPort={probe:captureOwnedProcess,fingerprint:exactExecutableFingerprint,nativeLibraryDirectory:originalNativeLibraryDirectory};
+
 /** 🧪️ Compiles each explicit target once and executes only its hash-bound, exact-listed native laws. */
-export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = { probe: captureOwnedProcess, fingerprint: exactExecutableFingerprint }): Promise<readonly ExactCargoLawReceipt[]> {
+export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = originalExactCargoPort): Promise<readonly ExactCargoLawReceipt[]> {
   const policy = readExactCargoLawPolicyV1(options.policy);
   checkScriptInvocation(options.invocation);
   if (options.invocation.policy.maximumElapsedMilliseconds > 0 && policy.buildMilliseconds === 0) throw Error("Finite original owner requires positive build authority");
@@ -299,6 +314,11 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
       if (!isAbsolute(initial.path) || !/^[0-9a-f]{64}$/u.test(initial.sha256)) fail("Cargo executable fingerprint is invalid");
       writeFileSync(join(groupRoot, "executable.json"), JSON.stringify({ package: group.package, target: group.target, ...initial }), { flag: "wx", mode: 0o600 });
       verify();
+      if(port.nativeLibraryDirectory){
+        stage="list";checkpoint();const optionsForLibraries={cwd:options.cwd,env,budgetMs:originalBudget(policy.listMilliseconds),maxOutputBytes:policy.transport.maximumNativeOutputBytes,stdoutPath:join(groupRoot,"toolchain-runtime.stdout"),stderrPath:join(groupRoot,"toolchain-runtime.stderr"),invocation:options.invocation};
+        const directory=await port.nativeLibraryDirectory(optionsForLibraries);checkpoint();Object.assign(nativeEnv,originalNativeLibraryEnvironment(nativeEnv,directory));
+        writeFileSync(join(groupRoot,"toolchain-runtime.json"),JSON.stringify({directory,cargoTargetDir}),{flag:"wx",mode:0o600});
+      }
       const listed = await capture("list", initial.path, ["--list"], policy.listMilliseconds, "list");
       verify();
       if (listed.status !== 0 || listed.signal !== null || (listed.reason && listed.reason !== "exit")) fail(`list ${listed.reason ?? "exit"}; ${listed.stderr.slice(0, 4000)}`);

@@ -168,6 +168,7 @@ fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, owner: 
             scope: Box::new(FaultScope::default()),
             span: None,
             source:None,
+            domain:None,
             causes: Vec::new(),
             params: None,
             retryable: false,

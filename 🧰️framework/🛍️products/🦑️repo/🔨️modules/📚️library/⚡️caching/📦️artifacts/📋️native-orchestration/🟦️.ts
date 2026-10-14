@@ -1,3 +1,5 @@
+import {repositoryCargoPreparationStorageV1} from "./📥️invocation/🛠️preparation/🟦️.ts";
+import {readExactCargoLawPreparationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {consumeOwnerArgumentsV1} from "../../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import {nativeOwnerTestManifestRequestV1} from "./🗺️owner-test-manifests/🟦️.ts";
@@ -5,7 +7,7 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { BundleScript, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { advanceScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { advanceScriptInvocation, scriptInvocationEnvironment } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readNativeOwnerCapabilities } from "./📥️invocation/🟦️.ts";
 import { CARGO_RELAY_BUDGET_ENV, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
 import {repositoryProcessOwnerContextV1,repositoryVitestPolicyV1} from "../../../🏃️process/📋️context/🔣️policy/🟦️.ts";
@@ -33,7 +35,7 @@ export class CargoRelayScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const budgetMs = Number(process.env[CARGO_RELAY_BUDGET_ENV] ?? 0);
     try {
-      process.exitCode = await cargoStreamingStatus(args, process.cwd(), process.env, scriptInvocationBudget(this.invocation, budgetMs));
+      process.exitCode = await cargoStreamingStatus(args, process.cwd(), process.env, {invocation:this.invocation,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot),budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}});
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error));
       process.exitCode = 1;
@@ -53,19 +55,22 @@ export class NativeScript extends BundleScript {
       await advanceScriptInvocation(this.invocation,"native:owner-command","running");
       const cargo = Bun.TOML.parse(readFileSync(path, "utf8")) as { package?: { name?: string }; workspace?: object };
       if (!cargo.package?.name && !cargo.workspace) throw Error(`Native owner requires a package or workspace manifest: ${manifest}`);
-      const env: Record<string,string|undefined>={...transported.environment,...ownerEnvironmentV1(cwd,["process","cargo"])};
+      const callerEnvironment={...transported.environment,SEMIO_BUILD_MODE:original.buildMode};
+      const env: Record<string,string|undefined>={...callerEnvironment,...ownerEnvironmentV1(cwd,["process","cargo"],undefined,callerEnvironment)};
       delete env.SEMIO_CARGO_TEST_POLICY;
-      if (cargo.package?.name) Object.assign(env, { SEMIO_CARGO_TEST_POLICY: JSON.stringify(repositoryCargoTestPolicyV1(path,cwd)) });
+      if (cargo.package?.name) Object.assign(env, { SEMIO_CARGO_TEST_POLICY: JSON.stringify(repositoryCargoTestPolicyV1(path,cwd,callerEnvironment)) });
       const policies=request.testManifests.map(manifest=>{
         const selected=resolve(this.repoRoot,manifest);
-        return repositoryCargoTestPolicyV1(selected,cwd);
+        return repositoryCargoTestPolicyV1(selected,cwd,callerEnvironment);
       });
       if(new Set(policies.map(policy=>policy.manifestPath)).size!==policies.length)throw Error("Duplicate native test manifest authority");
       env.SEMIO_CARGO_TEST_POLICIES=JSON.stringify(policies);
-      if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,ownerEnvironmentV1(cwd,["wasm"]));
+      const preparation=repositoryCargoPreparationStorageV1(this.repoRoot);
+      env.SEMIO_EXACT_CARGO_PREPARATION=JSON.stringify(readExactCargoLawPreparationV1({version:1,command:process.execPath,args:[preparation.program,"synchronize","--cargo-arguments"],cwd:this.repoRoot,environment:{SEMIO_WORKSPACE_ROOT:this.repoRoot,SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(preparation)},maximumOutputLines:original.transport.maximumLines}));
+      if (process.env.SEMIO_WASM_BUILD_REQUIRED === "1") Object.assign(env,ownerEnvironmentV1(cwd,["wasm"],undefined,callerEnvironment));
       const remaining=this.invocation.control.remainingMilliseconds(),budget=remaining===null?original.child.maximumElapsedMilliseconds:Math.min(original.child.maximumElapsedMilliseconds,remaining);
       if(!Number.isFinite(budget)||budget<=0)throw Error("Original native child deadline exhausted");
-      await runOwnedCommand(request.command,arguments_,cwd,"native:owner-command",budget,{env,output:original.transport,signal:this.invocation.control.signal,onProgress:async line=>{await advanceScriptInvocation(this.invocation,"native:owner-command","running");if(env.SEMIO_NATIVE_OWNER_PROGRESS!=="delegated")process.stderr.write(`${line}\n`);}});
+      await runOwnedCommand(request.command,arguments_,cwd,"native:owner-command",budget,{env:scriptInvocationEnvironment(this.invocation,env),output:original.transport,signal:this.invocation.control.signal,onProgress:async line=>{await advanceScriptInvocation(this.invocation,"native:owner-command","running");if(env.SEMIO_NATIVE_OWNER_PROGRESS!=="delegated")process.stderr.write(`${line}\n`);}});
       return;
     }
     if (tool === "cargo" && operation === "metadata") {

@@ -179,7 +179,7 @@ test("original editor preparation preserves canonical refusal receipts and origi
   const root=new URL("../../../../../../../../",import.meta.url);
   const law=await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
   const schema=await Bun.file(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔁️codec/🧬️schema/🔣️.json",root)).json();
-  const {ValueError}=await import(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",root).href);
+  const {ValueError}=await import(new URL("🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts",root).href);
   const {Database}=await import("bun:sqlite");const db=new Database(":memory:");const valid=new Ajv2020({strict:true}).compile(schema);
   try{for(const wire of law.wireCases){expect(valid(wire)).toBe(true);const error=new ValueError(wire.kind,wire.message).withRetainedProgress(wire.retainedProgress);expect(error.under("preparation").retainedProgress).toBe(error.retainedProgress);const oracle=db.query("SELECT json_object('kind',?, 'message',?, 'retainedProgress',json(?)) AS wire").get(error.kind,error.message,JSON.stringify(error.retainedProgress)) as {wire:string};expect(JSON.parse(oracle.wire)).toEqual(wire);expect(valid({...wire,retainedProgress:{...wire.retainedProgress,copiedBytes:-1}})).toBe(false);}}
   finally{db.close();}
@@ -213,7 +213,7 @@ test("original editor preparation closes retained refusal owners under independe
 test("original unit preparation preserves typed semantic refusal custody",async()=>{
   const root=new URL("../../../../../../../../",import.meta.url);
   const law=await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🧾️refusal.json",import.meta.url)).json();
-  const {ValueError}=await import(new URL("🧰️framework/🔨️modules/🌱️value/⚠️refusal/🟦️.ts",root).href);
+  const {ValueError}=await import(new URL("🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts",root).href);
   for(const row of law.wireCases){const error=new ValueError(row.kind,row.message).withRetainedProgress(row.retainedProgress);expect(JSON.parse(Buffer.from(JSON.stringify(error.retainedProgress)).toString("utf8"))).toEqual(row.retainedProgress);}
   const source=await Bun.file(new URL("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",root)).text();
   for(const definition of ["impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEphemeralPreparation", "impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEditCursor"]){

@@ -1,4 +1,4 @@
-import { componentVertexIds, parsePolygonMesh } from "../../../../../../../../../🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🟦️.ts";
+import { componentVertexIds, parsePolygonMesh } from "@semio-tech/framework/mesh/polygon";
 
 /** 🎯️ The portable contract for a component picked in a procedural mesh preview. */
 export interface ComponentTarget {

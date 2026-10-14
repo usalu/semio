@@ -52,10 +52,10 @@ fn materialize(name: &str) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
             let source = workspace.join("compose/🧬️mutations/🦀️.rs");
             return (workspace.clone(), workspace, source, leaf);
         }
-        "nested-nx-anchor" => {
+        "nested-workspace-anchor" => {
             let nested = workspace.join("nested");
             fs::create_dir_all(&nested).unwrap();
-            fs::write(nested.join("nx.json"), "{}").unwrap();
+            fs::write(nested.join("package.json"), r#"{"workspaces":[]}"#).unwrap();
             fs::rename(workspace.join("domain"), nested.join("domain")).unwrap();
             return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🦀️.rs"), leaf);
         }

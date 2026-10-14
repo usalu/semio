@@ -1,0 +1,47 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "export",
+    "sourceRetained",
+    "copyCuts",
+    "expectedVm",
+    "noBudgetContext"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "export": {
+      "const": "ChannelVersion"
+    },
+    "sourceRetained": {
+      "const": true
+    },
+    "copyCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 2
+    },
+    "expectedVm": {
+      "const": 2
+    },
+    "noBudgetContext": {
+      "const": true
+    }
+  }
+}

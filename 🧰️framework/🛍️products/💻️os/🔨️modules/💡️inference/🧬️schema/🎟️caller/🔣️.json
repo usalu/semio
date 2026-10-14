@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "const": {
+    "version": 1,
+    "caller": {
+      "operation": 961,
+      "generation": 13,
+      "fuel": 1,
+      "deadlineUs": 1000000,
+      "clockUs": 1,
+      "sourceGrant": [
+        1,
+        64,
+        65536,
+        65536,
+        64
+      ]
+    },
+    "deniedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "sourceValues": [
+      1,
+      3,
+      4,
+      11
+    ],
+    "receiptFields": [
+      "items",
+      "copyBytes",
+      "capacityBytes",
+      "releaseBytes"
+    ],
+    "preserveWholeFailure": [
+      "fieldCode",
+      "fieldMessage",
+      "driverKey",
+      "driverParent",
+      "nativePrimary",
+      "receiptRefusal",
+      "contextRefusal"
+    ],
+    "forbiddenProduction": [
+      "StepContext::new",
+      "default_now_us",
+      "relativeDeadline",
+      "unlimitedFuel",
+      "postDebitAgain"
+    ]
+  }
+}

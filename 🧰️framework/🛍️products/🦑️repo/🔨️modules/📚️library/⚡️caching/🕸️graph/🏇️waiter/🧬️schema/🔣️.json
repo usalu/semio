@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Graph Cache Waiter Outcomes",
+  "type": "array",
+  "minItems": 5,
+  "maxItems": 5,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "present",
+      "minimumComputedAt",
+      "computedAt",
+      "errors",
+      "outcome"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "present": {
+        "type": "boolean"
+      },
+      "minimumComputedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "computedAt": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "errors": {
+        "type": "boolean"
+      },
+      "outcome": {
+        "enum": [
+          "missing",
+          "stale",
+          "current",
+          "error"
+        ]
+      }
+    }
+  }
+}

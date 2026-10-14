@@ -766,7 +766,9 @@ impl ArtifactEditor for Grid2dEditor {
 
     /// 🎥️ The canvas host syncs its own camera as one nested `camera` object; the palette's
     /// `set-camera` form states the three scalars flat. Both reach the same command.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         Ok(match action {
             "change-seed" => Grid2dEditorCommand::ChangeSeed { seed: arg_u64(args, "seed", 0) },
             "resize-grid" => Grid2dEditorCommand::ResizeGrid { width: arg_u32(args, "width", 1), height: arg_u32(args, "height", 1) },

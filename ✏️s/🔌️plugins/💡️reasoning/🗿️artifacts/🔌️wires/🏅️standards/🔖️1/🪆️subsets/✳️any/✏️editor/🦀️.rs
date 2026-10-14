@@ -691,7 +691,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         command.command_id()
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<WiresCommand, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<WiresCommand, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         wires_command_from_action(action, args)
     }
 
@@ -749,7 +751,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
         _interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == WIRES_PLAY_BODY_COMPOSITE {
             let window = edit::windows::canvas::config::current(cfg).cloned().unwrap_or_default();
             let gesture = transient.window::<window_transient::WiresCanvasTransientOwner>().cloned().unwrap_or_default();
@@ -769,7 +773,10 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             return edit::windows::canvas::render(&board, &fixture, &window).map(semio_framework_plugin::built_to_component_tree);
         }
         Self::render(body_key, doc, cfg, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 }
 //#endregion 🔖️ReasoningWiresPlayApp
 

@@ -1,0 +1,2 @@
+/** 🥽️ Public indexed polygon geometry contract and operations. */
+export { type MeshPoint, type MeshAttributeValue, type MeshAttribute, type PolygonMesh, type MeshAnalysis, parsePolygonMesh, triangulateMeshFace, componentVertexIds, type MeshComponentTransform, transformMeshComponents, loopCutMesh, type MeshKnifeCut, knifeCutMesh, analyzePolygonMesh, type MeshInspectionQuery, type MeshInspection, inspectMeshComponent } from "../../../../🔨️modules/🏗️mesh-engine/🥽️polygon/🟦️.ts";

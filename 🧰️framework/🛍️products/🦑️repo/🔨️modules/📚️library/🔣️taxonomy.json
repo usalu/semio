@@ -8490,6 +8490,70 @@
       "parentKindIds": [
         "hub-testing"
       ]
+    },
+    "repo-build-graph": {
+      "emoji": "🕸️",
+      "slugPattern": "^graph$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-build"
+      ]
+    },
+    "repo-build-inference": {
+      "emoji": "📥️",
+      "slugPattern": "^inference$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-build-graph"
+      ]
+    },
+    "repo-build-invocation": {
+      "emoji": "🧭️",
+      "slugPattern": "^invocation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-build"
+      ]
+    },
+    "repo-build-selection": {
+      "emoji": "🧭️",
+      "slugPattern": "^selection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-build"
+      ]
+    },
+    "repo-build-caller": {
+      "emoji": "📥️",
+      "slugPattern": "^caller$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-build"
+      ]
+    },
+    "repo-build-tools": {
+      "emoji": "🔧️",
+      "slugPattern": "^tools$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-build"
+      ]
+    },
+    "repo-build-bazel": {
+      "emoji": "🏗️",
+      "slugPattern": "^bazel$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-build-tools"
+      ]
+    },
+    "repo-build-project-contract": {
+      "emoji": "📋️",
+      "slugPattern": "^project$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema"
+      ]
     }
   },
   "semanticDirectoryMemberKinds": {
@@ -22409,7 +22473,7 @@
       "verification": "tsc --showConfig",
       "expires": null
     },
-    "nx-project-manifest": {
+    "build-project-manifest": {
       "pathPattern": "*/**/📋️project.json",
       "authority": "Nx",
       "reason": "Nx project configuration discovery below the repository root",
@@ -22420,26 +22484,26 @@
       "verification": "nx show project",
       "expires": null
     },
-    "nx-owned-node-package-manifest": {
+    "build-owned-node-package-manifest": {
       "pathPattern": "**/package.json",
-      "authority": "Nx and Node.js",
-      "reason": "Node package manifest owned by an adjacent exact Nx project manifest",
+      "authority": "Build Tools and Node.js",
+      "reason": "Node package manifest owned by an adjacent exact build project manifest",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "sibling-fixed-filename-contract",
-        "fixedFilenameContractId": "nx-project-manifest"
+        "fixedFilenameContractId": "build-project-manifest"
       },
       "verification": "nx show project and bun pm",
       "expires": null
     },
-    "nx-owned-typescript-config": {
+    "build-owned-typescript-config": {
       "pathPattern": "**/tsconfig.json",
-      "authority": "Nx and TypeScript",
-      "reason": "TypeScript configuration owned by an adjacent exact Nx project manifest",
+      "authority": "Build Tools and TypeScript",
+      "reason": "TypeScript configuration owned by an adjacent exact build project manifest",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "sibling-fixed-filename-contract",
-        "fixedFilenameContractId": "nx-project-manifest"
+        "fixedFilenameContractId": "build-project-manifest"
       },
       "verification": "nx show project and tsc --showConfig",
       "expires": null
@@ -24753,7 +24817,7 @@
       ],
       "allowedFixedContractIds": [
         "cargo-manifest",
-        "nx-project-manifest",
+        "build-project-manifest",
         "root-script"
       ],
       "allowedFileKindIds": [
@@ -24782,7 +24846,7 @@
         "bun-package-readme",
         "bun-package-license",
         "typescript-config",
-        "nx-project-manifest",
+        "build-project-manifest",
         "root-script",
         "next-environment-declaration",
         "next-typescript-config",
@@ -24808,7 +24872,7 @@
       "manifestContractId": null,
       "entryContractIds": [],
       "allowedFixedContractIds": [
-        "nx-project-manifest",
+        "build-project-manifest",
         "root-script"
       ],
       "allowedFileKindIds": [
@@ -24821,10 +24885,10 @@
       "implementationRole": "problem"
     },
     "🐹️go": {
-      "manifestContractId": "nx-project-manifest",
+      "manifestContractId": "build-project-manifest",
       "entryContractIds": [],
       "allowedFixedContractIds": [
-        "nx-project-manifest",
+        "build-project-manifest",
         "go-module",
         "go-sum",
         "root-script"
@@ -24846,7 +24910,7 @@
       "allowedFixedContractIds": [
         "python-project-manifest",
         "python-init",
-        "nx-project-manifest",
+        "build-project-manifest",
         "root-script",
         "uv-lock"
       ],
@@ -24866,7 +24930,7 @@
       "manifestContractId": null,
       "entryContractIds": [],
       "allowedFixedContractIds": [
-        "nx-project-manifest",
+        "build-project-manifest",
         "root-script"
       ],
       "allowedFileKindIds": [
@@ -24891,7 +24955,7 @@
       ],
       "allowedDirectoryKindIds": [],
       "allowedFixedContractIds": [
-        "nx-project-manifest",
+        "build-project-manifest",
         "root-script"
       ],
       "glueGrammarId": "c-cpp",
@@ -27215,13 +27279,22 @@
     },
     "plugin-registry": {
       "ownership": "owned",
-      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
-      "target": "@semio-tech/plugin-registry:generate",
-      "previewTarget": "@semio-tech/plugin-registry:preview-generated",
-      "checkTarget": "@semio-tech/plugin-registry:check-generated",
+      "ownerPath": "✏️s/🧑‍💻dev",
+      "target": "@semio-tech/s-dev-composition:generate",
+      "previewTarget": "@semio-tech/s-dev-composition:preview-generated",
+      "previewArguments": [
+        "catalog-publication",
+        "preview"
+      ],
+      "checkTarget": "@semio-tech/s-dev-composition:check-generated",
       "inputPatterns": [
         "nx.json",
         "package.json",
+        "✏️s/🧑‍💻dev/📋️project.json",
+        "✏️s/🧑‍💻dev/📜️script.ts",
+        "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🔣️.json",
+        "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+        "🌎️hub/📇️catalog/🔣️.json",
         "🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌳️surface-scaffold/🟦️.ts",
@@ -27230,6 +27303,12 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🧬️schema/📣️contribution/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
@@ -27251,7 +27330,7 @@
         "exampleDirectoryName": "📚️examples",
         "exampleFileKindId": "rust-source",
         "implementationEntryPaths": [
-          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts"
+          "✏️s/🧑‍💻dev/📜️script.ts"
         ],
         "workspaceImports": {
           "@semio-tech/framework": {
@@ -27266,7 +27345,7 @@
       },
       "outputRoots": [
         {
-          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated",
+          "path": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated",
           "inclusion": "ignored"
         }
       ],
@@ -27389,14 +27468,14 @@
         "✏️s/🧑‍💻dev/📋️project.json",
         "✏️s/🧑‍💻dev/📜️script.ts",
         "✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🔣️.json",
+        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎠️playgrounds.json",
+        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎠️playgrounds.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧬️schema/🔣️.json",
@@ -27978,6 +28057,8 @@
         "Cargo.toml",
         "nx.json",
         "package.json",
+        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts",
+        "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts",
         "📋️project.json",
         "🧰️framework/📦️packages/🟦️typescript/package.json",
         "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
@@ -28159,8 +28240,6 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📡️backbone/🔗️binding/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️.ts",
@@ -28485,7 +28564,7 @@
     },
     "🐹️go": {
       "packageIdentity": "manifest",
-      "manifestContractId": "nx-project-manifest",
+      "manifestContractId": "build-project-manifest",
       "moduleRootContractId": "go-module",
       "marker": {
         "in": "manifest",

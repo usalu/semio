@@ -1,0 +1,12 @@
+{
+  "done": false,
+  "cancellable": true,
+  "phase": "meshingFaces",
+  "unitsDone": 3,
+  "unitsTotal": 17,
+  "nodeHash": 4294967297,
+  "windowId": "source-🌊",
+  "windowKindId": "procedural-preview",
+  "handle": "original-source-handle",
+  "tolerance": 0.1
+}

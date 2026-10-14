@@ -152,7 +152,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Block5dPlayApp>>(context::block5d_app_manifest_for_tests).await;
-    assert!(<Block5dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
+    assert!(<Block5dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None, None).is_err());
 }
 //#endregion 🔖️CommandSurface
 
@@ -301,7 +301,7 @@ async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
 async fn command_from_action_bridges_set_active_example() {
     let _app = Block5dPlayApp;
     assert!(
-        matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "forest" })))), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest")
+        matches!(<Block5dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "forest" }))).clone()), None), Ok(Block5dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "forest")
     );
 }
 

@@ -65,18 +65,21 @@ fn member_catalog_initial_open_cancellation_pays_original_catalog_and_page_befor
     type Open = InitialMemberStoreOpen<RetainedTestMembers, DemoSnapshot, DemoMutation>;
     let (birth, allocated, released) = crate::test_allocation::observe_backing(|| Open::begin_birth_demand(&request).unwrap());
     assert_eq!((allocated, released), (0, 0));
+    let mut caller=OriginalMemberCaller::new();let mut admission=MemberOpenSourceAdmission::new(request);let policy=caller.policy;
+    let((ready,receipt),allocated,released)=crate::test_allocation::observe_backing(||caller.run(policy,|parent,cx|admission.admit_source(parent,cx).unwrap()));assert!(!ready);assert_eq!((allocated,released),(0,0));assert_eq!(receipt,RetainedCloneProgress{copied_items:1,..Default::default()});
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth, maximum_copy_bytes: 0, maximum_release_bytes: 0 };
-    let (open, allocated, released) = crate::test_allocation::observe_backing(|| Open::begin(request, grant).unwrap_or_else(|_| panic!("original funded begin")));
+    let(((open,raw),receipt),allocated,released)=crate::test_allocation::observe_backing(||caller.run(grant,|_parent,cx|{let(open,raw)=Open::begin(&mut admission,cx,grant).unwrap();crate::os_store::member_open::receive_member_close(cx,Ok(RetainedCloneStep::Progress(raw))).unwrap();(open,raw)}));assert_eq!(raw,receipt);assert!(admission.terminal_is_empty());
     let mut open = open;
     assert_eq!((allocated, released), (birth.capacity_bytes, 0));
     let initial_born=outstanding+allocated;
-    let(added,physical,turns)=retire_original_member_open(&mut open);
+    let(added,physical,turns)=retire_original_member_open(&mut open,&mut caller);
     let born=initial_born+added;
     assert_eq!(physical,born,"original request and catalog birth must all return under unchanged source policy");
     let (final_bytes, allocated, released) = crate::test_allocation::observe_backing(|| MemberOpenOperation::terminal_drop_byte_demand(&open).expect("terminal original open declares no remaining physical allocation"));
     assert_eq!((allocated, released, final_bytes), (0, 0, 0));
     let (_, allocated, released) = crate::test_allocation::observe_backing(|| drop(open));
     assert_eq!((allocated, released), (0, 0), "original page release is already paid in its exact current turn");
+    caller.close();
     println!("[DEBUG] original member begin sourcebirth={} originalrequest={outstanding} allfundedbirth={born} exactfundedphysical={physical} turns={turns} terminalDrop=0", birth.capacity_bytes);
 }
 

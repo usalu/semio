@@ -1,5 +1,40 @@
 {
   "version": 1,
+  "frozenGraph": {
+    "version": 1,
+    "exports": [
+      "writeNxGraphSeal",
+      "nxGraphSealHolds",
+      "nxGraphSourceMembershipV2",
+      "sourceClosureTaskEnvironments",
+      "sourceClosureReceiptHolds",
+      "compactTaskPlans"
+    ],
+    "policies": [
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🔣️policy.json"
+    ]
+  },
+  "actualDemand": {
+    "idle": true,
+    "pending": true,
+    "fresh": true,
+    "createDeferred": true,
+    "created": true,
+    "deleteDeferred": true,
+    "deleted": true,
+    "requested": true,
+    "observed": true,
+    "nativeObserved": true,
+    "structuralCreated": true,
+    "structuralRenamed": true,
+    "structuralDeleted": true
+  },
+  "emptyWatch": {
+    "events": [],
+    "updates": 0,
+    "globs": 0
+  },
   "scope": {
     "version": 1,
     "tasks": [
@@ -139,7 +174,7 @@
     {
       "key": "SEMIO_NX_GRAPH_STARTED_AT",
       "next": "different-proof-start",
-      "accepts": true
+      "accepts": false
     }
   ],
   "demandCases": [
@@ -215,7 +250,11 @@
       "repo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/**/*.ts",
       "cargo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/**/*.ts"
     },
-    "exclude": ["**/🧪️tests/**", "**/dist/**", "**/target/**"],
+    "exclude": [
+      "**/🧪️tests/**",
+      "**/dist/**",
+      "**/target/**"
+    ],
     "projects": {
       "repo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
       "cargo": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo"
@@ -235,5 +274,43 @@
         "cargo"
       ]
     ]
-  }
+  },
+  "ignoredStructural": [
+    {
+      "type": "create",
+      "path": ".🧬semio"
+    },
+    {
+      "type": "create",
+      "path": "node_modules"
+    }
+  ],
+  "publisherGenerationCases": [
+    {
+      "id": "current-generation",
+      "holds": true,
+      "published": true,
+      "preserved": true
+    },
+    {
+      "id": "superseded-generation",
+      "holds": false,
+      "published": false,
+      "preserved": true
+    }
+  ],
+  "acceptedPublicationCases": [
+    {
+      "id": "later-raw-producer",
+      "rawChanged": true,
+      "archiveChanged": false,
+      "accepts": true
+    },
+    {
+      "id": "original-archive-tampered",
+      "rawChanged": false,
+      "archiveChanged": true,
+      "accepts": false
+    }
+  ]
 }

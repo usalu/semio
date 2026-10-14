@@ -1,0 +1,10 @@
+{
+  "title": "Abstract Repo Build Tools And Add Bazel",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Abstract all Nx interfaces behind a tool-independent repo-framework build interface. Add Bazel infrastructure for every task, retain Nx as default until full qualification. Update dashboard, agents, launch, setup, CI and task callers. Actual fleet: GPT 6.1 Sol xhigh coordinator, High implementation, low exploration/audit.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪bdbcae371d724579a66c1c9630ff0427"
+  ]
+}

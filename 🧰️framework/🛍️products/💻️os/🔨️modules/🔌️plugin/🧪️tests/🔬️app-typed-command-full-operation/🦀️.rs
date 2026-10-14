@@ -1417,7 +1417,7 @@ mod typed_command_full_operation_tests {
         let gate = source[route..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("fail-closed full-operation gate");
         let refresh = source[route..].find("self.refresh_cache().await").expect("deferred legacy preparation census");
         assert!(gate < refresh, "incomplete typed command must fail before legacy preparation");
-        for decoder in ["let command = Box::new(A::command_from_action(action, args).await?)", "let command = A::command_from_action(command_id, Some(&args)).await"] {
+        for decoder in ["let command = Box::new(A::command_from_action(action, source_args).await?)", "let command = A::command_from_action(command_id, Some(args)).await"] {
             let decoder = source.find(decoder).expect("typed route decoder");
             let gate = source[decoder..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("typed route full-operation gate") + decoder;
             let reducer = source[decoder..].find("self.dispatch_typed_command_inner(").expect("typed route reducer entry") + decoder;
@@ -1502,7 +1502,7 @@ mod typed_command_full_operation_tests {
         assert!(wire.starts_with(TypedOperationResultPage::RENDERER_PAGE_MAGIC));
         assert_eq!(&wire[wire.len() - TYPED_OPERATION_RESULT_PAGE_BYTES..], &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
 
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️app-typed-command-full-operation/🔣️renderer-result-lanes.json")).expect("neutral result lanes");
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🎭️actor/🧪️tests/🗞️typed-operation-page/🧫️fixtures/🔣️.json")).expect("neutral result lanes");
         for row in fixture["lanes"].as_array().expect("result lanes") {
             let lane: TypedOperationResultLane = semio_framework_pack_json::from_json_str(&serde_json::to_string(&row["name"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("own lane decoder");
             let page = TypedOperationResultPage::try_new(token, lane, &[0x5a]).expect("declared result lane");

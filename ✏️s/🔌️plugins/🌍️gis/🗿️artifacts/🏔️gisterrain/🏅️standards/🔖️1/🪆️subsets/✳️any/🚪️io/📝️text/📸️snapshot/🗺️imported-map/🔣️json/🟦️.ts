@@ -1,7 +1,7 @@
 /** 🔣️ Physical member JSON representation. */
 import {parseSchemaRecord} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import {parseIntrinsicValue,parseDslValue,type DslValue,type IntrinsicValue,type IntrinsicMember} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
-import {binary64,binary64Value} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 📥️ Explicit finite JSON projection; safe numeric admission never disguises an integer overflow. */
 export function intrinsicFromJson(source:unknown):IntrinsicValue{
  const value=parseDslValue(source);

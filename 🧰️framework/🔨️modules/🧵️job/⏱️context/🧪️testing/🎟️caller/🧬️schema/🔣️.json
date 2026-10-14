@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "clock",
+    "deadline",
+    "fuel",
+    "stock",
+    "actions",
+    "terminalDrop",
+    "clockRegression",
+    "workLoans"
+  ],
+  "properties": {
+    "operation": {
+      "const": 941
+    },
+    "generation": {
+      "const": 17
+    },
+    "clock": {
+      "const": 1000
+    },
+    "deadline": {
+      "const": 2000
+    },
+    "fuel": {
+      "const": 13
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 64
+        },
+        "copy": {
+          "const": 9
+        },
+        "capacity": {
+          "const": 65536
+        },
+        "release": {
+          "const": 65536
+        },
+        "depth": {
+          "const": 64
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "copy",
+          "fuel",
+          "failed"
+        ],
+        "properties": {
+          "copy": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "fuel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "failed": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "terminalDrop": {
+      "const": 0
+    },
+    "clockRegression": {
+      "const": [
+        1000,
+        999,
+        1000
+      ]
+    },
+    "workLoans": {
+      "const": [
+        {
+          "fuel": 0,
+          "deadline": 1500,
+          "spent": 0,
+          "remaining": 10,
+          "unwind": false
+        },
+        {
+          "fuel": 3,
+          "deadline": 1500,
+          "spent": 1,
+          "remaining": 9,
+          "unwind": false
+        },
+        {
+          "fuel": 99,
+          "deadline": 3000,
+          "spent": 2,
+          "remaining": 7,
+          "unwind": false
+        },
+        {
+          "fuel": 3,
+          "deadline": 1000,
+          "spent": 0,
+          "remaining": 7,
+          "unwind": false
+        },
+        {
+          "fuel": 2,
+          "deadline": 1500,
+          "spent": 1,
+          "remaining": 6,
+          "unwind": true
+        }
+      ]
+    }
+  }
+}

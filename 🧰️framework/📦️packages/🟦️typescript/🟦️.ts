@@ -5,8 +5,8 @@ export type{IntrinsicValue,IntrinsicMember}from"../../🔨️modules/🌱️valu
 export { SqliteOperation, sqliteOperation, SqliteAllocationControl, exportSqliteDatabase, importSqliteDatabase, parseSqliteDatabaseSchema, validateSqliteDatabaseSchema, parseSqliteDatabaseSchemaControlled, validateSqliteDatabaseSchemaControlled } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export type { SqliteValue, SqliteRow, SqliteTable, SqliteDatabase, SqliteDatabaseOptions, SqliteDatabaseProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 export type { ArtifactSqliteOptions, ArtifactSqliteProgress } from "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-export {binary64,binary32,binary64Value,binary32Value,parseBinary64,parseBinary32} from "../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-export type {Binary64,Binary32} from "../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+export {binary64,binary32,binary64Value,binary32Value,parseBinary64,parseBinary32} from "../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
+export type {Binary64,Binary32} from "../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 export { createLeasePool } from "../../🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts";
 export type { Lease, LeasePool, LeasePoolStats } from "../../🔨️modules/⏳️async/🎟️lease-pool/🟦️.ts";
 export { retryWithJitteredBackoff } from "../../🔨️modules/⏳️async/🔁️jittered-backoff/🟦️.ts";
@@ -64,7 +64,7 @@ export {
 export type { GesturePointer, GesturePointers, GestureRecognizerState, GestureTransition, GestureVerdict, OrbitPose, OrbitProjection, OrbitVector, PinchFrame, PinchStep, ZoomBounds, ZoomNotchFactors } from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
 export * from "../../🔨️modules/🎠️kernel/🟦️.ts";
 export * from "../../🔨️modules/🔄️machine/🟦️.ts";
-export { NumericIndex, NumericIndexEdit, NumericIndexReader, NumericIndexRetirement } from "../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
-export type { NumericIndexGrant, NumericIndexStep, NumericIndexReadStep, NumericIndexOrdinal } from "../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+export { NumericIndex, NumericIndexEdit, NumericIndexReader, NumericIndexRetirement } from "../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+export type { NumericIndexGrant, NumericIndexStep, NumericIndexReadStep, NumericIndexOrdinal } from "../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 export { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, RetainedUiTransaction } from "../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts";
 export type { RetainedUiState, RetainedUiStep, RetainedUiResult, RetainedUiRejection, RetainedUiSurfaceIdentity, RetainedUiAcknowledgement } from "../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts";

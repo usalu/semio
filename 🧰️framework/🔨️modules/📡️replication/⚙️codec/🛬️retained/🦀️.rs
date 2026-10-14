@@ -103,6 +103,8 @@ impl RetainedWireFieldDecode{
  /// 📐️ Observes the same original published backing without source access or new work.
  pub fn output_bytes(&self)->usize{self.output_extent}
  pub fn close_demands(&self)->RetirementDemand{if self.receipt.is_some()||self.phase==3||!self.closing{return Default::default()}RetirementDemand{release_bytes:self.output.as_ref().map_or(0,Vec::capacity),depth:1,..Default::default()}}
+ /// 📏️ Quotes physical cancellation custody without mutating this original field's active phase.
+ pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:self.output.as_ref().map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty()),..Default::default()}}
  fn validate_source<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{let identity=source.original_source_identity();if identity.address!=self.original||identity.extent!=self.extent||identity.authority!=self.authority{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original wire source identity or extent changed"))}Ok(())}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
@@ -172,6 +174,25 @@ impl RetainedWireFieldDecode{
  pub fn terminal_is_empty(&self)->bool{self.phase==3&&self.output.is_none()&&self.receipt.is_none()}
 }
 impl Drop for RetainedWireFieldDecode{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original wire field abandoned receiving custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.output)}}}}
+
+struct RetainedWireFieldRetirement(RetainedWireFieldDecode);
+impl semio_framework_value::retirement::RetirementCursor for RetainedWireFieldRetirement{
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
+  use semio_framework_value::retirement::RetirementStep;
+  self.0.cancel();self.0.take_receipt();
+  match self.0.close_step(grant){Ok(_)=>{let progress=self.0.take_receipt().map_or(Default::default(),|(_,progress)|progress);if progress==Default::default()&&!self.0.terminal_is_empty(){RetirementStep::BudgetExhausted}else{RetirementStep::Progress(progress)}},Err(error)=>RetirementStep::Failure(error)}
+ }
+ fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
+ fn next_close_byte_demand(&self)->Option<usize>{Some(self.0.output.as_ref().map_or(0,Vec::capacity))}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+}
+impl semio_framework_value::retirement::RetireOwned for RetainedWireFieldDecode{
+ fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.cancel();self.take_receipt();Box::new(RetainedWireFieldRetirement(self))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<RetainedWireFieldRetirement>())}
+ fn controlled_retirement_supported()->bool{true}
+}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

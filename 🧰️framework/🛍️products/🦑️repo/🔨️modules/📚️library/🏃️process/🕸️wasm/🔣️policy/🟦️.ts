@@ -21,9 +21,9 @@ export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS
   const command = env.SEMIO_WASM_BINDGEN_BIN
     ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN)
     : (which as (name: string, options: { readonly PATH?: string }) => string | null)("wasm-bindgen", { PATH: env.PATH });
-  if (!command) throw new Error("Run bun nx run workspace:deps-wasm to provision wasm-bindgen");
+  if (!command) throw new Error("Run bun repo run workspace:deps-wasm to provision wasm-bindgen");
   const probe = spawnSync(command, ["--version"], { env,encoding:"utf8" });
-  if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run bun nx run workspace:deps-wasm`);
+  if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run bun repo run workspace:deps-wasm`);
   return command;
 }
 

@@ -178,7 +178,7 @@ class PreviewGeneratedScript extends BundleScript {
 /** ✅️ Fails when the committed projection is not the projection of the current taxonomy. */
 class CheckGeneratedScript extends BundleScript {
   async run(): Promise<void> {
-    if (readFileSync(MUTATION_AUTHORITY_PATH, "utf8") !== mutationAuthorityProjection(this.repoRoot)) throw new Error("mutation-authority projection is stale; run bun nx run @semio-tech/dsl-derive-rs:generate");
+    if (readFileSync(MUTATION_AUTHORITY_PATH, "utf8") !== mutationAuthorityProjection(this.repoRoot)) throw new Error("mutation-authority projection is stale; run bun repo run @semio-tech/dsl-derive-rs:generate");
     console.log("mutation-authority: fresh");
   }
 }
@@ -229,7 +229,7 @@ class PreviewSchemaIndexScript extends BundleScript {
 /** ✅️ Fails when the committed schema document index is not the index of the current schemas. */
 class CheckSchemaIndexScript extends BundleScript {
   async run(): Promise<void> {
-    if (readFileSync(SCHEMA_INDEX_PATH, "utf8") !== mutationSchemaDocumentIndexProjection(this.repoRoot)) throw new Error("schema document index is stale; run bun nx run @semio-tech/dsl-derive-rs:generate-schema-index");
+    if (readFileSync(SCHEMA_INDEX_PATH, "utf8") !== mutationSchemaDocumentIndexProjection(this.repoRoot)) throw new Error("schema document index is stale; run bun repo run @semio-tech/dsl-derive-rs:generate-schema-index");
     console.log("schema-document-index: fresh");
   }
 }

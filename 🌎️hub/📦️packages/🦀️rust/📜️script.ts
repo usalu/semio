@@ -14,7 +14,7 @@ import { GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYT
 import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts";
 import { DevLocalHubScript } from "../../🚀️local-bootstrap/👷️dev-owner/🟦️.ts";
 import { createHash, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
@@ -42,8 +42,8 @@ import type { DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOut
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, sealSpaceArtifactCreateV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { foldAll as foldDirectoryIndexEvents } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🟦️.ts";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, validDocumentIndexEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-import type { TestBrowserHostRootsV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🟦️.ts";
-import { stageTestBrowserHostV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️browser-host/🏗️staging/🟦️.ts";
+import type { TestBrowserHostRootsV1 } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🟦️.ts";
+import { stageTestBrowserHostV1 } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts";
 import { pluginModulesRootIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import {parseFreshProcessPolicyV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🟦️.ts";
 import cargoCommandLimits from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
@@ -79,6 +79,15 @@ import { ensureHubBackend, finishLocalHub, freeLoopbackPort, HUB_BINARY_SOURCES_
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 
 //#region 🧱️SourceGateRunners
+/** 🕸️ Supplies Hub's actual actor publication capability to the neutral runtime graph verifier. */
+class RuntimeFixtureGraphScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    const {verifyRuntimeFixtureGraphV1}=await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts");
+    const {hubRuntimeActorPublicationPortV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts");
+    await verifyRuntimeFixtureGraphV1(this.repoRoot,segments,hubRuntimeActorPublicationPortV1(this.repoRoot),["🧰️framework","✏️s","🌎️hub"]);
+  }
+}
+
 /** 🧱️ Runs the bounded Hub foundation source contract through the shared owned-process boundary. */
 class HubDocumentSweepScript extends BundleScript {
  async run(segments:string[]):Promise<void>{const {runHubDocumentSweepCli}=await import("../../🧪️tests/🗂️document-sweep/🟦️.ts");await runHubDocumentSweepCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🗂️document-sweep"),segments);}
@@ -2511,10 +2520,10 @@ async function proveAdminLiveJourney(repoRoot: string, root: string, fixture: Ad
 /** 🛡️ `os-hub-admin`'s build MUST land before cargo ever runs `main()` for real — `HubState.
  * admin_dir` (§C0 `OS_HUB_ADMIN_DIR`, else the compile-time default) is read at hub STARTUP, not
  * build time, so this is a runtime prerequisite, not a Cargo `build.rs` concern. Zero-touch/
- * cross-platform: `bun nx run os-hub-admin:build` is the same command every OS/devcontainer already
+ * cross-platform: `bun repo run os-hub-admin:build` is the same command every OS/devcontainer already
  * runs for every other nx target here. */
 function buildAdminSpa(repoRoot: string): void {
-  runCmd("bun", ["nx", "run", "os-hub-admin:build"], { cwd: repoRoot, ...orchestratorBudgetOpts() });
+  runCmd("bun", ["repo", "run", "os-hub-admin:build"], { cwd: repoRoot, ...orchestratorBudgetOpts() });
 }
 
 class SetupScript extends BundleScript {
@@ -3771,7 +3780,7 @@ class CanonicalPairCheckScript extends BundleScript {
     const env = { ...process.env, RUST_MIN_STACK: "268435456" };
     runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "canonical_pair", "--", "--test-threads=1"], this.root, env);
     runCargo(["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "canonical_pair_route", "--", "--test-threads=1"], this.root, env);
-    runCmd("bun", ["nx", "run", "os-hub-ts:test", "--", "quick", "--run", "-t", "canonical checkpoint pair neutral contract"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "os-hub-ts:test", "--", "quick", "--run", "-t", "canonical checkpoint pair neutral contract"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root, env);
   }
 }
@@ -4900,7 +4909,7 @@ class NativeCatalogSelectionCheckScript extends BundleScript {
     headlessStdioCommandRoots(this.repoRoot);
     proveHeadlessStdioCommandIsolation(this.repoRoot);
     await proveTrustedCompiledDependenciesFixture(this.repoRoot);
-    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/plugin-registry:native-catalog-selection-check", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     if (segments.includes("--oracle-only")) return;
     const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...exactCargoStageEnvironments(), groups: [
         {
@@ -5531,7 +5540,7 @@ class ExecutionTargetLeaseBrowserCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveExecutionTargetLeaseCorpus(this.repoRoot);
     proveExecutionTargetLeaseSource(this.repoRoot);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "long", "--run", "-t", "browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"], {
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "long", "--run", "-t", "browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"], {
       cwd: this.repoRoot,
       ...orchestratorBudgetOpts(),
     });
@@ -6244,7 +6253,7 @@ class BrowserDocumentOpenCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixture = await proveBrowserDocumentOpenFixture(this.repoRoot);
     await proveBrowserDocumentOpenRuntime(this.repoRoot, fixture);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "quick", "--run", "-t", "browser document open"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "quick", "--run", "-t", "browser document open"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCmd("bun", ["./📜️script.ts", "open-plan-server-check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("browser-document-open-check: neutral oracle, browser Worker D1 issue/exchange/WebSocket runtime, Session-gated activation, hostile bounds/cancellation/redaction, and current server laws passed");
   }
@@ -6310,7 +6319,7 @@ class SpacePublicBoundaryCheckScript extends BundleScript {
     });
     console.log(`space-public-boundary-laws: exact=${laws.length} laws=${laws.join(",")}`);
     for (const law of laws) runCargo([...target, law, "--", "--exact", "--test-threads=1"], this.root);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "quick", "--run", "-t", "DirectoryClient space public boundary"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "quick", "--run", "-t", "DirectoryClient space public boundary"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root);
     console.log("space-public-boundary-check: hostile neutral projection oracle, exact real REST/socket laws, TypeScript discriminator/unknown-field law, and hub all-feature check passed");
   }
@@ -7955,8 +7964,8 @@ export function trustedBootstrapSelectionFindingsV1(profileId: string, packages:
 /** 🛫️ [[trustedBootstrapSelectionFindingsV1]] over the selected packages' committed owner-root `🔣️.json` descriptors; throws every
  * finding at once. First step of `trusted-catalog-preflight` and `trusted-catalog-bootstrap`. */
 export function trustedBootstrapPreflightSelectionV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
-  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
-  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun nx run @semio-tech/plugin-registry:generate`);
+  const registryPath = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json");
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun repo run @semio-tech/plugin-registry:generate`);
   const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown }[];
   const packages = selection.map((spec) => {
     const row = registry.find((entry) => entry.pluginId === spec.pluginId);
@@ -7974,8 +7983,8 @@ export function trustedBootstrapPreflightSelectionV1(repoRoot: string, selection
  * dependency pins, every dependency inside the selected closure at that package's own version). A stale or malformed
  * declaration therefore surfaces before an hour of fresh release builds, and `describe` is the fix it names. */
 export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
-  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
-  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun nx run @semio-tech/plugin-registry:generate`);
+  const registryPath = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json");
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun repo run @semio-tech/plugin-registry:generate`);
   const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown }[];
   const claims = selection.map((spec) => {
     const row = registry.find((entry) => entry.pluginId === spec.pluginId);
@@ -7984,7 +7993,7 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
     try {
       return { spec, claims: trustedBootstrapDescriptorClaims(bytes) };
     } catch (error) {
-      throw new Error(`trusted catalog preflight: committed ${spec.pluginId} descriptor refused (${error instanceof Error ? error.message : String(error)}); fix the declaration, then bun nx run @semio-tech/${spec.pluginId}-plugin:describe`);
+      throw new Error(`trusted catalog preflight: committed ${spec.pluginId} descriptor refused (${error instanceof Error ? error.message : String(error)}); fix the declaration, then bun repo run @semio-tech/${spec.pluginId}-plugin:describe`);
     } finally {
       bytes.fill(0);
     }
@@ -8004,8 +8013,8 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
  * the actor build applies to the release component after its build (`browserActorImportAdmissionV1`). Every finding of every
  * component is reported at once, with the fix it needs. */
 export function trustedBootstrapPreflightComponentsV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
-  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
-  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun nx run @semio-tech/plugin-registry:generate`);
+  const registryPath = join(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json");
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun repo run @semio-tech/plugin-registry:generate`);
   const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; packageId?: unknown; packageName?: unknown; cratePath?: unknown; role?: unknown; extends?: unknown }[];
   const selected = new Set(selection.map((spec) => spec.pluginId));
   const rows = registry.filter((row) => (row.role === "plugin" && selected.has(String(row.pluginId))) || (row.role === "extension" && selected.has(String(row.extends))));
@@ -8014,7 +8023,7 @@ export function trustedBootstrapPreflightComponentsV1(repoRoot: string, selectio
   const findings: string[] = [];
   for (const row of rows) {
     if (typeof row.cratePath !== "string" || typeof row.packageName !== "string" || typeof row.packageId !== "string") { findings.push(`${String(row.pluginId)}: registry row carries no crate path, package name or package id`); continue; }
-    const pluginId = String(row.pluginId), fix = `run bun nx run workspace:release, then the crate's describe target`;
+    const pluginId = String(row.pluginId), fix = `run bun repo run workspace:release, then the crate's describe target`;
     const deliverable = componentDeliverableV1(join(repoRoot, row.cratePath), row.packageName, SHIPPED_COMPONENT_PROFILE);
     if (!existsSync(deliverable.wasm) || !existsSync(deliverable.receipt)) { findings.push(`${pluginId}: no shipped component with its receipt under ${relative(repoRoot, deliverable.directory)}; ${fix}`); continue; }
     const descriptor = trustedBootstrapReadRegular(join(repoRoot, row.cratePath, "..", "..", "🛂️.descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `committed ${pluginId} descriptor`, () => {});
@@ -12167,7 +12176,7 @@ async function startGisMapShellPeerV1(options: {
   if (
     !isAbsolute(options.artifactRoot) ||
     options.browserHost.artifactRoot !== realpathSync(options.artifactRoot) ||
-    options.browserHost.receipt.schema !== "semio.os.test-browser-host-staging/v1" ||
+    options.browserHost.receipt.schema !== "semio.s.test-browser-host-staging/v1" ||
     (creates === (existingDocumentId !== undefined)) ||
     (options.creation !== undefined && (!/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,255}$/u.test(options.creation.kindId) || options.creation.name.trim() !== options.creation.name || options.creation.name.length === 0 || [...options.creation.name].length > 128 || /[\u0000-\u001f\u007f]/u.test(options.creation.name))) ||
     options.credentialEnvelope.schema !== "semio.hub.local-credential-envelope/v1" ||
@@ -12873,7 +12882,7 @@ class GisMapProposalCheckScript extends BundleScript {
     if (mode === "--process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
       runCargo(["build", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], this.repoRoot, nativeEnv);
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
       await proveGisMapProposalProcess(this.invocation, this.repoRoot, this.root);
       console.log("gis-map-proposal-process-check: two real Author sockets and credential-FD MCP clients observed one exact paused owner-job cancellation, one later owner-private proposal, one peer-private denial boundary, one public approval, one owner-only durable undo with stale refusal and exact replay, four equal RebootstrapRequired controls, and four equal refreshed durable pairs; no external provider, Shell scene, WGPU render, or durable collaborative redo claim");
     }
@@ -12885,8 +12894,8 @@ class NativeDocumentOpenCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveDocumentOpenPlanFixture(this.repoRoot);
     proveNativeCredentialSourceOrder(this.repoRoot);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:check-frame-worker", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--skip-nx-cache", "--", "--scale"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-wgpu:check-frame-worker", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--skip-nx-cache", "--", "--scale"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runNativeDocumentAdmissionLaws(this.repoRoot);
     await proveNativeSocketGrantActor(this.repoRoot);
     console.log(
@@ -13116,11 +13125,11 @@ class DevScript extends BundleScript {
     const secureAdmin = secureSuite || segments[0] === "secure-admin";
     if (secureNative) {
       proveNativeCredentialSourceOrder(this.repoRoot);
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--", process.env.SEMIO_PLUGIN ?? "s"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--", process.env.SEMIO_PLUGIN ?? "s"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     }
     if (secureMcp) {
       proveMcpCredentialSourceOrder(this.repoRoot);
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-os-mcp-rs:build"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     }
     process.env.OS_HUB_CREDENTIAL_SIGN_IN = process.env.OS_HUB_CREDENTIAL_SIGN_IN ?? "1";
     process.env.OS_HUB_ADMIN_TOKEN = process.env.OS_HUB_ADMIN_TOKEN ?? "dev-local-hub-admin";
@@ -13231,9 +13240,9 @@ class SecureLocalSmokeScript extends BundleScript {
     await proveDocumentOpenPlanFixture(this.repoRoot);
     proveNativeCredentialSourceOrder(this.repoRoot);
     proveMcpCredentialSourceOrder(this.repoRoot);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:check-frame-worker", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--skip-nx-cache", "--", "--scale"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-wgpu:check-frame-worker", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-wgpu:native-build", "--skip-nx-cache", "--", "--scale"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runNativeDocumentAdmissionLaws(this.repoRoot);
     buildAdminSpa(this.repoRoot);
     runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
@@ -13248,7 +13257,7 @@ class SecureLocalSmokeScript extends BundleScript {
 class AdminRelayCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveAdminRelayBoundary(this.repoRoot);
-    runCmd("bun", ["nx", "run", "os-hub-admin:test", "--skip-nx-cache", "--", "long", "--run", "🛡️admin.test.tsx"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "os-hub-admin:test", "--skip-nx-cache", "--", "long", "--run", "🛡️admin.test.tsx"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     console.log("admin-relay-check: one-use fragment bootstrap, host-only HttpOnly strict cookie, expiry/replay/CSRF/raw-local denial, bearer redaction, and EN/DE UI laws passed");
   }
 }
@@ -13679,7 +13688,7 @@ class AdminBackendCheckScript extends BundleScript {
     console.log(`admin-backend-laws: ${[...laws, postgres].map((law) => law.name).join(",")}`);
     for (const law of laws) runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", ...law.target, law.name, "--", "--exact", "--test-threads=1"], this.root);
     await proveAdminRelayBoundary(this.repoRoot);
-    runCmd("bun", ["nx", "run", "os-hub-admin:test", "--skip-nx-cache", "--", "long", "--run", "🛡️admin.test.tsx"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "os-hub-admin:test", "--skip-nx-cache", "--", "long", "--run", "🛡️admin.test.tsx"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root);
     runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", ...postgres.target, postgres.name, "--", "--exact", "--test-threads=1"], this.root);
     console.log("admin-backend-check: closed intents, verified principal, durable audit, bounded snapshots, rebuild lifecycle, relay, and SPA laws passed");
@@ -15705,7 +15714,7 @@ class CheckInCheckScript extends BundleScript {
     if (phase === "process") {
       const nativeEnv = { ...process.env, RUST_MIN_STACK: "268435456" };
       runCargo(["build", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub", "--bin", "os-hub", "--no-default-features", "--features", "sqlite,native-artifact-execution"], this.repoRoot, nativeEnv);
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["repo", "run", "@semio-tech/framework-os-mcp-rs:build", "--skip-nx-cache"], { cwd: this.repoRoot, env: nativeEnv, ...orchestratorBudgetOpts() });
       await proveCheckInMcpProcess(this.repoRoot, this.root);
       console.log("check-in-process: real GIS Map ledger edit -> hub-materialized Check In -> credential-FD MCP scoped checkpoint resource passed");
     }
@@ -17594,6 +17603,7 @@ class DevCollaborationScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir)
+  .register("runtime-fixture-graph", RuntimeFixtureGraphScript)
   .register("setup", SetupScript)
   .register("hub-document-sweep", HubDocumentSweepScript)
   .register("io-matrix", HubIoMatrixScript)

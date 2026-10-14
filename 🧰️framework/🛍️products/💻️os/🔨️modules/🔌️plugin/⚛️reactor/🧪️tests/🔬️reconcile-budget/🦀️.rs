@@ -3,9 +3,15 @@ use super::*;
 
 #[test]
 fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     assert_eq!(reconcile_step_opportunities(512), 512);
     assert_eq!(reconcile_step_opportunities(15_640), RECONCILE_STEP_OPPORTUNITY_LIMIT as usize);
     assert_eq!(reconcile_step_opportunities(0), 1);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// ✅️ The task stage terminates on `cancel_instance_tasks_step`'s OWN witness, never on its
@@ -15,6 +21,8 @@ fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {
 /// in `✏️s/🔌️plugins/🌀️procedural/🧪️tests/🚪️close-ladder/🦀️.rs`, which links a non-test framework.
 #[test]
 fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_steps() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("closed finite original reactor fixture authority");
+    let mut cx=caller.context();
     let instance = 991u32;
     let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
     reserve_reactor_close(key).expect("fixed reactor close admission");
@@ -22,7 +30,7 @@ fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_st
     let mut steps = 0usize;
     loop {
         REACTOR_CLOSE_CURSOR.with(|cursor| cursor.set(ReactorCloseRegistry::index(instance)));
-        assert!(step_reactor_close().expect("one bounded reactor close opportunity"));
+        assert!(step_reactor_close(&mut cx).expect("one bounded reactor close opportunity"));
         steps += 1;
         if reactor_close_complete(key).expect("exact retained receipt") {
             break;
@@ -34,6 +42,7 @@ fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_st
     assert!(reserve_reactor_close(instance_lifetime::NativeCloseKey::fixture(instance, 2)).is_err(), "terminal receipt holds its exact slot until ACK");
     release_reactor_close(key).expect("final exact receipt release");
     assert!(reactor_close_complete(key).is_err(), "absence is not a terminal receipt");
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("same original reactor fixture caller closes with remaining fuel");
 }
 
 /// 🌍️ A world-3d scene the size the puzzle 3d editor publishes for the Nakagin Capsule Tower
@@ -64,7 +73,7 @@ fn nakagin_scale_world_scene() -> semio_framework_ui_scene::World3dScene {
 /// thread-local one, so the law can publish the same document twice and price its retirement two
 /// ways — and hands back the patch the turn would emit plus the reconcile turns it took at the
 /// production per-turn opportunity budget.
-fn publish_nakagin_world_patch(surface: &str) -> (ui_contract::UiPatch, usize, usize) {
+fn publish_nakagin_world_patch(surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> (ui_contract::UiPatch, usize, usize) {
     let node = crate::window_surface::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
     let tree = crate::window_surface::built_to_component_tree(node);
     let opportunities = reconcile_step_opportunities(50_000_000);
@@ -78,7 +87,7 @@ fn publish_nakagin_world_patch(surface: &str) -> (ui_contract::UiPatch, usize, u
             if !patches.has_publishable_work() {
                 break;
             }
-            patches.drive_one();
+            patches.drive_one(cx).expect("original patch fixture semantic step");
             steps += 1;
             if let Some(ready) = patches.take_ready_patch() {
                 owner = Some(ready);
@@ -96,7 +105,7 @@ fn publish_nakagin_world_patch(surface: &str) -> (ui_contract::UiPatch, usize, u
         while !published.close_step_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("published close").complete {}
     }
     for _ in 0..100_000 {
-        if patches.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT) {
+        if patches.close_step(cx).expect("original patch fixture close step") {
             break;
         }
     }
@@ -135,19 +144,25 @@ fn retirement_turns(patch: ui_contract::UiPatch, items_per_unit: usize, bytes_pe
 /// pins the pacing that made it necessary as still visibly expensive.
 #[test]
 fn a_nakagin_scale_world_publication_reconciles_and_retires_within_a_handful_of_reactor_turns() {
-    let (patch, reconcile_turns, reconcile_steps) = publish_nakagin_world_patch("1:puzzle3d-main-perspective");
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
+    let (patch, reconcile_turns, reconcile_steps) = publish_nakagin_world_patch("1:puzzle3d-main-perspective",cx);
     assert!(reconcile_turns <= 8, "the reconcile itself is cheap: {reconcile_turns} turns for {reconcile_steps} steps");
     let (granted_turns, granted_units) = retirement_turns(patch, PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_CLOSE_UNITS_PER_TURN);
-    let (dripped_turns, dripped_units) = retirement_turns(publish_nakagin_world_patch("2:puzzle3d-main-perspective").0, 1, 4_096, 8);
+    let (dripped_turns, dripped_units) = retirement_turns(publish_nakagin_world_patch("2:puzzle3d-main-perspective",cx).0, 1, 4_096, 8);
     assert!(dripped_units > 512, "this patch must be document-scaled for the bound below to mean anything; observed {dripped_units} retirement units");
     assert!(dripped_turns > 64, "the pre-W-S2 pacing is what this law guards against; it must stay visibly expensive, observed {dripped_turns} turns");
     assert!(granted_turns <= 8, "one world-3d publication must retire inside a handful of reactor turns; observed {granted_turns} turns over {granted_units} units against {dripped_turns} turns at one item per unit and 8 units per turn");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🌍️ Mounts one Nakagin-scale world surface on its OWN tracker and publishes it, leaving the
 /// tracker mounted so the caller can retire the surface owner through the terminal ladder — the
 /// retained half W-S2 measured only through the emitted patch.
-fn mount_and_publish_nakagin_world(surface: &str) -> (patches::PatchTracker, ui_contract::UiPatch) {
+fn mount_and_publish_nakagin_world(surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> (patches::PatchTracker, ui_contract::UiPatch) {
     let node = crate::window_surface::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
     let tree = crate::window_surface::built_to_component_tree(node);
     let tracker = patches::PatchTracker::new();
@@ -157,7 +172,7 @@ fn mount_and_publish_nakagin_world(surface: &str) -> (patches::PatchTracker, ui_
         if !tracker.has_publishable_work() {
             break;
         }
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(ready) = tracker.take_ready_patch() {
             owner = Some(ready);
             break;
@@ -181,9 +196,12 @@ fn mount_and_publish_nakagin_world(surface: &str) -> (patches::PatchTracker, ui_
 /// U5 §6b: its rows are ordinary `TableRow` built nodes, never a second retire arena of their own.
 #[test]
 fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_turns() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 3u32;
-    let (tracker, patch) = mount_and_publish_nakagin_world(&format!("{instance}:puzzle3d-main-perspective"));
+    let (tracker, patch) = mount_and_publish_nakagin_world(&format!("{instance}:puzzle3d-main-perspective"),cx);
     let mut world = ui_contract::UiPendingPatch::default();
     *world.source_mut().expect("writable payload") = Some(patch);
     let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
@@ -200,7 +218,7 @@ fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_t
             world_done = world.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).expect("world patch retirement").complete;
         }
         for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
-            if tracker.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT) {
+            if tracker.close_step(cx).expect("original patch fixture close step") {
                 break;
             }
         }
@@ -213,6 +231,9 @@ fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_t
     }
     tracker.release_close_instance(key).expect("final ACK releases close slot");
     assert!(turns < 10, "a world-3d turn must retire every ladder inside a single-digit number of reactor turns; observed {turns} turns");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🕹️ Wave B48 LAW: a surface whose publication the host has retired must become RE-RESERVABLE, so the
@@ -232,10 +253,13 @@ fn a_nakagin_scale_world_turn_retires_every_ladder_within_a_handful_of_reactor_t
 /// and it names the slot state in its own failure message so a red run says WHICH family held it.
 #[test]
 fn a_retired_surface_publication_leaves_its_slot_reservable_for_the_next_dirty_render() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 11u32;
     let surface = format!("{instance}:puzzle3d-main-perspective");
-    let (tracker, patch) = mount_and_publish_nakagin_world(&surface);
+    let (tracker, patch) = mount_and_publish_nakagin_world(&surface,cx);
     let (_turns, _units) = retirement_turns(patch, PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_CLOSE_UNITS_PER_TURN);
     let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
     let id = ui_contract::SurfaceId::try_from(surface.clone()).expect("fixture surface id");
@@ -246,12 +270,15 @@ fn a_retired_surface_publication_leaves_its_slot_reservable_for_the_next_dirty_r
             Err(_refused) => {
                 assert!(steps < 1_000_000, "a published-and-retired world surface never became reservable again after {steps} reconcile steps, so every later dirty render of it would be deferred forever: {}", tracker.debug_state());
                 steps += 1;
-                tracker.drive_one();
-                tracker.close_step(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT);
+                tracker.drive_one(cx).expect("original patch fixture semantic step");
+                tracker.close_step(cx).expect("original patch fixture close step");
                 let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one();
             }
         }
     };
     grant.cancel();
     assert!(tracker.reserve_mounted(id, key).is_ok(), "a cancelled reservation releases the slot for the render that follows it: {}", tracker.debug_state());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }

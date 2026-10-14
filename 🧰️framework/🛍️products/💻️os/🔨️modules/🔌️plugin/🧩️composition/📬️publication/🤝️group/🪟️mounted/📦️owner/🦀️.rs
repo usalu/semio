@@ -21,13 +21,11 @@ pub(crate) struct MountedPrivateChildGroup<M:SpaceMember+MemberFactory> {
     pub(crate) phase:u8,
     pub(crate) captured_millis:i64,
     pub(crate) expires_at_us:u64,
-    pub(crate) open_sequence:u64,
-    pub(crate) context:Option<semio_framework_job::StepContextOwner>,
     pub(crate) closing:bool,
 }
 
 impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
-    pub(crate) fn new(captured_millis:i64,expires_at_us:u64)->Self{Self{identity:MountedChildGroupIdentityIssuer::new(),parent_issuer:MountedArtifactHandleIssuer::new(),parent_issuer_closed:false,parent_handle:None,parent_touched:false,group_id:ManuallyDrop::new(None),parent_batch:ManuallyDrop::new(None),publication:ManuallyDrop::new(None),receipts:ManuallyDrop::new(None),command:None,append:None,output:ManuallyDrop::new(None),record:ManuallyDrop::new(None),record_close_field:0,displaced_shell_redo:ManuallyDrop::new(Vec::new()),phase:0,captured_millis,expires_at_us,open_sequence:0,context:None,closing:false}}
+    pub(crate) fn new(captured_millis:i64,expires_at_us:u64)->Self{Self{identity:MountedChildGroupIdentityIssuer::new(),parent_issuer:MountedArtifactHandleIssuer::new(),parent_issuer_closed:false,parent_handle:None,parent_touched:false,group_id:ManuallyDrop::new(None),parent_batch:ManuallyDrop::new(None),publication:ManuallyDrop::new(None),receipts:ManuallyDrop::new(None),command:None,append:None,output:ManuallyDrop::new(None),record:ManuallyDrop::new(None),displaced_shell_redo:ManuallyDrop::new(Vec::new()),record_close_field:0,phase:0,captured_millis,expires_at_us,closing:false}}
     pub(crate) fn frame_birth_bytes()->usize{size_of::<Self>()}
     pub(crate) fn retirement_demands(&self, maximum_body_bytes: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
@@ -47,41 +45,31 @@ impl<M:SpaceMember+MemberFactory> MountedPrivateChildGroup<M> {
         if let Some(command) = self.command.as_ref() { return Ok(release(command.next_close_byte_demand(), 2)); }
         if let Some(receipts) = self.receipts.as_ref() { return if receipts.terminal_is_empty() { Ok(release(MountedGroupMemberReceipts::frame_birth_bytes(), 1)) } else { nested(receipts.retirement_demands()?, 2) }; }
         if let Some(group) = self.publication.as_ref() { return nested(group.retirement_demands(maximum_body_bytes)?, 1); }
-        if let Some(context) = self.context.as_ref() {
-            return nested(RetirementDemand { copy_bytes: context.next_close_copy_byte_demand()?, capacity_bytes: context.next_close_capacity_byte_demand(maximum_body_bytes)?, release_bytes: context.next_close_release_byte_demand()?, depth: context.next_close_depth_demand()? }, 1);
-        }
         if let Some(batch) = self.parent_batch.as_ref() { return nested(batch.next_demands(maximum_body_bytes)?, 1); }
         if let Some(id) = self.group_id.as_ref() { return Ok(release(id.capacity(), 1)); }
         if !self.identity.terminal_is_empty() { return Ok(release(self.identity.next_close_byte_demand(), 2)); }
         Ok(release(0, 2))
     }
-    pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.record.is_none()&&self.displaced_shell_redo.capacity()==0&&self.append.is_none()&&self.command.is_none()&&self.receipts.is_none()&&self.publication.is_none()&&self.context.is_none()&&self.parent_batch.is_none()&&self.group_id.is_none()&&self.identity.terminal_is_empty()&&self.parent_issuer_closed}
-    pub(crate) fn close_step(&mut self,parent:&mut impl SpaceMember,registry:&mut ChildMemberRegistry<M>,graph:&mut store::os_store::composition_coordinator::CompositionGraph,live:&ChildContentView,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,Fault>{
+    pub(crate) fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.record.is_none()&&self.displaced_shell_redo.capacity()==0&&self.append.is_none()&&self.command.is_none()&&self.receipts.is_none()&&self.publication.is_none()&&self.parent_batch.is_none()&&self.group_id.is_none()&&self.identity.terminal_is_empty()&&self.parent_issuer_closed}
+    pub(crate) fn close_step(&mut self,parent:&mut impl SpaceMember,registry:&mut ChildMemberRegistry<M>,graph:&mut store::os_store::composition_coordinator::CompositionGraph,live:&ChildContentView,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,crate::PluginLifecycleFailure>{
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
         use semio_framework_job::InteractiveJobCloseStep;
         let pending=|step:RetainedCloneStep| InteractiveJobCloseStep::Pending{progress:step.progress()};
         if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()});}
-        let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
+        let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if !plugin_grant_funds(demand, grant){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()});}
         let bytes=demand.release_bytes;
         let child_grant=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         self.closing=true;
         if self.output.is_some(){return Ok(pending(self.receipts.as_mut().and_then(|receipts|receipts.final_receipt_mut()).expect("transferred output retains its exact empty receipt owner").retain_output(&mut self.output,child_grant)));}
-        if let Some(record)=self.record.as_mut(){if self.record_close_field==8{self.record.take();}else if PagedCommandLog::record_close_one(record,self.record_close_field,child_grant.maximum_release_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?{self.record_close_field+=1;}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}});}
+        if let Some(record)=self.record.as_mut(){if self.record_close_field==8{self.record.take();}else if PagedCommandLog::record_close_one(record,self.record_close_field,child_grant.maximum_release_bytes)?{self.record_close_field+=1;}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}});}
         if let Some(replay)=self.displaced_shell_redo.last_mut(){if replay.redo.action_id.capacity()!=0{drop(std::mem::take(&mut replay.redo.action_id));}else if let Some(value)=replay.redo.args.as_mut(){if matches!(value,DslValue::Null){replay.redo.args.take();}else{PagedCommandLog::value_close_one(value);}}else{self.displaced_shell_redo.pop();}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}});}
         if self.displaced_shell_redo.capacity()!=0{drop(std::mem::take(&mut*self.displaced_shell_redo));return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}});}
         if let Some(append)=self.append.as_mut(){let step=append.close_step(child_grant);self.append=None;return Ok(pending(step));}
         if let Some(command)=self.command.as_mut(){let step=command.close_step(child_grant);if command.terminal_is_empty(){self.command=None;}return Ok(pending(step));}
-        if let Some(receipts)=self.receipts.as_mut(){if !receipts.terminal_is_empty(){return receipts.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..child_grant }).map(pending).map_err(|error|plugin_sdk_fault(error.to_string()));}drop(self.receipts.take());return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}});}
-        if let Some(group)=self.publication.as_mut(){let step=group.close_step(parent,registry,graph,live,child_grant)?;if group.terminal_is_empty(){self.publication.take();}return Ok(pending(step));}
-        if let Some(context)=self.context.as_mut(){
-            let step=context.close_step(child_grant).admit(child_grant,context.terminal_is_empty());
-            return Ok(match step{
-                InteractiveJobCloseStep::Complete{progress}=>{self.context=None;InteractiveJobCloseStep::Pending{progress}},
-                step=>step,
-            });
-        }
-        if let Some(batch)=self.parent_batch.as_mut(){let step=batch.close_granted(child_grant).map_err(|error|plugin_sdk_fault(error.to_string()))?;if batch.terminal_is_empty(){self.parent_batch.take();}return Ok(pending(step));}
+        if let Some(receipts)=self.receipts.as_mut(){if !receipts.terminal_is_empty(){return receipts.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 2, ..child_grant }).map(pending).map_err(Into::into);}drop(self.receipts.take());return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}});}
+        if let Some(group)=self.publication.as_mut(){let step=group.close_step(parent,registry,graph,live,cx,child_grant)?;if group.terminal_is_empty(){self.publication.take();}return Ok(pending(step));}
+        if let Some(batch)=self.parent_batch.as_mut(){let step=batch.close_granted(child_grant)?;if batch.terminal_is_empty(){self.parent_batch.take();}return Ok(pending(step));}
         if self.group_id.is_some(){drop(self.group_id.take());return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}});}
         if !self.identity.terminal_is_empty(){return Ok(pending(self.identity.close_granted(child_grant)));}
         if !self.parent_issuer_closed{let step=self.parent_issuer.close_step(child_grant);self.parent_issuer_closed=true;return Ok(pending(step));}

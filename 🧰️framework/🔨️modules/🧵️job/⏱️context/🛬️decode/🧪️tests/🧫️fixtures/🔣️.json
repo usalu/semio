@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "contract": "framework.job.original-native-decode-source",
+  "sourceOperation": 17,
+  "sourceGeneration": 9,
+  "declaredMaximumBytes": 128,
+  "sameSourceLoan": true,
+  "sameForwardedLedger": true,
+  "sameRecipient": true,
+  "allocationReservationIsPhysicalBirth": false,
+  "producerReturnsActualGrant": true,
+  "producerReturnsPhysicalProgress": true,
+  "producerReturnsRawWork": true,
+  "preservesOutcomeOnReceivingRefusal": true,
+  "closeReturnsSourceLast": true,
+  "rows": [
+    {
+      "kind": "denied",
+      "reservation": 64,
+      "actualCapacity": 0,
+      "copy": 0,
+      "release": 0,
+      "work": 0
+    },
+    {
+      "kind": "admitted",
+      "reservation": 64,
+      "actualCapacity": 64,
+      "copy": 0,
+      "release": 0,
+      "work": 1
+    },
+    {
+      "kind": "copy",
+      "reservation": 0,
+      "actualCapacity": 0,
+      "copy": 3,
+      "release": 0,
+      "work": 1
+    },
+    {
+      "kind": "close",
+      "reservation": 0,
+      "actualCapacity": 0,
+      "copy": 0,
+      "release": 64,
+      "work": 1
+    }
+  ],
+  "closeUsesOriginalLoanAfterCancellation": true
+}

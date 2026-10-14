@@ -151,9 +151,9 @@ pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow:
             let value = if value.schema() == Some("list") { value.get(&target.index.to_string()).and_then(|value| value.as_dictionary()).ok_or("The selected geometry list item no longer exists")? } else if target.index == 0 { value } else { return Err("The selected geometry list item no longer exists".into()); };
             let handle = value.get("handle").and_then(|value| value.as_atom()).and_then(|value| value.as_str()).ok_or("The selected geometry has no analytic source")?;
             if handle != source.handle { return Err("The selected geometry has changed; select its current components".into()); }
-            let pack = session.preview_mesh_pack(handle).and_then(super::decode_preview_mesh_pack).ok_or("The selected geometry preview is not current")?;
+            let mesh = session.preview_mesh(handle).ok_or("The selected geometry preview is not current")?;
             let revision = revision.ok_or("The selected analytic edit has no authoring revision")?.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-            validate_analytic_source(ids, &revision, handle, &pack.component_references)?;
+            validate_analytic_source(ids, &revision, handle, &mesh.component_references)?;
             return Ok(());
         }
         let mut widget = target.widget;

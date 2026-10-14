@@ -677,7 +677,7 @@ export async function reportActivationFreshness(receipt: ActivationReceipt, opti
       installedPackageHash,
     }
   }, options.signal);
-  return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun nx run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
+  return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun repo run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
 }
 
 

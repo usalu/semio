@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"urn:semio:rust-runtime-direction:portable-law",
+  "type":"object","additionalProperties":false,"required":["schemaVersion","roots","rules","cases","physicalCases"],
+  "properties":{
+    "schemaVersion":{"const":1},
+    "roots":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
+    "rules":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["name","severity","from","to","oracle"],"properties":{"name":{"type":"string","minLength":1},"severity":{"const":"error"},"from":{"$ref":"#/definitions/selector"},"to":{"$ref":"#/definitions/selector"},"oracle":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"type":"string","minLength":1},"to":{"type":"string","minLength":1}}}}}},
+    "cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","from","source","expectedRules"],"properties":{"id":{"type":"string","minLength":1},"from":{"type":"string","minLength":1},"source":{"type":"string"},"expectedRules":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}}}}},
+    "physicalCases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","source","value","removeSpecific","violations"],"properties":{"id":{"type":"string","minLength":1},"source":{"type":"string","minLength":1},"value":{"type":"string","minLength":1},"removeSpecific":{"type":"boolean"},"violations":{"type":"integer","minimum":0}}}}
+  },
+  "definitions":{"selector":{"type":"object","additionalProperties":false,"required":["path"],"properties":{"path":{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},"pathNot":{"type":"array","items":{"type":"string","minLength":1}}}}}
+}

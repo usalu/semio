@@ -6,7 +6,7 @@ import fixture from"./🧫️fixtures/🔣️.json";
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import type * as schema from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as owner from"../🟦️.ts";
-import {binary64} from "../../../../../../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase,sqliteOperation,type SqliteDatabase}from"../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import type{ArtifactSqliteOptions}from"../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 type Snapshot=schema.RunSnapshot;

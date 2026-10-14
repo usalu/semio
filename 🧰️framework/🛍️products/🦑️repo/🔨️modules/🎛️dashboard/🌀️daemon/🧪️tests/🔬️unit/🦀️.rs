@@ -408,7 +408,7 @@ fn sessions_alive_when_no_daemon_runs_were_interrupted() {
 
 // #region 🔖️Launch
 fn process(command_id: &str, ready: Option<Ready>) -> LaunchProcess {
-    LaunchProcess { command_id: command_id.into(), cmd: "bun".into(), args: vec!["nx".into(), "run".into(), command_id.into()], cwd: PathBuf::from("."), env: vec![("A".into(), "1".into())], label: TaskLabel { verb: "dev".into(), owner: vec!["pkg".into()], subject: command_id.into(), qualifier: String::new(), parameters: vec![], members: 0 }, ready, long_running: true }
+    LaunchProcess { command_id: command_id.into(), cmd: "bun".into(), args: vec!["repo".into(), "run".into(), command_id.into()], cwd: PathBuf::from("."), env: vec![("A".into(), "1".into())], label: TaskLabel { verb: "dev".into(), owner: vec!["pkg".into()], subject: command_id.into(), qualifier: String::new(), parameters: vec![], members: 0 }, ready, long_running: true }
 }
 
 fn launch(command_id: &str, processes: Vec<LaunchProcess>, requires: Vec<Launch>, group: Option<&str>, stop: Stop) -> Launch {
@@ -522,14 +522,14 @@ fn a_queue_refuses_frames_beyond_its_limit_without_losing_count() {
 }
 #[test]
 fn a_task_starts_in_the_environment_of_the_client_with_a_terminal() {
-    let client = vec![("PATH".to_string(), "/client/bin".to_string()), ("TERM".to_string(), "dumb".to_string()), ("NX_INVOCATION_ROOT_PID".to_string(), "1".to_string()), ("TOKEN".to_string(), "t".to_string())];
+    let client = vec![("PATH".to_string(), "/client/bin".to_string()), ("TERM".to_string(), "dumb".to_string()), ("SEMIO_BUILD_INVOCATION_PID".to_string(), "1".to_string()), ("TOKEN".to_string(), "t".to_string())];
     let env = supervisor::child_environment(&client, &[("TOKEN".into(), "declared".into())]);
     let value = |name: &str| env.iter().find(|(key, _)| key == name).map(|(_, value)| value.as_str());
     assert_eq!(value("PATH"), Some("/client/bin"));
     assert_eq!(value("TOKEN"), Some("declared"), "the command's declared environment wins over the client's");
     assert_eq!(value("TERM"), Some("xterm-256color"));
     assert_eq!(value("COLORTERM"), Some("truecolor"));
-    assert_eq!(value("NX_INVOCATION_ROOT_PID"), None);
+    assert_eq!(value("SEMIO_BUILD_INVOCATION_PID"), None);
     let stated = supervisor::child_environment(&client, &[("TERM".into(), "vt100".into())]);
     assert_eq!(stated.iter().find(|(key, _)| key == "TERM").map(|(_, value)| value.as_str()), Some("vt100"));
 }

@@ -10,7 +10,7 @@
 //!
 //! [`schema_mirror_document`] projects the whole registry into the committed draft-07 document
 //! `🧬️schema/🔣️.json`, from which `🧬️schema/🟦️.ts` is generated
-//! (`bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`, whose emitter is `semio-os-mcp
+//! (`bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`, whose emitter is `semio-os-mcp
 //! schemas`). `GatewayError` is re-exported from `crate::errors` rather than redefined here — one
 //! type, one owning facet.
 
@@ -337,7 +337,7 @@ pub fn capabilities_search_input_schema() -> serde_json::Value {
 
 /// 📐️ MCP's `tools/list` requires an `outputSchema` (when present) to describe a JSON OBJECT at the
 /// top level — a bare `type:"array"` fails the SDK client's own Zod validation of the `Tool` shape
-/// (caught live running `bun nx run @semio-tech/framework-os-mcp:test -- quick`, not read off the spec).
+/// (caught live running `bun repo run @semio-tech/framework-os-mcp:test -- quick`, not read off the spec).
 /// The hits themselves are therefore wrapped under a `results` property.
 pub fn capabilities_search_output_shape() -> serde_json::Value {
     serde_json::json!({ "type": "object", "properties": { "results": { "type": "array" }, "total": { "type": "integer" }, "nextCursor": { "type": ["string", "null"] } } })
@@ -1197,7 +1197,7 @@ pub fn hub_inference_approval_request_schema() -> serde_json::Value {
 //#region 🔖️SchemaCatalog
 /// 📋️ `(ExportId, JSON Schema document)` for every schema the `os.mcp` scope owns — the ONE
 /// registry every facet reads from and the normative source `🧬️schema/🔣️.json` (draft-07) and
-/// `🧬️schema/🟦️.ts` are generated from (`bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`).
+/// `🧬️schema/🟦️.ts` are generated from (`bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`).
 /// Three families, one catalogue:
 ///
 /// 1. **gateway wire types** — `schemars`-derived from the structs above (`RevisionStamp` …
@@ -1293,7 +1293,7 @@ pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
 
 /// 🪞️ The whole `os.mcp` scope as ONE draft-07 document — the exact bytes
 /// `🧬️schema/🔣️.json` carries, emitted by `semio-os-mcp schemas` and written by
-/// `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`.
+/// `bun repo run @semio-tech/framework-os-mcp-rs:schema-mirror`.
 ///
 /// Three real conversions turn [`schemas`]'s wire documents into `$defs` entries, none of them a
 /// relabelling: the per-entry dialect/`$id` header is dropped (a `$defs` member may declare
@@ -1413,7 +1413,7 @@ fn repoint_definition_refs(value: &mut serde_json::Value) {
 /// (`PreparedActionReport.preview`'s free-form `serde_json::Value` field otherwise emits a bare
 /// boolean sub-schema, which the MCP SDK's Zod model rejects outright: `$ZodError` at
 /// `tools[2].outputSchema.properties.preview`, caught live by
-/// `bun nx run @semio-tech/framework-os-mcp:test -- quick`).
+/// `bun repo run @semio-tech/framework-os-mcp:test -- quick`).
 pub fn tool_output_schema(export_id: &str) -> serde_json::Value {
     schemas().into_iter().find(|(name, _)| *name == export_id).map(|(_, schema)| schema).unwrap_or_else(|| panic!("{export_id} is not an os.mcp schema export"))
 }

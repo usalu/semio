@@ -59,7 +59,10 @@ pub use worker_wake_retirement::admit_original_thread_worker_wake;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 #[path="⚠️failure/🦀️.rs"]
 mod original_turn_failure;
-pub use original_turn_failure::{OriginalTurnFailure,OriginalTurnPrimary};
+pub use original_turn_failure::{OriginalTurnFailure,OriginalTurnPrimary,OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand,project_original_turn_failure,key_original_turn_failure,project_original_value_error,key_original_value_error,project_original_fault,key_original_fault};
+#[path="⏱️context/🛬️decode/🦀️.rs"]
+mod original_native_decode_source;
+pub use original_native_decode_source::{OriginalNativeDecodePolicy,OriginalNativeDecodeIssued,OriginalNativeDecodeOutcome,OriginalNativeDecodeSource};
 #[path="♻️retirement/🎟️context/🦀️.rs"]
 mod original_close_context;
 pub use original_close_context::close_original_retained_step;
@@ -923,8 +926,15 @@ enum StepCancelReference<'a>{Owned(CancelToken),Borrowed(&'a CancelToken)}
 impl std::ops::Deref for StepCancelReference<'_>{type Target=CancelToken;fn deref(&self)->&Self::Target{match self{Self::Owned(original)=>original,Self::Borrowed(original)=>original}}}
 #[path="⏱️context/📸️capture/🦀️.rs"]
 mod original_caller_capture;
-pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn,OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan};
+pub use original_caller_capture::{OriginalCallerCapture,CapturedOriginalCaller,OriginalCallerIssuer,OriginalCallerTurn,OriginalCallerCloseReturn,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn};
 //#endregion 📄️RetainedPayload
+
+#[path="⏱️context/📦️return/🪶️weak/🦀️.rs"]
+mod original_native_weak_return;
+
+#[path="⏱️context/⏸️park/🦀️.rs"]
+mod original_owned_caller_turn;
+pub use original_owned_caller_turn::{OriginalOwnedCallerTurn,OriginalOwnedCallerReturn,OriginalOwnedCallerOutcome};
 
 //#region 🧭️StepContext
 /// 🧭️ Everything one [`InteractiveJob::step`] call needs: identity ([`OperationId`]/[`Generation`]),
@@ -938,6 +948,7 @@ pub struct StepContext<'a> {
     operation: OperationId,
     generation: Generation,
     fuel_remaining: u64,
+    work_units_spent:u128,
     deadline_us: u64,
     now_us: fn() -> Option<u64>,
     clock: std::cell::Cell<ClockStride>,
@@ -945,21 +956,28 @@ pub struct StepContext<'a> {
     stage: &'static str,
     preview_sequence: &'a mut u64,
     payload_ledger: JobPayloadLedgerReference<'a>,
+    source_parent: Option<&'a OriginalCallerSourceParent>,
+    native_weak_parent:Option<original_native_weak_return::OriginalNativeWeakParent>,
+    source_epoch: Option<u64>,
     payload_page_granted: bool,
     retained_work: retained_work::RetainedWorkBudget,
 }
 
-struct OriginalRetainedLoanIdentity{recipient:usize,cursor:usize,ledger:usize,operation:OperationId,generation:Generation,clock:fn()->Option<u64>,deadline:u64}
+#[derive(Clone,Copy)]
+struct OriginalRetainedLoanIdentity{parent:Option<usize>,recipient:usize,cursor:usize,ledger:usize,operation:OperationId,generation:Generation,clock:fn()->Option<u64>,deadline:u64}
 impl OriginalRetainedLoanIdentity{
- fn capture(cx:&StepContext<'_>)->Self{Self{recipient:cx.retained_progress as*const _ as usize,cursor:cx.preview_sequence as*const _ as usize,ledger:Arc::as_ptr(&cx.payload_ledger)as usize,operation:cx.operation,generation:cx.generation,clock:cx.now_us,deadline:cx.deadline_us}}
- fn matches(&self,cx:&StepContext<'_>)->bool{self.recipient==cx.retained_progress as*const _ as usize&&self.cursor==cx.preview_sequence as*const _ as usize&&self.ledger==Arc::as_ptr(&cx.payload_ledger)as usize&&self.operation==cx.operation&&self.generation==cx.generation&&std::ptr::fn_addr_eq(self.clock,cx.now_us)&&self.deadline==cx.deadline_us}
+ fn capture(cx:&StepContext<'_>)->Self{Self{parent:cx.source_parent.map(|parent|parent as*const _ as usize),recipient:cx.retained_progress as*const _ as usize,cursor:cx.preview_sequence as*const _ as usize,ledger:Arc::as_ptr(&cx.payload_ledger)as usize,operation:cx.operation,generation:cx.generation,clock:cx.now_us,deadline:cx.deadline_us}}
+ fn matches(&self,cx:&StepContext<'_>)->bool{self.parent==cx.source_parent.map(|parent|parent as*const _ as usize)&&self.recipient==cx.retained_progress as*const _ as usize&&self.cursor==cx.preview_sequence as*const _ as usize&&self.ledger==Arc::as_ptr(&cx.payload_ledger)as usize&&self.operation==cx.operation&&self.generation==cx.generation&&std::ptr::fn_addr_eq(self.clock,cx.now_us)&&self.deadline==cx.deadline_us}
 }
 struct OriginalRetainedLoan<'a>{target:*mut StepContext<'a>,original:RetainedCloneGrant,identity:OriginalRetainedLoanIdentity}
 impl OriginalRetainedLoan<'_>{fn matches_original(&self)->bool{unsafe{self.identity.matches(&*self.target)}}}
 impl Drop for OriginalRetainedLoan<'_>{fn drop(&mut self){if self.matches_original(){unsafe{(*self.target).retained=self.original}}}}
+struct OriginalWorkLoan<'a>{target:*mut StepContext<'a>,fuel:u64,deadline:u64,issued:u64,spent:u128,cancel:usize,identity:OriginalRetainedLoanIdentity}
+impl OriginalWorkLoan<'_>{fn matches_original(&self)->bool{let cx=unsafe{&*self.target};self.identity.matches(cx)&&self.cancel==cx.original_cancel_token()as*const CancelToken as usize&&cx.work_units_spent>=self.spent&&cx.fuel_remaining<=self.issued}}
+impl Drop for OriginalWorkLoan<'_>{fn drop(&mut self){if self.matches_original(){let cx=unsafe{&mut*self.target};let spent=cx.work_units_spent-self.spent;cx.fuel_remaining=self.fuel.saturating_sub(u64::try_from(spent).unwrap_or(u64::MAX));cx.deadline_us=self.deadline;}}}
 
 impl<'a> StepContext<'a> {
-    fn with_original_worker_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,payload_ledger:&'a Arc<JobPayloadOperationLedger>)->Result<Self,ValueError>{if payload_ledger.operation!=operation||payload_ledger.generation!=generation||!retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker context requires its original admitted identity ledger and recipient"))}Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(clock),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::OriginalWorker(payload_ledger),payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})}
+    fn with_original_worker_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,payload_ledger:&'a Arc<JobPayloadOperationLedger>)->Result<Self,ValueError>{if payload_ledger.operation!=operation||payload_ledger.generation!=generation||!retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker context requires its original admitted identity ledger and recipient"))}Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,work_units_spent:0,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(clock),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::OriginalWorker(payload_ledger),source_parent:None,native_weak_parent:None,source_epoch:None,payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})}
     pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64,retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
         StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)),retained_progress)
     }
@@ -969,7 +987,8 @@ impl<'a> StepContext<'a> {
         assert_eq!(payload_ledger.operation, operation, "job payload ledger operation must match its step context");
         assert_eq!(payload_ledger.generation, generation, "job payload ledger generation must match its step context");
         assert!(retained_progress.fits(budget.retained),"original job recipient exceeds its incoming retained grant");
-        StepContext { retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), payload_page_granted: false, retained_work: retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK) }
+        StepContext { retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel,
+            work_units_spent:0, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), source_parent:None,native_weak_parent:None,source_epoch:None, payload_page_granted: false, retained_work: retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK) }
     }
 
     /// 🤝️ Borrows the original paid ledger and cancellation while preserving the caller's exact recipient.
@@ -977,7 +996,7 @@ impl<'a> StepContext<'a> {
         let Some(original)=authority.original()else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority has already closed"))};
         if original.operation!=operation||original.generation!=generation{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority identity does not match caller turn"))}
         if !retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job recipient exceeds incoming retained grant"))}
-        Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(ClockStride::new()),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::Borrowed(authority),payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})
+        Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,work_units_spent:0,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(ClockStride::new()),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::Borrowed(authority),source_parent:None,native_weak_parent:None,source_epoch:None,payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})
     }
 
     /// 🎟️ Preserves the original caller depth and independently unspent physical credits.
@@ -992,6 +1011,16 @@ impl<'a> StepContext<'a> {
         if restore.matches_original(){return result}
         let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original retained loan callback replaced its initiating context");
         Err(match result{Ok(_)=>{let mut failure=OriginalTurnFailure::from(refusal());failure.context_refusal=Some(refusal());failure},Err(mut failure)=>{if failure.context_refusal.is_none(){failure.context_refusal=Some(refusal())}failure}})
+    }
+    /// ⏳️ Narrows actual CPU and absolute deadline on the same original context, preserving clock observations and charging actual child work even through unwind.
+    pub fn with_original_work_loan<R:Copy>(&mut self,requested_fuel:u64,absolute_deadline_us:u64,run:impl FnOnce(&mut Self)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
+        self.with_retained_loan(self.retained_grant(),|cx|{
+            let fuel=cx.fuel_remaining;let deadline=cx.deadline_us;let issued=requested_fuel.min(fuel);cx.fuel_remaining=issued;cx.deadline_us=absolute_deadline_us.min(deadline);
+            let restore=OriginalWorkLoan{target:std::ptr::addr_of_mut!(*cx),fuel,deadline,issued,spent:cx.work_units_spent,cancel:cx.original_cancel_token()as*const CancelToken as usize,identity:OriginalRetainedLoanIdentity::capture(cx)};let result=run(cx);
+            if restore.matches_original(){return result}
+            let refusal=||ValueError::literal(ValueRefusalKind::InvariantViolated,"original work loan callback replaced its initiating context or refilled its work");
+            Err(match result{Ok(_)=>{let mut failure=OriginalTurnFailure::from(refusal());failure.context_refusal=Some(refusal());failure},Err(mut failure)=>{if failure.context_refusal.is_none(){failure.context_refusal=Some(refusal())}failure}})
+        })
     }
     /// 🧾️ Records actual child effects in the external recipient before refusing exceeded authority.
     pub fn consume_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{
@@ -1008,6 +1037,16 @@ impl<'a> StepContext<'a> {
     /// 🕰️ Borrows the caller's original clock source for a retained child authority.
     pub fn clock_source(&self)->fn()->Option<u64>{self.now_us}
 
+    /// 🎟️ Reads the original supplied source turn without deriving it from trace sequences.
+    pub fn original_source_epoch(&self)->Option<u64>{self.source_epoch}
+
+    /// 🪪️ The genuine parent issuer binds one input epoch before children borrow this context.
+    pub fn bind_original_source_epoch(&mut self,epoch:u64)->Result<(),ValueError>{
+        self.original_source_parent()?;
+        if epoch==0||self.source_epoch.is_some_and(|original|original!=epoch){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original source epoch cannot be absent or rebound"))}
+        self.source_epoch=Some(epoch);Ok(())
+    }
+
     pub fn operation(&self) -> OperationId {
         self.operation
     }
@@ -1021,6 +1060,9 @@ impl<'a> StepContext<'a> {
 
     /// 🛑️ Borrows the admitted external cancellation for native controls without an alias or context replacement.
     pub fn borrowed_original_cancel_token(&self)->Result<&'a CancelToken,ValueError>{match &self.cancel{StepCancelReference::Borrowed(original)=>Ok(*original),StepCancelReference::Owned(_)=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native job controls require an original borrowed cancellation witness"))}}
+
+    /// 🏡️ Borrows the genuine supplier parent for its source lifetime without creating another strong loan.
+    pub fn original_source_parent(&self)->Result<&'a OriginalCallerSourceParent,ValueError>{self.source_parent.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original caller has no parent source supplier"))}
 
     /// 📸️ Borrows the genuine external ledger and cancellation roots without creating authority.
     fn borrowed_original_caller_source(&self)->Result<original_caller_capture::OriginalCallerSource<'a>,ValueError>{let ledger=match &self.payload_ledger{JobPayloadLedgerReference::OriginalWorker(original)=>*original,JobPayloadLedgerReference::Borrowed(authority)=>authority.original().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original caller ledger has already closed"))?,JobPayloadLedgerReference::Owned(_)=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"caller capture requires its admitted borrowed original ledger"))};Ok(original_caller_capture::OriginalCallerSource{ledger,cancel:self.borrowed_original_cancel_token()?,operation:self.operation,generation:self.generation,clock:self.now_us,deadline:self.deadline_us})}
@@ -1061,6 +1103,8 @@ impl<'a> StepContext<'a> {
         self.now_us().is_none_or(|now_us| now_us >= self.deadline_us)
     }
 
+    /// 🧾️ Raw work remains visible even when a returned guest exceeds the caller's finite wallet.
+    pub fn original_work_units_spent(&self)->u128{self.work_units_spent}
     pub fn fuel_remaining(&self) -> u64 {
         self.fuel_remaining
     }
@@ -1068,7 +1112,7 @@ impl<'a> StepContext<'a> {
     /// ⛽️ Decrements the remaining fuel by `units`, saturating at zero — a job calls this after doing
     /// `units` worth of its own work, never before.
     pub fn consume_fuel(&mut self, units: u64) {
-        self.fuel_remaining = self.fuel_remaining.saturating_sub(units);
+        self.work_units_spent+=u128::from(units);self.fuel_remaining = self.fuel_remaining.saturating_sub(units);
     }
 
     pub fn fuel_exhausted(&self) -> bool {
@@ -1182,6 +1226,10 @@ impl ClockStride {
     /// 🏁️ Begins a step at `start_us`, the reading its driver made at entry: the step's first
     /// `stride - 1` reads answer it, and the calibrated stride is kept.
     pub fn begin(&mut self, start_us: Option<u64>) {
+        if start_us.is_none() || matches!((start_us,self.last_read_us),(Some(now),Some(last)) if now<last) {
+            self.remaining=0;
+            return;
+        }
         self.last_read_us = start_us;
         self.remaining = if start_us.is_some() { self.stride - 1 } else { 0 };
     }
@@ -1192,15 +1240,16 @@ impl ClockStride {
             self.remaining -= 1;
             return self.last_read_us;
         }
-        let now = clock();
-        if let (Some(now), Some(last)) = (now, self.last_read_us) {
-            let elapsed = now.saturating_sub(last).max(1);
+        let now = clock()?;
+        if let Some(last) = self.last_read_us {
+            if now<last {self.remaining=0;return None;}
+            let elapsed = (now-last).max(1);
             let calibrated = u64::from(self.stride) * Self::TARGET_READ_INTERVAL_US / elapsed;
             self.stride = calibrated.clamp(1, u64::from(Self::MAXIMUM_STRIDE).min(u64::from(self.stride) * 2)) as u32;
         }
-        self.last_read_us = now;
+        self.last_read_us = Some(now);
         self.remaining = self.stride - 1;
-        now
+        Some(now)
     }
 
     /// 🕰️ The last reading, without reading the clock.

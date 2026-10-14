@@ -1,5 +1,5 @@
-import { type Binary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🧬️ ObjArtifact schema facet — mirrors 🦀️.rs field-for-field (same shape as
  * ObjSnapshot; see 📸️snapshot/🟦️.ts for the per-field doc comments). */
 export interface ObjVertex { x: Binary64; y: Binary64; z: Binary64; w?: Binary64; }

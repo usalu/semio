@@ -16,7 +16,7 @@ async fn cad_labels_translate_catalogue_typologies_in_german() {
     let config = CadConfig::default();
     let view_state = ViewModel { locale: Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &config, &view_state).expect("CAD UI assembly");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("fixture projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(node)).expect("fixture projection");
     assert!(json.contains("Typologien"));
     assert!(json.contains("Quader"));
     assert!(json.contains("Platte"));

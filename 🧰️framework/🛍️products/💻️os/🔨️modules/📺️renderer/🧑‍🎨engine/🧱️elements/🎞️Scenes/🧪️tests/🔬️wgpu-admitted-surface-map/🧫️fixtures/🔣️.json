@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "insert": [["a", 10], ["b", 20], ["c", 30]],
+  "remove": "a",
+  "reuse": ["d", 40],
+  "mutate": {"index": 2, "delta": 7},
+  "expected": [["b", 20], ["c", 30], ["d", 47]],
+  "absentIndex": 3,
+  "lookupHeapBytes": 0
+}

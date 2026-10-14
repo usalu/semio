@@ -57,7 +57,7 @@ export async function testDerivedConfig(workspace: string): Promise<void> {
   const canonical = readCanonicalEditor(workspace), overlay = JSON.parse(readFileSync(join(workspace, ".devcontainer/editor-overlay.json"), "utf8")) as EditorOverlay;
   for (const key of overlay.settings.omit) assert.ok(key in canonical.settings, `The overlay omits ${key}, which .vscode/settings.json no longer holds`);
   for (const id of overlay.extensions.omit) assert.ok(canonical.extensions.includes(id), `The overlay omits ${id}, which .vscode/extensions.json no longer recommends`);
-  assert.deepEqual(checkDerivedConfig(workspace), [], "Checked-in derived configuration must equal its derivation; run: bun nx run workspace:generate-config");
+  assert.deepEqual(checkDerivedConfig(workspace), [], "Checked-in derived configuration must equal its derivation; run: bun repo run workspace:generate-config");
   const expected = expectedContainerEditor(workspace), actual = readContainerEditor(workspace);
   assert.deepEqual(describeEditorDrift(expected, actual), []);
   assert.equal(describeEditorDrift(expected, { ...actual, settings: { ...actual.settings, "editor.formatOnSave": "tampered" } }).length, 1);

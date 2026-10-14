@@ -28,7 +28,7 @@ test("actual frame caller grants require every canonical independent axis", () =
 
 test("actual draft caller grant agrees with the canonical neutral grant", () => {
   const scene = new URL("../../../../../🔨️modules/🖱️ui/🎬️scene/", engine);
-  const fixture = JSON.parse(readFileSync(new URL("✂️text-splice/📡️draft-wire/🧫️fixtures/🔣️.json", scene), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("✂️text-splice/📡️draft-wire/🧪️tests/🧫️fixtures/🔣️.json", scene), "utf8"));
   const validate = authoritySchema().getSchema(grantKey)!;
   expect(validate(fixture.callerGrant)).toBe(true);
   for (const name of Object.keys(fixture.callerGrant)) {
@@ -60,7 +60,7 @@ test("frame close grants and all receipt currencies agree with the independent S
 test("actual scalar frame job declares inline ownership and receives a full grant", () => {
   const source = read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
   const body = source.slice(source.indexOf("impl InteractiveJob for FrameBuildJob"), source.indexOf("//#endregion 🧩️FrameBuildJob"));
-  for (const marker of ["grant: RetainedCloneGrant", "next_close_copy_byte_demand", "next_close_capacity_byte_demand", "next_close_release_byte_demand", "next_close_depth_demand", "copied_bytes", "size_of::<FrameDirectives>()"]) expect(body.includes(marker)).toBe(true);
+  for (const marker of ["cx: &mut StepContext", "Result<InteractiveJobCloseStep, OriginalTurnFailure>", "next_close_copy_byte_demand", "next_close_capacity_byte_demand", "next_close_release_byte_demand", "next_close_depth_demand", "size_of::<FrameDirectives>()", "consume_retained(progress)"]) expect(body.includes(marker)).toBe(true);
   expect(body.includes("maximum_items: usize")).toBe(false);
   expect(body.includes("released_items")).toBe(false);
 });
@@ -68,16 +68,22 @@ test("actual scalar frame job declares inline ownership and receives a full gran
 test("actual phase and aggregate receivers preserve the full typed close chain", () => {
   const source = read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
   const phase = source.slice(source.indexOf("fn retire_active_phase"), source.indexOf("impl ActiveFrameBuild"));
-  expect(phase.includes("grant: RetainedCloneGrant")).toBe(true);
-  expect(phase.includes("-> InteractiveJobCloseStep")).toBe(true);
+  expect(phase.includes("cx: &mut StepContext")).toBe(true);
+  expect(phase.includes("Result<InteractiveJobCloseStep, OriginalTurnFailure>")).toBe(true);
   expect(phase.includes("let _ =")).toBe(false);
   expect(source.includes("close_step(1,")).toBe(false);
   const renderer = read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
   for (const name of ["FrameTransaction", "AppFramePreparation", "AppFramePresentation"]) {
     const start = renderer.indexOf(`impl ${name} {`), next = renderer.indexOf("\nimpl ", start + 1);
     const owner = renderer.slice(start, next === -1 ? undefined : next);
-    expect(owner.includes("grant: RetainedCloneGrant")).toBe(true);
-    expect(owner.includes("-> InteractiveJobCloseStep")).toBe(true);
+    expect(owner.includes("Result<InteractiveJobCloseStep,")).toBe(true);
+    if (name === "AppFramePresentation") {
+      expect(owner.includes("grant: RetainedCloneGrant")).toBe(true);
+      expect(owner.includes("frame_child_step")).toBe(true);
+    } else {
+      expect(owner.includes("cx: &mut semio_framework_job::StepContext") || owner.includes("cx:&mut semio_framework_job::StepContext")).toBe(true);
+      expect(owner.includes("OriginalTurnFailure")).toBe(true);
+    }
   }
 });
 
@@ -164,7 +170,7 @@ test("camera exact capacity and identifier refusals agree with independent SQLit
 test("actual atlas original-owner contract prices fixed backing with independent full authorities", () => {
   const base = "../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/";
   expect(existsSync(new URL(base+"🖼️atlas/🧬️schema/🔣️.json",engine))).toBe(false);
-  const corpus = JSON.parse(read(base + "🖼️atlas/🧫️fixtures/🔣️.json"));
+  const corpus = JSON.parse(read("../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧊️wgpu/🎟️atlas/🔣️.json"));
   const validate = authoritySchema().getSchema(grantKey)!;
   for (const mode of ["normal", "retirement"]) {
     const grant = corpus.authority[mode];
@@ -192,7 +198,7 @@ test("actual atlas original-owner contract prices fixed backing with independent
 
 test("the actual typed ViewContext dictionaries preserve canonical UTF8 field order and the original wire oracle",()=>{
  expect(existsSync(new URL("../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔢️integer-carriers.json",engine))).toBe(false);
- const manifest="../../../../../🔨️modules/🛂️manifest/",law=JSON.parse(read(manifest+"🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json")),viewSchema=JSON.parse(read(manifest+"🪟️view-context/🧬️schema/🔣️.json")),ajv=authoritySchema(),validate=ajv.compile(viewSchema);expect(validate(law.viewContext)).toBe(true);
+ const manifest="../../../../../🔨️modules/🛂️manifest/",law=JSON.parse(read(manifest+"🪟️view-context/🧪️tests/🧫️fixtures/🔢️integer-carriers/🔣️.json")),viewSchema=JSON.parse(read(manifest+"🪟️view-context/🧬️schema/🔣️.json")),ajv=authoritySchema(),validate=ajv.compile(viewSchema);expect(validate(law.viewContext)).toBe(true);
  const db=new Database(":memory:");try{for(const [name,fields]of Object.entries(law.canonicalDictionaryOrder)){const ordered=db.query("SELECT value FROM json_each(?1) ORDER BY CAST(value AS BLOB)").all(JSON.stringify(fields)).map((row)=>row.value);expect(fields).toEqual(ordered);const source=read(name==="ViewModel"?manifest+"🦀️.rs":"../../../../../🔨️modules/⏯️tool-run/🦀️.rs"),start=source.indexOf(`pub struct ${name} {`),body=source.slice(start,source.indexOf("\n}",start));const actual=[...body.matchAll(/pub ([a-z_]+):/g)].map(match=>match[1].replace(/_([a-z])/g,(_,letter)=>letter.toUpperCase()));expect(actual).toEqual(fields);}}finally{db.close();}
  expect(law.packHex.length).toBe(384);const bridge=read("🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");expect(bridge.includes("ToValue::to_value(view_state)")).toBe(true);
 });
@@ -200,7 +206,7 @@ test("the actual typed ViewContext dictionaries preserve canonical UTF8 field or
 
 test("borrowed key presentation releases Scene storage before entering UI and matches independent keys", () => {
   const base = new URL("../../../../../🔨️modules/🖱️ui/", engine);
-  const corpus = JSON.parse(readFileSync(new URL("🔑️node-key/🧫️fixtures/🔣️.json", base), "utf8"));
+  const corpus = JSON.parse(readFileSync(new URL("🔑️node-key/🧪️tests/🧫️fixtures/🔣️.json", base), "utf8"));
   expect(existsSync(new URL("🔑️node-key/🧬️schema/🔣️.json",base))).toBe(false);
   const database = new Database(":memory:");
   try {

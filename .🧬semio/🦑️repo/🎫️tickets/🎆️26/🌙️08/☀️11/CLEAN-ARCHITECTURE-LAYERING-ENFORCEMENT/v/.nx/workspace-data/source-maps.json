@@ -1,0 +1,112 @@
+{
+  ".": {
+    "root": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:private": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.run.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.strict": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.strict.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.strict.cache": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.strict.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.strict.options.forwardAllArgs": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.strict.options": [
+      "project.json",
+      "nx/core/project-json"
+    ]
+  }
+}

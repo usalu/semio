@@ -12,7 +12,9 @@
     "completionCount",
     "duplicateRefused",
     "earlyReturnRefused",
-    "refusalHeap"
+    "refusalHeap",
+    "activeRemaining",
+    "closedRecipient"
   ],
   "properties": {
     "contract": {
@@ -80,6 +82,43 @@
         0,
         0
       ]
+    },
+    "activeRemaining": {
+      "const": [
+        {
+          "maximumItems": 1,
+          "maximumCopyBytes": 4093,
+          "maximumCapacityBytes": 65408,
+          "maximumReleaseBytes": 262144,
+          "maximumDepth": 64
+        },
+        {
+          "maximumItems": 1,
+          "maximumCopyBytes": 4084,
+          "maximumCapacityBytes": 65408,
+          "maximumReleaseBytes": 262016,
+          "maximumDepth": 64
+        },
+        {
+          "maximumItems": 0,
+          "maximumCopyBytes": 4084,
+          "maximumCapacityBytes": 65408,
+          "maximumReleaseBytes": 262016,
+          "maximumDepth": 64
+        }
+      ]
+    },
+    "closedRecipient": {
+      "const": {
+        "grantRefused": true,
+        "recordRefused": true,
+        "finishRefused": true,
+        "sameOriginalIdentity": true,
+        "heap": [
+          0,
+          0
+        ]
+      }
     }
   }
 }

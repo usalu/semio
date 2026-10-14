@@ -1,6 +1,20 @@
 use super::*;
 
 #[test]
+fn mutable_ordered_lookup_preserves_sparse_slot_reuse_without_heap_work(){
+ let fixture:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let mut surfaces=AdmittedSurfaceMap::default();
+ for row in fixture["insert"].as_array().unwrap(){surfaces.try_insert(row[0].as_str().unwrap().to_owned(),row[1].as_u64().unwrap()).unwrap();}
+ let removed=surfaces.remove(fixture["remove"].as_str().unwrap()).unwrap();assert_eq!(removed,10);
+ let row=&fixture["reuse"];surfaces.try_insert(row[0].as_str().unwrap().to_owned(),row[1].as_u64().unwrap()).unwrap();
+ let index=fixture["mutate"]["index"].as_u64().unwrap()as usize;let delta=fixture["mutate"]["delta"].as_u64().unwrap();
+ let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{*surfaces.get_mut_at(index).unwrap()+=delta;assert_eq!(surfaces.get_mut_at(fixture["absentIndex"].as_u64().unwrap()as usize),None);});
+ assert_eq!(heap.requested_bytes,fixture["lookupHeapBytes"].as_u64().unwrap()as usize);assert_eq!(heap.released_bytes,0);
+ for(index,row)in fixture["expected"].as_array().unwrap().iter().enumerate(){assert_eq!(surfaces.id_at(index),row[0].as_str());assert_eq!(surfaces.get_mut_at(index).copied(),row[1].as_u64());}
+ surfaces.begin_close();while surfaces.close_step().is_some(){}assert!(surfaces.terminal_is_empty());
+ eprintln!("[DEBUG] Ordered mutable surface lookup sparseReuse=true requestedBytes={} releasedBytes={} terminal=true",heap.requested_bytes,heap.released_bytes);
+}
+
+#[test]
 fn preserves_admission_order_with_constant_index_access() {
     let mut surfaces = AdmittedSurfaceMap::default();
     surfaces.try_insert("third".to_string(), 3usize).unwrap();

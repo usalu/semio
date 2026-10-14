@@ -23,12 +23,12 @@ async fn nakagin_document_text_round_trips_store_with_applied_operation() {
 
 /// 🧫️ The empty Nakagin-manifest document the round-trip laws edit the query of.
 fn create_document_envelope_for_test() -> store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
-    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document(), None)
+    create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None)
 }
 use store::os_store::document_materialize::create_document_envelope;
 
 fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
-    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document(), None);
+    let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None);
     JackStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
@@ -173,8 +173,8 @@ fn drive_snapshot_retirement(value: JackSnapshot) -> usize {
 
 #[test]
 fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
-    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document();
-    crate::materialize_jack_content(&mut source.content, vec![Node { id: "live".into(), kind: "Apartment".into(), name: "Live".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() }], Vec::new());
+    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();
+    crate::test_support::materialize_fixture(&mut source.content, vec![Node { id: "live".into(), kind: "Apartment".into(), name: "Live".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() }], Vec::new());
     let source_owner = source.content.local_owner::<crate::JackContentOwner>().expect("source content owner");
     let clone = drive_snapshot_clone(&source);
     let clone_owner = clone.content.local_owner::<crate::JackContentOwner>().expect("clone content owner");
@@ -182,15 +182,15 @@ fn query_ownership_shared_scene_clone_retires_while_source_remains_live() {
     drop(source_owner);
     drop(clone_owner);
     let steps = drive_snapshot_retirement(clone);
-    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("live source owner remains").snapshot().nodes[0].id.value, "live");
+    assert_eq!(source.content.local_owner::<crate::JackContentOwner>().expect("live source owner remains").read().node_id(0).unwrap(), "live");
     assert!(steps > 1);
     drive_snapshot_retirement(source);
 }
 
 #[test]
 fn query_ownership_unique_scene_retirement_drains_entities_one_owner_per_grant() {
-    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document();
-    crate::materialize_jack_content(
+    let mut source = crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>();
+    crate::test_support::materialize_fixture(
         &mut source.content,
         vec![
             Node { id: "one".into(), kind: "Apartment".into(), name: "One".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: Vec::new() },

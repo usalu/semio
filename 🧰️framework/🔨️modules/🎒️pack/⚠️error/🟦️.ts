@@ -1,5 +1,5 @@
 /** ⚠️ Container and schema errors preserve actual owned Value refusal identities. */
-import { ValueError } from "../../🌱️value/⚠️refusal/🟦️.ts";
+import { ValueError } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import { TextError } from "../../⚠️diagnostic/🚧️text-error/🟦️.ts";
 
 export type PackErrorData =

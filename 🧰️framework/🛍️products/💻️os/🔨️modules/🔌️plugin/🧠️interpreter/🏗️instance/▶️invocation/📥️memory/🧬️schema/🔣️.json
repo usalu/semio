@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "moduleHex",
+    "expected",
+    "expectedInstructions",
+    "address",
+    "width",
+    "deniedCopyBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "moduleHex": {
+      "type": "string",
+      "pattern": "^[a-f0-9]+$"
+    },
+    "expected": {
+      "const": -123456789
+    },
+    "expectedInstructions": {
+      "const": 6
+    },
+    "address": {
+      "const": 16
+    },
+    "width": {
+      "const": 8
+    },
+    "deniedCopyBytes": {
+      "const": 7
+    }
+  }
+}

@@ -22,7 +22,7 @@ pub struct JackArtifact {
     #[state(artifact)]
     pub camera: Camera,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio")]
+    #[child(capability = "s.trinity.jack.graph")]
     pub content: JackContentChild,
     #[state(artifact)]
     pub root_node_id: Option<String>,
@@ -75,7 +75,7 @@ impl semio_framework_value::FromValue for JackArtifact {
 //#region 🔖️Conversions
 impl Default for JackArtifact {
     fn default() -> Self {
-        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: crate::jack_content_child_with_owner(Vec::new(), Vec::new()), root_node_id: None, query: crate::TRINITY_JACK_DEFAULT_QUERY.into() }
+        Self { schema: crate::TRINITY_GRAPH_SCHEMA.into(), name: String::new(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), content: store::os_store::artifact_child::ArtifactChild::new(String::new(),semio_framework_artifact_reference::ArtifactRef{artifact_id:String::new(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:String::new(),standard:String::new(),subset:String::new()}}), root_node_id: None, query: crate::TRINITY_JACK_DEFAULT_QUERY.into() }
     }
 }
 
@@ -158,8 +158,8 @@ pub fn jack_artifact_schema_descriptor() -> ::semio_framework_schema_registry::A
 
 //#region 🔖️EmptyDocument
 /// 📦️ An empty trinity graph fixture — the app's zero-state initial document.
-pub fn empty_jack_document() -> crate::JackSnapshot {
-    crate::empty_trinity_graph_snapshot()
+pub fn empty_jack_document<C:crate::JackComposition>() -> crate::JackSnapshot {
+    crate::empty_trinity_graph_snapshot::<C>()
 }
 //#endregion 🔖️EmptyDocument
 

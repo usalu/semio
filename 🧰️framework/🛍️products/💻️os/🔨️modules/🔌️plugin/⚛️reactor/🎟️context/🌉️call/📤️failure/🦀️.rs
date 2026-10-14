@@ -1,16 +1,15 @@
 //! 📤️ Entry borrows its whole original failure while bounded Pack windows become paid fault pages.
-use semio_framework_dsl_record::native_encoding::FieldProjectionSource;
+use semio_framework_job::OriginalDomainProjection;
 use semio_framework_job::{OriginalTurnFailure,StepContext,RetainedPayloadBuilder,JobPayloadStream,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView};
 use semio_framework_os_kernel::record::BorrowedProjectedPackCursor;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-use crate::component::extension_invocation_failure::OriginalCauseLoan;
 
 /// 🏛️ The enclosing Entry admission owns this fixed window and metadata before the same cause is lent.
 pub(super) struct RetainedOriginalFailurePublication{builder:RetainedPayloadBuilder,cursor:BorrowedProjectedPackCursor,buffer:[u8;64],binding:Option<(usize,u64,u64)>,length:usize,offset:usize,delivered:bool,closing:bool}
 impl RetainedOriginalFailurePublication{
  pub(super) fn new()->Self{Self{builder:RetainedPayloadBuilder::new(JobPayloadStream::Fault),cursor:Default::default(),buffer:[0;64],binding:None,length:0,offset:0,delivered:false,closing:false}}
  fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Entry failure publication requires its same immutable cause and caller")}
- fn identity(original:&OriginalTurnFailure,cx:&StepContext<'_>)->(usize,u64,u64){(OriginalCauseLoan::Turn(original).projection_identity(),cx.operation().0,cx.generation().0)}
+ fn identity(original:&OriginalTurnFailure,cx:&StepContext<'_>)->(usize,u64,u64){(original.projection_identity(),cx.operation().0,cx.generation().0)}
  fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(Self::invalid)?;Ok(demand)}
  fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
  pub(super) fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.builder.terminal_is_empty()&&!self.closing}
@@ -30,7 +29,7 @@ impl RetainedOriginalFailurePublication{
   if !self.builder.is_initialized(){self.builder.advance_initialization(cx)?;return Ok(None)}
   if self.offset<self.length{self.builder.append_original(cx,&self.buffer[..self.length],&mut self.offset)?;return Ok(None)}
   if self.length>0{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.length=0;self.offset=0;return Ok(None)}
-  if !self.cursor.is_complete(){let result=self.cursor.advance_intrinsic(&OriginalCauseLoan::Turn(original),1,&mut self.buffer,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});match result{Ok(step)=>{self.length=step.written_bytes;cx.consume_retained(step.progress)?},Err(error)=>{self.length=error.written_bytes;let _=cx.consume_retained(error.reason.retained_progress());return Err(error.reason)}}return Ok(None)}
+  if !self.cursor.is_complete(){let result=self.cursor.advance_intrinsic(original,1,&mut self.buffer,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});match result{Ok(step)=>{self.length=step.written_bytes;cx.consume_retained(step.progress)?},Err(error)=>{self.length=error.written_bytes;let _=cx.consume_retained(error.reason.retained_progress());return Err(error.reason)}}return Ok(None)}
   if self.builder.published().is_none(){self.builder.seal(cx)?;return Ok(None)}let outcome=JobOutcomeBorrow::admit_fault(cx,self.builder.published().ok_or_else(Self::invalid)?)?;if outcome.is_some(){self.delivered=true}Ok(outcome)
  }
  pub(super) fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{if !self.delivered||self.closing{return Err(Self::invalid())}descriptor.fault(self.builder.published().ok_or_else(Self::invalid)?)}

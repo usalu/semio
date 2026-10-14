@@ -1,4 +1,5 @@
 export {createLiveFilesystemJournalV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
+export {writeNxGraphSeal,nxGraphSealHolds,nxGraphSourceMembershipV2} from "../../../../🕸️graph/🔏️seal/🟦️.ts";
 export {createRepositoryFilesystemJournalV1,repositoryFilesystemJournalPolicyV1} from "../../../../🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts";
 export {readFilesystemJournalRpcRequestV1,readFilesystemJournalRpcResponseV1,loadedFilesystemJournalToolingIdentityV1} from "../../../../🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts";
 export {createSelectedGraphSourceReceiptV1,selectedGraphSourceReceiptHoldsV1,isGlobalGraphIdentityPathV1,validateSelectedGraphValueV1} from "../../../../🕸️graph/🔏️seal/🎯️selection/🟦️.ts";
@@ -8,3 +9,9 @@ export {nativeSelectedTaskPlannerV1} from "../../../../🕸️graph/🔏️seal/
 export {writeSelectedGraphHandoffV1,selectedGraphHandoffHoldsV1,SELECTED_GRAPH_HANDOFF_ENV} from "../../../../🕸️graph/🔏️seal/🎯️selection/📥️handoff/🟦️.ts";
 export {selectedTaskSelectionV1,selectedGraphSdkPortsV1,originalSelectedGraphHandoffHoldsV1} from "../../../../🕸️graph/🔏️seal/🎯️selection/🔌️sdk/🟦️.ts";
 export {readFilesystemJournalWorkerOptionsV1,runFilesystemJournalWorkerV1} from "../../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/📜️script.ts";
+export {publishGraphFilesV1,withGraphPublisherControlV1} from "../../../../🕸️graph/📤️publication/🟦️.ts";
+export {withNxDaemonStartupV1} from "../../../../🕸️graph/🏁️startup/🟦️.ts";
+export {withNxLoadedToolingUseV1} from "../../📥️use/🟦️.ts";
+export {sourceClosureTaskEnvironments,sourceClosureReceiptHolds} from "../../../../../🔌️nx-plugin/📥️inputs/🧮️digest/🟨️.mjs";
+export {compactTaskPlans} from "../../../../🕸️graph/📤️export/🟨️.mjs";
+export {readNxGraphSourceProofV1} from "../../../../🕸️graph/🔏️seal/📥️membership/🌐️transport/🟦️.ts";

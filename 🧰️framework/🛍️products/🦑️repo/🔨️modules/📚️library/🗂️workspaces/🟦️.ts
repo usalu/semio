@@ -12,12 +12,12 @@ import { bunRepositoryPackages } from "./🟦️bun/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔎️WorkspaceRoot
-/** 🔎️Uses Nx's execution workspace before standalone hints and workspace-manifest discovery. Owned here
+/** 🔎️ Uses the build tool's execution workspace before standalone hints and workspace-manifest discovery. Owned here
  * rather than in the repository library barrel so a consumer that only needs the root path never pulls
  * the barrel (and its taxonomy discovery walk) into its module graph. */
 export function getWorkspaceRoot(environment: Readonly<Record<string,string|undefined>> = process.env): string {
-  const fromNx = environment.NX_WORKSPACE_ROOT?.trim();
-  if (fromNx) return resolve(fromNx);
+  const executionRoot = environment.SEMIO_WORKSPACE_ROOT?.trim();
+  if (executionRoot) return resolve(executionRoot);
   const fromEnv = environment.REPO_ROOT?.trim();
   if (fromEnv) return resolve(fromEnv);
   let dir = process.cwd();

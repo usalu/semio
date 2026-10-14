@@ -9,7 +9,7 @@ import controls from"./🧫️fixtures/🎛️control.json";
 import words from"./🧫️fixtures/🔢️binary64.json";
 import choices from"./🧫️fixtures/🛂️choices.json";
 import { EN1991_SQLITE_SCHEMA, en1991SnapshotToSqliteDatabase, en1991SnapshotFromSqliteDatabase, type En1991SqliteSnapshot } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 function ownedFixture():En1991SqliteSnapshot{

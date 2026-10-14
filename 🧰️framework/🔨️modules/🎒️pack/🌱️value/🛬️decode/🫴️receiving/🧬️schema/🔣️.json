@@ -1,0 +1,12 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"semio:framework:pack:original-record-receiving",
+ "title":"Original Record Receiving",
+ "type":"object","additionalProperties":false,
+ "required":["text","items","turn","laws"],
+ "properties":{
+  "text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}},
+  "turn":{"type":"object","additionalProperties":false,"required":["items","copyBytes","capacityBytes","releaseBytes","depth"],"properties":{"items":{"const":1},"copyBytes":{"type":"integer","minimum":1},"capacityBytes":{"type":"integer","minimum":1},"releaseBytes":{"type":"integer","minimum":1},"depth":{"type":"integer","minimum":1}}},
+  "laws":{"const":["sameOriginalSource","oneItemContinuation","sameOriginalNative","independentSerdeOutput","paidPartialRetirement"]}
+ }
+}

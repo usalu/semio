@@ -12,7 +12,7 @@ use std::cell::Cell;
 fn tree(text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded fixture text");
     let root = TreeNode::try_new("root", ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).expect("bounded fixture tree");
-    ComponentTree { root }
+    ComponentTree::new(root)
 }
 
 fn contract() -> serde_json::Value {
@@ -21,6 +21,9 @@ fn contract() -> serde_json::Value {
 
 #[test]
 fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_siblings() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/♻️late-ui-retirement.json")).unwrap();
     let limit = fixture["maximumTurns"].as_u64().unwrap() as usize;
@@ -85,14 +88,13 @@ fn late_ui_owners_arm_turns_until_their_credits_return_without_waiting_for_live_
         }
     }
     panic!("final sibling retirement did not settle");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 fn number(fixture: &serde_json::Value, key: &str) -> u64 {
     fixture[key].as_u64().unwrap_or_else(|| panic!("the more-work drive contract declares no {key}"))
-}
-
-fn far_deadline() -> std::time::Instant {
-    std::time::Instant::now() + std::time::Duration::from_secs(60)
 }
 
 fn declared_steps() -> usize {
@@ -164,6 +166,9 @@ fn drive_more_work(steps: usize, mut turn: impl FnMut() -> TurnOutcome, input_pe
 /// CEILING derived from that measurement, and the same k answers cost one crossing.
 #[test]
 fn a_guest_answering_more_work_k_times_with_nothing_costs_one_host_crossing() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let fixture = contract();
     let steps = declared_steps();
     let expected = number(&fixture, "crossingsPerSilentRun") as usize;
@@ -190,6 +195,9 @@ fn a_guest_answering_more_work_k_times_with_nothing_costs_one_host_crossing() {
         assert_eq!(turns.get(), run + 1, "the drive must run every silent turn plus the one that carried");
     }
     assert_eq!(expected, 1, "the contract this law is named after declares exactly one crossing per silent run");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// ⛔️ The host's continuation ceiling is a bound on CROSSINGS, and the drive may only make that bound
@@ -202,6 +210,9 @@ fn a_guest_answering_more_work_k_times_with_nothing_costs_one_host_crossing() {
 /// what fails if a future drive ever turns a bounded host loop into an unbounded one.
 #[test]
 fn the_hosts_continuation_ceiling_covers_more_guest_turns_under_the_drive_never_fewer() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let fixture = contract();
     let steps = declared_steps();
     let ceiling = number(&fixture, "hostContinuationCeiling") as usize;
@@ -231,12 +242,18 @@ fn the_hosts_continuation_ceiling_covers_more_guest_turns_under_the_drive_never_
         assert_eq!(turns.get(), needed, "the drive must run exactly the turns the guest needed");
     }
     assert_eq!(ceiling * steps, ceiling.checked_mul(steps).expect("the ceiling's guest-turn reach"), "the reach is the ceiling priced in drive steps");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 📬️ A host-owned input pending behind the drive — an ingress message, a cancel, a view-state change
 /// — ends it within ONE turn, so the drive can never delay what the host is waiting to say.
 #[test]
 fn a_pending_host_input_interrupts_the_drive_within_one_turn() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let fixture = contract();
     let steps = declared_steps();
     let within = number(&fixture, "ingressInterruptTurns") as usize;
@@ -259,12 +276,18 @@ fn a_pending_host_input_interrupts_the_drive_within_one_turn() {
         assert_eq!(stop, DriveStop::Input, "an input pending after {arrives_after} turns must end the drive");
         assert!(spent <= arrives_after.max(1) + within, "the drive ran {spent} turns after an input that arrived at turn {arrives_after}, past the declared {within}-turn interrupt");
     }
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🛑️ A cancellation mid-drive — the actor disposed, or re-activated under a new generation — ends the
 /// drive on the turn it lands, never on the next turn the guest happens to publish.
 #[test]
 fn a_cancellation_mid_drive_ends_the_drive_on_the_turn_it_lands() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let steps = declared_steps();
     let quiet = Cell::new(false);
     for closes_after in 1..=steps {
@@ -289,6 +312,9 @@ fn a_cancellation_mid_drive_ends_the_drive_on_the_turn_it_lands() {
         assert_eq!(stop, DriveStop::Closed, "a close landing after {closes_after} turns must end the drive");
         assert_eq!(spent, closes_after, "the drive ran {spent} turns against a close at {closes_after}");
     }
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// ⏱️ Hold coherence: the reactor's own executor slice and what a whole guest turn costs are two
@@ -297,6 +323,9 @@ fn a_cancellation_mid_drive_ends_the_drive_on_the_turn_it_lands() {
 /// again, and the one to re-read when the measured turn cost moves.
 #[test]
 fn the_worker_drive_budget_is_derived_from_the_measured_turn_cost_not_from_the_reactors_hold() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let fixture = contract();
     let hold = number(&fixture, "reactorExecutorHoldMs");
     let cost = number(&fixture, "measuredGuestTurnCostMs");
@@ -312,6 +341,9 @@ fn the_worker_drive_budget_is_derived_from_the_measured_turn_cost_not_from_the_r
     assert_eq!(more_work_drive_budget_ms(cost - 1, cost), cost, "a grant smaller than one measured turn still buys one whole turn");
     assert_eq!(more_work_drive_steps(cost - 1, cost), 1, "a grant smaller than one turn still admits one turn");
     assert_eq!(more_work_drive_steps(grant, 0), 1, "an unmeasured turn cost still admits one turn");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🎚️ Readiness is per ALLOCATION, not global: a finished output publishes while a DIFFERENT
@@ -324,6 +356,9 @@ fn the_worker_drive_budget_is_derived_from_the_measured_turn_cost_not_from_the_r
 /// measured boot turns had exactly ONE surface ready while the wire could already carry sixteen.
 #[test]
 fn a_ready_output_is_not_blocked_by_another_allocations_running_job() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let own = instance_lifetime::NativeCloseKey::fixture(71, 1);
     let other = instance_lifetime::NativeCloseKey::fixture(71, 2);
     let admissible = |ready_generation: u64, in_flight: &[(instance_lifetime::NativeCloseKey, u64)]| patches::ready_output_is_admissible(own, ready_generation, in_flight.iter().copied());
@@ -340,6 +375,9 @@ fn a_ready_output_is_not_blocked_by_another_allocations_running_job() {
             assert!(admissible(ready_generation, &[(other, in_flight_generation)]), "foreign g{in_flight_generation} against ready g{ready_generation}");
         }
     }
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🎚️ The widened gate through the PRODUCTION ladder: eight surfaces driven one reconcile opportunity
@@ -350,6 +388,9 @@ fn a_ready_output_is_not_blocked_by_another_allocations_running_job() {
 /// publication on the real ladder.
 #[test]
 fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 71u32;
     let tracker = patches::PatchTracker::new();
@@ -368,7 +409,7 @@ fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
                 overlapped += 1;
             }
         }
-        drive_reconcile_within(&tracker, 1, far_deadline()).expect("one-opportunity reconcile drive");
+        drive_reconcile_within(&tracker, 1, cx).expect("one-opportunity reconcile drive");
         with_pending(|pending| {
             let mut pending = pending.borrow_mut();
             for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
@@ -388,7 +429,7 @@ fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
             with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
             with_pending(|pending| pending.borrow_mut().commit_emission());
             assert!(with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"));
-            retire_host_patch(patch);
+            retire_host_patch(patch,cx);
         }
         if published == 8 && !reconcile_arms_turn(&tracker) {
             break;
@@ -397,7 +438,10 @@ fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
     eprintln!("more-work-drive readiness ladder turns={turns} published={published} overlapped={overlapped} surfaces={}", revisions.len());
     assert_eq!(published, 8, "every mounted surface must publish exactly once");
     assert_eq!(revisions.len(), 8, "every mounted surface must be its own publication line");
-    drain_pending_authority();
+    drain_pending_authority(cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🚚️ The production ladder under the drive: the same eight surfaces, driven one reconcile
@@ -405,8 +449,11 @@ fn the_widened_readiness_gate_keeps_every_surfaces_own_publication_order() {
 /// when the worker owns the pump, and not one of those crossings carries nothing.
 #[test]
 fn the_production_reconcile_ladder_costs_fewer_crossings_when_the_worker_owns_the_pump() {
-    let host_polled = settle_one_opportunity_per_turn(72, 8, 1);
-    let worker_driven = settle_one_opportunity_per_turn(73, 8, declared_steps());
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
+    let host_polled = settle_one_opportunity_per_turn(72, 8, 1,cx);
+    let worker_driven = settle_one_opportunity_per_turn(73, 8, declared_steps(),cx);
     eprintln!(
         "more-work-drive ladder host-polled crossings={} turns={} idle={} | worker-driven crossings={} turns={} idle={}",
         host_polled.crossings, host_polled.turns, host_polled.idle, worker_driven.crossings, worker_driven.turns, worker_driven.idle
@@ -416,6 +463,9 @@ fn the_production_reconcile_ladder_costs_fewer_crossings_when_the_worker_owns_th
     assert!(worker_driven.crossings * (declared_steps() - 1) <= host_polled.crossings, "the worker drive cost {} crossings against the host-polled {} at a ceiling of {}", worker_driven.crossings, host_polled.crossings, declared_steps());
     assert!(worker_driven.idle < host_polled.idle / declared_steps() + 1, "a worker-driven settle spent {} crossings carrying nothing against the host-polled {}", worker_driven.idle, host_polled.idle);
     assert_eq!(worker_driven.turns, host_polled.turns, "the drive moves turns off the wire, it does not remove them");
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🧾️ A page CUT SHORT by its byte budget must leave nothing unstaged, lose nothing and duplicate
@@ -435,6 +485,9 @@ fn the_production_reconcile_ladder_costs_fewer_crossings_when_the_worker_owns_th
 /// shape a world-3d surface produces against the real per-lane budget.
 #[test]
 fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_nothing() {
+ let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original reconcile fixture caller");
+ let mut original_context=original_caller.context();let cx=&mut original_context;
+ let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let instance = 74u32;
     let tracker = patches::PatchTracker::new();
@@ -442,7 +495,7 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
         tracker.begin(format!("{instance}:surface-{index}"), tree("body")).expect("mounted admission");
     }
     for _ in 0..1_000_000 {
-        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
         if !tracker.has_drivable_work() {
             break;
         }
@@ -476,7 +529,7 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
             let surface = patch.surface.0.to_string();
             let revision = patch.revision.0;
             assert!(with_pending(|pending| pending.borrow_mut().apply_issued_ack(receipt, &surface, revision, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES, |ack| tracker.mark_published_ack(ack))).expect("issued ack"));
-            retire_host_patch(patch);
+            retire_host_patch(patch,cx);
         }
         with_pending(|pending| {
             let mut pending = pending.borrow_mut();
@@ -486,7 +539,7 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
                 }
             }
         });
-        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), far_deadline()).expect("reconcile drive");
+        drive_reconcile_within(&tracker, reconcile_step_opportunities(u64::MAX), cx).expect("reconcile drive");
     }
     assert_eq!(delivered.len(), 4, "every mounted surface must be delivered exactly once across the cut pages");
     let mut surfaces: Vec<&String> = delivered.iter().map(|(surface, _)| surface).collect();
@@ -495,7 +548,10 @@ fn a_page_cut_by_its_byte_budget_stages_exactly_what_it_delivered_and_loses_noth
     assert_eq!(surfaces.len(), 4, "a cut page must not duplicate a publication: {delivered:?}");
     assert!(cuts >= 1, "the fixture must actually CUT a page — a page that fits never exercises the handback that caused the trap");
     assert!(pages >= 2, "the fixture must actually cut at least one page, not deliver everything in one");
-    drain_pending_authority();
+    drain_pending_authority(cx);
+
+ })();
+ let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original reconcile fixture source close");result
 }
 
 /// 🧾️ One turn's page under a byte budget that admits its first entry and at most one more — the
@@ -514,7 +570,7 @@ struct DriveLedger {
 }
 
 /// 🧹️ Retires one patch the way the HOST does once it has admitted it.
-fn retire_host_patch(patch: ui_contract::UiPatch) {
+fn retire_host_patch(patch: ui_contract::UiPatch,cx:&mut semio_framework_job::StepContext<'_>) {
     let mut owner = ui_contract::UiPendingPatch::default();
     *owner.source_mut().expect("writable payload") = Some(patch);
     for _ in 0..1_000_000 {
@@ -525,7 +581,7 @@ fn retire_host_patch(patch: ui_contract::UiPatch) {
     panic!("host patch retirement never completed");
 }
 
-fn drain_pending_authority() {
+fn drain_pending_authority(cx:&mut semio_framework_job::StepContext<'_>) {
     with_pending(|pending| {
         let mut pending = pending.borrow_mut();
         for _ in 0..1_000_000 {
@@ -541,7 +597,7 @@ fn drain_pending_authority() {
 /// the previous crossing earned, then the worker runs up to `steps` guest turns without crossing and
 /// hands back the first one that carried something. `steps = 1` is the host-polled shape this lane
 /// replaced.
-fn settle_one_opportunity_per_turn(instance: u32, surfaces: usize, steps: usize) -> DriveLedger {
+fn settle_one_opportunity_per_turn(instance: u32, surfaces: usize, steps: usize,cx:&mut semio_framework_job::StepContext<'_>) -> DriveLedger {
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = patches::PatchTracker::new();
     for index in 0..surfaces {
@@ -574,7 +630,7 @@ fn settle_one_opportunity_per_turn(instance: u32, surfaces: usize, steps: usize)
                         }
                     }
                 });
-                drive_reconcile_within(&tracker, 1, far_deadline()).expect("one-opportunity reconcile drive");
+                drive_reconcile_within(&tracker, 1, cx).expect("one-opportunity reconcile drive");
                 let mut carried = false;
                 while let Some(patch) = with_pending(|pending| pending.borrow_mut().take_one(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES)).expect("publication") {
                     sequence.set(sequence.get() + 1);
@@ -583,7 +639,7 @@ fn settle_one_opportunity_per_turn(instance: u32, surfaces: usize, steps: usize)
                     with_pending(|pending| pending.borrow_mut().stage_emission(receipt, std::iter::once(&patch))).expect("staged emission");
                     with_pending(|pending| pending.borrow_mut().commit_emission());
                     issued.borrow_mut().push((receipt, patch.surface.0.to_string(), patch.revision.0));
-                    retire_host_patch(patch);
+                    retire_host_patch(patch,cx);
                 }
                 armed.set(reconcile_arms_turn(&tracker));
                 TurnOutcome { carried, arms: armed.get() }
@@ -602,6 +658,6 @@ fn settle_one_opportunity_per_turn(instance: u32, surfaces: usize, steps: usize)
             break;
         }
     }
-    drain_pending_authority();
+    drain_pending_authority(cx);
     ledger
 }

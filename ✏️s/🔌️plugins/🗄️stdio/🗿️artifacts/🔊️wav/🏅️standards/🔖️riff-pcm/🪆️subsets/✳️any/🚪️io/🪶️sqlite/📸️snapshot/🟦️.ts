@@ -1,6 +1,6 @@
 /// <reference path="./🗄️.d.ts" />
 import sql from "./🗄️.sql" with {type:"text"};
-import {parseBinary32,binary32Value,type Binary32} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {parseBinary32,binary32Value,type Binary32} from "../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🎧️ Individually authored WAV sample domains and RIFF chunk relationships. */
 import type {WavSnapshot,WavData,WavChunkRef,RiffChunk} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteOrderedRowsControlled,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";

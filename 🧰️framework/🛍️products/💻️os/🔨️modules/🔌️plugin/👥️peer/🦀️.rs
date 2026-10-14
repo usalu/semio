@@ -114,7 +114,7 @@ mod peer_root_retirement_laws {
         let law = &fixture["configurationCompletion"];
         let axes = &law["grant"];
         let grant = RetainedCloneGrant { maximum_items: axes["items"].as_u64().unwrap() as usize, maximum_copy_bytes: axes["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: axes["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: axes["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: axes["depth"].as_u64().unwrap() as usize };
-        let (original, birth) = observe(|| std::sync::Arc::new(std::sync::Mutex::new(Some(Err::<ArtifactCommand<NoConfigMutation>, _>(Fault::new(FaultOrigin::Framework, FaultCode::new("original.configuration-cancellation"), law["message"].as_str().unwrap()))))));
+        let (original, birth) = observe(|| std::sync::Arc::new(std::sync::Mutex::new(Some(Err::<ArtifactCommand<NoConfigMutation>, _>(Fault::new(FaultOrigin::Framework, FaultCode::new("original.configuration-cancellation"), law["message"].as_str().unwrap()).into())))));
         let identity = std::sync::Arc::as_ptr(&original);
         let (mut owner, handoff) = observe(|| ConfigurationDecodeRetirement { original: std::mem::ManuallyDrop::new(Some(original)), payload: None });
         assert_eq!((handoff.requested_bytes, handoff.released_bytes), (0, 0));

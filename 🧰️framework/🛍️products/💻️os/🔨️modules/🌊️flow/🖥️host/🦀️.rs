@@ -10,6 +10,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc};
 #[cfg(test)] use std::sync::{Mutex};
 use protocol::causal::transition::HistoryFoldIndex;
+use semio_framework::MeshData;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,queue::RetirementQueue}};
 
@@ -49,6 +50,12 @@ use session_publication::SessionLivePublication;
 mod invocation_publication;
 pub use invocation_publication::{FlowInvocationIdentity,FlowInvocationOrigin,FlowInvocationOriginLease};
 use invocation_publication::FlowInvocationEntry;
+#[path="📥️preview/🦀️.rs"]
+mod preview_receiving;
+pub use preview_receiving::{FlowPreviewCompletedAddress,FlowPreviewCompletedReceiver,FlowPreviewCompletedIntakeSource,FlowPreviewLedgerFold};
+#[path="📥️evaluation/🦀️.rs"]
+mod evaluation_receiving;
+pub use evaluation_receiving::{FlowEvaluationReplyAddress,FlowEvaluationReplyReceiver,FlowEvaluationReplyIntakeSource};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum FlowEvaluationStep{Working,Complete}
@@ -1656,21 +1663,19 @@ impl FlowHost {
     }
 
     /// 🧵️ Advances one genuine source, evaluator, publication, or custody event with the caller's wallet.
-    pub fn evaluate_step(&mut self,budget:EvalStepBudget,grant:RetainedCloneGrant)->Result<FlowEvaluationStep,ValueError>{
-        self.evaluation_progress=Default::default();
-        if grant.maximum_items==0||budget.dispatches==0{return Ok(FlowEvaluationStep::Working)}
-        if !self.baseline_publication_terminal_is_empty(){let result=self.baseline_publication_step(grant);self.evaluation_progress=self.baseline_publication_step_progress();result?;return Ok(FlowEvaluationStep::Working)}
+    pub fn evaluate_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<FlowEvaluationStep,neural::OperatorWorkFailure>{
+        self.evaluation_progress=Default::default();if cx.is_cancelled()||cx.should_yield(){return Ok(FlowEvaluationStep::Working)}let grant=cx.retained_grant();let demand=self.next_evaluation_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(FlowEvaluationStep::Working)}
+        if !self.baseline_publication_terminal_is_empty(){let result=self.baseline_publication_step(grant);self.evaluation_progress=self.baseline_publication_step_progress();if self.evaluation_progress!=Default::default()||result.is_err(){cx.consume_fuel(1)}match result{Ok(_)=>cx.consume_retained(self.evaluation_progress).map_err(semio_framework_job::OriginalTurnFailure::from)?,Err(error)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error.with_retained_progress(self.evaluation_progress),cx).into())}return Ok(FlowEvaluationStep::Working)}
         let generation=self.operator_registry_generation();
         if let Some(work)=self.pending_evaluation.as_mut(){
-            if !work.source_matches(self.evaluation_revision,generation)||work.fault().is_some(){work.begin_close()}
-            if work.is_closing(){let completed=work.output_was_transferred()&&work.source_matches(self.evaluation_revision,generation);let result=work.close_step(grant);self.evaluation_progress=work.step_progress();result?;if work.terminal_is_empty(){self.pending_evaluation=None;return Ok(if completed{FlowEvaluationStep::Complete}else{FlowEvaluationStep::Working})}return Ok(FlowEvaluationStep::Working)}
-            let result=work.step(&self.host_snapshot,budget,grant);self.evaluation_progress=work.step_progress();
-            if let Some(output)=result?{match self.begin_work_publication(output){Ok(())=>self.pending_evaluation.as_mut().unwrap().begin_close(),Err((error,output))=>{self.pending_evaluation.as_mut().unwrap().restore_completion(output);return Err(error.with_retained_progress(self.evaluation_progress))}}}
+            if !work.source_matches(self.evaluation_revision,generation){work.begin_close()}
+            if work.is_closing(){let completed=work.output_was_transferred()&&work.source_matches(self.evaluation_revision,generation);let result=semio_framework_job::close_original_retained_step(cx,demand,|grant|work.close_step(grant));self.evaluation_progress=work.step_progress();result?;if work.terminal_is_empty(){self.pending_evaluation=None;return Ok(if completed{FlowEvaluationStep::Complete}else{FlowEvaluationStep::Working})}return Ok(FlowEvaluationStep::Working)}
+            let result=work.step(&self.host_snapshot,cx);self.evaluation_progress=work.step_progress();
+            if let Some(output)=result?{match self.begin_work_publication(output){Ok(())=>self.pending_evaluation.as_mut().unwrap().begin_close(),Err((error,output))=>{self.pending_evaluation.as_mut().unwrap().restore_completion(output);return Err(error.into())}}}
             return Ok(FlowEvaluationStep::Working)
         }
-        if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original Work intake requires admitted depth"))}
         let registry=self.operator_registry.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original normal Host requires its preborn registry authority"))?.clone();
-        self.pending_evaluation=Some(FlowEvaluationWork::new(self.kind_infos.clone(),registry,self.previous_channels.clone(),self.evaluation_revision,generation));self.evaluation_progress=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(FlowEvaluationStep::Working)
+        self.pending_evaluation=Some(FlowEvaluationWork::new(self.kind_infos.clone(),registry,self.previous_channels.clone(),self.evaluation_revision,generation));self.evaluation_progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_fuel(1);cx.consume_retained(self.evaluation_progress).map_err(semio_framework_job::OriginalTurnFailure::from)?;Ok(FlowEvaluationStep::Working)
     }
     pub fn evaluation_step_progress(&self)->RetainedCloneProgress{self.evaluation_progress}
     pub fn has_pending_evaluation(&self)->bool{self.pending_evaluation.is_some()||!self.baseline_publication_terminal_is_empty()}
@@ -3249,11 +3254,8 @@ pub struct FlowEvalSessionState {
     /// retained here.
     window_tick_latches: HistoryFoldIndex<u64, FlowEvalWindowTickLatch>,
     live_geometry_handles: HistoryFoldIndex<String, ()>,
-    /// 🧊 Tessellated preview meshes keyed by geometry handle, each one a base64 `pack` record body
-    /// (see `mesh::encode_mesh_pack`) — filled via extension `tessellate` because
-    /// runtime-installable brep owns the kernel that minted the handles. Binary, not a JSON number
-    /// array: the render path decodes typed arrays instead of parsing millions of JSON tokens.
-    preview_mesh_pack_by_handle: HistoryFoldIndex<String, String>,
+    /// 🧊️ Canonical native Mesh16 ownership lands only through the original paid receiver.
+    preview_mesh_by_handle: HistoryFoldIndex<String, MeshData>,
     /// ⏳ In-flight tessellate requests keyed by `nodeHash` forwarded through `InvokeExtension`. A
     /// request is removed the moment its answer is folded, even a partial one — the continuation
     /// re-admits it on the next tick.
@@ -3266,9 +3268,6 @@ pub struct FlowEvalSessionState {
     /// 📈 Progress of every tessellation this session has admitted, keyed by `nodeHash`. Plain
     /// `Copy` rows — no heap, so retirement is a single take.
     tessellate_progress_by_hash: HistoryFoldIndex<u64, PreviewTessellateProgress>,
-    /// 🧱 Partially received mesh bodies keyed by `nodeHash`, accumulated one intake-sized base64
-    /// chunk per round trip until `next_chunk == chunks`.
-    tessellate_chunks_by_hash: HistoryFoldIndex<u64, String>,
     /// 🩺 Blocking validate-gate findings keyed by geometry handle, as a JSON array string.
     preview_diagnostics_by_handle: HistoryFoldIndex<String, String>,
     /// 🔢 Which replacement of the process-wide flow extension registry every result this session
@@ -3442,11 +3441,10 @@ struct SessionResetFields {
     converged: String,
     status: String,
     handles: HistoryFoldIndex<String, ()>,
-    meshes: HistoryFoldIndex<String, String>,
+    meshes: HistoryFoldIndex<String, MeshData>,
     diagnostics: HistoryFoldIndex<String, String>,
     pending: HistoryFoldIndex<u64, String>,
     tessellate_handles: HistoryFoldIndex<u64, String>,
-    chunks: HistoryFoldIndex<u64, String>,
     tessellation: HistoryFoldIndex<u64, PreviewTessellateProgress>,
     evaluation: HistoryFoldIndex<u64, PreviewEvalProgress>,
     fault: Option<ExtensionEvaluateFault>,
@@ -3454,7 +3452,7 @@ struct SessionResetFields {
     retention:Option<SessionPreviewRetention>,
 }
 
-semio_framework_value::artifact_retire_struct!(SessionResetFields{invocation_growth,invocations,painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,chunks,tessellation,evaluation,fault,latches,retention});
+semio_framework_value::artifact_retire_struct!(SessionResetFields{invocation_growth,invocations,painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,tessellation,evaluation,fault,latches,retention});
 
 struct SessionResetSources {
     eval: Option<Arc<String>>,
@@ -3467,19 +3465,19 @@ impl SessionResetSources {
         Self{eval:state.eval_json.take(),baseline:FlowBaselineLeases{snapshot:state.previous_snapshot.take(),channels:state.previous_channels.take(),current:None},fields:SessionResetFields{
             invocation_growth:state.invocation_origin_growth.take(),invocations:std::mem::take(&mut state.invocation_origins),
             painted:std::mem::take(&mut state.painted_eval_json),converged:std::mem::take(&mut state.converged_eval_json),status:std::mem::take(&mut state.status_json),
-            handles:std::mem::take(&mut state.live_geometry_handles),meshes:std::mem::take(&mut state.preview_mesh_pack_by_handle),diagnostics:std::mem::take(&mut state.preview_diagnostics_by_handle),
-            pending:std::mem::take(&mut state.pending_tessellate_by_hash),tessellate_handles:std::mem::take(&mut state.tessellate_handle_by_hash),chunks:std::mem::take(&mut state.tessellate_chunks_by_hash),
+            handles:std::mem::take(&mut state.live_geometry_handles),meshes:std::mem::take(&mut state.preview_mesh_by_handle),diagnostics:std::mem::take(&mut state.preview_diagnostics_by_handle),
+            pending:std::mem::take(&mut state.pending_tessellate_by_hash),tessellate_handles:std::mem::take(&mut state.tessellate_handle_by_hash),
             tessellation:std::mem::take(&mut state.tessellate_progress_by_hash),evaluation:std::mem::take(&mut state.eval_progress_by_hash),fault:state.extension_evaluate_fault.take(),latches:reset_latches.then(||std::mem::take(&mut state.window_tick_latches)),retention:state.preview_retention.take(),
         }}
     }
     fn restore(self,state:&mut FlowEvalSessionState){
-        let Self{eval,baseline:FlowBaselineLeases{snapshot,channels,current},fields:SessionResetFields{invocation_growth,invocations,painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,chunks,tessellation,evaluation,fault,latches,retention}}=self;
+        let Self{eval,baseline:FlowBaselineLeases{snapshot,channels,current},fields:SessionResetFields{invocation_growth,invocations,painted,converged,status,handles,meshes,diagnostics,pending,tessellate_handles,tessellation,evaluation,fault,latches,retention}}=self;
         assert!(current.is_none(),"original session reset has no active Host channel lease");
         state.eval_json=eval;state.previous_snapshot=snapshot;state.previous_channels=channels;state.preview_retention=retention;
         state.invocation_origin_growth=invocation_growth;state.invocation_origins=invocations;
         state.painted_eval_json=painted;state.converged_eval_json=converged;state.status_json=status;
-        state.live_geometry_handles=handles;state.preview_mesh_pack_by_handle=meshes;state.preview_diagnostics_by_handle=diagnostics;
-        state.pending_tessellate_by_hash=pending;state.tessellate_handle_by_hash=tessellate_handles;state.tessellate_chunks_by_hash=chunks;
+        state.live_geometry_handles=handles;state.preview_mesh_by_handle=meshes;state.preview_diagnostics_by_handle=diagnostics;
+        state.pending_tessellate_by_hash=pending;state.tessellate_handle_by_hash=tessellate_handles;
         state.tessellate_progress_by_hash=tessellation;state.eval_progress_by_hash=evaluation;state.extension_evaluate_fault=fault;if let Some(latches)=latches{state.window_tick_latches=latches;}
     }
 }
@@ -3504,17 +3502,16 @@ struct SessionPreviewCancellationSources {
     retention:Option<SessionPreviewRetention>,
     pending:HistoryFoldIndex<u64,String>,
     handles:HistoryFoldIndex<u64,String>,
-    chunks:HistoryFoldIndex<u64,String>,
     evaluation:HistoryFoldIndex<u64,PreviewEvalProgress>,
 }
 impl SessionPreviewCancellationSources {
-    fn take(state:&mut FlowEvalSessionState)->Self{Self{invocation_growth:state.invocation_origin_growth.take(),invocations:std::mem::take(&mut state.invocation_origins),retention:state.preview_retention.take(),pending:std::mem::take(&mut state.pending_tessellate_by_hash),handles:std::mem::take(&mut state.tessellate_handle_by_hash),chunks:std::mem::take(&mut state.tessellate_chunks_by_hash),evaluation:std::mem::take(&mut state.eval_progress_by_hash)}}
-    fn restore(self,state:&mut FlowEvalSessionState){state.invocation_origin_growth=self.invocation_growth;state.invocation_origins=self.invocations;state.preview_retention=self.retention;state.pending_tessellate_by_hash=self.pending;state.tessellate_handle_by_hash=self.handles;state.tessellate_chunks_by_hash=self.chunks;state.eval_progress_by_hash=self.evaluation;}
+    fn take(state:&mut FlowEvalSessionState)->Self{Self{invocation_growth:state.invocation_origin_growth.take(),invocations:std::mem::take(&mut state.invocation_origins),retention:state.preview_retention.take(),pending:std::mem::take(&mut state.pending_tessellate_by_hash),handles:std::mem::take(&mut state.tessellate_handle_by_hash),evaluation:std::mem::take(&mut state.eval_progress_by_hash)}}
+    fn restore(self,state:&mut FlowEvalSessionState){state.invocation_origin_growth=self.invocation_growth;state.invocation_origins=self.invocations;state.preview_retention=self.retention;state.pending_tessellate_by_hash=self.pending;state.tessellate_handle_by_hash=self.handles;state.eval_progress_by_hash=self.evaluation;}
 }
 
 #[derive(semio_framework_value::RetireOwned)]
 enum SessionRetentionRow {
-    Mesh((String,String)),Pending((u64,String)),Progress((u64,PreviewTessellateProgress)),Roster(Vec<String>),
+    Mesh((String,MeshData)),Diagnostic((String,String)),Pending((u64,String)),Progress((u64,PreviewTessellateProgress)),Roster(Vec<String>),
 }
 #[derive(semio_framework_value::RetireOwned)]
 struct SessionPreviewRetention {
@@ -3533,7 +3530,8 @@ enum SessionCollectionOwner {
     SourceLease(Arc<String>),
     Text(String),
     Handles(HistoryFoldIndex<String, ()>),
-    Meshes(HistoryFoldIndex<String, String>),
+    Meshes(HistoryFoldIndex<String, MeshData>),
+    Diagnostics(HistoryFoldIndex<String, String>),
     Pending(HistoryFoldIndex<u64, String>),
     Latches(HistoryFoldIndex<u64, FlowEvalWindowTickLatch>),
     Tessellation(HistoryFoldIndex<u64, PreviewTessellateProgress>),
@@ -3559,7 +3557,7 @@ impl RetireOwned for SessionCollectionOwner {
             Self::SourceLease(value)=>Box::new(SharedControlledRetirement::lease(value)),
             Self::Snapshot(value)=>Box::new(SharedControlledRetirement::lease(value)),Self::Channels(value)=>Box::new(SharedControlledRetirement::lease(value)),
             Self::Cache(value)=>Box::new(SharedControlledRetirement::lease(value)),
-            Self::Text(value)=>value.retirement(),Self::Handles(value)=>value.retirement(),Self::Meshes(value)=>value.retirement(),Self::Pending(value)=>value.retirement(),
+            Self::Text(value)=>value.retirement(),Self::Handles(value)=>value.retirement(),Self::Meshes(value)=>value.retirement(),Self::Diagnostics(value)=>value.retirement(),Self::Pending(value)=>value.retirement(),
             Self::Latches(value)=>value.retirement(),Self::Tessellation(value)=>value.retirement(),Self::Evaluation(value)=>value.retirement(),
             Self::Registry(value)=>value.retirement(),Self::Fault(value)=>value.retirement(),
         }
@@ -3576,7 +3574,7 @@ impl RetireOwned for SessionCollectionOwner {
             Self::Baseline(value)=>value.retirement_birth_bytes(),
             Self::SourceLease(_)=>Some(shared_retirement_birth_bytes::<String>()),Self::Cache(_)=>Some(shared_retirement_birth_bytes::<NeuralCache>()),
             Self::Snapshot(_)=>Some(shared_retirement_birth_bytes::<TreeSnapshot>()),Self::Channels(_)=>Some(shared_retirement_birth_bytes::<EvalChannels>()),
-            Self::Text(value)=>value.retirement_birth_bytes(),Self::Handles(value)=>value.retirement_birth_bytes(),Self::Meshes(value)=>value.retirement_birth_bytes(),Self::Pending(value)=>value.retirement_birth_bytes(),
+            Self::Text(value)=>value.retirement_birth_bytes(),Self::Handles(value)=>value.retirement_birth_bytes(),Self::Meshes(value)=>value.retirement_birth_bytes(),Self::Diagnostics(value)=>value.retirement_birth_bytes(),Self::Pending(value)=>value.retirement_birth_bytes(),
             Self::Latches(value)=>value.retirement_birth_bytes(),Self::Tessellation(value)=>value.retirement_birth_bytes(),Self::Evaluation(value)=>value.retirement_birth_bytes(),
             Self::Registry(value)=>value.retirement_birth_bytes(),Self::Fault(value)=>value.retirement_birth_bytes(),
         }
@@ -3708,12 +3706,11 @@ impl FlowEvalSession {
                 tick_scheduled: false,
                 window_tick_latches: HistoryFoldIndex::new(),
                 live_geometry_handles: HistoryFoldIndex::new(),
-                preview_mesh_pack_by_handle: HistoryFoldIndex::new(),
+                preview_mesh_by_handle: HistoryFoldIndex::new(),
                 pending_tessellate_by_hash: HistoryFoldIndex::new(),
                 tessellate_handle_by_hash: HistoryFoldIndex::new(),
                 tessellate_progress_by_hash: HistoryFoldIndex::new(),
                 eval_progress_by_hash: HistoryFoldIndex::new(),
-                tessellate_chunks_by_hash: HistoryFoldIndex::new(),
                 preview_diagnostics_by_handle: HistoryFoldIndex::new(),
                 retirement: SessionRetirement::default(),
                 flow_extension_generation: flow_extension_registry_generation(),
@@ -3891,13 +3888,11 @@ impl FlowEvalSession {
     pub fn baseline_capture_terminal_is_empty(&self)->bool{!self.state.baseline_geometry_pending}
 
     /// 🧵️ Drives the genuine Work owned by the same retained tick Host with the full incoming wallet.
-    pub fn tick_evaluation_step(&mut self,budget:EvalStepBudget,grant:RetainedCloneGrant)->Result<FlowEvaluationStep,ValueError>{
-        self.state.tick_display_progress=Default::default();
-        if grant.maximum_items==0||budget.dispatches==0{return Ok(FlowEvaluationStep::Working)}
-        if self.state.tick_evaluation_ready!=0{return self.tick_display_step(grant)}
+    pub fn tick_evaluation_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<FlowEvaluationStep,neural::OperatorWorkFailure>{
+        self.state.tick_display_progress=Default::default();if cx.is_cancelled()||cx.should_yield(){return Ok(FlowEvaluationStep::Working)}let grant=cx.retained_grant();let demand=self.next_tick_evaluation_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(FlowEvaluationStep::Working)}
+        if self.state.tick_evaluation_ready!=0{let result=self.tick_display_step(grant);let progress=self.state.tick_display_progress;if progress!=Default::default()||result.is_err(){cx.consume_fuel(1)}return match result{Ok(step)=>{cx.consume_retained(progress).map_err(semio_framework_job::OriginalTurnFailure::from)?;Ok(step)},Err(error)=>Err(semio_framework_job::OriginalTurnFailure::debit_original(error.with_retained_progress(progress),cx).into())}}
         let host=self.state.pending_host.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation tick Host was not admitted"))?;
-        let step=host.evaluate_step(budget,grant);self.state.tick_display_progress=host.evaluation_step_progress();
-        if matches!(step,Ok(FlowEvaluationStep::Complete)){self.state.tick_evaluation_ready=1;return Ok(FlowEvaluationStep::Working)}step
+        let step=host.evaluate_step(cx);self.state.tick_display_progress=host.evaluation_step_progress();if matches!(step,Ok(FlowEvaluationStep::Complete)){self.state.tick_evaluation_ready=1;return Ok(FlowEvaluationStep::Working)}step
     }
     pub fn tick_evaluation_step_progress(&self)->RetainedCloneProgress{self.state.tick_display_progress}
     pub fn next_tick_evaluation_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
@@ -4341,11 +4336,8 @@ impl FlowEvalSession {
         seed_flow_eval_node_cache(cache, node_hash, output)
     }
 
-    /// 🧊 Preview mesh body (base64 `pack` record body) previously resolved through the owning
-    /// geometry extension.
-    pub fn preview_mesh_pack(&self, handle: &str) -> Option<&str> {
-        self.preview_mesh_pack_by_handle.get(handle).map(String::as_str)
-    }
+    /// 🧊️ Borrows the completed canonical mesh owned by this original session.
+    pub fn preview_mesh(&self,handle:&str)->Option<&MeshData>{self.preview_mesh_by_handle.get(handle)}
 
     /// 📏️ Mesh-residency fingerprint the preview last published — see [`FlowEvalSessionState::published_preview_mesh_digest`].
     pub fn published_preview_mesh_digest(&self) -> u64 {
@@ -4357,10 +4349,13 @@ impl FlowEvalSession {
         self.published_preview_mesh_digest = digest;
     }
 
-    /// 🧊 Every brep handle that currently holds a resolved preview tessellation pack.
-    pub fn preview_packed_handles(&self) -> Vec<String> {
-        self.preview_mesh_pack_by_handle.keys().cloned().collect()
-    }
+    /// 🪟️ Borrows resident canonical handles without allocating a copied roster.
+    pub fn preview_mesh_handles(&self)->impl Iterator<Item=&str>{self.preview_mesh_by_handle.keys().map(String::as_str)}
+    /// 🪪️ Native scene construction borrows the exact indexed row only under its original cache epoch.
+    pub fn preview_mesh_epoch(&self)->u64{self.preview_mesh_by_handle.mutation_epoch()}
+    pub fn preview_mesh_slot_count(&self)->usize{self.preview_mesh_by_handle.slot_count()}
+    pub fn preview_mesh_at_slot(&self,slot:usize,epoch:u64)->Result<Option<(&str,&MeshData)>,ValueError>{if self.preview_mesh_by_handle.mutation_epoch()!=epoch{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview mesh source epoch changed"))}Ok(self.preview_mesh_by_handle.slot_entry(slot).map(|(handle,mesh)|(handle.as_str(),mesh)))}
+
 
     /// 🩺 Blocking validate-gate findings for `handle`, as a JSON array string.
     pub fn preview_diagnostics(&self, handle: &str) -> Option<&str> {
@@ -4382,12 +4377,11 @@ impl FlowEvalSession {
     pub fn preview_retention_step_progress(&self)->RetainedCloneProgress{self.state.preview_retention_progress}
     fn preview_retention_handle(&self,owner:&SessionPreviewRetention)->Option<&str>{
         match owner.phase {
-            0=>self.state.preview_mesh_pack_by_handle.slot_entry(owner.slot).map(|(handle,_)|handle.as_str()),
+            0=>self.state.preview_mesh_by_handle.slot_entry(owner.slot).map(|(handle,_)|handle.as_str()),
             1=>self.state.preview_diagnostics_by_handle.slot_entry(owner.slot).map(|(handle,_)|handle.as_str()),
             2=>self.state.pending_tessellate_by_hash.slot_entry(owner.slot).map(|(_,handle)|handle.as_str()),
             3=>self.state.tessellate_progress_by_hash.slot_entry(owner.slot).and_then(|(hash,_)|self.state.tessellate_handle_by_hash.get(hash)).map(String::as_str),
-            4=>self.state.tessellate_chunks_by_hash.slot_entry(owner.slot).and_then(|(hash,_)|self.state.tessellate_handle_by_hash.get(hash)).map(String::as_str),
-            5=>self.state.tessellate_handle_by_hash.slot_entry(owner.slot).map(|(_,handle)|handle.as_str()),
+            4=>self.state.tessellate_handle_by_hash.slot_entry(owner.slot).map(|(_,handle)|handle.as_str()),
             _=>None,
         }
     }
@@ -4395,8 +4389,8 @@ impl FlowEvalSession {
     pub fn next_preview_retention_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         let Some(owner)=self.state.preview_retention.as_ref()else{return Ok(Default::default())};
         if let Some(removed)=owner.removed.as_ref(){return Ok(RetirementDemand{copy_bytes:removed.next_copy_byte_demand()?,capacity_bytes:removed.next_capacity_byte_demand(copy)?,release_bytes:removed.next_release_byte_demand()?,depth:removed.next_depth_demand()?})}
-        if owner.phase==7 {let port=self.geometry_port.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original geometry retention source disappeared"))?;return Ok(RetirementDemand{copy_bytes:port.next_retain_copy_byte_demand()?,capacity_bytes:port.next_retain_capacity_byte_demand(copy)?,release_bytes:port.next_retain_release_byte_demand()?,depth:port.next_retain_depth_demand()?})}
-        let depth=match owner.phase {0=>self.preview_mesh_pack_by_handle.next_extract_slot_depth_demand(owner.slot)?,1=>self.preview_diagnostics_by_handle.next_extract_slot_depth_demand(owner.slot)?,2=>self.pending_tessellate_by_hash.next_extract_slot_depth_demand(owner.slot)?,3=>self.tessellate_progress_by_hash.next_extract_slot_depth_demand(owner.slot)?,4=>self.tessellate_chunks_by_hash.next_extract_slot_depth_demand(owner.slot)?,5=>self.tessellate_handle_by_hash.next_extract_slot_depth_demand(owner.slot)?,_=>1};
+        if owner.phase==6 {let port=self.geometry_port.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original geometry retention source disappeared"))?;return Ok(RetirementDemand{copy_bytes:port.next_retain_copy_byte_demand()?,capacity_bytes:port.next_retain_capacity_byte_demand(copy)?,release_bytes:port.next_retain_release_byte_demand()?,depth:port.next_retain_depth_demand()?})}
+        let depth=match owner.phase {0=>self.preview_mesh_by_handle.next_extract_slot_depth_demand(owner.slot)?,1=>self.preview_diagnostics_by_handle.next_extract_slot_depth_demand(owner.slot)?,2=>self.pending_tessellate_by_hash.next_extract_slot_depth_demand(owner.slot)?,3=>self.tessellate_progress_by_hash.next_extract_slot_depth_demand(owner.slot)?,4=>self.tessellate_handle_by_hash.next_extract_slot_depth_demand(owner.slot)?,_=>1};
         Ok(RetirementDemand{depth:depth.max(1),..Default::default()})
     }
     /// 🍂️ Compares one roster entry or closes one exact original removed row per turn.
@@ -4415,24 +4409,24 @@ impl FlowEvalSession {
             if self.state.preview_retention.as_ref().unwrap().removed.as_ref().unwrap().terminal_is_empty(){self.state.preview_retention.as_mut().unwrap().removed=None;}
             self.state.preview_retention_progress=progress;return Ok(RetainedCloneStep::Progress(progress))
         }
-        if owner.phase==7 {
+        if owner.phase==6 {
             let port=self.geometry_port.as_mut().unwrap();let result=port.retain_step(grant);progress=port.retain_step_progress();
-            if port.retain_terminal_is_empty(){owner.phase=8;}
+            if port.retain_terminal_is_empty(){owner.phase=7;}
             self.state.preview_retention=Some(owner);self.state.preview_retention_progress=progress;
             let step=result.map_err(|error|error.with_retained_progress(progress))?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.geometry_port.as_ref().unwrap().retain_terminal_is_empty(),"Flow original preview geometry retention")?;
             return Ok(RetainedCloneStep::Progress(progress))
         }
-        if owner.phase==8 {self.state.baseline_geometry_pending=false;self.state.preview_retention_progress=progress;return Ok(RetainedCloneStep::Complete(progress))}
-        if owner.phase==6 {
+        if owner.phase==7 {self.state.baseline_geometry_pending=false;self.state.preview_retention_progress=progress;return Ok(RetainedCloneStep::Complete(progress))}
+        if owner.phase==5 {
             let handles=owner.roster.take().unwrap();
-            if let Some(port)=self.geometry_port.as_mut(){if let Err((error,handles))=port.begin_retain(handles){owner.roster=Some(handles);self.state.preview_retention=Some(owner);return Err(error)}owner.phase=7;}
-            else{owner.removed=Some(ControlledRetirement::new(SessionRetentionRow::Roster(handles)).unwrap_or_else(|_|unreachable!("original roster declares retirement")));owner.phase=8;}
+            if let Some(port)=self.geometry_port.as_mut(){if let Err((error,handles))=port.begin_retain(handles){owner.roster=Some(handles);self.state.preview_retention=Some(owner);return Err(error)}owner.phase=6;}
+            else{owner.removed=Some(ControlledRetirement::new(SessionRetentionRow::Roster(handles)).unwrap_or_else(|_|unreachable!("original roster declares retirement")));owner.phase=7;}
         }else {
-            let slots=match owner.phase {0=>self.preview_mesh_pack_by_handle.slot_count(),1=>self.preview_diagnostics_by_handle.slot_count(),2=>self.pending_tessellate_by_hash.slot_count(),3=>self.tessellate_progress_by_hash.slot_count(),4=>self.tessellate_chunks_by_hash.slot_count(),5=>self.tessellate_handle_by_hash.slot_count(),_=>unreachable!()};
+            let slots=match owner.phase {0=>self.preview_mesh_by_handle.slot_count(),1=>self.preview_diagnostics_by_handle.slot_count(),2=>self.pending_tessellate_by_hash.slot_count(),3=>self.tessellate_progress_by_hash.slot_count(),4=>self.tessellate_handle_by_hash.slot_count(),_=>unreachable!()};
             if owner.slot>=slots{owner.phase+=1;owner.slot=0;owner.comparison=0;owner.matched=false;}
             else if !owner.matched&&owner.comparison<owner.roster.as_ref().unwrap().len(){owner.matched=self.preview_retention_handle(&owner).is_some_and(|handle|handle==owner.roster.as_ref().unwrap()[owner.comparison]);owner.comparison+=1;}
             else{
-                let keep=owner.matched;let row=match owner.phase {0=>self.preview_mesh_pack_by_handle.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Mesh),1=>self.preview_diagnostics_by_handle.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Mesh),2=>self.pending_tessellate_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),3=>self.tessellate_progress_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Progress),4=>self.tessellate_chunks_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),5=>self.tessellate_handle_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),_=>unreachable!()};
+                let keep=owner.matched;let row=match owner.phase {0=>self.preview_mesh_by_handle.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Mesh),1=>self.preview_diagnostics_by_handle.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Diagnostic),2=>self.pending_tessellate_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),3=>self.tessellate_progress_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Progress),4=>self.tessellate_handle_by_hash.extract_slot_if(owner.slot,|_,_|keep).map(SessionRetentionRow::Pending),_=>unreachable!()};
                 if let Some(row)=row{owner.removed=Some(ControlledRetirement::new(row).unwrap_or_else(|_|unreachable!("original preview row declares retirement")));}
                 owner.slot+=1;owner.comparison=0;owner.matched=false;
             }
@@ -4442,12 +4436,7 @@ impl FlowEvalSession {
 
     /// 📨 Notes an in-flight tessellate; returns true when the caller should emit `InvokeExtension`.
     pub fn note_pending_tessellate(&mut self, node_hash: u64, handle: String) -> bool {
-        if let Some(pack) = self.preview_mesh_pack_by_handle.get(&handle) {
-            if preview_mesh_pack_has_geometry(pack) {
-                return false;
-            }
-            self.preview_mesh_pack_by_handle.remove(&handle);
-        }
+        if self.preview_mesh_by_handle.contains_key(&handle){return false;}
         if self.preview_diagnostics_by_handle.contains_key(&handle) {
             return false;
         }
@@ -4457,11 +4446,6 @@ impl FlowEvalSession {
         self.tessellate_handle_by_hash.insert(node_hash, handle.clone());
         self.pending_tessellate_by_hash.insert(node_hash, handle);
         true
-    }
-
-    /// 🧱 The mesh-body chunk index the next `tessellate` round trip for `node_hash` must ask for.
-    pub fn next_tessellate_chunk(&self, node_hash: u64) -> u32 {
-        self.tessellate_progress_by_hash.get(&node_hash).map_or(0, |progress| progress.next_chunk)
     }
 
     /// 📈 Aggregate progress of every tessellation this session has admitted and not yet finished —
@@ -4475,20 +4459,7 @@ impl FlowEvalSession {
             status.units_total = status.units_total.saturating_add(progress.units_total);
             status.faces_done = status.faces_done.saturating_add(progress.faces_done);
             status.faces_total = status.faces_total.saturating_add(progress.faces_total);
-            // 🧱 A kernel-COMPLETE job whose mesh body has not finished crossing is not idle — it is
-            // `Transferring`, the one phase the enum declares that no kernel ever reports. Without
-            // this the whole chunked transfer of a large mesh published `phase: "idle"` with a
-            // full-looking ratio, so a surface could neither label it nor offer to stop it
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-            if progress.phase == PreviewTessellatePhase::Complete {
-                if progress.next_chunk < progress.chunks {
-                    status.phase = PreviewTessellatePhase::Transferring;
-                }
-            } else {
-                status.phase = progress.phase;
-            }
-            status.chunks_done = status.chunks_done.saturating_add(progress.next_chunk.min(progress.chunks));
-            status.chunks_total = status.chunks_total.saturating_add(progress.chunks);
+            if progress.phase!=PreviewTessellatePhase::Complete{status.phase=progress.phase;}
         }
         if status.units_total == 0 && status.in_flight > 0 {
             status.phase = PreviewTessellatePhase::SamplingEdges;
@@ -4534,7 +4505,7 @@ impl FlowEvalSession {
                 self.state.preview_cancellation_phase=1;
             },
             1=>{
-                if cursor<self.state.tessellate_progress_by_hash.slot_count(){if let Some((_,row))=self.state.tessellate_progress_by_hash.slot_entry_mut(cursor){if row.phase!=PreviewTessellatePhase::Complete{row.phase=PreviewTessellatePhase::Cancelled;}row.next_chunk=0;row.chunks=0;}self.state.preview_cancellation_cursor=Some(cursor+1);}
+                if cursor<self.state.tessellate_progress_by_hash.slot_count(){if let Some((_,row))=self.state.tessellate_progress_by_hash.slot_entry_mut(cursor){if row.phase!=PreviewTessellatePhase::Complete{row.phase=PreviewTessellatePhase::Cancelled;}}self.state.preview_cancellation_cursor=Some(cursor+1);}
                 else{self.state.preview_cancellation_phase=2;self.state.preview_cancellation_cursor=Some(0);}
             },
             2=>{
@@ -4580,8 +4551,8 @@ impl FlowEvalSession {
         }
         let done=envelope.get("done").and_then(semio_framework_pack_json::Value::as_bool).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation response completion is absent"))?;
         let phase=PreviewEvalPhase::from_job_tag(envelope.get("phase").and_then(semio_framework_pack_json::Value::as_str).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation response phase is absent"))?);
-        let units_done=envelope.get("unitsDone").and_then(semio_framework_pack_json::Value::as_u64).and_then(|value|u32::try_from(value).ok()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation response done units are absent"))?;
-        let units_total=envelope.get("unitsTotal").and_then(semio_framework_pack_json::Value::as_u64).and_then(|value|u32::try_from(value).ok()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation response total units are absent"))?;
+        let units_done=envelope.get("unitsDone").and_then(semio_framework_pack_json::Value::as_u64).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation response done units are absent"))?;
+        let units_total=envelope.get("unitsTotal").and_then(semio_framework_pack_json::Value::as_u64).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original evaluation response total units are absent"))?;
         if !done{self.eval_progress_by_hash.insert(node_hash,PreviewEvalProgress{units_done,units_total,phase});return Ok(PreviewEvalOutcome::Working)}
         self.eval_progress_by_hash.remove(&node_hash);
         if matches!(phase,PreviewEvalPhase::Cancelled){return Ok(PreviewEvalOutcome::Cancelled)}
@@ -4659,73 +4630,11 @@ impl FlowEvalSession {
         self.window_tick_latches.values().map(|latch| latch.in_flight).sum()
     }
 
-    /// 🧹 Retires one tessellation's transfer state (its handle binding and any half-received mesh
-    /// body) without touching the progress row the status object still reports.
-    fn retire_tessellate_transfer(&mut self, node_hash: u64) {
-        let state = &mut *self.state;
-        state.tessellate_handle_by_hash.remove(&node_hash);
-        if let Some(partial) = state.tessellate_chunks_by_hash.remove(&node_hash) {
-            partial.retire_cold();
-        }
-    }
-
-    /// ✅ Folds one `tessellate` response envelope into this session. The mesh only lands once every
-    /// chunk of its `pack` body has arrived; until then the caller re-arms another round trip.
-    pub fn resolve_preview_tessellate(&mut self, node_hash: u64, output_json: &str) -> PreviewTessellateOutcome {
-        let Some(handle) = self.pending_tessellate_by_hash.remove(&node_hash) else {
-            return PreviewTessellateOutcome::Unknown;
-        };
-        let Ok(envelope) = semio_framework_pack_json::parse(output_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
-            return PreviewTessellateOutcome::Failed;
-        };
-        let phase = envelope.get("phase").and_then(|value| value.as_str()).unwrap_or_default();
-        let uint = |key: &str| envelope.get(key).and_then(|value| value.as_f64()).unwrap_or_default().max(0.0) as u32;
-        let mut progress = PreviewTessellateProgress { units_done: uint("unitsDone"), units_total: uint("unitsTotal"), faces_done: uint("facesDone"), faces_total: uint("facesTotal"), phase: PreviewTessellatePhase::from_tag(phase), next_chunk: 0, chunks: uint("chunks") };
-        match progress.phase {
-            PreviewTessellatePhase::Invalid => {
-                let diagnostics = envelope.get("diagnostics").cloned().unwrap_or(semio_framework_pack_json::Value::Array(Vec::new()));
-                self.preview_diagnostics_by_handle.insert(handle, semio_framework_pack_json::to_string(&diagnostics));
-                self.retire_tessellate_transfer(node_hash);
-                self.tessellate_progress_by_hash.insert(node_hash, progress);
-                PreviewTessellateOutcome::Invalid
-            }
-            PreviewTessellatePhase::Failed => {
-                self.retire_tessellate_transfer(node_hash);
-                self.tessellate_progress_by_hash.insert(node_hash, progress);
-                PreviewTessellateOutcome::Failed
-            }
-            PreviewTessellatePhase::Cancelled => {
-                self.retire_tessellate_transfer(node_hash);
-                self.tessellate_progress_by_hash.insert(node_hash, progress);
-                PreviewTessellateOutcome::Cancelled
-            }
-            PreviewTessellatePhase::Complete => {
-                let chunk = envelope.get("meshPack").and_then(|value| value.as_str()).unwrap_or_default();
-                let index = uint("chunk");
-                let assembled = self.tessellate_chunks_by_hash.entry(node_hash).or_default();
-                assembled.push_str(chunk);
-                progress.next_chunk = index.saturating_add(1);
-                if progress.next_chunk < progress.chunks {
-                    self.tessellate_progress_by_hash.insert(node_hash, progress);
-                    return PreviewTessellateOutcome::Working;
-                }
-                let Some(body) = self.tessellate_chunks_by_hash.remove(&node_hash) else {
-                    return PreviewTessellateOutcome::Failed;
-                };
-                if !preview_mesh_pack_has_geometry(&body) {
-                    self.tessellate_progress_by_hash.insert(node_hash, progress);
-                    return PreviewTessellateOutcome::Failed;
-                }
-                self.preview_mesh_pack_by_handle.insert(handle, body);
-                self.tessellate_handle_by_hash.remove(&node_hash);
-                self.tessellate_progress_by_hash.insert(node_hash, progress);
-                PreviewTessellateOutcome::Ready
-            }
-            _ => {
-                self.tessellate_progress_by_hash.insert(node_hash, progress);
-                PreviewTessellateOutcome::Working
-            }
-        }
+    /// 📥️ Advances the genuine original completed receiver into the session-owned canonical cache.
+    pub fn next_preview_tessellate_demands(&self,receiver:&FlowPreviewCompletedReceiver,copy:usize)->Result<RetirementDemand,ValueError>{receiver.next_demands(&self.preview_mesh_by_handle,copy)}
+    pub fn resolve_preview_tessellate(&mut self,receiver:&mut FlowPreviewCompletedReceiver,address:&FlowPreviewCompletedAddress<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original preview session is closing").into())}
+        receiver.step(address,&mut self.state.preview_mesh_by_handle,cx)
     }
 
     /// 🧹️ Marks the original session closed without releasing or replacing any source.
@@ -4735,9 +4644,9 @@ impl FlowEvalSession {
         let state=&*self.state;
         state.pending_tick_snapshot.is_some()||state.pending_tick_snapshot_retirement.is_some()||state.pending_tick_snapshot_origin.is_some()||state.invocation_origin_growth.is_some()||state.invocation_origins.capacity()!=0||state.pending_tick_display.is_some()||state.operator_registry.is_some()||state.neural_cache.is_some()||state.previous_snapshot.is_some()||state.previous_channels.is_some()||state.eval_json.is_some()
             ||state.painted_eval_json.capacity()!=0||state.converged_eval_json.capacity()!=0||state.status_json.capacity()!=0||state.extension_evaluate_fault.is_some()
-            ||state.preview_retention.is_some()||!state.window_tick_latches.terminal_is_empty()||!state.live_geometry_handles.terminal_is_empty()||!state.preview_mesh_pack_by_handle.terminal_is_empty()
+            ||state.preview_retention.is_some()||!state.window_tick_latches.terminal_is_empty()||!state.live_geometry_handles.terminal_is_empty()||!state.preview_mesh_by_handle.terminal_is_empty()
             ||!state.pending_tessellate_by_hash.terminal_is_empty()||!state.tessellate_handle_by_hash.terminal_is_empty()||!state.tessellate_progress_by_hash.terminal_is_empty()
-            ||!state.eval_progress_by_hash.terminal_is_empty()||!state.tessellate_chunks_by_hash.terminal_is_empty()||!state.preview_diagnostics_by_handle.terminal_is_empty()
+            ||!state.eval_progress_by_hash.terminal_is_empty()||!state.preview_diagnostics_by_handle.terminal_is_empty()
     }
 
     fn take_session_source(&mut self)->Option<SessionCollectionOwner>{
@@ -4749,9 +4658,8 @@ impl FlowEvalSession {
         if let Some(value)=state.preview_retention.take(){return Some(SessionCollectionOwner::Retention(value))}
         if let Some(value)=state.operator_registry.take(){return Some(SessionCollectionOwner::Registry(value))}
         if !state.window_tick_latches.terminal_is_empty(){return Some(SessionCollectionOwner::Latches(std::mem::take(&mut state.window_tick_latches)))}
-        if !state.preview_mesh_pack_by_handle.terminal_is_empty(){return Some(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_pack_by_handle)))}
-        if !state.preview_diagnostics_by_handle.terminal_is_empty(){return Some(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_diagnostics_by_handle)))}
-        if !state.tessellate_chunks_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_chunks_by_hash)))}
+        if !state.preview_mesh_by_handle.terminal_is_empty(){return Some(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_by_handle)))}
+        if !state.preview_diagnostics_by_handle.terminal_is_empty(){return Some(SessionCollectionOwner::Diagnostics(std::mem::take(&mut state.preview_diagnostics_by_handle)))}
         if !state.tessellate_handle_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Pending(std::mem::take(&mut state.tessellate_handle_by_hash)))}
         if !state.tessellate_progress_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Tessellation(std::mem::take(&mut state.tessellate_progress_by_hash)))}
         if !state.eval_progress_by_hash.terminal_is_empty(){return Some(SessionCollectionOwner::Evaluation(std::mem::take(&mut state.eval_progress_by_hash)))}
@@ -4839,24 +4747,15 @@ impl FlowEvalSession {
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.state.pending_snapshot_copy.is_none()&&self.state.pending_host.is_none()&&self.state.retiring_host.is_none()&&self.geometry_port.is_none()&&self.retiring_geometry_port.is_none()&&!self.owns_session_source()&&self.retirement.terminal_is_empty()}
 }
 
-/// 🧊 True when a base64 `pack` mesh body carries something paintable — decoded once, structurally,
-/// never by re-parsing prose.
-fn preview_mesh_pack_has_geometry(base64_body: &str) -> bool {
-    let Ok(bytes) = crate::mesh::decode_base64(base64_body) else {
-        return false;
-    };
-    let Ok(mesh) = crate::mesh::decode_mesh_pack(&bytes) else {
-        return false;
-    };
-    (!mesh.indices.is_empty() && mesh.positions.len() >= 9) || mesh.edge_positions.len() >= 6 || (mesh.positions.len() >= 3 && mesh.indices.is_empty())
-}
-
 /// ⏱️ Where one preview tessellation currently is — the wire-stable mirror of the kernel's own
 /// `TessellationPhase`, widened by the two boundary-only outcomes (`invalid`, `failed`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum PreviewTessellatePhase {
     #[default]
     Idle,
+    AwaitingGrant,
+    AdmittingSource,
+    Validating,
     SamplingEdges,
     MeshingFaces,
     PackingEdges,
@@ -4878,6 +4777,9 @@ impl PreviewTessellatePhase {
     pub fn tag(self) -> &'static str {
         match self {
             Self::Idle => "idle",
+            Self::AwaitingGrant => "awaitingGrant",
+            Self::AdmittingSource => "admittingSource",
+            Self::Validating => "validating",
             Self::SamplingEdges => "samplingEdges",
             Self::MeshingFaces => "meshingFaces",
             Self::PackingEdges => "packingEdges",
@@ -4893,6 +4795,9 @@ impl PreviewTessellatePhase {
     /// 🏷️ Inverse of [`PreviewTessellatePhase::tag`]; an unknown tag reads as `Idle`.
     pub fn from_tag(tag: &str) -> Self {
         match tag {
+            "awaitingGrant" => Self::AwaitingGrant,
+            "admittingSource" => Self::AdmittingSource,
+            "validating" => Self::Validating,
             "samplingEdges" => Self::SamplingEdges,
             "meshingFaces" => Self::MeshingFaces,
             "packingEdges" => Self::PackingEdges,
@@ -4908,13 +4813,16 @@ impl PreviewTessellatePhase {
 
     /// 🛑 True while a cancel can still retire the job.
     pub fn is_cancellable(self) -> bool {
-        matches!(self, Self::SamplingEdges | Self::MeshingFaces | Self::PackingEdges | Self::Transferring)
+        matches!(self, Self::AwaitingGrant | Self::AdmittingSource | Self::Validating | Self::SamplingEdges | Self::MeshingFaces | Self::PackingEdges | Self::Transferring)
     }
 
     /// 🌍 English and German labels — the UI carries both, with no default language.
     pub fn labels(self) -> (&'static str, &'static str) {
         match self {
             Self::Idle => ("Idle", "Bereit"),
+            Self::AwaitingGrant => ("Awaiting admission", "Warten auf Zulassung"),
+            Self::AdmittingSource => ("Admitting geometry", "Geometrie wird zugelassen"),
+            Self::Validating => ("Validating geometry", "Geometrie wird geprüft"),
             Self::SamplingEdges => ("Sampling edges", "Kanten werden abgetastet"),
             Self::MeshingFaces => ("Meshing faces", "Flächen werden vernetzt"),
             Self::PackingEdges => ("Packing edges", "Kanten werden gepackt"),
@@ -5009,8 +4917,8 @@ impl PreviewEvalPhase {
 /// 📈 One budgeted evaluation's monotone progress.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreviewEvalProgress {
-    pub units_done: u32,
-    pub units_total: u32,
+    pub units_done: u64,
+    pub units_total: u64,
     pub phase: PreviewEvalPhase,
 }
 
@@ -5019,8 +4927,8 @@ semio_framework_value::artifact_retire_leaf!(PreviewEvalProgress);
 /// 📈 The whole session's budgeted-evaluation state, as the status object reports it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreviewEvalStatus {
-    pub units_done: u32,
-    pub units_total: u32,
+    pub units_done: u64,
+    pub units_total: u64,
     pub in_flight: u32,
     pub phase: PreviewEvalPhase,
 }
@@ -5031,7 +4939,7 @@ impl PreviewEvalStatus {
         if self.units_total == 0 {
             return if self.in_flight == 0 { 1.0 } else { 0.0 };
         }
-        (f64::from(self.units_done) / f64::from(self.units_total)).clamp(0.0, 1.0)
+        (self.units_done as f64 / self.units_total as f64).clamp(0.0, 1.0)
     }
 
     /// 🛑 True while an explicit cancel would still retire something.
@@ -5062,7 +4970,7 @@ impl PreviewChainStatus {
     /// ⚖️ The denominator is the node census, raised to `done + 1` while the chain is still working:
     /// a census that has seen every node settle can still be waiting on the answer that will produce
     /// the mesh, and `4/4` there would say "done" about work a cancel could still stop — the same
-    /// rule [`PreviewTessellateStatus::ratio`] applies to a mesh body still crossing in chunks.
+    /// rule [`PreviewTessellateStatus::ratio`] applies throughout original receiving.
     ///
     /// 🩸️ The outstanding round trips are deliberately NOT in the denominator. Counting them made it
     /// oscillate with every park and fold — `2/3` at a parked request, `2/4` the moment it settled —
@@ -5125,13 +5033,11 @@ impl PreviewEvalOutcome {
 /// 📈 One tessellation's monotone progress plus its mesh-body chunk cursor.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreviewTessellateProgress {
-    pub units_done: u32,
-    pub units_total: u32,
-    pub faces_done: u32,
-    pub faces_total: u32,
+    pub units_done: u64,
+    pub units_total: u64,
+    pub faces_done: u64,
+    pub faces_total: u64,
     pub phase: PreviewTessellatePhase,
-    pub next_chunk: u32,
-    pub chunks: u32,
 }
 
 semio_framework_value::artifact_retire_leaf!(PreviewTessellateProgress);
@@ -5139,15 +5045,11 @@ semio_framework_value::artifact_retire_leaf!(PreviewTessellateProgress);
 /// 📈 The whole session's preview tessellation state, as the status object reports it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PreviewTessellateStatus {
-    pub units_done: u32,
-    pub units_total: u32,
-    pub faces_done: u32,
-    pub faces_total: u32,
-    /// 🧱 Mesh-body chunks already folded, and how many the bodies in flight carry in all — the
-    /// SECOND stage of the work a preview owes, which [`PreviewTessellateStatus::ratio`] counts
-    /// alongside the kernel's units so a body still crossing can never publish `ratio: 1`.
-    pub chunks_done: u32,
-    pub chunks_total: u32,
+    pub units_done: u64,
+    pub units_total: u64,
+    pub faces_done: u64,
+    pub faces_total: u64,
+    /// ⏳️ Original requests remain in flight through canonical receiving and cache admission.
     pub in_flight: u32,
     pub diagnostics: u32,
     pub phase: PreviewTessellatePhase,
@@ -5155,13 +5057,9 @@ pub struct PreviewTessellateStatus {
 
 impl PreviewTessellateStatus {
     /// 📈 Fraction of the admitted work already done, in `[0, 1]`.
-    /// ⚖️ A preview owes TWO stages of work — tessellating the kernel's units and carrying the mesh
-    /// body across in chunks — so the ratio is the fraction of BOTH. Counting units alone published
-    /// `ratio: 1` for the whole of a ten-chunk transfer, i.e. the surface said "done" while nothing
-    /// had been painted (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn ratio(&self) -> f64 {
-        let done = u64::from(self.units_done).saturating_add(u64::from(self.chunks_done));
-        let total = u64::from(self.units_total).saturating_add(u64::from(self.chunks_total));
+        let done = u64::from(self.units_done);
+        let total = u64::from(self.units_total);
         if total == 0 {
             return if self.in_flight == 0 { 1.0 } else { 0.0 };
         }
@@ -5177,7 +5075,7 @@ impl PreviewTessellateStatus {
 /// ✅ What one folded `tessellate` response did to the session.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PreviewTessellateOutcome {
-    /// 🔁 More units or more mesh-body chunks remain — re-arm another round trip.
+    /// 🔁️ Original kernel or receiving work remains.
     Working,
     /// ✅ The complete mesh landed under its handle.
     Ready,

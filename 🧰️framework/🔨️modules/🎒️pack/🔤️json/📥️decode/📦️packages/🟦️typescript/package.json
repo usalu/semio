@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun nx run @semio-tech/pack-json-decode-ts:test"
+    "test": "bun repo run @semio-tech/pack-json-decode-ts:test"
   },
   "nx": {
     "includedScripts": []

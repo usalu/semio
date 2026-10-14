@@ -1,9 +1,9 @@
 /** 📥️ Proves actual Nx dispatch issues exact original native child authority. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import {readFileSync} from "node:fs";
+import {readFileSync,mkdtempSync,rmSync} from "node:fs";
 import {createRequire} from "node:module";
-import {dirname,resolve} from "node:path";
+import {dirname,resolve,join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 import nativeSchema from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
 const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/📥️native-caller.json",import.meta.url),"utf8"));
@@ -36,7 +36,7 @@ test("original frozen mode selects inherited native dependencies with unchanged 
   input.context.taskGraph=createTaskGraph(input.context.projectGraph,{},["app"],["test"],mode,{},false);
   const row=fixture.commands[0],[project,target]=row.task.split(":");input.context.projectName=project;input.context.targetName=target;input.context.configurationName=mode;
   const options={...projects[project].targets[target].options,env:{SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(input.original),CARGO_TARGET_DIR:"/repo/artifacts",CARGO_NET_OFFLINE:"true",SEMIO_BUILD_MODE:mode}};
-  let calls=0;await api.executeOwnerArgumentsV1(options,input.context,async()=>{calls++;return{success:true};});expect(calls).toBe(1);expect(input.original.capabilities.selection).toEqual(input.original.capabilities.arguments);
+  let calls=0;await api.executeOwnerArgumentsV1(options,input.context,async(plan:any)=>{calls++;const issued=JSON.parse(plan.env.SEMIO_SCRIPT_PROCESS_INVOCATION);expect(issued.capabilities.buildMode).toBe(mode);return{success:true};});expect(calls).toBe(1);expect(input.original.capabilities.selection).toEqual(input.original.capabilities.arguments);
  }
 });
 test("literal native command kind agrees with independent const admission",()=>{
@@ -196,4 +196,23 @@ test("actual native private argument transport preserves selected child argv",as
  expect(actual.exitCode,new TextDecoder().decode(actual.stderr)).toBe(0);expect(oracle.exitCode,new TextDecoder().decode(oracle.stderr)).toBe(0);
  expect(JSON.parse(new TextDecoder().decode(actual.stdout))).toEqual(arguments_);expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(arguments_);
  console.log("[DEBUG] Native private envelope preserves literal selected arguments in actual Bun and independent Node child argv; outer wrapper command remains static");
+});
+
+/** 🪢️ Exercises the defining owner-command through a real independent Node child. */
+test("actual native owner process receives original build mode policy and deadline",async()=>{
+ const {NativeScript}=await import(new URL("../../../../⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",import.meta.url).href),processApi=await import(new URL("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url).href);
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original generated test output directory required");
+ const root=process.cwd(),directory=mkdtempSync(join(artifacts,"native-handoff-")),saved=process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;
+ const artifactDirectory=resolve(root,".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture"),schemaOracle=new Ajv({strict:true}).compile(nativeSchema);
+ try{
+  for(const mode of fixture.buildModes){
+   const output=join(directory,mode+".json"),program="const fs=require('node:fs');fs.writeFileSync(process.argv[1],JSON.stringify(JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION)));",arguments_=["-e",program,output],command={kind:"native-owner-command",manifest:fixture.ownerHandoff.manifest,workingDirectory:".",program:"node",arguments:arguments_};
+   const capabilities={version:1,buildMode:mode,repositoryRoot:root,artifactDirectory,command,transport:fixture.resources.transport,child:fixture.resources.child,network:fixture.resources.network};
+   const original=processApi.createScriptProcessEnvelope({version:1,owner:fixture.ownerHandoff.parentOwner,maximumElapsedMilliseconds:fixture.ownerHandoff.maximumElapsedMilliseconds},capabilities,Date.now()),before=JSON.stringify(original);
+   process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify({...original,capabilities:{buildMode:fixture.ownerHandoff.staleMode}});
+   await processApi.withScriptProcessEnvelope(original,async(invocation:any)=>{await new NativeScript(root,root,invocation).run(["owner-command","--manifest",command.manifest,"--cwd",".","--",command.program,...arguments_]);});
+   const observed=JSON.parse(readFileSync(output,"utf8"));expect(schemaOracle(observed.capabilities),JSON.stringify(schemaOracle.errors)).toBe(true);expect(observed.capabilities).toEqual(capabilities);expect(observed.policy).toEqual(original.policy);expect(observed.deadlineEpochMilliseconds).toBeLessThanOrEqual(original.deadlineEpochMilliseconds);expect(observed.deadlineEpochMilliseconds).toBeGreaterThan(Date.now());expect(JSON.stringify(original)).toBe(before);
+  }
+ }finally{if(saved===undefined)delete process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;else process.env.SEMIO_SCRIPT_PROCESS_INVOCATION=saved;rmSync(directory,{recursive:true,force:true});}
+ console.log("[DEBUG] Actual native owner-command preserves original mode and closed capability/policy in independent Node child; deadline remains bounded; foreign inherited envelope cannot replace original authority");
 });

@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "graph": {
+    "version": 1,
+    "projects": {
+      "app": {
+        "name": "app",
+        "root": "apps/app",
+        "tags": [
+          "kind:app"
+        ],
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "command",
+              "command": "bun ./📜️script.ts build",
+              "cwd": "apps/app",
+              "env": {
+                "BASE": "yes"
+              }
+            },
+            "cache": true,
+            "outputs": [
+              "{projectRoot}/dist"
+            ],
+            "configurations": {
+              "release": {
+                "execution": {
+                  "env": {
+                    "MODE": "release"
+                  }
+                }
+              }
+            }
+          },
+          "test": {
+            "execution": {
+              "kind": "command",
+              "command": "bun ./📜️script.ts test"
+            },
+            "dependsOn": [
+              "^build"
+            ]
+          }
+        }
+      },
+      "lib": {
+        "name": "lib",
+        "root": "libs/lib",
+        "tags": [
+          "kind:lib"
+        ],
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "noop"
+            }
+          }
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "source": "app",
+        "target": "lib",
+        "type": "static"
+      }
+    ]
+  },
+  "selectionCases": [
+    {
+      "args": [
+        "run",
+        "app:build",
+        "--configuration=release",
+        "--",
+        "literal arg"
+      ],
+      "tasks": [
+        "app:build:release"
+      ],
+      "forwarded": [
+        "literal arg"
+      ]
+    },
+    {
+      "args": [
+        "run-many",
+        "--targets=build",
+        "--projects=tag:kind:app"
+      ],
+      "tasks": [
+        "app:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "args": [
+        "run-many",
+        "--targets=build",
+        "--exclude=lib",
+        "--skip-cache",
+        "--exclude-dependencies"
+      ],
+      "tasks": [
+        "app:build"
+      ],
+      "forwarded": []
+    }
+  ],
+  "globCases": {
+    "paths": [
+      "src/a.ts",
+      "src/nested/b.ts",
+      "src/a.test.ts",
+      "tests/a.ts",
+      "src/a.rs"
+    ],
+    "patterns": [
+      "src/**/*.ts",
+      "**/*.test.ts",
+      "src/*.{ts,rs}",
+      "src/**/!(*.test).ts",
+      "**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)"
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/quiz-react",
   "version": "0.1.0",
   "description": "quiz · React web renderer and proctor client for @semio-tech/quiz",

@@ -1,16 +1,16 @@
 {
   "name": "@semio-tech/energy-js",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "test-toolchain-authority": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test toolchain-authority"
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

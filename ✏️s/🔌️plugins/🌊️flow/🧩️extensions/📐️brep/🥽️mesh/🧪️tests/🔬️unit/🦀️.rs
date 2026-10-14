@@ -12,7 +12,7 @@ fn drain_cancelled_mesh_evaluation(registry:&TestGeometryRegistry,request:&str,o
 #[test]
 fn mesh_output_fault_retires_owned_payload_before_terminal_error() {
     use neural_engine::OperatorJobStep;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["faultRetirement"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["faultRetirement"];
     let payload=" ".repeat(law["payloadBytes"].as_u64().unwrap()as usize);let text=serde_json::to_string(&payload).unwrap();assert_eq!(serde_json::from_str::<String>(&text).unwrap(),payload);
     for cancel in [false,true] {
         let mut job=MeshOperatorJob::json(HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap()).unwrap();let Some(MeshJobOutput::Mesh(state))=&mut job.output else {unreachable!()};state.data=payload.clone();
@@ -34,7 +34,7 @@ fn mesh_output_fault_retires_owned_payload_before_terminal_error() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_reconstruction_fault_retires_source_and_input_before_terminal_error() {
     use neural_engine::OperatorJobStep;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["reconstructionFault"];let registry=TestGeometryRegistry::new();let text=law["mesh"].to_string();let parsed:serde_json::Value=serde_json::from_str(&text).unwrap();assert_eq!(parsed,law["mesh"]);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["reconstructionFault"];let registry=TestGeometryRegistry::new();let text=law["mesh"].to_string();let parsed:serde_json::Value=serde_json::from_str(&text).unwrap();assert_eq!(parsed,law["mesh"]);
     let input=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(text))))).insert("offset",Value::Dictionary(vector_dictionary([1.0,2.0,3.0]))));
     for cancel in [false,true] {
         let mut job=MeshOperatorJob::preparation("translate",registry.session.clone(),&input).unwrap();let mut source=parse_polygon_mesh_source(&law["mesh"].to_string()).unwrap();source.faces=serde_json::from_value(law["ownedFaces"].clone()).unwrap();let state=job.preparation.as_mut().unwrap();let previous=state.source.take().unwrap();state.reconstruction=Some(HalfedgeMesh::polygon_source_job(source).unwrap());let mut retirement=semio_framework_value::retirement::owned_retirement(previous);while !retirement.terminal_is_empty() {retirement.close_step(1,8).unwrap();}let mut turns=0;
@@ -49,7 +49,7 @@ async fn mesh_reconstruction_fault_retires_source_and_input_before_terminal_erro
 #[semio_framework_async_macros::async_test]
 async fn mesh_import_admission_fault_retains_all_typed_transfer_bytes() {
     use neural_engine::OperatorJobStep;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["importAdmissionFault"];let mesh=HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();let transfer=mesh.tessellate().unwrap();let words=transfer.positions.len()+transfer.normals.len()+transfer.colors.len()+transfer.indices.len()+transfer.face_ids.len()+transfer.vertex_ids.len()+transfer.edge_positions.len()+transfer.edge_ids.len()+transfer.uvs.len()+transfer.edge_uvs.len();let expected=words*4+transfer.edge_is_seam.len();assert_eq!(transfer.positions.len()%law["positionStride"].as_u64().unwrap()as usize,0);assert_eq!(transfer.indices.len()%law["triangleStride"].as_u64().unwrap()as usize,0);
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["importAdmissionFault"];let mesh=HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();let transfer=mesh.tessellate().unwrap();let words=transfer.positions.len()+transfer.normals.len()+transfer.colors.len()+transfer.indices.len()+transfer.face_ids.len()+transfer.vertex_ids.len()+transfer.edge_positions.len()+transfer.edge_ids.len()+transfer.uvs.len()+transfer.edge_uvs.len();let expected=words*4+transfer.edge_is_seam.len();assert_eq!(transfer.positions.len()%law["positionStride"].as_u64().unwrap()as usize,0);assert_eq!(transfer.indices.len()%law["triangleStride"].as_u64().unwrap()as usize,0);
     let registry=TestGeometryRegistry::new();let mut job=MeshOperatorJob::to_brep(registry.session.clone(),mesh,law["tolerance"].as_f64().unwrap()).unwrap();let mut turns=0;
     while job.import.as_ref().unwrap().fault.is_none() {turns+=1;assert!(turns<10000);assert!(matches!(job.step(1).unwrap(),OperatorJobStep::Working(_)));}
     let mut retirement=job.import.as_mut().unwrap().transfer_retirement.take().unwrap();let mut bytes=0;while !retirement.terminal_is_empty() {match retirement.close_step(1,law["grantBytes"].as_u64().unwrap()as usize).unwrap() {semio_framework_value::SnapshotRetirementStep::Pending {released_bytes,..}=>{assert!(released_bytes<=8);bytes+=released_bytes;},_=>{}}}
@@ -60,7 +60,7 @@ async fn mesh_import_admission_fault_retains_all_typed_transfer_bytes() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_source_preparation_retains_json_and_typed_projection_under_work_grants() {
     use neural_engine::OperatorJobStep;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["sourceParsing"];let label=law["textUnit"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let mut source=law["mesh"].clone();source["materials"]=serde_json::json!({"paint":{"label":label}});let text=source.to_string();assert_eq!(serde_json::from_str::<serde_json::Value>(&text).unwrap(),source);let registry=TestGeometryRegistry::new();let input=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(text))))).insert("offset",Value::Dictionary(vector_dictionary([1.0,2.0,3.0]))));
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let law=&fixture["sourceParsing"];let label=law["textUnit"].as_str().unwrap().repeat(law["textRepeats"].as_u64().unwrap()as usize);let mut source=law["mesh"].clone();source["materials"]=serde_json::json!({"paint":{"label":label}});let text=source.to_string();assert_eq!(serde_json::from_str::<serde_json::Value>(&text).unwrap(),source);let registry=TestGeometryRegistry::new();let input=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(text))))).insert("offset",Value::Dictionary(vector_dictionary([1.0,2.0,3.0]))));
     let mut job=registry.dispatch_job("brep.mesh.translate",&input).unwrap().unwrap();assert_eq!(job.progress().phase,law["initialPhase"].as_str().unwrap(),"whole JSON must remain inside retained preparation");let mut phases=std::collections::BTreeSet::new();let mut turns=0;let output=loop {phases.insert(job.progress().phase);let before=job.progress();assert!(matches!(job.close_step(1,0).unwrap(),OperatorJobStep::Working(_)));assert_eq!(job.progress().units_done,before.units_done);turns+=1;assert!(turns<100000);match job.step(1).unwrap() {OperatorJobStep::Working(progress)=>assert_eq!(progress.units_done,before.units_done+1),OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.translate",value).unwrap()),_=>panic!("valid parser preparation cancelled")}};
     for phase in law["phases"].as_array().unwrap() {assert!(phases.contains(phase.as_str().unwrap()));let mut cancelled=registry.dispatch_job("brep.mesh.translate",&input).unwrap().unwrap();while cancelled.progress().phase!=phase.as_str().unwrap() {assert!(matches!(cancelled.step(1).unwrap(),OperatorJobStep::Working(_)));}cancelled.step(1).unwrap();cancelled.cancel();drain_cancelled_mesh_job(&mut *cancelled);}
     let data=output.get("meshOut").unwrap().as_dictionary().unwrap().get("data").unwrap().as_atom().unwrap().as_str().unwrap();let parsed:serde_json::Value=serde_json::from_str(data).unwrap();assert_eq!(parsed["materials"],source["materials"]);let positions:Vec<[f32;3]>=serde_json::from_value(parsed["vertices"].clone()).unwrap();assert_eq!(positions,vec![[1.,2.,3.],[2.,2.,3.],[1.,3.,3.]]);eprintln!("[DEBUG] Existing source owner retained JSON and typed projection, phases={phases:?}, workTurns={turns}");
@@ -80,7 +80,7 @@ async fn mesh_affine_operator_owns_matrix_contract_and_retained_output() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_json_export_retains_polygon_metadata_without_preview_work() {
     use neural_engine::OperatorJobStep;
-    let budget=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let fixture=semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🎨️attributes/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let source=fixture.get("indexedMesh").unwrap().to_string();let registry=TestGeometryRegistry::new();let input=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(source.clone()))))));
+    let budget=semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let fixture=semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🎨️attributes/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let source=fixture.get("indexedMesh").unwrap().to_string();let registry=TestGeometryRegistry::new();let input=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(source.clone()))))));
     for phase in budget.get("jsonExportPhases").unwrap().as_array().unwrap() {let mut job=registry.dispatch_job("brep.mesh.exportJson",&input).unwrap().unwrap();assert!(matches!(job.step(0).unwrap(),OperatorJobStep::Working(_)));let mut units=0;while job.progress().phase!=phase.as_str().unwrap() {let before=job.progress().units_done;assert!(matches!(job.step(1).unwrap(),OperatorJobStep::Working(_)));assert_eq!(job.progress().units_done,before+1);units+=1;assert!(units<100000);}job.cancel();let before=job.progress().units_done;drain_cancelled_mesh_job(&mut *job);assert_eq!(job.progress().units_done,before);}
     let mut job=registry.dispatch_job("brep.mesh.exportJson",&input).unwrap().unwrap();let mut phases=std::collections::BTreeSet::new();let output=loop {phases.insert(job.progress().phase);match job.step(1).unwrap() {OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.exportJson",value).unwrap()),OperatorJobStep::Working(_)=>{},_=>panic!("unexpected JSON cancellation")}};let text=read_text(&output,budget.get("jsonExportChannel").unwrap().as_str().unwrap()).unwrap();let mut actual:serde_json::Value=serde_json::from_str(&text).unwrap();let mut expected:serde_json::Value=serde_json::from_str(&source).unwrap();let positions=|value:&mut serde_json::Value|serde_json::from_value::<Vec<[f32;3]>>(value.as_object_mut().unwrap().remove("vertices").unwrap()).unwrap();assert_eq!(positions(&mut actual),positions(&mut expected));assert_eq!(actual,expected);assert!(!phases.contains("mesh-output-tessellate"));assert!(!phases.contains("mesh-output-pack"));assert!(!phases.contains("mesh-output-base64"));eprintln!("[DEBUG] Retained JSON-only export completedUnits={} bytes={} authored metadata preserved",job.progress().units_done,text.len());
     let case=budget.get("objExport").unwrap();let source=case.get("mesh").unwrap().to_string();let request=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(source))))));let mut job=registry.dispatch_job("brep.mesh.exportObj",&request).unwrap().unwrap();let mut phases=std::collections::BTreeMap::new();assert!(matches!(job.step(0).unwrap(),OperatorJobStep::Working(_)));let output=loop {let before=job.progress();match job.step(1).unwrap() {OperatorJobStep::Working(_)=>{phases.entry(before.phase).or_insert(before.units_done);},OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.exportObj",value).unwrap()),_=>unreachable!()}};let text=read_text(&output,"text").unwrap();assert_eq!(text,case.get("expected").unwrap().as_str().unwrap());for (phase,_) in &phases {let mut cancelled=registry.dispatch_job("brep.mesh.exportObj",&request).unwrap().unwrap();while cancelled.progress().phase!=*phase {assert!(matches!(cancelled.step(1).unwrap(),OperatorJobStep::Working(_)));}let before=cancelled.progress();cancelled.cancel();drain_cancelled_mesh_job(&mut *cancelled);assert_eq!(cancelled.progress().units_done,before.units_done);}eprintln!("[DEBUG] Retained OBJ export authored UV,exactneutraltext,allobservedphasecancellation,units={}",job.progress().units_done);
@@ -116,7 +116,7 @@ fn mesh_output_metadata_retains_bounded_values_and_cancellation() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_output_jobs_bound_work_and_cancel_every_output_phase() {
     use neural_engine::OperatorJob;
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let mesh = decode_mesh(&semio_framework_pack_json::to_string(case.get("mesh").unwrap())).unwrap();
         let transfer = mesh.tessellate().unwrap();
@@ -223,7 +223,7 @@ async fn mesh_existing_synchronous_routes_record_runtime_costs() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_mutation_preparation_retains_source_reconstruction_before_modeling() {
     use neural_engine::OperatorJobStep;
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let case=&fixture["inputPreparation"];let registry=TestGeometryRegistry::new();let source=registry.dispatch_cold("brep.mesh.box",["width","height","depth"].into_iter().fold(Dictionary::new(),|input,name|input.insert(name,Value::Dictionary(number_dictionary(1.0))))).unwrap();let input=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",source.get("meshOut").unwrap().clone()).insert("offset",Value::Dictionary(vector_dictionary(std::array::from_fn(|axis|case["offset"][axis].as_f64().unwrap())))));let mut job=registry.dispatch_job("brep.mesh.translate",&input).unwrap().unwrap();assert_eq!(job.progress().phase,case["initialPhase"].as_str().unwrap(),"input reconstruction must remain in the same retained job");assert!(matches!(job.step(0).unwrap(),OperatorJobStep::Working(_)));let mut phases=std::collections::BTreeMap::new();let output=loop {let before=job.progress();match job.step(1).unwrap() {OperatorJobStep::Working(_)=>{phases.entry(before.phase).or_insert(before.units_done);},OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.translate",value).unwrap()),_=>unreachable!()}};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let case=&fixture["inputPreparation"];let registry=TestGeometryRegistry::new();let source=registry.dispatch_cold("brep.mesh.box",["width","height","depth"].into_iter().fold(Dictionary::new(),|input,name|input.insert(name,Value::Dictionary(number_dictionary(1.0))))).unwrap();let input=neural_engine::ColdOwner::new(Dictionary::new().insert("mesh",source.get("meshOut").unwrap().clone()).insert("offset",Value::Dictionary(vector_dictionary(std::array::from_fn(|axis|case["offset"][axis].as_f64().unwrap())))));let mut job=registry.dispatch_job("brep.mesh.translate",&input).unwrap().unwrap();assert_eq!(job.progress().phase,case["initialPhase"].as_str().unwrap(),"input reconstruction must remain in the same retained job");assert!(matches!(job.step(0).unwrap(),OperatorJobStep::Working(_)));let mut phases=std::collections::BTreeMap::new();let output=loop {let before=job.progress();match job.step(1).unwrap() {OperatorJobStep::Working(_)=>{phases.entry(before.phase).or_insert(before.units_done);},OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.translate",value).unwrap()),_=>unreachable!()}};
     for phase in case["phases"].as_array().unwrap() {assert!(phases.contains_key(phase.as_str().unwrap()),"missing {phase}");}let mesh=read_mesh(&output,"meshOut").unwrap();assert_eq!(mesh.vertex_count(),case["vertices"].as_u64().unwrap() as usize);assert_eq!(mesh.face_count(),case["faces"].as_u64().unwrap() as usize);let report=neural_engine::ColdOwner::new(analyze(&mesh).unwrap());assert!((read_channel_number(&report,"area").unwrap()-case["area"].as_f64().unwrap()).abs()<1e-6);assert!((read_channel_number(&report,"volume").unwrap()-case["volume"].as_f64().unwrap()).abs()<1e-6);
     for (phase,_) in phases {let mut cancelled=registry.dispatch_job("brep.mesh.translate",&input).unwrap().unwrap();let mut preparation_steps=0;while cancelled.progress().phase!=phase {assert!(matches!(cancelled.step(1).unwrap(),OperatorJobStep::Working(_)));preparation_steps+=1;assert!(preparation_steps<100000);}cancelled.cancel();let before=cancelled.progress();assert!(matches!(cancelled.close_step(1,0).unwrap(),OperatorJobStep::Working(progress) if progress.units_done==before.units_done));let mut trips=0;loop {match cancelled.close_step(1,8).unwrap() {OperatorJobStep::Working(_)=>{trips+=1;assert!(trips<100000);},OperatorJobStep::Cancelled(_)=>break,_=>panic!("cancelled source preparation published")}}}
     eprintln!("[DEBUG] Same mesh mutation job retained source reconstruction and translation,all-phase eight-byte cancellation,units={}",job.progress().units_done);
@@ -232,7 +232,7 @@ async fn mesh_mutation_preparation_retains_source_reconstruction_before_modeling
 #[semio_framework_async_macros::async_test]
 async fn mesh_analysis_retains_topology_tessellation_and_measurement() {
     use neural_engine::{OperatorJob,OperatorJobStep};
-    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture=semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh=HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
     for phase in fixture.get("analysisPhases").unwrap().as_array().unwrap() {
         let mut job=MeshOperatorJob::analysis(mesh.clone()).unwrap();
@@ -249,7 +249,7 @@ async fn mesh_analysis_retains_topology_tessellation_and_measurement() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_generation_refuses_expansion_before_reconstruction() {
-    let fixture=semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture=semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let limit=fixture.get("limits").unwrap().get("vertices").unwrap().as_u64().unwrap() as usize;
     let source=HalfedgeMesh::from_faces(&vec![[1.0,0.0,0.0];limit],&[vec![0,1,2]]).unwrap();
     for mut job in [source.mirror_job(MirrorAxis::X,0.0).unwrap(),source.subdivide_faces_job(&[FaceId(0)]).unwrap()] {
@@ -287,7 +287,7 @@ async fn mesh_from_brep_retains_tessellation_import_normals_and_output() {
     let mut job=registry.dispatch_job("brep.mesh.fromBrep",&input).unwrap().unwrap();let output=loop {let before=job.progress().units_done;match job.step(1).unwrap() {OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.fromBrep",value).unwrap()),OperatorJobStep::Working(_)=>assert!(job.progress().units_done>=before),_=>panic!("unexpected cancellation")}};
     let mesh=read_mesh(&output,"meshOut").unwrap();assert_eq!(mesh.attributes()["normal"].values.len(),mesh.halfedge_count());let report=neural_engine::ColdOwner::new(analyze(&mesh).unwrap());assert_eq!(read_channel_number(&report,"boundaryEdges").unwrap(),0.0);
     eprintln!("[DEBUG] retained fromBrep completedUnits={} corners={} retainedNormals={}",job.progress().units_done,mesh.halfedge_count(),mesh.attributes()["normal"].values.len());
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let case=&fixture["toBrep"];let request=neural_engine::ColdOwner::new(defaults("brep.mesh.toBrep").insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(case["mesh"].to_string()))))));let counts=||registry.session.with_kernel_read(|kernel|{let body=kernel.tessellation_body();Ok([body.vertices.len(),body.edges.len(),body.coedges.len(),body.loops.len(),body.faces.len(),body.shells.len(),body.solids.len(),body.curves3.len(),body.curves2.len(),body.surfaces.len(),kernel.live_handles().len()])}).unwrap();let initial=counts();let mut job=registry.dispatch_job("brep.mesh.toBrep",&request).unwrap().expect("toBrep requires the existing retained operator owner");assert!(matches!(job.step(0).unwrap(),OperatorJobStep::Working(_)));let mut phases=std::collections::BTreeMap::new();let output=loop {let before=job.progress();match job.step(1).unwrap() {OperatorJobStep::Working(_)=>{phases.entry(before.phase).or_insert(before.units_done);},OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.toBrep",value).unwrap()),_=>unreachable!()}};let handle=read_geometry(&output,"geometry").unwrap();registry.session.with_kernel_read(|kernel|{kernel.validate_gate_sync(&handle).map_err(|errors|invalid(format!("{errors:?}")))?;assert!((kernel.area_sync(&handle).map_err(|error|map_kernel_error(&error))?-case["area"].as_f64().unwrap()).abs()<1e-6);Ok(())}).unwrap();let current=counts();assert_eq!(current[4],initial[4]+case["triangles"].as_u64().unwrap()as usize);assert_eq!(current[6],initial[6]+case["solids"].as_u64().unwrap() as usize);assert_eq!(output.get("geometry").and_then(Value::as_dictionary).unwrap().get("kind").and_then(Value::as_atom).and_then(Atom::as_str),case["kind"].as_str());
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json")).unwrap();let case=&fixture["toBrep"];let request=neural_engine::ColdOwner::new(defaults("brep.mesh.toBrep").insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(case["mesh"].to_string()))))));let counts=||registry.session.with_kernel_read(|kernel|{let body=kernel.tessellation_body();Ok([body.vertices.len(),body.edges.len(),body.coedges.len(),body.loops.len(),body.faces.len(),body.shells.len(),body.solids.len(),body.curves3.len(),body.curves2.len(),body.surfaces.len(),kernel.live_handles().len()])}).unwrap();let initial=counts();let mut job=registry.dispatch_job("brep.mesh.toBrep",&request).unwrap().expect("toBrep requires the existing retained operator owner");assert!(matches!(job.step(0).unwrap(),OperatorJobStep::Working(_)));let mut phases=std::collections::BTreeMap::new();let output=loop {let before=job.progress();match job.step(1).unwrap() {OperatorJobStep::Working(_)=>{phases.entry(before.phase).or_insert(before.units_done);},OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.toBrep",value).unwrap()),_=>unreachable!()}};let handle=read_geometry(&output,"geometry").unwrap();registry.session.with_kernel_read(|kernel|{kernel.validate_gate_sync(&handle).map_err(|errors|invalid(format!("{errors:?}")))?;assert!((kernel.area_sync(&handle).map_err(|error|map_kernel_error(&error))?-case["area"].as_f64().unwrap()).abs()<1e-6);Ok(())}).unwrap();let current=counts();assert_eq!(current[4],initial[4]+case["triangles"].as_u64().unwrap()as usize);assert_eq!(current[6],initial[6]+case["solids"].as_u64().unwrap() as usize);assert_eq!(output.get("geometry").and_then(Value::as_dictionary).unwrap().get("kind").and_then(Value::as_atom).and_then(Atom::as_str),case["kind"].as_str());
     let closed_request=neural_engine::ColdOwner::new(defaults("brep.mesh.toBrep").insert("mesh",Value::Dictionary(Dictionary::with_schema("mesh").insert("data",Value::Atom(Atom::String(case["closedMesh"].to_string()))))));let mut closed=registry.dispatch_job("brep.mesh.toBrep",&closed_request).unwrap().unwrap();let output=loop {match closed.step(1).unwrap() {OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.toBrep",value).unwrap()),OperatorJobStep::Working(_)=>{},_=>unreachable!()}};let solid=read_geometry(&output,"geometry").unwrap();registry.session.with_kernel_read(|kernel|{kernel.validate_gate_sync(&solid).map_err(|errors|invalid(format!("{errors:?}")))?;assert!((kernel.volume_sync(&solid).map_err(|error|map_kernel_error(&error))?-case["closedVolume"].as_f64().unwrap()).abs()<1e-6);Ok(())}).unwrap();let stable=counts();for (phase,_) in &phases {let mut cancelled=registry.dispatch_job("brep.mesh.toBrep",&request).unwrap().unwrap();while cancelled.progress().phase!=*phase {assert!(matches!(cancelled.step(1).unwrap(),OperatorJobStep::Working(_)));}cancelled.cancel();let frozen=cancelled.progress().units_done;assert!(matches!(cancelled.close_step(1,case["retirementBytes"][0].as_u64().unwrap() as usize).unwrap(),OperatorJobStep::Working(_)));assert_eq!(cancelled.progress().units_done,frozen);let mut retired=0;loop {match cancelled.step(1).unwrap() {OperatorJobStep::Working(_)=>{retired+=1;assert!(retired<10000);},OperatorJobStep::Cancelled(_)=>break,_=>panic!("cancelled import published a handle")}}assert_eq!(counts(),stable);}eprintln!("[DEBUG] Retained toBrep valid triangle-derived topology,allobservedphasecancellation exact{} entity/handle counters,units={}",stable.len(),job.progress().units_done);
     for (phase_index,phase) in phases.keys().filter(|phase|Some(**phase)!=case["privateInitialPhase"].as_str()).enumerate() {
         for all in [false,true] {
@@ -318,7 +318,7 @@ async fn mesh_from_brep_retains_tessellation_import_normals_and_output() {
 async fn mesh_output_encoding_cancels_through_the_existing_graph_owner() {
     let _serial = super::super::tests::test_serial().await;
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let input = neural_engine::ColdOwner::new(Dictionary::new().insert("data",Value::Dictionary(text_dictionary(semio_framework_pack_json::to_string(fixture.get("cases").unwrap().as_array().unwrap()[0].get("mesh").unwrap())))));
     let operator = "brep.mesh.construct"; let node_hash = 0x6D_04_00_i64;
     let request = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([
@@ -346,7 +346,7 @@ async fn mesh_output_encoding_cancels_through_the_existing_graph_owner() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_mirror_uses_the_existing_retained_modeling_owner() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let fixture = fixture.get("mirroring").unwrap();
     let mut source = HalfedgeMesh::box_prim(1.0,1.0,1.0).unwrap();
     source.translate(MeshVector([0,1,2].map(|axis|fixture.get("translation").unwrap().as_array().unwrap()[axis].as_f64().unwrap() as f32))).unwrap();
@@ -367,7 +367,7 @@ async fn mesh_mirror_uses_the_existing_retained_modeling_owner() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_merge_uses_retained_pair_and_corner_work() {
     let fixtures = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let jobs = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let jobs = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixtures.get("merges").unwrap().as_array().unwrap() {
         let source = decode_mesh(&semio_framework_pack_json::to_string(case.get("mesh").unwrap())).unwrap();
         let ids = case.get("selection").unwrap().as_array().unwrap().iter().map(|id|VertexId(id.as_u64().unwrap() as u32)).collect::<Vec<_>>();
@@ -391,7 +391,7 @@ async fn mesh_merge_uses_retained_pair_and_corner_work() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_subdivision_retains_concave_triangulation_and_centroid_work() {
     let fixtures = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🧪️tests/🧫️fixtures/🛠️modeling/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let jobs = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let jobs = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️output-budget/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let polygon = &fixtures.get("polygons").unwrap().as_array().unwrap()[0];
     let source = decode_mesh(&semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("vertices".into(),polygon.get("vertices").unwrap().clone()),("faces".into(),polygon.get("faces").unwrap().clone())]))).unwrap();
     for phase in jobs.get("subdivision").unwrap().get("phases").unwrap().as_array().unwrap() {
@@ -464,7 +464,7 @@ async fn mesh_knife_widget_preserves_shared_fixture_surfaces() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_component_transforms_match_shared_fixtures() {
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧭️component-transform/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🧭️component-transform/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let source = decode_mesh(&semio_framework_pack_json::to_string(fixture.get("mesh").unwrap())).unwrap();
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
         let transform = case.get("transform").unwrap();
@@ -512,7 +512,7 @@ async fn mesh_loop_cut_consumes_preview_halfedge_ids() {
 #[semio_framework_async_macros::async_test]
 async fn brep_scale_preserves_each_axis_and_explicit_center() {
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture.get("brepScales").unwrap().as_array().unwrap() {
         let coordinates = |key: &str| [0, 1, 2].map(|axis| case.get(key).unwrap().as_array().unwrap()[axis].as_f64().unwrap());
         let input = Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)));
@@ -537,7 +537,7 @@ async fn brep_scale_preserves_each_axis_and_explicit_center() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_reflections_preserve_outward_winding_at_every_scale() {
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture.get("reflections").unwrap().as_array().unwrap() {
         let factors = case.get("factors").unwrap().as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect::<Vec<_>>();
         let seed = neural_engine::ColdOwner::new(mesh_output(&HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap()).unwrap());
@@ -558,7 +558,7 @@ async fn mesh_reflections_preserve_outward_winding_at_every_scale() {
 
 #[test]
 fn indexed_mesh_contract_fixtures() {
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture.get("meshes").unwrap().as_array().unwrap() {
         let mesh = decode_mesh(&semio_framework_pack_json::to_string(case.get("mesh").unwrap())).unwrap();
         let report = neural_engine::ColdOwner::new(analyze(&mesh).unwrap());
@@ -589,7 +589,7 @@ async fn mesh_widgets_are_registered_and_typed() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_widget_workflow_fixtures_execute() {
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture.get("workflows").unwrap().as_array().unwrap() {
         let operation = case.get("operation").unwrap().as_str().unwrap();
         let id = format!("brep.mesh.{operation}");
@@ -661,7 +661,7 @@ async fn mesh_workbench_creates_edits_analyzes_and_converts() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_inspection_widgets_match_portable_fixtures() {
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔎️inspection/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔎️inspection/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh = decode_mesh(&semio_framework_pack_json::to_string(fixture.get("mesh").unwrap())).unwrap();
     let seed = neural_engine::ColdOwner::new(mesh_output(&mesh).unwrap());
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
@@ -736,7 +736,7 @@ async fn mesh_modeling_widgets_match_kernel_portable_fixtures() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_face_merge_widgets_preserve_fixture_surface() {
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🧵️merge-faces/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🧵️merge-faces/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let source = decode_mesh(&semio_framework_pack_json::to_string(fixture.get("mesh").unwrap())).unwrap();
     let seed = neural_engine::ColdOwner::new(mesh_output(&source).unwrap());
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
@@ -753,7 +753,7 @@ async fn mesh_face_merge_widgets_preserve_fixture_surface() {
 #[semio_framework_async_macros::async_test]
 async fn reflected_preview_edge_ids_inspect_the_serialized_mesh() {
     let registry = TestGeometryRegistry::new();
-    let fixtures = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/🔎️inspection/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixtures = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/🔎️inspection/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let source = neural_engine::ColdOwner::new(mesh_output(&HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap()).unwrap());
     for transform in fixtures.get("previewTransforms").unwrap().as_array().unwrap() {
         let factor = transform.get("factor").unwrap().as_array().unwrap();
@@ -773,7 +773,7 @@ async fn reflected_preview_edge_ids_inspect_the_serialized_mesh() {
 async fn mesh_modeling_yields_and_cancels_through_graph_evaluation_handler() {
     let _serial = super::super::tests::test_serial().await;
     let registry = TestGeometryRegistry::new();
-    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/⏱️modeling-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture = semio_framework_pack_json::parse(include_str!("../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🧫️fixtures/⏱️modeling-budget/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mesh = decode_mesh(&semio_framework_pack_json::to_string(fixture.get("mesh").unwrap())).unwrap();
     let source = neural_engine::ColdOwner::new(mesh_output(&mesh).unwrap());
     for (index, case) in fixture.get("cases").unwrap().as_array().unwrap().iter().enumerate() {

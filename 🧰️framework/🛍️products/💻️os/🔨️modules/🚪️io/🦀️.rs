@@ -3069,5 +3069,4 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 pub mod text;
 
 /// ⏱️ Original caller authority for physical route execution.
-#[path = "../../../../🔨️modules/🚪️io/⏱️control/🦀️.rs"]
-pub mod control;
+pub use semio_framework_io_sqlite_snapshot::control;

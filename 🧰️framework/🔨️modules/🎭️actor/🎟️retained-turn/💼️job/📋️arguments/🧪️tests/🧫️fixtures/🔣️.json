@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "slots": [
+    "operation",
+    "generation",
+    "epoch",
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes",
+    "maximumDepth",
+    "fuel",
+    "deadlineUs",
+    "cancelled"
+  ],
+  "budget": {
+    "input": {
+      "operation": 71,
+      "generation": 3,
+      "epoch": 23,
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 65536,
+        "maximumDepth": 64
+      }
+    },
+    "fuel": 17,
+    "deadlineUs": 123456,
+    "cancelled": true
+  },
+  "arguments": [
+    71,
+    3,
+    23,
+    1,
+    4096,
+    65536,
+    65536,
+    64,
+    17,
+    123456,
+    1
+  ]
+}

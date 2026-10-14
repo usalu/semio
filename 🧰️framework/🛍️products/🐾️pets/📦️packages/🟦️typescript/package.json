@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/pets",
   "version": "0.1.0",
   "description": "pets · render-independent deterministic pets: menageries of rigged species, keyframed clips, bonds, casts and the stage that folds events into frames",

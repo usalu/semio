@@ -1,3 +1,4 @@
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import { resolveAssetDeliveryModeV1 } from "../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,14 +23,14 @@ export function wgpuCompletedFrameworkRootsV1(profile: "prototype" | "release") 
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
   };
 }
-export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly catalog: import("../../../../../../🔌️plugin/📇️registry/🟦️.ts").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
+export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("../../../../../../🔌️plugin/📇️registry/🟦️.ts").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
   const variant = options.variant;
   const profile = wgpuCompletedProfileV1();
   const moduleRoot = pluginModulesRoot();
   const runtime = developmentRuntimeRoot(resolve(root, "../../../../../🧑‍💻dev/📦️packages/🟦️typescript"), variant!, profile, "wgpu");
   const config = createWgpuBrowserConfig({
     workspace, root, profile, variant,
-    catalog: options.catalog,
+    catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(),
     ...wgpuCompletedFrameworkRootsV1(profile),
     moduleRoot,
     extensionRoot: join(runtime, "extensions"),

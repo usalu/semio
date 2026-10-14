@@ -15,6 +15,11 @@ const PENDING_KEY_BYTE_CAPACITY: usize = 4 * 1024;
 const DRAG_POINT_CAPACITY: usize = 4_096;
 const INPUT_TEXT_PAGE_BYTES: usize = 16 * 1024;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ClipboardIntentSource { pub operation: semio_framework_job::OperationId, pub generation: semio_framework_job::Generation, pub epoch: u64 }
+pub enum ClipboardIntentRecipient { Write(String), Window(String), Text { slot: u8, generation: u64 }, Ink { slot: u8, generation: u64 } }
+pub struct OriginalClipboardIntent { pub source: ClipboardIntentSource, pub recipient: ClipboardIntentRecipient, pub text: Option<String> }
+
 struct RetainedInputAction {
     source: RetainedInputActionSource,
     action: RetainedStringAction,
@@ -295,6 +300,8 @@ impl<E> HitRegistry<E> {
 }
 
 pub struct InputState<E> {
+    pub original_clipboard_source: Option<ClipboardIntentSource>,
+    pub original_clipboard_intents: [Option<OriginalClipboardIntent>; 32],
     pub pointer_x: f32,
     pub pointer_y: f32,
     pub pointer_down: bool,
@@ -321,6 +328,8 @@ pub struct InputState<E> {
 impl<E> Default for InputState<E> {
     fn default() -> Self {
         Self {
+            original_clipboard_source: None,
+            original_clipboard_intents: std::array::from_fn(|_| None),
             pointer_x: 0.0,
             pointer_y: 0.0,
             pointer_down: false,
@@ -347,6 +356,24 @@ impl<E> Default for InputState<E> {
 }
 
 impl<E: Clone> InputState<E> {
+    pub fn bind_original_clipboard_dispatch(&mut self, cx: &mut semio_framework_job::StepContext<'_>, epoch: u64) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if epoch == 0 || !cx.original_source_epoch().is_some_and(|incoming| incoming >= epoch) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "clipboard dispatch requires its original admitted causal epoch").into()); }
+        let _ = cx.original_source_parent()?;
+        let bytes = std::mem::size_of::<ClipboardIntentSource>();
+        if cx.should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_copy_bytes < bytes || cx.retained_grant().maximum_depth == 0 { return Ok(false); }
+        self.original_clipboard_source = Some(ClipboardIntentSource { operation: cx.operation(), generation: cx.generation(), epoch });
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_bytes: bytes, ..Default::default() })?;
+        Ok(true)
+    }
+
+    pub fn original_clipboard_has_capacity(&self) -> bool { self.original_clipboard_intents.iter().any(Option::is_none) }
+
+    pub fn retain_original_clipboard_intent(&mut self, recipient: ClipboardIntentRecipient, text: Option<String>) -> Result<(), (ClipboardIntentRecipient, Option<String>)> {
+        let Some(source) = self.original_clipboard_source else { return Err((recipient, text)); };
+        let Some(slot) = self.original_clipboard_intents.iter_mut().find(|slot| slot.is_none()) else { return Err((recipient, text)); };
+        *slot = Some(OriginalClipboardIntent { source, recipient, text });
+        Ok(())
+    }
     /// 🎨️ Mints one entry into the registry the CURRENT frame build is assembling. It becomes
     /// resolvable only at `publish_hits`, so a half-walked chrome pass never answers a pointer.
     pub fn register_hit(&mut self, target: HitTarget<E>) {

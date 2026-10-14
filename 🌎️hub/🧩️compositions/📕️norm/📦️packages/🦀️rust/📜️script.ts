@@ -360,7 +360,7 @@ function componentCoreCensus(buffer: Buffer): NormComponentCensus {
 class ComponentBudgetScript extends BundleScript {
   run(): void {
     const component = componentDeliverableV1(join(this.root, "../../🧩️component/📦️packages/🦀️rust"), "semio-hub-norm-component", SHIPPED_COMPONENT_PROFILE).wasm;
-    if (!existsSync(component)) throw new Error(`norm's shipped component is absent, so its size cannot be weighed: build it with \`bun nx run semio-hub-norm-component:component\` (${component})`);
+    if (!existsSync(component)) throw new Error(`norm's shipped component is absent, so its size cannot be weighed: build it with \`bun repo run semio-hub-norm-component:component\` (${component})`);
     const census = componentCoreCensus(readFileSync(component));
     for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
       let refused = false;

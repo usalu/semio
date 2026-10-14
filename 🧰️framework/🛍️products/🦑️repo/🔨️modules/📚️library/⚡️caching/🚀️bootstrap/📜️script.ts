@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import {nativeNxChildEnvironmentV1,createNativeNxCallerCapabilitiesV1,issueSelectedNxCallerEnvelopeV1} from "../📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts";
+import {resolveBuildSelectionV1} from "../../🏗️build/🧭️invocation/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
@@ -12,14 +13,17 @@ import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, relative, sep, win32, posix } from "node:path";
 import { Script, ScriptRouter, readScriptPolicy, scriptInvocationBudget, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { orchestratorBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { devToolingEnv, semioNxParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
+import { devToolingEnv, semioBuildParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 
 import { gitCollectionManifests, moduleCollectionAncestry } from "./📥️admission/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { resolveNxBuildMode } from "./🎚️mode/🟦️.ts";
 import { nxCacheEnvironmentV1 } from "./💾️budget/🟦️.ts";
+import {withNxToolingUseV1,nxToolingUseStorageV1} from "./🛠️tools/📥️use/🟦️.ts";
 
 const WORKSPACE_ROOT = getWorkspaceRoot();
 
@@ -218,6 +222,17 @@ export async function publishNxCollectionBoundary(root: string, signal?: AbortSi
   if (inventory === undefined && (reused !== directories || Object.keys(previous).length !== directories)) await writeNxAdmissionSnapshot(snapshotPath, { policy: snapshotPolicy, directories: current });
 }
 
+/** 🏗️ Projects portable process controls into the selected Nx implementation. */
+export function nxBuildEnvironmentV1(root:string,environment:NodeJS.ProcessEnv):NodeJS.ProcessEnv {
+ const env:NodeJS.ProcessEnv={...environment,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:root,NX_WORKSPACE_ROOT:root};
+ env.NX_TUI=environment.SEMIO_BUILD_TERMINAL??environment.NX_TUI??"false";
+ env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT=environment.SEMIO_BUILD_DYNAMIC_OUTPUT??environment.NX_TASKS_RUNNER_DYNAMIC_OUTPUT??"false";
+ env.NX_VERBOSE_LOGGING=environment.SEMIO_BUILD_VERBOSE??environment.NX_VERBOSE_LOGGING??"false";
+ env.NX_PARALLEL=environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL;
+ if(environment.SEMIO_BUILD_REUSE_GRAPH==="true")env.NX_FORCE_REUSE_CACHED_GRAPH="true";
+ return env;
+}
+
 /** 🧮️ Lets each watched build finish its graph while the daemon retains source watching. */
 export function nxChildEnvironment(environment: NodeJS.ProcessEnv, args: readonly string[], watching: boolean): NodeJS.ProcessEnv {
   if (args[0] === "watch") return { ...environment, NX_DAEMON: "true" };
@@ -271,7 +286,7 @@ export function activateWhenNxWatcherReady(watcher: ReturnType<typeof spawnNxPro
 }
 
 /** 🛡️ Registers automatic source callbacks after the initial prerequisite graph has settled. */
-export async function startNxWatcherAfterPreparation(prepared:Promise<void>,active:()=>boolean,start:()=>ReturnType<typeof spawnNxProcess>):Promise<ReturnType<typeof spawnNxProcess>|undefined> {
+export async function startNxWatcherAfterPreparation(prepared:Promise<void>,active:()=>boolean,start:()=>ReturnType<typeof spawnNxProcess>|Promise<ReturnType<typeof spawnNxProcess>|undefined>):Promise<ReturnType<typeof spawnNxProcess>|undefined> {
   await prepared;return active()?start():undefined;
 }
 
@@ -335,16 +350,9 @@ export class NxScript extends Script {
    * (measured on a clean Linux container, ticket 26/09/23/END-TO-END-OS-HUB-COLLABORATION-MCP `📓️wp-z2.md`). */
   static readonly javascriptEnvironment = "workspace:deps-javascript";
 
-  /** 🧿️ `nx watch` refuses to run without the daemon, and Nx disables its daemon for every later
-   * client by writing `<workspace-data>/d/disabled` whenever one start fails — a marker that outlives
-   * the crash it records (seen: a 2026-09-08 start failure still blocked `bun dev:puzzle:3d` two days
-   * later while `nx daemon --start` ran fine). A watching invocation therefore drops a stale marker
-   * and starts the daemon itself, so a developer's first `dev` never depends on a manual reset. */
-  static ensureDaemon(nxCli: string, root: string, env: NodeJS.ProcessEnv): void {
-    const marker = join(env.NX_WORKSPACE_DATA_DIRECTORY ?? join(root, ".nx", "workspace-data"), "d", "disabled");
-    if (existsSync(marker)) rmSync(marker, { force: true });
-    const started = stopNxProcessTree("node", [nxCli, "daemon", "--start"], { cwd: root, env, stdio: "inherit" });
-    if (started.status !== 0) throw new Error(`Nx daemon did not start (status ${started.status ?? started.signal})`);
+  /** 🧿️ A watch invocation starts its configured daemon without deleting namespace failure state. */
+  static async ensureDaemon(nxCli: string, root: string, env: NodeJS.ProcessEnv,control:ResourceLeaseControl): Promise<void> {
+    process.stdout.write(await captureOwnedCommandV1("node",[nxCli,"daemon","--start"],root,{env,control}));
   }
 
   static ownedDescendants(roots: readonly number[], rows: readonly { pid: number; parent: number; command: string }[], daemonScript: string): number[] {
@@ -384,7 +392,8 @@ export class NxScript extends Script {
     const nxCli = tooling.cli;
     const invocation = resolveNxInvocation(segments), children: ReturnType<typeof spawnNxProcess>[] = [], spooling: Promise<void>[] = [];
     const toolingIdentity=basename(dirname(tooling.modulePath));if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw Error("Original loaded Nx tooling receipt required");
-    const env = await nxCacheEnvironmentV1(this.root,pinnedNxRuntimeEnvironment(nxFiniteEnvironment(this.root,devToolingEnv({ ...invocation.env, NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY, NX_SOCKET_DIR: invocation.env.NX_SOCKET_DIR || process.env.NX_SOCKET_DIR, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined }),toolingIdentity), tooling.bun));
+    return withNxToolingUseV1(nxToolingUseStorageV1(this.root),{identity:toolingIdentity,toolkitRoot:dirname(tooling.modulePath),invocation:this.invocation},async()=>{
+    const env = await nxCacheEnvironmentV1(this.root,pinnedNxRuntimeEnvironment(nxFiniteEnvironment(this.root,nxBuildEnvironmentV1(this.root,devToolingEnv({ ...invocation.env, NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY, NX_SOCKET_DIR: invocation.env.NX_SOCKET_DIR || process.env.NX_SOCKET_DIR, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined })),toolingIdentity), tooling.bun));
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
     let sourceHandoff:Readonly<{environment:string;close():Promise<void>}>|undefined;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
@@ -470,7 +479,7 @@ export class NxScript extends Script {
           const frozen=await createRequire(nxCli)("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();
           if(!frozen||frozen.toolingIdentity!==toolingIdentity)throw Error("Original immutable graph authorizers required");
           if(frozen.authorizers.selectedTaskSelectionV1(invocation.args,readBuildMode(env.SEMIO_BUILD_MODE??"prototype"))){
-            const control=scriptCompilerAdmissionControlV1(this.invocation,"nx:selected-graph-observation",0),ports=await frozen.authorizers.selectedGraphSdkPortsV1(this.root,nxCli,invocation.args,readBuildMode(env.SEMIO_BUILD_MODE),control),proof=await frozen.authorizers.captureSelectedGraphReuseReceiptV1(this.root,workspaceData,ports,this.invocation.control.signal);
+            const control=scriptCompilerAdmissionControlV1(this.invocation,"nx:selected-graph-observation",0),ports=await frozen.authorizers.selectedGraphSdkPortsV1(this.root,nxCli,invocation.args,readBuildMode(env.SEMIO_BUILD_MODE),control,nxChildEnvironment(nativeNxChildEnvironmentV1(this.root,issueSelectedNxCallerEnvelopeV1(this.root,readScriptProcessEnvelope(JSON.parse(env[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),invocation.args),invocation.args,env),invocation.args,false)),proof=await frozen.authorizers.captureSelectedGraphReuseReceiptV1(this.root,workspaceData,ports,this.invocation.control.signal);
             if(proof){sourceHandoff=await frozen.authorizers.writeSelectedGraphHandoffV1(workspaceData,proof,this.invocation.control.signal);env.SEMIO_NX_SELECTED_GRAPH_RECEIPT=sourceHandoff!.environment;selected=true;}
           }
         }
@@ -480,7 +489,6 @@ export class NxScript extends Script {
         if(!inheritedReuse){env.NX_FORCE_REUSE_CACHED_GRAPH=sealed?"true":"false";env.SEMIO_NX_GRAPH_SEAL_REUSE=sealed?"true":"false";}
         this.invocation.control.signal.throwIfAborted();
         env.SEMIO_NX_GRAPH_SOURCE_MEMBERSHIP=sourceMembership?.digest;
-        env.SEMIO_NX_GRAPH_STARTED_AT=String(Date.now());
         const launchedAt = Date.now();
         const child=launch(invocation.args,Boolean(invocation.watch));
         const status=new Promise<number>((accept,reject) => { child.once("error",reject);child.once("close",code=>accept(code??1)); });void status.catch(()=>{});
@@ -489,8 +497,9 @@ export class NxScript extends Script {
           const prepared=invocation.watch.includes(":activate-") ? waitForNxTargetStart(child,invocation.args[1]!) : Promise.resolve();
           child.stdout!.on("data",chunk=>process.stdout.write(chunk));
           const watchEnvironment=nxWatcherEnvironment(this.root,env,invocation.watch);
-          watcher=await startNxWatcherAfterPreparation(prepared,()=>!finishing&&!cancelled,()=>{
-            NxScript.ensureDaemon(nxCli,this.root,watchEnvironment);
+          watcher=await startNxWatcherAfterPreparation(prepared,()=>!finishing&&!cancelled,async()=>{
+            await NxScript.ensureDaemon(nxCli,this.root,watchEnvironment,scriptCompilerAdmissionControlV1(this.invocation,"nx:watch-daemon-start",0));
+            if(finishing||cancelled)return undefined;
             const registered=launch(["watch","--all","--includeGlobalWorkspaceFiles","--verbose","--","bun","nx","run",watchTarget,"--output-style=stream"],true,watchEnvironment);
             return registered;
           });
@@ -538,87 +547,13 @@ export class NxScript extends Script {
       process.removeListener("SIGINT", interrupt);
       process.removeListener("SIGTERM", terminate);
     }
+    });
   }
 }
 
-/** 🧭️ Resolves public selections before Nx creates the single task graph. */
-function resolveNxSelection(segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
-  if (segments[0] !== "run") return { args: segments, env: {} };
-  const delimiter = segments.indexOf("--");
-  const selected = delimiter < 0 ? [] : segments.slice(delimiter + 1);
-  const options = segments.slice(2, delimiter < 0 ? undefined : delimiter);
-  const target = segments[1];
-  const print = target?.match(/^@semio-tech\/print:(build|watch)(?:-(.*))?$/);
-  if (print) {
-    const catalog = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json"), "utf8")) as { documents: { id: string }[] };
-    const suffix = print[2], viz = suffix === "viz" || selected[0] === "viz";
-    const names = selected[0] === "viz" ? selected.slice(1) : selected;
-    const ids = suffix && suffix !== "viz" ? [suffix] : names.map(name => viz && !name.startsWith("viz-") ? `viz-${name}` : name);
-    if (suffix && suffix !== "viz" && selected.length) throw new Error("A Print document target accepts no compiler arguments");
-    for (const id of ids) if (!catalog.documents.some(document => document.id === id)) throw new Error(`Unknown Print document: ${id}`);
-    if (print[1] === "watch" && ids.length > 1) throw new Error("Select one Print document or a complete collection to watch");
-    const targets = ids.length ? [...new Set(ids)].map(id => `${print[1]}-${id}`) : [`${print[1]}${viz ? "-viz" : ""}`];
-    const args = targets.length === 1 ? ["run", `@semio-tech/print:${targets[0]}`, ...options] : ["run-many", "--projects=@semio-tech/print", `--targets=${targets.join(",")}`, ...semioNxParallelFlag(), ...options];
-    return { args, env: {}, ...(print[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/print:${targets[0]!.replace(/^watch/, "build")}` } : {}) };
-  }
-  const report = target?.match(/^@semio-tech\/mit-bestand-bericht:(build|watch)(?:-(.*))?$/);
-  if (report) {
-    const catalog = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🔣️.json"), "utf8")) as { documents: { id: string }[] };
-    if (selected.length) throw new Error("Report targets accept no compiler arguments");
-    if (report[2] && !catalog.documents.some(document => document.id === report[2])) throw new Error(`Unknown report document: ${report[2]}`);
-    return { args: ["run", target, ...options], env: {}, ...(report[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: target.replace(":watch", ":build") } : {}) };
-  }
-  const demonstrator = target?.match(/^@semio-tech\/mit-bestand-demonstrator:(prepare-(prototype|release)|prepare|build|activate-prototype|activate-release|serve|dev|prepare-e2e|serve-e2e|test-e2e)$/);
-  if (demonstrator) {
-    if (selected.length) throw new Error("Demonstrator targets accept no compiler arguments");
-    const release = demonstrator[1].endsWith("-release");
-    return { args: segments, env: { ...(["prepare", "build"].includes(demonstrator[1]) ? {} : { SEMIO_BUILD_MODE: release ? "release" : "prototype" }), SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-prototype" } : {}) };
-  }
-  const nativeRuntime = target?.match(/^@semio-tech\/framework-os-dev:(prepare|run|smoke)-(.+)-native-(prototype|release)$/);
-  if (nativeRuntime) return { args: segments, env: { SEMIO_PLUGIN: nativeRuntime[2], SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: nativeRuntime[3] === "release" ? "release" : "prototype" } };
-  const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev|build)-(.+)-(react|wgpu)-(prototype|release)$/);
-  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[4] === "release" ? "release" : "prototype", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: preparation[3] }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-${preparation[3]}-${preparation[4]}` } : {}) };
-  if (target === "workspace:setup" && selected.length) {
-    const command = selected[0] === "deps" ? `deps-${selected[1]}` : selected[0] === "prepare" ? "prepare" : `setup-${selected[0]}`;
-    return { args: ["run", `workspace:${command}`, ...options], env: {} };
-  }
-  if (target === "workspace:bench" || target === "@semio-tech/framework-os-dev:bench") {
-    if (selected[0] !== "plugins") throw new Error("Select bench plugins through Nx");
-    let renderer = "native";
-    const args: string[] = [];
-    for (let index = 1; index < selected.length; index++) {
-      const argument = selected[index];
-      if (argument === "--renderer") renderer = selected[++index];
-      else if (argument.startsWith("--renderer=")) renderer = argument.slice(11);
-      else args.push(argument);
-    }
-    if (!["native", "react", "wgpu"].includes(renderer)) throw new Error(`Unknown benchmark renderer: ${renderer}`);
-    return { args: ["run", `@semio-tech/framework-os-dev:bench-plugins-${renderer}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
-  }
-  if (target === "workspace:cpp" && selected.length) {
-    const [command, ...args] = selected;
-    if (!["setup", "configure", "build", "test", "all"].includes(command)) throw new Error(`Unknown CMake operation: ${command}`);
-    return { args: ["run", command === "all" ? "workspace:cpp" : `workspace:cpp-${command}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
-  }
-  if (target === "workspace:test") {
-    const { level, rest } = resolveTestLevel(selected);
-    if (!rest.length) return { args: ["run", "workspace:test", ...options, "--", level], env: { SEMIO_TEST_LEVEL: level } };
-    if (rest[0] === "repo-client" || rest[0] === "repo-mcp") return { args: ["run", `${rest[0] === "repo-client" ? "@semio-tech/repo-client" : "repo-mcp"}:test`, ...options, "--", level, ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
-    const taxonomy = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
-    if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0])) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
-  }
-  if (target === "workspace:lint" && selected[0] === "repo") return { args: ["run", "workspace:lint-repo", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
-  if (target === "workspace:build" && selected.length) {
-    const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
-    const resolved = targets[selected[0]];
-    if (!resolved) throw new Error(`Unknown build selection: ${selected[0]}`);
-    return { args: ["run", resolved, ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
-  }
-  return { args: segments, env: {} };
-}
 /** 🎚️ Selects one compiler mode before Nx hashes or builds its task graph. */
 export function resolveNxInvocation(segments: string[], environment: NodeJS.ProcessEnv = process.env): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
-  const selection = resolveNxSelection(segments);
+  const selection = resolveBuildSelectionV1(WORKSPACE_ROOT,segments);
   return resolveNxBuildMode(selection, environment);
 }
 //#endregion 🔖️NxScript

@@ -1,0 +1,21 @@
+{
+  "schema": "semio.test.dependency-owner-pattern-safety/v1",
+  "owners": [
+    {"name":"@test/root","owner":"🧰️framework/root/📦️packages/🟦️typescript"},
+    {"name":"@test/a","owner":"🧰️framework/root/a/📦️packages/🟦️typescript"},
+    {"name":"@test/aa","owner":"🧰️framework/root/a/a/📦️packages/🟦️typescript"},
+    {"name":"@test/aaa","owner":"🧰️framework/root/a/a/a/📦️packages/🟦️typescript"},
+    {"name":"@test/aaaa","owner":"🧰️framework/root/a/a/a/a/📦️packages/🟦️typescript"},
+    {"name":"@test/aaaaa","owner":"🧰️framework/root/a/a/a/a/a/📦️packages/🟦️typescript"}
+  ],
+  "cases": [
+    {"id":"outside-private","from":"outside/entry.ts","to":"🧰️framework/root/private.ts","forbidden":true},
+    {"id":"same-owner-private","from":"🧰️framework/root/entry.ts","to":"🧰️framework/root/private.ts","forbidden":false},
+    {"id":"child-to-parent-private","from":"🧰️framework/root/a/entry.ts","to":"🧰️framework/root/private.ts","forbidden":true},
+    {"id":"deep-child-to-parent-private","from":"🧰️framework/root/a/a/a/a/a/entry.ts","to":"🧰️framework/root/private.ts","forbidden":true},
+    {"id":"separate-child-target","from":"outside/entry.ts","to":"🧰️framework/root/a/private.ts","forbidden":false},
+    {"id":"declared-public-target","from":"outside/entry.ts","to":"🧰️framework/root/📦️packages/🟦️typescript/🟦️.ts","forbidden":false},
+    {"id":"similar-root-prefix","from":"🧰️framework/root-other/entry.ts","to":"🧰️framework/root/private.ts","forbidden":true},
+    {"id":"similar-child-prefix","from":"🧰️framework/root/ab/entry.ts","to":"🧰️framework/root/private.ts","forbidden":false}
+  ]
+}

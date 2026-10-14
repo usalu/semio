@@ -23,7 +23,7 @@ impl NativeCloseKey {
     pub(super) fn lifetime(self) -> ActorInstanceLifetime {
         self.lifetime
     }
-    #[cfg(test)]
+    #[cfg(any(test,feature="original-actor-context-testing"))]
     pub(super) fn fixture(instance_id: u32, guest_lifetime: u64) -> Self {
         Self { lifetime: ActorInstanceLifetime { activation_generation: 1, instance_id, guest_lifetime }, allocation: 1 }
     }
@@ -404,6 +404,7 @@ impl<PA: crate::plugin_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwne
 pub(crate) struct NativeLifetimeSlot<PA: crate::plugin_app::PluginApp> {
     pub(crate) cell: NativeCell<PA>,
     pub(crate) native_created: bool,
+    pub(crate) pending_creation: ManuallyDrop<Option<crate::plugin_runtime::PendingNativeCreation<PA>>>,
     patch_sequence: u64,
 }
 
@@ -433,7 +434,7 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifecycleRegistry<PA> {
             return Err("lifecycle backing unavailable");
         }
         let cell = NativeCell::admit(open, self.serial.next()?)?;
-        self.slots.insert_admitted(index, NativeLifetimeSlot { cell, native_created: false, patch_sequence: 0 });
+        self.slots.insert_admitted(index, NativeLifetimeSlot { cell, native_created: false, pending_creation:ManuallyDrop::new(None), patch_sequence: 0 });
         Ok(true)
     }
     pub(crate) fn get(&self, instance: u32) -> Option<&NativeLifetimeSlot<PA>> {
@@ -444,12 +445,13 @@ impl<PA: crate::plugin_app::PluginApp> NativeLifecycleRegistry<PA> {
     }
     pub(crate) fn remove_uncreated(&mut self, instance: u32) -> Result<(), &'static str> {
         let slot = self.get(instance).ok_or("opening lifecycle missing")?;
-        if slot.native_created || slot.cell.owner().is_some() {
+        if slot.native_created || slot.cell.owner().is_some() || slot.pending_creation.is_some() {
             return Err("created native owner cannot be forgotten");
         }
         drop(self.slots.take(Self::index(instance)));
         Ok(())
     }
+    pub(crate) fn pending_opening(&self)->Option<u32>{self.slots.iter().find(|slot|!slot.native_created&&slot.pending_creation.is_some()).map(|slot|slot.cell.lifetime().instance_id)}
     pub(crate) fn next_patch_receipt(&mut self, instance: u32) -> Option<semio_framework::kernel::ActorUiPatchReceipt> {
         let slot = self.get_mut(instance).filter(|slot| slot.cell.is_live())?;
         slot.patch_sequence = slot.patch_sequence.checked_add(1)?;

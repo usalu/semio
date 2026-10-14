@@ -8,18 +8,26 @@ import { generation3dMeshSelectionSelfTests } from "../../🏅️standards/🔖�
 import { generation3dWidgetInputSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🟦️.ts";
 import { generation3dWidgetCreationSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🟦️.ts";
 import { resolve } from "node:path";
+import { runExactCargoLaws, configuredExactCargoLawPreparationPortV1, configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { testGeneration3dIoInputContracts } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts";
 import { testGeneration3dIoAuthorityFixture } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts";
 import { assertGeneration3dSemanticWire } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧬️semantic-wire/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runCargo, runVitest, runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative } from "node:path";
 
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "original-widget-output") {
+      const testRoot=join(this.repoRoot,"✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/💎️value/🧪️tests");
+      if(segments[1]==="native") await runExactCargoLaws({manifestPaths:{"semio-s-artifact-procedural-generation3d":join(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,env:{...process.env,CARGO_BUILD_BUILD_DIR:readCargoTestPolicyV1(process.env).buildDirectory},invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,3600000),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:["--offline"],groups:[{package:"semio-s-artifact-procedural-generation3d",target:{kind:"lib"},laws:["original_widget_output_moves_once_on_same_caller_and_retires_all_fields","original_widget_output_cancel_keeps_nested_payload_for_same_caller_retirement"]}]},configuredExactCargoLawPreparationPortV1(process.env));
+      else await runRepositoryTestCommand(process.execPath,["test",join(testRoot,"🟦️.ts")],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,120000),signal:this.invocation.control.signal});
+      return;
+    }
     if (segments[0] === "geometry-context") {
       const testRoot=join(this.repoRoot,"✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any");
       runCmd("bun",["test",`${testRoot}/🚪️io/📐️geometry/🧪️tests/🟦️.ts`,`${testRoot}/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/🧪️tests/🔬️oracle/🟦️.ts`],{cwd:this.repoRoot});
@@ -35,11 +43,12 @@ class OwnedVerifyScript extends BundleScript {
     }
     if (segments[0] === "generation3d-widget-inputs") {
       console.log(`generation3d-mesh-selection checks=${generation3dMeshSelectionSelfTests()} independentAjv=true`);
-      console.log(`generation3d-widget-input checks=${generation3dWidgetInputSelfTests()} independentAjv=true`);
+      console.log(`[DEBUG] generation3d-widget-input checks=${generation3dWidgetInputSelfTests()} independentAjvJsonPatch=true`);
       console.log(`generation3d-widget-creation checks=${generation3dWidgetCreationSelfTests()} independentAjv=true`);
       console.log(`generation3d-terminology checks=${generation3dTerminologySelfTests()}`);
       const testRoot = join(this.repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input");
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", "--resolveJsonModule", `${testRoot}/🧪️tests/🔬️unit/🟦️.ts`,join(testRoot,"../🥽️edit-mesh-selection/🧪️tests/🔬️unit/🟦️.ts")], { cwd: this.repoRoot });
+      await runRepositoryTestCommand(process.execPath, [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", "--resolveJsonModule", `${testRoot}/🧪️tests/🔬️unit/🟦️.ts`,join(testRoot,"../🥽️edit-mesh-selection/🧪️tests/🔬️unit/🟦️.ts")], { cwd: this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,120000),signal:this.invocation.control.signal });
+      if(segments[1]==="native")await runArtifactRustTests("semio-s-artifact-procedural-generation3d",this.repoRoot,["--lib","widget_input_","--","--nocapture"],this.invocation.control,["component-app-assembly"]);
       return;
     }
     if (segments[0] === "semantic-wire") {

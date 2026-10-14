@@ -11,9 +11,10 @@ use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
-use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
+use crate::{JackGraphQuery,JackContentRead};
+use semio_framework_plugin::app::ChildEmitPreparation;
 
-type Owner = EditorApp<TrinityJackPlayApp>;
+type Owner<C> = EditorApp<TrinityJackPlayApp<C>>;
 pub(crate) const JACK_QUERY_TOOL_IDS: &[&str] = &["runQuery", "loadExampleQuery"];
 const RAW_BYTES: usize = 16_384;
 const QUERY_BYTES: usize = 4_096;
@@ -22,19 +23,20 @@ const QUERY_REPLAY_MAXIMUM_STEPS: u64 = (QUERY_BYTES as u64) * 16_384 * 16_384 *
 const PAYLOAD_SCHEMA: &str = "trinity.jack.query-command.v1";
 const LANES: &[ArtifactToolPublicationLane] = &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Child, ArtifactToolPublicationLane::WindowTransient];
 
-pub(crate) struct JackQueryJobFactory {
+pub(crate) struct JackQueryJobFactory<C:crate::JackComposition>{
+    composition:std::marker::PhantomData<C>,
     keys: Vec<ToolFactoryKey>,
 }
 
-impl JackQueryJobFactory {
+impl<C:crate::JackComposition> JackQueryJobFactory<C>{
     pub(crate) fn new(controller: &str) -> Self {
-        Self { keys: JACK_QUERY_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
+        Self { composition:std::marker::PhantomData,keys: JACK_QUERY_TOOL_IDS.iter().map(|tool| ToolFactoryKey::new(controller, *tool)).collect() }
     }
 }
 
-impl ToolJobFactory for JackQueryJobFactory {
-    type Payload = ArtifactRetainedCommandPayload<Owner>;
-    type Job = ArtifactRetainedCommandJob<Owner>;
+impl<C:crate::JackComposition> ToolJobFactory for JackQueryJobFactory<C>{
+    type Payload = ArtifactRetainedCommandPayload<Owner<C>>;
+    type Job = ArtifactRetainedCommandJob<Owner<C>>;
     fn keys(&self) -> &[ToolFactoryKey] {
         &self.keys
     }
@@ -67,15 +69,15 @@ impl ToolJobFactory for JackQueryJobFactory {
     }
 }
 
-impl ArtifactOwnedToolJobFactory for JackQueryJobFactory {
-    type Owner = Owner;
+impl<C:crate::JackComposition> ArtifactOwnedToolJobFactory for JackQueryJobFactory<C>{
+    type Owner = Owner<C>;
     const TOOL_IDS: &'static [&'static str] = JACK_QUERY_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "runQuery", lanes: LANES }, ArtifactToolPublicationContract { tool_id: "loadExampleQuery", lanes: LANES }];
 }
 
-pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<semio_framework::ToolOperationSpec, Fault> {
-    let tool = TrinityJackPlayApp::command_id(&request.command);
+pub(crate) fn build_job<C:crate::JackComposition>(request: ArtifactOwnedToolJobRequest<Owner<C>>) -> Result<semio_framework::ToolOperationSpec, Fault> {
+    let tool = TrinityJackPlayApp::<C>::command_id(&request.command);
     if tool != request.tool_id || !JACK_QUERY_TOOL_IDS.contains(&tool) {
         return Err(Fault::from("query command does not match its exact factory key"));
     }
@@ -121,7 +123,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
         authoring_seed: request.authoring_seed.clone(),
     };
     let adopts_query = matches!(request.command.as_ref(), TrinityJackCommand::LoadExampleQuery { .. }) && source != request.snapshot.query && source.len() <= crate::JACK_QUERY_MAXIMUM_BYTES;
-    let work = Box::new(JackQueryWork::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
+    let work = Box::new(JackQueryWork::<C>::new(tool, source.to_string(), adopts_query, editor_window_id.to_string(), results_window_id.to_string(), operation.operation_id, operation.generation));
     let payload = ArtifactRetainedCommandPayload::new(
         ArtifactRetainedCommandInputs {
             command: *request.command,
@@ -135,7 +137,7 @@ pub(crate) fn build_job(request: ArtifactOwnedToolJobRequest<Owner>) -> Result<s
             operation,
             completion: request.completion,
         },
-        TrinityJackPlayApp::command_id,
+        TrinityJackPlayApp::<C>::command_id,
         RAW_BYTES,
         1,
         work,
@@ -148,7 +150,8 @@ fn content_missing() -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new("trinity.jack.content-missing"), "the query operation carries no child view")
 }
 
-struct JackQueryWork {
+struct JackQueryWork<C:crate::JackComposition>{
+    composition:std::marker::PhantomData<C>,
     tool: &'static str,
     source: Option<String>,
     adopts_query: bool,
@@ -165,9 +168,9 @@ struct JackQueryWork {
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
-impl JackQueryWork {
+impl<C:crate::JackComposition> JackQueryWork<C>{
     fn new(tool: &'static str, source: String, adopts_query: bool, editor_window_id: String, results_window_id: String, operation_id: u64, generation: u64) -> Self {
-        Self { tool, source: Some(source), adopts_query, editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false, retirement: None }
+        Self { composition:std::marker::PhantomData,tool, source: Some(source), adopts_query, editor_window_id: Some(editor_window_id), results_window_id: Some(results_window_id), preparation: None, execution: None, operation_id, generation, progress: 0, replay_target: None, finished: false, closing: false, retirement: None }
     }
 
     fn identity(&self) -> u64 {
@@ -180,7 +183,7 @@ impl JackQueryWork {
         fold(fold(tool ^ self.operation_id.rotate_left(19) ^ self.generation.rotate_left(41), self.editor_window_id.as_ref()), self.results_window_id.as_ref())
     }
 
-    fn progress(&mut self, stage: &'static str, preview: &'static [u8]) -> ArtifactCommandWorkStep<Owner> {
+    fn progress(&mut self, stage: &'static str, preview: &'static [u8]) -> ArtifactCommandWorkStep<Owner<C>> {
         self.progress = self.progress.saturating_add(1);
         if self.replay_target.is_some_and(|target| self.progress <= target) {
             if self.replay_target == Some(self.progress) {
@@ -194,13 +197,13 @@ impl JackQueryWork {
 
     fn complete(
         &mut self,
-        input: &ArtifactCommandInputs<'_, Owner>,
+        input: &ArtifactCommandInputs<'_, Owner<C>>,
         result: Option<crate::ast::QueryResult>,
         error: Option<String>,
-        leaves: Vec<SemioGraphMutation>,
-    ) -> ArtifactCommandWorkStep<Owner> {
+        preparations:Vec<ChildEmitPreparation>,
+    ) -> ArtifactCommandWorkStep<Owner<C>> {
         self.finished = true;
-        let mut emit = crate::jack_child_emit(input.snapshot, leaves);
+        let mut emit=semio_framework_plugin::Emit{child_preparations:preparations.into(),..Default::default()};
         emit.artifact_mutations = self.adopts_query.then(|| set_query(self.source.as_ref().expect("query source is retained").clone())).into_iter().collect();
         ArtifactCommandWorkStep::CompleteWithEphemeral {
             emit,
@@ -216,23 +219,23 @@ impl JackQueryWork {
     }
 }
 
-impl ArtifactCommandWork<Owner> for JackQueryWork {
+impl<C:crate::JackComposition> ArtifactCommandWork<Owner<C>> for JackQueryWork<C>{
     fn tool_id(&self) -> &'static str {
         self.tool
     }
     fn workspace_identity(&self) -> u64 {
         self.identity()
     }
-    fn extent(&self, command: &TrinityJackCommand, snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<Owner>>) -> Option<usize> {
+    fn extent(&self, command: &TrinityJackCommand, snapshot: &JackSnapshot, _interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<Owner<C>>>) -> Option<usize> {
         let bytes = match command {
             TrinityJackCommand::RunQuery { query, results_window_id } => query.as_ref().map_or(0, String::len).saturating_add(results_window_id.len()),
             TrinityJackCommand::LoadExampleQuery { query, results_window_id } => query.len().saturating_add(results_window_id.len()),
             _ => return None,
         };
-        let scene = crate::jack_content_from_children(snapshot, &context?.children).ok()?;
-        (bytes <= QUERY_BYTES && scene.nodes.len() <= 16_384 && scene.edges.len() <= 16_384 && snapshot.manifest.node_kinds.len() <= 16_384 && snapshot.manifest.edge_kinds.len() <= 16_384 && snapshot.manifest.port_kinds.len() <= 16_384).then_some(1)
+        let scene = C::bind(snapshot, &context?.children).ok()?;
+        (bytes <= QUERY_BYTES && scene.node_count() <= 16_384 && scene.edge_count() <= 16_384 && snapshot.manifest.node_kinds.len() <= 16_384 && snapshot.manifest.edge_kinds.len() <= 16_384 && snapshot.manifest.port_kinds.len() <= 16_384).then_some(1)
     }
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, Owner>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<Owner>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, Owner<C>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<Owner<C>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.finished || self.closing {
             return Err(Fault::from("query operation is terminal"));
@@ -248,7 +251,7 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             return Ok(self.progress("query-parse", br#"{"en":"Parsing query","de":"Abfrage wird analysiert"}"#));
         }
         if let Some(preparation) = self.preparation.as_mut() {
-            let content = crate::jack_content_from_children(input.snapshot, &input.context.ok_or_else(content_missing)?.children)?;
+            let content = C::bind(input.snapshot, &input.context.ok_or_else(content_missing)?.children)?;
             match preparation.step(input.snapshot, &content, QUERY_BYTES) {
                 Ok(crate::executor::QueryPreparationStep::Pending) => return Ok(self.progress("query-prepare", br#"{"en":"Preparing query","de":"Abfrage wird vorbereitet"}"#)),
                 Ok(crate::executor::QueryPreparationStep::Complete(execution)) => {
@@ -261,8 +264,8 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
         }
         match self.execution.as_mut().expect("query execution is retained").step() {
             Ok(Some((result, effects))) => {
-                let leaves = if effects.is_empty() { Vec::new() } else { crate::graph_leaves(&*crate::jack_content_from_children(input.snapshot, &input.context.ok_or_else(content_missing)?.children)?, &effects) };
-                Ok(self.complete(input, Some(result), None, leaves))
+                let preparations=if effects.is_empty(){Vec::new()}else{C::bind(input.snapshot,&input.context.ok_or_else(content_missing)?.children)?.prepare_effects(&effects).map_err(|error|Fault::from(error.into_message()))?};
+                Ok(self.complete(input, Some(result), None, preparations))
             }
             Ok(None) => Ok(self.progress("query-evaluate", br#"{"en":"Evaluating query","de":"Abfrage wird ausgewertet"}"#)),
             Err(error) => Ok(self.complete(input, None, Some(error.into_message()), Vec::new())),
@@ -306,55 +309,25 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
         Some(size_of::<Self>())
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
-        if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: empty };
-        }
-        if grant.maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { progress: empty };
-        }
-        let demand = match self.close_demands(grant.maximum_copy_bytes) {
-            Ok(demand) => demand,
-            Err(error) => return refused(error),
-        };
-        match crate::host::admit_demand(grant, demand, "query work close exceeds admitted depth") {
-            Ok(true) => {}
-            Ok(false) => return InteractiveJobCloseStep::Pending { progress: empty },
-            Err(error) => return refused(error),
-        }
-        let progress = |step: Result<RetainedCloneStep, semio_framework_value::ValueError>| match step {
-            Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-            Err(error) => refused(error),
-        };
-        if self.retirement.is_some() {
-            return progress(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant));
-        }
-        if let Some(execution) = self.execution.as_mut() {
-            if execution.terminal_is_empty() {
-                drop(self.execution.take());
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty } };
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if !self.closing{return Ok(InteractiveJobCloseStep::Blocked)}
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+            if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}
+            if self.retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}
+            if let Some(execution)=self.execution.as_mut(){
+                if execution.terminal_is_empty(){drop(self.execution.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}
+                return execution.close_step(grant)
             }
-            return progress(execution.close_step(grant));
-        }
-        if let Some(preparation) = self.preparation.as_mut() {
-            if preparation.terminal_is_empty() {
-                drop(self.preparation.take());
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty } };
+            if let Some(preparation)=self.preparation.as_mut(){
+                if preparation.terminal_is_empty(){drop(self.preparation.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+                return preparation.close_step(grant)
             }
-            return progress(preparation.close_step(grant));
-        }
-        if self.source.is_some() {
-            return progress(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.source, &mut self.retirement, grant));
-        }
-        if self.editor_window_id.is_some() {
-            return progress(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.editor_window_id, &mut self.retirement, grant));
-        }
-        progress(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.results_window_id, &mut self.retirement, grant))
+            if self.source.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.source,&mut self.retirement,grant)}
+            if self.editor_window_id.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.editor_window_id,&mut self.retirement,grant)}
+            store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.results_window_id,&mut self.retirement,grant)
+        })?;
+        Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_demands(0)?.copy_bytes)
@@ -373,7 +346,7 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
     }
 }
 
-impl JackQueryWork {
+impl<C:crate::JackComposition> JackQueryWork<C>{
     /// 📏️ Quotes the next close turn in the fixed order: child cursor, execution, preparation, then each owned string.
     fn close_demands(&self, body: usize) -> Result<RetirementDemand, semio_framework_value::ValueError> {
         if let Some(owner) = self.retirement.as_ref() {

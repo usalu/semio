@@ -9,6 +9,11 @@ const SYMBOL_LIMIT: usize = isize::MAX as usize;
 #[derive(Clone, Copy)]
 #[derive(Debug)]
 struct Symbol { path: [usize; 64], depth: usize, occurrences: usize, selected: bool, forced: bool }
+impl semio_framework_value::retirement::RetireOwned for Symbol{
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
+}
 impl Symbol {
     fn text<'a>(&self, source: &'a dyn FieldProjectionSource) -> Result<&'a str, ValueError> {
         match source.projection_view(&self.path[..self.depth])? { V::Text(text) | V::IntrinsicText(text) => Ok(text), _ => Err(invalid("Pack symbol source changed")) }
@@ -26,7 +31,7 @@ enum Phase { Discover, Find, Reserve, Insert, Select, SymbolsCount, Symbols, Sym
 pub struct BorrowedProjectedPackProgress { pub progress: RetainedCloneProgress, pub written_bytes: usize, pub complete: bool }
 
 /// ⚠️ The original Value refusal retains the sole physical receipt and initialized output prefix.
-#[derive(Debug)]
+#[derive(Debug,semio_framework_value::RetireOwned)]
 pub struct BorrowedProjectedPackFailure { pub reason: ValueError, pub written_bytes: usize }
 
 impl From<ValueError> for BorrowedProjectedPackFailure {
@@ -429,6 +434,12 @@ impl BorrowedProjectedPackCursor {
 
 impl Drop for BorrowedProjectedPackCursor {
     fn drop(&mut self) { assert!(self.symbols.terminal_is_empty(), "borrowed Pack symbol backing requires its exact terminal-empty close witness"); }
+}
+
+impl semio_framework_value::retirement::RetireOwned for BorrowedProjectedPackCursor{
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let owner=std::mem::ManuallyDrop::new(self);let symbols=unsafe{std::ptr::read(&owner.symbols)};semio_framework_value::retirement::RetireOwned::retirement(symbols)}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.symbols)}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 #[cfg(test)]

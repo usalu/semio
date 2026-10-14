@@ -1,1 +1,32 @@
-{"version":1,"ignoredOwner":{"path":"owner/🔨️modules/🧫️fixtures/example/package.json","contents":"{\"name\":\"ignored-example\"}\n","ignore":"/owner/\n"},"expectedGlobal":["owner/🔨️modules/🧫️fixtures/example/package.json"]}
+{
+  "version": 1,
+  "ignoredOwner": {
+    "path": "owner/🔨️modules/🧫️fixtures/example/package.json",
+    "contents": "{\"name\":\"ignored-example\"}\n",
+    "ignore": "/owner/\n"
+  },
+  "expectedGlobal": [
+    "owner/🔨️modules/🧫️fixtures/example/package.json"
+  ],
+  "structuralRename": {
+    "source": "owners/branch",
+    "destination": "owners/renamed",
+    "files": [
+      "main.ts",
+      "package.json"
+    ],
+    "nativeEvents": [
+      {
+        "path": "owners/branch",
+        "type": "delete"
+      }
+    ],
+    "expectedMembership": [
+      "owners/renamed/main.ts",
+      "owners/renamed/package.json"
+    ],
+    "expectedGlobal": [
+      "owners/renamed/package.json"
+    ]
+  }
+}

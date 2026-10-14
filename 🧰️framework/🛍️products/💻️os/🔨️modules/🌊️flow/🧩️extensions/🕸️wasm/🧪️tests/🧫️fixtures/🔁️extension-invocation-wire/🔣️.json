@@ -4,8 +4,7 @@
   "requestFields": [
     "neuronId",
     "operatorId",
-    "inputJson",
-    "retained"
+    "inputJson"
   ],
   "envelopeFields": [
     "done",
@@ -13,7 +12,7 @@
     "phase",
     "unitsDone",
     "unitsTotal",
-    "outputJson"
+    "output"
   ],
   "operatorId": "test.echo",
   "outputChannel": "x",
@@ -84,26 +83,26 @@
     {
       "name": "operator-fault",
       "requestJson": "{\"operatorId\":\"test.missing\",\"inputJson\":\"{}\",\"neuronId\":\"tree.fixture.echo\"}",
-      "outcome": "ok",
-      "done": true,
-      "phase": "complete",
-      "outputKeys": [
-        "error"
-      ],
-      "outputEmpty": false
+      "outcome": "fault",
+      "fault": "test.missing"
     },
     {
       "name": "bad-request",
       "requestJson": "{\"inputJson\":\"{}\",\"neuronId\":\"tree.fixture.echo\"}",
       "outcome": "fault",
-      "fault": "missing field `operatorId`"
+      "fault": "operatorId"
     }
   ],
   "optionalRequestFields": [
     "nodeHash",
-    "budget",
-    "wallMicros",
-    "resume"
+    "resume",
+    "operatorVersion",
+    "cancellationId",
+    "dependencyJson",
+    "windowId",
+    "windowKindId",
+    "extensionId",
+    "externalResult"
   ],
   "retainedOutput": {
     "labelUnit": "Größe 😀 雪 \"\\\n",
@@ -273,7 +272,22 @@
     "sourceCopyBytes": 0,
     "outputSourceMoved": true,
     "writerRequiresIncomingGrant": true,
-    "terminalDropBytes": 0
+    "terminalDropBytes": 0,
+    "replyWire": "Pack",
+    "caller": {
+      "operation": 71,
+      "generation": 3,
+      "fuel": 65536,
+      "deadline": 1500,
+      "clock": 1000,
+      "stock": {
+        "maximumItems": 65536,
+        "maximumCopyBytes": 134217728,
+        "maximumCapacityBytes": 268435456,
+        "maximumReleaseBytes": 536870912,
+        "maximumDepth": 4096
+      }
+    }
   },
   "originalRegistryRemoval": {
     "predicateMeansKeep": true,

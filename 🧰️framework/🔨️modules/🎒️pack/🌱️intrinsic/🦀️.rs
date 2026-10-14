@@ -8,7 +8,7 @@ pub enum IntrinsicFormat { Body, Document }
 
 #[path="🎮️retained/🦀️.rs"]
 mod retained;
-pub use retained::{RetainedIntrinsicBody,RetainedIntrinsicDocument,RetainedIntrinsicInput,RetainedIntrinsicStep};
+pub use retained::{RetainedIntrinsicBody,RetainedIntrinsicDocument,RetainedIntrinsicInput,RetainedIntrinsicStep,RetainedIntrinsicOriginalCall};
 
 /// 🛬️ Moves the exact intrinsic value out of one complete input under cumulative caller control.
 pub fn decode(bytes: &[u8], format: IntrinsicFormat, options: &DecodeOptions, control: &mut NativeDecodeControl<'_>) -> Result<DslValue, PackRefusal> {

@@ -36,12 +36,12 @@ fn the_view_command_channel_carries_exactly_the_host_dispatched_verbs() {
     let window = definition.window_kinds.first();
     for action in GRID2D_VIEW_TOOL_IDS {
         assert!(window.actions.iter().any(|declared| &declared.id == action), "{action} is dispatched at this pane but declared by no window");
-        let command = <Grid2dViewer as ArtifactViewer>::command_from_action(action, None).unwrap_or_else(|error| panic!("{action}: {error:?}"));
+        let command = <Grid2dViewer as ArtifactViewer>::command_from_action(action, None, None).unwrap_or_else(|error| panic!("{action}: {error:?}"));
         assert_eq!(grid2d_view_command_id(&command), *action);
         let bytes = <Grid2dViewCommand as protocol::OpBinary>::encode_op(&command).expect("encode");
         assert_eq!(<Grid2dViewCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode"), command);
     }
-    assert!(<Grid2dViewer as ArtifactViewer>::command_from_action("pin-cell", None).is_err(), "a mutation verb never reaches a read-only surface");
+    assert!(<Grid2dViewer as ArtifactViewer>::command_from_action("pin-cell", None, None).is_err(), "a mutation verb never reaches a read-only surface");
 }
 
 #[test]

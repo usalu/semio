@@ -8,7 +8,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-curation-document-contract": "bun nx run @semio-tech/sourcing-curation-rs:verify-curation-document-contract"
+    "verify-curation-document-contract": "bun repo run @semio-tech/sourcing-curation-rs:verify-curation-document-contract"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

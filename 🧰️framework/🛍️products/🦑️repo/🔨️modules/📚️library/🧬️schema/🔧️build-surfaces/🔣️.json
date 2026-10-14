@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scripts",
+    "postCreateCommand",
+    "contexts",
+    "editorCommands"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scripts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^bun "
+      },
+      "required": [
+        "repo",
+        "setup",
+        "dashboard",
+        "dashboard:install"
+      ],
+      "properties": {
+        "repo": {
+          "type": "string"
+        },
+        "setup": {
+          "type": "string"
+        },
+        "dashboard": {
+          "type": "string"
+        },
+        "dashboard:install": {
+          "type": "string"
+        }
+      }
+    },
+    "postCreateCommand": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "contexts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "environment",
+          "expected"
+        ],
+        "properties": {
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "editorCommands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "labels",
+          "args",
+          "group",
+          "order"
+        ],
+        "properties": {
+          "labels": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "en",
+              "de"
+            ],
+            "properties": {
+              "en": {
+                "type": "string"
+              },
+              "de": {
+                "type": "string"
+              }
+            }
+          },
+          "args": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

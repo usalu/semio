@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/ui-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -24,7 +24,7 @@
   },
   "targets": {
     "check-command-types": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -43,7 +43,7 @@
       }
     },
     "test-command-dispatch": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -66,7 +66,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
@@ -80,7 +80,7 @@
       ]
     },
     "test-wgpu-engine": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test wgpu-engine"
@@ -94,28 +94,28 @@
       ]
     },
     "check-wgpu-engine-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check wgpu-engine wasm"
       }
     },
     "check-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check wasm"
       }
     },
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"
       }
     },
     "preview-generated": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
@@ -123,7 +123,7 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check"
@@ -137,7 +137,7 @@
       ]
     },
     "test-feature-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -156,7 +156,7 @@
       }
     },
     "test-control-commit": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -177,7 +177,7 @@
       }
     },
     "test-physical-close": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -194,7 +194,7 @@
       }
     },
     "test-physical-close-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
@@ -209,7 +209,7 @@
       }
     },
     "test-mounted-admission": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -224,7 +224,7 @@
       }
     },
     "test-mounted-admission-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -237,6 +237,20 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test mounted-admission-native"
       }
+    },
+    "test-original-presented-source-native": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test original-presented-source-native"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
+      ]
     }
   }
 }

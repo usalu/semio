@@ -20,11 +20,11 @@ struct FixtureSource {
 impl ArtifactCompositionFields for SnapshotNode {
     fn child_slots() -> &'static [ChildSlotSpec] {
         &[
-            ChildSlotSpec { name: "objects", kind: "s.stdio.semio", many: true },
-            ChildSlotSpec { name: "mesh", kind: "s.stdio.semio", many: true },
-            ChildSlotSpec { name: "value", kind: "s.stdio.semio", many: true },
-            ChildSlotSpec { name: "children", kind: "s.stdio.semio", many: true },
-            ChildSlotSpec { name: "other", kind: "s.stdio.semio", many: true },
+            ChildSlotSpec { name: "objects", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.semio"), many: true },
+            ChildSlotSpec { name: "mesh", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.semio"), many: true },
+            ChildSlotSpec { name: "value", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.semio"), many: true },
+            ChildSlotSpec { name: "children", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.semio"), many: true },
+            ChildSlotSpec { name: "other", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.stdio.semio"), many: true },
         ]
     }
     fn visit_child_refs<'a, V: ChildRefVisitor<'a>>(&'a self, visitor: &mut V) -> Result<(), V::Error> {

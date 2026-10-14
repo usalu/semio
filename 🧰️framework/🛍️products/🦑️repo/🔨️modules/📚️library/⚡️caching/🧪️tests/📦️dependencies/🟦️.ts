@@ -14,7 +14,7 @@ export async function testDependencyBootstrap(workspace: string, output: string)
   const graph = await require("esbuild").build({ absWorkingDir: workspace, entryPoints: [fixture.entry], bundle: true, write: false, metafile: true, platform: "node", packages: "external", format: "esm", logLevel: "silent" });
   for (const source of Object.keys(graph.metafile.inputs)) assert.notEqual(resolve(workspace, source), join(workspace, "📜️script.ts"));
   for (const value of Object.values(graph.metafile.outputs) as { imports: { path: string }[] }[]) for (const dependency of value.imports) assert.ok(dependency.path.startsWith("node:"), dependency.path);
-  const root = mkdtempSync(join(output, "dependency-bootstrap-")), env = { ...process.env, NX_WORKSPACE_ROOT_PATH: root, NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NX_WORKSPACE_ROOT: root, REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NODE_PATH: join(workspace, "node_modules"), NO_COLOR: "1", FORCE_COLOR: "0" };
+  const root = mkdtempSync(join(output, "dependency-bootstrap-")), env = { ...process.env, SEMIO_WORKSPACE_ROOT_PATH: root, NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_WORKSPACE_ROOT: root, REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NODE_PATH: join(workspace, "node_modules"), NO_COLOR: "1", FORCE_COLOR: "0" };
   mkdirSync(join(root, "dependency"));
   writeFileSync(join(root, "dependency/package.json"), JSON.stringify({ name: fixture.dependency.name, version: fixture.dependency.version, type: "module", main: "index.js" }));
   writeFileSync(join(root, "dependency/index.js"), fixture.dependency.content);
@@ -67,7 +67,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   for (const folder of ["data", "cache"]) { mkdirSync(join(foreign, folder)); writeFileSync(join(foreign, folder, "sentinel.txt"), fixture.tooling.storage.sentinel); }
   writeFileSync(join(foreign, "data/file-map.json"), fixture.tooling.storage.sentinel);
   const inherited = { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(foreign, "data"), NX_CACHE_DIRECTORY: join(foreign, "cache") };
-  const env = { ...inherited, NX_WORKSPACE_DATA_DIRECTORY: join(root, fixture.tooling.storage.data), NX_CACHE_DIRECTORY: join(root, fixture.tooling.storage.cache), NODE_PATH: installation.modulePath, NX_DAEMON: "false", NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_ROOT: root, REPO_ROOT: root };
+  const env = { ...inherited, NX_WORKSPACE_DATA_DIRECTORY: join(root, fixture.tooling.storage.data), NX_CACHE_DIRECTORY: join(root, fixture.tooling.storage.cache), NODE_PATH: installation.modulePath, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT_PATH: root, SEMIO_WORKSPACE_ROOT: root, REPO_ROOT: root };
   const actual = Bun.spawnSync(["node", installation.cli, "--version"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   assert.equal(actual.exitCode, 0, actual.stderr.toString());
   assert.ok(actual.stdout.toString().includes(manifest.dependencies.nx));
@@ -91,7 +91,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
   const lock = readFileSync(join(root, "bun.lock"), "utf8");
   for (const overrides of [[], ["--", "--force"]]) {
-    const command = Bun.spawn([process.execPath, join(root, bootstrap), "nx", "run", `workspace:${fixture.target}`, "--output-style=stream", ...overrides], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+    const command = Bun.spawn([process.execPath, join(root, bootstrap), "repo", "run", `workspace:${fixture.target}`, "--output-style=stream", ...overrides], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
     const [out, err, code] = await Promise.all([new Response(command.stdout).text(), new Response(command.stderr).text(), command.exited]);
     writeFileSync(join(root, overrides.length ? "public-rejected-override.log" : "public-dependency-sync.log"), out + err);
     assert.equal(code, overrides.length ? 1 : 0, out + err);
@@ -102,7 +102,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   writeFileSync(join(root, "Cargo.toml"), '[workspace]\nresolver="2"\nmembers=[]\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nmember-manifests=["🧪️packages/**/Cargo.toml"]\nowner-manifests=[]\n');
   copyFileSync(join(root, "project.json"), join(root, "📋️project.json"));
   unlinkSync(join(root, "project.json"));
-  const graphRun = Bun.spawn([process.execPath, join(root, bootstrap), "nx", "run", `workspace:${fixture.target}`, "--output-style=stream"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  const graphRun = Bun.spawn([process.execPath, join(root, bootstrap), "repo", "run", `workspace:${fixture.target}`, "--output-style=stream"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   const [graphOut, graphErr, graphStatus] = await Promise.all([new Response(graphRun.stdout).text(), new Response(graphRun.stderr).text(), graphRun.exited]);
   writeFileSync(join(root, "public-repository-plugins.log"), graphOut + graphErr);
   assert.equal(graphStatus, 0, graphOut + graphErr);

@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "copies",
+    "wire"
+  ],
+  "properties": {
+    "contract": {
+      "const": "original-source-closure"
+    },
+    "copies": {
+      "type": "array",
+      "items": {
+        "enum": [
+          1,
+          3,
+          64
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "wire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initial",
+        "closure"
+      ],
+      "properties": {
+        "initial": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "primary",
+            "receiptRefusal",
+            "contextRefusal"
+          ],
+          "properties": {
+            "primary": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "message"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            },
+            "receiptRefusal": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "message"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            },
+            "contextRefusal": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "message"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "closure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "primary",
+            "receiptRefusal",
+            "contextRefusal"
+          ],
+          "properties": {
+            "primary": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "message"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            },
+            "receiptRefusal": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "message"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            },
+            "contextRefusal": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "message"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

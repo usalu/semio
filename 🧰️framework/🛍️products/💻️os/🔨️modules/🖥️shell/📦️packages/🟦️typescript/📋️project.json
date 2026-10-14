@@ -1,12 +1,12 @@
 {
   "name": "@semio-tech/framework-os-shell",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": ["{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🟦️.ts", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🤖️generated/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧫️fixtures/**/*", "{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",

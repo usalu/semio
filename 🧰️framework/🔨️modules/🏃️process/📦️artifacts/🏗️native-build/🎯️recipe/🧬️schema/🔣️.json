@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://framework.process.native-build/CargoTargetRecipeV1",
+  "title": "Immutable compiler request identifying reusable Cargo target state",
+  "description": "Cargo executes for every invocation and validates actual source and declared environment freshness; this is a target-state identity, never a source-content cache hit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cwd",
+    "manifest",
+    "command",
+    "args",
+    "buildDirectory",
+    "compilerIdentity",
+    "toolchainIdentity",
+    "inputs",
+    "environment"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cwd": {
+      "$ref": "#/definitions/AbsolutePath"
+    },
+    "manifest": {
+      "$ref": "#/definitions/AbsolutePath"
+    },
+    "command": {
+      "type": "string",
+      "minLength": 1
+    },
+    "args": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "buildDirectory": {
+      "$ref": "#/definitions/AbsolutePath"
+    },
+    "compilerIdentity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "toolchainIdentity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "#/definitions/AbsolutePath"
+          },
+          "sha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "AbsolutePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "Protocol": {
+      "const": {
+        "namespace": "cargo-target-recipe-v1",
+        "store": "t",
+        "receipt": "recipe.json",
+        "digestUnits": 32
+      }
+    },
+    "Scheduling": {
+      "const": {
+        "admissions": [
+          "one-core",
+          "all-cores"
+        ],
+        "sameTarget": true,
+        "warmFresh": true,
+        "warmRustc": 0,
+        "waitingCompilerCapacity": false
+      }
+    },
+    "EnvironmentSelection": {
+      "const": {
+        "names": [
+          "RUSTFLAGS",
+          "CARGO_ENCODED_RUSTFLAGS",
+          "RUSTC",
+          "RUSTC_WRAPPER",
+          "RUSTC_WORKSPACE_WRAPPER",
+          "RUSTUP_TOOLCHAIN",
+          "CARGO_HOME"
+        ],
+        "prefixes": [
+          "CARGO_BUILD_",
+          "CARGO_PROFILE_",
+          "CARGO_TARGET_"
+        ],
+        "excluded": [
+          "CARGO_TARGET_DIR",
+          "CARGO_BUILD_BUILD_DIR",
+          "CARGO_BUILD_JOBS"
+        ]
+      }
+    },
+    "TargetOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "directory",
+        "writesOutside"
+      ],
+      "properties": {
+        "key": {
+          "const": "build.target-dir"
+        },
+        "directory": {
+          "const": "foreign-target"
+        },
+        "writesOutside": {
+          "const": false
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/semio-tech-play",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*"
@@ -8,7 +8,7 @@
   },
   "targets": {
     "prepare-prototype": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "inputs": [
@@ -65,7 +65,7 @@
       "defaultConfiguration": "prototype"
     },
     "activate-prototype": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [
         "{projectRoot}/dist/♻️activation/prototype"
@@ -135,7 +135,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [
         "activate-prototype"
       ],
@@ -167,7 +167,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts serve",
@@ -181,7 +181,7 @@
       ]
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "metadata": {
         "semio": {
           "orchestrator": true,
@@ -400,7 +400,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
@@ -409,7 +409,7 @@
       }
     },
     "prepare-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -423,7 +423,7 @@
       }
     },
     "serve-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -442,7 +442,7 @@
       }
     },
     "test-release-routing": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -452,7 +452,7 @@
       }
     },
     "test-release": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -465,7 +465,7 @@
       }
     },
     "test-e2e-enduser": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -478,7 +478,7 @@
       }
     },
     "test-e2e": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [
@@ -491,7 +491,7 @@
       }
     },
     "release-verify": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "dependsOn": [],

@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/ui-styling",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
@@ -10,7 +10,7 @@
   },
   "targets": {
     "generate": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts generate",
@@ -23,14 +23,14 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test"
       }
     },
     "twin": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
@@ -41,7 +41,7 @@
       "outputs": []
     },
     "test-geometry": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-geometry"
@@ -62,7 +62,7 @@
       ]
     },
     "test-asset-transport": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test-asset-transport",
         "cwd": "{projectRoot}",

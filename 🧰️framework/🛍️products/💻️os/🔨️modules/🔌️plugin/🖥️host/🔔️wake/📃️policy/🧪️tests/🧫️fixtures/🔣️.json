@@ -26,5 +26,17 @@
     "maximumCapacityBytes": 1048576,
     "maximumReleaseBytes": 1048576,
     "maximumDepth": 64
+  },
+  "root": {
+    "operation": 71,
+    "generation": 3,
+    "turnFuel": 64,
+    "operationFuel": 1024,
+    "maximumTurnMicroseconds": 500,
+    "turnExecutionFuel": 1000000,
+    "operationExecutionFuel": 500000000,
+    "maxEffects": 256,
+    "maxPatchBytes": 1048576,
+    "maxFrames": 256
   }
 }

@@ -1,0 +1,38 @@
+{
+  "contract": "original-source-closure",
+  "copies": [
+    1,
+    3,
+    64
+  ],
+  "wire": {
+    "initial": {
+      "primary": {
+        "kind": "invalidValue",
+        "message": "initial original semantic"
+      },
+      "receiptRefusal": {
+        "kind": "invariantViolated",
+        "message": "initial original receipt"
+      },
+      "contextRefusal": {
+        "kind": "workLimit",
+        "message": "initial original context"
+      }
+    },
+    "closure": {
+      "primary": {
+        "kind": "ownershipLimit",
+        "message": "closure original semantic"
+      },
+      "receiptRefusal": {
+        "kind": "allocationFailed",
+        "message": "closure original receipt"
+      },
+      "contextRefusal": {
+        "kind": "depthLimit",
+        "message": "closure original context"
+      }
+    }
+  }
+}

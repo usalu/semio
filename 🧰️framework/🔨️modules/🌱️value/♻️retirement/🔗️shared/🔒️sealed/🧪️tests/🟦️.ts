@@ -42,3 +42,7 @@ test("stale original slot refuses another issuance at the same numeric address",
  expect({sameAddress:replay.candidate.address===replay.slot.address,sameIssuance:replay.candidate.issuance===replay.slot.issuance,accepted:replay.candidate.address===replay.slot.address&&replay.candidate.issuance===replay.slot.issuance}).toEqual(corpus.staleSlot);
  const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8");expect(source.includes("self.issuance!=slot.issuance")).toBe(true);
 });
+
+test("original shared issuer declares its exact transfer body quote before header release",()=>{
+ const fixture=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));expect(new Ajv2020({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{expect(db.query("SELECT ? AS body,? AS releasedHeader").get(fixture.originalTransferQuote.sourceRootMetadataCopy,32)).toEqual({body:0,releasedHeader:32})}finally{db.close()}const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8");expect(source.includes("pub transfer_copy_bytes:fn(&T)->usize")).toBe(true);expect(source.includes("pub fn original_transfer_demand(")).toBe(true);expect(source.includes("self.issuer.transfer_copy_bytes")).toBe(true);console.log("[DEBUG] Ajv/SQLite original source roots transfer metadata with body0 and separately funded exact header release; generic inline quote remains explicit");
+});

@@ -1774,7 +1774,7 @@ pub fn cancel_js_plugin_install(plugin_id: &str) -> bool {
 // lexically cancelled out) to actually exist; no number of `../../../🌉️ProgramBridge/🎯️targets`s fixes that. Declaring it at the crate
 // root instead (where `program_bridge/`'s directory is real) and re-exporting preserves the
 // `crate::program_bridge::{PluginHostConfig, ...}` path every call site already depends on.
-pub use crate::generated_plugin_hosts::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, PLUGIN_ARTIFACT_KIND_ACTIVATIONS};
+pub use crate::plugin_catalog::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, plugin_artifact_kind_activations};
 
 /// 🎬️ Resolves an artifact activation from the caller's exact declared capability rows.
 pub fn resolve_artifact_kind_activation_owner<'a>(artifact_kind: &str, declarations: &'a [(&str, &'a str)]) -> Option<&'a str> {

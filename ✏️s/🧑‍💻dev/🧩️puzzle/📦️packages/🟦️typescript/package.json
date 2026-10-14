@@ -7,8 +7,8 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-puzzle-fill-policy-self-tests": "bun nx run @semio-tech/s-puzzle-composition-tests:verify-puzzle-fill-policy-self-tests",
-    "verify-browser-contribution": "bun nx run @semio-tech/s-puzzle-composition-tests:verify-browser-contribution"
+    "verify-puzzle-fill-policy-self-tests": "bun repo run @semio-tech/s-puzzle-composition-tests:verify-puzzle-fill-policy-self-tests",
+    "verify-browser-contribution": "bun repo run @semio-tech/s-puzzle-composition-tests:verify-browser-contribution"
   },
   "semio": {
     "role": "test",

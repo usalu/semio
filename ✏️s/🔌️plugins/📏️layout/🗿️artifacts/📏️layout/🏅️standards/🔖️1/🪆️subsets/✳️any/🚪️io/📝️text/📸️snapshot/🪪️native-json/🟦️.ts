@@ -1,6 +1,6 @@
 /** 🪪️ Literal Layout native JSON boundary alongside its exact owned words and SQLite relations. */
 import {parseLayoutArtifact,type LayoutArtifact} from "../../../../🧬️schema/🟦️.ts";
-import {binary64,binary32,binary64Value,binary32Value,type Binary64,type Binary32} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary32,binary64Value,binary32Value,type Binary64,type Binary32} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {semioDrawingSnapshotFromNativeJson,semioDrawingSnapshotNativeJson} from "../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
 import{formDictionaryNativeJson,formDictionaryFromNativeJson}from"../../../../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧾️dictionary/🪪️native-json/🟦️.ts";
 export const row=(v:unknown):Record<string,unknown>=>{if(v===null||typeof v!=="object"||Array.isArray(v))throw Error("Layout native JSON record");return v as Record<string,unknown>;};

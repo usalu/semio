@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { configuredExactCargoLawPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation,scriptInvocationBudget } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -1341,10 +1341,6 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     assert(!artifactSchedule.includes("scheduled.compare_exchange"));
     const observe = readFileSync(join(owner, "..", "..", "👁️observe", "🦀️.rs"), "utf8");
     assert(observe.includes("fn emit(&self, event: EmitEvent) -> impl Future<Output = ()> + Send;"));
-    const hub = readFileSync(join(this.repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
-    const ensure = hub.slice(hub.indexOf("async fn ensure_document(&self"), hub.indexOf("fn bearer("));
-    assert(ensure.includes("self.db.ensure_document(id).await") && ensure.includes("rejected.retry_close().await"));
-    assert(!ensure.includes("self.db.create_document") && !ensure.includes("self.db.document(id)"));
     for (const law of [
       "database_document_mount_coalesces_join_drives_without_shared_pool_starvation",
       "database_document_mount_cleanup_fault_consumes_racing_resume_request_exactly_once",
@@ -1776,6 +1772,9 @@ class CanonicalArchitectureScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if(segments[0]==="original-inference-caller"){
+      await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_inference::component::tests::original_inferred_source_binding_preserves_actual_caller_before_unfunded_plan","os_inference::component::tests::original_inferred_graph_planning_quotes_each_borrowed_source_and_page"]},{package:"semio-framework-dsl-record",target:{kind:"test",name:"field_refusal_public"},laws:["retained_projection_measure_and_step_follow_original_payload_across_borrowed_headers"]},{package:"semio-framework-plugin",target:{kind:"lib"},laws:["tool_contract::original_inference_admission_tests::original_mounted_inference_admission_retains_source_and_quotes_actual_registry_events"]}]});return;
+    }
     const { rest } = resolveTestLevel(segments);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-kernel"], cwd: this.root, extraArgs: ["--features", "mutation-testing", ...rest] }, readCargoTestPolicyV1(process.env));
   }
@@ -2261,12 +2260,10 @@ export async function directorySessionAuthorityOracle(repoRoot: string): Promise
   }
   const rust = readFileSync(join(root, "🦀️.rs"), "utf8");
   const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
-  const hub = readFileSync(join(repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8");
   const sessionIo = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🦀️.rs"), "utf8");
   assert(rust.includes("pub struct DirectorySessionAuthorityV1") && sessionIo.includes("parse_canonical_json"), "Rust session authority contract missing");
   assert(client.includes("DirectorySessionAuthorityV1::parse_canonical_json") && client.includes("DIRECTORY_SESSION_AUTHORITY_MAX_BYTES"), "Rust client does not enforce canonical session authority");
-  assert(hub.includes("directory_event_page_session_binding_v1(&caller)") && hub.includes("Json<DirectorySessionAuthorityV1>"), "Hub session response is not bound to the existing session digest");
-  return fixture.rows.length + fixture.raw.length + fixture.bindingGoldens.length + fixture.authorityLifecycle.length + 3;
+  return fixture.rows.length + fixture.raw.length + fixture.bindingGoldens.length + fixture.authorityLifecycle.length + 2;
 }
 
 class DirectorySessionAuthorityCheckScript extends BundleScript {

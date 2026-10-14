@@ -25,7 +25,7 @@ fn run(id: &str, values: Vec<(&str, GeometryValue)>, fuel: usize) -> (usize, Wid
     let kind = support::kind_of(id);
     let values: BTreeMap<String, GeometryValue> = values.into_iter().map(|(port, value)| (port.to_string(), value)).collect();
     let entry = COMPUTES.iter().find(|entry| entry.id == id).expect("registered");
-    support::slices((entry.start)(kind, WidgetInputs::new("w", kind, values)), fuel)
+    support::slices((entry.start)(kind, WidgetInputs::new_cold("w", kind, values)), fuel)
 }
 
 #[test]
@@ -71,7 +71,7 @@ fn a_moved_vertex_sits_where_the_offset_puts_it() {
     let vertex = session.brep().vertex_sync([1.0, 1.0, 1.0]).expect("vertex");
     let value = Arc::new(session.export(&vertex).expect("export"));
     let (_, evaluation) = run("brep.transform.translate", vec![("shape", GeometryValue::Shape(value)), ("offset", GeometryValue::Vector([1.0, 2.0, 3.0]))], usize::MAX);
-    let GeometryValue::Shape(moved) = &evaluation.outputs["shape"] else { panic!("shape") };
+    let GeometryValue::Shape(moved) = &*evaluation.outputs.get("shape").unwrap() else { panic!("shape") };
     let semio_framework_3d_brep_engine::ShapeRoot::Vertex(id) = moved.root else { panic!("vertex") };
     let position = moved.body.vertices.get(id).expect("vertex").position;
     assert_eq!([position.x, position.y, position.z], [2.0, 3.0, 4.0]);
@@ -90,6 +90,6 @@ fn a_motion_never_edits_the_input_value() {
 fn a_copy_is_geometrically_the_input_and_a_new_value() {
     let input = cube(2.0);
     let (_, evaluation) = run("brep.transform.copy", vec![("shape", GeometryValue::Shape(input.clone()))], usize::MAX);
-    let GeometryValue::Shape(copy) = &evaluation.outputs["shape"] else { panic!("shape") };
+    let GeometryValue::Shape(copy) = &*evaluation.outputs.get("shape").unwrap() else { panic!("shape") };
     assert_eq!(support::measures(&support::tessellate(copy, 0.1)).triangles, support::measures(&support::tessellate(&input, 0.1)).triangles);
 }

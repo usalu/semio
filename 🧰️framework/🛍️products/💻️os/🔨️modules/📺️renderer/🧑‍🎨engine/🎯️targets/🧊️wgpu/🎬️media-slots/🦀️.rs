@@ -14,7 +14,9 @@ fn serialize_coordinate<S: serde::Serializer>(value: &f32, serializer: S) -> Res
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone,semio_framework_value::CanonicalJsonTree)]
+#[value(rename_all="camelCase")]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PresentedMediaRect {
     #[serde(serialize_with = "serialize_coordinate")]
@@ -33,7 +35,9 @@ impl From<Rect> for PresentedMediaRect {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone,semio_framework_value::CanonicalJsonTree)]
+#[value(rename_all="camelCase")]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PresentedMediaSlot {
     pub token: String,
@@ -48,7 +52,7 @@ pub struct PresentedMediaSlot {
     pub controller_id: String,
     pub app_instance_id: u32,
     pub parent_document_id: String,
-    pub props: serde_json::Value,
+    pub props: semio_framework_value::DslValue,
 }
 
 #[derive(Clone, Debug)]
@@ -120,6 +124,7 @@ pub(crate) fn body_occluder(body: Rect, frames: impl Iterator<Item = Rect>) -> R
 }
 
 /// 🪪️ Refuses any resource whose authority differs from the accepted shell owner.
+#[cfg(test)]
 pub(crate) fn resource_matches_owner(props: &serde_json::Value, owner: &PresentedMediaOwner) -> bool {
     props.get("resource").is_some_and(|resource| {
         resource.is_null()
@@ -130,6 +135,7 @@ pub(crate) fn resource_matches_owner(props: &serde_json::Value, owner: &Presente
 }
 
 /// 📐️ Walks one strictly presented tree and composes its leaves with the accepted shell body.
+#[cfg(test)]
 pub(crate) fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: &str, body: Rect, owner: &PresentedMediaOwner, slots: &mut Vec<PresentedMediaSlot>) -> bool {
     let Some(root) = tree.root else { return true };
     if !valid_bounds(body) || !(1..=512).contains(&window_id.chars().count()) || !(1..=256).contains(&owner.plugin_id.chars().count()) || !(1..=256).contains(&owner.controller_id.chars().count()) || !(1..=512).contains(&owner.parent_document_id.chars().count()) {
@@ -172,7 +178,7 @@ pub(crate) fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: 
                             let resource_identity = props.get("resource").filter(|resource| !resource.is_null()).map(|resource| ["kind", "controllerId", "appInstanceId", "parentDocumentId", "outputPort", "revision", "generation"].map(|field| resource.get(field)));
                             let identity = (window_id, document_id.0.to_string(), &node_key, &owner.plugin_id, &owner.controller_id, owner.app_instance_id, &owner.parent_document_id, resource_identity);
                             let token = semio_framework_hash::sha256_hex(&serde_json::to_vec(&identity).expect("media identity serialization"));
-                            slots.push(PresentedMediaSlot { token, window_id: window_id.to_string(), node_id: document_id.0.to_string(), node_key, rect: rect.into(), clip: clip.into(), paint_order: slots.len() as u32, occluded: occluded || !valid_rect(rect) || !valid_rect(clip), plugin_id: owner.plugin_id.clone(), controller_id: owner.controller_id.clone(), app_instance_id: owner.app_instance_id, parent_document_id: owner.parent_document_id.clone(), props });
+                            slots.push(PresentedMediaSlot { token, window_id: window_id.to_string(), node_id: document_id.0.to_string(), node_key, rect: rect.into(), clip: clip.into(), paint_order: slots.len() as u32, occluded: occluded || !valid_rect(rect) || !valid_rect(clip), plugin_id: owner.plugin_id.clone(), controller_id: owner.controller_id.clone(), app_instance_id: owner.app_instance_id, parent_document_id: owner.parent_document_id.clone(), props:semio_framework_value::DslValue::from(props) });
                         }
                     }
                 }
@@ -194,3 +200,12 @@ pub(crate) fn collect_tree_slots(tree: &ui_wgpu::wgpu::tree::UiTree, window_id: 
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️wgpu-media-slots-unit/🦀️.rs"]
 mod tests;
+
+#[path="📥️props/🦀️.rs"]
+pub(crate) mod original_props;
+
+#[path="📤️slot/🦀️.rs"]
+pub(crate) mod original_slot;
+
+#[path="🎟️collect/🦀️.rs"]
+pub(crate) mod original_collect;

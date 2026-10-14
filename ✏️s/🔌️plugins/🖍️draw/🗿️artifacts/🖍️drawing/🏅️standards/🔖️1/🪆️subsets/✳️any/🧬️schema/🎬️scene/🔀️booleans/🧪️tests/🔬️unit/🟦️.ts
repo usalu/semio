@@ -13,7 +13,7 @@ import imageSchema from "../../../../../../../../../../../../../../🧰️framew
 import flatSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧬️schema/🔣️.json";
 import regionSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔀️booleans/🧬️schema/🔣️.json";
 import curveSchema from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🧬️schema/🔣️.json";
-import {binary64} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {DocumentSceneJob,DocumentRasterJob,rasterizeDocument,resolvedSceneInput} from "../../../📋️prepare/🟦️.ts";
 import {RasterSceneJob} from "../../../📷️raster/🟦️.ts";
 import {DocumentBooleanJob,resolveDocumentBooleans,type DocumentBooleanInput,type DocumentBooleanProgress} from "../../🟦️.ts";

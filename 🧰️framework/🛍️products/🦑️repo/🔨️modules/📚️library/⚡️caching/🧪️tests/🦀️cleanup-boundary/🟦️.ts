@@ -1,3 +1,4 @@
+import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -34,15 +35,15 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
     writeFileSync(join(root, "project.json"), JSON.stringify({ name: "fixture", targets: Object.fromEntries(fixture.operations.map((operation: string) => [operation, {
       executor: "nx:run-commands", cache: false, options: { command: `bun "${fixture.implementation}" native cargo ${operation} --manifest Cargo.toml` }
     }])) }));
-    const env = { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_TEST_ARTIFACT_DIR: root, NODE_PATH: join(workspace, "node_modules"), CARGO_TARGET_DIR: join(root, "target"), CARGO_BUILD_BUILD_DIR: join(root, "build"), FORCE_COLOR: "0", NO_COLOR: "1" };
+    const env = { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_TEST_ARTIFACT_DIR: root, NODE_PATH: join(workspace, "node_modules"), CARGO_TARGET_DIR: join(root, "target"), CARGO_BUILD_BUILD_DIR: join(root, "build"), FORCE_COLOR: "0", NO_COLOR: "1" };
     for (const operation of fixture.operations) {
-      const log = await runTool("node",[require.resolve("nx/bin/nx.js"), "run", `fixture:${operation}`, "--outputStyle=stream"],root,signal,true,env,{version:1,directory:output});
+      const log = await runTool("node",[require.resolve("nx/bin/nx.js"), "run", `fixture:${operation}`, "--outputStyle=stream"],root,signal,true,env,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
       writeFileSync(join(root, `${operation}.log`), log);
       assert.equal(existsSync(join(root, fixture.cleanupStamp)), false, `${operation} must not schedule cleanup after completing its Nx leaf`);
       assert.equal(existsSync(join(root, fixture.cleanupMarker)), false, `${operation} launched detached cleanup`);
     }
     assert.ok(existsSync(join(root, "dist/build/.nx-artifact.json")), "Build still publishes owned artifacts");
-    const oracle = JSON.parse(await runTool("cargo",["metadata", "--locked", "--offline", "--no-deps", "--format-version=1"],root,signal,true,env,{version:1,directory:output}));
+    const oracle = JSON.parse(await runTool("cargo",["metadata", "--locked", "--offline", "--no-deps", "--format-version=1"],root,signal,true,env,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program}));
     assert.equal(oracle.packages[0].name, cargo.package);
     for (const entrypoint of fixture.entrypoints) assert.ok(!code.includes(entrypoint), "Cargo must not orchestrate cleanup indirectly");
     passed = true;

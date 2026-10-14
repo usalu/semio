@@ -45,7 +45,7 @@ const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
 function assertExtensionOutputsFresh(root: string = extensionOutRoot, rebuilding: readonly PluginBuildTargetV1[] = []): void {
   if (!existsSync(root)) return;
   const currentHostShim = hostShimSource();
-  const republished = new Set(rebuilding.filter((target) => target.role === "extension").map((target) => moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]}))));
+  const republished = new Set<string>(rebuilding.filter((target) => target.role === "extension").map((target) => moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]}))));
   for (const entry of readdirSync(root, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     if (republished.has(entry.name)) continue;

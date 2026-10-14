@@ -5,11 +5,11 @@
   "tags": ["lang:typescript", "role:hub"],
   "targets": {
     "publish": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": { "command": "bun 📜️script.ts publish", "cwd": "{projectRoot}", "forwardAllArgs": true }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": { "command": "bun 📜️script.ts test", "cwd": "{projectRoot}", "forwardAllArgs": true }
     }
   }

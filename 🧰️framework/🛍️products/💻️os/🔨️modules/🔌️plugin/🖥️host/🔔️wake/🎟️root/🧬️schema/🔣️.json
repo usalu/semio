@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Host Root Invocation Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "turnFuel",
+    "operationFuel",
+    "maximumTurnMicroseconds",
+    "turnExecutionFuel",
+    "operationExecutionFuel",
+    "maxEffects",
+    "maxPatchBytes",
+    "maxFrames"
+  ],
+  "properties": {
+    "operation": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "turnFuel": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "operationFuel": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "maximumTurnMicroseconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "turnExecutionFuel": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "operationExecutionFuel": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "maxEffects": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "maxPatchBytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "maxFrames": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  }
+}

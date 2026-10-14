@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Actor Source Epoch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operation", "generation", "epochs", "refusedEpoch", "heapBytes"],
+  "properties": {
+    "operation": {"type": "integer", "minimum": 1},
+    "generation": {"type": "integer", "minimum": 1},
+    "epochs": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}},
+    "refusedEpoch": {"const": 0},
+    "heapBytes": {"const": 0}
+  }
+}

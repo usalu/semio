@@ -176,7 +176,7 @@ impl WindowDelegate for OsHost {
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn redraw(&mut self, _reason: InvalidationReason) -> RedrawOutcome {
         let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_present", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiPresent);
-        self.redraw_core()
+        self.present_snapshot(self.clock.now_seconds())
     }
 
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -199,12 +199,16 @@ impl OsHost {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn redraw_offscreen_worker(&mut self) -> crate::os_host::BrowserRedrawOutcome {
-        let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_offscreen_worker", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::InteractiveStep);
-        let _ = self.scheduler.should_render(self.clock.now_seconds());
-        let _ = self.redraw_core();
-        let snapshot = self.snapshot_sink.acquire();
-        crate::os_host::BrowserRedrawOutcome { cursor_css: ui_wgpu::wgpu::cursor::semio_cursor_css(snapshot.accepted_cursor, snapshot.accepted_theme_dark), media_slots: snapshot.media_slots.clone() }
+    pub(crate) fn redraw_offscreen_worker(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<crate::os_host::BrowserRedrawOutcome>,semio_framework_job::OriginalTurnFailure>{
+        let _=self.scheduler.should_render(self.clock.now_seconds());
+        self.prepare_redraw();
+        if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
+        self.build_and_publish_snapshot_on_original_caller(cx)?;
+        if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
+        let _=self.present_snapshot(self.clock.now_seconds());
+        let Some(snapshot)=self.snapshot_sink.acquire_output_on_original_caller(cx)?else{return Ok(None)};
+        let cursor_css=ui_wgpu::wgpu::cursor::semio_cursor_css(snapshot.snapshot().accepted_cursor,snapshot.snapshot().accepted_theme_dark);
+        Ok(Some(crate::os_host::BrowserRedrawOutcome{cursor_css,media_slots:snapshot}))
     }
 
     /// 🔢️ The frame generation names the INPUT STATE a build is answering, so it advances when input
@@ -217,7 +221,7 @@ impl OsHost {
     /// 6118 exactly one build ever ran (`frame build admitted generation=Generation(3)`), the next
     /// tick superseded it, and the shell produced no further frame for the rest of the session
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-    fn redraw_core(&mut self) -> RedrawOutcome {
+    fn prepare_redraw(&mut self) {
         let _ = crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step();
         if self.frame_ready {
             self.frame_ready = false;
@@ -237,9 +241,15 @@ impl OsHost {
         if !self.presenter.surface_resize_step() || self.surface_resize.has_work() {
             self.scheduler.invalidate(InvalidationReason::VIEWPORT);
         }
+    }
+
+    fn redraw_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RedrawOutcome,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(RedrawOutcome{cursor:CursorRequest::Default,ime:None})}
+        self.prepare_redraw();
         let now = self.clock.now_seconds();
-        self.build_and_publish_snapshot();
-        self.present_snapshot(now)
+        if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(RedrawOutcome{cursor:CursorRequest::Default,ime:None})}
+        self.build_and_publish_snapshot_on_original_caller(cx)?;
+        Ok(self.present_snapshot(now))
     }
 }
 
@@ -272,92 +282,49 @@ impl OsHost {
     /// inside the loop is still priced by its own two-millisecond ceiling
     /// (`🖱️ui/🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs` `admit_prepared_gpu_opportunity`), so the loop cannot
     /// hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn build_and_publish_snapshot(&mut self) {
-        if !self.presenter.holds_presented_input_publication() {
-            let _ = self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS);
+    fn pump_frame_inputs(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        if !self.presenter.holds_presented_input_publication(){let _=self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS,cx)?;}
+        #[cfg(not(target_arch="wasm32"))]{let _=self.runtime.pump_native_asset();let _=self.runtime.asset_decode_step();}
+        if self.advance_component_surface_close(){self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);}
+        if !self.events.is_empty(){let _=self.runtime.enqueue_dispatch_on_original_caller(&mut self.events,self.frame_generation,cx)?;}Ok(())
+    }
+
+    /// 🎟️ Business authority is lent unchanged while presentation generation only selects freshness.
+    fn build_and_publish_snapshot_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(())}
+        self.pump_frame_inputs(cx)?;
+        if !crate::os_host::component_surface_close_pending(){
+            let inputs=self.runtime.frame_inputs(crate::app_now_ms());
+            let generation=semio_framework_trace::Generation(self.frame_generation);
+            self.runtime.observe_presentation_input_generation(generation.0);
+            let runtime=self.runtime.clone();
+            let mut failure=None;let frame_build=&mut self.frame_build;
+            let _=self.presenter.admit_next_frame(||match frame_build.poll_runtime_on_original_caller(runtime,inputs,generation,cx){Ok(frame)=>frame,Err(original)=>{failure=Some(original);None}});
+            if let Some(original)=failure{return Err(original)}
         }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = self.runtime.pump_native_asset();
-            let _ = self.runtime.asset_decode_step();
-        }
-        if self.advance_component_surface_close() {
-            self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-        }
-        if !self.events.is_empty() && self.runtime.has_lossless_capacity() {
-            let generation = self.events.current_generation();
-            let drained = self.events.drain_page(ui_host::WorkerContext::new(generation));
-            let drained_shape = format!("move={} metrics={} ordered={}", drained.pointer_move.is_some(), drained.metrics.is_some(), drained.discrete.iter().filter(|slot| slot.is_some()).count());
-            let admitted = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new_for_generation(drained, self.frame_generation))));
-            crate::log_debug(&format!("[TRACE] os_host drain events generation={generation:?} {drained_shape} enqueue-apply={admitted}"));
-        }
-        let component_close_pending = crate::os_host::component_surface_close_pending();
-        if !component_close_pending {
-            let build_inputs = self.runtime.frame_inputs(crate::app_now_ms());
-            let build_operation = render_frame_operation_id();
-            let build_generation = semio_framework_trace::Generation(self.frame_generation);
-            crate::frame_latency::observe_frame_generation(build_generation.0);
-            self.runtime.observe_presentation_input_generation(build_generation.0);
-            let runtime = self.runtime.clone();
-            crate::log_debug_diagnostic_once_per_transition(
-                "frame-gate",
-                self.presenter.has_pending_presentation(),
-                &format!("[TRACE] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()),
-            );
-            let frame_build = &mut self.frame_build;
-            let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
-        }
-        #[cfg(target_arch = "wasm32")]
-        let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
-        loop {
-            match self.presenter.present_step() {
-                Ok(crate::AppPresentStep::Complete { generation, cursor, theme_dark, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives, media_slots }) => {
-                    self.animation_clock.accept(has_animated_primitives);
-                    self.animation_clock.sync(&mut self.scheduler, self.clock.now_seconds());
-                    self.runtime.publish_retained_control_deadline(retained_control_deadline);
-                    self.runtime.publish_shell_clock_deadline(shell_clock_deadline);
-                    self.scheduler.replace_deadline(crate::deadlines::RETAINED_CONTROL_CLOCK, self.runtime.retained_control_deadline(self.clock.now_seconds()));
-                    if generation.0 != self.frame_generation {
-                        self.scheduler.invalidate(InvalidationReason::INPUT_STATE);
-                        return;
-                    }
-                    self.platform_fullscreen = fullscreen;
-                    if let Some(token) = cursor_wake {
-                        if self.runtime.acknowledge_world_cursor_wake(&token) {
-                            self.retain_cursor_wake_directive(token);
-                            self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-                        }
-                    }
-                    let Some(revision) = self.snapshot_sink.next_revision() else {
-                        self.present_fault = Some("render snapshot revision exhausted".to_string());
-                        return;
-                    };
-                    let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0), crate::frame_latency::FrameLatencyStage::SnapshotPublish, 1);
-                    self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), cursor, theme_dark, None).with_media_slots(media_slots));
-                }
-                Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
-                Ok(crate::AppPresentStep::RetryRuntime) => {
-                    self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-                    return;
-                }
-                Ok(crate::AppPresentStep::AwaitingRuntime) => return,
-                Ok(crate::AppPresentStep::Idle) => return,
-                Err(error) => {
-                    crate::log_debug(&format!("[TRACE] os_host present_step faulted: {error}"));
-                    self.present_fault = Some(error);
-                    if self.presenter.has_pending_presentation() {
-                        self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
-                    }
-                    return;
-                }
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            return;
-            #[cfg(target_arch = "wasm32")]
-            if present_deadline_us.is_none_or(|deadline| semio_framework_job::default_now_us().is_none_or(|now| now >= deadline)) {
-                return;
-            }
-        }
+        self.publish_presented_snapshot_on_original_caller(cx)?;
+        Ok(())
+    }
+
+
+    /// 📮️ The actual completed media body enters paid snapshot publication without serialization or a vector clone.
+    fn publish_presented_snapshot_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(())}
+        if self.original_snapshot.is_some(){if !self.snapshot_sink.retain_original_publication(&mut self.original_snapshot,cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY)}return Ok(())}
+        if !self.snapshot_sink.publish_on_original_caller(cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);return Ok(())}
+        let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
+        match self.presenter.present_step(cx){
+            Ok(crate::AppPresentStep::Complete{generation,cursor,theme_dark,fullscreen,cursor_wake,retained_control_deadline,shell_clock_deadline,has_animated_primitives,media_slots})=>{
+                self.original_snapshot=Some(crate::render_snapshot::RenderSnapshot::new(0,semio_cursor_to_request(cursor),cursor,theme_dark,None).with_media_slots(media_slots));
+                cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
+                self.animation_clock.accept(has_animated_primitives);self.animation_clock.sync(&mut self.scheduler,self.clock.now_seconds());self.runtime.publish_retained_control_deadline(retained_control_deadline);self.runtime.publish_shell_clock_deadline(shell_clock_deadline);self.platform_fullscreen=fullscreen;
+                if let Some(token)=cursor_wake{if self.runtime.acknowledge_world_cursor_wake(&token){self.retain_cursor_wake_directive(token);self.scheduler.invalidate(InvalidationReason::RESOURCE_READY)}}
+                if generation.0!=self.frame_generation{self.scheduler.invalidate(InvalidationReason::INPUT_STATE)}
+            },
+            Ok(crate::AppPresentStep::Pending|crate::AppPresentStep::RetryRuntime)=>self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
+            Ok(crate::AppPresentStep::AwaitingRuntime|crate::AppPresentStep::Idle)=>{},
+            Err(original)=>return Err(original),
+        }Ok(())
     }
 
     /// 📤️ The PRESENT half — atomically acquires the newest published snapshot (never blocks, never
@@ -399,68 +366,68 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
 /// `MouseEvent.button` convention `AppRuntime`'s own `i16` button parameter already assumed
 /// (`dispatch_actions`/world3d/graph/map/board call sites all branch on `0`/`1`/`2` verbatim).
 /// 📤️ P3a: the runtime mailbox invokes this for one retained cursor item per worker turn.
-pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, event: DispatchEvent) {
+pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mut DispatchEvent) {
     crate::log_debug(&format!("[TRACE] os_host dispatch_normalized_event {event:?}"));
     match event {
         DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
-            let (down, button, modifiers) = (app.pointer_down, app.pointer_button, event_modifiers_to_pointer(modifiers));
-            app.handle_pointer_move(pointer, x, y, down, button, modifiers).await;
+            let (down, button, modifiers) = (app.pointer_down, app.pointer_button, event_modifiers_to_pointer(*modifiers));
+            app.handle_pointer_move(*pointer, *x, *y, down, button, modifiers).await;
         }
         DispatchEvent::PointerDown { pointer, x, y, button, modifiers } => {
-            let modifiers = event_modifiers_to_pointer(modifiers);
-            app.handle_pointer_button(pointer, x, y, true, pointer_button_to_i16(button), modifiers).await;
+            let modifiers = event_modifiers_to_pointer(*modifiers);
+            app.handle_pointer_button(*pointer, *x, *y, true, pointer_button_to_i16(*button), modifiers).await;
         }
         DispatchEvent::PointerUp { pointer, x, y, button, modifiers } => {
-            let modifiers = event_modifiers_to_pointer(modifiers);
-            app.handle_pointer_button(pointer, x, y, false, pointer_button_to_i16(button), modifiers).await;
+            let modifiers = event_modifiers_to_pointer(*modifiers);
+            app.handle_pointer_button(*pointer, *x, *y, false, pointer_button_to_i16(*button), modifiers).await;
         }
-        DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(pointer),
+        DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(*pointer),
         DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
-            app.handle_pointer_wheel(x, y, delta_x, delta_y, event_modifiers_to_pointer(modifiers));
+            app.handle_pointer_wheel(*x, *y, *delta_x, *delta_y, event_modifiers_to_pointer(*modifiers));
         }
         DispatchEvent::KeyDown { key, modifiers } => {
-            app.modifiers = event_modifiers_to_pointer(modifiers);
+            app.modifiers = event_modifiers_to_pointer(*modifiers);
             if (modifiers.ctrl || modifiers.meta) && key.eq_ignore_ascii_case("z") && app.undo_text_operation() {
                 return;
             }
-            if key == "Escape" {
+            if key.as_str() == "Escape" {
                 app.cancel_text_operations();
             }
-            if let Some(action) = key_action_from_dispatch(&key, true) {
-                app.handle_key(action, event_modifiers_to_pointer(modifiers)).await;
+            if let Some(action) = key_action_from_dispatch(key, true) {
+                app.handle_key(action, event_modifiers_to_pointer(*modifiers)).await;
             }
         }
         DispatchEvent::KeyUp { key, modifiers } => {
-            app.modifiers = event_modifiers_to_pointer(modifiers);
-            if let Some(action) = key_action_from_dispatch(&key, false) {
-                app.handle_key(action, event_modifiers_to_pointer(modifiers)).await;
+            app.modifiers = event_modifiers_to_pointer(*modifiers);
+            if let Some(action) = key_action_from_dispatch(key, false) {
+                app.handle_key(action, event_modifiers_to_pointer(*modifiers)).await;
             }
         }
         DispatchEvent::Paste { text } => {
-            if crate::interpreter::apply_focused_ink_paste(&text, false, &mut app.input) {
+            if crate::interpreter::apply_focused_ink_paste(text, false, &mut app.input) {
                 return;
             }
-            if crate::interpreter::apply_focused_text_editor_text(&text, &mut app.input) {
+            if crate::interpreter::apply_focused_text_editor_text(text, &mut app.input) {
                 return;
             }
-            if let Err(error) = app.enqueue_text_operation(text) {
+            if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {
                 app.text_fault = Some(error);
             }
         }
         DispatchEvent::TextInput { text } => {
-            if let Err(error) = app.enqueue_text_operation(text) {
+            if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {
                 app.text_fault = Some(error);
             }
         }
-        DispatchEvent::TextEditStart { stream, target, declared_bytes } if matches!(target, TextEditTarget::Paste | TextEditTarget::PasteImageDataUrl) => {
-            match crate::interpreter::start_focused_ink_clipboard_stream(stream, target == TextEditTarget::PasteImageDataUrl, declared_bytes) {
+        DispatchEvent::TextEditStart { stream, target, declared_bytes } if matches!(*target, TextEditTarget::Paste | TextEditTarget::PasteImageDataUrl) => {
+            match crate::interpreter::start_focused_ink_clipboard_stream(*stream, *target == TextEditTarget::PasteImageDataUrl, *declared_bytes) {
                 Ok(true) => {}
                 Ok(false) => {
-                    let text_editor = if target == TextEditTarget::Paste { crate::interpreter::start_focused_text_editor_stream(stream, declared_bytes) } else { Ok(false) };
+                    let text_editor = if *target == TextEditTarget::Paste { crate::interpreter::start_focused_text_editor_stream(*stream, *declared_bytes) } else { Ok(false) };
                     match text_editor {
                         Ok(true) => {}
                         Ok(false) => {
-                            if let Err(error) = app.start_text_operation(stream, declared_bytes) {
+                            if let Err(error) = app.start_text_operation(*stream, *declared_bytes) {
                                 app.text_fault = Some(error);
                             }
                         }
@@ -470,21 +437,21 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
                 Err(error) => app.text_fault = Some(error.to_string()),
             }
         }
-        DispatchEvent::TextEditStart { stream, target, declared_bytes } => match crate::interpreter::start_focused_text_editor_stream(stream, declared_bytes) {
+        DispatchEvent::TextEditStart { stream, target, declared_bytes } => match crate::interpreter::start_focused_text_editor_stream(*stream, *declared_bytes) {
             Ok(true) => {}
             Ok(false) => {
-                if let Err(error) = app.start_text_operation(stream, declared_bytes) {
+                if let Err(error) = app.start_text_operation(*stream, *declared_bytes) {
                     app.text_fault = Some(error);
                 }
             }
             Err(error) => app.text_fault = Some(error.to_string()),
         },
-        DispatchEvent::TextEditChunk { stream, text } => match crate::interpreter::push_focused_ink_clipboard_stream(stream, &text) {
+        DispatchEvent::TextEditChunk { stream, text } => match crate::interpreter::push_focused_ink_clipboard_stream(*stream, text) {
             Ok(true) => {}
-            Ok(false) => match crate::interpreter::push_focused_text_editor_stream(stream, &text) {
+            Ok(false) => match crate::interpreter::push_focused_text_editor_stream(*stream, text) {
                 Ok(true) => {}
                 Ok(false) => {
-                    if let Err(error) = app.push_text_operation(stream, text) {
+                    if let Err(error) = app.push_text_operation(*stream, std::mem::take(text)) {
                         app.text_fault = Some(error)
                     }
                 }
@@ -493,38 +460,38 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             Err(error) => app.text_fault = Some(error.to_string()),
         },
         DispatchEvent::TextEditCommit { stream } => {
-            if crate::interpreter::commit_focused_ink_clipboard_stream(stream, &mut app.input) {
+            if crate::interpreter::commit_focused_ink_clipboard_stream(*stream, &mut app.input) {
                 return;
             }
-            if crate::interpreter::commit_focused_text_editor_stream(stream, &mut app.input) {
+            if crate::interpreter::commit_focused_text_editor_stream(*stream, &mut app.input) {
                 return;
             }
-            if let Err(error) = app.commit_text_operation(stream) {
+            if let Err(error) = app.commit_text_operation(*stream) {
                 app.text_fault = Some(error);
             }
         }
         DispatchEvent::TextEditAbort { stream } => {
-            if crate::interpreter::abort_focused_ink_clipboard_stream(stream) {
+            if crate::interpreter::abort_focused_ink_clipboard_stream(*stream) {
                 return;
             }
-            if crate::interpreter::abort_focused_text_editor_stream(stream) {
+            if crate::interpreter::abort_focused_text_editor_stream(*stream) {
                 return;
             }
-            if let Err(error) = app.abort_text_operation(stream) {
+            if let Err(error) = app.abort_text_operation(*stream) {
                 app.text_fault = Some(error);
             }
         }
         DispatchEvent::Ime(ImeEvent::Commit { text }) => {
-            if crate::interpreter::apply_focused_text_editor_text(&text, &mut app.input) {
+            if crate::interpreter::apply_focused_text_editor_text(text, &mut app.input) {
                 return;
             }
-            if let Err(error) = app.enqueue_text_operation(text) {
+            if let Err(error) = app.enqueue_text_operation(std::mem::take(text)) {
                 app.text_fault = Some(error);
             }
         }
         DispatchEvent::Ime(_) => {}
         DispatchEvent::Accessibility { target, event } => {
-            if let Err(error) = app.shell.handle_accessibility_event(&target, &event, &mut app.input).await {
+            if let Err(error) = app.shell.handle_accessibility_event(target, event, &mut app.input).await {
                 app.frame_fault = Some(error);
             }
         }
@@ -655,6 +622,8 @@ mod native {
         accessibility: Option<crate::native_accessibility::NativeAccessibilityBridge>,
         host: Option<OsHost>,
         retirement: Option<OsHostRetirement>,
+        frame_caller:crate::native_caller::NativeFrameCaller,
+        close_pending:bool,
         #[cfg(not(target_arch = "wasm32"))]
         pointers: ui_host::PointerRegistry,
         modifiers: EventModifiers,
@@ -672,6 +641,7 @@ mod native {
             #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
             #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
             #[cfg(not(target_arch = "wasm32"))] services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
+            frame_caller:crate::native_caller::NativeFrameCaller,
         ) -> Self {
             Self {
                 proxy,
@@ -689,6 +659,8 @@ mod native {
                 accessibility: None,
                 host: None,
                 retirement: None,
+                frame_caller,
+                close_pending:false,
                 #[cfg(not(target_arch = "wasm32"))]
                 pointers: ui_host::PointerRegistry::new(),
                 modifiers: EventModifiers::default(),
@@ -1053,15 +1025,7 @@ mod native {
                 WindowEvent::CloseRequested => {
                     let requested = self.host.as_mut().is_some_and(|host| host.close_requested());
                     if requested {
-                        if let Some(host) = self.host.take() {
-                            match host.try_into_retirement() {
-                                Ok(retirement) => self.retirement = Some(retirement),
-                                Err(mut host) => {
-                                    host.present_fault = Some("host retirement abandonment registry refused admission".to_string());
-                                    self.host = Some(host);
-                                }
-                            }
-                        }
+                        self.close_pending=true;
                         event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                     }
                     return;
@@ -1093,8 +1057,10 @@ mod native {
                 }
                 WindowEvent::RedrawRequested => {
                     if let Some(reason) = self.pending_reason.take() {
+                        if !self.frame_caller.ready(){self.pending_reason=Some(reason);window.request_redraw();return;}
                         if let Some(host) = self.host.as_mut() {
-                            let _outcome = host.redraw(reason);
+                            let call=self.frame_caller.dispatch_step(|cx|host.redraw_on_original_caller(cx));
+                            match call{Ok(original)=>{crate::log_debug(&format!("[DEBUG] Native frame original epoch={} copiedItems={} copiedBytes={} bornBytes={} releasedBytes={} fuel={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.copied_bytes,original.receipt_spent.retained_capacity_bytes,original.receipt_spent.released_bytes,original.work_units_spent));if original.result.is_err(){self.close_pending=true;}},Err(_)=>{self.pending_reason=Some(reason);window.request_redraw();}}
                         }
                     }
                     self.recompute_control_flow(event_loop);
@@ -1118,22 +1084,35 @@ mod native {
         /// ♿️ The platform tree follows the latest presented publication; every assistive-technology action is
         /// handed to the shell as the accessibility event it is, exactly like a browser mirror event.
         fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-            if !OsHostRetirement::close_abandoned_step() {
+            if !self.frame_caller.ready()&&(self.host.is_some()||self.retirement.is_some()||!self.close_pending){
+                match self.frame_caller.admit_step(){Ok(original)=>crate::log_debug(&format!("[DEBUG] Native root admission epoch={} copiedItems={} bornBytes={} ready={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes,original.result.as_ref().is_ok_and(|step|step.ready))),Err(_)=>{}}
+                event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
+                return;
+            }
+            if self.close_pending&&self.host.is_some(){
+                let returned=self.frame_caller.dispatch_cleanup_step(|cx|OsHost::try_into_retirement(&mut self.host,cx));
+                if let Ok(original)=returned{
+                    crate::log_debug(&format!("[DEBUG] Native host retirement admission epoch={} copiedItems={} bornBytes={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes));
+                    if let Ok(Some(retirement))=original.result{self.retirement=Some(retirement);}
+                }
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 return;
             }
             if let Some(retirement) = self.retirement.as_mut() {
-                if retirement.close_step() && retirement.terminal_is_empty() {
+                let returned=self.frame_caller.dispatch_cleanup_step(|cx|retirement.close_step(cx));
+                if returned.as_ref().is_ok_and(|original|original.result.as_ref().is_ok_and(|done|*done)) && retirement.terminal_is_empty() {
                     self.retirement = None;
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        self.accessibility = None;
-                    }
-                    self.window = None;
-                    event_loop.exit();
-                } else {
-                    event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 }
+                event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
+                return;
+            }
+            if self.close_pending&&self.host.is_none()&&self.retirement.is_none(){
+                let complete=self.frame_caller.close_step().is_ok_and(|original|matches!(original.result,Ok(semio_framework_value::RetainedCloneStep::Complete(_))));
+                if complete&&self.frame_caller.terminal_is_empty(){
+                    #[cfg(not(target_arch="wasm32"))]
+                    {self.accessibility=None;}
+                    self.window=None;event_loop.exit();
+                }else{event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));}
                 return;
             }
             let Some(host) = self.host.as_mut() else { return };

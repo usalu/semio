@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework-dsl-record-derive-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive",
   "namedInputs": {
     "default": [
@@ -10,7 +10,7 @@
   },
   "targets": {
     "test-ownership": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -21,7 +21,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "inputs": [
         "default"
@@ -29,6 +29,17 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-native"
+      }
+    },
+    "test-custody-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-custody-native"
       }
     }
   }

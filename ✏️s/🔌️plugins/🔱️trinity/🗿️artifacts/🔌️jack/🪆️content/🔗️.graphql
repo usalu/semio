@@ -1,0 +1,109 @@
+# 🪆️ Jack's content consumers request behavior from one retained child owner.
+# import JackGraphQuery from "../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/🔗️.graphql"
+# import GraphEffect from "../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🔗️.graphql"
+scalar JackPreparedChildEdit
+scalar JackQueryNode
+scalar JackQueryEdge
+scalar JackOwnedRetirement
+scalar JackBytes
+scalar JackChildHandle
+scalar JackParentSnapshot
+scalar JackMemberRoster
+scalar JackExampleSource
+scalar JackFormatEntry
+scalar JackValueRefusal
+
+type JackContentPortView {
+  id: String!
+  label: String!
+  inbound: Boolean!
+  outbound: Boolean!
+}
+
+type JackContentNodeView {
+  id: String!
+  kind: String!
+  label: String!
+  x: Float!
+  y: Float!
+  width: Float!
+  height: Float!
+  portCount: Int!
+}
+
+type JackContentEdgeView {
+  id: String!
+  kind: String!
+  label: String!
+  source: String!
+  target: String!
+  sourcePort: String
+  targetPort: String
+}
+
+type JackContentMove {
+  nodeId: String!
+  x: Float!
+  y: Float!
+}
+
+interface JackContentMoveCodec {
+  encodeMove(nodeId: String!, x: Float!, y: Float!): JackBytes!
+  decodeMove(bytes: JackBytes!): JackContentMove
+}
+
+type JackContentAdmissionFailure {
+  cause: JackValueRefusal!
+  originalChild: JackChildHandle!
+  originalSource: JackOwnedContent!
+  retirement: JackOwnedRetirement!
+}
+
+interface JackContentVisual {
+  visualNodeCount: Int!
+  visualEdgeCount: Int!
+  node(index: Int!): JackContentNodeView
+  port(nodeIndex: Int!, portIndex: Int!): JackContentPortView
+  edge(index: Int!): JackContentEdgeView
+}
+
+interface JackContentProjection {
+  graph: JackGraphQuery!
+  projectionNodeCount: Int!
+  projectionEdgeCount: Int!
+  queryNodeId(index: Int!): String
+  queryEdgeId(index: Int!): String
+  queryNode(index: Int!, maximumBytes: Int!): JackQueryNode
+  queryEdge(index: Int!, maximumBytes: Int!): JackQueryEdge
+}
+
+interface JackContentLayout {
+  visual: JackContentVisual!
+  moveCodec: JackContentMoveCodec!
+}
+
+interface JackContentRead {
+  graph: JackGraphQuery!
+  projection: JackContentProjection!
+  layout: JackContentLayout!
+  prepareEffects(effects: [GraphEffect!]!): JackPreparedChildEdit!
+}
+
+interface JackOwnedContent {
+  read: JackContentRead!
+  genesisPack: JackBytes!
+  retirementBirthBytes: Int
+  retirement: JackOwnedRetirement!
+}
+
+interface JackComposition {
+  memberRoster: JackMemberRoster!
+  childFromWorking(nodes: [JackQueryNode!]!, edges: [JackQueryEdge!]!): JackChildHandle!
+  initialSnapshot: JackParentSnapshot!
+  initialViewerSnapshot: JackParentSnapshot!
+  exampleSnapshot(id: String!): JackParentSnapshot
+  bindPublished(snapshot: JackParentSnapshot!): JackContentRead!
+  genesisChildPack(snapshot: JackParentSnapshot!, slot: String!, childId: String!): JackBytes
+  examples: [JackExampleSource!]!
+  formatEntries: [JackFormatEntry!]!
+}

@@ -354,7 +354,7 @@ async fn sqlite_wal_writer_fence_holds_every_shared_law() {
 
 #[cfg(feature = "postgres")]
 #[semio_framework_async_macros::async_test]
-#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- bun nx run @semio-tech/framework-os-kernel:wal-writer-fence-live postgres`"]
+#[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- bun repo run @semio-tech/framework-os-kernel:wal-writer-fence-live postgres`"]
 async fn postgres_wal_writer_fence_holds_every_shared_law() {
     if fence_child().await {
         return;
@@ -365,7 +365,7 @@ async fn postgres_wal_writer_fence_holds_every_shared_law() {
 
 #[cfg(feature = "neo4j")]
 #[semio_framework_async_macros::async_test]
-#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- bun nx run @semio-tech/framework-os-kernel:wal-writer-fence-live neo4j`"]
+#[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- bun repo run @semio-tech/framework-os-kernel:wal-writer-fence-live neo4j`"]
 async fn neo4j_wal_writer_fence_holds_every_shared_law() {
     if fence_child().await {
         return;

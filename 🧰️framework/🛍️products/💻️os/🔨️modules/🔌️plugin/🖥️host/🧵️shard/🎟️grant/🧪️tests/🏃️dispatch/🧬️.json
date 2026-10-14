@@ -1,0 +1,93 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "originalInput",
+    "originalGrant",
+    "scheduledFuel",
+    "hostFuel",
+    "copiedAuthority",
+    "newAuthority",
+    "receiverCarrier"
+  ],
+  "properties": {
+    "schema": {
+      "const": "actor.original-dispatch/v1"
+    },
+    "originalInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "epoch"
+      ],
+      "properties": {
+        "operation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "originalGrant": {
+      "title": "Retained Clone Grant",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "scheduledFuel": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "hostFuel": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "copiedAuthority": {
+      "const": "exactIssuedTurnGrantRetained"
+    },
+    "newAuthority": {
+      "const": false
+    },
+    "receiverCarrier": {
+      "const": "issuedShardTurnRetained"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "PinnedAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "admissionMilliseconds", "observeMilliseconds", "settledBeforePublisherRelease", "outputPublished"],
+      "properties": {
+        "version": {"const": 1},
+        "admissionMilliseconds": {"const": 100},
+        "observeMilliseconds": {"const": 200},
+        "settledBeforePublisherRelease": {"const": true},
+        "outputPublished": {"const": false}
+      }
+    }
+  },
+  "const": {
+    "version": 1,
+    "publicationStore": ".cache/framework/leases",
+    "foreignOwner": "refused",
+    "existingBytes": "preserved",
+    "retiredManifestAdoption": false,
+    "unmarkedOwner": "refused"
+  }
+}

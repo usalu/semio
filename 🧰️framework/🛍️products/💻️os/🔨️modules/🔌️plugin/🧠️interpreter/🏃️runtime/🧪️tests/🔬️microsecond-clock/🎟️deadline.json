@@ -1,0 +1,58 @@
+{
+  "duration": [
+    {
+      "milliseconds": 1,
+      "microseconds": 1000
+    },
+    {
+      "milliseconds": 8,
+      "microseconds": 8000
+    },
+    {
+      "milliseconds": 4294967295,
+      "microseconds": 4294967295000
+    }
+  ],
+  "absolute": [
+    {
+      "now": "999",
+      "deadline": "1000",
+      "expired": false
+    },
+    {
+      "now": "1000",
+      "deadline": "1000",
+      "expired": true
+    },
+    {
+      "now": "1001",
+      "deadline": "1000",
+      "expired": true
+    },
+    {
+      "now": "9007199254740993",
+      "deadline": "9007199254740994",
+      "expired": false
+    }
+  ],
+  "snapshot": [
+    {
+      "now": "1999",
+      "deadline": "2000",
+      "fuelUsed": 0,
+      "expired": false
+    },
+    {
+      "now": "2000",
+      "deadline": "2000",
+      "fuelUsed": 17,
+      "expired": true
+    },
+    {
+      "now": "2001",
+      "deadline": "2000",
+      "fuelUsed": 33,
+      "expired": true
+    }
+  ]
+}

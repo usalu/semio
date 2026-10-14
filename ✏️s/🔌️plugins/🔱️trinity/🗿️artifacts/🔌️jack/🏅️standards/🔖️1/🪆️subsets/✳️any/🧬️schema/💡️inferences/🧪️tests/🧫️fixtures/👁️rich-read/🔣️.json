@@ -1,0 +1,4 @@
+{
+  "nodes": [{"id":"literal@node","kind":"rich","label":"","x":5,"y":-3,"width":0,"height":-1,"ports":[{"id":"both@port","label":"Anschluss","inbound":true,"outbound":true}],"expectedLabel":"literal@node","expectedWidth":96,"expectedHeight":48}],
+  "edges": [{"id":"edge","kind":"rich","label":"Beschriftung","source":"literal@node","target":"target","sourcePort":"both@port","targetPort":null}]
+}

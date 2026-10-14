@@ -23,9 +23,9 @@ import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️p
 
 import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 
-import { DEFAULT_PLAYGROUND_VARIANT } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { DEFAULT_PLAYGROUND_VARIANT } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts";
 
-import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS } from "../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
 
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
@@ -492,7 +492,7 @@ const COLLAB_E2E_DEV_SCRIPT = "./🧰️framework/🛍️products/💻️os/🔨
  * because the Nx `dev-…` target is a WATCH: it re-activates on any peer's source write, which under this
  * repo's concurrent fleet means the staged tree moves mid-scenario. Activate once, serve detached. */
 function collabActivateShellRuntime(): void {
-  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-prototype"], {
+  runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:activate-s-react-prototype"], {
     cwd: repoRoot,
     ...daemonBudgetOpts({ SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: "prototype" }),
   });

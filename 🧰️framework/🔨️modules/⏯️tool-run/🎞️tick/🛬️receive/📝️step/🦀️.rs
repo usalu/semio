@@ -16,6 +16,7 @@ fn metadata()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Defa
 impl ToolRunStepReceiving{
  pub fn admit(source:&RetainedRecordBodySourceDecode,g:RetainedCloneGrant)->Option<(Self,RetainedCloneProgress)>{if !funds(g,RetirementDemand{depth:2,..Default::default()}){return None}let p=metadata();Some((Self{source:witness(source),phase:Phase::Begin,field:0,seen:0,fields:0,argument_bytes:0,argument_at:0,argument:[0;9],step:ManuallyDrop::new(Some(ToolRunStep::new(0,ToolRunStepKind::Info,0,0))),receipt:Some((g,p)),closing:false},p))}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
+ pub fn allocated_bytes(&self)->usize{self.step.as_ref().map_or(0,|step|step.args.capacity()*std::mem::size_of::<ToolRunStepArg>())}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
  pub fn demands(&self,pending:&Option<RetainedRecordBodyToken>)->Result<RetirementDemand,ValueError>{
   if self.receipt.is_some()||self.closing||matches!(self.phase,Phase::Complete|Phase::Closed){return Ok(Default::default())}

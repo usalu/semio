@@ -1,6 +1,6 @@
 /** 💬️ Canonical BCF topic and viewpoint domain. */
-import { type Binary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import { type Binary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import { parseBinary64 } from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export interface BcfPoint3{readonly x:Binary64;readonly y:Binary64;readonly z:Binary64}
 export type BcfCamera=Readonly<{kind:"perspective";viewPoint:BcfPoint3;direction:BcfPoint3;upVector:BcfPoint3;fieldOfView:Binary64}>|Readonly<{kind:"orthogonal";viewPoint:BcfPoint3;direction:BcfPoint3;upVector:BcfPoint3;viewToWorldScale:Binary64}>;
 export interface BcfVisibility{readonly defaultVisibility:boolean;readonly exceptions:readonly string[]}

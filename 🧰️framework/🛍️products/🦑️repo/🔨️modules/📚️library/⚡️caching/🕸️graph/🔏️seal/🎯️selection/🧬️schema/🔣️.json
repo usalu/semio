@@ -2,6 +2,111 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio.nx.selected-graph-custody/v1",
   "$defs": {
+    "PhysicalProducerAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owners",
+        "modes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "modes": {
+          "const": [
+            "prototype",
+            "release"
+          ]
+        },
+        "owners": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "project",
+              "root",
+              "target",
+              "output"
+            ],
+            "properties": {
+              "project": {
+                "type": "string",
+                "minLength": 1
+              },
+              "root": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1
+              },
+              "output": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      }
+    },
+    "FrozenGraphAuthorizerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "exports",
+        "policies"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "exports": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "enum": [
+              "writeNxGraphSeal",
+              "nxGraphSealHolds",
+              "nxGraphSourceMembershipV2",
+              "sourceClosureTaskEnvironments",
+              "sourceClosureReceiptHolds",
+              "compactTaskPlans"
+            ]
+          },
+          "const": [
+            "writeNxGraphSeal",
+            "nxGraphSealHolds",
+            "nxGraphSourceMembershipV2",
+            "sourceClosureTaskEnvironments",
+            "sourceClosureReceiptHolds",
+            "compactTaskPlans"
+          ]
+        },
+        "policies": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    },
     "ScopeV1": {
       "type": "object",
       "additionalProperties": false,
@@ -642,6 +747,54 @@
           "minimum": 0
         },
         "sockets": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PublisherGenerationCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "holds",
+        "published",
+        "preserved"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "holds": {
+          "type": "boolean"
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "preserved": {
+          "const": true
+        }
+      }
+    },
+    "AcceptedPublicationCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rawChanged",
+        "archiveChanged",
+        "accepts"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "rawChanged": {
+          "type": "boolean"
+        },
+        "archiveChanged": {
+          "type": "boolean"
+        },
+        "accepts": {
           "type": "boolean"
         }
       }

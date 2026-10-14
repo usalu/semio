@@ -286,8 +286,8 @@ it("crosses the document-backbone door with an exact u64 binding generation and 
     const { OwnedResidentLedger } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
     const { ShardClient } = await import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
     const { DEFAULT_SHARD_BUDGET } = await import("../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
-    const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
-    const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
+    const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
+    const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
     
     
     const sent: string[] = [];
@@ -548,7 +548,7 @@ describe("framework renderer wgpu generated worker", () => {
     const callerCwd = process.cwd();
     const renders: string[] = [];
     for (const context of contexts) {
-      const rendered = bunOracle<{ content: string; cwd: string }>("const { renderFrameWorker } = await import(input.module); const rendered = await renderFrameWorker(input.bundleRoot); return { content: rendered.content, cwd: process.cwd() };", { module: frameWorkerModule, bundleRoot }, { cwd: context.cwd, env: { ...context.env, NX_WORKSPACE_ROOT: workspaceRoot } });
+      const rendered = bunOracle<{ content: string; cwd: string }>("const { renderFrameWorker } = await import(input.module); const rendered = await renderFrameWorker(input.bundleRoot); return { content: rendered.content, cwd: process.cwd() };", { module: frameWorkerModule, bundleRoot }, { cwd: context.cwd, env: { ...context.env, SEMIO_WORKSPACE_ROOT: workspaceRoot } });
       renders.push(rendered.content);
       expect(rendered.cwd).toBe(context.cwd);
     }
@@ -570,7 +570,7 @@ describe("framework renderer wgpu generated worker", () => {
     expect(pinnedVersion).toBe(bunVersion);
     expect(/^ARG BUN_VERSION=(\d+\.\d+\.\d+)$/mu.exec(dockerfile)?.[1]).toBe(pinnedVersion);
     expect(configuration.error).toBeUndefined();
-    expect(configuration.config.postCreateCommand).toEqual(["bun", "nx", "run", "workspace:setup"]);
+    expect(configuration.config.postCreateCommand).toEqual(["bun", "repo", "run", "workspace:setup"]);
     expect(JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8")).targets.setup.dependsOn).toContain("deps-js-all");
     expect(dockerfile).not.toContain("bun.sh/install");
     expect(dockerfile).toContain("sha256sum -c -");

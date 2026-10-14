@@ -1,0 +1,52 @@
+{
+  "contract": "actor.original-job-source-frame/v1",
+  "headerBytes": 40,
+  "wordSlots": [
+    "job",
+    "kindBytes",
+    "inputBytes",
+    "checkpointBytes"
+  ],
+  "cases": [
+    {
+      "source": {
+        "job": "19",
+        "kind": "snapshot",
+        "input": null,
+        "checkpoint": null
+      },
+      "hex": "534a5331000000001300000000000000080000000000000000000000000000000000000000000000736e617073686f74",
+      "extent": 48,
+      "flags": 0
+    },
+    {
+      "source": {
+        "job": "71",
+        "kind": "über\\\"\n",
+        "input": [
+          0,
+          1,
+          255
+        ],
+        "checkpoint": []
+      },
+      "hex": "534a5331030000004700000000000000080000000000000003000000000000000000000000000000c3bc6265725c220a0001ff",
+      "extent": 51,
+      "flags": 3
+    },
+    {
+      "source": {
+        "job": "18446744073709551615",
+        "kind": "",
+        "input": [],
+        "checkpoint": [
+          255,
+          0
+        ]
+      },
+      "hex": "534a533103000000ffffffffffffffff000000000000000000000000000000000200000000000000ff00",
+      "extent": 42,
+      "flags": 3
+    }
+  ]
+}

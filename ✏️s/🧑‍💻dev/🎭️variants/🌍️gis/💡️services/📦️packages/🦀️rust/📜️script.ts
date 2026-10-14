@@ -110,13 +110,13 @@ class McpCompositionSourceScript extends BundleScript {
 }
 class FixtureOwnershipCompositionScript extends BundleScript {
   async run(): Promise<void> {
-    for (const target of ["@semio-tech/framework-rs:test-fixture-ownership", "@semio-tech/gis-gismap-rs:verify-inference-client-native", "@semio-tech/gis-gismap-rs:verify-inference-mcp"]) await runRepositoryCommand(this.invocation,process.execPath,["nx", "run", target, "--skip-nx-cache"],this.repoRoot,"fixture-owner:" + target,{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
+    for (const target of ["@semio-tech/framework-rs:test-fixture-ownership", "@semio-tech/gis-gismap-rs:verify-inference-client-native", "@semio-tech/gis-gismap-rs:verify-inference-mcp"]) await runRepositoryCommand(this.invocation,process.execPath,["repo", "run", target, "--skip-nx-cache"],this.repoRoot,"fixture-owner:" + target,{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }
 
 class CanonicalPairCompositionScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCommand(this.invocation,process.execPath,["nx", "run", "@semio-tech/framework-os-mcp-rs:canonical-pair-check", "--skip-nx-cache"],this.repoRoot,"canonical-pair-neutral",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
+    await runRepositoryCommand(this.invocation,process.execPath,["repo", "run", "@semio-tech/framework-os-mcp-rs:canonical-pair-check", "--skip-nx-cache"],this.repoRoot,"canonical-pair-neutral",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
     await runRepositoryCommand(this.invocation,"cargo",["check", "-p", "semio-hub", "--all-features", "--bin", "os-hub"],this.repoRoot,"canonical-pair-peer",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }

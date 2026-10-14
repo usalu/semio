@@ -50,15 +50,17 @@ pub struct FlowEvalResolve {
     pub window_id: String,
     pub window_kind_id: String,
     pub node_hash: u64,
-    pub output_json: String,
+    pub output: semio_framework_value::DslValue,
+    #[value(default)]
+    pub fault: Option<semio_framework::Fault>,
     #[value(default)]
     pub extension_id: String,
     #[value(default)]
     pub ok: bool,
+
     #[value(default)]
-    pub fault_code: String,
-    #[value(default)]
-    pub fault_message: String,
+    pub original_input:Option<semio_framework_value::DslValue>,
+    pub input_valid:bool,
 }
 
 /// 🪪️ The request id every hop effect of the run carries; the hop's own payload is its address.
@@ -212,26 +214,8 @@ pub fn settle_empty_tick(window_id: &str, session: &mut FlowEvalSession, grant: 
 /// ✅️ Folds one `evaluate` answer into `session` and settles the window's outstanding answer. An
 /// answer that cannot fold (a faulted invocation, a cancelled envelope) gives the window up rather than
 /// parking the identical request again.
-pub fn resolve_eval(payload: &FlowEvalResolve, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<ExtensionInvocation>, semio_framework_value::ValueError> {
-    let outcome = session.resolve_preview_eval_cold(payload.node_hash, &payload.output_json)?;
-    if payload.ok || payload.fault_code.is_empty() {
-        session.clear_extension_evaluate_fault(grant)?;
-    } else {
-        session.note_extension_evaluate_fault(semio_framework_os_flow::ExtensionEvaluateFault { extension_id: payload.extension_id.clone(), capability: "evaluate".to_string(), code: payload.fault_code.clone(), message: payload.fault_message.clone() }, grant).map_err(|(error, _)| error)?;
-    }
-    if let semio_framework_os_flow::PreviewEvalOutcome::Pending(pending) = &outcome {
-        return Ok(vec![extension_invocation(pending, &payload.window_id, &payload.window_kind_id, &grant)]);
-    }
-    let given_up = match &outcome {
-        semio_framework_os_flow::PreviewEvalOutcome::Complete { output_json } => semio_framework_os_flow::host::io::evaluation_response::decode_flow_node_output_json(output_json).map(|output|session.seed_node_cache(payload.node_hash,output)).is_err(),
-        semio_framework_os_flow::PreviewEvalOutcome::Cancelled => true,
-        semio_framework_os_flow::PreviewEvalOutcome::Working | semio_framework_os_flow::PreviewEvalOutcome::Pending(_) => false,
-    };
-    if given_up {
-        session.abandon_window_tick(&payload.window_id, grant)?;
-    }
-    session.settle_window_extension(&payload.window_id, grant)?;
-    Ok(Vec::new())
+pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_framework_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    let address=semio_framework_os_flow::FlowEvaluationReplyAddress{node_hash:payload.node_hash,window_id:&payload.window_id,window_kind_id:&payload.window_kind_id};receiver.step(session,&address,cx)
 }
 
 /// 🔢️ A digest of the text a target evaluates, recorded by the hop that evaluated it and compared by

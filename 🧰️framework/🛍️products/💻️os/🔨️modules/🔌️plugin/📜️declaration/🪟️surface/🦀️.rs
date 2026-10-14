@@ -218,7 +218,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
     type Mutation: protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::replication::OpBinaryReceiving + 'static;
     type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type DraftMutation: ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
@@ -506,7 +506,8 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn command_id(_command: &Self::Command) -> &'static str {
         "typed-command"
     }
-    fn command_from_action(action: &str, _args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(
             FaultOrigin::App,
             FaultCode::new("app.command.unsupported"),
@@ -517,24 +518,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn agent_target_revision(_action: &str, _args: &DslValue, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         Ok(None)
     }
-    /// 🎯️ M1: `ArtifactApp::command_from_intent`'s sibling default for a hand-authored
-    /// `ArtifactEditor` — same version-mismatch Fault, same `merge_ui_values` bridge to
-    /// `Self::command_from_action`. `EditorApp<E>`'s `ArtifactApp` impl delegates its own
-    /// `command_from_intent` here, so overriding it on `E` actually takes effect.
-    async fn command_from_intent(intent: &UiIntent) -> Result<Self::Command, Fault> {
-        if intent.action.version != 1 {
-            return Err(Fault::new(
-                FaultOrigin::App,
-                FaultCode::new("app.intent.version-mismatch"),
-                format!(
-                    "intent action '{}' targets version {} but the default intent bridge only resolves version-1 actions (see `ArtifactEditor::command_from_intent`'s own doc) — override it for a versioned contract",
-                    intent.action.name, intent.action.version
-                ),
-            ));
-        }
-        let merged = merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?;
-        Self::command_from_action(&intent.action.name, merged.as_ref())
-    }
+
     fn config_spec() -> ConfigSpec {
         ConfigSpec::default()
     }
@@ -578,10 +562,15 @@ pub trait ArtifactEditor: Default + Send + 'static {
         view_state: &ViewModel,
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> crate::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<crate::ComponentTree>=(||{
         let _ = (transient, interaction);
         Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
     fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         HashMap::new()
     }
@@ -924,7 +913,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     /// past edits made by an `ArtifactEditor` sharing this dialect, and labels them in every locale like it.
     type Mutation: protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type ConfigMutation: ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::replication::OpBinaryReceiving + 'static;
     type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
@@ -1100,7 +1089,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
     fn command_id(_command: &Self::Command) -> &'static str {
         "typed-command"
     }
-    fn command_from_action(action: &str, _args: Option<&DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(
             FaultOrigin::App,
             FaultCode::new("app.command.unsupported"),
@@ -1125,10 +1115,15 @@ pub trait ArtifactViewer: Default + Send + 'static {
         view_state: &ViewModel,
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> crate::OriginalRenderResult<ComponentTree> {
+        let rendered:crate::UiAssemblyResult<crate::ComponentTree>=(||{
         let _ = (transient, interaction);
         Self::render(body_key, doc, cfg, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
     fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
         Vec::new()
     }
@@ -1479,15 +1474,13 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     async fn command_id(command: &Self::Command) -> &'static str {
         E::command_id(command)
     }
-    async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
-        E::command_from_action(action, args)
+    async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        E::command_from_action(action, args, original_fault)
     }
     async fn agent_target_revision(action: &str, args: &DslValue, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
         E::agent_target_revision(action, args, doc)
     }
-    async fn command_from_intent(intent: &UiIntent) -> Result<Self::Command, Fault> {
-        E::command_from_intent(intent).await
-    }
+
     async fn config_spec() -> ConfigSpec {
         E::config_spec()
     }
@@ -1532,8 +1525,9 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         view_state: &ViewModel,
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
-        E::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> crate::OriginalRenderResult<ComponentTree> {
+        E::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
     async fn window_engagements(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         E::window_engagements(doc, cfg, view_state)
@@ -1825,8 +1819,8 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     async fn command_id(command: &Self::Command) -> &'static str {
         V::command_id(command)
     }
-    async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
-        V::command_from_action(action, args)
+    async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        V::command_from_action(action, args, original_fault)
     }
     async fn config_spec() -> ConfigSpec {
         V::config_spec()
@@ -1845,8 +1839,9 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
         view_state: &ViewModel,
         transient: &TransientView<'_, Self::Transient>,
         interaction: &InteractionView<'_>,
-    ) -> UiAssemblyResult<ComponentTree> {
-        V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction)
+        cx:&mut semio_framework_job::StepContext<'_>,
+    ) -> crate::OriginalRenderResult<ComponentTree> {
+        V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
     async fn pending_effects(owner: &ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&ViewModel>) -> Vec<Effect> {
         V::pending_effects(owner, doc, cfg, view)

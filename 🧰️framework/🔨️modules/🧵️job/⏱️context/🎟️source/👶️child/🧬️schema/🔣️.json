@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Child Source Issuance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "parent",
+    "child",
+    "initialOnlyLedger",
+    "sameOriginalCancellationNode",
+    "noNewCancellationRoot",
+    "actualParentTurn",
+    "sharedOriginalRecipient",
+    "parentSpendReceivedOnce",
+    "wholeUnacceptedReturnOwned",
+    "initialGrant",
+    "callbackGrant",
+    "closeGrant",
+    "admission",
+    "incoming",
+    "callbackSpent",
+    "expectedRemaining",
+    "close",
+    "cuts"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.job.original-child-source-issuance.v1"
+    },
+    "parent": {
+      "const": {
+        "operation": 99241,
+        "generation": 7
+      }
+    },
+    "child": {
+      "const": {
+        "operation": 211,
+        "generation": 19
+      }
+    },
+    "initialOnlyLedger": {
+      "const": true
+    },
+    "sameOriginalCancellationNode": {
+      "const": true
+    },
+    "noNewCancellationRoot": {
+      "const": true
+    },
+    "actualParentTurn": {
+      "const": true
+    },
+    "sharedOriginalRecipient": {
+      "const": true
+    },
+    "parentSpendReceivedOnce": {
+      "const": true
+    },
+    "wholeUnacceptedReturnOwned": {
+      "const": true
+    },
+    "initialGrant": {
+      "const": [
+        1,
+        64,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "callbackGrant": {
+      "const": [
+        9,
+        64,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "closeGrant": {
+      "const": [
+        1,
+        0,
+        512,
+        512,
+        8
+      ]
+    },
+    "admission": {
+      "const": [
+        {
+          "phase": "parent-strong-lease",
+          "spent": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phase": "original-cancellation-alias",
+          "spent": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phase": "initial-child-ledger",
+          "spent": [
+            1,
+            0,
+            128,
+            0
+          ]
+        },
+        {
+          "phase": "child-parent-wrapper",
+          "spent": [
+            1,
+            0,
+            32,
+            0
+          ]
+        },
+        {
+          "phase": "ready",
+          "spent": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "incoming": {
+      "const": [
+        {
+          "fuel": 4,
+          "deadline": 100000,
+          "clock": 1000
+        },
+        {
+          "fuel": 1,
+          "deadline": 200000,
+          "clock": 1001
+        },
+        {
+          "fuel": 0,
+          "deadline": 250000,
+          "clock": 1002
+        }
+      ]
+    },
+    "callbackSpent": {
+      "const": [
+        1,
+        7,
+        0,
+        0
+      ]
+    },
+    "expectedRemaining": {
+      "const": [
+        8,
+        57,
+        65536,
+        262144,
+        64
+      ]
+    },
+    "close": {
+      "const": [
+        "child-source-header",
+        "child-original-ledger",
+        "return-same-cancel-alias",
+        "return-parent-strong-lease"
+      ]
+    },
+    "cuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  }
+}

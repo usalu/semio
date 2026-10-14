@@ -992,7 +992,7 @@ store::space_members! {
     }
 }
 
-async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value) {
+async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value, cx:&mut semio_framework_job::StepContext<'_>) {
     let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     let dialect = test_child_dialect().await;
     let child_id = row["childId"].as_str().unwrap();
@@ -1008,7 +1008,7 @@ async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value) {
     let admitted = app.open_child(slot, child_id, dialect, &packed, &mut crate::app::artifact_app_laws::fixture_identity()).await.is_ok();
     let parent_clones = PARENT_SNAPSHOT_CLONES.with(std::cell::Cell::get);
     let published = app.test_child_admission_state(1).generation;
-    close_member_admission_app(&mut app);
+    close_member_admission_app(&mut app, cx);
     let expected = row["accepted"].as_bool().unwrap();
     assert_eq!(admitted, expected, "{}", row["id"]);
     assert_eq!(published, u64::from(expected), "{}", row["id"]);
@@ -1320,9 +1320,8 @@ async fn retained_composed_replacement_fixture(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
     operation: u64,
     parent_id: &str,
-    child_count: i32,
-) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
-    retained_composed_replacement_fixture_at_revision(app, operation, parent_id, child_count, 0).await
+    child_count: i32, cx:&mut semio_framework_job::StepContext<'_>) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
+    retained_composed_replacement_fixture_at_revision(app, operation, parent_id, child_count, 0, cx).await
 }
 
 async fn retained_composed_replacement_fixture_at_revision(
@@ -1330,12 +1329,11 @@ async fn retained_composed_replacement_fixture_at_revision(
     operation: u64,
     parent_id: &str,
     child_count: i32,
-    parent_revision: i32,
-) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
+    parent_revision: i32, cx:&mut semio_framework_job::StepContext<'_>) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
     let child_dialect = test_child_dialect().await;
     let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
     let child_reference = ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect.clone() };
-    let handle = composed_replacement_candidate(app, operation, parent_id, parent_revision).await;
+    let handle = composed_replacement_candidate(app, operation, parent_id, parent_revision, cx).await;
     let generation = handle.generation;
     let operation = handle.operation;
 
@@ -1365,8 +1363,7 @@ async fn composed_replacement_candidate(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
     operation: u64,
     parent_id: &str,
-    parent_revision: i32,
-) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
+    parent_revision: i32, cx:&mut semio_framework_job::StepContext<'_>) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
     let generation = semio_framework_job::Generation(app.store.generation_now());
     let child_dialect = test_child_dialect().await;
     let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
@@ -1378,20 +1375,27 @@ async fn composed_replacement_candidate(
     store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("candidate parent catalog installs");
     let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
     let operation = semio_framework_job::OperationId(operation);
-    app.store_replacement_jobs.insert_admitted(operation.0, crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job, app.mounted_policy.maintenance));
+    app.store_replacement_jobs.insert_admitted(operation.0, crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job, (cx.operation(),cx.generation())));
     crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }
 }
 
 /// 🎟️ The fixture lends its authored maintenance policy without deriving authority from quotes.
-fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize) -> Result<crate::app::PluginLifecycleStep, Fault> {
+fn composed_maintenance_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<crate::app::PluginLifecycleStep, crate::PluginLifecycleFailure> {
     assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
-    app.maintenance_step(COMPOSITION_MAINTENANCE_GRANT)
+    app.maintenance_step(cx,COMPOSITION_MAINTENANCE_GRANT)
+}
+
+/// ♻️ Returns the complete original fixture refusal through the initiating physical recipient.
+fn close_composition_refusal(source:crate::PluginLifecycleFailure,cx:&mut semio_framework_job::StepContext<'_>){
+ let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(source).unwrap_or_else(|_|panic!("complete original lifecycle refusal supports controlled retirement"));
+ for _ in 0..crate::app_testing::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){return}cx.with_retained_loan(COMPOSITION_CLEANUP_GRANT,|same|semio_framework_job::close_original_retained_step(same,owner.selected_demand(COMPOSITION_CLEANUP_GRANT.maximum_copy_bytes)?,|grant|owner.step(grant))).expect("original composition refusal paid retirement");}
+ panic!("original composition refusal exceeded its initiating supplied turn bound")
 }
 
 /// 🎟️ The fixture's original close policy remains independent of every retirement quote.
-fn composed_close_turn<A: PluginApp>(app: &mut A, body: usize) -> Result<crate::app::PluginLifecycleStep, Fault> {
+fn composed_close_turn<A: PluginApp>(app: &mut A, body: usize, cx:&mut semio_framework_job::StepContext<'_>) -> Result<crate::app::PluginLifecycleStep, crate::PluginLifecycleFailure> {
     assert_eq!(body,COMPOSITION_MAINTENANCE_GRANT.maximum_copy_bytes);
-    let step = app.close_step(COMPOSITION_MAINTENANCE_GRANT);
+    let step = app.close_step(cx,COMPOSITION_MAINTENANCE_GRANT);
     let _ = app.take_constructor_receipt();
     step
 }
@@ -1399,14 +1403,13 @@ fn composed_close_turn<A: PluginApp>(app: &mut A, body: usize) -> Result<crate::
 async fn drive_composed_replacement_to(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
     handle: crate::app::ArtifactEnvelopeDecodeOperationHandle,
-    target: crate::app::ActiveArtifactStoreReplacementState,
-) {
+    target: crate::app::ActiveArtifactStoreReplacementState, cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..100_000 {
         if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == target) {
             return;
         }
         app.maintenance_stage = 14;
-        let _ = composed_maintenance_turn(app, 4096).expect("retained composed replacement step");
+        let _ = composed_maintenance_turn(app, 4096, cx).expect("retained composed replacement step");
         semio_framework_async::yield_once().await;
     }
     let active = app.store_replacement_jobs.get(handle.operation.0);
@@ -1455,12 +1458,12 @@ fn close_recursive_parent_fixture(store: &mut store::ArtifactStore<ComposedParen
     panic!("recursive archive parent did not close");
 }
 
-fn close_recursive_replacement_app(app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>) {
+fn close_recursive_replacement_app(app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>, cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..100_000 {
         let demand = app.close_retirement_demands(4096).expect("original fixture close demand");
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
             assert!(grant.maximum_copy_bytes <= 4096 && grant.maximum_release_bytes <= 4096, "original fixture body and physical grant limits remain unchanged {demand:?}");
-            match { let step = app.close_step(grant).expect("recursive fixture app closes under its exact grant"); let _ = app.take_constructor_receipt(); step } {
+            match { let step = app.close_step(cx,grant).expect("recursive fixture app closes under its exact grant"); let _ = app.take_constructor_receipt(); step } {
             crate::app::PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
             crate::app::PluginLifecycleStep::AwaitingInput { reason } => panic!("recursive fixture app close awaited input: {reason}"),
             crate::app::PluginLifecycleStep::Blocked { reason } => panic!("recursive fixture app has no external owner: {reason}"),
@@ -1630,17 +1633,16 @@ async fn recursive_document_archive(parent_id: &str) -> protocol::DocumentArchiv
 
 async fn drive_recursive_document_archive_load(
     app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>,
-    operation: u64,
-) -> protocol::DocumentArchiveLoadStatus {
+    operation: u64, cx:&mut semio_framework_job::StepContext<'_>) -> protocol::DocumentArchiveLoadStatus {
     for _ in 0..1_000_000 {
-        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation, &mut crate::app::artifact_app_laws::fixture_identity())).await.expect("recursive archive operation status");
+        let status = Box::pin(PluginApp::poll_document_archive_load(app, operation, &mut crate::app::artifact_app_laws::fixture_identity(), cx)).await.expect("recursive archive operation status");
         if matches!(
             status.state,
             protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault
         ) {
             return status;
         }
-        let _ = composed_maintenance_turn(app, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("recursive archive public maintenance step");
+        let _ = composed_maintenance_turn(app, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, cx).expect("recursive archive public maintenance step");
         semio_framework_async::yield_once().await;
     }
     panic!("recursive archive operation exceeded its public maintenance progress authority")
@@ -1650,8 +1652,7 @@ async fn retained_recursive_replacement_fixture(
     app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>,
     operation: u64,
     parent_id: &str,
-    mode: &str,
-) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, Vec<crate::app::OwnedDocumentMemberIngress>) {
+    mode: &str, cx:&mut semio_framework_job::StepContext<'_>) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, Vec<crate::app::OwnedDocumentMemberIngress>) {
     let generation = semio_framework_job::Generation(app.store.generation_now());
     let child_dialect = test_child_dialect().await;
     let leaf_dialect = child_dialect.clone();
@@ -1668,7 +1669,7 @@ async fn retained_recursive_replacement_fixture(
     let operation = semio_framework_job::OperationId(operation);
     app.store_replacement_jobs.insert_admitted(
         operation.0,
-        crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job, app.mounted_policy.maintenance),
+        crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job, (cx.operation(),cx.generation())),
     );
 
     let branch_owner = store::OwnerRef { parent: root_reference.clone(), slot: "slot".into(), child_id: branch_reference.artifact_id.clone() };
@@ -1713,20 +1714,19 @@ fn admit_recursive_member_set(
     app.seal_owned_document_members(handle).expect("recursive complete candidate member set");
 }
 
-fn drive_recursive_replacement_step(app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>) -> Result<crate::app::PluginLifecycleStep, Fault> {
-    composed_maintenance_turn(app, 4096)
+fn drive_recursive_replacement_step(app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<crate::app::PluginLifecycleStep, crate::PluginLifecycleFailure> {
+    composed_maintenance_turn(app, 4096, cx)
 }
 
 async fn drive_recursive_replacement_to(
     app: &mut VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>,
     handle: crate::app::ArtifactEnvelopeDecodeOperationHandle,
-    target: crate::app::ActiveArtifactStoreReplacementState,
-) {
+    target: crate::app::ActiveArtifactStoreReplacementState, cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..100_000 {
         if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == target) {
             return;
         }
-        let _ = drive_recursive_replacement_step(app);
+        if let Err(source)=drive_recursive_replacement_step(app,cx){close_composition_refusal(source,cx)}
         semio_framework_async::yield_once().await;
     }
     let active = app.store_replacement_jobs.get(handle.operation.0);
@@ -1750,16 +1750,17 @@ async fn live_recursive_replacement_app() -> Box<VcsArtifactApp<ComposedParentAp
 /// call-count ceiling: while a displaced child root is still queued, no call may answer idle.
 #[semio_framework_async_macros::async_test]
 async fn maintenance_answers_idle_only_when_every_stage_is_idle() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let generation = app.admit_child_content_publication().expect("child content publication authority");
     app.publish_child_content_member(generation, "slot", "child-1").await.expect("second child content generation");
     assert!(!app.child_content_retirements.is_empty(), "a second child-content publication queues its displaced root");
     for call in 0..4_096 {
         let grant = COMPOSITION_MAINTENANCE_GRANT;
-        match app.maintenance_step(grant).expect("bounded maintenance call") {
+        match app.maintenance_step(&mut cx,grant).expect("bounded maintenance call") {
             crate::app::PluginLifecycleStep::Progress(progress) | crate::app::PluginLifecycleStep::Complete(progress) if progress == semio_framework_value::retained_clone::RetainedCloneProgress::default() => {
                 assert!(app.child_content_retirements.is_empty(), "maintenance answered idle on call {call} while a displaced child root was still queued");
-                close_member_admission_app(&mut app);
+                close_member_admission_app(&mut app, &mut cx);
                 return;
             }
             crate::app::PluginLifecycleStep::Progress(progress) | crate::app::PluginLifecycleStep::Complete(progress) => {
@@ -1769,17 +1770,20 @@ async fn maintenance_answers_idle_only_when_every_stage_is_idle() {
         }
     }
     panic!("maintenance never reached its idle answer while draining one displaced child root");
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_publishes_parent_members_view_graph_window_and_retires_displaced_bundle_atomically() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let old_parent_id = app.store.envelope().id.clone();
     let child_dialect = test_child_dialect().await;
     app.pending_child_pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect }, checkpoint_id: "old-checkpoint".into() });
     let old_window_generation = app.window_transient_store.document_generation();
-    let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 701, "replacement-parent", 23).await;
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 701, "replacement-parent", 23, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
     assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("member ingress registry"));
     app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("exact candidate member admission"));
     app.seal_owned_document_members(handle).expect("complete candidate member set");
@@ -1801,16 +1805,19 @@ async fn retained_composed_replacement_publishes_parent_members_view_graph_windo
             break;
         }
         app.maintenance_stage = 14;
-        let _ = composed_maintenance_turn(&mut app, 4096).expect("atomic composed replacement drive");
+        let _ = composed_maintenance_turn(&mut app, 4096, &mut cx).expect("atomic composed replacement drive");
         semio_framework_async::yield_once().await;
     }
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("terminal replacement acknowledgement"));
-    close_member_admission_app(&mut app);
+    close_member_admission_app(&mut app, &mut cx);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_cancellation_during_open_closure_and_view_preparation_preserves_the_live_bundle() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     for (case, target) in [
         ("member-open", crate::app::ActiveArtifactStoreReplacementState::OpeningMembers),
         ("closure", crate::app::ActiveArtifactStoreReplacementState::ValidatingClosure),
@@ -1819,30 +1826,33 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
         let mut app = live_composed_replacement_app().await;
         let old_parent_id = app.store.envelope().id.clone();
         let old_window_generation = app.window_transient_store.document_generation();
-        let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 710 + case.len() as u64, &format!("cancel-{case}"), 31).await;
-        drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+        let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 710 + case.len() as u64, &format!("cancel-{case}"), 31, &mut cx).await;
+        drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
         assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("cancel member registry"));
         app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("cancel candidate ingress"));
         app.seal_owned_document_members(handle).expect("cancel candidate seal");
-        drive_composed_replacement_to(&mut app, handle, target).await;
+        drive_composed_replacement_to(&mut app, handle, target, &mut cx).await;
         if case == "member-open" {
             app.maintenance_stage = 14;
-            let _ = composed_maintenance_turn(&mut app, 4096).expect("begin exact member open before cancellation");
+            let _ = composed_maintenance_turn(&mut app, 4096, &mut cx).expect("begin exact member open before cancellation");
             assert!(app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()));
         }
         app.cancel_artifact_store_replacement(handle).expect("cancel retained composed replacement");
-        drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+        drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
         assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{case}");
         assert_eq!(app.store.envelope().id, old_parent_id, "{case}");
         assert_eq!(app.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").expect("live content retained").count, 0, "{case}");
         assert_eq!(app.window_transient_store.document_generation(), old_window_generation, "{case}");
         assert!(app.acknowledge_artifact_store_replacement(handle).expect("cancel acknowledgement"));
-        close_member_admission_app(&mut app);
+        close_member_admission_app(&mut app, &mut cx);
     }
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_close_query_forwards_whole_member_page_extent() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️replacement-demand/🔣️.json")).expect("closed neutral replacement demand");
     let ordinary = fixture["ordinaryGrantBytes"].as_u64().unwrap() as usize;
     assert_eq!(ordinary,COMPOSITION_PAGE_GRANT.maximum_release_bytes);
@@ -1850,28 +1860,28 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
     let ceiling = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     assert_eq!(ceiling,COMPOSITION_CLEANUP_GRANT.maximum_release_bytes);
     let mut app = live_composed_replacement_app().await;
-    let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 799, "exact-page-close", 31).await;
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 799, "exact-page-close", 31, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
     assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("member ingress registry"));
     app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("exact member ingress"));
     app.seal_owned_document_members(handle).expect("sealed member set");
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::OpeningMembers).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::OpeningMembers, &mut cx).await;
     app.maintenance_stage = 14;
-    composed_maintenance_turn(&mut app, ordinary).expect("begin retained member open");
+    composed_maintenance_turn(&mut app, ordinary, &mut cx).expect("begin retained member open");
     app.cancel_artifact_store_replacement(handle).expect("cancel candidate");
     for _ in 0..100_000 {
         if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.state == crate::app::ActiveArtifactStoreReplacementState::RetiringRejectedMembers && active.active_member_open.as_ref().is_some_and(|open| store::MemberOpenOperation::next_release_byte_demand(open).is_ok_and(|bytes| bytes == extent))) { break; }
-        app.close_step(COMPOSITION_PAGE_GRANT).expect("close prior owners and bounded logical request retirement"); let _ = app.take_constructor_receipt();
+        app.close_step(&mut cx,COMPOSITION_PAGE_GRANT).expect("close prior owners and bounded logical request retirement"); let _ = app.take_constructor_receipt();
         semio_framework_async::yield_once().await;
     }
     let demand = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(|open| store::MemberOpenOperation::next_release_byte_demand(open).expect("retained member release quote")).expect("retained member operation");
-    let denied = app.close_step(COMPOSITION_PAGE_GRANT).expect("physical undergrant retains owner"); let _ = app.take_constructor_receipt();
+    let denied = app.close_step(&mut cx,COMPOSITION_PAGE_GRANT).expect("physical undergrant retains owner"); let _ = app.take_constructor_receipt();
     let demand_after_denial = app.store_replacement_jobs.get(handle.operation.0).and_then(|active| active.active_member_open.as_ref()).map(|open| store::MemberOpenOperation::next_release_byte_demand(open).expect("denied member release quote")).expect("denied owner remains retained");
     let caller_demand = app.close_retirement_demands(ordinary).expect("caller close quote").release_bytes;
     eprintln!("[DEBUG] retained replacement neutral before cleanup request={} caller={} denied={:?}", demand_after_denial, caller_demand, denied);
     let mut terminal = false;
     for _ in 0..100_000 {
-        let step = app.close_step(COMPOSITION_CLEANUP_GRANT).expect("explicit admitted cleanup extent"); let _ = app.take_constructor_receipt();
+        let step = app.close_step(&mut cx,COMPOSITION_CLEANUP_GRANT).expect("explicit admitted cleanup extent"); let _ = app.take_constructor_receipt();
         if matches!(step, crate::app::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
@@ -1881,16 +1891,19 @@ async fn retained_composed_replacement_close_query_forwards_whole_member_page_ex
     assert_eq!(demand_after_denial, extent);
     assert!(matches!(denied, crate::app::PluginLifecycleStep::Progress(progress) if progress.released_bytes == 0) || matches!(denied, crate::app::PluginLifecycleStep::Blocked { .. }));
     assert_eq!(caller_demand, extent);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_terminal_store_box_requires_whole_physical_grant() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/📏️replacement-terminal/🔣️.json")).expect("closed neutral terminal frame");
     let ceiling = fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize;
     assert_eq!(ceiling,COMPOSITION_CLEANUP_GRANT.maximum_release_bytes);
     let mut app = live_composed_replacement_app().await;
-    let handle = composed_replacement_candidate(&mut app, 798, "terminal-box-close", 0).await;
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    let handle = composed_replacement_candidate(&mut app, 798, "terminal-box-close", 0, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
     app.cancel_artifact_store_replacement(handle).expect("cancel candidate before member ingress");
     let mut extent = None;
     for _ in 0..100_000 {
@@ -1900,19 +1913,19 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
                 break;
             }
         }
-        app.close_step(COMPOSITION_CLEANUP_GRANT).expect("close exact preceding candidate owners"); let _ = app.take_constructor_receipt();
+        app.close_step(&mut cx,COMPOSITION_CLEANUP_GRANT).expect("close exact preceding candidate owners"); let _ = app.take_constructor_receipt();
         semio_framework_async::yield_once().await;
     }
     let extent = extent.expect("terminal candidate store frame remains retained");
     assert!(extent > 0 && extent <= ceiling);
     let before_demand = app.close_retirement_demands(extent).expect("terminal frame close quote").release_bytes;
-    let (denied, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(store::RetainedCloneGrant{maximum_release_bytes:extent-1,..COMPOSITION_CLEANUP_GRANT}).expect("terminal frame one below")); let _ = app.take_constructor_receipt();
+    let (denied, denied_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(&mut cx,store::RetainedCloneGrant{maximum_release_bytes:extent-1,..COMPOSITION_CLEANUP_GRANT}).expect("terminal frame one below")); let _ = app.take_constructor_receipt();
     let retained = app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.terminal_store_frame_bytes() == Some(extent));
     let exact_demand = app.close_retirement_demands(extent).expect("terminal frame close quote after the undergrant").release_bytes;
-    let (funded, funded_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(store::RetainedCloneGrant{maximum_release_bytes:extent,..COMPOSITION_CLEANUP_GRANT}).expect("terminal frame exact funding")); let _ = app.take_constructor_receipt();
+    let (funded, funded_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(&mut cx,store::RetainedCloneGrant{maximum_release_bytes:extent,..COMPOSITION_CLEANUP_GRANT}).expect("terminal frame exact funding")); let _ = app.take_constructor_receipt();
     let mut terminal = false;
     for _ in 0..100_000 {
-        let step = app.close_step(COMPOSITION_CLEANUP_GRANT).expect("complete separately admitted app cleanup"); let _ = app.take_constructor_receipt();
+        let step = app.close_step(&mut cx,COMPOSITION_CLEANUP_GRANT).expect("complete separately admitted app cleanup"); let _ = app.take_constructor_receipt();
         if matches!(step, crate::app::PluginLifecycleStep::Complete(_)) { terminal = true; break; }
         semio_framework_async::yield_once().await;
     }
@@ -1924,6 +1937,8 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
     assert!(matches!(denied, crate::app::PluginLifecycleStep::Progress(progress) if progress.copied_items <= 1 && progress.released_bytes == 0));
     assert_eq!((funded_heap.requested_bytes, funded_heap.released_bytes), (0, extent));
     assert!(matches!(funded, crate::app::PluginLifecycleStep::Progress(progress) if progress.copied_items == 1 && progress.released_bytes == extent));
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 /// 🧩️ A candidate parent's child projection is the APP's answer, never the structural one.
@@ -1939,48 +1954,57 @@ async fn retained_composed_replacement_terminal_store_box_requires_whole_physica
 /// revision, and a pump that bypassed the app would answer progress here instead of a fault.
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_candidate_projection_is_the_apps_own_answer() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let old_parent_id = app.store.envelope().id.clone();
-    let handle = composed_replacement_candidate(&mut app, 741, "app-projection-parent", COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION).await;
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    let handle = composed_replacement_candidate(&mut app, 741, "app-projection-parent", COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
 
     app.maintenance_stage = 14;
-    let fault = composed_maintenance_turn(&mut app, 4096).expect_err("the app's refusal must reach the caller, never be answered as progress");
-    assert_eq!(fault.code.0, "test.parent-projection", "the app's own fault code survives the pump");
-    assert_eq!(fault.message, COMPOSED_PARENT_PROJECTION_REFUSAL_MESSAGE, "the app's own diagnostic survives the pump, not a flat framework string");
+    let fault = composed_maintenance_turn(&mut app, 4096, &mut cx).expect_err("the app's refusal must reach the caller, never be answered as progress");
+    let crate::PluginLifecyclePrimary::Fault(original)=&fault.primary else{panic!("original app diagnostic remains the primary")};
+    assert_eq!(original.code.0, "test.parent-projection", "the app's own fault code survives the pump");
+    assert_eq!(original.message, COMPOSED_PARENT_PROJECTION_REFUSAL_MESSAGE, "the app's own diagnostic survives the pump, not a flat framework string");
+    close_composition_refusal(fault,&mut cx);
 
     app.cancel_artifact_store_replacement(handle).expect("cancel the refused candidate");
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled);
     assert_eq!(app.store.envelope().id, old_parent_id, "a refused candidate never displaces the live parent");
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("refused candidate acknowledgement"));
-    close_member_admission_app(&mut app);
+    close_member_admission_app(&mut app, &mut cx);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_composed_replacement_rejects_a_real_live_child_generation_change_before_publication() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
-    let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 729, "stale-parent", 47).await;
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+    let (handle, ingress) = retained_composed_replacement_fixture(&mut app, 729, "stale-parent", 47, &mut cx).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx).await;
     assert!(app.try_begin_owned_document_members(handle, 1, u64::MAX).expect("stale member registry"));
     app.admit_owned_document_member(handle, ingress).unwrap_or_else(|_| panic!("stale candidate ingress"));
     app.seal_owned_document_members(handle).expect("stale candidate seal");
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady, &mut cx).await;
     let generation = app.admit_child_content_publication().expect("real live child publication authority");
     app.publish_child_content_member(generation, "slot", "child-1").await.expect("real live child generation change");
-    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete, &mut cx).await;
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.store.envelope().id, old_parent_id);
     assert_eq!(app.child_content_root.typed_read::<TestSnapshot>("slot", "child-1").expect("live content retained").count, 0);
     assert_eq!(app.window_transient_store.document_generation(), old_window_generation);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("stale replacement acknowledgement"));
-    close_member_admission_app(&mut app);
+    close_member_admission_app(&mut app, &mut cx);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_replacement_publishes_the_complete_nested_bundle_atomically() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, "recursive-unordered-success");
     let mut app = live_recursive_replacement_app().await;
@@ -1990,14 +2014,14 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
     let child_dialect = test_child_dialect().await;
     app.pending_child_pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect }, checkpoint_id: "displaced-checkpoint".into() });
     let parent_id = vectors["root"]["artifactId"].as_str().expect("recursive replacement root id");
-    let (handle, ingress) = retained_recursive_replacement_fixture(&mut app, 741, parent_id, row["mode"].as_str().expect("recursive replacement mode")).await;
+    let (handle, ingress) = retained_recursive_replacement_fixture(&mut app, 741, parent_id, row["mode"].as_str().expect("recursive replacement mode"), &mut cx).await;
     eprintln!(
         "recursive replacement success: admitting complete member set active={} app={} ingress={}",
         std::mem::size_of::<crate::app::ActiveArtifactStoreReplacement<ComposedParentSnapshot, RecursiveFixtureMutation, RecursiveTestMembers>>(),
         std::mem::size_of::<VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>>(),
         std::mem::size_of::<crate::app::OwnedDocumentMemberIngress>(),
     );
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, &mut cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
 
     for _ in 0..100_000 {
@@ -2024,7 +2048,7 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
         if app.poll_artifact_store_replacement(handle) == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
-        let _ = drive_recursive_replacement_step(&mut app).expect("atomic recursive replacement drive");
+        let _ = drive_recursive_replacement_step(&mut app, &mut cx).expect("atomic recursive replacement drive");
         semio_framework_async::yield_once().await;
     }
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready);
@@ -2032,17 +2056,20 @@ async fn retained_window_input_recursive_replacement_publishes_the_complete_nest
     assert_eq!(packs.iter().map(|entry| entry.child_id.as_str()).collect::<std::collections::BTreeSet<_>>(), std::collections::BTreeSet::from(["child-1", "grandchild-1"]));
     assert!(app.test_child_admission_state(1).roots_retiring_empty);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("recursive terminal replacement acknowledgement"));
-    close_recursive_replacement_app(app.as_mut());
+    close_recursive_replacement_app(app.as_mut(), &mut cx);
     assert_eq!(row["published"], true);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_document_archive_round_trips_the_complete_owned_closure() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let archive = recursive_document_archive("archive-parent").await;
     let expected = archive.clone();
     let mut app = live_recursive_replacement_app().await;
     PluginApp::begin_document_archive_load(app.as_mut(), 81, archive).expect("recursive archive admission");
-    let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 81)).await;
+    let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 81, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 81).expect("recursive archive acknowledgement");
     assert_eq!(app.store.envelope().id, "archive-parent");
@@ -2058,7 +2085,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     let mut malformed = persisted.clone();
     malformed.parent_pack.push(0);
     PluginApp::begin_document_archive_load(app.as_mut(), 82, malformed).expect("malformed recursive archive retains admission owner");
-    let malformed_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 82)).await;
+    let malformed_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 82, &mut cx)).await;
     assert_eq!(malformed_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 82).expect("malformed recursive archive acknowledgement");
     assert_eq!(Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive after malformed parent"), persisted);
@@ -2088,7 +2115,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     .await
     .expect("encode semantically malformed retained history");
     PluginApp::begin_document_archive_load(app.as_mut(), 85, malformed_history).expect("semantic recursive archive refusal retains admission owner");
-    let malformed_history_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 85)).await;
+    let malformed_history_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 85, &mut cx)).await;
     assert_eq!(malformed_history_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 85).expect("semantic recursive archive refusal acknowledgement");
     assert_eq!(Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive after semantic history refusal"), persisted);
@@ -2096,7 +2123,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     let mut malformed_child_history = persisted.clone();
     Box::pin(append_malformed_transition_to_member_history(&mut malformed_child_history.members[0])).await;
     PluginApp::begin_document_archive_load(app.as_mut(), 86, malformed_child_history).expect("semantic recursive child refusal retains admission owner");
-    let malformed_child_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 86)).await;
+    let malformed_child_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 86, &mut cx)).await;
     assert_eq!(malformed_child_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 86).expect("semantic recursive child refusal acknowledgement");
     assert_eq!(Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive after semantic child history refusal"), persisted);
@@ -2117,11 +2144,13 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     refused.parent_pack = foreign.pack;
     refused.parent_spr = foreign.spr;
     PluginApp::begin_document_archive_load(app.as_mut(), 83, refused).expect("foreign recursive archive retains admission owner");
-    let refused_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 83)).await;
+    let refused_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 83, &mut cx)).await;
     assert_eq!(refused_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 83).expect("foreign recursive archive acknowledgement");
     assert_eq!(Box::pin(PluginApp::document_archive(app.as_ref())).await.expect("live archive after foreign parent"), persisted);
-    close_recursive_replacement_app(app.as_mut());
+    close_recursive_replacement_app(app.as_mut(), &mut cx);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 /// 🧭️ One poll spends up to `DOCUMENT_ARCHIVE_POLL_WALL_US` driving the same rotation, so whether it
@@ -2132,35 +2161,38 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
 /// been retired. Both are asserted directly.
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_document_archive_cancel_retires_the_exact_input_before_acknowledgement() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let archive = recursive_document_archive("cancelled-archive-parent").await;
     let mut app = live_recursive_replacement_app().await;
     let previous = app.store.envelope().id.clone();
     PluginApp::begin_document_archive_load(app.as_mut(), 84, archive).expect("recursive archive cancellation admission");
     assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err());
     PluginApp::cancel_document_archive_load(app.as_mut(), 84).expect("recursive archive cancellation request");
-    let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84, &mut crate::app::artifact_app_laws::fixture_identity())).await.expect("recursive archive cancellation request status");
+    let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84, &mut crate::app::artifact_app_laws::fixture_identity(), &mut cx)).await.expect("recursive archive cancellation request status");
     assert!(!matches!(requested.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Fault), "a cancelled recursive archive published or faulted: {:?}", requested.state);
     if requested.state != protocol::DocumentArchiveLoadState::Cancelled {
         assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err(), "a cancelled archive short of its terminal status was acknowledgeable");
     }
-    let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 84)).await;
+    let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 84, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Cancelled);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).expect("recursive archive cancelled acknowledgement");
     assert_eq!(app.store.envelope().id, previous);
-    close_recursive_replacement_app(app.as_mut());
+    close_recursive_replacement_app(app.as_mut(), &mut cx);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
-async fn verify_recursive_rejection_case(id: &'static str, operation: u64) {
+async fn verify_recursive_rejection_case(id: &'static str, operation: u64, cx:&mut semio_framework_job::StepContext<'_>) {
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, id);
     let mut app = Box::pin(live_recursive_replacement_app()).await;
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
     let old_content_generation = app.child_content_generation;
-    let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, operation, &format!("rejected-{id}"), row["mode"].as_str().expect("recursive rejection mode"))).await;
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers)).await;
+    let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, operation, &format!("rejected-{id}"), row["mode"].as_str().expect("recursive rejection mode"), cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete, cx)).await;
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault, "{id}");
     assert_eq!(app.store.envelope().id, old_parent_id, "{id}");
     assert_eq!(app.child_content_root.slots(), vec![("slot".into(), "child-1".into())], "{id}");
@@ -2168,18 +2200,21 @@ async fn verify_recursive_rejection_case(id: &'static str, operation: u64) {
     assert_eq!(app.child_content_generation, old_content_generation, "{id}");
     assert_eq!(app.window_transient_store.document_generation(), old_window_generation, "{id}");
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("bounded rejected replacement acknowledgement"), "{id}");
-    close_recursive_replacement_app(app.as_mut());
+    close_recursive_replacement_app(app.as_mut(), cx);
     assert_eq!(row["published"], false, "{id}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_replacement_rejects_missing_extra_and_duplicate_members_after_bounded_retirement() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     for (offset, id) in ["missing-grandchild", "extra-unreachable-member", "duplicate-member"].into_iter().enumerate() {
-        Box::pin(verify_recursive_rejection_case(id, 750 + offset as u64)).await;
+        Box::pin(verify_recursive_rejection_case(id, 750 + offset as u64, &mut cx)).await;
     }
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
-async fn verify_recursive_cancellation_case(id: &'static str, operation: u64) {
+async fn verify_recursive_cancellation_case(id: &'static str, operation: u64, cx:&mut semio_framework_job::StepContext<'_>) {
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, id);
     let target = match row["cancelAt"].as_str().expect("recursive cancellation phase") {
@@ -2192,61 +2227,64 @@ async fn verify_recursive_cancellation_case(id: &'static str, operation: u64) {
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
     let old_content_generation = app.child_content_generation;
-    let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, operation, &format!("cancelled-{id}"), row["mode"].as_str().expect("recursive cancellation mode"))).await;
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers)).await;
+    let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, operation, &format!("cancelled-{id}"), row["mode"].as_str().expect("recursive cancellation mode"), cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, target)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, target, cx)).await;
     if target == crate::app::ActiveArtifactStoreReplacementState::OpeningMembers {
         for _ in 0..crate::app::MAINTENANCE_STAGES {
             if app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()) {
                 break;
             }
-            let _ = drive_recursive_replacement_step(&mut app).expect("begin recursive member open before cancellation");
+            let _ = drive_recursive_replacement_step(&mut app, cx).expect("begin recursive member open before cancellation");
         }
         assert!(app.store_replacement_jobs.get(handle.operation.0).is_some_and(|active| active.active_member_open.is_some()));
     }
     app.cancel_artifact_store_replacement(handle).expect("cancel recursive retained replacement");
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete, cx)).await;
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled, "{id}");
     assert_eq!(app.store.envelope().id, old_parent_id, "{id}");
     assert_eq!(app.child_content_root.slots(), vec![("slot".into(), "child-1".into())], "{id}");
     assert_eq!(app.child_content_generation, old_content_generation, "{id}");
     assert_eq!(app.window_transient_store.document_generation(), old_window_generation, "{id}");
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("bounded cancelled replacement acknowledgement"), "{id}");
-    close_recursive_replacement_app(app.as_mut());
+    close_recursive_replacement_app(app.as_mut(), cx);
 }
 
-async fn verify_recursive_stale_authority_case() {
+async fn verify_recursive_stale_authority_case( cx:&mut semio_framework_job::StepContext<'_>) {
     let vectors = recursive_replacement_vectors();
     let row = recursive_replacement_case(&vectors, "stale-child-content-authority");
     let mut app = Box::pin(live_recursive_replacement_app()).await;
     let old_parent_id = app.store.envelope().id.clone();
     let old_window_generation = app.window_transient_store.document_generation();
     let old_content_generation = app.child_content_generation;
-    let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, 769, "stale-recursive-parent", row["mode"].as_str().expect("recursive stale mode"))).await;
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers)).await;
+    let (handle, ingress) = Box::pin(retained_recursive_replacement_fixture(&mut app, 769, "stale-recursive-parent", row["mode"].as_str().expect("recursive stale mode"), cx)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers, cx)).await;
     admit_recursive_member_set(&mut app, handle, row, ingress);
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::CandidateReady, cx)).await;
     let generation = app.admit_child_content_publication().expect("real concurrent child-content publication authority");
     app.publish_child_content_member(generation, "slot", "child-1").await.expect("real concurrent child-content publication");
-    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete)).await;
+    Box::pin(drive_recursive_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete, cx)).await;
     assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault);
     assert_eq!(app.store.envelope().id, old_parent_id);
     assert_eq!(app.child_content_root.slots(), vec![("slot".into(), "child-1".into())]);
     assert_eq!(app.child_content_generation, old_content_generation + 1);
     assert_eq!(app.window_transient_store.document_generation(), old_window_generation);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("bounded stale replacement acknowledgement"));
-    close_recursive_replacement_app(app.as_mut());
+    close_recursive_replacement_app(app.as_mut(), cx);
     assert_eq!(row["staleAuthority"], true);
     assert_eq!(row["published"], false);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_window_input_recursive_replacement_cancellation_and_stale_authority_preserve_the_live_bundle() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     for (offset, id) in ["cancel-member-open", "cancel-closure", "cancel-view-preparation"].into_iter().enumerate() {
-        Box::pin(verify_recursive_cancellation_case(id, 760 + offset as u64)).await;
+        Box::pin(verify_recursive_cancellation_case(id, 760 + offset as u64, &mut cx)).await;
     }
-    Box::pin(verify_recursive_stale_authority_case()).await;
+    Box::pin(verify_recursive_stale_authority_case( &mut cx)).await;
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 //#endregion 🧬️ComposedParentFixture
 
@@ -2351,35 +2389,34 @@ fn install_slow_envelope_decode(
     app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
     operation: u64,
     budget: usize,
-    steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>,
-) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
+    steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>, cx:&mut semio_framework_job::StepContext<'_>) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
     let operation = semio_framework_job::OperationId(operation);
     let generation = semio_framework_job::Generation(app.store.generation_now());
     let bundle = ComposedParentApp::<true>::build_envelope_decode_owner_bundle().expect("composed parent envelope decode bundle");
     let completion = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion::new();
     let inner = bundle.begin_fresh_decoder(operation, generation, std::sync::Arc::clone(&app.envelope_completed_records), std::sync::Arc::clone(&completion));
-    app.admit_artifact_envelope_decode_owner(operation, generation, envelope_law_pages(), Box::new(SlowFreshEnvelopeFieldDecoder::new(budget, steps, inner)), completion)
+    app.admit_artifact_envelope_decode_owner(operation, generation, envelope_law_pages(), Box::new(SlowFreshEnvelopeFieldDecoder::new(budget, steps, inner)), completion, cx)
         .unwrap_or_else(|_| panic!("exact envelope decode owner admission"))
 }
 
 /// 🧹️ Pumps the post-`Ready` worker close ladder (same work production loads run via [`VcsArtifactApp::advance_ready_envelope_decode_worker_owners`]).
-fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) {
+fn pump_envelope_decode_worker_close(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle, cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..32 {
         if app.artifact_envelope_decode_worker_owners_are_terminal(handle) {
             return;
         }
-        app.advance_ready_envelope_decode_worker_owners(handle,app.mounted_policy.maintenance).expect("envelope decode worker-owner drain");
-        let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);
+        app.advance_ready_envelope_decode_worker_owners(handle,app.mounted_policy.maintenance, cx).expect("envelope decode worker-owner drain");
+        if let Err(source)=semio_framework_job::pump_worker_job_retirements(8,cx){close_composition_refusal(source.into(),cx)}
     }
     assert!(app.artifact_envelope_decode_worker_owners_are_terminal(handle), "envelope decode worker owners still active after bounded drain");
 }
 
 /// 🚿️ Drives one live envelope decode to its terminal poll through the reactor-turn pump, so the
 /// app can close with every field lease returned.
-async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
+async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>, handle: crate::app::ArtifactEnvelopeDecodeOperationHandle, cx:&mut semio_framework_job::StepContext<'_>) -> crate::app::ArtifactEnvelopeDecodeOperationPoll {
     let mut poll = crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending;
     for _ in 0..100_000 {
-        PluginApp::advance_typed_operation_publication(app, &mut crate::app::artifact_app_laws::fixture_identity(), crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.expect("one reactor turn drives the envelope decode worker");
+        PluginApp::advance_typed_operation_publication(app, &mut crate::app::artifact_app_laws::fixture_identity(), cx).await.expect("one reactor turn drives the envelope decode worker");
         poll = app.poll_artifact_envelope_decode(handle);
         if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;
@@ -2390,9 +2427,9 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-        let step = app.maintenance_step(grant).expect("envelope decode maintenance");
+        let step = app.maintenance_step(cx,grant).expect("envelope decode maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
-        let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);
+        if let Err(source)=semio_framework_job::pump_worker_job_retirements(8,cx){close_composition_refusal(source.into(),cx)}
         poll = app.poll_artifact_envelope_decode(handle);
         if matches!(poll, crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault | crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled) {
             return poll;
@@ -2403,7 +2440,7 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         semio_framework_async::yield_once().await;
     }
     if poll == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
-        pump_envelope_decode_worker_close(app, handle);
+        pump_envelope_decode_worker_close(app, handle, cx);
     }
     poll
 }
@@ -2414,12 +2451,13 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[semio_framework_async_macros::async_test]
 async fn advance_artifact_envelope_load_reports_a_live_decode_as_pending_not_fault() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let steps = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let handle = install_slow_envelope_decode(&mut app, 811, 64, &steps);
+    let handle = install_slow_envelope_decode(&mut app, 811, 64, &steps, &mut cx);
     assert_eq!(app.poll_artifact_envelope_decode(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending);
     assert_eq!(
-        app.advance_artifact_envelope_load(handle).expect("live decode advancement"),
+        app.advance_artifact_envelope_load(handle, &mut cx).expect("live decode advancement"),
         crate::app::ArtifactEnvelopeDecodeOperationPoll::Pending,
         "an unfinished decode is pending, not a terminal fault"
     );
@@ -2428,8 +2466,10 @@ async fn advance_artifact_envelope_load_reports_a_live_decode_as_pending_not_fau
         crate::app::ArtifactEnvelopeDecodeOperationPoll::Fault,
         "no replacement job exists yet, which is exactly the reading that must not leak out of the load API"
     );
-    drain_envelope_decode(&mut app, handle).await;
-    close_member_admission_app(&mut app);
+    drain_envelope_decode(&mut app, handle, &mut cx).await;
+    close_member_admission_app(&mut app, &mut cx);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 
 /// ⚖️ LAW: the reactor turn pumps the envelope decode worker to its terminal poll.
@@ -2438,11 +2478,12 @@ async fn advance_artifact_envelope_load_reports_a_live_decode_as_pending_not_fau
 /// cooperative-maintenance rotation, so a document load never advanced inside an interactive turn.
 #[semio_framework_async_macros::async_test]
 async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll() {
+    let mut caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let mut app = live_composed_replacement_app().await;
     let steps = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-    let handle = install_slow_envelope_decode(&mut app, 812, 256, &steps);
+    let handle = install_slow_envelope_decode(&mut app, 812, 256, &steps, &mut cx);
     assert!(PluginApp::has_runnable_typed_operations(&app), "a live envelope decode is runnable reactor-turn work");
-    drain_envelope_decode(&mut app, handle).await;
+    drain_envelope_decode(&mut app, handle, &mut cx).await;
     let driven = steps.load(std::sync::atomic::Ordering::SeqCst);
     assert_eq!(app.poll_artifact_envelope_decode(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready, "the reactor-turn pump left the decode ready after {driven} steps");
     assert!(driven >= 256, "the reactor-turn pump drove only {driven} decode steps");
@@ -2452,11 +2493,13 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
         let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-        let step = app.maintenance_step(grant).expect("envelope law decode cancellation maintenance");
+        let step = app.maintenance_step(&mut cx,grant).expect("envelope law decode cancellation maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
-        let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);
+        if let Err(source)=semio_framework_job::pump_worker_job_retirements(8,&mut cx){close_composition_refusal(source.into(),&mut cx)}
     }
-    close_member_admission_app(&mut app);
+    close_member_admission_app(&mut app, &mut cx);
+
+    let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).expect("original composition caller paid retirement");
 }
 //#endregion 📨️EnvelopeDecodeLadder
 

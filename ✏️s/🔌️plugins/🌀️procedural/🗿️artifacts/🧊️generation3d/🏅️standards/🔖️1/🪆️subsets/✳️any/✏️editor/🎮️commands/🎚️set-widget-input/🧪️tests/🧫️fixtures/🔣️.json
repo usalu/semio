@@ -758,6 +758,396 @@
       },
       "value": "1",
       "error": true
+    },
+    {
+      "id": "plane-origin-x",
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "7.5",
+      "component": "origin.x",
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 7.5,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      }
+    },
+    {
+      "id": "plane-origin-y",
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "-4",
+      "component": "origin.y",
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": -4,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      }
+    },
+    {
+      "id": "plane-origin-z",
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "0.001",
+      "component": "origin.z",
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 0.001
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      }
+    },
+    {
+      "id": "plane-normal-x",
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "7.5",
+      "component": "normal.x",
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 7.5,
+          "y": 0,
+          "z": 1
+        }
+      }
+    },
+    {
+      "id": "plane-normal-y",
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "-4",
+      "component": "normal.y",
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": -4,
+          "z": 1
+        }
+      }
+    },
+    {
+      "id": "plane-normal-z",
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "0.001",
+      "component": "normal.z",
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 0.001
+        }
+      }
+    },
+    {
+      "id": "plane-first-origin",
+      "types": [
+        "plane"
+      ],
+      "current": null,
+      "value": "5",
+      "component": "origin.z",
+      "expected": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 0,
+          "y": 0,
+          "z": 5
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      }
+    },
+    {
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "1",
+      "error": true,
+      "id": "plane-coordinate-required"
+    },
+    {
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "1",
+      "error": true,
+      "id": "plane-unqualified-coordinate",
+      "component": "x"
+    },
+    {
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "NaN",
+      "error": true,
+      "id": "plane-normal-invalid-number",
+      "component": "normal.x"
+    },
+    {
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "1",
+      "error": true,
+      "id": "plane-invalid-component",
+      "component": "origin.w",
+      "schemaValid": false
+    },
+    {
+      "types": [
+        "point"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        },
+        "normal": {
+          "$schema": "vector",
+          "x": 0,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "value": "1",
+      "error": true,
+      "id": "plane-type-mismatch",
+      "component": "origin.x"
+    },
+    {
+      "types": [
+        "plane"
+      ],
+      "current": {
+        "$schema": "plane",
+        "origin": {
+          "$schema": "point",
+          "x": 1,
+          "y": 2,
+          "z": 3
+        }
+      },
+      "value": "1",
+      "error": true,
+      "id": "plane-incomplete-current",
+      "component": "origin.x"
     }
   ],
   "facets": [
@@ -4822,7 +5212,11 @@
     "selector": "solid__selected",
     "consumer": "volume",
     "openedActor": "local",
-    "sourceExtent": [2, 1.5, 1],
+    "sourceExtent": [
+      2,
+      1.5,
+      1
+    ],
     "sourceHandle": "from rendered componentSource",
     "label": "from rendered componentReferences",
     "revision": "from rendered componentSource",

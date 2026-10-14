@@ -17,8 +17,8 @@ import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/�
  */
 import { describe, expect, it } from "vitest";
 import { MAINTENANCE_LANE_DEFAULT_BUDGET, ShardClient, type ShardEventEnvelope, type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
-import { encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import { encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
+import { encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedUiInstance } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
 

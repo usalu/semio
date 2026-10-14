@@ -1,7 +1,9 @@
-import { existsSync, lstatSync, readdirSync, rmdirSync, rmSync, unlinkSync } from "node:fs";
-import { basename, dirname, join, relative, sep } from "node:path";
+import { lstat, readdir, rmdir, unlink } from "node:fs/promises";
+import type {Stats} from "node:fs";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import schema from "./🧬️schema/🔣️.json";
 import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {acquireCargoBuildLeaseV1,acquireCargoStoreLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import {acquireCargoProfileMaintenanceLeaseV1,acquireCargoStoreLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 
 export type CacheUnitKind = "cargo-build" | "cargo-incremental" | "cargo-incremental-session" | "cargo-target-file" | "directory";
 /** 📦️ One independently deletable slice of a cache area: a compilation unit, an incremental crate dir, a stale finalized incremental session, an uplifted file, or a whole scratch directory. */
@@ -32,6 +34,7 @@ export interface PrunePlan {
   readonly generatedAtMs: number;
   readonly areas: readonly AreaPlan[];
 }
+export{planCachePressurePruneV1,type CachePressurePolicyV1,type CachePressurePlanV1}from"./📉️pressure/🟦️.ts";
 
 /** 🛡️ Rescans and prunes a shared compiler store only after all admitted profiles release it. */
 export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;leaseDirectory:string;control:ResourceLeaseControl}>,run:()=>Promise<T>):Promise<T>{
@@ -82,63 +85,81 @@ export function formatBytes(bytes: number): string {
   return `${value.toFixed(2)} ${units[index]}`;
 }
 
-const safeReaddir = (path: string): string[] => { try { return readdirSync(path); } catch { return []; } };
+class CacheWalk {
+  private operations = 0;
+  private readonly started = Date.now();
+  constructor(readonly control: ResourceLeaseControl, readonly resource: string, readonly mode: "shared" | "exclusive") { checkResourceLeaseControl(control); }
+  async checkpoint(): Promise<void> {
+    checkResourceLeaseControl(this.control);
+    if (++this.operations % schema.definitions.Policy.const.maximumOperationsPerContinuation === 0) {
+      await this.control.publish({resource:this.resource,mode:this.mode,elapsedMs:Date.now()-this.started});checkResourceLeaseControl(this.control);
+      await this.control.yieldContinuation();checkResourceLeaseControl(this.control);
+    }
+  }
+  async stat(path: string): Promise<Stats | undefined> {
+    await this.checkpoint();try { const value=await lstat(path);checkResourceLeaseControl(this.control);return value; } catch(error) { if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error; }
+  }
+  async entries(path: string): Promise<string[]> {
+    await this.checkpoint();try { const value=await readdir(path);checkResourceLeaseControl(this.control);return value; } catch(error) { if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;return []; }
+  }
+}
 
 /**
  * 📏️ Recursively measures one deletable unit's total bytes and most-recent access/modification time.
  * Recency comes only from file timestamps, never directory timestamps — a directory's own mtime changes
  * on unrelated churn (a sibling created or renamed) and would otherwise mask a genuinely stale unit.
  */
-function measureUnit(root: string): { bytes: number; recencyMs: number } {
+async function measureUnit(root: string, walk: CacheWalk): Promise<{ bytes: number; recencyMs: number }> {
   let bytes = 0, recencyMs = 0;
-  const walk = (path: string): void => {
-    let stat;
-    try { stat = lstatSync(path); } catch { return; }
-    if (stat.isSymbolicLink()) return;
-    if (stat.isDirectory()) { for (const child of safeReaddir(path)) walk(join(path, child)); return; }
-    if (!stat.isFile()) return;
+  const pending = [root];
+  while(pending.length){
+    const path=pending.pop()!,stat=await walk.stat(path);
+    if (!stat || stat.isSymbolicLink()) continue;
+    if (stat.isDirectory()) { for (const child of await walk.entries(path)) pending.push(join(path, child)); continue; }
+    if (!stat.isFile()) continue;
     recencyMs = Math.max(recencyMs, stat.atimeMs, stat.mtimeMs);
     bytes += stat.size;
-  };
-  walk(root);
+  }
   return { bytes, recencyMs };
 }
 
 const posix = (path: string): string => path.split(sep).join("/");
 
 /** 🔎️ Recursively finds every directory literally named `named` under `root`, at any depth (an optional target-triple/profile level in between is handled without guessing). */
-function findNamedDirs(root: string, named: string, signal: AbortSignal): string[] {
+async function findNamedDirs(root: string, named: string, walk: CacheWalk): Promise<string[]> {
   const found: string[] = [];
-  const descend = (dir: string, depth: number): void => {
-    signal.throwIfAborted();
-    if (depth > 8 || !existsSync(dir)) return;
-    for (const name of safeReaddir(dir)) {
+  const pending=[{dir:root,depth:0}];
+  while(pending.length){
+    const {dir,depth}=pending.pop()!,rootStat=await walk.stat(dir);
+    if(depth>8||!rootStat?.isDirectory()||rootStat.isSymbolicLink())continue;
+    for (const name of await walk.entries(dir)) {
       const path = join(dir, name);
-      let stat;
-      try { stat = lstatSync(path); } catch { continue; }
-      if (!stat.isDirectory() || stat.isSymbolicLink()) continue;
+      const stat=await walk.stat(path);
+      if (!stat?.isDirectory() || stat.isSymbolicLink()) continue;
       if (name === named) { found.push(path); continue; }
-      descend(path, depth + 1);
+      pending.push({dir:path,depth:depth+1});
     }
-  };
-  descend(root, 0);
+  }
   return found;
 }
 
 /** 🗃️ Walks Cargo's shared build-dir for compiled units: `.../build/<package>/<unit-hash>/`. https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#build-dir */
-export function scanCargoBuildUnits(buildDir: string, signal: AbortSignal, onUnit?: (unit: CacheUnit) => void): CacheUnit[] {
+export async function scanCargoBuildUnits(buildDir: string, control: ResourceLeaseControl, onUnit?: (unit: CacheUnit) => void): Promise<CacheUnit[]> {
+  const walk=new CacheWalk(control,"cache-scan:"+resolve(buildDir),"shared");
   const units: CacheUnit[] = [];
-  for (const buildRoot of findNamedDirs(buildDir, "build", signal)) {
-    for (const pkg of safeReaddir(buildRoot)) for (const hash of safeReaddir(join(buildRoot, pkg))) {
-      signal.throwIfAborted();
+  for (const buildRoot of await findNamedDirs(buildDir, "build", walk)) {
+    for (const pkg of await walk.entries(buildRoot)) {
+      const packagePath=join(buildRoot,pkg),packageStat=await walk.stat(packagePath);if(!packageStat?.isDirectory()||packageStat.isSymbolicLink())continue;
+      for (const hash of await walk.entries(packagePath)) {
       const unitPath = join(buildRoot, pkg, hash);
-      let unitStat;
-      try { unitStat = lstatSync(unitPath); } catch { continue; }
-      if (!unitStat.isDirectory() || unitStat.isSymbolicLink()) continue;
-      const measured = measureUnit(unitPath);
+      const unitStat=await walk.stat(unitPath);
+      if (!unitStat?.isDirectory() || unitStat.isSymbolicLink()) continue;
+      const measured = await measureUnit(unitPath,walk);
       const unit: CacheUnit = { path: posix(relative(buildDir, unitPath)), bytes: measured.bytes, recencyMs: measured.recencyMs, lockHeld: false, kind: "cargo-build" };
       units.push(unit);
       onUnit?.(unit);
+      checkResourceLeaseControl(control);
+      }
     }
   }
   return units;
@@ -147,10 +168,10 @@ export function scanCargoBuildUnits(buildDir: string, signal: AbortSignal, onUni
 const sessionLockName = (sessionDirName: string): string => `${sessionDirName.split("-").slice(0, 3).join("-")}.lock`;
 
 /** 📏️ Measures one incremental session (its directory plus its sibling `.lock` file, which rustc keeps alongside even after finalizing). */
-function measureSession(crateDir: string, sessionName: string): { bytes: number; recencyMs: number } {
-  const measured = measureUnit(join(crateDir, sessionName));
+async function measureSession(crateDir: string, sessionName: string, walk: CacheWalk): Promise<{ bytes: number; recencyMs: number }> {
+  const measured = await measureUnit(join(crateDir, sessionName),walk);
   let lockBytes = 0, lockRecencyMs = 0;
-  try { const lockStat = lstatSync(join(crateDir, sessionLockName(sessionName))); if (lockStat.isFile()) { lockBytes = lockStat.size; lockRecencyMs = Math.max(lockStat.atimeMs, lockStat.mtimeMs); } } catch {}
+  const lockStat=await walk.stat(join(crateDir,sessionLockName(sessionName)));if(lockStat?.isFile()&&!lockStat.isSymbolicLink()){lockBytes=lockStat.size;lockRecencyMs=Math.max(lockStat.atimeMs,lockStat.mtimeMs);}
   return { bytes: measured.bytes + lockBytes, recencyMs: Math.max(measured.recencyMs, lockRecencyMs) };
 }
 
@@ -171,21 +192,20 @@ export interface CargoIncrementalScan {
  * no longer needs (everything but the newest), as independent `cargo-incremental-session` units for
  * unconditional compaction, regardless of the crate dir's own age or lock state.
  */
-export function scanCargoIncrementalUnits(buildDir: string, signal: AbortSignal, onUnit?: (unit: CacheUnit) => void): CargoIncrementalScan {
+export async function scanCargoIncrementalUnits(buildDir: string, control: ResourceLeaseControl, onUnit?: (unit: CacheUnit) => void): Promise<CargoIncrementalScan> {
+  const walk=new CacheWalk(control,"cache-scan:"+resolve(buildDir),"shared");
   const units: CacheUnit[] = [];
   const staleSessions: CacheUnit[] = [];
-  for (const incrementalRoot of findNamedDirs(buildDir, "incremental", signal)) {
-    for (const crate of safeReaddir(incrementalRoot)) {
-      signal.throwIfAborted();
+  for (const incrementalRoot of await findNamedDirs(buildDir, "incremental", walk)) {
+    for (const crate of await walk.entries(incrementalRoot)) {
       const crateDir = join(incrementalRoot, crate);
-      let crateStat;
-      try { crateStat = lstatSync(crateDir); } catch { continue; }
-      if (!crateStat.isDirectory() || crateStat.isSymbolicLink()) continue;
-      const sessions = safeReaddir(crateDir).filter((name) => {
-        if (!name.startsWith("s-") || name.endsWith(".lock")) return false;
-        try { const stat = lstatSync(join(crateDir, name)); return stat.isDirectory() && !stat.isSymbolicLink(); } catch { return false; }
-      });
-      const measured = sessions.map((name) => ({ name, working: name.endsWith("-working"), ...measureSession(crateDir, name) }));
+      const crateStat=await walk.stat(crateDir);
+      if (!crateStat?.isDirectory() || crateStat.isSymbolicLink()) continue;
+      const measured:{name:string;working:boolean;bytes:number;recencyMs:number}[]=[];
+      for(const name of await walk.entries(crateDir)){
+        if(!name.startsWith("s-")||name.endsWith(".lock"))continue;const stat=await walk.stat(join(crateDir,name));if(!stat?.isDirectory()||stat.isSymbolicLink())continue;
+        measured.push({name,working:name.endsWith("-working"),...await measureSession(crateDir,name,walk)});
+      }
       const working = measured.filter((session) => session.working);
       const finalized = measured.filter((session) => !session.working).sort((left, right) => right.recencyMs - left.recencyMs);
       const [newest, ...stale] = finalized;
@@ -199,6 +219,7 @@ export function scanCargoIncrementalUnits(buildDir: string, signal: AbortSignal,
       const unit: CacheUnit = { path: posix(relative(buildDir, crateDir)), bytes: crateBytes, recencyMs: crateRecencyMs, lockHeld: working.length > 0, kind: "cargo-incremental" };
       units.push(unit);
       onUnit?.(unit);
+      checkResourceLeaseControl(control);
     }
   }
   return { units, staleSessions };
@@ -208,13 +229,13 @@ export function scanCargoIncrementalUnits(buildDir: string, signal: AbortSignal,
 export async function compactCargoIncrementalSessionsV1(options:Readonly<{buildDirectory:string;leaseDirectory:string;profile:string;control:ResourceLeaseControl;dryRun:boolean;onUnit?:(unit:CacheUnit)=>void}>):Promise<Readonly<{profile:string;paths:readonly string[];bytes:number;dryRun:boolean}>>{
  checkResourceLeaseControl(options.control);const signal=options.control.signal;
  const identity=cargoBuildLeaseIdentityV1(options.buildDirectory,["--profile",options.profile]),prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control});
- let compiler:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
+ let compiler:Awaited<ReturnType<typeof acquireCargoProfileMaintenanceLeaseV1>>|undefined;
  try{
-  compiler=await acquireCargoBuildLeaseV1({directory:options.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal,control:options.control});
-  const scan=scanCargoIncrementalUnits(identity.buildDirectory,signal,()=>checkResourceLeaseControl(options.control));checkResourceLeaseControl(options.control);const working=new Set(scan.units.filter(unit=>unit.lockHeld).map(unit=>unit.path));
+  compiler=await acquireCargoProfileMaintenanceLeaseV1({directory:options.leaseDirectory,buildDirectory:identity.buildDirectory,args:["--profile",identity.profile],signal,control:options.control});
+  const scan=await scanCargoIncrementalUnits(identity.buildDirectory,options.control);checkResourceLeaseControl(options.control);const working=new Set(scan.units.filter(unit=>unit.lockHeld).map(unit=>unit.path));
   const candidates=scan.staleSessions.filter(unit=>{const parts=unit.path.split("/"),index=parts.indexOf("incremental");return index>0&&parts[index-1]===identity.profile&&!working.has(parts.slice(0,-1).join("/"));}).sort((left,right)=>left.path.localeCompare(right.path));
   let bytes=0;const paths:string[]=[];
-  for(const unit of candidates){checkResourceLeaseControl(options.control);options.onUnit?.(unit);checkResourceLeaseControl(options.control);if(!options.dryRun)deleteUnit(identity.buildDirectory,unit);paths.push(unit.path);bytes+=unit.bytes;}
+  for(const unit of candidates){checkResourceLeaseControl(options.control);options.onUnit?.(unit);checkResourceLeaseControl(options.control);if(!options.dryRun)await deleteUnit(identity.buildDirectory,unit,options.control);paths.push(unit.path);bytes+=unit.bytes;}
   return {profile:identity.profile,paths,bytes,dryRun:options.dryRun};
  }finally{compiler?.release();prune.release();}
 }
@@ -223,64 +244,71 @@ const CARGO_SENTINEL_NAMES = new Set(["CACHEDIR.TAG"]);
 const isCargoSentinel = (name: string): boolean => CARGO_SENTINEL_NAMES.has(name) || name.startsWith(".cargo-");
 
 /** 🗃️ Walks Cargo's uplifted target-dir; under the new build-dir layout it holds only final deliverable files, so each file is its own unit. */
-export function scanCargoTargetUnits(targetDir: string, signal: AbortSignal, onUnit?: (unit: CacheUnit) => void): CacheUnit[] {
+export async function scanCargoTargetUnits(targetDir: string, control: ResourceLeaseControl, onUnit?: (unit: CacheUnit) => void): Promise<CacheUnit[]> {
+  const walk=new CacheWalk(control,"cache-scan:"+resolve(targetDir),"shared");
   const units: CacheUnit[] = [];
-  const descend = (dir: string): void => {
-    signal.throwIfAborted();
-    if (!existsSync(dir)) return;
-    for (const name of safeReaddir(dir)) {
+  const pending=[targetDir];
+  while(pending.length){
+    const dir=pending.pop()!,directoryStat=await walk.stat(dir);if(!directoryStat?.isDirectory()||directoryStat.isSymbolicLink())continue;
+    for (const name of await walk.entries(dir)) {
       const path = join(dir, name);
-      let stat;
-      try { stat = lstatSync(path); } catch { continue; }
-      if (stat.isSymbolicLink()) continue;
-      if (stat.isDirectory()) { descend(path); continue; }
+      const stat=await walk.stat(path);
+      if (!stat || stat.isSymbolicLink()) continue;
+      if (stat.isDirectory()) { pending.push(path); continue; }
       if (!stat.isFile() || isCargoSentinel(name)) continue;
       const unit: CacheUnit = { path: posix(relative(targetDir, path)), bytes: stat.size, recencyMs: Math.max(stat.atimeMs, stat.mtimeMs), lockHeld: false, kind: "cargo-target-file" };
       units.push(unit);
       onUnit?.(unit);
+      checkResourceLeaseControl(control);
     }
-  };
-  descend(targetDir);
+  }
   return units;
 }
 
 /** 📂️ Walks one cache-root area whose units are its immediate child directories (Vite consumer caches, stray agent scratch dirs). */
-export function scanDirectoryUnits(areaRoot: string, signal: AbortSignal, exclude: ReadonlySet<string> = new Set(), onUnit?: (unit: CacheUnit) => void): CacheUnit[] {
-  if (!existsSync(areaRoot)) return [];
+export async function scanDirectoryUnits(areaRoot: string, control: ResourceLeaseControl, exclude: ReadonlySet<string> = new Set(), onUnit?: (unit: CacheUnit) => void): Promise<CacheUnit[]> {
+  const walk=new CacheWalk(control,"cache-scan:"+resolve(areaRoot),"shared"),rootStat=await walk.stat(areaRoot);
+  if(!rootStat?.isDirectory()||rootStat.isSymbolicLink())return [];
   const units: CacheUnit[] = [];
-  for (const name of safeReaddir(areaRoot)) {
-    signal.throwIfAborted();
+  for (const name of await walk.entries(areaRoot)) {
     if (exclude.has(name)) continue;
     const path = join(areaRoot, name);
-    let stat;
-    try { stat = lstatSync(path); } catch { continue; }
-    if (!stat.isDirectory() || stat.isSymbolicLink()) continue;
-    const measured = measureUnit(path);
+    const stat=await walk.stat(path);
+    if (!stat?.isDirectory() || stat.isSymbolicLink()) continue;
+    const measured = await measureUnit(path,walk);
     const unit: CacheUnit = { path: name, bytes: measured.bytes, recencyMs: measured.recencyMs, lockHeld: false, kind: "directory" };
     units.push(unit);
     onUnit?.(unit);
+    checkResourceLeaseControl(control);
   }
   return units;
 }
 
 /** 🗑️ Deletes one previously scanned unit: a flat target-dir file prunes now-empty parent directories back to the area root; a stale incremental session also removes its sibling `.lock` file. */
-export function deleteUnit(areaRoot: string, unit: CacheUnit): void {
-  const absolute = join(areaRoot, ...unit.path.split("/"));
+export async function deleteUnit(areaRoot: string, unit: CacheUnit, control: ResourceLeaseControl): Promise<void> {
+  const walk=new CacheWalk(control,"cache-delete:"+resolve(areaRoot),"exclusive"),root=resolve(areaRoot),parts=unit.path.split("/");
+  if(!unit.path||isAbsolute(unit.path)||parts.some(part=>!part||part==="."||part===".."||part.includes("\\")||part.includes("\0")))throw Error("Cache unit must remain inside its area");
+  const absolute=join(root,...parts);let ancestor=root;
+  for(const part of ["",...parts.slice(0,-1)]){ancestor=part?join(ancestor,part):ancestor;const stat=await walk.stat(ancestor);if(!stat)return;if(!stat.isDirectory()||stat.isSymbolicLink())throw Error("Cache unit parent must remain a physical directory");}
+  const removeFile=async(path:string):Promise<void>=>{await walk.checkpoint();try{await unlink(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}checkResourceLeaseControl(control);};
   if (unit.kind === "cargo-target-file") {
-    try { unlinkSync(absolute); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+    const stat=await walk.stat(absolute);if(!stat)return;if(!stat.isFile()||stat.isSymbolicLink())throw Error("Cargo target unit must remain a physical file");await removeFile(absolute);
     let parent = dirname(absolute);
     for (;;) {
-      if (parent === areaRoot || relative(areaRoot, parent).startsWith("..")) break;
-      if (safeReaddir(parent).length > 0) break;
-      try { rmdirSync(parent); } catch { break; }
+      if (parent === root || relative(root, parent).startsWith("..")) break;
+      if ((await walk.entries(parent)).length > 0) break;
+      await walk.checkpoint();try { await rmdir(parent); } catch(error) { if(!["ENOENT","ENOTEMPTY","EEXIST"].includes((error as NodeJS.ErrnoException).code??""))throw error;break; }
       parent = dirname(parent);
     }
     return;
   }
-  if (unit.kind === "cargo-incremental-session") {
-    rmSync(absolute, { recursive: true, force: true });
-    try { unlinkSync(join(dirname(absolute), sessionLockName(basename(absolute)))); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-    return;
+  const pending:{path:string;visited:boolean}[]=[{path:absolute,visited:false}];
+  while(pending.length){
+    const {path,visited}=pending.pop()!,stat=await walk.stat(path);if(!stat)continue;
+    if(stat.isSymbolicLink()){if(path===absolute)throw Error("Cache unit must remain a physical directory");await removeFile(path);continue;}
+    if(!stat.isDirectory()){await removeFile(path);continue;}
+    if(visited){await walk.checkpoint();try{await rmdir(path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}checkResourceLeaseControl(control);continue;}
+    pending.push({path,visited:true});for(const child of await walk.entries(path))pending.push({path:join(path,child),visited:false});
   }
-  rmSync(absolute, { recursive: true, force: true });
+  if(unit.kind==="cargo-incremental-session")await removeFile(join(dirname(absolute),sessionLockName(basename(absolute))));
 }

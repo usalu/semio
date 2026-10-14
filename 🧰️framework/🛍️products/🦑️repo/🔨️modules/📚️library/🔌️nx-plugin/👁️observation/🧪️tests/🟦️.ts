@@ -9,7 +9,7 @@ import Ajv from "ajv";
 import fastGlob from "fast-glob";
 
 type Scenario = { id: string; mutation: { op: "none" | "write" | "replace-directory-with-file"; path?: string; content?: string }; expected: "hit" | "miss" };
-const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { schemaVersion: number; files: Record<string, string>; scenarios: Scenario[] };
+const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { schemaVersion: number; files: Record<string, string>; scenarios: Scenario[];corruption:{value:string;computations:number} };
 const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8")));
 const { observedFs, observeInference } = await import(new URL("../🟨️.mjs", import.meta.url).href) as typeof import("../🟨️.mjs");
 
@@ -103,3 +103,5 @@ test("a dependency receipt names the persisted inference records this process us
   expect(() => readFileSync(receiptPath)).toThrow();
   rmSync(root, { recursive: true, force: true });
 }, 30_000);
+
+test("persisted inference body corruption requires original source recomputation",async()=>{const root=workspace(),cachePath=join(root,"cache.json");let computations=0;try{const compute=()=>{computations++;return probe(root);};const before=await observeInference({cachePath,key:"corruption"},compute),bytes=readFileSync(cachePath,"utf8"),split=bytes.indexOf("\n");writeFileSync(cachePath,bytes.slice(0,split+1)+JSON.stringify({...before,one:fixture.corruption.value}));expect(await observeInference({cachePath,key:"corruption"},compute)).toEqual(before);expect(computations).toBe(fixture.corruption.computations);}finally{rmSync(root,{recursive:true,force:true});}});

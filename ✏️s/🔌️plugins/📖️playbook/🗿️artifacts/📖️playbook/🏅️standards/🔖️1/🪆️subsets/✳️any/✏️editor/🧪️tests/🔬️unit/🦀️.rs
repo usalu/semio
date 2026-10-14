@@ -395,10 +395,10 @@ fn every_retained_tool_id_is_migrated_contracted_and_backed_by_store_owners() {
 fn command_from_action_resolves_every_declared_verb() {
     use semio_framework_plugin::ArtifactEditor;
     for tool_id in PLAYBOOK_RETAINED_TOOL_IDS {
-        let command = PlaybookPlayApp::command_from_action(tool_id, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
+        let command = PlaybookPlayApp::command_from_action(tool_id, None, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
     }
-    assert!(PlaybookPlayApp::command_from_action("thereIsNoSuchVerb", None).is_err());
+    assert!(PlaybookPlayApp::command_from_action("thereIsNoSuchVerb", None, None).is_err());
 }
 
 /// 🧬️ The example picker's whole-document load: a `HostOnly` retained verb whose demo parent names the ONE composed `flow`

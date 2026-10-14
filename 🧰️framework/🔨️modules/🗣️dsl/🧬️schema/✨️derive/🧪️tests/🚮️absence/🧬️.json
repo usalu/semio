@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "entry", "removedRoots", "removedPackages", "packages", "laws"],
+  "properties": {
+    "version": { "const": 1 },
+    "entry": { "const": "📦️packages/🦀️rust/📜️script.ts" },
+    "removedRoots": { "$ref": "#/$defs/names" },
+    "removedPackages": { "$ref": "#/$defs/names" },
+    "packages": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "laws": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+  },
+  "$defs": { "names": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } }
+}

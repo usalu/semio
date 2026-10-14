@@ -1,5 +1,5 @@
 //#region 📦️OwnedWireContract
-import { NumericIndex, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexGrant } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import { NumericIndex, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { UiSurfaceBytes, UiSurfaceByteBuilder, type UiSurfaceByteRetirement } from "./🔢️bytes/🟦️.ts";
 import { takeOwnedNativeBuffer } from "./🔒️transport/🟦️.ts";
 

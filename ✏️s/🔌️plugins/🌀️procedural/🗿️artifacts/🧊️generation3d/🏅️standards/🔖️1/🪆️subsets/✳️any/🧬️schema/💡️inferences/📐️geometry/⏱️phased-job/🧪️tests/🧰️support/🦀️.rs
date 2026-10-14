@@ -121,7 +121,7 @@ pub fn inputs_of(kind: &Kind, case: &Value) -> WidgetInputs {
         let resolved = selection_of(port, value, shape);
         values.insert(port.name.clone(), resolved);
     }
-    WidgetInputs::new(case["name"].as_str().unwrap_or("case"), kind, values)
+    WidgetInputs::new_cold(case["name"].as_str().unwrap_or("case"), kind, values)
 }
 //#endregion 🔖️Inputs
 
@@ -363,7 +363,7 @@ fn check_value(name: &str, actual: &GeometryValue, port: &Port, expected: &Value
 pub fn assert_case(case: &Value, kind: &Kind, evaluation: &WidgetEvaluation, tolerance: f64, mesh_tolerance: f64) {
     let name = case["name"].as_str().unwrap_or("case");
     if let Some(expected) = case.get("fault") {
-        let fault = evaluation.fault.as_ref().unwrap_or_else(|| panic!("{name}: expected fault {expected}, found outputs {:?}", evaluation.outputs.keys().collect::<Vec<_>>()));
+        let fault = evaluation.fault.as_ref().unwrap_or_else(|| panic!("{name}: expected fault {expected}, found outputs {:?}", evaluation.outputs.iter().map(|(port, _)| port).collect::<Vec<_>>()));
         assert_eq!(fault.code, expected["code"].as_str().expect("fault code"), "{name}: fault code ({fault})");
         assert_eq!(fault.port.as_deref(), expected["port"].as_str(), "{name}: fault port");
         assert!(!fault.message.en.is_empty() && !fault.message.de.is_empty() && fault.message.en != fault.message.de, "{name}: fault carries distinct EN and DE text");
@@ -373,7 +373,7 @@ pub fn assert_case(case: &Value, kind: &Kind, evaluation: &WidgetEvaluation, tol
     }
     assert!(evaluation.fault.is_none(), "{name}: unexpected fault {:?}", evaluation.fault);
     let expected = case["outputs"].as_object().unwrap_or_else(|| panic!("{name}: case states neither outputs nor a fault"));
-    let found: Vec<&String> = evaluation.outputs.keys().collect();
+    let found: Vec<&String> = evaluation.outputs.iter().map(|(port, _)| port).collect();
     let wanted: Vec<&String> = { let mut names: Vec<&String> = expected.keys().collect(); names.sort(); names };
     assert_eq!(found, wanted, "{name}: output ports");
     for (port_name, value) in expected {

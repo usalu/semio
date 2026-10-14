@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/fem-js",
   "version": "0.1.0",
@@ -7,7 +7,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/fem-js:test"
+    "test": "bun repo run @semio-tech/fem-js:test"
   },
   "dependencies": {},
   "devDependencies": {

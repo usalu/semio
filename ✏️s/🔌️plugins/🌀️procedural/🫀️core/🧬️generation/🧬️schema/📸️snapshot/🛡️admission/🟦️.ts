@@ -1,5 +1,5 @@
 /** 🛡️ Exact owned procedural primitive and variant admission without field reflection. */
-import {binary64,binary64Value,parseBinary64} from "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value,parseBinary64} from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{ProceduralSnapshot,FlowHostSnapshot,GenerationPlayState,CameraJson,WidgetLayout,SynapseSpec,Widget,FormGeneration}from"../🟦️.ts";
 export{binary64,binary64Value,parseBinary64};
 type Kind="snapshot"|"host"|"state"|"preset"|"camera"|"layout"|"synapse"|"widget"|"tree"|"neuron"|"gui"|"node"|"chrome"|"preview"|"dictionary"|"neural"|"answers"|"answer";

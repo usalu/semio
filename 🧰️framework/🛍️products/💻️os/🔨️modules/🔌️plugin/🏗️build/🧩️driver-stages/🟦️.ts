@@ -1,3 +1,4 @@
+import {runtimeCatalogBuildInventoryV1} from "../../📇️registry/📖️catalog-view/🟦️.ts";
 import { requireMaterializedPathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type { CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModeEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -11,8 +12,8 @@ import { assembleComponentModuleV1, optimizeComponentCoresV1, probeComponentModu
 import { componentDeliverableV1, SHIPPED_COMPONENT_PROFILE, componentProfileV1, type ComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
 import { componentStageTargetV1, componentsDescribeArgumentsV1, describeComponentStageV1, describeIterateComponentsV1, settleComponentDescriptorV1, writeComponentStageReceiptV1, type ComponentDescribeModeV1 } from "../../🖨️describe/🧩️component-stage/🟦️.ts";
 import type { SemanticDescriptorEmissionV1 } from "../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
+
+
 import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 
 /** 🧩️ The post-link stages of one shipped plugin or extension component inside a build driver, each holding one jobserver token and cached by content:
@@ -74,9 +75,9 @@ export function buildComponentClosureV1(repoRoot: string, pluginIds: ReadonlySet
 /** 🧭️ The components one playground variant loads: `boot` is the host closure a launch must serve before anything else (its app scope only), `full` is
  * every component the variant's session lists. */
 export function playgroundComponentClosureV1(variant: string, scope: "boot" | "full"): ReadonlySet<string> {
-  const row = PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === variant);
+  const row = runtimeCatalogBuildInventoryV1().playgrounds.find((target) => target.variant === variant);
   if (!row) throw new Error(`Unknown playground variant: ${variant}`);
-  return new Set(runtimeComponentClosure([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS], [{ id: row.pluginId, appScoped: scope === "boot" || row.app !== undefined }]) as readonly string[]);
+  return new Set(runtimeComponentClosure([...runtimeCatalogBuildInventoryV1().plugins, ...runtimeCatalogBuildInventoryV1().extensions], [{ id: row.pluginId, appScoped: scope === "boot" || row.app !== undefined }]) as readonly string[]);
 }
 
 /** ✍️ `components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype]`: writes the committed semantic pairs from freshly built bytes. Shipped

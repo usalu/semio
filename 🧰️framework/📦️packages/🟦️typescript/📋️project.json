@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/framework",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
@@ -9,23 +9,37 @@
   },
   "targets": {
     "test-artifact-reference": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
-      "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"],
-      "options": { "command": "bun ./📜️script.ts test-artifact-reference", "cwd": "{projectRoot}" }
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-artifact-reference",
+        "cwd": "{projectRoot}"
+      }
     },
     "test-script-boundary": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],
-      "inputs": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/📏️script-boundary/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"],
-      "options": { "command": "bun ./📜️script.ts test-script-boundary", "cwd": "{projectRoot}" }
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/📏️script-boundary/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-script-boundary",
+        "cwd": "{projectRoot}"
+      }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
@@ -34,7 +48,7 @@
       }
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "dependsOn": [],
       "options": {
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
@@ -43,11 +57,20 @@
       }
     },
     "installation-identity-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts installation-identity-check",
         "cwd": "🧰️framework/📦️packages/🟦️typescript"
+      }
+    },
+    "test-polygon-mesh": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts test-polygon-mesh",
+        "cwd": "{projectRoot}"
       }
     }
   }

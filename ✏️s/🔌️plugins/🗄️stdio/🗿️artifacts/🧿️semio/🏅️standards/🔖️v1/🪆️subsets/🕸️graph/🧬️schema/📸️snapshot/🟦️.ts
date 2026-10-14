@@ -1,5 +1,5 @@
 /** 🧬️ SemioGraphSnapshot schema — real facet mirror of the Rust `🦀️.rs` sibling. */
-import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type {SemioValue} from "../../../🔢️value/🧬️schema/📸️snapshot/🟦️.ts";
 export type SemioGraphPortKind = "in" | "out" | "inOut";
 

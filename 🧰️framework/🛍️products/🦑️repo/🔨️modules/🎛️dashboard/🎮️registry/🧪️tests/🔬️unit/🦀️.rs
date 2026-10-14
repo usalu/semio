@@ -19,7 +19,7 @@ fn materialise_text(name: &str, fixture: &str) -> PathBuf {
 
 fn fixture(name: &str) -> (PathBuf, Registry) {
     let root = materialise(name);
-    let registry = crate::inventory::discover(&root, &std::sync::atomic::AtomicBool::new(false));
+    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     (root, registry)
 }
 
@@ -75,9 +75,9 @@ fn a_target_resolves_axes_then_parameters_then_extra_arguments_after_the_double_
     let launch = resolve(&registry, "workspace:test", &request(&[("test-level", "quick"), ("cache", "skip-local"), ("dependencies", "true"), ("cargo-jobs", "2")], &["--filter", "x"], &[("EXTRA", "1")]));
     let process = &launch.processes[0];
     assert_eq!((process.cmd.as_str(), process.cwd.as_path()), ("bun", root.as_path()));
-    assert_eq!(process.args, ["nx", "run", "workspace:test", "--skip-nx-cache", "--excludeTaskDependencies", "--", "--filter", "x"]);
+    assert_eq!(process.args, ["repo", "run", "workspace:test", "--skip-cache", "--exclude-dependencies", "--", "--filter", "x"]);
     assert_eq!((env_of(process, "SEMIO_TEST_LEVEL"), env_of(process, "CARGO_BUILD_JOBS"), env_of(process, "EXTRA")), (Some("quick"), Some("2"), Some("1")));
-    assert_eq!((env_of(process, "NX_TUI"), env_of(process, "NX_NATIVE_COMMAND_RUNNER")), (Some("false"), Some("false")));
+    assert_eq!(env_of(process, "SEMIO_BUILD_TERMINAL"), Some("false"));
     assert_eq!(launch.label, TaskLabel { verb: "test".into(), owner: vec!["workspace".into()], subject: "workspace".into(), qualifier: String::new(), parameters: vec![("cache".into(), "skip-local".into()), ("test-level".into(), "quick".into()), ("dependencies".into(), "true".into()), ("cargo-jobs".into(), "2".into())], members: 0 });
 }
 
@@ -86,7 +86,7 @@ fn a_required_parameter_must_be_chosen_and_a_choice_must_be_one_of_its_values() 
     let (_, registry) = fixture("required");
     assert!(registry.resolve_with("workspace:verify", &Request::default(), RunPolicy::default()).unwrap_err().contains("\"rule\" is required"));
     assert!(registry.resolve_with("workspace:verify", &request(&[("rule", "nope")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose dependencies, literal-external"));
-    assert_eq!(resolve(&registry, "workspace:verify", &request(&[("rule", "literal-external")], &[], &[])).processes[0].args, ["nx", "run", "workspace:verify", "--", "dependencies", "literal-external"]);
+    assert_eq!(resolve(&registry, "workspace:verify", &request(&[("rule", "literal-external")], &[], &[])).processes[0].args, ["repo", "run", "workspace:verify", "--", "dependencies", "literal-external"]);
     assert!(registry.resolve_with("workspace:verify", &request(&[("rule", "dependencies"), ("ghost", "1")], &[], &[]), RunPolicy::default()).unwrap_err().contains("unknown parameter \"ghost\""));
 }
 
@@ -144,27 +144,27 @@ fn a_compound_starts_its_members_in_order_with_pins_and_member_environment() {
 }
 
 #[test]
-fn a_group_runs_several_targets_over_nx_project_patterns_unchanged() {
+fn a_group_runs_several_targets_over_project_patterns_unchanged() {
     let (_, registry) = fixture("group");
     let tests = resolve(&registry, "group:workspace/artifact-tests", &request(&[("test-level", "long")], &[], &[]));
-    assert_eq!(tests.processes[0].args, ["nx", "run-many", "-t", "test", "-p", "@fixture/artifact-*,!@fixture/artifact-contract"]);
+    assert_eq!(tests.processes[0].args, ["repo", "run-many", "-t", "test", "-p", "@fixture/artifact-*,!@fixture/artifact-contract"]);
     assert_eq!(env_of(&tests.processes[0], "SEMIO_TEST_LEVEL"), Some("long"));
     let both = resolve(&registry, "group:workspace/all-builds", &Request::default());
-    assert_eq!(both.processes[0].args, ["nx", "run-many", "-t", "build,test", "-p", "hub,@fixture/quiz"]);
+    assert_eq!(both.processes[0].args, ["repo", "run-many", "-t", "build,test", "-p", "hub,@fixture/quiz"]);
     assert_eq!(registry.find("group:workspace/all-builds").map(|entry| (entry.verb.as_str(), entry.qualifier.as_str())), Some(("build", "build+test")));
 }
 
 #[test]
-fn global_axes_select_tools_by_verb_and_nx_flags_do_not_reach_them() {
+fn global_axes_select_tools_by_verb_and_build_flags_do_not_reach_them() {
     let (_, registry) = fixture("tool-axes");
     let tool = registry.find("tool:workspace/bun-test").unwrap();
     let ids: Vec<String> = registry.parameters(tool).iter().map(|parameter| parameter.id.clone()).collect();
     assert_eq!(ids, ["test-level", "build-mode", "cargo-jobs", "project", "file", "bail"]);
     let launch = resolve(&registry, "tool:workspace/bun-test", &request(&[("file", "a.test.ts"), ("build-mode", "ship"), ("test-level", "quick"), ("bail", "true")], &[], &[]));
     let process = &launch.processes[0];
-    assert_eq!(process.args, ["nx", "exec", "--projects=workspace", "--", "bun", "test", "a.test.ts", "--bail"]);
+    assert_eq!(process.args, ["repo", "exec", "--projects=workspace", "--", "bun", "test", "a.test.ts", "--bail"]);
     assert_eq!((env_of(process, "SEMIO_BUILD_MODE"), env_of(process, "SEMIO_TEST_LEVEL"), env_of(process, "BUN_TEST_BAIL")), (Some("ship"), Some("quick"), Some("workspace")));
-    assert!(!process.args.iter().any(|word| word.starts_with("--skip")), "nxFlags of an axis are ignored on a tool");
+    assert!(!process.args.iter().any(|word| word.starts_with("--skip")), "buildFlags of an axis are ignored on a tool");
     let viewer = registry.find("tool:workspace/viewer").unwrap();
     assert!(registry.parameters(viewer).is_empty());
 }
@@ -231,7 +231,7 @@ fn the_check_reports_ports_that_commands_of_different_owners_claim_together_and_
 }
 
 #[test]
-fn the_check_reports_a_playground_renderer_whose_nx_target_the_graph_lacks() {
+fn the_check_reports_a_playground_renderer_whose_build_target_the_graph_lacks() {
     let owner = |targets: &[&str]| ProjectFacts { name: "@semio-tech/framework-os-dev".into(), root: "dev".into(), targets: targets.iter().map(|name| TargetFacts { name: (*name).into(), continuous: Some(true), ..Default::default() }).collect(), ..Default::default() };
     let playgrounds = vec![PlaygroundFacts { variant: "p".into(), plugin: "x".into(), react: 7100, wgpu: 7101, ..Default::default() }];
     let complete = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-dev", "dev-p-wgpu-dev", "run-p-native-dev"])], playgrounds: playgrounds.clone(), ..Default::default() });
@@ -239,7 +239,7 @@ fn the_check_reports_a_playground_renderer_whose_nx_target_the_graph_lacks() {
     let missing = Registry::build(Path::new("/w"), &Facts { projects: vec![owner(&["dev-p-react-dev"])], playgrounds: playgrounds.clone(), ..Default::default() }).check();
     let lacking: Vec<&str> = missing.iter().filter(|problem| problem.message.contains("project graph does not have")).map(|problem| problem.message.as_str()).collect();
     assert_eq!(lacking.len(), 2, "{lacking:?}");
-    assert!(lacking[0].contains("renderer wgpu-wasm resolves to the Nx target @semio-tech/framework-os-dev:dev-p-wgpu-dev") && lacking[1].contains("run-p-native-dev"));
+    assert!(lacking[0].contains("renderer wgpu-wasm resolves to the build target @semio-tech/framework-os-dev:dev-p-wgpu-dev") && lacking[1].contains("run-p-native-dev"));
     let nothing = Registry::build(Path::new("/w"), &Facts { playgrounds, ..Default::default() }).check();
     assert_eq!(nothing.iter().filter(|problem| problem.message.contains("project graph does not have")).count(), 3, "no owner project at all: every renderer is reported");
 }
@@ -275,16 +275,16 @@ fn a_playground_example_locks_the_shell_to_it_and_native_renderers_pass_it_as_an
     let react = resolve(&registry, "playground:shell", &request(&[("example", "tower")], &[], &[]));
     assert_eq!((env_of(&react.processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), react.processes[0].args.last().map(String::as_str)), (Some("tower"), Some("@semio-tech/framework-os-dev:dev-shell-react-dev")));
     let native = resolve(&registry, "playground:shell", &request(&[("example", "tower"), ("renderer", "wgpu-native")], &[], &[]));
-    assert_eq!(native.processes[0].args, ["nx", "run", "@semio-tech/framework-os-dev:run-shell-native-dev", "--", "--example", "tower"]);
+    assert_eq!(native.processes[0].args, ["repo", "run", "@semio-tech/framework-os-dev:run-shell-native-dev", "--", "--example", "tower"]);
     assert!(native.processes[0].ready.is_none());
 }
 
 #[test]
 fn a_catalog_example_is_chosen_by_its_slug_or_its_bare_id() {
     let root = materialise("bare-example");
-    std::fs::create_dir_all(crate::catalog::generated_dir(&root)).unwrap();
-    std::fs::write(crate::catalog::generated_dir(&root).join("🚀️playgrounds.json"), r#"[{"variant":"p","pluginId":"x","cratePath":"x","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
-    let registry = crate::inventory::discover(&root, &std::sync::atomic::AtomicBool::new(false));
+    std::fs::create_dir_all(root.join("catalog")).unwrap();
+    std::fs::write(root.join("catalog").join("🚀️playgrounds.json"), r#"[{"variant":"p","pluginId":"x","cratePath":"x","aliases":[],"ports":{"react":3100,"wgpu":3200},"examples":["🎬️first","🎬️second"]}]"#).unwrap();
+    let registry = crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog")));
     for chosen in ["second", "🎬️second"] { assert_eq!(env_of(&resolve(&registry, "playground:p", &request(&[("example", chosen)], &[], &[])).processes[0], "PLAYGROUND_LOCKED_EXAMPLE_ID"), Some("🎬️second")); }
     assert!(registry.resolve_with("playground:p", &request(&[("example", "third")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose 🎬️first, 🎬️second"));
 }
@@ -293,7 +293,7 @@ fn a_catalog_example_is_chosen_by_its_slug_or_its_bare_id() {
 fn a_target_with_configurations_resolves_the_configuration_into_its_identity() {
     let (_, registry) = fixture("configuration");
     let launch = resolve(&registry, "hub:build:production", &Request::default());
-    assert_eq!((launch.command_id.as_str(), launch.processes[0].args.as_slice(), launch.label.qualifier.as_str()), ("hub:build:production", ["nx", "run", "hub:build:production"].map(String::from).as_slice(), "production"));
+    assert_eq!((launch.command_id.as_str(), launch.processes[0].args.as_slice(), launch.label.qualifier.as_str()), ("hub:build:production", ["repo", "run", "hub:build:production"].map(String::from).as_slice(), "production"));
     assert!(registry.resolve_with("hub:build:nope", &Request::default(), RunPolicy::default()).is_err());
 }
 
@@ -371,21 +371,25 @@ fn the_xxh3_hash_matches_the_reference_vectors() {
 }
 
 fn publish_graph_basis(root: &Path, registry: &Registry) {
-    let rows = |files: Vec<&String>| files.into_iter().map(|file| serde_json::json!({ "file": file, "hash": xxh3_64(&std::fs::read(root.join(file)).unwrap()).to_string() })).collect::<Vec<_>>();
-    let (owners, projects): (Vec<&String>, Vec<&String>) = registry.definitions().iter().partition(|file| GRAPH_OWNERS.contains(&file.as_str()));
-    let document = serde_json::json!({ "fileMap": { "projectFileMap": { "all": rows(projects) }, "nonProjectFiles": rows(owners) } });
-    std::fs::write(root.join(".nx/workspace-data/file-map.json"), document.to_string()).unwrap();
+    let path = root.join(GRAPH_FILE);
+    let document = std::fs::read_to_string(&path).unwrap();
+    std::fs::write(path, document).unwrap();
+    registry.adopt_basis(GraphBasis::read(root, registry.definitions()));
 }
 
 #[test]
-fn a_build_starts_from_the_published_graph_only_while_the_manifests_still_hash_to_what_nx_recorded() {
+fn a_build_reuses_the_neutral_graph_only_while_its_manifest_inputs_are_unchanged() {
     let (root, registry) = fixture("graph");
     let reuses = |registry: &Registry, id: &str| env_of(&registry.resolve(id, &Request::default()).unwrap().processes[0], GRAPH_REUSE.0).is_some();
-    assert!(!registry.graph_is_current(), "no file map has been published yet");
+    registry.adopt_basis(None);
+    let graph = std::fs::read(root.join(GRAPH_FILE)).unwrap();
+    std::fs::remove_file(root.join(GRAPH_FILE)).unwrap();
+    assert!(!registry.graph_is_current(), "no neutral graph has been published yet");
     assert!(!reuses(&registry, "workspace:build"));
+    std::fs::write(root.join(GRAPH_FILE), graph).unwrap();
     publish_graph_basis(&root, &registry);
     assert!(registry.graph_is_current());
-    assert!(reuses(&registry, "workspace:build") && reuses(&registry, "@fixture/quiz:test"), "finite Nx tasks reuse the graph");
+    assert!(reuses(&registry, "workspace:build") && reuses(&registry, "@fixture/quiz:test"), "finite build tasks reuse the graph");
     assert!(!reuses(&registry, "workspace:dev") && !reuses(&registry, "hub:dev"), "a continuous task builds its own graph");
     assert!(!reuses(&registry, "tool:workspace/format-notes"), "a command that does not run Nx has no graph to reuse");
     let manifest = root.join("🎓️teaching/❓️quiz/📦️packages/🟦️typescript/📋️project.json");
@@ -401,13 +405,13 @@ fn every_scenario_of_the_registry_feature_is_proved_by_a_test_of_this_file() {
     let feature = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🥒️.feature");
     let source = include_str!("🦀️.rs");
     let proofs: &[(&str, &[&str])] = &[
-        ("A developer starts a declared command from the dashboard", &["a_ready_port_comes_from_the_declaration_or_the_resolved_environment_and_is_exported", "global_axes_select_tools_by_verb_and_nx_flags_do_not_reach_them", "a_target_resolves_axes_then_parameters_then_extra_arguments_after_the_double_dash"]),
+        ("A developer starts a declared command from the dashboard", &["a_ready_port_comes_from_the_declaration_or_the_resolved_environment_and_is_exported", "global_axes_select_tools_by_verb_and_build_flags_do_not_reach_them", "a_target_resolves_axes_then_parameters_then_extra_arguments_after_the_double_dash"]),
         ("A compound starts its members in order", &["a_compound_starts_its_members_in_order_with_pins_and_member_environment"]),
         ("A command with a required parameter is not started without it", &["a_required_parameter_must_be_chosen_and_a_choice_must_be_one_of_its_values"]),
         ("A declaration that breaks the schema is reported", &["references_that_name_nothing_are_problems_not_panics"]),
         ("Build, test and publish commands are found by their verb and owner", &["verbs_come_from_the_leading_word_with_a_fallback", "entries_are_searched_by_label_and_identity_and_closed_tickets_stay_unlisted"]),
-        ("A build starts from the published project graph", &["a_build_starts_from_the_published_graph_only_while_the_manifests_still_hash_to_what_nx_recorded"]),
-        ("A changed project manifest rebuilds the project graph", &["a_build_starts_from_the_published_graph_only_while_the_manifests_still_hash_to_what_nx_recorded"]),
+        ("A build starts from the published project graph", &["a_build_reuses_the_neutral_graph_only_while_its_manifest_inputs_are_unchanged"]),
+        ("A changed project manifest rebuilds the project graph", &["a_build_reuses_the_neutral_graph_only_while_its_manifest_inputs_are_unchanged"]),
     ];
     let titles: Vec<&str> = feature.lines().filter_map(|line| line.trim().strip_prefix("Scenario: ")).collect();
     assert_eq!(titles, proofs.iter().map(|(title, _)| *title).collect::<Vec<_>>());
@@ -427,7 +431,7 @@ fn a_tool_that_is_an_mcp_server_lists_the_clients_that_start_it_and_a_wrong_expo
     for (from, to, message) in [(r#""claude-code": {}"#, r#""emacs": {}"#, "mcp client \"emacs\""), (r#""project": "workspace" } } }"#, r#""nothing": "x" } } }"#, "states \"nothing\""), (r#""server": "bun-test""#, r#""server": "Bun Test""#, "mcp server")] {
         let (_, broken) = {
             let root = materialise_text("mcp-broken", &FIXTURE.replace(from, to));
-            (root.clone(), crate::inventory::discover(&root, &std::sync::atomic::AtomicBool::new(false)))
+            (root.clone(), crate::inventory::discover_with_catalog(&root,&std::sync::atomic::AtomicBool::new(false),Some(&root.join("catalog"))))
         };
         assert!(broken.problems().iter().any(|problem| problem.message.contains(message)), "{message}: {:?}", broken.problems());
     }

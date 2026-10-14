@@ -2,7 +2,7 @@
   "name": "@semio-tech/schema-validator-ts",
   "targets": {
     "test-shape": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

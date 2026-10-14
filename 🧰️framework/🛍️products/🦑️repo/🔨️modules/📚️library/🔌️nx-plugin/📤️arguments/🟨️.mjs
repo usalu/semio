@@ -69,7 +69,7 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
  const expectedArguments=expected.forwardAllArgs===false?[]:[...expected.args??[],...expected.__unparsed__??[]],actualArguments=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]];
  if(JSON.stringify(expectedArguments)!==JSON.stringify(actualArguments))throw Error("Original native task arguments changed");
  if(typeof environment.CARGO_TARGET_DIR!=="string"||resolve(context.root,caller.native.artifactDirectory)!==resolve(context.root,environment.CARGO_TARGET_DIR)||environment.CARGO_NET_OFFLINE!==String(caller.native.network.offline))throw Error("Original native artifact or network authority changed");
- const forwarded=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]],capabilities={version:1,repositoryRoot:context.root,artifactDirectory:resolve(context.root,caller.native.artifactDirectory),command:{...request,arguments:[...request.arguments,...forwarded]},transport:caller.native.transport,child:caller.native.child,network:caller.native.network};
+ const forwarded=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]],capabilities={version:1,buildMode:caller.buildMode,repositoryRoot:context.root,artifactDirectory:resolve(context.root,caller.native.artifactDirectory),command:{...request,arguments:[...request.arguments,...forwarded]},transport:caller.native.transport,child:caller.native.child,network:caller.native.network};
  if(!conforms(nativeSchema,capabilities))throw Error("Issued original native capability refused");return {...original,capabilities};
 }
 
@@ -97,7 +97,7 @@ export async function executeOwnerArgumentsV1(options,context,delegate){
  if(options.args!==undefined&&!Array.isArray(options.args))throw Error("Owner executor requires literal argument arrays");
  if(options.forwardAllArgs!==false&&!Array.isArray(options.__unparsed__))throw Error("Nx did not admit the original forwarded arguments");
  const arguments_=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]];
- const environment={...process.env,...options.env};
+ const environment={...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName};
  if(options.nativeOwnerCommand!==undefined){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(await issueNativeOwnerInvocationV1(options,context,environment,Date.now()));delete environment.SEMIO_SCRIPT_CAPABILITIES;}
  else if(/ native owner-command /u.test(options.command))throw Error("Original discovered native request required");
  const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...environment,[key]:encodeOwnerArgumentsV1(arguments_)}};

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework",
   "version": "0.1.0",
   "description": "framework · render-independent shared modules (Rust: Platform, CommandBus, UiTree, layouts)",
@@ -31,12 +31,17 @@
     "./process/native-cache": "./🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts",
     "./process/go-build": "./🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
     "./process/compiler-state": "./🏃️process/🏗️build/🗃️state/🟦️.ts",
-    "./process/typescript-check": "./🏃️process/🏗️build/🟦️typescript/🟦️.ts"
+    "./process/typescript-check": "./🏃️process/🏗️build/🟦️typescript/🟦️.ts",
+    "./mesh/polygon": "./🥽️mesh/🥽️polygon/🟦️.ts",
+    "./value/ordered/numeric": "./🌱️value/🗂️ordered/🔢️numeric/🟦️.ts",
+    "./value/refusal": "./🌱️value/⚠️refusal/🟦️.ts",
+    "./value/ieee754": "./🌱️value/🔢️ieee754/🟦️.ts"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/framework:test",
-    "test-artifact-reference": "nx run @semio-tech/framework:test-artifact-reference",
-    "test-script-boundary": "nx run @semio-tech/framework:test-script-boundary"
+    "test": "bun repo run @semio-tech/framework:test",
+    "test-artifact-reference": "bun repo run @semio-tech/framework:test-artifact-reference",
+    "test-script-boundary": "bun repo run @semio-tech/framework:test-script-boundary",
+    "test-polygon-mesh": "bun repo run @semio-tech/framework:test-polygon-mesh"
   },
   "devDependencies": {
     "@types/d3-scale": "4.0.9",
@@ -46,7 +51,9 @@
     "fast-check": "3.23.2",
     "xstate": "^5.32.5",
     "@semio-tech/schema-validator-ts": "workspace:*",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "three": "0.182.0",
+    "ajv": "8.20.0"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

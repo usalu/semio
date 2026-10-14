@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "moduleHex",
+    "expected",
+    "expectedInstructions",
+    "physicalCloseSeparately",
+    "deniedFrameKeepsOperands"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "moduleHex": {
+      "type": "string",
+      "pattern": "^[a-f0-9]+$"
+    },
+    "expected": {
+      "const": 30
+    },
+    "expectedInstructions": {
+      "const": 8
+    },
+    "physicalCloseSeparately": {
+      "const": true
+    },
+    "deniedFrameKeepsOperands": {
+      "const": true
+    }
+  }
+}

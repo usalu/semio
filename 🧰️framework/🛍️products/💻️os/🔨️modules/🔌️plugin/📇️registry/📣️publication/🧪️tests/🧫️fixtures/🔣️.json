@@ -1,0 +1,115 @@
+{
+  "cases": [
+    {
+      "name": "empty-neutral",
+      "value": {
+        "version": 1,
+        "ownerRoot": "general/catalog",
+        "outputRoot": "general/catalog/generated",
+        "contributions": []
+      },
+      "roots": []
+    },
+    {
+      "name": "composed",
+      "value": {
+        "version": 1,
+        "ownerRoot": "applications/design/catalog",
+        "outputRoot": "applications/design/catalog/generated",
+        "contributions": [
+          {
+            "ownerRoot": "applications/design",
+            "packageRoots": [
+              "applications/design/plugins"
+            ]
+          },
+          {
+            "ownerRoot": "applications/service",
+            "packageRoots": [
+              "applications/service/components"
+            ]
+          }
+        ]
+      },
+      "roots": [
+        "applications/design/plugins",
+        "applications/service/components"
+      ]
+    },
+    {
+      "name": "service-deleted",
+      "value": {
+        "version": 1,
+        "ownerRoot": "applications/design/catalog",
+        "outputRoot": "applications/design/catalog/generated",
+        "contributions": [
+          {
+            "ownerRoot": "applications/design",
+            "packageRoots": [
+              "applications/design/plugins"
+            ]
+          }
+        ]
+      },
+      "roots": [
+        "applications/design/plugins"
+      ]
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "ownerRoot": "general/catalog",
+      "outputRoot": "outside/generated",
+      "contributions": []
+    },
+    {
+      "version": 1,
+      "ownerRoot": "general/catalog",
+      "outputRoot": "general/catalog/generated",
+      "contributions": [
+        {
+          "ownerRoot": "applications/design",
+          "packageRoots": [
+            "outside/components"
+          ]
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "ownerRoot": "general/catalog",
+      "outputRoot": "general/catalog/generated",
+      "contributions": [],
+      "fallback": "applications/design"
+    }
+  ],
+  "runtimeCases": [
+    {
+      "name": "owner-deleted",
+      "catalogRoot": null,
+      "result": {
+        "entries": [],
+        "playgrounds": []
+      }
+    },
+    {
+      "name": "configured-missing",
+      "catalogRoot": "missing",
+      "reject": true
+    },
+    {
+      "name": "configured-malformed",
+      "catalogRoot": "malformed",
+      "reject": true
+    },
+    {
+      "name": "configured-empty",
+      "catalogRoot": "empty",
+      "result": {
+        "entries": [],
+        "playgrounds": []
+      }
+    }
+  ]
+}

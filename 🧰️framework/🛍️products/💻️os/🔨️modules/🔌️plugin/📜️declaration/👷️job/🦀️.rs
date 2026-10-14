@@ -237,15 +237,15 @@ impl<T:semio_framework_value::retirement::RetireOwned> OriginalInferenceSessionO
 /// 🔮️ Original mounted sessions carry their mandatory typed close producer beside the same value.
 #[derive(Default)]
 pub(crate) struct InstanceInferenceSessions {
- sessions:Vec<(&'static str,Box<dyn OriginalInferenceSessionOwner>)>,
+ sessions:semio_framework_value::list::PagedList<(&'static str,Box<dyn OriginalInferenceSessionOwner>),{usize::MAX}>,
  closed:bool,
  closing:bool,
 }
 impl InstanceInferenceSessions {
- pub(crate) fn terminal_is_empty(&self)->bool{self.closed&&self.sessions.is_empty()&&self.sessions.capacity()==0}
+ pub(crate) fn terminal_is_empty(&self)->bool{self.closed&&self.sessions.terminal_is_empty()}
  pub(crate) fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if let Some((_,session))=self.sessions.last(){return if session.terminal_is_empty(){Ok(RetirementDemand{release_bytes:std::mem::size_of_val(session.as_ref()),depth:1,..Default::default()})}else{session.retirement_demands(body)}}
-  Ok(RetirementDemand{release_bytes:self.sessions.capacity().checked_mul(std::mem::size_of::<(&'static str,Box<dyn OriginalInferenceSessionOwner>)>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference session vector extent overflow"))?,depth:usize::from(!self.terminal_is_empty()),..Default::default()})
+  if let Some((_,session))=self.sessions.last(){return if session.terminal_is_empty(){Ok(RetirementDemand{release_bytes:std::mem::size_of_val(session.as_ref()),depth:self.sessions.next_pop_depth_demand().map_err(ValueError::from)?,..Default::default()})}else{session.retirement_demands(body)}}
+  Ok(RetirementDemand{release_bytes:self.sessions.next_release_allocation_bytes().map_err(ValueError::from)?,depth:if self.sessions.terminal_is_empty(){usize::from(!self.closed)}else{self.sessions.next_release_depth_demand().map_err(ValueError::from)?},..Default::default()})
  }
  /// 🎟️ Advances only the same original data retirement after all independent currencies admit it.
  pub(crate) fn close_granted(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{
@@ -257,8 +257,7 @@ impl InstanceInferenceSessions {
    if session.terminal_is_empty(){let bytes=std::mem::size_of_val(session.as_ref());drop(self.sessions.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}))}
    return session.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))
   }
-  let bytes=self.sessions.capacity()*std::mem::size_of::<(&'static str,Box<dyn OriginalInferenceSessionOwner>)>();
-  if bytes!=0{drop(std::mem::take(&mut self.sessions));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}))}
+  if !self.sessions.terminal_is_empty(){let released=self.sessions.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(released.progressed),released_bytes:released.released_allocation_bytes,..Default::default()}))}
   self.closed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
  pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>,loan:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
@@ -279,6 +278,35 @@ pub struct ArtifactInstanceOperationOwnerHandle {
     inference: std::sync::Arc<std::sync::Mutex<InstanceInferenceSessions>>,
 }
 
+/// 🧭️ Retains one original caller's mounted lookup and donated typed session between funded turns.
+#[derive(Debug,semio_framework_value::RetireOwned)]
+pub struct ArtifactInferenceSessionAccess<T:semio_framework_value::retirement::RetireOwned>{
+ original:Option<T>,
+ source:usize,
+ operation:u64,
+ generation:u64,
+ name_pointer:usize,
+ name_length:usize,
+ index:usize,
+ byte:usize,
+ phase:u8,
+}
+impl<T:semio_framework_value::retirement::RetireOwned> Default for ArtifactInferenceSessionAccess<T>{
+ fn default()->Self{Self{original:None,source:0,operation:0,generation:0,name_pointer:0,name_length:0,index:0,byte:0,phase:0}}
+}
+impl<T:semio_framework_value::retirement::RetireOwned> ArtifactInferenceSessionAccess<T>{
+ /// 👁️ Borrows the defining original source while its typed frame awaits admission.
+ pub fn original(&self)->Option<&T>{self.original.as_ref()}
+ /// 🪹️ Pending typed ownership must close before the access frontier can retire.
+ pub fn terminal_is_empty(&self)->bool{self.original.is_none()}
+}
+
+fn original_inference_metadata(cx:&mut StepContext<'_>,copy:usize,depth:usize)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+ let grant=cx.retained_grant();
+ if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth<depth{return Ok(false)}
+ cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;Ok(true)
+}
+
 impl ArtifactInstanceOperationOwnerHandle {
     /// 🧳️ Wraps an owner the CALLER built. It confers no authority of its own — `with_mut`
     /// downcasts to the concrete type the caller passed in — so an app's own laws can build the
@@ -288,8 +316,8 @@ impl ArtifactInstanceOperationOwnerHandle {
         Self { inner: std::sync::Arc::new(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellV1::new(owner)), inference: Default::default() }
     }
 
-    /// 🔮️ Runs `apply` on the instance's session `name`, creating it with `init` on first use; refused once the close ladder dropped the sessions.
-    pub fn with_inference_session<T: semio_framework_value::retirement::RetireOwned, R>(&self, name: &'static str, init: impl FnOnce() -> T, apply: impl FnOnce(&mut T) -> Result<R, Fault>) -> Result<R, Fault> {
+    /// 🔮️ Explicit synchronous semantic facade of the same registry and typed close owner.
+    pub fn with_inference_session_cold<T: semio_framework_value::retirement::RetireOwned, R>(&self, name: &'static str, init: impl FnOnce() -> T, apply: impl FnOnce(&mut T) -> Result<R, Fault>) -> Result<R, Fault> {
         if !T::controlled_retirement_supported(){return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.instance-inference-retirement"),"mounted inference session requires its defining controlled retirement producer"))}
         let mut sessions = self.inference.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if sessions.closed || sessions.closing {
@@ -298,6 +326,68 @@ impl ArtifactInstanceOperationOwnerHandle {
         let index=match sessions.sessions.iter().position(|(known,_)|*known==name){Some(index)=>index,None=>{let body=semio_framework_value::retirement::controlled::ControlledRetirement::new(init()).unwrap_or_else(|_|panic!("mounted inference session must declare its typed retirement"));sessions.sessions.push((name,Box::new(OriginalInferenceSession{body})));sessions.sessions.len()-1}};
         let session = sessions.sessions[index].1.original_mut().and_then(|value|value.downcast_mut::<T>()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-inference-type"), "app-instance inference session type does not match its name"))?;
         apply(session)
+    }
+
+    /// 🎟️ Looks up and admits the same defining typed session with the actual caller and registry.
+    pub fn with_inference_session<T:semio_framework_value::retirement::RetireOwned,R>(&self,name:&'static str,access:&mut ArtifactInferenceSessionAccess<T>,cx:&mut StepContext<'_>,init:impl FnOnce(&mut StepContext<'_>)->Result<Option<T>,semio_framework_job::OriginalTurnFailure>,apply:impl FnOnce(&mut T,&mut StepContext<'_>)->R)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
+     use semio_framework_job::OriginalTurnFailure;
+     use semio_framework_value::ValueRefusalKind;
+     cx.original_source_parent()?;
+     let refused=|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
+     let source=std::sync::Arc::as_ptr(&self.inference)as usize;
+     if access.phase!=0&&(access.source!=source||access.operation!=cx.operation().0||access.generation!=cx.generation().0||access.name_pointer!=name.as_ptr()as usize||access.name_length!=name.len()){return Err(refused("original mounted inference access source or caller changed").into())}
+     if cx.is_cancelled()||cx.should_yield(){return Ok(None)}
+     if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"mounted inference source requires its defining controlled retirement producer").into())}
+     let mut sessions=match self.inference.try_lock(){Ok(sessions)=>sessions,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err(refused("original mounted inference registry is poisoned").into())};
+     if sessions.closed||sessions.closing{return Err(refused("original mounted inference registry is closing").into())}
+     match access.phase{
+      0=>{if original_inference_metadata(cx,0,1)?{access.source=source;access.operation=cx.operation().0;access.generation=cx.generation().0;access.name_pointer=name.as_ptr()as usize;access.name_length=name.len();access.phase=1}Ok(None)},
+      1=>{
+       let depth=sessions.sessions.next_get_depth_demand(access.index).map_err(ValueError::from)?.max(1);
+       let Some((known,_))=sessions.sessions.get(access.index)else{if original_inference_metadata(cx,0,1)?{access.phase=2}return Ok(None)};
+       if access.byte<known.len().min(name.len()){
+        if !original_inference_metadata(cx,1,depth)?{return Ok(None)}
+        if known.as_bytes()[access.byte]==name.as_bytes()[access.byte]{access.byte+=1}else{access.index+=1;access.byte=0}return Ok(None)
+       }
+       if original_inference_metadata(cx,0,depth)?{if known.len()==name.len(){access.phase=5}else{access.index+=1;access.byte=0}}Ok(None)
+      },
+      2=>{
+       if sessions.sessions.has_reserved_slot(){if original_inference_metadata(cx,0,1)?{access.phase=if access.original.is_some(){4}else{3}}return Ok(None)}
+       if cx.should_yield(){return Ok(None)}
+       let grant=cx.retained_grant();
+       match sessions.sessions.reserve_one_funded(grant){
+        Ok(progress)=>{if progress.copied_items!=0{cx.consume_fuel(1);cx.consume_retained(progress)?}Ok(None)},
+        Err(error)=>{cx.consume_fuel(1);Err(OriginalTurnFailure::debit_original(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}),cx))}
+       }
+      },
+      3=>{let before=cx.fuel_remaining();if let Some(original)=init(cx)?{access.original=Some(original);access.phase=4;if cx.fuel_remaining()==before{return Err(refused("defining mounted inference constructor omitted original work receipt").into())}}Ok(None)},
+      4=>{
+       if !sessions.sessions.has_reserved_slot(){if original_inference_metadata(cx,0,1)?{access.phase=2}return Ok(None)}
+       let grant=cx.retained_grant();let layout=std::alloc::Layout::new::<OriginalInferenceSession<T>>();
+       if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<sessions.sessions.next_push_depth_demand().map_err(ValueError::from)?.max(1)||grant.maximum_capacity_bytes<layout.size(){return Ok(None)}
+       cx.consume_fuel(1);
+       let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<OriginalInferenceSession<T>>())else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"original mounted inference typed frame allocation refused").into())};
+       let body=match semio_framework_value::retirement::controlled::ControlledRetirement::new(access.original.take().expect("original inference source retained before typed birth")){Ok(body)=>body,Err((error,original))=>{access.original=Some(original);unsafe{std::alloc::dealloc(pointer.as_ptr().cast(),layout)};return Err(OriginalTurnFailure::debit_original(error.with_retained_progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),released_bytes:layout.size(),..Default::default()}),cx))}};
+       let owner=unsafe{pointer.as_ptr().write(OriginalInferenceSession{body});Box::from_raw(pointer.as_ptr())};
+       access.index=sessions.sessions.len();sessions.sessions.push_reserved((name,owner)).unwrap_or_else(|_|panic!("original mounted inference row was admitted"));access.phase=5;
+       cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})?;Ok(None)
+      },
+      5=>{let depth=sessions.sessions.next_get_depth_demand(access.index).map_err(ValueError::from)?;let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_depth<=depth{return Ok(None)}let session=sessions.sessions.get_mut(access.index).and_then(|(_,owner)|owner.original_mut()).and_then(|original|original.downcast_mut::<T>()).ok_or_else(||refused("original mounted inference source type changed"))?;let mut output=None;cx.with_retained_loan(RetainedCloneGrant{maximum_depth:grant.maximum_depth-depth,..grant},|cx|{output=Some(apply(session,cx));Ok(())})?;Ok(output)},
+      _=>Err(refused("original mounted inference admission phase is invalid").into())
+     }
+    }
+
+    /// 📏️ Quotes this actual registry lookup, page and frame event before its defining constructor or child.
+    pub fn inference_admission_demands<T:semio_framework_value::retirement::RetireOwned>(&self,access:&ArtifactInferenceSessionAccess<T>)->Result<RetirementDemand,ValueError>{
+     let sessions=match self.inference.try_lock(){Ok(sessions)=>sessions,Err(std::sync::TryLockError::WouldBlock)=>return Ok(Default::default()),Err(std::sync::TryLockError::Poisoned(_))=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original mounted inference registry is poisoned"))};
+     Ok(match access.phase{
+      0|3=>RetirementDemand{depth:1,..Default::default()},
+      1=>RetirementDemand{copy_bytes:sessions.sessions.get(access.index).filter(|(name,_)|access.byte<name.len().min(access.name_length)).map_or(0,|_|1),depth:sessions.sessions.next_get_depth_demand(access.index).map_err(ValueError::from)?.max(1),..Default::default()},
+      2=>if sessions.sessions.has_reserved_slot(){RetirementDemand{depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:sessions.sessions.next_reserve_copy_byte_demand().map_err(ValueError::from)?,capacity_bytes:sessions.sessions.next_allocation_bytes().map_err(ValueError::from)?,depth:sessions.sessions.next_reserve_depth_demand().map_err(ValueError::from)?,..Default::default()}},
+      4=>if sessions.sessions.has_reserved_slot(){RetirementDemand{capacity_bytes:std::mem::size_of::<OriginalInferenceSession<T>>(),depth:sessions.sessions.next_push_depth_demand().map_err(ValueError::from)?.max(1),..Default::default()}}else{RetirementDemand{depth:1,..Default::default()}},
+      5=>RetirementDemand{depth:sessions.sessions.next_get_depth_demand(access.index).map_err(ValueError::from)?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original inference child depth overflow"))?,..Default::default()},
+      _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original inference admission phase is invalid"))
+     })
     }
 
     pub(crate) fn inference_is_empty(&self) -> bool {
@@ -313,6 +403,13 @@ impl ArtifactInstanceOperationOwnerHandle {
         let mut owner = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-busy"), "app-instance operation owner is busy or poisoned"))?;
         let owner = owner.as_any_mut().downcast_mut::<T>().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.instance-owner-type"), "app-instance operation owner type does not match its concrete app"))?;
         apply(owner)
+    }
+
+    /// 🔎️ Quotes the same original concrete owner without manufacturing a diagnostic on contention.
+    pub fn inspect_original<T:std::any::Any,R>(&self,read:impl FnOnce(&T)->R)->Result<Option<R>,ValueError>{
+        let mut owner=match self.inner.try_lock(){Ok(owner)=>owner,Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Busy)=>return Ok(None),Err(semio_framework_plugin_mounted_owner::alias_retirement::MountedOwnerCellErrorV1::Poisoned)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original instance owner is poisoned"))};
+        let source=owner.as_any_mut().downcast_ref::<T>().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original instance owner type changed"))?;
+        Ok(Some(read(source)))
     }
 
     /// ⏳️ A WouldBlock is not a fault. A retained command job runs its `step` on a process-pool
@@ -698,7 +795,7 @@ impl ArtifactToolRawInput {
         }
         let mut input = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.raw-page-busy"), "typed-operation raw page owner is busy or poisoned"))?;
         let Some(owner) = input.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
-        let step = owner.close_step(grant);
+        let step = owner.close_step(grant).map_err(crate::bounded_ownership::plugin_retirement_fault)?;
         if owner.terminal_is_empty() {
             *input = None;
         }
@@ -706,7 +803,6 @@ impl ArtifactToolRawInput {
             InteractiveJobCloseStep::Pending { progress } => Ok(PluginLifecycleStep::Progress(progress)),
             InteractiveJobCloseStep::Blocked => Ok(PluginLifecycleStep::Blocked { reason: "typed-operation raw page close is blocked" }),
             InteractiveJobCloseStep::Complete { progress } => Ok(PluginLifecycleStep::Complete(progress)),
-            InteractiveJobCloseStep::Refused{kind,progress} => Err(Fault::from(format!("typed-operation raw page close refused: {kind:?}")).with_retained_progress(progress)),
         }
     }
 
@@ -1098,106 +1194,84 @@ pub trait ArtifactReservedJob: semio_framework_job::InteractiveJob {}
 
 /// 📦️ Sized ActionBus payload around one app-owned concrete resumable state machine.
 pub(crate) struct ArtifactReservedToolJobState {
-    /// 🧵️ `+ Send`: this state lives behind an `Arc<Mutex<…>>` the host moves across pool
-    /// threads, so the box states the thread-transfer requirement itself now that
-    /// `InteractiveJob` no longer imposes `Send` on single-threaded targets.
-    inner: ManuallyDrop<Option<Box<dyn ArtifactReservedJob + Send>>>,
-    operation: Option<semio_framework_job::Operation>,
+    inner:ManuallyDrop<Option<Box<dyn ArtifactReservedJob+Send>>>,
+    operation:Option<semio_framework_job::Operation>,
 }
 
 #[derive(Clone)]
 pub struct ArtifactReservedToolJob {
-    pub(crate) state: std::sync::Arc<std::sync::Mutex<ArtifactReservedToolJobState>>,
+    state:ManuallyDrop<Option<std::sync::Arc<semio_framework_value::retirement::controlled::RetainedOwnerGate<ArtifactReservedToolJobState>>>>,
 }
 
 impl ArtifactReservedToolJob {
-    pub fn new<J: ArtifactReservedJob + Send + 'static>(job: J) -> Self {
-        Self { state: std::sync::Arc::new(std::sync::Mutex::new(ArtifactReservedToolJobState { inner: ManuallyDrop::new(Some(Box::new(job))), operation: None })) }
+    pub fn new<J:ArtifactReservedJob+Send+'static>(job:J)->Self {
+        Self{state:ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(ArtifactReservedToolJobState{inner:ManuallyDrop::new(Some(Box::new(job))),operation:None}))))}
     }
 
-    pub fn bind_operation(&mut self, operation: semio_framework_job::Operation) -> Result<(), semio_framework::ToolJobFactoryError> {
-        let mut state = self.state.try_lock().map_err(|_| semio_framework::ToolJobFactoryError::new("reserved job operation authority is busy or poisoned"))?;
-        if state.operation.is_some() {
-            return Err(semio_framework::ToolJobFactoryError::new("reserved job operation authority was already bound"));
-        }
-        state.operation = Some(operation);
-        Ok(())
+    pub fn bind_operation(&mut self,operation:semio_framework_job::Operation)->Result<(),semio_framework::ToolJobFactoryError>{
+        let source=self.state.as_ref().ok_or_else(||semio_framework::ToolJobFactoryError::new("reserved job state already returned"))?;
+        let mut state=source.try_lock().map_err(|_|semio_framework::ToolJobFactoryError::new("reserved job operation authority is busy"))?;
+        if state.operation.is_some(){return Err(semio_framework::ToolJobFactoryError::new("reserved job operation authority was already bound"))}
+        state.operation=Some(operation);Ok(())
     }
 
     fn close_demand(&self,kind:u8,copy:usize)->Result<usize,ValueError>{
-        let state=match self.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::Poisoned(state))=>state.into_inner(),Err(_)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"reserved producer demand authority is borrowed"))};
-        let Some(inner)=state.inner.as_ref()else{return Ok(match kind{0=>if state.operation.is_some(){size_of::<semio_framework_job::Operation>()}else{0},3=>usize::from(state.operation.is_some()),_=>0});};
-        if semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){return Ok(match kind{2=>size_of_val(&**inner),3=>1,_=>0});}
+        let Some(source)=self.state.as_ref()else{return Ok(0)};
+        let state=source.try_lock().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"reserved producer demand authority is borrowed"))?;
+        let Some(inner)=state.inner.as_ref()else{return Ok(if state.operation.is_some(){match kind{0=>size_of::<semio_framework_job::Operation>(),3=>1,_=>0}}else{match kind{0=>size_of::<Self>(),2=>Self::original_shared_frame_bytes(),3=>1,_=>0}})};
+        if semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){return Ok(match kind{2=>size_of_val(&**inner),3=>1,_=>0})}
         match kind{0=>inner.next_close_copy_byte_demand(),1=>inner.next_close_capacity_byte_demand(copy),2=>inner.next_close_release_byte_demand(),_=>inner.next_close_depth_demand()}
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
-        match self.state.try_lock(){Ok(state)=>state.inner.is_none()&&state.operation.is_none(),Err(std::sync::TryLockError::Poisoned(state))=>{let state=state.into_inner();state.inner.is_none()&&state.operation.is_none()},Err(_)=>false}
-    }
+    pub(crate) fn terminal_is_empty(&self)->bool{self.state.is_none()}
 
-    pub(crate) fn begin_close(&mut self) {
-        if let Ok(mut state) = self.state.try_lock() {
-            if let Some(inner) = state.inner.as_mut() {
-                inner.begin_close();
-            }
-        }
-    }
+    pub(crate) fn begin_close(&mut self){if let Some(source)=self.state.as_ref(){if let Ok(mut state)=source.try_lock(){if let Some(inner)=state.inner.as_mut(){inner.begin_close()}}}}
 }
 
 impl semio_framework_job::InteractiveJob for ArtifactReservedToolJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        match self.state.try_lock() {
-            Ok(mut state) => match state.inner.as_mut() {
-                Some(inner) => {
-                    let inner: *mut (dyn ArtifactReservedJob + Send) = &mut **inner;
-                    drop(state);
-                    unsafe { (&mut *inner).step(cx) }
-                }
-                None => JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
-            },
-            Err(std::sync::TryLockError::WouldBlock) => JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
-            Err(std::sync::TryLockError::Poisoned(_)) => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "reserved job authority is poisoned").into()),
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+        let Some(source)=self.state.as_ref()else{return JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into)};
+        match source.try_lock(){
+            Ok(mut state)=>match state.inner.as_mut(){Some(inner)=>{let inner:*mut(dyn ArtifactReservedJob+Send)=&mut**inner;drop(state);unsafe{(&mut*inner).step(cx)}},None=>JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into)},
+            Err(_)=>JobOutcomeBorrow::admit_yield(cx).map_err(Into::into),
         }
     }
 
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
-        let state = match self.state.try_lock() { Ok(state) => state, Err(std::sync::TryLockError::Poisoned(state)) => state.into_inner(), Err(_) => return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "reserved producer outcome authority is borrowed")) };
-        match state.inner.as_ref() {
-            Some(inner) => {
-                let inner: *const (dyn ArtifactReservedJob + Send) = &**inner;
-                drop(state);
-                unsafe { (&*inner).borrow_outcome(descriptor) }
-            }
-            None => match descriptor.kind() {
-                JobOutcomeKind::Cancelled => descriptor.cancelled(),
-                _ => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "reserved producer released before its outcome borrow")),
-            },
-        }
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{
+        let Some(source)=self.state.as_ref()else{return match descriptor.kind(){JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved producer state returned before outcome handback"))}};
+        let state=source.try_lock().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"reserved producer outcome authority is borrowed"))?;
+        match state.inner.as_ref(){Some(inner)=>{let inner:*const(dyn ArtifactReservedJob+Send)=&**inner;drop(state);unsafe{(&*inner).borrow_outcome(descriptor)}},None=>match descriptor.kind(){JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved producer released before its outcome borrow"))}}
     }
 
-    fn begin_close(&mut self) {
-        ArtifactReservedToolJob::begin_close(self);
-    }
+    fn begin_close(&mut self){ArtifactReservedToolJob::begin_close(self)}
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
+        let Some(source)=self.state.as_ref()else{return Ok(Step::Complete{progress:Default::default()})};
         if cx.should_yield(){return Ok(Step::Pending{progress:Default::default()})}let grant=cx.retained_grant();
-        let mut state=match self.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::Poisoned(state))=>state.into_inner(),Err(_)=>return Ok(Step::Blocked)};
-        let Some(inner)=state.inner.as_mut()else{if state.operation.is_none(){return Ok(Step::Complete{progress:Default::default()})}let demand=RetirementDemand{copy_bytes:size_of::<semio_framework_job::Operation>(),depth:1,..Default::default()};return semio_framework_job::close_original_retained_step(cx,demand,|_|{state.operation.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))})};
-        if semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){let demand=RetirementDemand{release_bytes:size_of_val(&**inner),depth:1,..Default::default()};return semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(state.inner.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})}
-        let step=semio_framework_job::InteractiveJob::close_step(&mut**inner,cx)?.admit(grant,semio_framework_job::InteractiveJob::terminal_is_empty(&**inner))?;
-        Ok(match step{Step::Complete{progress}=>Step::Pending{progress},step=>step})
+        let mut state=match source.try_lock(){Ok(state)=>state,Err(_)=>return Ok(Step::Blocked)};
+        if let Some(inner)=state.inner.as_mut(){
+            if semio_framework_job::InteractiveJob::terminal_is_empty(&**inner){let demand=RetirementDemand{release_bytes:size_of_val(&**inner),depth:1,..Default::default()};return semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(state.inner.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})}
+            let step=semio_framework_job::InteractiveJob::close_step(&mut**inner,cx)?.admit(grant,semio_framework_job::InteractiveJob::terminal_is_empty(&**inner))?;return Ok(match step{Step::Complete{progress}=>Step::Pending{progress},step=>step})
+        }
+        if state.operation.is_some(){let demand=RetirementDemand{copy_bytes:size_of::<semio_framework_job::Operation>(),depth:1,..Default::default()};return semio_framework_job::close_original_retained_step(cx,demand,|_|{state.operation.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))})}
+        drop(state);
+        let demand=RetirementDemand{copy_bytes:size_of::<Self>(),release_bytes:Self::original_shared_frame_bytes(),depth:1,..Default::default()};
+        semio_framework_job::close_original_retained_step(cx,demand,|_|{let original=std::sync::Arc::into_inner(self.state.take().unwrap());let released_bytes=if let Some(original)=original{let original=original.into_inner();assert!(original.inner.is_none()&&original.operation.is_none(),"original shared producer frame still retains a body");drop(original);demand.release_bytes}else{0};Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}))})
     }
 
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(0,0)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.close_demand(1,copy)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(2,0)}
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.close_demand(3,0)}
-
-    fn terminal_is_empty(&self) -> bool {
-        ArtifactReservedToolJob::terminal_is_empty(self)
-    }
+    fn terminal_is_empty(&self)->bool{ArtifactReservedToolJob::terminal_is_empty(self)}
 }
+
+impl Drop for ArtifactReservedToolJob {
+    fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original reserved producer requires its paid shared frame return")}
+}
+
+include!("🎟️birth/🦀️.rs");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ToolOwnerWitness {
@@ -1394,3 +1468,7 @@ pub fn reducer_fault_of_detail(detail: &[u8]) -> Option<Fault> {
 #[cfg(test)]
 #[path="🧪️inference-close/🦀️.rs"]
 mod original_inference_close_tests;
+
+#[cfg(test)]
+#[path="🧪️inference-admission/🦀️.rs"]
+mod original_inference_admission_tests;

@@ -2,7 +2,7 @@
   "name": "semio-framework-pixels",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "inputs": [
         "default",
         "^default",

@@ -24,7 +24,7 @@
   },
   "targets": {
     "public-member-open-handoff-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts public-member-open-handoff-check",
@@ -34,7 +34,7 @@
       "outputs": []
     },
     "public-member-open-handoff-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -44,7 +44,7 @@
       }
     },
     "member-factory-identity-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-factory-identity-check",
@@ -54,7 +54,7 @@
       "outputs": []
     },
     "member-history-record-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-record-check",
@@ -64,7 +64,7 @@
       "outputs": []
     },
     "member-history-foundation-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-foundation-check",
@@ -74,7 +74,7 @@
       "outputs": []
     },
     "member-history-dictionary-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-dictionary-check",
@@ -84,7 +84,7 @@
       "outputs": []
     },
     "member-history-id-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-id-check",
@@ -94,7 +94,7 @@
       "outputs": []
     },
     "member-history-input-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-history-input-check",
@@ -104,7 +104,7 @@
       "outputs": []
     },
     "member-history-identity-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "outputs": [],
       "options": {
@@ -114,7 +114,7 @@
       }
     },
     "member-open-protocol-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts member-open-protocol-check",
@@ -124,7 +124,7 @@
       "outputs": []
     },
     "document-retirement-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts document-retirement-check",
@@ -134,7 +134,7 @@
       "outputs": []
     },
     "persistence-contract-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts persistence-contract-check",
@@ -143,7 +143,7 @@
       }
     },
     "media-projection-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts media-projection-check",
@@ -153,14 +153,14 @@
       "outputs": []
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts check",
         "cwd": "{projectRoot}"
       }
     },
     "wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts wasm",
         "cwd": "{projectRoot}"
@@ -171,7 +171,7 @@
       "cache": true
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test",
         "cwd": "{projectRoot}"

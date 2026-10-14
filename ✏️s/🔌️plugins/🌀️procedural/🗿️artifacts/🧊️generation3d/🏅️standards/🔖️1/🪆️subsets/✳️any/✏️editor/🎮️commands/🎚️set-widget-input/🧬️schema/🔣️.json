@@ -25,7 +25,13 @@
       "enum": [
         "x",
         "y",
-        "z"
+        "z",
+        "origin.x",
+        "origin.y",
+        "origin.z",
+        "normal.x",
+        "normal.y",
+        "normal.z"
       ]
     },
     "operation": {

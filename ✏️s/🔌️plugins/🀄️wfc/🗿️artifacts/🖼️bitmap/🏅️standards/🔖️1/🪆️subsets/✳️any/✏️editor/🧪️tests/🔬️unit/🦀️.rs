@@ -123,11 +123,11 @@ fn the_brush_verb_and_utility_are_declared_and_answered() {
 #[test]
 fn the_bridge_reads_stroke_points_in_both_spellings_and_refuses_garbage() {
     let objects = semio_framework_value::DslValue::from(&serde_json::json!({ "points": [{ "x": 1, "y": 2 }, { "x": 3, "y": 4 }], "color": 1 }));
-    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&objects)).expect("objects bridge"), stroke(&[(1, 2), (3, 4)], Some(1), None));
+    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some((objects).clone()), None).expect("objects bridge"), stroke(&[(1, 2), (3, 4)], Some(1), None));
     let pairs = semio_framework_value::DslValue::from(&serde_json::json!({ "points": [[1, 2], [3, 4]], "phase": "stream" }));
-    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&pairs)).expect("pairs bridge"), stroke(&[(1, 2), (3, 4)], None, Some("stream")));
+    assert_eq!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some((pairs).clone()), None).expect("pairs bridge"), stroke(&[(1, 2), (3, 4)], None, Some("stream")));
     for garbage in [serde_json::json!({ "points": [[1.5, 2]] }), serde_json::json!({ "points": [[-1, 2]] }), serde_json::json!({ "points": [[1]] }), serde_json::json!({ "points": "1,2" })] {
-        assert!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some(&semio_framework_value::DslValue::from(&garbage))).is_err(), "{garbage} must be refused");
+        assert!(<BitmapEditor as ArtifactEditor>::command_from_action("paint-stroke", Some((semio_framework_value::DslValue::from(&garbage)).clone()), None).is_err(), "{garbage} must be refused");
     }
 }
 //#endregion 🖌️Gesture
@@ -168,10 +168,10 @@ fn the_solve_command_publishes_a_real_collapse_on_the_transient_lane() {
 #[test]
 fn every_declared_action_bridges_to_the_command_it_names() {
     for action in BITMAP_TOOL_IDS {
-        let command = <BitmapEditor as ArtifactEditor>::command_from_action(action, None).unwrap_or_else(|error| panic!("action '{action}' does not bridge: {}", error.message));
+        let command = <BitmapEditor as ArtifactEditor>::command_from_action(action, None, None).unwrap_or_else(|error| panic!("action '{action}' does not bridge: {}", error.message));
         assert_eq!(bitmap_command_id(&command), *action, "action '{action}' bridged to the wrong command");
     }
-    assert!(<BitmapEditor as ArtifactEditor>::command_from_action("no-such-action", None).is_err());
+    assert!(<BitmapEditor as ArtifactEditor>::command_from_action("no-such-action", None, None).is_err());
 }
 
 /// 🧾️ The retained roster is ONE list spelled in four places — the command channel's `TOOL_JOB_IDS`,

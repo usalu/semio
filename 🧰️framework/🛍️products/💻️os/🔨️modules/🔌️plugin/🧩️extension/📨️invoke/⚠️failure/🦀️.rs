@@ -18,18 +18,24 @@ pub(crate) enum OriginalCauseLoan<'a>{Fault(&'a Fault),Value(&'a ValueError),Tur
 enum Node<'a>{Root(OriginalCauseLoan<'a>),Scope(&'a FaultScope),Progress(RetainedCloneProgress),Span(&'a TextSpan),Source(FaultSource),Causes(&'a [FaultCause],[Option<&'a ValueError>;2]),Cause(&'a FaultCause),ReceiptCauses([Option<&'a ValueError>;2]),ReceiptCause(&'a ValueError),Params(&'a FaultParams),Text(&'a str),Bool(bool),UInt(u64),Empty}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original invocation diagnostic ordinal changed")}
 fn fault_loan<'a>(cause:OriginalCauseLoan<'a>)->Option<(&'a Fault,[Option<&'a ValueError>;2])>{match cause{OriginalCauseLoan::Fault(fault)=>Some((fault,[None,None])),OriginalCauseLoan::Turn(error)=>error.primary_fault().map(|fault|(fault,[error.receipt_refusal.as_ref(),error.context_refusal.as_ref()])),_=>None}}
-fn root_fields(cause:OriginalCauseLoan<'_>)->usize{if let Some((fault,secondary))=fault_loan(cause){return 7+usize::from(fault.source.is_some())+usize::from(fault.span.is_some())+usize::from(!fault.causes.is_empty()||secondary.iter().any(Option::is_some))+usize::from(fault.params.as_deref().is_some_and(|params|!params.0.is_empty()))}match cause{OriginalCauseLoan::Turn(error)=>7+usize::from(error.receipt_refusal.is_some()||error.context_refusal.is_some()),OriginalCauseLoan::Inference(error)=>7+usize::from(error.primary.fault_source().is_some())+usize::from(error.receipt_refusal.is_some()),_=>7}}
-fn root_key(cause:OriginalCauseLoan<'_>,index:usize)->Result<&'static str,ValueError>{
- if index<6{return Ok(["origin","code","severity","message","scope","retainedProgress"][index])}
- let mut next=6;if let Some((fault,secondary))=fault_loan(cause){for(present,key)in[(fault.source.is_some(),"source"),(fault.span.is_some(),"span"),(!fault.causes.is_empty()||secondary.iter().any(Option::is_some),"causes"),(fault.params.as_deref().is_some_and(|params|!params.0.is_empty()),"params")]{if present{if index==next{return Ok(key)}next+=1}}}else{if let OriginalCauseLoan::Inference(error)=cause{if error.primary.fault_source().is_some(){if index==next{return Ok("source")}next+=1}}let secondary=match cause{OriginalCauseLoan::Turn(error)=>error.receipt_refusal.is_some()||error.context_refusal.is_some(),OriginalCauseLoan::Inference(error)=>error.receipt_refusal.is_some(),_=>false};if secondary{if index==next{return Ok("causes")}next+=1}}if index==next{Ok("retryable")}else{Err(invalid())}
+fn domain_loan<'a>(cause:OriginalCauseLoan<'a>)->Option<&'a dyn FieldProjectionSource>{
+ if let Some((fault,_))=fault_loan(cause){return fault.domain.as_ref().map(|domain|domain as &dyn FieldProjectionSource)}
+ match cause{OriginalCauseLoan::Turn(error)=>error.primary_domain().map(|domain|domain.projection()),OriginalCauseLoan::Inference(error)=>match &error.primary{crate::ArtifactInferenceGatewayFailure::Execution(original)=>Some(original),_=>None},_=>None}
 }
+fn extras(cause:OriginalCauseLoan<'_>)->[(bool,&'static str);5]{
+ if let Some((fault,secondary))=fault_loan(cause){return [(fault.source.is_some(),"source"),(fault.span.is_some(),"span"),(!fault.causes.is_empty()||secondary.iter().any(Option::is_some),"causes"),(fault.params.as_deref().is_some_and(|params|!params.0.is_empty()),"params"),(fault.domain.is_some(),"domain")]}
+ match cause{OriginalCauseLoan::Turn(error)=>[(error.primary_domain().is_some(),"domain"),(error.receipt_refusal.is_some()||error.context_refusal.is_some(),"causes"),(false,""),(false,""),(false,"")],OriginalCauseLoan::Inference(error)=>[(error.primary.fault_source().is_some(),"source"),(error.receipt_refusal.is_some(),"causes"),(domain_loan(cause).is_some(),"domain"),(false,""),(false,"")],_=>[(false,"");5]}
+}
+fn root_fields(cause:OriginalCauseLoan<'_>)->usize{7+extras(cause).into_iter().filter(|(present,_)|*present).count()}
+fn root_key(cause:OriginalCauseLoan<'_>,index:usize)->Result<&'static str,ValueError>{if index<6{return Ok(["origin","code","severity","message","scope","retainedProgress"][index])}let extras=extras(cause);let count=extras.iter().filter(|(present,_)|*present).count();if index==6+count{return Ok("retryable")}extras.into_iter().filter(|(present,_)|*present).nth(index-6).map(|(_,key)|key).ok_or_else(invalid)}
+fn domain_path<'a>(cause:OriginalCauseLoan<'a>,path:&[usize])->Option<&'a dyn FieldProjectionSource>{let first=path.first()?;(root_key(cause,*first).ok()==Some("domain")).then(||domain_loan(cause)).flatten()}
 impl<'a> Node<'a>{
  fn fault_child(fault:&'a Fault,secondary:[Option<&'a ValueError>;2],key:&str)->Result<Self,ValueError>{Ok(match key{"origin"=>Self::Text(match fault.origin{FaultOrigin::Edge=>"edge",FaultOrigin::Renderer=>"renderer",FaultOrigin::Os=>"os",FaultOrigin::Module=>"module",FaultOrigin::Plugin=>"plugin",FaultOrigin::App=>"app",FaultOrigin::Extension=>"extension",FaultOrigin::Framework=>"framework"}),"code"=>Self::Text(&fault.code.0),"severity"=>Self::Text(match fault.severity{Severity::Info=>"info",Severity::Warning=>"warning",Severity::Error=>"error",Severity::Fatal=>"fatal"}),"message"=>Self::Text(&fault.message),"scope"=>Self::Scope(&fault.scope),"retainedProgress"=>Self::Progress(fault.retained_progress),"source"=>Self::Source(fault.source.ok_or_else(invalid)?),"span"=>Self::Span(fault.span.as_ref().ok_or_else(invalid)?),"causes"=>Self::Causes(&fault.causes,secondary),"params"=>Self::Params(fault.params.as_deref().ok_or_else(invalid)?),"retryable"=>Self::Bool(fault.retryable),_=>return Err(invalid())})}
 
  fn child(self,index:usize)->Result<Self,ValueError>{Ok(match self{
   Self::Root(cause)=>if let Some((fault,secondary))=fault_loan(cause){Self::fault_child(fault,secondary,root_key(cause,index)?)?}else{match cause{
    OriginalCauseLoan::Inference(error)=>{let(code,message,progress)=error.primary.fault_wire_fields();match root_key(cause,index)?{"origin"=>Self::Text("plugin"),"code"=>Self::Text(code),"severity"=>Self::Text("error"),"message"=>Self::Text(message),"scope"=>Self::Empty,"retainedProgress"=>Self::Progress(progress),"source"=>Self::Source(error.primary.fault_source().ok_or_else(invalid)?),"causes"=>Self::ReceiptCauses([error.receipt_refusal.as_ref(),None]),"retryable"=>Self::Bool(false),_=>return Err(invalid())}},
-   OriginalCauseLoan::Turn(error)=>{let primary=error.primary_value().ok_or_else(invalid)?;match root_key(cause,index)?{"origin"=>Self::Text("framework"),"code"=>Self::Text(primary.kind.as_str()),"severity"=>Self::Text("error"),"message"=>Self::Text(&primary.message),"scope"=>Self::Empty,"retainedProgress"=>Self::Progress(primary.retained_progress()),"causes"=>Self::ReceiptCauses([error.receipt_refusal.as_ref(),error.context_refusal.as_ref()]),"retryable"=>Self::Bool(false),_=>return Err(invalid())}},
+   OriginalCauseLoan::Turn(error)=>{let(code,message,progress)=if let Some(primary)=error.primary_value(){(primary.kind.as_str(),primary.message.as_ref(),primary.retained_progress())}else if let Some(primary)=error.primary_domain(){(primary.code(),primary.message(),primary.retained_progress())}else{return Err(invalid())};match root_key(cause,index)?{"origin"=>Self::Text("framework"),"code"=>Self::Text(code),"severity"=>Self::Text("error"),"message"=>Self::Text(message),"scope"=>Self::Empty,"retainedProgress"=>Self::Progress(progress),"causes"=>Self::ReceiptCauses([error.receipt_refusal.as_ref(),error.context_refusal.as_ref()]),"retryable"=>Self::Bool(false),_=>return Err(invalid())}},
    OriginalCauseLoan::Value(error)=>match root_key(cause,index)?{"origin"=>Self::Text("framework"),"code"=>Self::Text(error.kind.as_str()),"severity"=>Self::Text("error"),"message"=>Self::Text(&error.message),"scope"=>Self::Empty,"retainedProgress"=>Self::Progress(error.retained_progress()),"retryable"=>Self::Bool(false),_=>return Err(invalid())},
    OriginalCauseLoan::Fault(_)=>return Err(invalid())}},
   Self::Scope(scope)=>{let mut present=0;let mut selected=None;for value in [&scope.plugin_id,&scope.app_id,&scope.instance_id,&scope.module,&scope.body_key]{if let Some(value)=value{if present==index{selected=Some(value.as_str());break}present+=1}}Self::Text(selected.ok_or_else(invalid)?)},
@@ -46,19 +52,21 @@ impl<'a> Node<'a>{
 }
 impl<'a> OriginalCauseLoan<'a>{
  fn node(self,path:&[usize])->Result<Node<'a>,ValueError>{let mut node=Node::Root(self);for &index in path{node=node.child(index)?}Ok(node)}
+ fn view_at(self,path:&[usize])->Result<V<'a>,ValueError>{if let Some(domain)=domain_path(self,path){return domain.projection_view(&path[1..])}Ok(self.node(path)?.view())}
+ fn key_at(self,path:&[usize],index:usize)->Result<&'a str,ValueError>{if let Some(domain)=domain_path(self,path){return domain.projection_key(&path[1..],index)}self.node(path)?.key(index)}
 }
 impl FieldProjectionSource for OriginalCauseLoan<'_>{
  fn projection_identity(&self)->usize{match self{Self::Fault(fault)=>fault.scope.as_ref()as *const FaultScope as usize,Self::Value(error)=>error.message.as_ptr()as usize,Self::Turn(error)=>*error as *const OriginalTurnFailure as usize,Self::Inference(error)=>error.primary.source_identity()}}
- fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{Ok(self.node(path)?.view())}
- fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.node(path)?.key(index)}
+ fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{self.view_at(path)}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.key_at(path,index)}
 }
 impl ExtensionInvocationCause{
  fn loan(&self)->OriginalCauseLoan<'_>{match self{Self::Fault(original)=>OriginalCauseLoan::Fault(original),Self::Value(original)=>OriginalCauseLoan::Value(original),Self::Turn(original)=>OriginalCauseLoan::Turn(original),Self::Inference(original)=>OriginalCauseLoan::Inference(original)}}
 }
 impl FieldProjectionSource for ExtensionInvocationCause{
- fn projection_identity(&self)->usize{match self{Self::Turn(original)=>original.primary.message().as_ptr()as usize,_=>self.loan().projection_identity()}}
- fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{Ok(self.loan().node(path)?.view())}
- fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.loan().node(path)?.key(index)}
+ fn projection_identity(&self)->usize{match self{Self::Turn(original)=>original.primary_domain().map_or_else(||original.primary.message().as_ptr()as usize,|domain|domain.projection().projection_identity()),_=>self.loan().projection_identity()}}
+ fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{self.loan().view_at(path)}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.loan().key_at(path,index)}
 }
 
 /// 🎒️ Measurement, output, symbol release and complete typed cause closure use one original wallet.

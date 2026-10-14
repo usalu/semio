@@ -1,6 +1,6 @@
 {
   "name": "@teaching/proctor",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "root": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
   "sourceRoot": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
   "projectType": "application",
@@ -19,7 +19,7 @@
   },
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
@@ -31,7 +31,7 @@
       ]
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -49,7 +49,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev"
@@ -58,7 +58,7 @@
       "continuous": true
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -67,7 +67,7 @@
       "cache": false
     },
     "rebuild": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts rebuild"
@@ -75,7 +75,7 @@
       "cache": false
     },
     "health": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts health"
@@ -83,7 +83,7 @@
       "cache": false
     },
     "backup": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts backup",
@@ -106,7 +106,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts restore",
@@ -145,7 +145,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts erase",
@@ -176,7 +176,7 @@
           }
         }
       },
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts prune",
@@ -185,7 +185,7 @@
       "cache": false
     },
     "capacity": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts capacity",

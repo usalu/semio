@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Guest Job Scalar Arguments",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "slots",
+    "budget",
+    "arguments"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "slots": {
+      "type": "array",
+      "items": [
+        {
+          "const": "operation"
+        },
+        {
+          "const": "generation"
+        },
+        {
+          "const": "epoch"
+        },
+        {
+          "const": "maximumItems"
+        },
+        {
+          "const": "maximumCopyBytes"
+        },
+        {
+          "const": "maximumCapacityBytes"
+        },
+        {
+          "const": "maximumReleaseBytes"
+        },
+        {
+          "const": "maximumDepth"
+        },
+        {
+          "const": "fuel"
+        },
+        {
+          "const": "deadlineUs"
+        },
+        {
+          "const": "cancelled"
+        }
+      ],
+      "additionalItems": false,
+      "minItems": 11,
+      "maxItems": 11
+    },
+    "budget": {
+      "type": "object"
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 11,
+      "maxItems": 11
+    }
+  }
+}

@@ -17,7 +17,7 @@ fn run(id: &str, values: Vec<(&str, GeometryValue)>, fuel: usize) -> (usize, Wid
     let kind = support::kind_of(id);
     let values: BTreeMap<String, GeometryValue> = values.into_iter().map(|(port, value)| (port.to_string(), value)).collect();
     let entry = COMPUTES.iter().find(|entry| entry.id == id).expect("registered");
-    support::slices((entry.start)(kind, WidgetInputs::new("w", kind, values)), fuel)
+    support::slices((entry.start)(kind, WidgetInputs::new_cold("w", kind, values)), fuel)
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn cancelling_a_split_midway_ends_in_the_cancelled_fault() {
     let kind = support::kind_of("brep.intersect.split");
     let values = BTreeMap::from([("solid".to_string(), GeometryValue::Shape(cube(2.0))), ("plane".to_string(), GeometryValue::Plane(PlaneValue { origin: [1.0, 0.0, 0.0], normal: [1.0, 0.0, 0.0] }))]);
     let entry = COMPUTES.iter().find(|entry| entry.id == kind.id).expect("registered");
-    let mut job = (entry.start)(kind, WidgetInputs::new("w", kind, values));
+    let mut job = (entry.start)(kind, WidgetInputs::new_cold("w", kind, values));
     assert!(matches!(job.step(1), WidgetStep::Working { .. }));
     job.cancel();
     let WidgetStep::Done(evaluation) = job.step(1) else { panic!("finished") };
@@ -75,7 +75,7 @@ fn the_wire_of_a_surface_intersection_is_a_consistent_value_the_kernel_can_impor
         GeometryValue::Shape(Arc::new(session.export(&handle).expect("export")))
     };
     let (_, evaluation) = run("brep.intersect.surfaceSurface", vec![("a", plane([0.0; 3], [0.0, 0.0, 1.0])), ("b", plane([0.0; 3], [1.0, 0.0, 0.0])), ("tolerance", GeometryValue::Number(1e-6))], usize::MAX);
-    let GeometryValue::List(wires) = &evaluation.outputs["wires"] else { panic!("list") };
+    let GeometryValue::List(wires) = &*evaluation.outputs.get("wires").unwrap() else { panic!("list") };
     for wire in wires {
         let GeometryValue::Shape(wire) = wire else { panic!("shape") };
         wire.check().expect("consistent");

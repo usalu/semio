@@ -11,7 +11,7 @@
     ".vscode/settings.json",
     "node_modules/vite/dist/node/index.js",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
     "🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/target/wasm32-wasip2/release/plugin.wasm"
   ],
   "watchedPaths": [

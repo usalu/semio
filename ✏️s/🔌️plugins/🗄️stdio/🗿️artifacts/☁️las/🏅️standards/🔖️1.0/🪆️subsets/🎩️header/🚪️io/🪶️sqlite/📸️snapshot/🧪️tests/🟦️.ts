@@ -6,7 +6,7 @@ import {Database} from "bun:sqlite";
 import fixture from "./🧫️fixtures/🔣️.json";
 import type {LasSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {LAS_SQLITE_SCHEMA,lasSnapshotToSqliteDatabase,lasSnapshotFromSqliteDatabase,lasSnapshotValidateSqliteSubset} from "../🟦️.ts";
-import {binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 
 import {lasSnapshotFixture as snapshot} from "🧰️support/🟦️.ts";

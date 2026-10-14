@@ -15,7 +15,7 @@ pub use crate::preview_eval::FlowEvalTick;
 
 /// 🪟️ The BODY one preview window kind renders — the thing a chain hop's refresh has to name, as
 /// opposed to the window kind its payload is addressed by.
-fn preview_body_key(window_kind_id: &str) -> &'static str {
+pub(crate) fn preview_body_key(window_kind_id: &str) -> &'static str {
     if window_kind_id == crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW {
         crate::editor::generation3d::modes::generate::windows::preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW
     } else {

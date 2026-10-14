@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-process",
   "targets": {
     "test-build-mode": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "dependsOn": [],
       "inputs": [
@@ -23,7 +23,7 @@
       }
     },
     "test-routing": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -36,7 +36,7 @@
       }
     },
     "test-artifact-files": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -49,7 +49,7 @@
       }
     },
     "test-owned-execution": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -62,7 +62,7 @@
       }
     },
     "test-process-tree-termination": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -75,7 +75,7 @@
       }
     },
     "test-budget": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -88,7 +88,7 @@
       }
     },
     "test-execution-budget": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -101,7 +101,7 @@
       }
     },
     "test-test-command": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -114,7 +114,7 @@
       }
     },
     "test-cargo-profile": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -127,7 +127,7 @@
       }
     },
     "test-cargo-driver": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -140,7 +140,7 @@
       }
     },
     "test-resource-leases": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -153,7 +153,7 @@
       }
     },
     "test-vitest-driver": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -166,7 +166,7 @@
       }
     },
     "test-artifact-publication": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -179,7 +179,7 @@
       }
     },
     "test-owner-context": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -192,7 +192,7 @@
       }
     },
     "test-capture": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -205,7 +205,7 @@
       }
     },
     "test-exact-cargo-laws": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -218,7 +218,7 @@
       }
     },
     "test-native-artifacts": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -231,7 +231,7 @@
       }
     },
     "test-wasm-build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -252,7 +252,7 @@
       }
     },
     "test-command-owner": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "inputs": [
@@ -265,7 +265,7 @@
       }
     },
     "test-command-boundary": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "inputs": [
@@ -278,7 +278,7 @@
       }
     },
     "test-command-cold": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "inputs": [
@@ -291,7 +291,7 @@
       }
     },
     "test-cargo-test-leases": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -304,7 +304,7 @@
       }
     },
     "test-native-build-mode": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test native-build-mode",
         "cwd": "🧰️framework/🔨️modules/🏃️process"
@@ -312,7 +312,7 @@
       "cache": false
     },
     "test-managed-build-mode": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [
         {
@@ -330,7 +330,7 @@
       }
     },
     "test-go-build-mode": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "outputs": [],
       "options": {
@@ -339,7 +339,7 @@
       }
     },
     "test-compiler-state": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -361,7 +361,7 @@
       }
     },
     "test-cargo-build-lease": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -382,7 +382,7 @@
       }
     },
     "test-native-artifact-publication": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -404,7 +404,7 @@
       }
     },
     "test-native-queued-cancellation": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -417,7 +417,7 @@
       }
     },
     "test-compiler-capacity": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [
@@ -430,12 +430,26 @@
       }
     },
     "test-cargo-profile-policy": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test cargo-profile-policy"
       },
       "cache": false
+    },
+    "test-workspace": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test workspace"
+      }
     }
   },
   "tags": [

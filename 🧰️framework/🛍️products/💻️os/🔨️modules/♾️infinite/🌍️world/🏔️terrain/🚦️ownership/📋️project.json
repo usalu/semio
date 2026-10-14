@@ -3,7 +3,7 @@
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🏔️terrain/🚦️ownership",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "command": "bun ./📜️script.ts test"
       }

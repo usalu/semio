@@ -44,7 +44,7 @@ await withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner:
 appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\n");
 `);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
-  const environment = join(root, ".venv"), env = { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, SEMIO_STYLING_PYTHON_BUILD_ROOT: join(root, "state"), UV_PROJECT_ENVIRONMENT: environment };
+  const environment = join(root, ".venv"), env = { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, SEMIO_STYLING_PYTHON_BUILD_ROOT: join(root, "state"), UV_PROJECT_ENVIRONMENT: environment };
   const execute = async (args: string[]) => {
     const child = Bun.spawn(args, { cwd: root, env, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);

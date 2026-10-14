@@ -9308,7 +9308,7 @@ pub fn step_world3d_terrain(state:&mut World3dState,grant:semio_framework_value:
 
 pub fn step_world3d_terrain_retirement(state:&mut World3dState,grant:semio_framework_value::retained_clone::RetainedCloneGrant,context:&mut semio_framework_job::StepContext<'_>)->WorldTerrainMeshProgress {
     let mut result=WorldTerrainMeshProgress{step:WorldTerrainMeshPublicationStep::Idle,ownership:Default::default()};
-    if context.should_yield() || context.is_cancelled() || grant.maximum_items==0 {result.step=WorldTerrainMeshPublicationStep::Pending;return result;}
+    if context.should_yield() || grant.maximum_items==0 {result.step=WorldTerrainMeshPublicationStep::Pending;return result;}
     context.set_stage("terrainMeshRetirement");
     if state.terrain_build.is_none() && state.terrain_pending.is_some() {
         match begin_world_terrain_pending(state,grant,true) {

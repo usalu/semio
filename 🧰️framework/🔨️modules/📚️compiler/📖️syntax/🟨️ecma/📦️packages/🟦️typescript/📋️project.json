@@ -2,7 +2,7 @@
   "name": "@semio-tech/compiler-syntax-ecma-ts",
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "outputs": [],

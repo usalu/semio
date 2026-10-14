@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cooperative Cache Maintenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "maximumOperationsPerContinuation", "originalControl"],
+  "properties": {
+    "version": {"const": 1},
+    "maximumOperationsPerContinuation": {"const": 64},
+    "originalControl": {"const": ["signal", "deadline", "awaitedProgress", "awaitedContinuation"]}
+  },
+  "definitions": {
+    "Policy": {"const": {"version": 1, "maximumOperationsPerContinuation": 64, "originalControl": ["signal", "deadline", "awaitedProgress", "awaitedContinuation"]}}
+  }
+}

@@ -43,13 +43,14 @@ async fn a_queued_invocation_allocates_a_registry_slot_and_one_effect() {
 async fn a_completion_for_a_minted_id_dispatches_the_response_action_with_the_outcome() {
     let req = queue_extension_invocation(3, &brep_invocation("flowTessellateResolve", r#"{"nodeHash":99,"handle":"h7","tolerance":0.5}"#)).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
-    let (instance, action, args) = take_extension_response(req, Ok(packed_answer(r#"{"positions":[]}"#))).expect("a minted continuation must answer its own completion");
+    let (instance, action, args, original_fault) = take_extension_response(req, Ok(packed_answer(r#"{"positions":[]}"#))).expect("a minted continuation must answer its own completion");
     assert_eq!(instance, 3, "the dispatch must target the instance that asked");
     assert_eq!(action, "flowTessellateResolve");
     assert_eq!(args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64), Some(99), "the request's own correlation must survive: {args:?}");
     assert_eq!(args.get("handle").and_then(semio_framework_value::DslValue::as_str), Some("h7"));
     assert_eq!(args.get("ok").and_then(semio_framework_value::DslValue::as_bool), Some(true));
-    assert_eq!(args.get("outputJson").and_then(semio_framework_value::DslValue::as_str), Some(r#"{"positions":[]}"#), "the packed answer must reach the app as its own JSON, not as container bytes: {args:?}");
+    assert!(original_fault.is_none());
+    assert_eq!(args.get("output").and_then(|output| output.get("positions")), Some(&semio_framework_value::DslValue::Array(Vec::new())));
     assert!(take_extension_response(req, Ok(Vec::new())).is_err(), "a continuation answers exactly once");
 }
 
@@ -60,10 +61,10 @@ async fn a_faulted_invocation_dispatches_the_response_action_with_the_fault() {
     let req = queue_extension_invocation(1, &brep_invocation("flowEvalResolve", r#"{"nodeHash":5}"#)).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
     let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("brep.unsupported"), "no such operator".to_string());
-    let (_, action, args) = take_extension_response(req, Err(fault)).expect("a fault must still answer the continuation");
+    let (_, action, args, original_fault) = take_extension_response(req, Err(fault)).expect("a fault must still answer the continuation");
     assert_eq!(action, "flowEvalResolve");
     assert_eq!(args.get("ok").and_then(semio_framework_value::DslValue::as_bool), Some(false));
-    assert_eq!(args.get("faultCode").and_then(semio_framework_value::DslValue::as_str), Some("brep.unsupported"));
+    assert_eq!(original_fault.as_ref().map(|fault| fault.code.0.as_str()), Some("brep.unsupported"));
     assert!(args.get("outputJson").is_none(), "a fault carries no output payload: {args:?}");
 }
 
@@ -96,10 +97,11 @@ async fn a_paged_answer_reaches_the_response_action_whole() {
         assert!(page.len() <= page_bytes, "no page may exceed the contiguous-request ceiling");
         assert!(append_extension_response_page(req, page), "a continuation must claim its own prologue pages");
     }
-    let (_, action, args) = take_extension_response(req, Ok(terminal.to_vec())).expect("the terminal page answers the continuation");
+    let (_, action, args, original_fault) = take_extension_response(req, Ok(terminal.to_vec())).expect("the terminal page answers the continuation");
     assert_eq!(action, "flowTessellateResolve");
     assert_eq!(args.get("ok").and_then(semio_framework_value::DslValue::as_bool), Some(true), "a paged megabyte must decode, not fault: {args:?}");
-    let decoded = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(args.get("outputJson").and_then(semio_framework_value::DslValue::as_str).expect("outputJson"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outputJson is JSON");
+    assert!(original_fault.is_none());
+    let decoded = args.get("output").expect("original output");
     assert_eq!(decoded.get("mesh").and_then(semio_framework_value::DslValue::as_str).map(str::len), Some(mesh.len()), "every delivered page must survive the assembly");
 }
 
@@ -111,9 +113,9 @@ async fn an_over_ceiling_answer_faults_instead_of_growing_the_guest() {
     let oversized_page = queue_extension_invocation(5, &brep_invocation("flowEvalResolve", r#"{"nodeHash":12}"#)).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
     assert!(append_extension_response_page(oversized_page, &vec![0u8; semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES + 1]));
-    let (_, _, args) = take_extension_response(oversized_page, Ok(Vec::new())).expect("a poisoned accumulator still answers");
+    let (_, _, args, original_fault) = take_extension_response(oversized_page, Ok(Vec::new())).expect("a poisoned accumulator still answers");
     assert_eq!(args.get("ok").and_then(semio_framework_value::DslValue::as_bool), Some(false));
-    assert_eq!(args.get("faultCode").and_then(semio_framework_value::DslValue::as_str), Some("plugin.request-registry.answer-too-large"));
+    assert_eq!(original_fault.as_ref().map(|fault| fault.code.0.as_str()), Some("plugin.request-registry.answer-too-large"));
 
     let over_total = queue_extension_invocation(6, &brep_invocation("flowEvalResolve", r#"{"nodeHash":13}"#)).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
@@ -121,8 +123,8 @@ async fn an_over_ceiling_answer_faults_instead_of_growing_the_guest() {
     for _ in 0..=semio_framework_trace::guest_host_answer_pages(semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES) {
         assert!(append_extension_response_page(over_total, &page));
     }
-    let (_, _, args) = take_extension_response(over_total, Ok(Vec::new())).expect("a poisoned accumulator still answers");
-    assert_eq!(args.get("faultCode").and_then(semio_framework_value::DslValue::as_str), Some("plugin.request-registry.answer-too-large"));
+    let (_, _, args, original_fault) = take_extension_response(over_total, Ok(Vec::new())).expect("a poisoned accumulator still answers");
+    assert_eq!(original_fault.as_ref().map(|fault| fault.code.0.as_str()), Some("plugin.request-registry.answer-too-large"));
 }
 
 /// ⚖️ LAW: the echoed correlation is correlation, not the request BODY. A field the shell could not
@@ -138,11 +140,12 @@ async fn the_echoed_correlation_drops_a_request_body_the_shell_could_not_have_se
     ]));
     let req = queue_extension_invocation(2, &crate::app_emission::ExtensionInvocation::new("math", "evaluate", &request_json, "flowEvalResolve")).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
-    let (_, _, args) = take_extension_response(req, Ok(packed_answer(r#"{"value":1}"#))).expect("a minted continuation must answer its own completion");
+    let (_, _, args, original_fault) = take_extension_response(req, Ok(packed_answer(r#"{"value":1}"#))).expect("a minted continuation must answer its own completion");
     assert_eq!(args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64), Some(77), "bounded correlation survives: {args:?}");
     assert_eq!(args.get("windowId").and_then(semio_framework_value::DslValue::as_str), Some("preview"));
     assert!(args.get("inputJson").is_none(), "the request body must not ride back into the guest: {args:?}");
-    assert_eq!(args.get("outputJson").and_then(semio_framework_value::DslValue::as_str), Some(r#"{"value":1}"#));
+    assert!(original_fault.is_none());
+    assert_eq!(args.get("output").and_then(|output| output.get("value")).and_then(semio_framework_value::DslValue::as_u64), Some(1));
 }
 
 /// ⚖️ LAW: `completion-result.fault` is a `pack` of the fault value — the same bytes the shell
@@ -162,9 +165,41 @@ async fn a_packed_host_fault_round_trips_through_outcome_to_result() {
     assert_eq!(decoded.message, "no such extension");
     let req = queue_extension_invocation(2, &brep_invocation("flowEvalResolve", r#"{"nodeHash":8}"#)).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
-    let (_, action, args) = take_extension_response(req, Err(decoded)).expect("a packed host fault must reach the response action readable");
+    let (_, action, args, original_fault) = take_extension_response(req, Err(decoded)).expect("a packed host fault must reach the response action readable");
     assert_eq!(action, "flowEvalResolve");
     assert_eq!(args.get("ok").and_then(semio_framework_value::DslValue::as_bool), Some(false));
-    assert_eq!(args.get("faultCode").and_then(semio_framework_value::DslValue::as_str), Some("extension.missing"));
-    assert_eq!(args.get("faultMessage").and_then(semio_framework_value::DslValue::as_str), Some("no such extension"));
+    let original_fault = original_fault.expect("whole original Fault");
+    assert_eq!(original_fault.code.0, "extension.missing");
+    assert_eq!(original_fault.message, "no such extension");
+    assert!(args.get("faultCode").is_none());
+    assert!(args.get("faultMessage").is_none());
+}
+
+/// 🪢️ The existing continuation donates every original Fault allocation without a second codec.
+#[semio_framework_async_macros::async_test]
+async fn original_extension_response_donates_full_native_fault_into_typed_dispatch() {
+    use semio_framework_value::{DslValue,FromValue};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/owned-extension-response.json")).unwrap();
+    let input=semio_framework_pack_json::from_json_str::<DslValue>(&fixture["fault"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut fault=semio_framework::Fault::from_value(input).unwrap();
+    let exact=fixture["exactUnsigned"].as_str().unwrap().parse::<u64>().unwrap();
+    let Some(DslValue::Object(domain))=fault.domain.as_mut() else {panic!("original domain source")};
+    domain.push(("exact".into(),DslValue::uint(exact)));
+    let scope=std::ptr::from_ref(fault.scope.as_ref());
+    let message=fault.message.as_ptr();
+    let causes=fault.causes.as_ptr();
+    let params=std::ptr::from_ref(fault.params.as_ref().unwrap().as_ref());
+    let domain=domain.as_ptr();
+    let receipt=fault.retained_progress;
+    let req=queue_extension_invocation(41,&brep_invocation("flowTessellateResolve",&fixture["request"].to_string())).unwrap();
+    let _=REGISTRY.with(|registry|registry.drain());
+    let (instance,action,args,original)=take_extension_response(req,Err(fault)).unwrap();
+    let original=original.unwrap();
+    assert_eq!(instance,41);assert_eq!(action,"flowTessellateResolve");
+    assert_eq!(std::ptr::from_ref(original.scope.as_ref()),scope);assert_eq!(original.message.as_ptr(),message);assert_eq!(original.causes.as_ptr(),causes);assert_eq!(std::ptr::from_ref(original.params.as_ref().unwrap().as_ref()),params);
+    let Some(DslValue::Object(fields))=original.domain.as_ref() else {panic!("original domain retained")};assert_eq!(fields.as_ptr(),domain);assert_eq!(original.domain.as_ref().unwrap().get("exact").and_then(DslValue::as_u64),Some(exact));
+    assert_eq!(original.retained_progress,receipt);assert_eq!(original.source.unwrap().offset,Some(65539));assert_eq!(original.causes[0].retained_progress.unwrap().copied_bytes,64);assert!(original.retryable);
+    assert_eq!(args.get("ok"),Some(&DslValue::Bool(false)));assert_eq!(args.get("output"),Some(&DslValue::Null));assert!(args.get("faultCode").is_none());assert!(args.get("faultMessage").is_none());
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&args)).unwrap()["windowId"],fixture["request"]["windowId"]);
+    eprintln!("[DEBUG] originalNativeFaultResponse=whole originalAllocationPointers=scope,message,causes,params,domain exactUnsigned={} sourceReceipt=577 causeReceipt=64 noSecondFaultCodec=true",exact);
 }

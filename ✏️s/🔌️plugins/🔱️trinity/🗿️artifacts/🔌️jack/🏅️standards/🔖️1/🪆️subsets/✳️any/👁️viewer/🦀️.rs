@@ -46,11 +46,11 @@ impl protocol::OpBinary for TrinityJackViewCommand {
 
 //#region 🔖️Viewer
 #[derive(Default, Clone, Copy)]
-pub struct TrinityJackViewer;
+pub struct TrinityJackViewer<C:crate::JackComposition>(std::marker::PhantomData<C>);
 
-impl ArtifactViewer for TrinityJackViewer {
+impl<C:crate::JackComposition> ArtifactViewer for TrinityJackViewer<C> {
     /// 🧩️ The same member roster the editor declares — see `TrinityJackPlayApp`'s `Members`.
-    type Members = semio_s_artifact_stdio_semio::SemioMembers;
+    type Members = C::Members;
     type Snapshot = JackSnapshot;
     type Mutation = TrinityGraphMutation;
     type Config = NoConfig;
@@ -69,11 +69,11 @@ impl ArtifactViewer for TrinityJackViewer {
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
-        crate::genesis_jack_child_pack(snapshot, slot, child_id)
+        C::genesis_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> JackSnapshot {
-        empty_trinity_graph_snapshot()
+        C::initial_viewer_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `TrinityJackViewCommand::Noop` variant never carries a
@@ -94,7 +94,7 @@ impl ArtifactViewer for TrinityJackViewer {
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             graph::BODY_KEY => {
-                let content = crate::jack_content_from_children(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content", fault.message))?;
+                let content = C::bind(doc.snapshot, &doc.children).map_err(|fault| semio_framework_plugin::PluginAssemblyError::new("trinity.jack.content", fault.message))?;
                 graph::render(doc.snapshot, &content).map(semio_framework_plugin::built_to_component_tree)
             }
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

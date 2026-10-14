@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/stdio-tsv",
   "version": "0.1.0",
@@ -12,9 +12,9 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun nx run @semio-tech/stdio-tsv:build",
-    "check": "bun nx run @semio-tech/stdio-tsv:check",
-    "test": "bun nx run @semio-tech/stdio-tsv:test"
+    "build": "bun repo run @semio-tech/stdio-tsv:build",
+    "check": "bun repo run @semio-tech/stdio-tsv:check",
+    "test": "bun repo run @semio-tech/stdio-tsv:test"
   },
   "exports": {
     ".": {

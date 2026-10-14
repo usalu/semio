@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/value-resident-rs",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
   "projectType": "library",
   "namedInputs": {
@@ -16,7 +16,7 @@
   },
   "targets": {
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
@@ -26,7 +26,7 @@
       "outputs": []
     },
     "check-wasm": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": ["nativeSources", "^nativeSources"],
       "options": {

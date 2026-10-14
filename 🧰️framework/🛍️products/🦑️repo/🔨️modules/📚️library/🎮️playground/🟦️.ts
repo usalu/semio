@@ -8,20 +8,14 @@ import { ephemeralBox } from "../../../../../🔨️modules/🎠️kernel/📦�
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { declaredWorkspaces, getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
 
 export type PlaygroundHostKind = string;
 
-/**
- * 📚️ Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
- * Reads the registry owner's `🤖️generated/🚀️playgrounds.json` directly (rather than a static
- * TS import of the gitignored generated module) so this shared kernel never fails to load on a
- * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
- * an empty catalog in that case instead of a hard module-resolution error.
- */
-export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  const catalogPath = join(getWorkspaceRoot(), "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json");
-  if (!existsSync(catalogPath)) return [];
+/** 📚️ Reads the caller-supplied publication root; absence admits empty, configured missing or malformed files refuse. */
+export function loadFrameworkOsPlaygroundCatalog(catalogRoot=process.env.SEMIO_PLUGIN_CATALOG): readonly PlaygroundVariant[] {
+  if(catalogRoot===undefined)return [];
+  const catalogPath = join(catalogRoot, "🚀️playgrounds.json");
   return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }
 

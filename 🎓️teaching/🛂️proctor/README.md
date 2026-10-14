@@ -242,7 +242,7 @@ must never be throttled, and **one script must not be able to take the proctor d
   principal for the same target; the enrollment saga's keys live in the proctor's own key space, so no caller can read
   or occupy them.
 
-The gate `bun nx run @teaching/proctor:capacity` holds the release build to this, under its default cap of learners:
+The gate `bun repo run @teaching/proctor:capacity` holds the release build to this, under its default cap of learners:
 300 simulated learners from one address play two quizzes each, spread evenly over the four challenges (an easy run read
 again after every answer for its hints, guesses on hard and expert, every expert task opened before its answers and
 answered only while its clock runs), at five times the pace of a real lecture, alone and then
@@ -279,22 +279,22 @@ has not yet been run on that mix, so every figure above is to be re-measured by 
 
 ## Run
 
-Each `bun nx run <project>:<target>` below is the dashboard command `<project>:<target>`: pick it in the dashboard (`bun run dashboard`, `Ctrl+B n`) or run it with `bun run dashboard run <project>:<target> [-- extra arguments]`.
+Each `bun repo run <project>:<target>` below is the dashboard command `<project>:<target>`: pick it in the dashboard (`bun run dashboard`, `Ctrl+B n`) or run it with `bun run dashboard run <project>:<target> [-- extra arguments]`.
 
 | Command | What it does |
 |---|---|
-| `bun nx run @teaching/proctor:dev` | Serves `🎓️teaching/🏛️architecture/❓️quiz/🔣️.json` on `127.0.0.1:8791` over the git-ignored `.🧬semio/🎓️teaching/proctor-dev/`. The dev site (Vite, port 6061) proxies `/instance`, `/commands`, `/queries`, `/actors` and `/scopes` to it, so in development the client stays same-origin. `PROCTOR_*` variables set by the launcher win. |
-| `bun nx run @teaching/architecture-quiz:dev` | The proctor and the site together in one terminal (dashboard command `@teaching/architecture-quiz:dev`): it reuses a proctor that already answers on `PROCTOR_PORT` (saying so when it serves another quiz contract), else launches one exactly as `@teaching/proctor:dev` does, waits for `GET /instance`, then starts the site; the proctor it launched is built and launched anew when its sources or catalog change and launched again when it ends by itself. One Ctrl+C stops both. See the site's README. |
-| `bun nx run @teaching/proctor:check [-- <catalog>]` | `proctor check <catalog>`: validates a catalog and every quiz it lists, and prints each quiz's revision. It exits non-zero and lists `[ERROR] <json-pointer> <code> (<quiz file>)` for every issue. |
-| `bun nx run @teaching/proctor:rebuild` | `proctor rebuild`: drops every read model of the dev data directory and refolds the whole event log, with progress. |
-| `bun nx run @teaching/proctor:health` | `proctor health` against the dev proctor (dashboard command `@teaching/proctor:health`): exits 0 exactly when it serves. |
-| `bun nx run @teaching/proctor:backup [-- <directory/\|file\|->]` | `proctor backup` of the dev database while the dev proctor serves it (dashboard command `@teaching/proctor:backup`). Without a target it writes `proctor-<UTC time>.sqlite` into the git-ignored `.🧬semio/🎓️teaching/proctor-backups/` and prints the path. |
-| `bun nx run @teaching/proctor:restore -- <file\|->` | `proctor restore` into the dev data directory (dashboard command `@teaching/proctor:restore`, parameter `file`). Stop the dev proctor first. |
-| `bun nx run @teaching/proctor:erase -- --handle <handle> [--dry-run]` | `proctor erase` on the dev database (dashboard command `@teaching/proctor:erase`, parameters `handle`, `tag`, `learner` and `dry-run`); `--tag <tag>` and `--learner <id>` select as well. Stop the dev proctor first. |
-| `bun nx run @teaching/proctor:prune -- --older-than <age> [--dry-run]` | `proctor prune` on the dev database (dashboard command `@teaching/proctor:prune`, parameters `older-than`, `7d` unless stated, and `dry-run`). Stop the dev proctor first. |
-| `bun nx run @teaching/proctor:test` | Unit tests, the storage conformance laws and the end-to-end API test. The level is an argument: `bun nx run @teaching/proctor:test -- quick`, `long` or `exhaustive`. |
-| `bun nx run @teaching/proctor:build` | Builds the cargo artifacts. Pass `-- --release` for a deployment. |
-| `bun nx run @teaching/proctor:capacity [-- --learners 300 --compression 5 --report <file> --executable <proctor> --hall-only]` | The capacity gate (dashboard command `@teaching/proctor:capacity`): builds the release binary (or takes `--executable`), serves it in production mode on a throw-away port and data directory with the default cap of learners, plays the lecture hall alone and beside the abusive script (`--hall-only` skips the script and is not the gate), stops it and counts its roster (`prune --dry-run`), prints p50/p95/p99 per operation, how late the load generator itself ran, the script's answers by status, the roster and the proctor's memory, and exits non-zero on any violation. Run it on a quiet machine: it takes about five minutes with the build. |
+| `bun repo run @teaching/proctor:dev` | Serves `🎓️teaching/🏛️architecture/❓️quiz/🔣️.json` on `127.0.0.1:8791` over the git-ignored `.🧬semio/🎓️teaching/proctor-dev/`. The dev site (Vite, port 6061) proxies `/instance`, `/commands`, `/queries`, `/actors` and `/scopes` to it, so in development the client stays same-origin. `PROCTOR_*` variables set by the launcher win. |
+| `bun repo run @teaching/architecture-quiz:dev` | The proctor and the site together in one terminal (dashboard command `@teaching/architecture-quiz:dev`): it reuses a proctor that already answers on `PROCTOR_PORT` (saying so when it serves another quiz contract), else launches one exactly as `@teaching/proctor:dev` does, waits for `GET /instance`, then starts the site; the proctor it launched is built and launched anew when its sources or catalog change and launched again when it ends by itself. One Ctrl+C stops both. See the site's README. |
+| `bun repo run @teaching/proctor:check [-- <catalog>]` | `proctor check <catalog>`: validates a catalog and every quiz it lists, and prints each quiz's revision. It exits non-zero and lists `[ERROR] <json-pointer> <code> (<quiz file>)` for every issue. |
+| `bun repo run @teaching/proctor:rebuild` | `proctor rebuild`: drops every read model of the dev data directory and refolds the whole event log, with progress. |
+| `bun repo run @teaching/proctor:health` | `proctor health` against the dev proctor (dashboard command `@teaching/proctor:health`): exits 0 exactly when it serves. |
+| `bun repo run @teaching/proctor:backup [-- <directory/\|file\|->]` | `proctor backup` of the dev database while the dev proctor serves it (dashboard command `@teaching/proctor:backup`). Without a target it writes `proctor-<UTC time>.sqlite` into the git-ignored `.🧬semio/🎓️teaching/proctor-backups/` and prints the path. |
+| `bun repo run @teaching/proctor:restore -- <file\|->` | `proctor restore` into the dev data directory (dashboard command `@teaching/proctor:restore`, parameter `file`). Stop the dev proctor first. |
+| `bun repo run @teaching/proctor:erase -- --handle <handle> [--dry-run]` | `proctor erase` on the dev database (dashboard command `@teaching/proctor:erase`, parameters `handle`, `tag`, `learner` and `dry-run`); `--tag <tag>` and `--learner <id>` select as well. Stop the dev proctor first. |
+| `bun repo run @teaching/proctor:prune -- --older-than <age> [--dry-run]` | `proctor prune` on the dev database (dashboard command `@teaching/proctor:prune`, parameters `older-than`, `7d` unless stated, and `dry-run`). Stop the dev proctor first. |
+| `bun repo run @teaching/proctor:test` | Unit tests, the storage conformance laws and the end-to-end API test. The level is an argument: `bun repo run @teaching/proctor:test -- quick`, `long` or `exhaustive`. |
+| `bun repo run @teaching/proctor:build` | Builds the cargo artifacts. Pass `-- --release` for a deployment. |
+| `bun repo run @teaching/proctor:capacity [-- --learners 300 --compression 5 --report <file> --executable <proctor> --hall-only]` | The capacity gate (dashboard command `@teaching/proctor:capacity`): builds the release binary (or takes `--executable`), serves it in production mode on a throw-away port and data directory with the default cap of learners, plays the lecture hall alone and beside the abusive script (`--hall-only` skips the script and is not the gate), stops it and counts its roster (`prune --dry-run`), prints p50/p95/p99 per operation, how late the load generator itself ran, the script's answers by status, the roster and the proctor's memory, and exits non-zero on any violation. Run it on a quiet machine: it takes about five minutes with the build. |
 
 The binary itself takes `proctor serve`, `proctor check <catalog>`, `proctor rebuild`, `proctor health`,
 `proctor backup <directory/|file|->`, `proctor restore <file|->`,

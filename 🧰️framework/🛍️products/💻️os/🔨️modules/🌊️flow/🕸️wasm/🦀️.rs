@@ -4745,12 +4745,9 @@ struct FlowAction2599 {
 }
 
 impl FlowAction2599 {
-    fn receive_original_work(&mut self,work:crate::geometry::GeometryWorkProgress,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_value::ValueError>{
-        let fuel=cx.fuel_remaining();cx.consume_fuel(work.consumed_units as u64);
+    fn record_original_work(&mut self,work:crate::geometry::GeometryWorkProgress)->Result<(),semio_framework_value::ValueError>{
         self.work_units=self.work_units.checked_add(work.consumed_units).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original Flow geometry cumulative CPU overflow"))?;
-        self.receipt=self.receipt.checked_add(work.retained)?;
-        cx.consume_retained(work.retained)?;
-        if work.consumed_units as u64>fuel{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original Flow geometry work exceeds initiating fuel"))}Ok(())
+        self.receipt=self.receipt.checked_add(work.retained)?;Ok(())
     }
     fn advance_original(&mut self,domain:&mut FlowDomainAdapter,args:&FlowArguments,cx:&mut semio_framework_job::StepContext<'_>)->Result<FlowFeatureStep,FlowFailure>{
         if cx.should_yield(){return Ok(FlowFeatureStep::Yield)}
@@ -4763,7 +4760,7 @@ impl FlowAction2599 {
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(FlowFeatureStep::Yield)}
         if let Some(encoding)=self.encoding.as_mut(){
             let original=encoding.advance(grant);cx.consume_fuel(1);self.work_units=self.work_units.checked_add(1).ok_or_else(||abi_failure(AbiErrorCode::LimitExceeded))?;
-            let step=match original{Ok(step)=>step,Err(error)=>{let work=crate::geometry::GeometryWorkProgress{retained:error.retained_progress(),consumed_units:0};let mut failure=crate::geometry::GeometryWorkFailure::new(error,1);failure.receipt_refusal=self.receive_original_work(work,cx).err();return Err(FlowFailure::from_geometry(AbiErrorCode::Busy,failure))}};
+            let step=match original{Ok(step)=>step,Err(error)=>{let work=crate::geometry::GeometryWorkProgress{retained:error.retained_progress(),consumed_units:0};let mut failure=crate::geometry::GeometryWorkFailure::new(error,1);failure.receipt_refusal=cx.consume_retained(work.retained).err();let _=self.record_original_work(work);return Err(FlowFailure::from_geometry(AbiErrorCode::Busy,failure))}};
             if let Some(output)=step.output{self.output=Some(ControlledRetirement::new(output).unwrap_or_else(|_|unreachable!("original Vec declares controlled retirement")))}
             let receipt=step.progress;self.receipt=self.receipt.checked_add(receipt).map_err(|error|FlowFailure::from_value(AbiErrorCode::LimitExceeded,error))?;cx.consume_retained(receipt).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;
             if let Some(output)=self.output.as_mut().and_then(ControlledRetirement::take_original){self.output=None;self.complete=true;return Ok(FlowFeatureStep::Complete(output))}
@@ -4772,10 +4769,9 @@ impl FlowAction2599 {
         let port=domain.host.geometry_port().map_err(domain_error)?;let(handle,tolerance)=(text(args,"handle")?,number(args,"tolerance")?);
         let demand=port.tessellation_demands(identity,handle,tolerance,grant.maximum_copy_bytes).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))?;
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(FlowFeatureStep::Yield)}
-        let units=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX);
-        let(step,work)=match port.tessellate_step(identity,handle,tolerance,units,grant){Ok(original)=>original,Err(mut original)=>{original.receipt_refusal=self.receive_original_work(original.work,cx).err();return Err(FlowFailure::from_geometry(AbiErrorCode::Busy,original))}};
+        let(step,work)=match port.tessellate_step(identity,handle,tolerance,cx){Ok(original)=>original,Err(original)=>{let _=self.record_original_work(original.work);return Err(FlowFailure::from_geometry(AbiErrorCode::Busy,original))}};
         let step=match step{crate::geometry::GeometryStep::Ready(mesh)=>{self.encoding=Some(semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor::new(mesh));None},step=>Some(step)};
-        if let Err(error)=self.receive_original_work(work,cx){return Err(FlowFailure::from_geometry(AbiErrorCode::NoCredit,crate::geometry::GeometryWorkFailure{primary:error,work,receipt_refusal:None}))}
+        if let Err(error)=self.record_original_work(work){return Err(FlowFailure::from_geometry(AbiErrorCode::NoCredit,crate::geometry::GeometryWorkFailure{primary:error,work,receipt_refusal:None}))}
         Ok(match step{
             None=>FlowFeatureStep::Yield,
             Some(crate::geometry::GeometryStep::Working{units_done,units_total,..})=>FlowFeatureStep::Progress{completed:units_done as u64,total:units_total as u64},

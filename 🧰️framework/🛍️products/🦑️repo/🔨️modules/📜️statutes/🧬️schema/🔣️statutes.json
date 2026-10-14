@@ -415,7 +415,7 @@
       "policyId": "system",
       "priority": "high",
       "reason": "The devcontainer editor settings are derived from .vscode/settings.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-      "solution": "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+      "solution": "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
       "autofixable": false
     },
     {
@@ -423,7 +423,7 @@
       "policyId": "system",
       "priority": "high",
       "reason": "The devcontainer extensions are derived from .vscode/extensions.json and .devcontainer/editor-overlay.json; a hand-edited copy drifts from the host editor",
-      "solution": "Run `bun nx run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
+      "solution": "Run `bun repo run workspace:generate-config` to rewrite the devcontainer editor block; edit .vscode/settings.json, .vscode/extensions.json or the overlay instead of the copy",
       "autofixable": false
     },
     {

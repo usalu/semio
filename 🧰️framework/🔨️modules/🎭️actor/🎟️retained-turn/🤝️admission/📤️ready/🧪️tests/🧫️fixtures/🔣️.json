@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "operation": 71,
+  "generation": 3,
+  "inputBytes": 41,
+  "cuts": [
+    {
+      "copyBytes": 40,
+      "ready": true,
+      "issued": false,
+      "guest": false,
+      "refused": false,
+      "expectedTaken": false
+    },
+    {
+      "copyBytes": 41,
+      "ready": true,
+      "issued": false,
+      "guest": false,
+      "refused": false,
+      "expectedTaken": true
+    },
+    {
+      "copyBytes": 41,
+      "ready": false,
+      "issued": false,
+      "guest": false,
+      "refused": false,
+      "expectedTaken": false
+    },
+    {
+      "copyBytes": 41,
+      "ready": true,
+      "issued": true,
+      "guest": false,
+      "refused": false,
+      "expectedTaken": false
+    },
+    {
+      "copyBytes": 41,
+      "ready": true,
+      "issued": false,
+      "guest": true,
+      "refused": false,
+      "expectedTaken": false
+    },
+    {
+      "copyBytes": 41,
+      "ready": true,
+      "issued": false,
+      "guest": false,
+      "refused": true,
+      "expectedTaken": false
+    }
+  ]
+}

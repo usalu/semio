@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "source": "repositoryVitestPolicyV1",
+  "owner": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+  "originalBudgetMs": 15000,
+  "outputRedirect": {
+    "cacheRoot": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/actor-facet-kernel/cache",
+    "coverageDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/actor-facet-kernel/coverage"
+  },
+  "arguments": [
+    "run",
+    "architecture-source-verification:run",
+    "--files=🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📜️script.ts",
+    "--arguments=[\"test\",\"--testNamePattern\",\"KernelReturnContentFraming\"]",
+    "--group=actor-facet-kernel-client",
+    "--budget=180000",
+    "--skip-nx-cache",
+    "--outputStyle=stream"
+  ]
+}

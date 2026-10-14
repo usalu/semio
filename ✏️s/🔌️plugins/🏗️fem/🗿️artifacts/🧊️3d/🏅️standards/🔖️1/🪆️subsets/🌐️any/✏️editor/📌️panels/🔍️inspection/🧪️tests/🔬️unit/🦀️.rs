@@ -26,7 +26,7 @@ fn selecting(ids: &[&str]) -> Fem3dInteractionSnapshot {
 
 fn panel(doc: &Fem3dSnapshot, ids: &[&str], view_state: &ViewModel) -> String {
     let built = render(doc, &selecting(ids), fem3d_labels(view_state), &TreeWindows::unhosted()).expect("fem3d inspector assembly");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree { root: built }).expect("fem3d inspector projection")
+    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(ComponentTree::new(built)).expect("fem3d inspector projection")
 }
 
 fn english(doc: &Fem3dSnapshot, ids: &[&str]) -> String {

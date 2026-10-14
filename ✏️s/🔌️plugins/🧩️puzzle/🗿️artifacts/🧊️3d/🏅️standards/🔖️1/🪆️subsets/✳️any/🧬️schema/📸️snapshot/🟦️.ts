@@ -1,5 +1,5 @@
 /** 🧊️ Complete persisted Puzzle3d fields shared by its owned Source facets. */
-import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,parseBinary64} from "../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 export type Puzzle3dObjectAnchor="fixed"|"derived";
 export type Puzzle3dCompatSpecificity="general"|"object"|"attraction"|"vortex"|"cable";
 export type Puzzle3dVector3=[Binary64,Binary64,Binary64];

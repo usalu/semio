@@ -1,4 +1,4 @@
-import type{Binary64} from "../../../../../../../../🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import type{Binary64} from "../../../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 /** 🎛️ Authored media classes in their native declaration order. */
 export type WorkflowMediaClass="twoD"|"threeD"|"text"|"data"|"graph"|"kit"|"computation"|"presentation";
 /** 🧩️ Authored media forms in their native declaration order. */

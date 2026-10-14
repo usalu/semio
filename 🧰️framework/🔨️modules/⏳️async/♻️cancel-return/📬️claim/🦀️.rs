@@ -4,6 +4,10 @@ use std::sync::{Arc, atomic::{AtomicU8,AtomicPtr,Ordering}};
 pub struct PublicationClaim { state: AtomicU8, returned: AtomicPtr<PublicationClaim> }
 pub struct PublicationClaimHandle { inner: Arc<PublicationClaim> }
 impl PublicationClaim {
+ /// 📏️ Quotes the original inline claim and shared frame before its caller-funded birth.
+ pub fn admission_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{capacity_bytes:PublicationClaimHandle::frame_bytes(),depth:1,..Default::default()}}
+ /// 🎟️ Admits one original claim only under independently supplied birth authority.
+ pub fn admit(grant:RetainedCloneGrant)->Result<Option<(PublicationClaimHandle,RetainedCloneProgress)>,ValueError>{let demand=Self::admission_demands();if grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return Ok(None)}Ok(Some((Self::new(),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})))}
  pub fn new()->PublicationClaimHandle { PublicationClaimHandle { inner:Arc::new(Self { state:AtomicU8::new(0),returned:AtomicPtr::new(std::ptr::null_mut()) }) } }
  pub fn cancel(&self) { self.state.fetch_or(2,Ordering::AcqRel); }
  pub fn is_cancelled(&self)->bool { self.state.load(Ordering::Acquire)&2!=0 }

@@ -69,7 +69,16 @@ pub(crate) fn edit_collection_value(types: &[String], current: Option<&semio_fra
 /// 🧬️ Preserves the declared schema while changing one literal or coordinate.
 pub(crate) fn edit_input_value(types: &[String], current: Option<&semio_framework_value::DslValue>, text: &str, component: Option<&str>) -> Result<semio_framework_value::DslValue, String> {
     let schema = current.and_then(|value| value.get("$schema")).and_then(semio_framework_value::DslValue::as_str).or_else(|| types.first().map(String::as_str)).ok_or("Connect a compatible output to this input")?;
-    if !types.iter().any(|kind| kind == schema) || !matches!(schema, "number" | "text" | "boolean" | "point" | "vector") { return Err("Connect a compatible output to this input".into()); }
+    if !types.iter().any(|kind| kind == schema) || !matches!(schema, "number" | "text" | "boolean" | "point" | "vector" | "plane") { return Err("Connect a compatible output to this input".into()); }
+    if schema=="plane"{
+        use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputPlane;
+        let(part,axis)=component.and_then(|value|value.split_once('.')).filter(|(part,axis)|matches!(*part,"origin"|"normal")&&matches!(*axis,"x"|"y"|"z")).ok_or("Choose a plane origin or normal coordinate")?;
+        let mut plane=match current{Some(value)=>match widget_input_of_literal(value){Some(WidgetInputValue::Plane(plane))=>plane,_=>return Err("Plane input must contain a point origin and vector normal".into())},None=>WidgetInputPlane{origin:[0.0;3],normal:[0.0,0.0,1.0]}};
+        if !plane.origin.iter().chain(&plane.normal).all(|value|value.is_finite()){return Err("Plane input must contain finite coordinates".into())}
+        let number=text.trim().parse::<f64>().ok().filter(|value|value.is_finite()).ok_or("Input must be a finite number")?;
+        let coordinates=if part=="origin"{&mut plane.origin}else{&mut plane.normal};coordinates[match axis{"x"=>0,"y"=>1,_=>2}]=number;
+        return Ok(widget_input_literal(&WidgetInputValue::Plane(plane)))
+    }
     let mut fields = match current { Some(semio_framework_value::DslValue::Object(fields)) => fields.clone(), _ => vec![("$schema".into(), semio_framework_value::DslValue::String(schema.into()))] };
     let number = || text.trim().parse::<f64>().ok().filter(|number| number.is_finite()).map(semio_framework_value::DslValue::float).ok_or_else(|| "Input must be a finite number".to_string());
     let (field, value) = match schema {

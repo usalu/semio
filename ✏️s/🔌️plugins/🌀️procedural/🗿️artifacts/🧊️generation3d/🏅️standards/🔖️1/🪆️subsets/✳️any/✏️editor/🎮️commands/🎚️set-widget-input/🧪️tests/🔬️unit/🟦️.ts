@@ -14,6 +14,7 @@ import {getByRole} from "@testing-library/dom";
 import inspectorFixture from "../../../../📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json";
 import type { Widget } from "../../../../../🧬️schema/🟦️.ts";
 import {diff as widgetDiff} from "../../../../../🧬️schema/🧬️mutations/🩹update-widget/🔺️diff/🟦️.ts";
+import {applyPatch,type Operation} from "fast-json-patch";
 
 const {computeAccessibleName}=createRequire(import.meta.url)("dom-accessibility-api") as {computeAccessibleName(element:Element):string};
 
@@ -29,9 +30,10 @@ export function generation3dWidgetInputSelfTests(): number {
     if ("error" in entry) assert.throws(operation, entry.id);
     else {
       assert.deepEqual(operation(), entry.expected, entry.id);
+      if(entry.types[0]==="plane"&&component){const [part,axis]=component.split("."),base=entry.current??{$schema:"plane",origin:{$schema:"point",x:0,y:0,z:0},normal:{$schema:"vector",x:0,y:0,z:1}};const patch:Operation={op:"replace",path:`/${part}/${axis}`,value:Number(entry.value)};assert.deepEqual(operation(),applyPatch(structuredClone(base),[patch],true).newDocument,entry.id);checks++;}
       if (entry.types[0] === "number" || entry.types[0] === "boolean") { assert.equal(operation().value, JSON.parse(entry.value), entry.id); checks++; }
     }
-    assert.equal(validate({widgetId:"shape",channel:"parameter",value:entry.value,...(component ? {component} : {})}), entry.id !== "invalid-component", entry.id);
+    assert.equal(validate({widgetId:"shape",channel:"parameter",value:entry.value,...(component ? {component} : {})}), entry.id !== "invalid-component"&&!("schemaValid"in entry&&entry.schemaValid===false), entry.id);
     checks += 2;
   }
   for (const key of ["extra","gesture"]) { assert.equal(validate({widgetId:"shape",channel:"parameter",value:"1",[key]:true}),false); checks++; }

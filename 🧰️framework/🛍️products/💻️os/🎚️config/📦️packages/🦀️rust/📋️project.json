@@ -3,7 +3,7 @@
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
   "targets": {
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -11,7 +11,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",

@@ -2,7 +2,7 @@
   "name": "@semio-tech/framework-identity",
   "targets": {
     "test-grapheme": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "dependsOn": [],
       "inputs": [

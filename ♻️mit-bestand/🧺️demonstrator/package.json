@@ -1,5 +1,5 @@
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/mit-bestand-demonstrator",
   "version": "0.1.0",
   "description": "Entwerfen mit Bestand · Demonstrator landing and static site assembly",
@@ -17,9 +17,9 @@
     "@semio-tech/puzzle-2d": "workspace:*"
   },
   "scripts": {
-    "build": "bun nx run @semio-tech/mit-bestand-demonstrator:build",
-    "test": "bun nx run @semio-tech/mit-bestand-demonstrator:test",
-    "test:e2e": "bun nx run @semio-tech/mit-bestand-demonstrator:test-e2e"
+    "build": "bun repo run @semio-tech/mit-bestand-demonstrator:build",
+    "test": "bun repo run @semio-tech/mit-bestand-demonstrator:test",
+    "test:e2e": "bun repo run @semio-tech/mit-bestand-demonstrator:test-e2e"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

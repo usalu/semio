@@ -1,5 +1,5 @@
 {
-  "$schema": "../../node_modules/nx/schemas/technology-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "application",
   "name": "repo-vscode",
   "nx": {

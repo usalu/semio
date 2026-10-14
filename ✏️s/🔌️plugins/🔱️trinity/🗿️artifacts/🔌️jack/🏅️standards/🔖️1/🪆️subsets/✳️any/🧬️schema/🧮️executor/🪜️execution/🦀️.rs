@@ -6,7 +6,7 @@ use crate::host::{admit_demand, JackSnapshotCloneAuthority, JackSnapshotCloneSte
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
 use crate::{port_key, JackSnapshot, Port, PortDirection, PropertyBag};
-use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+
 use std::collections::{BTreeSet, VecDeque};
 use std::ops::Bound::{Excluded, Unbounded};
 
@@ -59,7 +59,7 @@ fn bag_owned_bytes(values: &PropertyBag, items: &mut usize, bytes: &mut usize, m
     Ok(())
 }
 
-fn node_owned_bytes(node: &Node, maximum: usize) -> Result<usize, ValueError> {
+pub(crate) fn node_owned_bytes(node: &Node, maximum: usize) -> Result<usize, ValueError> {
     let mut bytes = size_of::<Node>();
     let mut items = node.ports.len();
     if items > QUERY_ENTITY_COLLECTION_MAXIMUM {
@@ -78,7 +78,7 @@ fn node_owned_bytes(node: &Node, maximum: usize) -> Result<usize, ValueError> {
     Ok(bytes)
 }
 
-fn edge_owned_bytes(edge: &Edge, maximum: usize) -> Result<usize, ValueError> {
+pub(crate) fn edge_owned_bytes(edge: &Edge, maximum: usize) -> Result<usize, ValueError> {
     let mut bytes = size_of::<Edge>();
     let mut items = 0;
     for value in [&edge.id, &edge.id, &edge.kind, &edge.source, &edge.target] {
@@ -86,29 +86,6 @@ fn edge_owned_bytes(edge: &Edge, maximum: usize) -> Result<usize, ValueError> {
     }
     bag_owned_bytes(&edge.properties, &mut items, &mut bytes, maximum)?;
     Ok(bytes)
-}
-
-fn content_property_bytes(value:&semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue,depth:usize,items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
-    if depth>QUERY_ENTITY_NESTING_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its nesting admission"))}
-    *items=items.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"query entity item count overflow"))?;
-    if *items>QUERY_ENTITY_COLLECTION_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its collection admission"))}
-    add_owned_bytes(bytes,size_of::<PropertyValue>(),maximum)?;
-    match value{SemioValue::Null|SemioValue::Bool{..}|SemioValue::Float{..}=>Ok(()),SemioValue::Str{value}=>add_owned_bytes(bytes,value.len(),maximum),SemioValue::List{items:values}=>{for value in values{content_property_bytes(value,depth+1,items,bytes,maximum)?;}Ok(())},SemioValue::Map{entries}=>{for entry in entries{add_owned_bytes(bytes,entry.key.len(),maximum)?;content_property_bytes(&entry.value,depth+1,items,bytes,maximum)?;}Ok(())},_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Jack query projection cannot represent this intrinsic Semio value family"))}
-}
-fn content_bag_bytes(values:&[semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry],items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{for entry in values{add_owned_bytes(bytes,entry.key.len(),maximum)?;content_property_bytes(&entry.value,0,items,bytes,maximum)?;}Ok(())}
-fn content_node_bytes(node:&semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphNode,maximum:usize)->Result<(),ValueError>{
-    let mut bytes=size_of::<Node>();let mut items=0;
-    if node.ports.len()>QUERY_ENTITY_COLLECTION_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query node exceeds its port admission"))}
-    for value in[&node.id.value,&node.kind,&node.label]{add_owned_bytes(&mut bytes,value.len(),maximum)?;}
-    content_bag_bytes(&node.properties,&mut items,&mut bytes,maximum)?;
-    for port in &node.ports{add_owned_bytes(&mut bytes,size_of::<Port>(),maximum)?;add_owned_bytes(&mut bytes,port.name.len(),maximum)?;add_owned_bytes(&mut bytes,port.category.len(),maximum)?;content_bag_bytes(&port.properties,&mut items,&mut bytes,maximum)?;}Ok(())
-}
-fn content_edge_bytes(edge:&semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphEdge,maximum:usize)->Result<(),ValueError>{
-    let mut bytes=size_of::<Edge>();let mut items=0;
-    for value in[&edge.id.value,&edge.kind,&edge.source.value,&edge.target.value]{add_owned_bytes(&mut bytes,value.len(),maximum)?;}
-    for port in[edge.source_port.as_deref(),edge.target_port.as_deref()].into_iter().flatten(){add_owned_bytes(&mut bytes,port.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"query entity byte count overflow"))?,maximum)?;}
-    content_bag_bytes(&edge.properties,&mut items,&mut bytes,maximum)
 }
 
 fn reserve_result<T>(values: &mut Vec<T>, owned: &mut usize, maximum: usize) -> Result<(), ValueError> {
@@ -130,7 +107,7 @@ fn add_result_owned(owned: &mut usize, additional: usize, maximum: usize) -> Res
 }
 
 fn graph_result_metadata_owned_bytes(graph: &Graph, maximum: usize) -> Result<usize, ValueError> {
-    let mut bytes = size_of::<JackSnapshot>() + size_of::<crate::JackContentOwner>() + 2 * size_of::<usize>();
+    let mut bytes = size_of::<crate::ast::JackQueryGraphSnapshot>() + 2 * size_of::<usize>();
     add_result_owned(&mut bytes, JackSnapshot::SCHEMA.len() + graph.name.capacity() + graph.manifest_id.as_ref().map_or(0, String::capacity) + graph.root_node_id.as_ref().map_or(0, String::capacity), maximum)?;
     let mut properties = |values: &Vec<crate::PropertyDef>| -> Result<(), ValueError> {
         add_result_owned(&mut bytes, values.capacity().checked_mul(size_of::<crate::PropertyDef>()).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "query metadata capacity overflow"))?, maximum)?;
@@ -208,16 +185,17 @@ pub struct QueryExecutionPreparation {
 }
 
 impl QueryExecutionPreparation {
-    pub fn new(query: Query) -> Self { Self::with_result_grant(query, QUERY_RESULT_MAXIMUM_OWNED_BYTES) }
+    pub fn new(query:Query)->Self{Self::with_result_grant(query,QUERY_RESULT_MAXIMUM_OWNED_BYTES)}
 
-    pub fn with_result_grant(query: Query, maximum_result_owned_bytes: usize) -> Self {
-        Self { query: Some(query), metadata: JackSnapshotCloneAuthority::metadata_only(), closing_owner: None, retirement: None, graph: None, node: 0, edge: 0, maximum_result_owned_bytes, closing: false, terminal: false }
+    pub fn with_result_grant(query:Query,maximum_result_owned_bytes:usize) -> Self {
+        Self { query: Some(query), metadata: JackSnapshotCloneAuthority::metadata_only(), closing_owner: None, retirement: None, graph: None, node: 0, edge: 0, maximum_result_owned_bytes,closing:false,terminal:false }
     }
 
-    pub fn step(&mut self, snapshot: &JackSnapshot, scene: &SemioGraphSnapshot, maximum_bytes: usize) -> Result<QueryPreparationStep, ValueError> {
+    pub fn step(&mut self, snapshot: &JackSnapshot, scene: &dyn crate::JackContentProjection, maximum_bytes: usize) -> Result<QueryPreparationStep, ValueError> {
         if self.closing || self.terminal {
             return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"query preparation is terminal"));
         }
+        crate::retained_jack_graph(crate::jack_content_identity(&snapshot.content),scene)?;
         if self.graph.is_none() {
             match self.metadata.advance(snapshot, maximum_bytes)? {
                 JackSnapshotCloneStep::Pending { .. } => {
@@ -245,33 +223,30 @@ impl QueryExecutionPreparation {
             self.graph = Some(graph);
             return Ok(QueryPreparationStep::Pending);
         }
-        if scene.nodes.len() > QUERY_ENTITY_MAXIMUM || scene.edges.len() > QUERY_ENTITY_MAXIMUM {
-            return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query snapshot exceeds its entity admission"));
-        }
-        if let Some(node) = scene.nodes.get(self.node) {
-            content_node_bytes(node, maximum_bytes)?;
-            let graph = self.graph.as_mut().expect("query preparation graph is initialized");
-            if graph.nodes.contains_key(&node.id.value) {
-                return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("duplicate node id {}", node.id.value)));
-            }
-            graph.nodes.insert(node.id.value.clone(), crate::jack_node_from_content(node)?);
-            self.node += 1;
+        let (nodes,edges)=scene.projection_counts();
+        if nodes>QUERY_ENTITY_MAXIMUM||edges>QUERY_ENTITY_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query snapshot exceeds its entity admission"))}
+        if self.node<nodes {
+            let id=scene.query_node_id(self.node).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"query node index is not retained"))?;
+            let graph=self.graph.as_mut().expect("query preparation graph is initialized");
+            if graph.nodes.contains_key(id){return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("duplicate node id {id}")))}
+            let node=scene.query_node(self.node,maximum_bytes)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"query node is not retained"))?;
+            graph.nodes.insert(node.id.clone(),node);
+            self.node+=1;
             return Ok(QueryPreparationStep::Pending);
         }
-        if let Some(edge) = scene.edges.get(self.edge) {
-            content_edge_bytes(edge, maximum_bytes)?;
-            let graph = self.graph.as_mut().expect("query preparation graph is initialized");
-            if graph.edges.contains_key(&edge.id.value) {
-                return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("duplicate edge id {}", edge.id.value)));
-            }
-            graph.edges.insert(edge.id.value.clone(), crate::jack_edge_from_content(edge)?);
-            self.edge += 1;
+        if self.edge<edges {
+            let id=scene.query_edge_id(self.edge).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"query edge index is not retained"))?;
+            let graph=self.graph.as_mut().expect("query preparation graph is initialized");
+            if graph.edges.contains_key(id){return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("duplicate edge id {id}")))}
+            let edge=scene.query_edge(self.edge,maximum_bytes)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"query edge is not retained"))?;
+            graph.edges.insert(edge.id.clone(),edge);
+            self.edge+=1;
             return Ok(QueryPreparationStep::Pending);
         }
         let graph = self.graph.take().expect("query preparation graph remains owned");
         let query = self.query.take().expect("query preparation AST remains owned");
         self.terminal = true;
-        Ok(QueryPreparationStep::Complete(Box::new(QueryExecution::with_result_grant(graph, query, self.maximum_result_owned_bytes))))
+        Ok(QueryPreparationStep::Complete(Box::new(QueryExecution::with_result_grant(graph,query,self.maximum_result_owned_bytes))))
     }
 
     pub fn begin_close(&mut self) {
@@ -445,7 +420,7 @@ enum ReturnPhase {
     Complete,
 }
 
-struct ReturnExecution {
+struct ReturnExecution{
     phase: ReturnPhase,
     columns: Vec<String>,
     rows: Vec<Vec<PropertyValue>>,
@@ -462,7 +437,7 @@ struct ReturnExecution {
 }
 
 impl ReturnExecution {
-    fn new(maximum_result_owned_bytes: usize) -> Self {
+    fn new(maximum_result_owned_bytes:usize) -> Self {
         Self {
             phase: ReturnPhase::Columns,
             columns: Vec::new(),
@@ -562,16 +537,16 @@ impl ReturnExecution {
                         self.edges.push(edge.clone());
                     }
                 } else {
-                    let content = crate::jack_content_child_with_owner(std::mem::take(&mut self.nodes), std::mem::take(&mut self.edges));
                     let mut name = std::mem::take(&mut graph.name);
                     name.push_str(" subgraph");
-                    let fixture = JackSnapshot {
+                    let fixture = crate::ast::JackQueryGraphSnapshot {
                         schema: JackSnapshot::SCHEMA.into(),
                         name,
                         manifest_id: graph.manifest_id.take(),
                         manifest: std::mem::take(&mut graph.manifest),
                         camera: graph.camera.clone(),
-                        content,
+                        nodes:std::mem::take(&mut self.nodes),
+                        edges:std::mem::take(&mut self.edges),
                         root_node_id: if self.root_selected { graph.root_node_id.take() } else { None },
                         query: String::new(),
                     };
@@ -610,7 +585,7 @@ impl ReturnExecution {
 }
 
 /// 🔎️ Owns query evaluation state; each step advances one bounded cursor unit.
-pub struct QueryExecution {
+pub struct QueryExecution{
     graph: Graph,
     query: Option<Query>,
     clause: usize,
@@ -634,10 +609,10 @@ pub struct QueryExecution {
 }
 
 impl QueryExecution {
-    pub fn new(graph: Graph, query: Query) -> Self {
-        Self::with_result_grant(graph, query, QUERY_RESULT_MAXIMUM_OWNED_BYTES)
+    pub fn new(graph:Graph,query:Query) -> Self {
+        Self::with_result_grant(graph,query,QUERY_RESULT_MAXIMUM_OWNED_BYTES)
     }
-    pub fn with_result_grant(graph: Graph, query: Query, maximum_result_owned_bytes: usize) -> Self {
+    pub fn with_result_grant(graph:Graph,query:Query,maximum_result_owned_bytes:usize)->Self{
         Self {
             graph,
             query: Some(query),

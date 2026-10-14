@@ -28,5 +28,30 @@
   "terminalDropBytes": 0,
   "clock": "originalCaller",
   "cancel": "originalCaller",
-  "refilledPolicyLoop": false
+  "refilledPolicyLoop": false,
+  "recordHandle": 77,
+  "storeGeneration": 35,
+  "cleanupReceiver": {
+    "callerTurnBorrowed": true,
+    "detachedContextBirth": false,
+    "originalFailureRetained": true,
+    "maximumStepsPerCall": 1,
+    "cancelReturnWitness": "original-source-parent"
+  },
+  "previewReceiver": {
+    "persistentProducer": true,
+    "originalCaller": true,
+    "budgetRefill": false,
+    "events": [
+      "source",
+      "alias",
+      "admission",
+      "callback",
+      "acknowledgement",
+      "resume",
+      "callback",
+      "close",
+      "delivery"
+    ]
+  }
 }

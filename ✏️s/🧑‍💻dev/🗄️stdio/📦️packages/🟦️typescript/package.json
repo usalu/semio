@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/stdio-js",
   "version": "0.1.0",
@@ -12,14 +12,14 @@
   ],
   "types": "./dist/🟦️.d.ts",
   "scripts": {
-    "build": "bun nx run @semio-tech/stdio-js:build",
-    "check": "bun nx run @semio-tech/stdio-js:check",
-    "package-contract": "bun nx run @semio-tech/stdio-js:package-contract",
-    "package-graph": "bun nx run @semio-tech/stdio-js:package-graph",
-    "test": "bun nx run @semio-tech/stdio-js:test",
-    "test:quick": "bun nx run @semio-tech/stdio-js:test -- quick",
-    "test:long": "bun nx run @semio-tech/stdio-js:test -- long",
-    "test:exhaustive": "bun nx run @semio-tech/stdio-js:test -- exhaustive"
+    "build": "bun repo run @semio-tech/stdio-js:build",
+    "check": "bun repo run @semio-tech/stdio-js:check",
+    "package-contract": "bun repo run @semio-tech/stdio-js:package-contract",
+    "package-graph": "bun repo run @semio-tech/stdio-js:package-graph",
+    "test": "bun repo run @semio-tech/stdio-js:test",
+    "test:quick": "bun repo run @semio-tech/stdio-js:test -- quick",
+    "test:long": "bun repo run @semio-tech/stdio-js:test -- long",
+    "test:exhaustive": "bun repo run @semio-tech/stdio-js:test -- exhaustive"
   },
   "exports": {
     ".": {

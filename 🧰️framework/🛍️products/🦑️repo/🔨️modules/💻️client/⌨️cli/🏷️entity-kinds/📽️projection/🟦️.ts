@@ -2,7 +2,7 @@
 import type { EntityCatalogSource } from "../../../../../../../🔨️modules/🧬️schema/🏷️entity-kinds/📥️source/🟦️.ts";
 
 export const GENERATOR_ID = "repo-entity-kinds";
-export const REFRESH_COMMAND = "bun nx run @semio-tech/repo-client:generate-entity-kinds";
+export const REFRESH_COMMAND = "bun repo run @semio-tech/repo-client:generate-entity-kinds";
 
 //#region 🔖️emit-go
 export function emitGo(source: EntityCatalogSource): string {

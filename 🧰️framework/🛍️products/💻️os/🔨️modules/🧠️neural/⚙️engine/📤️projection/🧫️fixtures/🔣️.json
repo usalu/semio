@@ -1,0 +1,25 @@
+{
+  "source": {
+    "flag": true,
+    "negative": -2,
+    "nested": {
+      "text": "same original 雪"
+    },
+    "null": null,
+    "number": 3.5
+  },
+  "rootKeys": [
+    "flag",
+    "negative",
+    "nested",
+    "null",
+    "number"
+  ],
+  "textPath": [
+    2,
+    0
+  ],
+  "sameRootOnHeaderMove": true,
+  "projectionHeapBytes": 0,
+  "replyWire": "Pack"
+}

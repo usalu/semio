@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/canvas-react-renderer",
   "version": "0.1.0",
   "description": "infinite · canvas react renderer",
@@ -9,7 +9,7 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "test": "bun nx run @semio-tech/canvas-react-renderer:test"
+    "test": "bun repo run @semio-tech/canvas-react-renderer:test"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

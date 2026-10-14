@@ -1,0 +1,1 @@
+[{"outcome":"pending","before":[3,19,128,7],"producer":[1,3,64,0],"after":[4,22,192,7],"fuelBefore":13,"fuelAfter":12,"causes":[]},{"outcome":"failed","before":[4,22,192,7],"producer":[1,0,0,64],"after":[5,22,192,71],"fuelBefore":12,"fuelAfter":11,"causes":["original Pack close 源","original receipt 源","original context 源"]}]

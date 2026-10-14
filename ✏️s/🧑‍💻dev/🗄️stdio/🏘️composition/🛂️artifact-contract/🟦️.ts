@@ -121,9 +121,9 @@ export async function assertStdioArtifactSourceContract(repoRoot: string, contra
     assert.equal(typescript.private, true);
     assert.deepEqual(typescript.exports?.["."], entry.typescript.entry);
     assert.equal(typescript.types, entry.typescript.entry.types);
-    assert.equal(typescript.scripts?.build, `bun nx run ${names.typescript}:build`);
-    assert.equal(typescript.scripts?.check, `bun nx run ${names.typescript}:check`);
-    assert.equal(typescript.scripts?.test, `bun nx run ${names.typescript}:test`);
+    assert.equal(typescript.scripts?.build, `bun repo run ${names.typescript}:build`);
+    assert.equal(typescript.scripts?.check, `bun repo run ${names.typescript}:check`);
+    assert.equal(typescript.scripts?.test, `bun repo run ${names.typescript}:test`);
     for (const dependency of Object.keys(typescript.dependencies ?? {})) assert(catalogTypeScriptNames.has(dependency), `${names.typescript} has unknown artifact dependency ${dependency}`);
     assertScriptTargets(readStdioJson(join(typescriptRoot, "📋️project.json")), names.typescript);
     assert(readFileSync(join(typescriptRoot, "📜️script.ts"), "utf8").includes("runArtifactTypeScriptPackageMain"), `${names.typescript} does not use the domain-neutral TypeScript artifact router`);
@@ -131,7 +131,7 @@ export async function assertStdioArtifactSourceContract(repoRoot: string, contra
     if (existsSync(join(rustRoot, "package.json"))) {
       const commands = readStdioJson(join(rustRoot, "package.json"));
       assert.equal(commands.name, names.rustNx);
-      for (const [target, invocation] of Object.entries(commands.scripts ?? {})) assert.equal(invocation, `bun nx run ${names.rustNx}:${target}`);
+      for (const [target, invocation] of Object.entries(commands.scripts ?? {})) assert.equal(invocation, `bun repo run ${names.rustNx}:${target}`);
     }
     assertDeclarationOnly(typescriptRoot, ["package.json", "📋️project.json", "📜️script.ts"]);
   }

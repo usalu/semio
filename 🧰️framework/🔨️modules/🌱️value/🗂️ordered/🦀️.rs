@@ -103,6 +103,8 @@ impl<V> OrderedMap<V> {
     pub fn new() -> Self { Self::default() }
     pub fn len(&self) -> usize { len(&self.root) }
     pub fn is_empty(&self) -> bool { self.root.is_none() }
+    /// 🪪️ Borrows the original immutable node identity without issuing another ownership alias.
+    pub fn original_root_identity(&self)->Option<usize>{self.root.as_ref().map(|root|Arc::as_ptr(root)as usize)}
     pub fn iter(&self) -> Iter<'_, V> { Iter { root: &self.root, front: 0, back: self.len() } }
     pub fn keys(&self) -> impl DoubleEndedIterator<Item = &String> + ExactSizeIterator { self.iter().map(|(key, _)| key) }
     pub fn values(&self) -> impl DoubleEndedIterator<Item = &V> + ExactSizeIterator { self.iter().map(|(_, value)| value) }

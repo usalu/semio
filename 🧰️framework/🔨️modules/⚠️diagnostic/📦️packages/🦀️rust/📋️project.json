@@ -1,10 +1,10 @@
 {
   "name": "@semio-tech/framework-diagnostic-rs",
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "sourceRoot": "🧰️framework/🔨️modules/⚠️diagnostic",
   "targets": {
     "test-controlled-oracle": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
@@ -12,7 +12,7 @@
       }
     },
     "test-native": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
@@ -20,7 +20,7 @@
       }
     },
     "test-source": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
@@ -28,11 +28,27 @@
       }
     },
     "test-text-error-portable": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-text-error-portable"
+      }
+    },
+    "test-original-domain-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-domain-source"
+      }
+    },
+    "test-original-domain-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-original-domain-native"
       }
     }
   }

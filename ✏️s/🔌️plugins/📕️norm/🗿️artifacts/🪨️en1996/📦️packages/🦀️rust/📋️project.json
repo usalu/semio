@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/norm-en1996-rs",
-  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
   "tags": [
     "language:rust",
@@ -9,22 +9,22 @@
   ],
   "targets": {
     "test-snapshot-sqlite": {
-      "executor":"nx:run-commands",
+      "executor":"repo:script",
       "inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],
       "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite"}
     },
     "test-snapshot-sqlite-source": {
-      "executor":"nx:run-commands",
+      "executor":"repo:script",
       "inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],
       "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite source"}
     },
     "test-snapshot-sqlite-native": {
-      "executor":"nx:run-commands",
+      "executor":"repo:script",
       "inputs":["production","^production","{projectRoot}/../../🏅️standards/**/*","{projectRoot}/../../🦀️.rs","{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"],
       "options":{"cwd":"✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust","command":"bun ./📜️script.ts test-snapshot-sqlite native"}
     },
     "build": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": true,
       "inputs": [
         "production",
@@ -40,7 +40,7 @@
       }
     },
     "check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts check",
@@ -48,7 +48,7 @@
       }
     },
     "test": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -56,7 +56,7 @@
       }
     },
     "regenerate-example-assets": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts regenerate-example-assets",

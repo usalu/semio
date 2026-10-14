@@ -17,7 +17,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
   assert.equal(project.targets.build.options.command, cases.completion.command);
   assert.deepEqual(project.targets.build.outputs, []);
   assert.equal(project.targets.build.cache, true);
-  assert.equal(JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")).scripts.build, `bun nx run ${cases.completion.project}:build`);
+  assert.equal(JSON.parse(await readFile(join(packageRoot, "package.json"), "utf8")).scripts.build, `bun repo run ${cases.completion.project}:build`);
   for (const target of cases.completion.targets) assert.equal(project.targets[target]?.executor, "nx:run-commands", `${cases.completion.project}:${target} must be declared by its owner`);
   assert.equal(require("jsonschema").validate(cases.plan, schema).valid, true);
   assert.deepEqual(selectProductionBrowserComponents(cases.session, "cad", "cad", cases.plan.components), cases.plan);
@@ -83,7 +83,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     configured.targets[cases.completion.prerequisite] = configured.targets.build;
     configured.targets.build = { ...project.targets.build, options: { command: `bun ${JSON.stringify(join(directory, "../🏁completion/📜️script.ts"))} complete` } };
     await writeFile(join(root, "project.json"), JSON.stringify(configured));
-    const nx = join(dirname(require.resolve("nx/package.json")), require("nx/package.json").bin.nx), env = { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NODE_PATH: join(workspace, "node_modules"), NX_SKIP_NX_CACHE: "false", NX_SKIP_REMOTE_CACHE: "true" };
+    const nx = join(dirname(require.resolve("nx/package.json")), require("nx/package.json").bin.nx), env = { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NODE_PATH: join(workspace, "node_modules"), NX_SKIP_NX_CACHE: "false", NX_SKIP_REMOTE_CACHE: "true" };
     const runNx = async () => {
       const child = Bun.spawn(["node", nx, "run", "browser-production:build", "--output-style=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
       const timer = setTimeout(() => child.kill("SIGKILL"), 90_000);

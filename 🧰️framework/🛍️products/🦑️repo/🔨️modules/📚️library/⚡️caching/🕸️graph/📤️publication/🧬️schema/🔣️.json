@@ -1,0 +1,148 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "faults",
+    "cohortRefused",
+    "rollbackCauseHeld",
+    "rollbackBackupRetained",
+    "generationRefused",
+    "interruptionRefused",
+    "unchangedGeneration",
+    "producerOwnership"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cohortRefused": {
+      "const": true
+    },
+    "faults": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "at",
+          "originalCode",
+          "priorPreserved",
+          "childDispatch",
+          "leaseRefused",
+          "leaseReleased"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "stage",
+              "commit"
+            ]
+          },
+          "at": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "originalCode": {
+            "enum": [
+              "ENOSPC",
+              "EACCES"
+            ]
+          },
+          "priorPreserved": {
+            "const": true
+          },
+          "childDispatch": {
+            "const": false
+          },
+          "leaseRefused": {
+            "const": true
+          },
+          "leaseReleased": {
+            "const": true
+          }
+        }
+      }
+    },
+    "rollbackCauseHeld": {
+      "const": true
+    },
+    "rollbackBackupRetained": {
+      "const": true
+    },
+    "generationRefused": {
+      "const": true
+    },
+    "producerOwnership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "callbackHeld",
+        "minted",
+        "leaseReleased",
+        "expiredLeaseRefused",
+        "wrongOwnPidRefused",
+        "missingOwnRefused",
+        "ownSymlinkRefused",
+        "forgedLeaseRefused",
+        "foreignControlRefused"
+      ],
+      "properties": {
+        "callbackHeld": {
+          "const": true
+        },
+        "minted": {
+          "const": true
+        },
+        "leaseReleased": {
+          "const": true
+        },
+        "expiredLeaseRefused": {
+          "const": true
+        },
+        "wrongOwnPidRefused": {
+          "const": true
+        },
+        "missingOwnRefused": {
+          "const": true
+        },
+        "ownSymlinkRefused": {
+          "const": true
+        },
+        "forgedLeaseRefused": {
+          "const": true
+        },
+        "foreignControlRefused": {
+          "const": true
+        }
+      }
+    },
+    "unchangedGeneration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preserved",
+        "changedPublished",
+        "receiptPreserved"
+      ],
+      "properties": {
+        "preserved": {
+          "const": true
+        },
+        "changedPublished": {
+          "const": true
+        },
+        "receiptPreserved": {
+          "const": true
+        }
+      }
+    },
+    "interruptionRefused": {
+      "const": true
+    }
+  }
+}

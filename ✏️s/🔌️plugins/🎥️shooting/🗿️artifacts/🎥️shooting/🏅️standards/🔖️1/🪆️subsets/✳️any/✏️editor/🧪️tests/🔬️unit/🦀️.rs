@@ -374,39 +374,39 @@ fn command_from_action_round_trips_every_command_id() {
             DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),
         };
-        let bridged = ShootingPlayApp::command_from_action(id, Some(&camel_case_keys(&payload))).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = ShootingPlayApp::command_from_action(id, Some((camel_case_keys(&payload)).clone()), None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
     }
-    assert!(ShootingPlayApp::command_from_action("nonsense", None).is_err());
+    assert!(ShootingPlayApp::command_from_action("nonsense", None, None).is_err());
 }
 
 /// 🎛️ The host control contracts (`value`/`pressed`/gumball `ids`/viewport `camera`) reach the rows.
 #[test]
 fn command_from_action_bridges_host_control_contracts() {
     let args = |json: Value| action_args(&json);
-    assert_eq!(ShootingPlayApp::command_from_action("setActiveShot", Some(&args(json!({ "value": "s2" })))).expect("select bridge"), ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s2".into()) }));
-    assert_eq!(ShootingPlayApp::command_from_action("toggleSun", Some(&args(json!({ "pressed": true })))).expect("toggle bridge"), ShootingCommand::ToggleSun(toggle_sun::ToggleSun { value: true }));
-    assert_eq!(ShootingPlayApp::command_from_action("setCenterModel", Some(&args(json!({ "pressed": false })))).expect("toggle bridge"), ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));
-    assert_eq!(ShootingPlayApp::command_from_action("setSunAzimuth", Some(&args(json!({ "value": 90 })))).expect("slider bridge"), ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
+    assert_eq!(ShootingPlayApp::command_from_action("setActiveShot", Some((args(json!({ "value": "s2" }))).clone()), None).expect("select bridge"), ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s2".into()) }));
+    assert_eq!(ShootingPlayApp::command_from_action("toggleSun", Some((args(json!({ "pressed": true }))).clone()), None).expect("toggle bridge"), ShootingCommand::ToggleSun(toggle_sun::ToggleSun { value: true }));
+    assert_eq!(ShootingPlayApp::command_from_action("setCenterModel", Some((args(json!({ "pressed": false }))).clone()), None).expect("toggle bridge"), ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));
+    assert_eq!(ShootingPlayApp::command_from_action("setSunAzimuth", Some((args(json!({ "value": 90 }))).clone()), None).expect("slider bridge"), ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
     assert_eq!(
-        ShootingPlayApp::command_from_action("patchShots", Some(&args(json!({ "field": "width", "shotIds": ["s1"], "value": 512 })))).expect("inspector bridge"),
+        ShootingPlayApp::command_from_action("patchShots", Some((args(json!({ "field": "width", "shotIds": ["s1"], "value": 512 }))).clone()), None).expect("inspector bridge"),
         ShootingCommand::PatchShots(patch_shots::PatchShots { shot_ids: vec!["s1".into()], field: "width".into(), value: "512".into() })
     );
-    assert_eq!(ShootingPlayApp::command_from_action("addShot", Some(&args(json!({ "format": "svg", "shape": "ellipse" })))).expect("catalogue bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
-    assert_eq!(ShootingPlayApp::command_from_action("addShot", None).expect("defaults bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("addShot", Some((args(json!({ "format": "svg", "shape": "ellipse" }))).clone()), None).expect("catalogue bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("addShot", None, None).expect("defaults bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }));
     assert_eq!(
-        ShootingPlayApp::command_from_action("translateSelection", Some(&args(json!({ "mode": "object", "ids": ["a1"], "dx": 1, "dy": 0, "dz": -2.5 })))).expect("gumball bridge"),
+        ShootingPlayApp::command_from_action("translateSelection", Some((args(json!({ "mode": "object", "ids": ["a1"], "dx": 1, "dy": 0, "dz": -2.5 }))).clone()), None).expect("gumball bridge"),
         ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["a1".into()], dx: 1.0, dy: 0.0, dz: -2.5 })
     );
-    let ShootingCommand::SetCamera(set_camera::SetCamera { camera }) = ShootingPlayApp::command_from_action("setCamera", Some(&args(json!({ "windowId": "w1", "camera": { "position": [1, 2, 3], "target": [0, 0, 0], "zoom": 2 } })))).expect("viewport bridge") else {
+    let ShootingCommand::SetCamera(set_camera::SetCamera { camera }) = ShootingPlayApp::command_from_action("setCamera", Some((args(json!({ "windowId": "w1", "camera": { "position": [1, 2, 3], "target": [0, 0, 0], "zoom": 2 } }))).clone()), None).expect("viewport bridge") else {
         panic!("setCamera must bridge to SetCamera");
     };
     assert_eq!(camera.position, [1.0, 2.0, 3.0]);
     assert_eq!(camera.zoom, 2.0);
     assert_eq!(camera.fov, crate::default_fov());
-    assert_eq!(ShootingPlayApp::command_from_action("loadSavedCamera", Some(&args(json!({ "id": "cam1" })))).expect("possible engagement bridge"), ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: "cam1".into() }));
-    assert_eq!(ShootingPlayApp::command_from_action("setShotSelection", Some(&args(json!({ "shotIds": ["s1", "s2"] })))).expect("tree bridge"), ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into(), "s2".into()] }));
-    assert_eq!(ShootingPlayApp::command_from_action("exportAllShots", None).expect("export bridge"), ShootingCommand::ExportAllShots(export_all_shots::ExportAllShots {}));
+    assert_eq!(ShootingPlayApp::command_from_action("loadSavedCamera", Some((args(json!({ "id": "cam1" }))).clone()), None).expect("possible engagement bridge"), ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: "cam1".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("setShotSelection", Some((args(json!({ "shotIds": ["s1", "s2"] }))).clone()), None).expect("tree bridge"), ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into(), "s2".into()] }));
+    assert_eq!(ShootingPlayApp::command_from_action("exportAllShots", None, None).expect("export bridge"), ShootingCommand::ExportAllShots(export_all_shots::ExportAllShots {}));
 }
 //#endregion 🔖️ActionBridge
 

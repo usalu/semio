@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/trinity-jack-lsp-worker",
   "version": "0.1.0",

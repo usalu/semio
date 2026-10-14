@@ -3,7 +3,7 @@ use semio_framework_diagnostic::{FaultOrigin,TextError};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};
 use super::{PackTransportCategory,PackRetryDisposition,TransportCaptureRefusal};
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Clone,PartialEq,semio_framework_value::RetireOwned)]
 pub enum PackRefusal{
  BadMagic,
  UnsupportedVersion{major:u16,minor:u16},

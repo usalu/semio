@@ -9,7 +9,7 @@ import { pathToFileURL } from "node:url";
 import { describe, expect, test } from "vitest";
 import { artifactKindActivationOwner, ON_ARTIFACT_KIND_ACTIVATION_PREFIX } from "@semio-tech/framework";
 import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
-const catalog = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog;
+const catalog = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog;
 import { hostProjection, installedScope } from "../🧩️scope/🟦️.ts";
 import { resolvePluginHostConfig } from "@semio-tech/framework";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
@@ -41,8 +41,8 @@ describe("host variant session", () => {
     expect(session.plugins.map((row) => row.pluginId).sort()).toEqual(hostProjection.entries.map((row) => row.pluginId).sort());
     expect(session.plugins.length).toBeGreaterThan(1);
     expect(resolvePluginHostConfig(catalog, installedScope.missingVariant)).toBeUndefined();
-    const operation = new AbortController(), composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] installed host ${event.completed}/${event.total}`) });
-    expect(() => resolveFrameworkOsCatalogConfigurationV1(composition.rows, installedScope.missingVariant, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] missing host ${event.completed}/${event.total}`) })).toThrow();
+    const operation = new AbortController(), composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] installed host ${event.completed}/${event.total}`) });
+    expect(() => resolveFrameworkOsCatalogConfigurationV1(composition.rows, installedScope.missingVariant, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: event => console.log(`[DEBUG] missing host ${event.completed}/${event.total}`) })).toThrow();
   });
 
   test("a non-host variant stays filtered to its own closure", () => {

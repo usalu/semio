@@ -7,7 +7,7 @@
     "route": "testing-readme-coordinates",
     "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🗺️testing-readme-coordinates/🟦️.ts",
     "launchName": "🧹clean🧩️taxonomy🗺️testing-readme-coordinates",
-    "launchCommand": "bun nx run @semio-tech/repo-lib:test-testing-readme-coordinates --skip-nx-cache",
+    "launchCommand": "bun repo run @semio-tech/repo-lib:test-testing-readme-coordinates --skip-nx-cache",
     "launchGroup": "4_gate",
     "launchOrder": 410.192
   },

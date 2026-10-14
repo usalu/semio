@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "projectType": "library",
   "name": "@semio-tech/draw-js",
   "version": "0.1.0",
@@ -7,8 +7,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun nx run @semio-tech/draw-js:test",
-    "utility-action-policy": "bun nx run @semio-tech/draw-js:utility-action-policy"
+    "test": "bun repo run @semio-tech/draw-js:test",
+    "utility-action-policy": "bun repo run @semio-tech/draw-js:utility-action-policy"
   },
   "dependencies": {},
   "devDependencies": {

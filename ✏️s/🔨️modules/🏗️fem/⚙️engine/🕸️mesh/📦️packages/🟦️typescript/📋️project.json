@@ -7,7 +7,7 @@
   ],
   "targets": {
     "test-surface-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",
@@ -16,7 +16,7 @@
       }
     },
     "test-neutral-surface": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "cache": false,
       "options": {
         "cwd": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🟦️typescript",

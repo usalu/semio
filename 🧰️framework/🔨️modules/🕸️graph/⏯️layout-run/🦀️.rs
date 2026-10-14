@@ -12,7 +12,7 @@
 //! Schema of record: `🧬️schema/🔣️.json`. Contract: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/📋️tool-run-contract.md` §3.7, §5 W3-F.
 
 use semio_framework_value::{FromValue, ToValue};
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPublication, StepContext, JOB_PAYLOAD_PAGE_BYTES};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPublication, StepContext, JOB_PAYLOAD_PAGE_BYTES};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_tool_run::{
     JobKindId, ToolRunCounter, ToolRunCounterDefinition, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTickWriter,
@@ -1395,8 +1395,8 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
         Ok(RetirementDemand { release_bytes: self.next_release_bytes(), depth: usize::from(!self.owns_nothing()), ..Default::default() })
     }
 
-    fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
-        let step = self.publication.close_step(cx.retained_grant())?;
+    fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+        let step = self.publication.close_step(cx.retained_grant()).map_err(|error| OriginalTurnFailure::debit_original(error, cx))?;
         cx.consume_retained(step.progress())?;
         if self.publication.terminal_is_empty() {
             if let Some((_, bytes)) = self.staged.as_ref() {
@@ -1444,12 +1444,12 @@ enum LayoutRunTurn {
 }
 
 impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if self.delivered {
             return self.retire_delivered(cx);
         }
         if cx.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         if let Some((kind, bytes)) = self.staged.as_ref() {
             let outcome = self.publication.advance_from_source(*kind, bytes, cx)?;
@@ -1469,8 +1469,8 @@ impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
         };
         match turn {
             LayoutRunTurn::Yield | LayoutRunTurn::Staged => Ok(None),
-            LayoutRunTurn::Cancelled => JobOutcomeBorrow::admit_cancelled(cx),
-            LayoutRunTurn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
+            LayoutRunTurn::Cancelled => JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into),
+            LayoutRunTurn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into),
         }
     }
 
@@ -1488,36 +1488,29 @@ impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
         self.writer = ToolRunTickWriter::new(self.writer.identity());
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        if !self.closing || grant.maximum_items == 0 {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        if self.terminal_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
-        }
-        let demand = match self.close_demands() {
-            Ok(demand) => demand,
-            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        };
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+        let grant = cx.retained_grant();
+        if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+        if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }); }
+        if cx.should_yield() || grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+        let demand = self.close_demands()?;
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        if !self.publication.terminal_is_empty() {
-            return match self.publication.close_step(grant) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
-        }
-        if let Some((_, bytes)) = self.staged.take() {
+        cx.consume_fuel(1);
+        let progress = if !self.publication.terminal_is_empty() {
+            self.publication.close_step(grant).map_err(|error| OriginalTurnFailure::debit_original(error, cx))?.progress()
+        } else if let Some((_, bytes)) = self.staged.take() {
             let released_bytes = bytes.capacity();
             drop(bytes);
             self.delivered = false;
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } };
-        }
-        match self.release_next() {
-            Some(released_bytes) => InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } },
-            None => InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() },
-        }
+            RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }
+        } else {
+            let Some(released_bytes) = self.release_next() else { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }); };
+            RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }
+        };
+        cx.consume_retained(progress)?;
+        Ok(InteractiveJobCloseStep::Pending { progress })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -1806,13 +1799,21 @@ pub mod testing {
     /// 🧹️ Closes a job the way the ledger does, one owned buffer per `close_step`.
     pub fn layout_run_close<J: InteractiveJob + ?Sized>(job: &mut J) {
         let grant = wallet();
+        let (mut owner, _) = StepContextOwner::new(OperationId(1), Generation(1), grant).expect("layout close context owner admission");
+        let cancel = root_cancel_token();
+        let mut sequence = 0;
+        let mut complete = false;
         job.begin_close();
         for _ in 0..4096 {
-            if matches!(job.close_step(grant), InteractiveJobCloseStep::Complete { .. }) {
-                return;
-            }
+            let mut receipt = RetainedCloneProgress::default();
+            let mut cx = owner.context(StepBudget::new(1, INTERACTIVE_LANE_WALL_US, grant), cancel.clone(), frozen_now, &mut sequence, &mut receipt).expect("layout close original context");
+            let step = job.close_step(&mut cx).expect("layout close original failure custody");
+            assert_eq!(step.progress(), cx.retained_progress());
+            if matches!(step, InteractiveJobCloseStep::Complete { .. }) { complete = true; break; }
         }
-        panic!("layout run job did not close");
+        for _ in 0..4096 { if owner.terminal_is_empty() { break; } owner.close_step(grant); }
+        assert!(owner.terminal_is_empty(), "layout close context owner did not close");
+        assert!(complete, "layout run job did not close");
     }
 }
 //#endregion 🔖️Testing

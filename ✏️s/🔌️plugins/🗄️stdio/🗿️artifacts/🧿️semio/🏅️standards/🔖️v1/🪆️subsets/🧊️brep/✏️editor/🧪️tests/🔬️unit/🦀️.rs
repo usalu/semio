@@ -30,14 +30,14 @@ fn one_vertex_snapshot() -> SemioBrepSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_parses_the_point_payload() {
     let args = DslValue::Object(vec![("vertexId".to_string(), DslValue::String("v1".into())), ("point".to_string(), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]))]);
-    let command = SemioBrepEditor::command_from_action("set-vertex", Some(&args)).expect("set-vertex is supported");
+    let command = SemioBrepEditor::command_from_action("set-vertex", Some((args).clone()), None).expect("set-vertex is supported");
     assert_eq!(command, editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { vertex_id: "v1".into(), point: [1.0, 2.0, 3.0] })));
-    assert!(SemioBrepEditor::command_from_action("set-vertex", Some(&DslValue::Object(vec![]))).is_err());
+    assert!(SemioBrepEditor::command_from_action("set-vertex", Some((DslValue::Object(vec![])).clone()), None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_rejects_unknown_actions() {
-    assert!(SemioBrepEditor::command_from_action("delete-vertex", None).is_err());
+    assert!(SemioBrepEditor::command_from_action("delete-vertex", None, None).is_err());
 }
 
 /// ✏️ Stable vertex id plus little-endian `[f64;3]` `OpBinary` round trip.

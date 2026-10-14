@@ -862,7 +862,9 @@ impl ArtifactEditor for BitmapEditor {
         bitmap_command_id(command)
     }
 
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         args_bridge::command_from_action(action, args)
     }
 
@@ -894,9 +896,14 @@ impl ArtifactEditor for BitmapEditor {
         _view_state: &semio_framework_plugin::ViewModel,
         transient: &TransientView<'_, Self::Transient>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         Self::render_bodies(body_key, doc.snapshot, cfg, transient.snapshot, doc.tool_run())
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
         if request.tool_id != fill_tool::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {

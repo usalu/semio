@@ -22,7 +22,8 @@
       "coverageEnabled": false,
       "targetDirectory": "/owner/compiler-output",
       "buildDirectory": "/owner/compiler-build",
-      "leaseDirectory": "/owner/resource-leases"
+      "leaseDirectory": "/owner/resource-leases",
+      "mode": "prototype"
     },
     {
       "version": 1,
@@ -45,7 +46,8 @@
       "coverageEnabled": false,
       "targetDirectory": "/owner/compiler-output",
       "buildDirectory": "/owner/compiler-build",
-      "leaseDirectory": "/owner/resource-leases"
+      "leaseDirectory": "/owner/resource-leases",
+      "mode": "prototype"
     },
     {
       "version": 1,
@@ -68,7 +70,8 @@
       "coverageEnabled": true,
       "targetDirectory": "/owner/compiler-output",
       "buildDirectory": "/owner/compiler-build",
-      "leaseDirectory": "/owner/resource-leases"
+      "leaseDirectory": "/owner/resource-leases",
+      "mode": "prototype"
     },
     {
       "version": 1,
@@ -91,7 +94,8 @@
       "coverageEnabled": true,
       "targetDirectory": "/owner/compiler-output",
       "buildDirectory": "/owner/compiler-build",
-      "leaseDirectory": "/owner/resource-leases"
+      "leaseDirectory": "/owner/resource-leases",
+      "mode": "prototype"
     }
   ],
   "libtestCompilation": {
@@ -100,11 +104,38 @@
     "integration": "#[test] fn selected_original_profile() { std::fs::write(std::env::var(\"DRAW_CARGO_ASSERTION_FILE\").unwrap(), b\"integration\").unwrap(); }\n",
     "unselected": "compile_error!(\"unselected integration target was compiled\");\n",
     "cases": [
-      {"id":"default-library","arguments":["--lib","selected_original_profile"],"expected":"library"},
-      {"id":"exact-integration","arguments":["--test","selected","selected_original_profile"],"expected":"integration"},
-      {"id":"explicit-dev-library","arguments":["--lib","--profile","dev","selected_original_profile"],"expected":"library"}
+      {
+        "id": "default-library",
+        "arguments": [
+          "--lib",
+          "selected_original_profile"
+        ],
+        "expected": "library"
+      },
+      {
+        "id": "exact-integration",
+        "arguments": [
+          "--test",
+          "selected",
+          "selected_original_profile"
+        ],
+        "expected": "integration"
+      },
+      {
+        "id": "explicit-dev-library",
+        "arguments": [
+          "--lib",
+          "--profile",
+          "dev",
+          "selected_original_profile"
+        ],
+        "expected": "library"
+      }
     ],
-    "buildPrefix": ["test","--no-run"]
+    "buildPrefix": [
+      "test",
+      "--no-run"
+    ]
   },
   "arguments": [
     "--features",
@@ -140,6 +171,8 @@
     ],
     "command": [
       "clippy",
+      "--profile",
+      "prototype",
       "--manifest-path",
       "/owner/Cargo.toml",
       "-p",
@@ -177,5 +210,14 @@
       "noClean": false,
       "extractOverwrite": false
     }
+  ],
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "refusedModes": [
+    null,
+    "dev",
+    "test"
   ]
 }

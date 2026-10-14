@@ -1,0 +1,148 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "plugins",
+    "playgrounds"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "plugins": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pluginId",
+          "cratePath",
+          "wasmOut",
+          "role",
+          "extends",
+          "capabilities",
+          "activationEvents",
+          "host"
+        ],
+        "properties": {
+          "pluginId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cratePath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "wasmOut": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "enum": [
+              "plugin",
+              "extension"
+            ]
+          },
+          "extends": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "capabilities": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "activationEvents": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "landingAppId",
+                  "hostAppId"
+                ],
+                "properties": {
+                  "landingAppId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "hostAppId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "playgrounds": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "pluginId",
+          "app",
+          "aliases"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pluginId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "app": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "aliases": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-os",
   "version": "0.1.0",
   "description": "framework · os — composable operating system shell (CQRS, workflow, plugin registry)",
@@ -16,11 +16,11 @@
     "@semio-tech/framework-replication": "workspace:*"
   },
   "scripts": {
-    "generate-wgpu": "bun nx run @semio-tech/framework-os:generate-wgpu",
-    "check-wgpu": "bun nx run @semio-tech/framework-os:check-wgpu",
-    "preview-generated": "bun nx run @semio-tech/framework-os:preview-generated",
-    "test": "bun nx run @semio-tech/framework-os:test",
-    "installed-service-source": "nx run @semio-tech/framework-os:installed-service-source"
+    "generate-wgpu": "bun repo run @semio-tech/framework-os:generate-wgpu",
+    "check-wgpu": "bun repo run @semio-tech/framework-os:check-wgpu",
+    "preview-generated": "bun repo run @semio-tech/framework-os:preview-generated",
+    "test": "bun repo run @semio-tech/framework-os:test",
+    "installed-service-source": "bun repo run @semio-tech/framework-os:installed-service-source"
   },
   "devDependencies": {
     "dom-accessibility-api": "0.5.16",

@@ -1,9 +1,9 @@
 //#region 📄️PrivatePagedInputAuthority
 import { OwnedUiResidentPayload, OwnedUiResidentPayloadReader, OwnedUiResidentReaderRetirement, type OwnedUiResidentReaderAdmission, type OwnedUiResidentReaderStep, type OwnedUiResidentPage } from "../../../💾️resident/🟦️.ts";
 import type { OwnedUiInstance } from "../../../🏘️instance/🟦️.ts";
-import type { NumericIndexGrant } from "../../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { NumericIndexGrant } from "../../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import type { RetainedUiWireStep } from "../../../📦️wire/🟦️.ts";
-import type { ActorInstanceLifetime } from "../../../../../../🎭️actor/🚪️lifetime/🟦️.ts";
+import type { ActorInstanceLifetime } from "../../../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import type { ShardActorActivationLease } from "../../../../../../🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnInputRelease } from "../../../../../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts";
 

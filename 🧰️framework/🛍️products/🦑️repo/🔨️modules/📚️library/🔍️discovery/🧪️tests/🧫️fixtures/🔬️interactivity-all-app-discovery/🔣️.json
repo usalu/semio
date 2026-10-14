@@ -162,7 +162,7 @@
             "semio": {
               "dashboard": {
                 "parameters": [
-                  { "id": "cache", "kind": "choice", "values": [{ "id": "skip-local", "nxFlags": ["--skip-nx-cache"] }] },
+                  { "id": "cache", "kind": "choice", "values": [{ "id": "skip-local", "buildFlags": ["--skip-nx-cache"] }] },
                   {
                     "id": "verification",
                     "kind": "choice",

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@semio-tech/framework-renderer-react",
   "version": "0.1.0",
   "description": "framework · trusted React renderer for declarative Rust program UI trees",
@@ -14,8 +14,8 @@
     ".": "./🟦️.tsx"
   },
   "scripts": {
-    "paint2d-editing-check": "bun nx run @semio-tech/framework-renderer-react:paint2d-editing-check",
-    "test": "bun nx run @semio-tech/framework-renderer-react:test"
+    "paint2d-editing-check": "bun repo run @semio-tech/framework-renderer-react:paint2d-editing-check",
+    "test": "bun repo run @semio-tech/framework-renderer-react:test"
   },
   "dependencies": {
     "@react-three/fiber": "^9.5.0",

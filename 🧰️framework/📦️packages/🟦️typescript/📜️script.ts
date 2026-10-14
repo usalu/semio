@@ -15,7 +15,7 @@ import { runScriptMain } from "../../🔨️modules/🏃️process/📦️packag
 
 function retainedUiNativeStripOnly(): void {
   const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
-  const numeric = new URL("../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts", import.meta.url).href;
+  const numeric = new URL("../../🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts", import.meta.url).href;
   const fixture = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🧪️tests/🧫️fixtures/🌳️owned-nodes/🔣️.json", import.meta.url).href;
   const validation = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🛡️validation/🟦️.ts", import.meta.url).href;
   const nodes = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🗂️nodes/🟦️.ts", import.meta.url).href;
@@ -357,6 +357,14 @@ function retainedUiNativeStripOnly(): void {
   console.log(`retained UI native strip-only oracle: ${result.laws} fixture laws, ${result.grants} grants, ${result.retired} one-time retirements, ${result.cancellations} table cancellation, ${result.validationCancellations} validation cancellations, ${result.hashBytes} hash bytes in ${result.hashChunks} chunks over ${result.hashCalls} advances, ${result.hashCancellations} hash cancellations, ${result.readCancellations} read cancellations, ${result.readCaptures} read captures/releases, ${result.readCancelTurns} cancel turns, ${result.readRetirementTurns} publish-retirement turns, ${result.readCloseTurns} final read close turns`);
 }
 
+/** 🥽️ Executes portable polygon geometry with independent Three.js and schema oracles. */
+class PolygonMeshScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("test-polygon-mesh accepts no arguments");
+    await runOwnedCommand(process.execPath, ["test", fileURLToPath(new URL("../../🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🔬️unit/🟦️.ts", import.meta.url))], this.root, "framework:polygon-mesh", 30_000);
+  }
+}
+
 /** 📏️ Executes the closed general command-owner boundary. */
 class ScriptBoundaryScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -398,6 +406,6 @@ class InstallationIdentityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-polygon-mesh", PolygonMeshScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

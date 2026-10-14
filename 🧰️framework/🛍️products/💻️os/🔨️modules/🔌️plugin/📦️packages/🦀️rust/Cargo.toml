@@ -27,6 +27,8 @@ default = []
 # lives behind exactly this gate.
 component-guest-async = []
 artifact-app-testing = []
+media-turn-testing = []
+original-actor-context-testing = []
 
 [dependencies]
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -119,3 +121,13 @@ semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️
 # own thread). Dev-only, so no interactive-reachable build ever sees the gate open.
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async", features = ["entrypoint"] }
 wasmtime = { version = "47.0.3", features = ["cranelift"] }
+
+[[test]]
+name = "media-turn"
+path = "../../🎞️media/⚠️turn/🧪️tests/🎟️native/🦀️.rs"
+required-features = ["media-turn-testing"]
+
+[[test]]
+name = "owned-output"
+path = "../../⚛️reactor/🎟️context/🌉️call/💼️job/📤️output/🧪️tests/🎟️native/🦀️.rs"
+required-features = ["original-actor-context-testing"]

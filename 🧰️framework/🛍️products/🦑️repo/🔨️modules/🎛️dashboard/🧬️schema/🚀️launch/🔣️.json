@@ -96,7 +96,7 @@
         },
         "command": {
           "type": "string",
-          "pattern": "^bun nx run @semio-tech/repo-dashboard-rs:launch -- run ticket:[0-9]{2}/[0-9]{2}/[0-9]{2}/[A-Z0-9]+(?:-[A-Z0-9]+)*/[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+          "pattern": "^bun repo run @semio-tech/repo-dashboard-rs:launch -- run ticket:[0-9]{2}/[0-9]{2}/[0-9]{2}/[A-Z0-9]+(?:-[A-Z0-9]+)*/[a-z0-9]+(?:[._-][a-z0-9]+)*$"
         },
         "cwd": {
           "const": "${workspaceFolder}"

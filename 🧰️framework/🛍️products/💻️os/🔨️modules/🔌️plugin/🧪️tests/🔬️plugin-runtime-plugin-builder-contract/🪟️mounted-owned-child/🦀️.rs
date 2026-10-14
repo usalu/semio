@@ -48,7 +48,7 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         for _ in 0..100000 { if matches!(prepare_original_fixture_child(&mut emit, 1, 262144).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
         assert_eq!(emit.owned_child_emits.len(), count);
         assert!(emit.child_emits.is_empty());
-        let (mutations, inverse_group, operation) = crate::child_content::test_mounted_original_owned_publication(&mut app, emit, meta(), row["parentTouched"].as_bool().unwrap(), |app| (0..count).map(|index| {
+        let (mutations, inverse_group, operation,mut caller) = crate::child_content::test_mounted_original_owned_publication(&mut app, emit, meta(), row["parentTouched"].as_bool().unwrap(), |app| (0..count).map(|index| {
             let TestMembers::Child(child) = &app.children.get(&("slot".into(), format!("child-{}", index + 1))).unwrap().member;
             child.snapshot_ref().count != 0
         }).collect()).await;
@@ -74,7 +74,10 @@ async fn mounted_owned_child_actual_publisher_commits_original_parent_and_childr
         println!("[DEBUG] actual mounted original owned group parent={} children={count} operations={} memberEdits={} Child page stable until exact ACK", row["parentTouched"], mutations.len(), inverse_group.member_edits.len());
         drop(mutations);
         drop(inverse_group);
-        drain_and_close_composed_fixture(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+        let policy=crate::app_testing::artifact_app_laws::fixture_mounted_policy();
+        for _ in 0..64{for _ in 0..MAINTENANCE_STAGES{let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(policy.maintenance.maximum_items),..policy.maintenance};caller.turn(grant,|cx|{let demand=app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::maintenance_step(&mut app,same,grant)?,app.maintenance_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();}}
+        for turn in 0..100000{if app.close_terminal_is_empty(){break}let grant=policy.close;caller.turn(grant,|cx|{let demand=app.close_retirement_demands(grant.maximum_copy_bytes)?;crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant|Ok((PluginApp::close_step(&mut app,same,grant)?,app.close_terminal_is_empty()))).map(|_|()).map_err(Into::into)}).unwrap();assert!(turn<99999,"original composed fixture full closure");}
+        assert!(app.close_terminal_is_empty());caller.retire(policy.close);
     }
 }
 

@@ -3,7 +3,7 @@ use semio_framework_ui_contract as ui_contract;
 use semio_framework_ui_runtime::{ComponentTree, TreeNode};
 
 fn leaf(key: &str) -> ComponentTree {
-    ComponentTree { root: TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).unwrap_or_else(|_| panic!("bounded test tree")) }
+    ComponentTree::new(TreeNode::try_new(key, ui_contract::Component::Separator(ui_contract::SeparatorProps {})).unwrap_or_else(|_| panic!("bounded test tree")))
 }
 
 /// 🎯️ M1: `PATCHES.revision` reads 0 for a surface `poll` has never rendered, and
@@ -23,13 +23,16 @@ async fn revision_guard_never_rejects_an_intent_at_the_never_rendered_default() 
 /// no command" reduced to the guard `poll` evaluates before ever reaching dispatch.
 #[semio_framework_async_macros::async_test]
 async fn revision_guard_rejects_an_intent_trailing_by_more_than_the_tolerance() {
-    patches_diff("s", leaf("root")).await;
-    patches_diff("s", leaf("root2")).await;
-    patches_diff("s", leaf("root3")).await;
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().unwrap();let mut cx=original_caller.context();
+
+    patches_diff("s",leaf("root"),&mut cx).await;
+    patches_diff("s",leaf("root2"),&mut cx).await;
+    patches_diff("s",leaf("root3"),&mut cx).await;
     let current = patches_revision("s").await;
     assert_eq!(current, ui_contract::UiRevision(3));
     assert!(!semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(2), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by exactly the tolerance must still dispatch");
     assert!(semio_framework_ui_runtime::is_stale_intent(ui_contract::UiRevision(1), current, semio_framework_ui_runtime::DEFAULT_REVISION_TOLERANCE), "trailing by 2 must be rejected — no patch, no command");
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("same original repeated-render fixture caller close");
 }
 
 /// 👥️ M2 acceptance: a turn where only presence changed touches `PRESENCE` and leaves `PATCHES`

@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "hostFactory": {
+    "originalContext": true,
+    "retainedOpening": true,
+    "instructionReceiptBeforeReturn": true,
+    "admittedInputBeforeHandle": true,
+    "fullFailureRestoresOwner": true
+  },
+  "operation": 71,
+  "generation": 3,
+  "channelVersion": 23,
+  "phases": [
+    "Resources",
+    "StartOpening",
+    "StartDriving",
+    "StartClosing",
+    "ChannelOpening",
+    "ChannelDriving",
+    "ChannelParsing",
+    "ChannelClosing",
+    "Ready",
+    "Closing"
+  ],
+  "expectedInstructions": 2,
+  "transferCuts": [
+    {
+      "copyBytes": 0,
+      "expectedTaken": false
+    },
+    {
+      "copyBytes": 4096,
+      "expectedTaken": true
+    }
+  ],
+  "nativeFactory": {
+    "transferCopyBytes": [
+      0,
+      8192
+    ],
+    "foreignSourceSameBusiness": true,
+    "terminalState": "Closed"
+  }
+}

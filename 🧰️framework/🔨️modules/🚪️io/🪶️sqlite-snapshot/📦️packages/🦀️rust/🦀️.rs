@@ -20,8 +20,8 @@ pub use component::{
     ValueError, ValueRefusalKind, SQLITE_SNAPSHOT_APPLICATION_ID, SQLITE_SNAPSHOT_USER_VERSION,
 };
 
-#[cfg(test)]
 pub(crate) mod sqlite_snapshot {pub use super::component::*;}
-#[cfg(test)]
 #[path="../../../⏱️control/🦀️.rs"]
-pub(crate) mod original_control;
+pub mod control;
+#[cfg(test)]
+pub(crate) use control as original_control;

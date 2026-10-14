@@ -1,8 +1,8 @@
 # 🚚️ Architecture quiz releases, started by hand only (Actions → "architecture quiz" → Run workflow → branch `main`):
-#   site    — `bun nx run @teaching/architecture-quiz:publish` builds and verifies the CDN artifact against the production
+#   site    — `bun repo run @teaching/architecture-quiz:publish` builds and verifies the CDN artifact against the production
 #             proctor, then GitHub Pages serves it at quizze.architektur-und-technologie.de.
-#   proctor — `bun nx run @teaching/architecture-quiz:docker-image-build` builds the proctor image;
-#             `bun nx run @teaching/architecture-quiz:docker-image-publish` checks the image and the stack and only then
+#   proctor — `bun repo run @teaching/architecture-quiz:docker-image-build` builds the proctor image;
+#             `bun repo run @teaching/architecture-quiz:docker-image-publish` checks the image and the stack and only then
 #             pushes it to ghcr.io/usalu/architecture-quiz-proctor as `sha-<commit>` (never moved again: the rollback
 #             target), `<workspace version>` and `latest`, printing the digest.
 # Both jobs run on `main` only: a run started from another branch skips them, so nothing but reviewed code reaches the
@@ -62,9 +62,9 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Test the catalog and the deployment files
-        run: bun nx run @teaching/architecture-quiz:test
+        run: bun repo run @teaching/architecture-quiz:test
       - name: Build and verify the CDN artifact
-        run: bun nx run @teaching/architecture-quiz:publish --configuration=release
+        run: bun repo run @teaching/architecture-quiz:publish --configuration=release
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: 🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release/pages/quizzes
@@ -108,11 +108,11 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Build the proctor image
-        run: bun nx run @teaching/architecture-quiz:docker-image-build
+        run: bun repo run @teaching/architecture-quiz:docker-image-build
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Check the image and the stack, then push
-        run: bun nx run @teaching/architecture-quiz:docker-image-publish
+        run: bun repo run @teaching/architecture-quiz:docker-image-publish

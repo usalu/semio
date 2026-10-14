@@ -368,7 +368,7 @@ export async function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1
   const unitGraphs = new Map(plan.passes.map((pass) => [pass.id, (async (): Promise<CargoUnitGraphV1> => {
     const port = options.cargo ?? { command: "cargo", args: [] };
     check();
-    const request = exec(port.command, [...port.args, ...cargoConfigurationArgumentsV1(nativeBuildUnitGraphArgsV1(pass),options.compilerConfiguration)], { cwd: options.cwd, signal, timeout: compilerAdmissionBudgetV1(admission), maxBuffer: 512 * 1024 * 1024, env: { ...options.environment, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" } });
+    const request = exec(port.command, [...port.args, ...cargoConfigurationArgumentsV1(nativeBuildUnitGraphArgsV1(pass),options.compilerConfiguration,generation.build)], { cwd: options.cwd, signal, timeout: compilerAdmissionBudgetV1(admission), maxBuffer: 512 * 1024 * 1024, env: { ...options.environment, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" } });
     children.add(request.child);
     let output: Awaited<typeof request>;
     try { output = await request; check(); } catch (error) { check(); throw error; } finally { children.delete(request.child); }
@@ -410,11 +410,11 @@ export async function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1
     })());
   };
   const runPass = async (pass: NativeBuildPassV1): Promise<void> => {
-    const args = cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass),options.compilerConfiguration), startMs = Date.now(), units: { message: any; evidence: unknown }[] = [], buildScripts: unknown[] = [], linked = new Map<string, string>();
+    const args = cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass),options.compilerConfiguration,generation.build), startMs = Date.now(), units: { message: any; evidence: unknown }[] = [], buildScripts: unknown[] = [], linked = new Map<string, string>();
     const slot = await jobserver.acquire(signal);
     let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
     try {
-      lease = await acquireCargoBuildLeaseV1({ directory: options.leaseDirectory, buildDirectory: generation.build, args, signal: admission.signal, control: admission });
+      lease = await acquireCargoBuildLeaseV1({ directory: options.leaseDirectory, buildDirectory: generation.build, targetDirectory: generation.target, args, signal: admission.signal, control: admission });
       check();
       broker.registerPass({ id: pass.id, profile: pass.profile, target: pass.target });
       const port = options.cargo ?? { command: "cargo", args: [] };

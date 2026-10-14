@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { runExactCargoLaws, configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -7,13 +9,25 @@ import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦�
 import { resolve } from "node:path";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter,scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments[0] === "original-owned-wire-source" || segments[0] === "original-owned-wire-native") {
+      if (segments.length !== 1) throw Error("Original owned wire gate requires one exact cohort");
+      const remaining = this.invocation.control.remainingMilliseconds();
+      if (remaining === null || remaining <= 0) throw Error("Original owned wire requires finite original deadline");
+      await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🌱️value/🛫️encode/🫳️borrowed/📨️wire/🧪️tests/🟦️.ts")], this.repoRoot, "pack:original-owned-wire-source", remaining, { env: process.env });
+      if (segments[0] === "original-owned-wire-native") {
+        const left = this.invocation.control.remainingMilliseconds();
+        if (left === null || left <= 0) throw Error("Original owned wire exhausted before native admission");
+        await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left }, manifestPaths: { "semio-framework-pack": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-pack", target: { kind: "test", name: "original-owned-wire" }, laws: ["original_owned_source_header_returns_without_payload_copy", "original_owned_pack_wire_returns_same_source_and_matches_normal_decoder", "original_owned_pack_wire_cancellation_closes_all_original_backing", "original_owned_pack_wire_physical_retirement_closes_actual_native_fields"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR });
+      }
+      return;
+    }
     const { rest } = resolveTestLevel(segments);
     await runRetainedIntrinsicSource(this.root,this.repoRoot);
     await runOccurrenceOrderSource(this.root,this.repoRoot);
@@ -139,4 +153,15 @@ router.register("test-intrinsic-schema-native",IntrinsicSchemaNativeScript);
 router.register("test-retained-intrinsic-source",RetainedIntrinsicSourceScript);
 router.register("test-occurrence-order-source",OccurrenceOrderSourceScript);
 router.register("test-original-storage",OriginalStorageScript);
+/** 🫴️ Executes complete stored original Record receiving laws after their neutral source contract. */
+class OriginalRecordReceivingScript extends BundleScript{
+ async run(segments:string[]):Promise<void>{
+  const mode=segments[0];if(segments.length!==1||(mode!=="source"&&mode!=="native"))throw Error("test-original-record-receiving requires source or native");
+  const source=resolve(this.root,"../../🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
+  if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--offline","--lib","original_record_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env));
+ }
+}
+router.register("test-original-record-receiving",OriginalRecordReceivingScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

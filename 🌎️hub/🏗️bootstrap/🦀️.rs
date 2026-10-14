@@ -10863,7 +10863,7 @@ async fn get_trusted_plugin_module_file(Path((bundle_sha256, path)): Path<(Strin
 //#region 🔖️AdminPage
 /// 🛡️ Static SPA serving for `/admin` (contract §C2) — reads from `HubState.admin_dir`
 /// (lane 1-B's field, `OS_HUB_ADMIN_DIR` else the compile-time default pointing at lane 2-E's own
-/// `bun nx run os-hub-admin:build` output), mirroring `🔖️Extensions`'s `extension_asset_path`/
+/// `bun repo run os-hub-admin:build` output), mirroring `🔖️Extensions`'s `extension_asset_path`/
 /// `get_extension_asset` pair exactly: plain `tokio::fs::read`, no `tower-http`, a traversal guard
 /// before ever joining onto `root`, then a second `starts_with` check on the joined path as
 /// defense-in-depth. SPA fallback: any requested path whose exact file is missing (a client-side
@@ -10901,7 +10901,7 @@ fn admin_asset_path(root: &std::path::Path, rest: &str) -> Option<std::path::Pat
 async fn admin_page(state: &HubState, rest: &str) -> Response {
     let root = &state.admin_dir;
     if !root.is_dir() {
-        return (StatusCode::SERVICE_UNAVAILABLE, "admin SPA not built — run: bun nx run os-hub-admin:build").into_response();
+        return (StatusCode::SERVICE_UNAVAILABLE, "admin SPA not built — run: bun repo run os-hub-admin:build").into_response();
     }
     let Some(requested) = admin_asset_path(root, rest) else {
         return StatusCode::BAD_REQUEST.into_response();

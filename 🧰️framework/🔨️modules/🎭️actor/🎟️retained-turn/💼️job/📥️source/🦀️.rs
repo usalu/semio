@@ -11,7 +11,7 @@ use semio_framework_value::{retirement::controlled::ControlledRetirement,Retirem
 pub struct OriginalJobSource{pub job:u64,pub kind:String,pub input:Option<Vec<u8>>,pub checkpoint:Option<Vec<u8>>}
 
 /// ⏱️ The original caller deadline is absolute and shares the caller clock across the actual guest loan.
-#[derive(Clone,Copy,Debug,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize,semio_framework_value_derive::FromValue,semio_framework_value_derive::ToValue)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 #[value(crate="::protocol::value",rename_all="camelCase")]
 pub struct OriginalJobBudget{pub input:RetainedTurnInput,pub fuel:u64,pub deadline_us:u64,pub cancelled:bool}

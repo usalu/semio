@@ -1,8 +1,8 @@
 import { hostContinuations } from "../../⏳️async/🪃️continuation/🟦️.ts";
 import {textUtf8ByteLength} from "../../🌱️value/📝️text/🟦️.ts";
 /** 🪶️ Dependency-free relational SQLite 3 physical engine. @see https://sqlite.org/fileformat.html */
-import { ValueError, type ValueRefusalKind } from "../../🌱️value/⚠️refusal/🟦️.ts";
-export { ValueError, type ValueRefusalKind } from "../../🌱️value/⚠️refusal/🟦️.ts";
+import { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
+export { ValueError, type ValueRefusalKind } from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 
 export type SqliteValue = null | bigint | number | string | Uint8Array;
 /** 🧾️ Semantic cells in declared column order, including resolved INTEGER PRIMARY KEY aliases. */

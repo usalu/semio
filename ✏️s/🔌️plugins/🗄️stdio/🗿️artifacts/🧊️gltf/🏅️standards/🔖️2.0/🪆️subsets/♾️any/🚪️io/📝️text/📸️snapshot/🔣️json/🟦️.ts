@@ -1,4 +1,4 @@
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type {GltfJson,GltfAsset,GltfScene,GltfNode,GltfMorphTarget,GltfPrimitive,GltfMesh,GltfComponentType,GltfAccessorType,GltfSparseIndices,GltfSparseValues,GltfSparseAccessor,GltfAccessor,GltfBufferView,GltfBuffer,GltfTextureInfo,GltfNormalTextureInfo,GltfOcclusionTextureInfo,GltfPbrMetallicRoughness,GltfAlphaMode,GltfMaterial,GltfTexture,GltfImage,GltfSampler,GltfSkin,GltfAnimationPath,GltfAnimationChannelTarget,GltfAnimationChannel,GltfInterpolation,GltfAnimationSampler,GltfAnimation,GltfOrthographic,GltfPerspective,GltfCameraProjection,GltfCamera,GltfDocument,GltfSourceForm,GltfSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 //#region 🚪️Wire
 /** 🚫️ One refused wire position: where the instance breaks its contract and why. */

@@ -1,5 +1,7 @@
-import {createHash} from "node:crypto";
-import {lstat,readFile,writeFile,rename,rm} from "node:fs/promises";
+import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {withGraphPublicationLeaseV1,type GraphPublicationLeaseV1} from "../../../📤️publication/🟦️.ts";
+import {createHash,randomUUID} from "node:crypto";
+import {lstat,readFile,writeFile,rename,rm,realpath,mkdir} from "node:fs/promises";
 import {isAbsolute,join,relative} from "node:path";
 import {createSelectedGraphSourceReceiptV1,selectedGraphSourceReceiptHoldsV1,isGlobalGraphIdentityPathV1,validateSelectedGraphValueV1,type SelectedGraphJournalWitnessV1,type SelectedGraphScopeV1,type SelectedGraphSourcePortsV1,type SelectedGraphSourceReceiptV1} from "../🟦️.ts";
 import {graphEnvironmentIdentityV1} from "../../../../../🔌️nx-plugin/🌍️environment/🟦️.ts";
@@ -13,7 +15,18 @@ export interface SelectedGraphReuseReceiptV1 {readonly version:1;readonly toolin
 export interface SelectedGraphReusePortsV1 extends SelectedGraphSourcePortsV1 {readonly toolingIdentity:string;readonly environment:Readonly<Record<string,string|undefined>>;scope(graph:unknown):Promise<SelectedGraphScopeV1|null>;}
 const destination="semio-selected-graph-publisher.json",graphs=["project-graph.json","file-map.json"],receipts=["emoji-project-json.publication.json","test-cases.publication.json"];
 const hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");
-async function readPublication(file:string):Promise<Buffer>{const before=await lstat(file,{bigint:true});if(!before.isFile()||before.isSymbolicLink())throw Error("Original graph publication requires a real file");const bytes=await readFile(file),after=await lstat(file,{bigint:true});if(["dev","ino","size","mtimeNs","ctimeNs"].some(key=>(before as any)[key]!==(after as any)[key]))throw Error("Original graph publication changed during receipt");return bytes;}
+async function readPublication(file:string):Promise<Buffer>{const before=await lstat(file,{bigint:true});if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1n)throw Error("Original graph publication requires a real file");const bytes=await readFile(file),after=await lstat(file,{bigint:true});if(["dev","ino","nlink","size","mtimeNs","ctimeNs"].some(key=>(before as any)[key]!==(after as any)[key]))throw Error("Original graph publication changed during receipt");return bytes;}
+async function publicationArchive(directory:string,digest:string):Promise<string>{
+ const parent=requireMaterializedPathV1(join(directory,"pa"));if(await realpath(parent)!==parent)throw Error("Original graph publication archive requires real namespace custody");return requireMaterializedPathV1(join(parent,digest+".json"));
+}
+async function producerPublication(directory:string,name:string):Promise<string>{
+ const parent=requireMaterializedPathV1(join(directory,"inference","p-"+process.pid)),status=await lstat(parent);if(!status.isDirectory()||status.isSymbolicLink()||await realpath(parent)!==parent)throw Error("Original graph producer requires real namespace custody");return requireMaterializedPathV1(join(parent,name));
+}
+async function archivePublication(directory:string,bytes:Buffer,check:()=>void):Promise<string>{
+ check();await mkdir(join(directory,"pa"),{recursive:true});const digest=hash(bytes),file=await publicationArchive(directory,digest);check();
+ try{await writeFile(file,bytes,{flag:"wx"});}catch(error){if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;}
+ check();if(hash(await readPublication(file))!==digest)throw Error("Original graph publication archive changed");check();return digest;
+}
 async function graphStamps(directory:string):Promise<Record<string,readonly string[]>>{
  const result:Record<string,readonly string[]>={};for(const name of graphs){const status=await lstat(join(directory,name),{bigint:true});if(!status.isFile()||status.isSymbolicLink())throw Error("Original graph publisher requires real cache files");result[name]=[status.dev,status.ino,status.size,status.mtimeNs,status.ctimeNs].map(String);}return result;
 }
@@ -27,27 +40,30 @@ function originalFiles(value:unknown):{file:string;hash:string|null}[]{
 }
 async function publisherInputs(directory:string,receipt:SelectedGraphPublisherReceiptV1,scope?:SelectedGraphScopeV1,root?:string):Promise<unknown[]>{
  const facts:unknown[]=[],authority:unknown[]=[];
- for(const name of receipts){const bytes=await readPublication(join(directory,"inference",name));if(hash(bytes)!==receipt.receipts[name])throw Error("Original graph producer publication changed");const source=JSON.parse(bytes.toString());validateSelectedGraphValueV1("InferencePublicationV1",source);if(source.pid!==receipt.pid||source.startedAt<receipt.startedAt||source.completedAt<source.startedAt||source.completedAt>Number(receipt.graph["project-graph.json"]![3])/1e6)throw Error("Original graph publication producer refused");for(const fact of source.observations)facts.push(fact);for(const row of source.inference){if(!isAbsolute(row.path)||isAbsolute(relative(root!,row.path))||relative(root!,row.path).split(/[\\/]/u).includes(".."))throw Error("Original inference publication must remain in workspace custody");for(const fact of row.authorityObservations)authority.push(fact);for(const fact of row.observations)facts.push(fact);}}
+ for(const name of receipts){const bytes=await readPublication(await publicationArchive(directory,receipt.receipts[name]!));if(hash(bytes)!==receipt.receipts[name])throw Error("Original graph producer publication changed");const source=JSON.parse(bytes.toString());validateSelectedGraphValueV1("InferencePublicationV1",source);if(source.pid!==receipt.pid||source.startedAt<receipt.startedAt||source.completedAt<source.startedAt||source.completedAt>Number(receipt.graph["project-graph.json"]![3])/1e6)throw Error("Original graph publication producer refused");for(const fact of source.observations)facts.push(fact);for(const row of source.inference){if(!isAbsolute(row.path)||isAbsolute(relative(root!,row.path))||relative(root!,row.path).split(/[\\/]/u).includes(".."))throw Error("Original inference publication must remain in workspace custody");for(const fact of row.authorityObservations)authority.push(fact);for(const fact of row.observations)facts.push(fact);}}
  if(!scope)return [...authority,...facts];
  return [...authority,...facts.filter((value:any)=>observationPaths(root!,value).some(path=>isAbsolute(path)||path===".."||path.startsWith("../")||path.startsWith("node_modules/")||isGlobalGraphIdentityPathV1(path)||owned(path,scope)))];
 }
 
 /** ✍️ Only the actual cache publisher's original PID-bound receipts can create reuse authority. */
-export async function writeSelectedGraphPublisherReceiptV1(root:string,directory:string,startedAt:number,ports:Pick<SelectedGraphReusePortsV1,"capture"|"toolingIdentity"|"environment">,signal?:AbortSignal):Promise<boolean>{
- const file=join(directory,destination);await rm(file,{force:true});
- try{
+export async function writeSelectedGraphPublisherReceiptV1(root:string,directory:string,startedAt:number,ports:Pick<SelectedGraphReusePortsV1,"capture"|"toolingIdentity"|"environment">&Readonly<{control:ResourceLeaseControl;generationHolds:()=>boolean;publication?:GraphPublicationLeaseV1}>,signal?:AbortSignal):Promise<boolean>{
+ const file=join(directory,destination),temporary=requireMaterializedPathV1(file+"."+randomUUID()+".tmp"),check=()=>{checkResourceLeaseControl(ports.control);if(!ports.generationHolds())throw Error("Original selected graph publisher generation changed");};
+ if(await realpath(directory)!==directory)throw Error("Original selected graph namespace required");
+ return withGraphPublicationLeaseV1(directory,ports.toolingIdentity,ports.control,async()=>{
+ try{check();
   signal?.throwIfAborted();if(!Number.isSafeInteger(startedAt)||startedAt<1||!/^[a-f0-9]{64}$/u.test(ports.toolingIdentity))throw Error("Original selected graph publisher identity required");
   const graph=await graphStamps(directory),journal=await ports.capture({roots:[],files:[]}),original=originalFiles(JSON.parse(await readFile(join(directory,"file-map.json"),"utf8")));
   validateSelectedGraphValueV1("JournalWitnessV1",journal);if(JSON.stringify([...new Set(original.map(row=>row.file).filter(isGlobalGraphIdentityPathV1))].sort((left,right)=>Buffer.compare(Buffer.from(left),Buffer.from(right))))!==JSON.stringify(journal.globalIdentity.paths))throw Error("Original publisher global source membership disagrees with live observer");
   const evidence:Record<string,string>={};
-  for(const name of receipts){const bytes=await readPublication(join(directory,"inference",name)),value=JSON.parse(bytes.toString());validateSelectedGraphValueV1("InferencePublicationV1",value);if(value.pid!==process.pid||value.startedAt<startedAt||value.completedAt<value.startedAt||value.completedAt>Number(graph["project-graph.json"]![3])/1e6)throw Error("Original selected graph publication belongs to another producer");evidence[name]=hash(bytes);}
+  for(const name of receipts){const bytes=await readPublication(await producerPublication(directory,name)),value=JSON.parse(bytes.toString());validateSelectedGraphValueV1("InferencePublicationV1",value);if(value.pid!==process.pid||value.startedAt<startedAt||value.completedAt<value.startedAt||value.completedAt>Number(graph["project-graph.json"]![3])/1e6)throw Error("Original selected graph publication belongs to another producer");evidence[name]=await archivePublication(directory,bytes,check);}
 
   const rootStatus=await lstat(root,{bigint:true});if(!rootStatus.isDirectory()||rootStatus.isSymbolicLink())throw Error("Original graph publisher workspace requires real directory custody");
   const receipt:SelectedGraphPublisherReceiptV1={version:1,root,rootDirectory:{device:String(rootStatus.dev),inode:String(rootStatus.ino)},pid:process.pid,startedAt,toolingIdentity:ports.toolingIdentity,environmentIdentity:graphEnvironmentIdentityV1(ports.environment),journal,graph,receipts:evidence};
   validateSelectedGraphValueV1("PublisherReceiptV1",receipt);await publisherInputs(directory,receipt,undefined,root);
   const after=await ports.capture({roots:[],files:[]});if(JSON.stringify(after)!==JSON.stringify(journal)||JSON.stringify(await graphStamps(directory))!==JSON.stringify(graph))throw Error("Original selected graph publication changed during capture");
-  const temporary=file+"."+process.pid+".tmp";await writeFile(temporary,JSON.stringify(receipt));await rename(temporary,file);return true;
- }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_NX_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true")console.log("[DEBUG] Selected graph publisher refused: "+String(error));return false;}
+  check();await writeFile(temporary,JSON.stringify(receipt),{flag:"wx"});check();await rename(temporary,file);check();return true;
+ }catch(error){signal?.throwIfAborted();if(process.env.SEMIO_NX_PROFILE_INPUTS==="1"||process.env.NX_VERBOSE_LOGGING==="true")console.log("[DEBUG] Selected graph publisher refused: "+String(error));return false;}finally{await rm(temporary,{force:true});}
+ },ports.publication);
 }
 
 /** ✅️ Current selected sources and observations may reuse only the original graph producer's immutable evidence. */

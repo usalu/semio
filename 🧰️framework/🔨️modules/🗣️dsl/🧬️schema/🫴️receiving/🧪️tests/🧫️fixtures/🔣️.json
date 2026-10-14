@@ -1,0 +1,117 @@
+{
+  "text": "原稿 🧬️ größe",
+  "items": [
+    "α",
+    "retained 🌱️",
+    "最後"
+  ],
+  "optional": "shared 👥️",
+  "grant": {
+    "items": 65536,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64
+  },
+  "laws": [
+    "sameOriginalLedger",
+    "sameOriginalCallback",
+    "sameOriginalRecipient",
+    "sameOutputAsSerdeJson",
+    "retainedPartialFields",
+    "paidRetirement"
+  ],
+  "ownedCases": [
+    {
+      "kind": "text",
+      "items": 0,
+      "capacityBytes": 0,
+      "ready": false,
+      "sourceSame": true
+    },
+    {
+      "kind": "text",
+      "items": 1,
+      "capacityBytes": 0,
+      "ready": true,
+      "sourceSame": false
+    },
+    {
+      "kind": "bytes",
+      "items": 1,
+      "capacityBytes": 0,
+      "ready": true,
+      "sourceSame": false
+    },
+    {
+      "kind": "list",
+      "items": 1,
+      "capacityBytes": 0,
+      "ready": false,
+      "sourceSame": true
+    }
+  ],
+  "declaredCases": [
+    {
+      "kind": "normal",
+      "source": {
+        "text": "owned original",
+        "items": [
+          "a"
+        ],
+        "optional": null
+      },
+      "accepted": true
+    },
+    {
+      "kind": "normal",
+      "source": {
+        "text": "owned original",
+        "items": []
+      },
+      "accepted": true
+    },
+    {
+      "kind": "normal",
+      "source": {
+        "text": "owned original",
+        "items": [],
+        "undeclared": {
+          "future": 1
+        }
+      },
+      "accepted": false
+    },
+    {
+      "kind": "normal",
+      "source": {
+        "items": []
+      },
+      "accepted": false
+    },
+    {
+      "kind": "opaque",
+      "source": {
+        "payload": {
+          "future": [
+            1,
+            {
+              "unknown": "retained"
+            }
+          ]
+        }
+      },
+      "accepted": true
+    },
+    {
+      "kind": "opaque",
+      "source": {
+        "payload": {
+          "future": 1
+        },
+        "undeclared": "refused"
+      },
+      "accepted": false
+    }
+  ]
+}

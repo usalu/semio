@@ -1,0 +1,38 @@
+{
+  "source": {
+    "title": "Original source 源",
+    "values": [
+      -17,
+      0,
+      9
+    ],
+    "nodeHashLiteral": "18446744073709551613"
+  },
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "cancelStops": [
+    0,
+    1,
+    3,
+    17,
+    83
+  ],
+  "fieldId": 1,
+  "sourceReturned": true,
+  "headerCopyBytes": 0,
+  "terminalDrop": 0,
+  "stock": {
+    "items": 100000,
+    "copy": 1000000,
+    "capacity": 4000000,
+    "release": 4000000,
+    "depth": 128
+  },
+  "fuel": 100000,
+  "clock": 1000,
+  "deadline": 1000000,
+  "physicalRetirement": true
+}

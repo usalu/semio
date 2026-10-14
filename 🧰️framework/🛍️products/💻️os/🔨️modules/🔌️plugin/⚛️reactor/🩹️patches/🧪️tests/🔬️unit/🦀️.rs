@@ -31,7 +31,7 @@ fn reserve(tracker: &PatchTracker, surface: ui_contract::SurfaceId) -> Result<Mo
 fn leaf(key: &str, text: &str) -> ComponentTree {
     let value = ui_contract::UiText::try_from_str(text).expect("bounded test text");
     let root = TreeNode::try_new(key, ui_contract::Component::Text(ui_contract::TextProps { value: ui_contract::Label(value), emphasize: None, data_attributes: None })).unwrap_or_else(|_| panic!("bounded test tree"));
-    ComponentTree { root }
+    ComponentTree::new(root)
 }
 
 fn tree_with_owned_child(text: &str) -> ComponentTree {
@@ -82,9 +82,9 @@ fn close_test_patch(patch: ui_contract::UiPatch) {
     }
 }
 
-fn finish(tracker: &PatchTracker) -> Option<ui_contract::UiPatch> {
+fn finish(tracker: &PatchTracker,cx:&mut semio_framework_job::StepContext<'_>) -> Option<ui_contract::UiPatch> {
     for _ in 0..4_096 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(owner) = tracker.take_ready_patch() {
             let (patch, published) = publish_test(owner);
             close_published(published);
@@ -101,14 +101,14 @@ fn finish(tracker: &PatchTracker) -> Option<ui_contract::UiPatch> {
 /// and holds its reconciler again — the state the NEXT dirty render of that surface reserves from. A real
 /// turn does this in `reconcile_step_opportunities` and `close_step`; a law that publishes the same surface
 /// twice has to do it explicitly (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
-fn drain_released_output(tracker: &PatchTracker, surface: &str, round: u32) {
+fn drain_released_output(tracker: &PatchTracker, surface: &str, round: u32,cx:&mut semio_framework_job::StepContext<'_>) {
     for _ in 0..65_536 {
         let ready = tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface.as_ref() == surface).is_some_and(|slot| slot.output_index.is_none() && slot.job.is_none() && slot.reconciler.is_some());
         if ready {
             return;
         }
-        tracker.drive_one();
-        tracker.close_step(1, 4096);
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
+        tracker.close_step(cx).expect("original patch fixture close step");
     }
     panic!("round {round} never released its output slot: {}", tracker.debug_state());
 }
@@ -117,9 +117,9 @@ fn drain_released_output(tracker: &PatchTracker, surface: &str, round: u32) {
 /// releases its output and the NEXT publication of the same surface is admissible — what a real session
 /// does every refresh, and what a repeat-publication law needs (ticket 26/09/02/PUZZLE-3D-END-TO-END wave
 /// B56).
-fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str) -> Option<ui_contract::UiPatch> {
+fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> Option<ui_contract::UiPatch> {
     for _ in 0..65_536 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(owner) = tracker.take_ready_patch() {
             let (patch, authority) = publish_test(owner);
             let mut authority = Some(authority);
@@ -143,10 +143,10 @@ fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str) -> Option<
     None
 }
 
-fn published(tracker: &PatchTracker, surface: &str) -> semio_framework_ui_runtime::SurfaceReconcilePublishedPatch {
+fn published(tracker: &PatchTracker, surface: &str,cx:&mut semio_framework_job::StepContext<'_>) -> semio_framework_ui_runtime::SurfaceReconcilePublishedPatch {
     tracker.begin(surface.to_owned(), leaf("root", "published")).expect("admitted publication");
     for _ in 0..4_096 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(owner) = tracker.take_ready_patch() {
             let (patch, published) = publish_test(owner);
             close_test_patch(patch);
@@ -169,12 +169,12 @@ fn saturate_terminals(tracker: &PatchTracker, instance: u32, generation: u64) {
     }
 }
 
-fn close_instance_to_empty(tracker: &PatchTracker, instance: u32) {
+fn close_instance_to_empty(tracker: &PatchTracker, instance: u32,cx:&mut semio_framework_job::StepContext<'_>) {
     let key = NativeCloseKey::fixture(instance, 1);
     tracker.reserve_close_instance(key).expect("exact close reservation");
     tracker.activate_close_instance(key).expect("activate retained close");
     for _ in 0..65_536 {
-        tracker.close_step(1, 4096);
+        tracker.close_step(cx).expect("original patch fixture close step");
         if tracker.close_instance_complete(key).expect("exact close receipt") {
             tracker.release_close_instance(key).expect("final ACK releases close slot");
             assert!(tracker.terminal_is_empty());
@@ -186,6 +186,9 @@ fn close_instance_to_empty(tracker: &PatchTracker, instance: u32) {
 
 #[test]
 fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let fixture = &fixture["cancelledAdmission"];
@@ -201,15 +204,21 @@ fn mounted_output_admission_cancel_and_drop_keep_the_original_close_generation()
         }
         let preserved = tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface == surface).is_some_and(|slot| slot.generation == generation && generation != 0);
         let revision = tracker.revision(surface.as_ref()).0;
-        close_instance_to_empty(&tracker, 74);
+        close_instance_to_empty(&tracker, 74,cx);
         assert_eq!(preserved, fixture["generationPreserved"].as_bool().unwrap());
         assert_eq!(revision, fixture["revision"].as_u64().unwrap());
         assert_eq!(tracker.terminal_is_empty(), fixture["terminal"].as_bool().unwrap());
     }
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut outputs = SurfaceReconcileOutputs::default();
@@ -232,16 +241,22 @@ fn mounted_output_admission_refuses_before_tree_when_shared_output_pool_is_full(
         while !owner.close_step(1).unwrap().complete {}
     }
     while !outputs.close_step(1, 4096).unwrap().complete {}
-    close_instance_to_empty(&tracker, 71);
+    close_instance_to_empty(&tracker, 71,cx);
     assert_eq!(admitted, fixture["extraInvocation"].as_bool().unwrap());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_and_box() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let tracker = PatchTracker::new();
-    reserve(&tracker, ui_contract::SurfaceId::try_from("72:producer-unwind").unwrap()).unwrap().commit_source(leaf("root", "owned-é").root).unwrap();
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from("72:producer-unwind").unwrap()).unwrap();let mut source=Some(leaf("root", "owned-é"));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
     let (index, rejected_index, generation, pointer) = {
         let state = tracker.state.borrow();
         let index = state.slots.iter().position(Option::is_some).unwrap();
@@ -250,7 +265,7 @@ fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_a
         (index, producer.rejected_index, slot.generation, producer.authority.as_ref() as *const _)
     };
     PANIC_AFTER_PRODUCER_STEP.with(|pending| pending.set(true));
-    let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracker.drive_one()));
+    let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracker.drive_one(cx).expect("original patch fixture semantic step")));
     assert!(caught.is_err());
     let retained = tracker.state.borrow().slots[index]
         .as_ref()
@@ -261,16 +276,22 @@ fn mounted_output_admission_partial_producer_step_unwind_retains_original_slot_a
         assert_eq!(state.rejected_reserved[rejected_index], Some(generation));
         state.rejected_reserved[rejected_index] = None;
     }
-    close_instance_to_empty(&tracker, 72);
+    close_instance_to_empty(&tracker, 72,cx);
     assert_eq!(retained, fixture["partialProducerUnwindRetainsOwner"].as_bool().unwrap(), "actual producer step must not remove the structural slot before invoking the child");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owners() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let tracker = PatchTracker::new();
-    reserve(&tracker, ui_contract::SurfaceId::try_from("73:producer-source").unwrap()).unwrap().commit_source(leaf("owned-root", "é").root).unwrap();
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from("73:producer-source").unwrap()).unwrap();let mut source=Some(leaf("owned-root", "é"));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
     let (index, generation, pointer, reconciler) = {
         let mut state = tracker.state.borrow_mut();
         let index = state.slots.iter().position(Option::is_some).unwrap();
@@ -284,8 +305,8 @@ fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owner
         }
         (index, slot.generation, producer.authority.as_ref() as *const _, producer.reconciler.take().unwrap())
     };
-    tracker.drive_one();
-    tracker.drive_one();
+    tracker.drive_one(cx).expect("original patch fixture semantic step");
+    tracker.drive_one(cx).expect("original patch fixture semantic step");
     let (reservation_retained, tree_retained) = {
         let mut state = tracker.state.borrow_mut();
         let result = if let Some(producer) = state.slots[index].as_mut().and_then(|slot| slot.producer.as_mut()) {
@@ -299,12 +320,18 @@ fn mounted_output_admission_incomplete_producer_sources_preserve_remaining_owner
         state.slots[index].as_mut().unwrap().reconciler = Some(reconciler);
         result
     };
-    close_instance_to_empty(&tracker, 73);
+    close_instance_to_empty(&tracker, 73,cx);
     assert_eq!(reservation_retained && tree_retained, fixture["incompleteProducerSourcesPreserveRemainingOwners"].as_bool().unwrap(), "one missing source must not consume other completed owners");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generation_and_callback_roots() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["capturedLifetime"];
@@ -312,13 +339,13 @@ fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generati
     let key = NativeCloseKey::fixture(instance, law["original"].as_u64().unwrap());
     let foreign = NativeCloseKey::fixture(instance, law["reused"].as_u64().unwrap());
     let tracker = PatchTracker::new();
-    let grant = tracker.reserve_mounted(ui_contract::SurfaceId::try_from(format!("{instance}:direct")).unwrap(), key).unwrap();
+    let mut grant = tracker.reserve_mounted(ui_contract::SurfaceId::try_from(format!("{instance}:direct")).unwrap(), key).unwrap();
     let generation = grant.generation;
-    grant.commit_source(leaf("owned-root", "界-é").root).unwrap();
+    let mut source=Some(leaf("owned-root", "界-é"));assert!(grant.commit_source(&mut source,cx).unwrap());assert!(source.is_none());
     PANIC_AFTER_OUTPUT_TRANSFER.with(|pending| pending.set(true));
     let mut caught = false;
     for _ in 0..65_536 {
-        if std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracker.drive_one())).is_err() {
+        if std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tracker.drive_one(cx).expect("original patch fixture semantic step"))).is_err() {
             caught = true;
             break;
         }
@@ -348,31 +375,47 @@ fn mounted_output_admission_direct_receiver_preserves_captured_lifetime_generati
     assert_eq!(target.as_ref().unwrap().generation(), generation);
     assert_eq!(target.as_ref().unwrap().surface().unwrap().as_ref(), format!("{instance}:direct"));
     while !target.as_mut().unwrap().close_step_with_grant(1, 4096).unwrap().complete {}
-    close_instance_to_empty(&tracker, instance);
+    close_instance_to_empty(&tracker, instance,cx);
     assert_eq!(tracker.terminal_is_empty(), law["terminal"].as_bool().unwrap());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_output_admission_close_waits_for_the_original_uncommitted_grant() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let key = NativeCloseKey::fixture(76, 1);
-    let grant = tracker.reserve_mounted(ui_contract::SurfaceId::try_from("76:grant").unwrap(), key).unwrap();
+    let mut grant = tracker.reserve_mounted(ui_contract::SurfaceId::try_from("76:grant").unwrap(), key).unwrap();
     tracker.reserve_close_instance(key).unwrap();
     tracker.activate_close_instance(key).unwrap();
     for _ in 0..8 {
-        tracker.close_step(1, 4096);
+        tracker.close_step(cx).expect("original patch fixture close step");
         assert!(!tracker.close_instance_complete(key).unwrap());
     }
-    let root = tree_with_owned_child("returned");
-    let pointer = root.root.children.get(0).unwrap().key.as_ptr();
-    let returned = grant.commit_source(root.root).expect_err("closing lifetime rejects producer invocation");
-    assert_eq!(returned.children.get(0).unwrap().key.as_ptr(), pointer);
-    close_instance_to_empty(&tracker, 76);
+    let mut source=Some(tree_with_owned_child("returned"));
+    let pointer=source.as_ref().unwrap().root.children.get(0).unwrap().key.as_ptr();
+    assert!(!grant.commit_source(&mut source,cx).expect("closing lifetime preserves source and grant"));
+    assert_eq!(source.as_ref().unwrap().root.children.get(0).unwrap().key.as_ptr(),pointer);
+    grant.cancel();
+    let returned=source.take().unwrap();assert!(returned.native_resources.is_none());
+    let mut returned=ui_contract::BuiltTreeRetirement::new(returned.root);
+    while !returned.close_step(1,4096).unwrap().complete {}
+    close_instance_to_empty(&tracker, 76,cx);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_overadmission() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["concurrentAdmission"];
@@ -388,6 +431,7 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
         let barrier = barrier.clone();
         let tx = tx.clone();
         workers.push(std::thread::spawn(move || {
+            let mut worker_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored concurrent instance caller");let mut worker_context=worker_caller.context();let cx=&mut worker_context;
             let tracker = PatchTracker::new();
             let mut surface = ui_contract::SurfaceId::try_from(format!("{instance}:concurrent")).unwrap();
             let key = NativeCloseKey::fixture(instance, 1);
@@ -411,7 +455,8 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
             if let Some(grant) = admitted {
                 grant.cancel();
             }
-            close_instance_to_empty(&tracker, instance);
+            close_instance_to_empty(&tracker, instance,cx);
+            let fuel=worker_context.fuel_remaining();drop(worker_context);worker_caller.retire(fuel).expect("concurrent instance caller paid source close");
         }));
     }
     barrier.wait();
@@ -435,10 +480,16 @@ fn mounted_output_admission_concurrent_trackers_share_one_fixed_pool_without_ove
         while !reservation.close_step(1).unwrap().complete {}
     }
     while !reused.close_step(1, 4096).unwrap().complete {}
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn tracker_initialization_fits_the_component_stack_budget() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let bytes = size_of::<PatchTrackerState>();
     assert!(bytes <= 256, "PatchTrackerState requires {bytes} bytes");
@@ -446,22 +497,34 @@ fn tracker_initialization_fits_the_component_stack_budget() {
     assert_eq!(state.slots.len(), SURFACE_RECONCILE_ADMISSION_SLOTS);
     assert_eq!(state.unadmitted.len(), SURFACE_RECONCILE_ADMISSION_SLOTS + 1);
     assert_eq!(state.ready.len(), READY_PATCH_CAPACITY);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_path_advances_one_reconcile_opportunity_per_grant() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
     assert!(tracker.take_ready_patch().is_none());
-    assert!(tracker.drive_one());
+    assert!(tracker.drive_one(cx).expect("original patch fixture semantic step"));
     assert!(tracker.take_ready_patch().is_none());
-    let patch = finish(&tracker).expect("eventual patch");
+    let patch = finish(&tracker,cx).expect("eventual patch");
     assert_eq!(patch.base_revision, ui_contract::UiRevision(0));
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_document_tree_publishes_nested_interactive_rows() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     fn row(value: &serde_json::Value) -> ui_contract::BuiltNode {
@@ -507,16 +570,22 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
     });
     let root = ui_contract::tree().try_id("document").ok().unwrap().try_children(sections).ok().unwrap().try_build().unwrap();
     let tracker = PatchTracker::new();
-    reserve(&tracker, ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
-    let patch = finish(&tracker).unwrap_or_else(|| panic!("document never published: {:?}", tracker.state.borrow().terminals.iter().flatten().map(|slot| slot.authority.fault()).collect::<Vec<_>>()));
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap();let mut source=Some(ComponentTree::new(root));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
+    let patch = finish(&tracker,cx).unwrap_or_else(|| panic!("document never published: {:?}", tracker.state.borrow().terminals.iter().flatten().map(|slot| slot.authority.fault()).collect::<Vec<_>>()));
     let nodes = patch.ops.iter().filter_map(|op| if let ui_contract::UiPatchOp::Upsert(node) = op { Some(node) } else { None }).collect::<Vec<_>>();
     assert_eq!(nodes.len(), fixture["nodes"].as_u64().unwrap() as usize);
     let activates = |node: &&&ui_contract::UiNodeRecord| matches!(&node.component, ui_contract::Component::TreeItem(props) if props.target.as_ref().is_some_and(|target| target.activation.is_some()));
     assert_eq!(nodes.iter().filter(activates).count(), fixture["interactiveRows"].as_u64().unwrap() as usize);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_settings_controls_publish_with_authored_fields() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎚️settings-surface.json")).expect("language-neutral settings");
@@ -535,8 +604,8 @@ fn mounted_settings_controls_publish_with_authored_fields() {
     });
     let root = ui_contract::section(ui_contract::Label(ui_contract::UiText::try_from_str(fixture["label"].as_str().unwrap()).unwrap())).try_id("settings").ok().unwrap().default_open(true).try_children(children).ok().unwrap().try_build().unwrap();
     let tracker = PatchTracker::new();
-    reserve(&tracker, ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
-    let patch = finish(&tracker).unwrap_or_else(|| panic!("settings never published: {:?}", tracker.state.borrow().slots.iter().flatten().map(|slot| &slot.job).collect::<Vec<_>>()));
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap();let mut source=Some(ComponentTree::new(root));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
+    let patch = finish(&tracker,cx).unwrap_or_else(|| panic!("settings never published: {:?}", tracker.state.borrow().slots.iter().flatten().map(|slot| &slot.job).collect::<Vec<_>>()));
     let controls = patch
         .ops
         .iter()
@@ -549,10 +618,16 @@ fn mounted_settings_controls_publish_with_authored_fields() {
         })
         .collect::<Vec<_>>();
     assert_eq!(controls, fields.iter().map(|field| serde_json::json!({ "value": field["value"], "step": field["step"], "action": field["action"] })).collect::<Vec<_>>());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
@@ -570,10 +645,10 @@ fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
     let root = ui_contract::tree().try_id("catalogue").ok().unwrap().try_children(sections).ok().unwrap().try_build().unwrap();
     assert_eq!(expected.len() as u64, fixture["expectedRows"].as_u64().unwrap());
     let tracker = PatchTracker::new();
-    reserve(&tracker, ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from(fixture["surface"].as_str().unwrap()).unwrap()).unwrap();let mut source=Some(ComponentTree::new(root));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
     let mut published = None;
     for _ in 0..65_536 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(owner) = tracker.take_ready_patch() {
             let (patch, authority) = publish_test(owner);
             let mut authority = Some(authority);
@@ -596,15 +671,21 @@ fn mounted_catalogue_publishes_every_section_beyond_thirty_two_nodes() {
         }
     }
     let fault = format!("{:?}", tracker.state.borrow().terminals.iter().flatten().map(|slot| slot.authority.fault()).collect::<Vec<_>>());
-    close_instance_to_empty(&tracker, 1);
+    close_instance_to_empty(&tracker, 1,cx);
     let patch = published.unwrap_or_else(|| panic!("catalogue did not publish: {fault}"));
     let nodes = patch.ops.iter().filter_map(|op| if let ui_contract::UiPatchOp::Upsert(node) = op { Some(node) } else { None }).collect::<Vec<_>>();
     assert_eq!(nodes.len() as u64, fixture["expectedNodes"].as_u64().unwrap());
     assert_eq!(nodes.iter().filter(|node| matches!(node.component, ui_contract::Component::Text(_))).map(|node| node.key.to_string()).collect::<std::collections::BTreeSet<_>>(), expected);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let failure = &fixture["failure"];
@@ -613,10 +694,10 @@ fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
     root.children.try_push(leaf(key, key).root).unwrap();
     root.children.try_push(leaf(key, key).root).unwrap();
     let tracker = PatchTracker::new();
-    reserve(&tracker, ui_contract::SurfaceId::try_from(failure["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from(failure["surface"].as_str().unwrap()).unwrap()).unwrap();let mut source=Some(ComponentTree::new(root));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
     let mut reported = None;
     for _ in 0..4096 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(fault) = tracker.take_render_fault() {
             reported = Some(fault);
             break;
@@ -624,17 +705,23 @@ fn mounted_catalogue_reports_producer_failure_once_before_cleanup() {
     }
     assert!(tracker.take_ready_patch().is_none());
     assert!(tracker.take_render_fault().is_none());
-    close_instance_to_empty(&tracker, failure["instance"].as_u64().unwrap() as u32);
+    close_instance_to_empty(&tracker, failure["instance"].as_u64().unwrap() as u32,cx);
     let (instance, reason) = reported.expect("producer fault must not disappear during cleanup");
     assert_eq!(instance as u64, failure["instance"].as_u64().unwrap());
     assert!(reason.contains(failure["surface"].as_str().unwrap()));
     assert!(reason.contains(failure["reason"].as_str().unwrap()));
     assert!(reason.contains(failure["authority"].as_str().unwrap()), "the report names the authority that read the fault, so an exact attribution is distinguishable from a generation-derived one: {reason}");
     assert!(reason.contains(&format!("parent={} key={}", failure["parent"].as_str().unwrap(), failure["key"].as_str().unwrap())), "a duplicate sibling key names the parent and the key it refused, not only the surface: {reason}");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗂️catalogue-surface.json")).unwrap();
     let failure = &fixture["capacityFailure"];
@@ -648,10 +735,10 @@ fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
         root.children.try_push(child).unwrap();
     }
     let tracker = PatchTracker::new();
-    reserve(&tracker, ui_contract::SurfaceId::try_from(failure["surface"].as_str().unwrap()).unwrap()).unwrap().commit_source(root).unwrap();
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from(failure["surface"].as_str().unwrap()).unwrap()).unwrap();let mut source=Some(ComponentTree::new(root));assert!(grant.commit_source(&mut source,cx).unwrap(), "actual original source admitted");assert!(source.is_none());}
     let mut reported = None;
     for _ in 0..65_536 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if let Some(fault) = tracker.take_render_fault() {
             reported = Some(fault);
             break;
@@ -659,15 +746,21 @@ fn mounted_catalogue_reports_reconcile_capacity_without_leaking_owners() {
     }
     assert!(tracker.take_ready_patch().is_none());
     assert!(tracker.take_render_fault().is_none());
-    close_instance_to_empty(&tracker, failure["instance"].as_u64().unwrap() as u32);
+    close_instance_to_empty(&tracker, failure["instance"].as_u64().unwrap() as u32,cx);
     let (instance, reason) = reported.expect("reconcile failure must not become an idle empty surface");
     assert_eq!(instance as u64, failure["instance"].as_u64().unwrap());
     assert!(reason.contains(failure["surface"].as_str().unwrap()));
     assert!(reason.contains(failure["reason"].as_str().unwrap()));
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn mounted_sources_publish_every_window_and_panel_tree() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use ui_contract::{Buildable, HasBase, HasChildren};
     let fixtures: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️mounted-surfaces.json")).expect("language-neutral surface fixtures");
@@ -682,8 +775,8 @@ fn mounted_sources_publish_every_window_and_panel_tree() {
             node
         });
         let root = ui_contract::column().try_id(surface).ok().expect("bounded key").try_children(children).ok().expect("bounded children").try_build().expect("bounded root");
-        reserve(&tracker, ui_contract::SurfaceId::try_from(surface).expect("bounded surface")).expect("mounted reservation").commit_source(root).expect("mounted producer");
-        let patch = finish(&tracker).unwrap_or_else(|| {
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from(surface).expect("bounded surface")).expect("mounted reservation");let mut source=Some(ComponentTree::new(root));assert!(grant.commit_source(&mut source,cx).expect("mounted producer"), "actual original source admitted");assert!(source.is_none());}
+        let patch = finish(&tracker,cx).unwrap_or_else(|| {
             let state = tracker.state.borrow();
             panic!(
                 "surface {} never published: {:?}; terminals={}, rejected={}",
@@ -703,17 +796,23 @@ fn mounted_sources_publish_every_window_and_panel_tree() {
             }
         }
     }
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let steps = [0, SURFACE_RECONCILE_ADMISSION_SLOTS - 1].map(|index| {
         let tracker = PatchTracker::new();
         tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
         tracker.state.borrow_mut().slots.swap(0, index);
         for step in 1..=4_096 {
-            tracker.drive_one();
+            tracker.drive_one(cx).expect("original patch fixture semantic step");
             if let Some(owner) = tracker.take_ready_patch() {
                 let (patch, published) = publish_test(owner);
                 close_test_patch(patch);
@@ -724,10 +823,16 @@ fn one_active_surface_does_not_wait_behind_sixty_three_empty_slots_between_steps
         panic!("active surface never published");
     });
     assert_eq!(steps[0], steps[1], "empty slots consume no reconcile opportunities");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     use super::super::pending::PendingPatchAuthority;
     use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt};
@@ -739,7 +844,7 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
         let first = tracker.begin(surface.into(), leaf("root", "first")).unwrap();
         let mut ready = None;
         for _ in 0..4096 {
-            tracker.drive_one();
+            tracker.drive_one(cx).expect("original patch fixture semantic step");
             if let Some(owner) = tracker.take_ready_patch() {
                 ready = Some(owner);
                 break;
@@ -754,8 +859,8 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
         close_test_patch(patch);
         assert!(!tracker.mark_rejected(surface, first + 1), "future feedback cannot reset a current generation");
         for turn in 0..4096 {
-            tracker.drive_one();
-            tracker.close_step(1, 4096);
+            tracker.drive_one(cx).expect("original patch fixture semantic step");
+            tracker.close_step(cx).expect("original patch fixture close step");
             if tracker.state.borrow().slots.iter().flatten().any(|slot| slot.surface.as_ref() == surface && slot.job.is_none() && slot.producer.is_none() && slot.output_index.is_none() && slot.reconciler.is_some()) {
                 break;
             }
@@ -780,16 +885,22 @@ fn issued_obsolete_reconcile_feedback_retires_only_the_old_pending_owner() {
         assert!(!pending.receipt_is_issued(issued));
         assert!(!pending.has_unpublished());
         assert!(pending.has_capacity());
-        close_instance_to_empty(&tracker, 7);
+        close_instance_to_empty(&tracker, 7,cx);
         eprintln!("obsolete real reconcile feedback rejection={} old={} current={} exact old owner retired", rejection, first, second);
     }
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_aba_without_authority_loss() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
-    let mut published = Some(published(&tracker, "71:ack"));
+    let mut published = Some(published(&tracker, "71:ack",cx));
     let revision = published.as_ref().unwrap().revision().0;
     let mut ack = None;
     let admitted = semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes();
@@ -812,10 +923,16 @@ fn published_owner_first_ack_rejects_early_stale_duplicate_wrong_instance_and_ab
     assert!(!tracker.mark_published_ack(ack.as_ref().unwrap()).unwrap(), "duplicate ACK is inert");
     assert_eq!(ack.as_ref().unwrap().surface().unwrap().0.as_str(), "71:ack", "duplicate refusal preserves exact authority");
     close_ack(ack.take().unwrap());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn cap_plus_one_returns_the_exact_tree_owner() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
@@ -827,10 +944,8 @@ fn cap_plus_one_returns_the_exact_tree_owner() {
                 output_index: None,
                 surface: ui_contract::SurfaceId::try_from(surface).expect("bounded surface fixture"),
                 generation: index as u64 + 1,
-                operation: semio_framework_job::allocate_operation_id(),
-                preview_sequence: 0,
                 acknowledged_revision: ui_contract::UiRevision::default(),
-                cancel: semio_framework_job::root_cancel_token(),
+                cancelled:false,pending_render:false,pending_render_source:None,
                 reconciler: Some(SurfaceReconciler::new(ui_contract::SurfaceId::try_from(format!("{index}:main")).expect("bounded surface fixture"))),
                 producer: None,
                 job: None,
@@ -841,6 +956,9 @@ fn cap_plus_one_returns_the_exact_tree_owner() {
     let pointer = tree.root.children.get(0).unwrap().key.as_ptr();
     let (_, returned) = tracker.begin("65:main".into(), tree).expect_err("cap + 1");
     assert_eq!(returned.root.children.get(0).unwrap().key.as_ptr(), pointer);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🎟️ Holds process-wide resident credit until the aggregate has less than ONE reconcile floor price left,
@@ -873,6 +991,9 @@ fn release_resident_aggregate(held: Vec<ui_contract::UiResidentPermit>) {
 
 #[test]
 fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📤️output/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["residentCapacity"];
@@ -921,7 +1042,7 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
         tracker.activate_close_instance(*key).unwrap();
     }
     for _ in 0..65_536 {
-        tracker.close_step(1, 4096);
+        tracker.close_step(cx).expect("original patch fixture close step");
         if keys.iter().all(|key| tracker.close_instance_complete(*key).unwrap()) {
             break;
         }
@@ -933,10 +1054,16 @@ fn mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner() {
     assert_eq!(tracker.terminal_is_empty(), law["terminal"].as_bool().unwrap());
     assert_eq!(ui_contract::UiResidentPermit::snapshot().unwrap(), ui_contract::UiResidentSnapshot { bytes: fixed_bytes, items: 0, used_slots: 0 });
     eprintln!("mounted-resident-capacity fixed={fixed_bytes} floor={floor} ceiling={} ceiling-sized-accepted={capacity} full={} cap-plus-one=false exact-refusal=true restored={fixed_bytes}", limits.max_bytes, full.bytes);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn stale_generation_fault_is_publicly_retrievable() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let generation = tracker.begin("main".into(), leaf("root", "a")).expect("admitted");
@@ -948,10 +1075,16 @@ fn stale_generation_fault_is_publicly_retrievable() {
         }
     }
     assert!(terminal.terminal_is_empty());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn resize_storm_coalesces_to_one_deferred_surface_owner() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let generation = tracker.begin("7:main".into(), leaf("root", "a")).expect("admitted");
@@ -968,22 +1101,34 @@ fn resize_storm_coalesces_to_one_deferred_surface_owner() {
     }
     assert_eq!(tracker.take_deferred_ready().as_ref().map(AsRef::as_ref), Some("7:main"));
     assert!(tracker.take_deferred_ready().is_none());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn effects_publish_in_admission_order_even_when_later_tree_finishes_first() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("1:first".into(), leaf("root", "a")).expect("first");
     tracker.begin("1:second".into(), leaf("root", "b")).expect("second");
-    let first = finish(&tracker).expect("first ready");
-    let second = finish(&tracker).expect("second ready");
+    let first = finish(&tracker,cx).expect("first ready");
+    let second = finish(&tracker,cx).expect("second ready");
     assert_eq!(first.surface.0.as_str(), "1:first");
     assert_eq!(second.surface.0.as_str(), "1:second");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_slot() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let old = tracker.begin("9:first".into(), leaf("root", "a")).expect("old generation");
@@ -997,12 +1142,18 @@ fn actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_sl
             break;
         }
     }
-    close_instance_to_empty(&tracker, 9);
+    close_instance_to_empty(&tracker, 9,cx);
     assert!(tracker.terminal_is_empty());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_stale_publish() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚪️surface-close.json")).unwrap();
     let instance = fixture["instance"].as_u64().unwrap() as u32;
@@ -1010,7 +1161,7 @@ fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_st
     let tracker = PatchTracker::new();
     tracker.begin(surface("ready").into(), leaf("root", "ready")).expect("ready source");
     for _ in 0..128 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if tracker.state.borrow().ready.iter().any(Option::is_some) {
             break;
         }
@@ -1031,7 +1182,7 @@ fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_st
     tracker.activate_close_instance(key).expect("activate retained close");
     assert_eq!(tracker.take_ready_patch().is_some(), fixture["stalePatch"].as_bool().unwrap());
     for _ in 0..16_384 {
-        tracker.close_step(1, 4096);
+        tracker.close_step(cx).expect("original patch fixture close step");
         if tracker.close_instance_complete(key).expect("exact close receipt") {
             break;
         }
@@ -1040,10 +1191,16 @@ fn close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_st
     tracker.release_close_instance(key).expect("final ACK releases close slot");
     assert_eq!(tracker.terminal_is_empty(), fixture["terminalEmpty"].as_bool().unwrap());
     assert_eq!(tracker.take_ready_patch().is_some(), fixture["stalePatch"].as_bool().unwrap());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
@@ -1070,30 +1227,48 @@ fn terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed() 
     assert!(released.terminal_is_empty());
     reject_current(&tracker, "44:active");
     assert!(tracker.take_terminal(generation).is_some(), "freed capacity receives the original generation");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn terminal_full_plus_matching_unadmitted_advances_capacity_before_conversion() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     saturate_terminals(&tracker, 51, 510_000);
     tracker.retain_unadmitted("51:queued".into(), leaf("root", "queued")).expect("pre-admitted owner");
-    close_instance_to_empty(&tracker, 51);
+    close_instance_to_empty(&tracker, 51,cx);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn terminal_full_plus_matching_rejected_advances_capacity_before_conversion() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let identifier_bytes = semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_identifier_bytes;
     tracker.begin(format!("52:{}", "x".repeat(identifier_bytes)), leaf("root", "rejected")).expect("fixed surface slot");
     assert!(tracker.state.borrow().rejected.iter().any(Option::is_some), "identifier cap produces an exact rejected owner");
     saturate_terminals(&tracker, 52, 520_000);
-    close_instance_to_empty(&tracker, 52);
+    close_instance_to_empty(&tracker, 52,cx);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
@@ -1103,21 +1278,25 @@ fn terminal_full_plus_matching_surface_advances_capacity_before_conversion() {
             output_index: None,
             surface: ui_contract::SurfaceId::try_from("53:idle").expect("bounded surface fixture"),
             generation: 530_000,
-            operation: semio_framework_job::allocate_operation_id(),
-            preview_sequence: 0,
             acknowledged_revision: ui_contract::UiRevision::default(),
-            cancel: semio_framework_job::root_cancel_token(),
+            cancelled:false,pending_render:false,pending_render_source:None,
             reconciler: Some(SurfaceReconciler::new(ui_contract::SurfaceId::try_from("53:idle").expect("bounded surface fixture"))),
             producer: None,
             job: None,
         });
     }
     saturate_terminals(&tracker, 53, 531_000);
-    close_instance_to_empty(&tracker, 53);
+    close_instance_to_empty(&tracker, 53,cx);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_without_mutation() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
@@ -1137,10 +1316,16 @@ fn generation_max_is_issued_once_and_repeated_exhaustion_returns_exact_owners_wi
     let state = tracker.state.borrow();
     assert_eq!(state.next_generation, u64::MAX);
     assert!(state.generation_exhausted);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_reservation() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     {
@@ -1151,10 +1336,8 @@ fn terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_re
             output_index: None,
             surface: ui_contract::SurfaceId::try_from("62:idle").expect("bounded surface fixture"),
             generation: u64::MAX - 1,
-            operation: semio_framework_job::allocate_operation_id(),
-            preview_sequence: 0,
             acknowledged_revision: ui_contract::UiRevision::default(),
-            cancel: semio_framework_job::root_cancel_token(),
+            cancelled:false,pending_render:false,pending_render_source:None,
             reconciler: Some(SurfaceReconciler::new(ui_contract::SurfaceId::try_from("62:idle").expect("bounded surface fixture"))),
             producer: None,
             job: None,
@@ -1175,15 +1358,21 @@ fn terminal_saturation_does_not_consume_maximum_generation_before_exact_owner_re
     assert_eq!(state.next_generation, u64::MAX);
     assert!(state.generation_exhausted);
     assert!(state.terminals.iter().flatten().any(|terminal| terminal.authority.generation() == u64::MAX));
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("5:main".into(), tree_with_owned_child("a")).expect("admitted");
     for _ in 0..4_096 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         if tracker.state.borrow().slots.iter().flatten().any(|slot| slot.job.is_some()) {
             break;
         }
@@ -1195,41 +1384,53 @@ fn abandoned_reconcile_job_closes_its_ready_output_so_the_tracker_can_idle() {
         slot.reconciler = Some(SurfaceReconciler::new(slot.surface.clone()));
     }
     for _ in 0..4_096 {
-        tracker.drive_one();
-        tracker.close_step(1, 4096);
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
+        tracker.close_step(cx).expect("original patch fixture close step");
         let _ = tracker.take_deferred_ready();
         if !tracker.has_work() {
             break;
         }
     }
     assert!(!tracker.has_work(), "an abandoned job must not strand its reserved output: {}", tracker.debug_state());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn a_closing_terminal_does_not_wait_behind_sixty_three_empty_slots_per_unit() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let generation = tracker.begin("6:main".into(), tree_with_owned_child("a")).expect("admitted");
-    let patch = finish(&tracker).expect("first publication");
+    let patch = finish(&tracker,cx).expect("first publication");
     close_test_patch(patch);
     assert!(tracker.mark_rejected("6:main", generation), "the published generation must be rejectable into a terminal");
     let mut steps = 0;
     while tracker.has_work() {
-        tracker.close_step(1, 4096);
+        tracker.close_step(cx).expect("original patch fixture close step");
         let _ = tracker.take_deferred_ready();
         steps += 1;
         assert!(steps < 1_024, "a single closing terminal must drain one unit per close step, not one per 64: {}", tracker.debug_state());
     }
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 #[test]
 fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("9:main".into(), leaf("root", "a")).expect("admitted");
     for _ in 0..4_096 {
-        tracker.drive_one();
-        tracker.close_step(1, 4096);
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
+        tracker.close_step(cx).expect("original patch fixture close step");
         if !tracker.state.borrow().slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some()) {
             break;
         }
@@ -1256,6 +1457,9 @@ fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work
     }
     assert!(tracker.has_publishable_work(), "an acknowledged deferred surface is re-admittable work");
     assert_eq!(tracker.take_deferred_ready().as_ref().map(AsRef::as_ref), Some("9:main"));
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🕹️ Wave B48 LAW: a render reservation that ends WITHOUT `cancel` releases exactly what `cancel`
@@ -1279,6 +1483,9 @@ fn a_deferred_surface_awaiting_the_hosts_acknowledgement_does_not_hold_more_work
 /// with it, it also proves the released output returns to the fixed `ready` pool.
 #[test]
 fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     let key = NativeCloseKey::fixture(5, 1);
@@ -1290,15 +1497,18 @@ fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
         };
         drop(grant);
         for _ in 0..1_024 {
-            tracker.drive_one();
-            if tracker.close_step(1, 4_096) {
+            tracker.drive_one(cx).expect("original patch fixture semantic step");
+            if tracker.close_step(cx).expect("original patch fixture close step") {
                 break;
             }
         }
     }
-    let grant = tracker.reserve_mounted(surface.clone(), key).expect("a released slot reserves");
+    let mut grant = tracker.reserve_mounted(surface.clone(), key).expect("a released slot reserves");
     grant.cancel();
     assert!(tracker.reserve_mounted(surface, key).is_ok(), "`cancel` and `Drop` must leave the slot in the same reservable state: {}", tracker.debug_state());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🪟️ WAVE B52 LAW: an alias window surface that still HOLDS an output, and whose revision the host
@@ -1314,10 +1524,13 @@ fn a_dropped_render_reservation_releases_its_surface_slot_and_its_output() {
 /// wave B50's 7 843-turn streak with `sources=["reconcile"]`).
 #[test]
 fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retirement_ladder() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let tracker = PatchTracker::new();
     tracker.begin("21:window".into(), tree_with_owned_child("alias")).expect("admitted alias publication");
-    let patch = finish(&tracker).expect("alias surface publishes");
+    let patch = finish(&tracker,cx).expect("alias surface publishes");
     close_test_patch(patch);
     {
         let mut state = tracker.state.borrow_mut();
@@ -1327,7 +1540,10 @@ fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retire
     }
     assert!(tracker.defer(ui_contract::SurfaceId::try_from("21:window").expect("bounded surface")).is_ok());
     assert!(tracker.take_deferred_ready().is_none(), "the unacknowledged alias stays deferred: {}", tracker.debug_state());
-    close_instance_to_empty(&tracker, 21);
+    close_instance_to_empty(&tracker, 21,cx);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🎫️ WAVE B56 LAW: the reconcile registry that refuses a render reservation NAMES itself, and the
@@ -1348,6 +1564,9 @@ fn an_alias_window_surface_the_host_never_acknowledges_does_not_block_the_retire
 /// other half — that ordinary bodies are never refused at all.
 #[test]
 fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_handback_registry() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
     let ceiling = (ui_contract::UI_RESIDENT_AGGREGATE_BYTES - baseline.resident_bytes) / ui_contract::UI_RESIDENT_SURFACE_BYTES;
@@ -1362,6 +1581,9 @@ fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_ha
     let refused_census = semio_framework_ui_runtime::surface_reconcile_registry_census();
     assert!(refused_census.handback_free > 0, "the handback registry must still have headroom when credit runs out: {refused_census:?}");
     release_resident_aggregate(held);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🎫️ WAVE B56 LAW: after two hundred leftover-producing publications the process-wide reconcile
@@ -1378,19 +1600,22 @@ fn the_refused_reconcile_reservation_names_the_resident_credit_ledger_not_the_ha
 /// so the count is the session's, not the unit's (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
 #[test]
 fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
     let baseline_fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
     let tracker = PatchTracker::new();
     for round in 0..200u32 {
         tracker.begin("41:puzzle3d-main".into(), tree_with_owned_child(&round.to_string())).unwrap_or_else(|_| panic!("round {round} admits its publication: {}", tracker.debug_state()));
-        let patch = acknowledge_one_publication(&tracker, "41:puzzle3d-main").unwrap_or_else(|| panic!("round {round} publishes: {}", tracker.debug_state()));
+        let patch = acknowledge_one_publication(&tracker, "41:puzzle3d-main",cx).unwrap_or_else(|| panic!("round {round} publishes: {}", tracker.debug_state()));
         close_test_patch(patch);
-        drain_released_output(&tracker, "41:puzzle3d-main", round);
+        drain_released_output(&tracker, "41:puzzle3d-main", round,cx);
         let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
         assert!(census.resident_bytes <= baseline.resident_bytes + ui_contract::UI_RESIDENT_SURFACE_BYTES, "round {round} left more than one live reservation's credit held: {census:?} against baseline {baseline:?} — {}", tracker.debug_state());
     }
-    close_instance_to_empty(&tracker, 41);
+    close_instance_to_empty(&tracker, 41,cx);
     let after = semio_framework_ui_runtime::surface_reconcile_registry_census();
     assert_eq!(after.resident_slots, baseline.resident_slots, "resident slots leaked across 200 publications: {after:?} against {baseline:?}");
     let after_fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
@@ -1400,6 +1625,9 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
         "resident credit leaked across 200 publications (the reconcile runtime backing registers once, on the first reservation, and is fixed thereafter): {after:?} against {baseline:?}"
     );
     assert_eq!(after.handback_free, baseline.handback_free, "handback slots leaked across 200 publications: {after:?} against {baseline:?}");
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 🧮️ WAVE B52 LAW: the retirement ladder of a published surface must not be priced by a grant
@@ -1415,6 +1643,9 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
 /// 26/09/02/PUZZLE-3D-END-TO-END wave B52 §2).
 #[test]
 fn a_node_record_wider_than_the_copy_grant_still_retires_its_document_to_terminal_empty() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let record = size_of::<ui_contract::UiNodeRecord>();
     let tracker = PatchTracker::new();
@@ -1422,11 +1653,14 @@ fn a_node_record_wider_than_the_copy_grant_still_retires_its_document_to_termina
     for row in 0..32u32 {
         root.children.try_push(leaf(&row.to_string(), "Row").root).expect("bounded fixture row");
     }
-    reserve(&tracker, ui_contract::SurfaceId::try_from("22:catalogue").expect("bounded surface")).expect("fixed mounted reservation").commit_source(root).expect("admitted publication");
-    let patch = finish(&tracker).expect("catalogue surface publishes");
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from("22:catalogue").expect("bounded surface")).expect("fixed mounted reservation");let mut source=Some(ComponentTree::new(root));assert!(grant.commit_source(&mut source,cx).expect("admitted publication"), "actual original source admitted");assert!(source.is_none());}
+    let patch = finish(&tracker,cx).expect("catalogue surface publishes");
     close_test_patch(patch);
-    close_instance_to_empty(&tracker, 22);
+    close_instance_to_empty(&tracker, 22,cx);
     assert!(!tracker.has_work(), "one node record is {record} bytes and its document ladder still holds work: {}", tracker.debug_state());
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
 }
 
 /// 📐️ A body of roughly `bytes` of authored text, spread over as many bounded `UiText` rows as the fixed
@@ -1460,6 +1694,9 @@ fn sized_body(key: &str, bytes: usize) -> TreeNode {
 /// MAXIMUM, never a price, and this law fixes the aggregate to the session's real occupancy.
 #[test]
 fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_at_once() {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("independently authored original patch fixture caller");
+    let mut original_context=original_caller.context();let cx=&mut original_context;
+    let result=(||{
     let _guard = semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
     let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
     let tracker = PatchTracker::new();
@@ -1479,10 +1716,9 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
     for (index, body) in panes.iter().map(|name| (*name, 54 * 1024)).chain(panels.iter().enumerate().map(|(index, name)| (*name, 1024 + index * 768))).enumerate() {
         let (name, bytes) = body;
         let surface = format!("58:{name}");
-        reserve(&tracker, ui_contract::SurfaceId::try_from(surface.clone()).expect("bounded surface"))
-            .unwrap_or_else(|_| panic!("surface {index} of a twelve-surface session must hold a reservation priced by its own {bytes}-byte body: {}", tracker.debug_state()))
-            .commit_source(sized_body(name, bytes))
-            .unwrap_or_else(|_| panic!("surface {surface} commits its rendered body: {}", tracker.debug_state()));
+    {let mut grant=reserve(&tracker, ui_contract::SurfaceId::try_from(surface.clone()).expect("bounded surface"))
+            .unwrap_or_else(|_| panic!("surface {index} of a twelve-surface session must hold a reservation priced by its own {bytes}-byte body: {}", tracker.debug_state()));let mut source=Some(ComponentTree::new(sized_body(name, bytes)));assert!(grant.commit_source(&mut source,cx)
+            .unwrap_or_else(|_| panic!("surface {surface} commits its rendered body: {}", tracker.debug_state())), "actual original source admitted");assert!(source.is_none());}
         mounted.push(surface);
     }
     let state = tracker.debug_state();
@@ -1496,7 +1732,7 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
     let mut peak = census.resident_bytes;
     let mut published = 0usize;
     for _ in 0..1_048_576 {
-        tracker.drive_one();
+        tracker.drive_one(cx).expect("original patch fixture semantic step");
         peak = peak.max(semio_framework_ui_runtime::surface_reconcile_registry_census().resident_bytes);
         if let Some(owner) = tracker.take_ready_patch() {
             let (patch, authority) = publish_test(owner);
@@ -1528,5 +1764,48 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
         ui_contract::UI_RESIDENT_SURFACE_BYTES,
         baseline.resident_bytes
     );
-    close_instance_to_empty(&tracker, 58);
+    close_instance_to_empty(&tracker, 58,cx);
+
+    })();
+    let fuel=original_context.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original patch fixture caller paid source close");result
+}
+
+
+#[test]
+fn mounted_original_producer_shell_denials_unchanged_child_census_and_paid_terminal_release() {
+    use semio_framework_job::{Generation,OperationId,OriginalJobFixtureCaller};
+    use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
+    fn clock()->Option<u64>{Some(1000)}
+    fn observe<T>(run:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,heap.requested_bytes,heap.released_bytes)}
+    let _guard=semio_framework_ui_runtime::surface_reconcile_registry_test_guard();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎬️media-slots/🎟️collect/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let stock=RetainedCloneGrant{maximum_items:1000000,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:256};
+    let mut caller=OriginalJobFixtureCaller::admit(OperationId(941),Generation(17),stock,clock,1000000,1000000);
+    let tracker=PatchTracker::new();let key=NativeCloseKey::fixture(941,1);
+    let mut grant=tracker.reserve_mounted(ui_contract::SurfaceId::try_from("941:original-producer").unwrap(),key).unwrap();
+    let(mut source,source_birth,source_release)=observe(||Some(tree_with_owned_child("original-é")));assert_eq!(source_release,0);
+    let child=source.as_ref().unwrap().root.children.get(0).unwrap()as*const TreeNode as usize;
+    let generation=grant.generation;let capacity=ComponentTreeProducer::required_capacity_bytes();
+    for denied in fixture["originalTreeProducer"]["capacityDenials"].as_array().unwrap(){
+        let denial=RetainedCloneGrant{maximum_capacity_bytes:denied.as_u64().unwrap()as usize,..stock};
+        let(admitted,born,released)=observe(||caller.turn(denial,|cx|grant.commit_source(&mut source,cx)).unwrap());
+        assert!(!admitted);assert_eq!((born,released),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());assert!(grant.active);assert!(matches!(grant.owner,MountedReconcileOwner::Live{..}));assert_eq!(source.as_ref().unwrap().root.children.get(0).unwrap()as*const TreeNode as usize,child);
+    }
+    let(admitted,born,released)=observe(||caller.turn(RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:capacity,..stock},|cx|grant.commit_source(&mut source,cx)).unwrap());assert!(admitted);assert!(source.is_none());assert_eq!((born,released),(capacity,0));assert_eq!(caller.receipt().retained_capacity_bytes,capacity);assert_eq!(caller.receipt().copied_bytes,0);drop(grant);
+    let mut producer=tracker.state.borrow_mut().slots.iter_mut().flatten().find(|slot|slot.key==key).unwrap().producer.take().unwrap();
+    for _ in 0..256{
+        assert_eq!(producer.authority.original_source().unwrap().root.children.get(0).unwrap()as*const TreeNode as usize,child);
+        let(step,born,released)=observe(||caller.turn(RetainedCloneGrant{maximum_copy_bytes:0,..stock},|cx|producer.authority.step_on_original(generation,false,cx)).unwrap());assert_eq!((born,released),(0,0));assert_eq!((caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes),(0,0));if step==ComponentTreeProducerStep::Complete{break}
+    }
+    assert!(producer.authority.has_complete());
+    let tree=producer.authority.take_complete().unwrap();assert_eq!(tree.root.children.get(0).unwrap()as*const TreeNode as usize,child);
+    let mut tree=ui_contract::OriginalBuiltTreeRetirement::new(tree.root);let mut freed=0;let mut close_birth=0;
+    for _ in 0..4096{if tree.terminal_is_empty(){break}let(_,born,released)=observe(||caller.turn(stock,|cx|{let demand=tree.next_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|loan|tree.step(loan))?;Ok(())}).unwrap());assert_eq!((born,released),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));freed+=released;close_birth+=born;}
+    assert!(tree.terminal_is_empty());assert_eq!(source_birth+close_birth,freed);assert_eq!(observe(||drop(tree)).1,0);
+    let mut terminal=MountedTreeTerminal{key,instance:Some(941),surface_index:None,surface:ui_contract::SurfaceId::try_from("941:original-producer").unwrap(),reconciler:None,reservation:None,authority:Some(producer.authority),close:true};
+    let(done,born,released)=observe(||caller.turn(RetainedCloneGrant{maximum_release_bytes:capacity-1,..stock},|cx|terminal.close_step(cx)).unwrap());assert!(!done);assert_eq!((born,released),(0,0));assert!(terminal.authority.is_some());assert_eq!(caller.receipt(),Default::default());
+    let(done,born,released)=observe(||caller.turn(RetainedCloneGrant{maximum_release_bytes:capacity,..stock},|cx|terminal.close_step(cx)).unwrap());assert!(!done);assert_eq!((born,released),(0,capacity));assert_eq!(caller.receipt().released_bytes,capacity);assert!(terminal.terminal_is_empty());assert_eq!(observe(||drop(terminal)).1,0);
+    {let mut state=tracker.state.borrow_mut();let slot=state.slots.iter_mut().flatten().find(|slot|slot.key==key).unwrap();slot.reconciler=producer.reconciler.take();}drop(producer.reservation.take());
+    caller.turn(stock,|cx|{close_instance_to_empty(&tracker,941,cx);Ok(())}).unwrap();caller.retire(stock);
+    eprintln!("[DEBUG] actual original producer deniedCapacity0/1/3/64 unchangedChild=true zeroCensusBirthRelease=true originalDonationCopy0=true shellBorn={capacity} sourceReleased={freed} separateFinalShellRelease={capacity} terminalDrop0=true");
 }

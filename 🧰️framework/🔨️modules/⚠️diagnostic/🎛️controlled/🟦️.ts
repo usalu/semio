@@ -1,8 +1,8 @@
-import type {FaultSource} from "../🧾️retained/🟦️.ts";
-import {ValueError} from "../../🌱️value/⚠️refusal/🟦️.ts";
+import type {FaultSource,Fault} from "../🧾️retained/🟦️.ts";
+import {ValueError} from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import type {ValueRefusalCodecControl} from "../../🌱️value/⚠️refusal/🔁️codec/🟦️.ts";
 import type {IntrinsicValue,IntrinsicMember} from "../../🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts";
-import {binary64Value} from "../../🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64Value} from "../../🌱️value/📦️packages/🟦️typescript/🔢️ieee754/🟦️.ts";
 import type {TextSpan} from "../📍️span/🟦️.ts";
 /** 🧾️ Source-positioned data uses the closed owned Diagnostic schema. */
 export interface Diagnostic {code:string;severity:"info"|"warning"|"error"|"fatal";span:TextSpan;message:string;expected?:ExpectedSet;scope:FaultScope}
@@ -46,3 +46,8 @@ export async function encodeFaultSourceControlled(value:FaultSource,c:ValueRefus
  for(const name of ["offset","byte","depth"]as const){const field=value[name];if(field===undefined)continue;const number=name==="byte"?(typeof field==="number"&&Number.isInteger(field)&&field>=0&&field<=255?BigInt(field):invalid("Fault.source byte exceeds u8")):typeof field==="bigint"?field:invalid("expected exact unsigned Fault.source scalar");if(number<0n||number>18446744073709551615n)invalid("expected exact unsigned Fault.source scalar");entries.push([name,async()=>{await c.charge(64);return{kind:"unsigned",value:number};}]);}
  return record(entries,c);
 }
+
+/** 🧷️ A first-party domain projection remains the same intrinsic object under the initiating codec control. */
+export async function decodeFaultDomainControlled(value:IntrinsicValue,c:ValueRefusalCodecControl):Promise<NonNullable<Fault["domain"]>>{await c.checkpoint();if(value.kind!=="object")invalid("Fault.domain requires an original object projection");await c.charge(16);return value;}
+/** 🪢️ Domain encoding lends its exact original intrinsic u64, byte and nested object owners. */
+export async function encodeFaultDomainControlled(value:NonNullable<Fault["domain"]>,c:ValueRefusalCodecControl):Promise<IntrinsicValue>{return decodeFaultDomainControlled(value,c);}

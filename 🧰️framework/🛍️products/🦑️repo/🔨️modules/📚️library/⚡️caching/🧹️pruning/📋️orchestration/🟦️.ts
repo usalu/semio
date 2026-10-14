@@ -5,19 +5,15 @@ import { BundleScript } from "../../../../../../../🔨️modules/🏃️process
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
 import {compactCargoIncrementalSessionsV1,withCargoCacheMaintenanceV1, deleteUnit, formatBytes, planCachePrune, type PrunePlan } from "../🟦️.ts";
-import {cargoDirectories} from "../../🦀️cargo/🟦️.ts";
+import {cargoDirectories} from "../../🦀️cargo/🗂️directories/🟦️.ts";
 import { areaUnitRoot, pruneTestEvidence, scanCacheAreas } from "../🌐️workspace/🟦️.ts";
 
 /** 📊️ Dry-run visibility into the shared cache root: per-area sizes, unit counts, and exactly what `cache-prune` would delete. */
 export class CacheReportScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const controller = new AbortController(),
-      cancel = (): void => controller.abort(new Error("Cache report cancelled"));
-    process.once("SIGINT", cancel);
-    process.once("SIGTERM", cancel);
-    try {
+    const control=scriptCompilerAdmissionControlV1(this.invocation,"cache:report",buildBudgetMs());
       const json = args.includes("--json");
-      const areas = scanCacheAreas(this.repoRoot, controller.signal, json ? undefined : (area, unit) => console.log(`[cache-report] scanned ${area}/${unit.path}`));
+      const areas = await scanCacheAreas(this.repoRoot, control, json ? undefined : (area, unit) => console.log(`[cache-report] scanned ${area}/${unit.path}`));
       const plan = planCachePrune(areas, Date.now(), CACHE_POLICY.storage.guardAgeMs);
       if (json) {
         console.log(JSON.stringify(plan));
@@ -31,10 +27,6 @@ export class CacheReportScript extends BundleScript {
         );
       }
       console.log(`[cache-report] tests: ${await pruneTestEvidence(this.repoRoot, true)}`);
-    } finally {
-      process.removeListener("SIGINT", cancel);
-      process.removeListener("SIGTERM", cancel);
-    }
   }
 }
 
@@ -49,8 +41,9 @@ export class CachePruneScript extends BundleScript {
         const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:join(this.repoRoot,".cache","framework","leases"),profile,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:incremental-compaction",buildBudgetMs()),dryRun,onUnit:unit=>console.log(`[DEBUG] Incremental compaction ${dryRun?"planned":"removing"} ${unit.path} bytes=${unit.bytes}`)});
         console.log(`[DEBUG] Incremental compaction result=${JSON.stringify(result)}`);return;
       }
-      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","framework","leases"),buildDirectory:cargoDirectories(this.repoRoot).build,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:shared-maintenance",buildBudgetMs())},async()=>{
-        const areas = scanCacheAreas(this.repoRoot, signal, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
+      const control=scriptCompilerAdmissionControlV1(this.invocation,"cache:shared-maintenance",buildBudgetMs());
+      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","framework","leases"),buildDirectory:cargoDirectories(this.repoRoot).build,control},async()=>{
+        const areas = await scanCacheAreas(this.repoRoot, control, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
         const plan: PrunePlan = planCachePrune(areas, Date.now(), CACHE_POLICY.storage.guardAgeMs);
         let deletedBytes = 0,
           deletedCount = 0;
@@ -58,7 +51,7 @@ export class CachePruneScript extends BundleScript {
           for (const unit of [...area.ageDeletions, ...area.budgetDeletions]) {
             signal.throwIfAborted();
             console.log(`[cache-prune] ${dryRun ? "would delete" : "deleting"} ${area.name}/${unit.path} (${formatBytes(unit.bytes)})`);
-            if (!dryRun) deleteUnit(areaUnitRoot(this.repoRoot, area.name, unit), unit);
+            if (!dryRun) await deleteUnit(areaUnitRoot(this.repoRoot, area.name, unit), unit,control);
             deletedBytes += unit.bytes;
             deletedCount++;
           }

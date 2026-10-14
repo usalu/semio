@@ -47,6 +47,7 @@ semio-framework-value = { workspace = true }
 tokio = { workspace = true, features = ["sync", "macros"] }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 # 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: `testkit` (and `ManualRuntime`, the
 # deterministic-clock `HostAsyncRuntime` test double it gates) is DROPPED here — every test that used
 # to drive `ManualRuntime`'s injected clock now drives a real `semio_framework_async::WorkerPool` on
@@ -64,3 +65,7 @@ tokio = { workspace = true, features = ["sync", "macros"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
+
+[[test]]
+name = "original-compute-parameters"
+path = "../../🧮️compute/🎟️invocation/📋️parameters/🧪️tests/🦀️.rs"

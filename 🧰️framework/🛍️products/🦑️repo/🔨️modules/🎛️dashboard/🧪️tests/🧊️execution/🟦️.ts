@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import installationSchema from "../../📦️installation/🧬️schema/🔣️.json";
 const installation=()=>({mode:"prototype" as const,control:phaseCompilerAdmissionControlV1(new AbortController().signal,120000,()=>undefined,()=>new Promise(done=>setImmediate(done)))});
 import { expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, statSync, utimesSync, writeFileSync } from "node:fs";
+import { chmodSync, constants, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { captureDashboardSources, digestDashboardSources, installDashboard, dashboardInvocation, mayRunStale, staleDashboard } from "../../📦️installation/🟦️.ts";
 import { dashboardExecutable } from "../../📦️packages/🦀️rust/📜️script.ts";
@@ -83,4 +83,25 @@ test("dashboard installation records and binaries coexist for both selected mode
  mkdirSync(packageRoot,{recursive:true});writeFileSync(join(packageRoot,"Cargo.toml"),'[package]\nname="dashboard-fixture"\nversion="0.0.0"\n');
  for(const mode of fixture.installationModes){mkdirSync(join(packageRoot,"dist/build",mode),{recursive:true});writeFileSync(join(packageRoot,"dist/build",mode,name),mode);const options={...installation(),mode};paths.push(await installDashboard(packageRoot,root,options));const record=JSON.parse(readFileSync(join(root,".🧬semio/🦑️repo/⚡️cache/🎛️dashboard",mode,"installed.json"),"utf8"));expect(oracle(record)).toBe(true);expect(record.mode).toBe(mode);expect(record.path).toContain(`/dashboard-cli/${mode}/`);}
  expect(paths[0]).not.toBe(paths[1]);for(const [index,mode] of fixture.installationModes.entries())expect(await dashboardExecutable(packageRoot,root,{...installation(),mode})).toBe(paths[index]);
+});
+
+/** 🛫️ An installed dashboard receives the neutral runner's original backend and process handoff. */
+test("the neutral build runner launches an installed dashboard before discovering backend graphs",async()=>{
+  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
+  const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🧊️execution/🔣️.json",import.meta.url),"utf8")).installedRunner;
+  const root=join(output,"d"),previousMode=process.env.SEMIO_BUILD_MODE,relative=`.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/${fixture.mode}/${"a".repeat(64)}/${process.platform==="win32"?"semio.exe":"semio"}`;
+  expect(join(root,relative).length).toBeLessThanOrEqual(256);mkdirSync(root);
+  try{
+    process.env.SEMIO_BUILD_MODE=fixture.mode;
+    const executable=join(root,relative);mkdirSync(dirname(executable),{recursive:true});copyFileSync(process.execPath,executable,constants.COPYFILE_FICLONE);chmodSync(executable,0o755);
+    writeFileSync(join(root,"daemon"),`import {writeFileSync} from "node:fs";writeFileSync("observed.json",JSON.stringify({arguments:process.argv.slice(2),tool:process.env.SEMIO_BUILD_TOOL,mode:process.env.SEMIO_BUILD_MODE}));console.log("[DEBUG] installed dashboard bridge tool="+process.env.SEMIO_BUILD_TOOL+" args="+process.argv.slice(2).join(","));`);
+    const record={version:2,platform:process.platform,mode:fixture.mode,path:relative,sources:{roots:["fixture"],digest:`0:${"a".repeat(40)}`}};
+    expect(new Ajv({strict:false}).compile(installationSchema)(record)).toBe(true);
+    const path=join(root,`.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/${fixture.mode}/installed.json`);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,JSON.stringify(record));
+    const {createScriptProcessEnvelope,withScriptProcessEnvelope}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+    const {runOwnedBuildInvocationV1}=await import("../../../📚️library/🏗️build/📜️script.ts");
+    await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"dashboard:bridge-test",maximumElapsedMilliseconds:30000},{},Date.now()),invocation=>runOwnedBuildInvocationV1(root,fixture.arguments,invocation));
+    expect(JSON.parse(readFileSync(join(root,"observed.json"),"utf8"))).toEqual(fixture.expected);
+  }finally{if(previousMode===undefined)delete process.env.SEMIO_BUILD_MODE;else process.env.SEMIO_BUILD_MODE=previousMode;rmSync(root,{recursive:true,force:true});}
 });

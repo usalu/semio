@@ -24,7 +24,7 @@ test("workspace build gate requires compiler intent and emits the completed grap
     for (const mode of fixture.modes) {
       process.env.SEMIO_BUILD_MODE = mode;
       await script.run([]);
-      expect(messages.at(-1)).toBe(`[build] Nx completed the ${mode} workspace build graph.`);
+      expect(messages.at(-1)).toBe(`[build] Completed the ${mode} workspace build graph.`);
     }
     for (const mode of fixture.invalidModes) {
       if (mode === null) delete process.env.SEMIO_BUILD_MODE; else process.env.SEMIO_BUILD_MODE = mode;

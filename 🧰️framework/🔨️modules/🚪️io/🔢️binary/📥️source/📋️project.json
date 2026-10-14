@@ -2,7 +2,7 @@
   "name": "@semio-tech/io-binary-source",
   "targets": {
     "test-typescript": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source",
         "command": "bun ./📜️script.ts test typescript",
@@ -17,7 +17,7 @@
       ]
     },
     "test-rust": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source",
         "command": "bun ./📜️script.ts test rust",

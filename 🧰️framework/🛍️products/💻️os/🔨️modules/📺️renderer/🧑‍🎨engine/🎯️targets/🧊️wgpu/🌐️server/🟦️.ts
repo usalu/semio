@@ -1,3 +1,4 @@
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
 import type { PluginCatalogRowsV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
@@ -12,6 +13,7 @@ import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻
 
 export type WgpuBrowserConfiguration = {
   readonly catalog: PluginCatalogRowsV1;
+  readonly nativeCatalog?: NativeCatalogV1;
   readonly workspace: string;
   readonly root: string;
   readonly profile: "prototype" | "release";
@@ -125,7 +127,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
       },
       completedArtifactReload(options.reloadFile),
       wgpuBrowserSelectionPlugin(options.variant),
-      { name: "wgpu-supplied-catalog", transformIndexHtml: () => [{ tag: "script", attrs: { id: "semio-plugin-catalog", type: "application/json" }, children: JSON.stringify(options.catalog).replaceAll("<", "\\u003c"), injectTo: "head" }] },
+      { name: "wgpu-supplied-catalog", transformIndexHtml: () => [{ tag: "script", attrs: { id: "semio-plugin-catalog", type: "application/json" }, children: JSON.stringify(options.catalog).replaceAll("<", "\\u003c"), injectTo: "head" },{tag:"script",attrs:{id:"semio-native-catalog",type:"application/json"},children:JSON.stringify(readNativeCatalogV1(options.nativeCatalog??emptyNativeCatalogV1())).replaceAll("<","\\u003c"),injectTo:"head"}] },
       { name: "wgpu-serve-only", config(_config, environment) { if (environment.command !== "serve") throw new Error("Build the finite WGPU wasm target through Nx"); } },
     ],
   };

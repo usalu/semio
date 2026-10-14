@@ -46,7 +46,7 @@ async fn op_text_roundtrip() {
 
 #[semio_framework_async_macros::async_test]
 async fn missing_set_page_payload_is_rejected() {
-    assert!(<PptxEditor as ArtifactEditor>::command_from_action("set-page", None).is_err());
+    assert!(<PptxEditor as ArtifactEditor>::command_from_action("set-page", None, None).is_err());
 }
 
 #[semio_framework_async_macros::async_test]

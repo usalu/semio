@@ -144,7 +144,7 @@ export async function compileNativeGrammar(repoRoot: string, workDir: string, na
     const source = join(workDir, "native-chart.tex");
     const spatialSources=join(workDir,"native-spatial-sources");
     const planarSources=join(workDir,"native-planar-sources");
-    const child = Bun.spawn(["bun", "x", "--no-install", "nx", "run", "@semio-tech/print-rs:test", "--skip-nx-cache"], { cwd: repoRoot, env: { ...process.env, PRINT_NATIVE_CHART_TIKZ: source, PRINT_NATIVE_SPATIAL_TIKZ: spatialSources, PRINT_NATIVE_GEO_PLANAR_TIKZ:planarSources, NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false" }, stdout: "inherit", stderr: "inherit" });
+    const child = Bun.spawn(["bun", "x", "--no-install", "repo", "run", "@semio-tech/print-rs:test", "--skip-nx-cache"], { cwd: repoRoot, env: { ...process.env, PRINT_NATIVE_CHART_TIKZ: source, PRINT_NATIVE_SPATIAL_TIKZ: spatialSources, PRINT_NATIVE_GEO_PLANAR_TIKZ:planarSources, NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false" }, stdout: "inherit", stderr: "inherit" });
     if (await child.exited !== 0) throw new Error("native chart inference fixture execution failed");
     const text = readFileSync(source, "utf8");
     const typedProbes = fixture.typedValues.map((_, index) => `\\ExplSyntaxOn\\semio_viz_table_cell:nnnN{native-typed}{${index+1}}{x}\\l_tmpa_tl\\semio_viz_scale_value:nVN{native-typed-x}\\l_tmpa_tl\\l_tmpb_tl\\semio_viz_probe_values:nV{native/typed/${index}}\\l_tmpb_tl\\semio_viz_scale_value:nVN{native-typed-color}\\l_tmpa_tl\\l_tmpb_tl\\semio_viz_probe_values:nx{native/typed-alpha/${index}}{\\semio_viz_color_alpha:n{\\l_tmpb_tl}}\\ExplSyntaxOff`).join("\n");

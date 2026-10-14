@@ -6,20 +6,35 @@
       "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
       "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
       "classification": "package",
-      "policy": "owned"
+      "policy": "owned",
+      "callerMode": "prototype",
+      "environmentMode": "release"
     },
     {
       "id": "actual-virtual-workspace-no-foreign-policy",
       "manifest": "Cargo.toml",
       "cwd": ".",
       "classification": "workspace",
-      "policy": "absent"
+      "policy": "absent",
+      "callerMode": "prototype",
+      "environmentMode": "release"
     },
     {
       "id": "invalid-manifest-refuses-child",
       "manifestText": "[dependencies]\n",
       "classification": "invalid",
-      "policy": "refused"
+      "policy": "refused",
+      "callerMode": "prototype",
+      "environmentMode": "release"
+    },
+    {
+      "id": "actual-release-caller-policy",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+      "classification": "package",
+      "policy": "owned",
+      "callerMode": "release",
+      "environmentMode": "prototype"
     }
   ]
 }

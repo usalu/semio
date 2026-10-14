@@ -7,7 +7,7 @@ use crate::sdk_fault::plugin_sdk_fault;
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure;
 pub use original_failure::{PluginLifecycleFailure,PluginLifecyclePrimary};
-pub(crate) use original_failure::{original_lifecycle_grant,original_lifecycle_step};
+pub(crate) use original_failure::{original_lifecycle_grant,original_lifecycle_step,original_lifecycle_delta,original_lifecycle_unposted};
 
 
 
@@ -56,7 +56,7 @@ impl semio_framework_value::RetirementReceipt for PluginLifecycleStep {
 #[derive(Debug)]
 pub(crate) struct ArtifactFixedQueue<T> {
     pub(crate) items: std::collections::VecDeque<T>,
-    capacity: usize,
+    pub(crate) capacity: usize,
     pub(crate) allocation_admitted: bool,
 }
 
@@ -112,28 +112,6 @@ pub(crate) fn plugin_retirement_fault(error: ValueError) -> Fault {
 /// 📏️ Observes every independent demand of one interactive job's next close turn.
 fn plugin_job_close_demand<J: semio_framework_job::InteractiveJob>(job: &J, body: usize) -> Result<RetirementDemand, ValueError> {
     Ok(RetirementDemand { copy_bytes: job.next_close_copy_byte_demand()?, capacity_bytes: job.next_close_capacity_byte_demand(body)?, release_bytes: job.next_close_release_byte_demand()?, depth: job.next_close_depth_demand()?.max(1) })
-}
-
-/// 🪢 Admits an interactive-job close receipt: `None` is a genuinely blocked close, a refusal is a fault.
-fn plugin_interactive_close_progress(step: semio_framework_job::InteractiveJobCloseStep, grant: RetainedCloneGrant, terminal_is_empty: bool) -> Result<Option<RetainedCloneProgress>, Fault> {
-    use semio_framework_job::InteractiveJobCloseStep;
-    match step.admit(grant, terminal_is_empty) {
-        InteractiveJobCloseStep::Pending { progress } | InteractiveJobCloseStep::Complete { progress } => Ok(Some(progress)),
-        InteractiveJobCloseStep::Blocked => Ok(None),
-        InteractiveJobCloseStep::Refused { kind, .. } => Err(plugin_sdk_fault(format!("job retirement refused: {kind:?}"))),
-    }
-}
-
-/// 🪢 Admits a worker-session close receipt exactly like [`plugin_interactive_close_progress`].
-pub(crate) fn plugin_worker_close_progress(step: semio_framework_job::WorkerJobCloseStep, grant: RetainedCloneGrant, terminal_is_empty: bool) -> Result<Option<RetainedCloneProgress>, Fault> {
-    use semio_framework_job::WorkerJobCloseStep;
-    match step {
-        WorkerJobCloseStep::Pending { progress } | WorkerJobCloseStep::Complete { progress } if !progress.fits(grant) => Err(plugin_sdk_fault("worker session retirement receipt exceeds its unchanged grant")),
-        WorkerJobCloseStep::Complete { .. } if !terminal_is_empty => Err(plugin_sdk_fault("worker session completed without its terminal-empty witness")),
-        WorkerJobCloseStep::Pending { progress } | WorkerJobCloseStep::Complete { progress } => Ok(Some(progress)),
-        WorkerJobCloseStep::Blocked => Ok(None),
-        WorkerJobCloseStep::Refused { kind, .. } => Err(plugin_sdk_fault(format!("worker session retirement refused: {kind:?}"))),
-    }
 }
 
 /// 📏️ Quotes the next close turn of one owned text: its last scalar, then its whole physical backing.
@@ -270,6 +248,23 @@ impl<T> ArtifactFixedRegistry<T> {
             unsafe { slots.set_len(capacity) };
         }
         Self { slots: slots.into_boxed_slice(), occupied: 0, allocation_admitted, capacity }
+    }
+
+    /// 🎟️ Retains the authored slot count without allocating before an original caller admits its backing.
+    pub(crate) fn unallocated(capacity:usize)->Self{
+        assert!(capacity!=0&&capacity<=ARTIFACT_LIVE_OUTPUT_SLOTS&&ARTIFACT_LIVE_OUTPUT_SLOTS%capacity==0);
+        Self{slots:Box::new([]),occupied:0,allocation_admitted:false,capacity}
+    }
+
+    /// 🪙️ Allocates the exact empty slot body under the receiving caller's independent currencies.
+    pub(crate) fn admit_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        if self.allocation_admitted{return Ok(RetainedCloneStep::Complete(Default::default()))}
+        let bytes=self.capacity.checked_mul(size_of::<std::mem::MaybeUninit<(u64,T)>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original registry backing extent overflow"))?;
+        if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        let mut slots=Vec::new();slots.try_reserve_exact(self.capacity).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original registry backing allocation refused"))?;
+        let actual=slots.capacity()*size_of::<std::mem::MaybeUninit<(u64,T)>>();
+        unsafe{slots.set_len(self.capacity)};self.slots=slots.into_boxed_slice();self.allocation_admitted=true;
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:actual,..Default::default()}))
     }
 
     fn occupied(&self, index: usize) -> bool {

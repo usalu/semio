@@ -7,7 +7,10 @@
     "historyLimits",
     "maximumHistoryAllocationBytes",
     "expected",
-    "caller"
+    "caller",
+    "sourceParent",
+    "boxedShell",
+    "sourceReceiving"
   ],
   "properties": {
     "historyLimits": {
@@ -84,6 +87,82 @@
         "deadlineUs": 999,
         "fuel": 8192,
         "maximumTurns": 65536
+      }
+    },
+    "sourceParent": {
+      "const": {
+        "alreadyPaidRoots": true,
+        "requiredParent": true,
+        "sameOperationGeneration": true,
+        "strongLoanItems": 1,
+        "loanCopyBytes": 0,
+        "loanCapacityBytes": 0,
+        "loanReleaseBytes": 0,
+        "separateParentClose": true,
+        "noRebase": true
+      }
+    },
+    "boxedShell": {
+      "const": {
+        "paidItems": 1,
+        "copiedBytes": 0,
+        "terminalDropBytes": 0,
+        "originalContext": true,
+        "separateChildClose": true
+      }
+    },
+    "sourceReceiving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cuts",
+        "originalPageBytes",
+        "reservationDebits",
+        "receiptDebits",
+        "sameControlReceipt",
+        "sameRecipient",
+        "actualCallerPorts",
+        "paidCancelledClose",
+        "typedFaultCustody",
+        "terminalDropBytes"
+      ],
+      "properties": {
+        "cuts": {
+          "const": [
+            0,
+            1,
+            5,
+            64,
+            65536
+          ]
+        },
+        "originalPageBytes": {
+          "const": 4096
+        },
+        "reservationDebits": {
+          "const": 0
+        },
+        "receiptDebits": {
+          "const": 1
+        },
+        "sameControlReceipt": {
+          "const": true
+        },
+        "sameRecipient": {
+          "const": true
+        },
+        "actualCallerPorts": {
+          "const": true
+        },
+        "paidCancelledClose": {
+          "const": true
+        },
+        "typedFaultCustody": {
+          "const": true
+        },
+        "terminalDropBytes": {
+          "const": 0
+        }
       }
     }
   }

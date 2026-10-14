@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "entry": "📦️packages/🦀️rust/📜️script.ts",
+  "removedRoots": ["🧰️framework/🛍️products", "✏️s", "🌎️hub"],
+  "removedPackages": ["@semio-tech/repo", "@semio-tech/s", "@semio-tech/hub"],
+  "packages": ["semio-framework-dsl-record-derive", "semio-framework-dsl-record"],
+  "laws": ["tests::original_optional_custody_is_excluded_from_wire_but_retired_as_owned_native_field", "original_optional_custody_native_record_wire_source_identity_and_paid_retirement"]
+}

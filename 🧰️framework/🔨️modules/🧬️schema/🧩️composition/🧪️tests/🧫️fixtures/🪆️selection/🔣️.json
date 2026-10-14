@@ -1,0 +1,9 @@
+{
+  "contract": "explicit-child-slot-selection-v1",
+  "cases": [
+    {"name": "concrete kind admits exact kind", "selection": {"kind": "artifactKind", "id": "s.example.graph"}, "artifactKind": "s.example.graph", "accepted": true},
+    {"name": "concrete kind refuses another kind", "selection": {"kind": "artifactKind", "id": "s.example.graph"}, "artifactKind": "s.other.graph", "accepted": false},
+    {"name": "consumer capability defers to composed behavioral admission", "selection": {"kind": "capability", "id": "s.trinity.jack.graph"}, "artifactKind": "s.example.graph", "accepted": true},
+    {"name": "consumer capability accepts another selected serialization", "selection": {"kind": "capability", "id": "s.trinity.jack.graph"}, "artifactKind": "s.other.graph", "accepted": true}
+  ]
+}

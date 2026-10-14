@@ -15,7 +15,11 @@
     "terminalDropBytes",
     "clock",
     "cancel",
-    "refilledPolicyLoop"
+    "refilledPolicyLoop",
+    "recordHandle",
+    "storeGeneration",
+    "cleanupReceiver",
+    "previewReceiver"
   ],
   "properties": {
     "version": {
@@ -73,6 +77,39 @@
     },
     "refilledPolicyLoop": {
       "const": false
+    },
+    "recordHandle": {
+      "const": 77
+    },
+    "storeGeneration": {
+      "const": 35
+    },
+    "cleanupReceiver": {
+      "const": {
+        "callerTurnBorrowed": true,
+        "detachedContextBirth": false,
+        "originalFailureRetained": true,
+        "maximumStepsPerCall": 1,
+        "cancelReturnWitness": "original-source-parent"
+      }
+    },
+    "previewReceiver": {
+      "const": {
+        "persistentProducer": true,
+        "originalCaller": true,
+        "budgetRefill": false,
+        "events": [
+          "source",
+          "alias",
+          "admission",
+          "callback",
+          "acknowledgement",
+          "resume",
+          "callback",
+          "close",
+          "delivery"
+        ]
+      }
     }
   }
 }

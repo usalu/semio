@@ -9,7 +9,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { delimiter, dirname, join, relative, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import { prepareCargoWorkspaceInvocation } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 
 import { cargoDirectories } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
@@ -47,7 +48,7 @@ async function compileTrunkRenderer(options: TrunkRendererBuild): Promise<void> 
   const lock = Bun.TOML.parse(readFileSync(join(toolWorkspace, "Cargo.lock"), "utf8")) as { package: { name: string; version: string }[] };
   const bindgen = [...new Set(lock.package.filter(row => row.name === "wasm-bindgen").map(row => row.version))];
   if (bindgen.length !== 1) throw new Error("Renderer tooling requires one locked wasm-bindgen version");
-  const optimizer = preparedBinaryen(toolWorkspace), environment = { ...(options.environment??process.env),SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(repositoryCargoPreparationStorageV1(workspace)) };
+  const optimizer = preparedBinaryen(toolWorkspace), environment:Record<string,string|undefined> = { ...(options.environment??process.env),SEMIO_CARGO_PREPARATION_STORAGE:JSON.stringify(repositoryCargoPreparationStorageV1(workspace)) };
   const compilerDirectories = cargoDirectories(workspace, environment);
   environment.CARGO_BUILD_BUILD_DIR = compilerDirectories.build;
   environment.SEMIO_COMPILER_RESOURCE_ROOT = join(compilerDirectories.build, "semio-compiler-resources");
@@ -66,7 +67,7 @@ async function compileTrunkRenderer(options: TrunkRendererBuild): Promise<void> 
     writeFileSync(join(temporary, "index.html"), `<!doctype html><html><head><link data-trunk rel="rust" href="${href}" data-cargo-profile="${profile}" data-wasm-opt="${profile==="release"?"z":"0"}" data-type="worker" data-bindgen-target="web" /></head><body></body></html>\n`);
     writeFileSync(join(temporary, "Trunk.toml"), `required_version = "=0.21.14"\noffline = true\n[build]\nlocked = true\nfrozen = true\ntarget = "index.html"\ndist = "dist"\nfilehash = false\nrelease = ${profile === "release"}\n[tools]\nwasm_bindgen = ${JSON.stringify(bindgen[0])}\nwasm_opt = "version_130"\n`);
     environment.CARGO_TARGET_DIR = join(temporary, "target");
-    const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/framework/leases"),buildDirectory:compilerDirectories.build,args:["--profile",profile],signal:options.control.signal,control:options.control});
+    const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/framework/leases"),buildDirectory:compilerDirectories.build,targetDirectory:environment.CARGO_TARGET_DIR,args:["--profile",profile],signal:options.control.signal,control:options.control});
     try {await runTool("cargo", ["metadata", "--locked", "--offline", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], root, "ignore", environment);await runTool("trunk", ["build", "--config", join(temporary, "Trunk.toml"), "--skip-version-check", "--offline", "true", "--color", "never"], root, false, environment);}finally{lease.release();}
     const rawSource=join(temporary,"target","wasm32-unknown-unknown",profile,manifest.package.name.replaceAll("-","_")+".wasm"),rawSha256=hash(rawSource);
     const ledger=join(cargoDirectories(workspace,environment).build,"semio-cargo-provenance"),before=new Set(existsSync(ledger)?readdirSync(ledger):[]);

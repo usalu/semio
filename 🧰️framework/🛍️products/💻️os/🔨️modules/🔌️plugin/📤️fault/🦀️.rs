@@ -19,11 +19,32 @@ pub(crate) fn plugin_sdk_fault(message: impl Into<String>) -> Fault {
 }
 
 /// 🚨️ Typed failure at the plugin assembly boundary.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq,semio_framework_value::RetireOwned)]
 pub struct PluginAssemblyError {
     pub code: String,
     pub message: String,
 }
+
+/// 🧱️ A render keeps its native assembly source or complete already-paid original failure.
+#[derive(Debug,semio_framework_value::RetireOwned)]
+pub enum OriginalRenderFailure{Assembly(PluginAssemblyError),Original(semio_framework_job::OriginalTurnFailure)}
+/// 🎬️ A pending render publishes no replacement tree while its original source remains retained.
+pub type OriginalRenderResult<T>=Result<Option<T>,OriginalRenderFailure>;
+impl From<Fault> for OriginalRenderFailure{fn from(source:Fault)->Self{Self::Original(source.into())}}
+impl From<PluginAssemblyError> for OriginalRenderFailure{fn from(source:PluginAssemblyError)->Self{Self::Assembly(source)}}
+impl From<semio_framework_job::OriginalTurnFailure> for OriginalRenderFailure{fn from(source:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(source)}}
+impl semio_framework_job::OriginalDomainFailure for OriginalRenderFailure{
+ fn domain_code(&self)->&str{match self{Self::Assembly(source)=>&source.code,Self::Original(_)=>"render.original"}}
+ fn domain_message(&self)->&str{match self{Self::Assembly(source)=>&source.message,Self::Original(source)=>source.primary.message()}}
+ fn domain_retained_progress(&self)->semio_framework_value::RetainedCloneProgress{Default::default()}
+}
+impl semio_framework_job::OriginalDomainProjection for OriginalRenderFailure{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,semio_framework_value::ValueError>{
+  use semio_framework_job::OriginalDomainView as V;match(self,path){(_,[])=>Ok(V::IntrinsicObject(2)),(Self::Assembly(_),[0])=>Ok(V::Text("assembly")),(Self::Original(_),[0])=>Ok(V::Text("original")),(Self::Assembly(_),[1])=>Ok(V::IntrinsicObject(2)),(Self::Assembly(source),[1,0])=>Ok(V::Text(&source.code)),(Self::Assembly(source),[1,1])=>Ok(V::Text(&source.message)),(Self::Original(source),[1,rest @ ..])=>semio_framework_job::project_original_turn_failure(source,rest),_=>Err(render_projection_refusal())}
+ }
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{match(self,path){(_,[])=>["kind","source"].get(index).copied().ok_or_else(render_projection_refusal),(Self::Assembly(_),[1])=>["code","message"].get(index).copied().ok_or_else(render_projection_refusal),(Self::Original(source),[1,rest @ ..])=>semio_framework_job::key_original_turn_failure(source,rest,index),_=>Err(render_projection_refusal())}}
+}
+fn render_projection_refusal()->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render failure projection ordinal changed")}
 
 // 🚫️async: E1 pure error constructor consumed pervasively by sync closures
 // (`.map_err`/`.ok_or_else`) — see R9.

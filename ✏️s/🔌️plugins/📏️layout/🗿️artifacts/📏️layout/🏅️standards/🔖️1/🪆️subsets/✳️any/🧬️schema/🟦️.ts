@@ -3,7 +3,7 @@ import { parseSchemaRecord } from "../../../../../../../../../../🧰️framewor
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { parseArtifactLink, type ArtifactLink } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts";
 export type { ArtifactChild, ArtifactLink };
-import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import {parseSemioDrawingSnapshot,type SemioDrawingSnapshot} from '../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts';
 import{parseFormDictionary,type FormDictionary}from"../../../../../../../../📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️dictionary/🟦️.ts";
 export{parseFormDictionary,type FormDictionary};

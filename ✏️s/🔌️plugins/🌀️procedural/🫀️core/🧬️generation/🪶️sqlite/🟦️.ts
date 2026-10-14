@@ -1,7 +1,7 @@
 /** 🌀️ Explicit typed support for the two actual procedural owned snapshot pairs. */
 import{ArtifactSqliteProjection,type ArtifactSqliteOptions}from"../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 import {encodeIeee754Cells} from "../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
-import {type Binary64} from "../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {type Binary64} from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import type{SqliteDatabase,SqliteValue}from"../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 import{validateProceduralSnapshotForProjection}from"./🛡️validation/🟦️.ts";
 import {compareProceduralText as compare} from "../🧬️schema/📸️snapshot/🛡️admission/🟦️.ts";

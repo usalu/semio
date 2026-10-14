@@ -808,7 +808,9 @@ impl ArtifactEditor for Block3dPlayApp {
     /// 🎯️ Maps host action id + JSON args onto `Block3dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly.
-    fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
+        if let Some(fault) = original_fault.take() { return Err(fault); }
+        let args = args.as_ref();
         let args = args.map(semio_framework_pack_json::from_dsl_value);
         let args = args.as_ref();
         let str_field = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
@@ -937,7 +939,9 @@ impl ArtifactEditor for Block3dPlayApp {
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
         _interaction: &InteractionView<'_>,
-    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        cx:&mut semio_framework_plugin::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         if body_key == world::BLOCK3D_BODY_WORLD {
             let preview = transient.window::<Block3dWorldWindowTransientOwner>().and_then(|window| window.brush_preview.as_ref());
             let root = world::render(
@@ -950,7 +954,10 @@ impl ArtifactEditor for Block3dPlayApp {
             return Ok(semio_framework_plugin::built_to_component_tree(root));
         }
         Self::render(body_key, doc, cfg, view_state)
-    }
+
+        })();
+        rendered.map(Some).map_err(Into::into)
+        }
 
     /// 🌉️ The flagship seam: `puzzle3d_catalog_fragment`'s first real caller. Wraps the block-3d
     /// document's puzzle3d-shaped catalog fragment as a `kit.catalog`-schema `Media` value for the

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "operation": 71,
+  "generation": 3,
+  "memoryBytes": 65536,
+  "tableItems": 3,
+  "globalValue": 7,
+  "activeData": "20",
+  "activeOffset": 5,
+  "chunkBytes": 1024,
+  "cuts": [
+    {
+      "capacity": 65535,
+      "required": 65536,
+      "cancelled": false,
+      "expired": false,
+      "expectedBirth": false
+    },
+    {
+      "capacity": 65536,
+      "required": 65536,
+      "cancelled": false,
+      "expired": false,
+      "expectedBirth": true
+    },
+    {
+      "capacity": 65536,
+      "required": 65536,
+      "cancelled": true,
+      "expired": false,
+      "expectedBirth": false
+    },
+    {
+      "capacity": 65536,
+      "required": 65536,
+      "cancelled": false,
+      "expired": true,
+      "expectedBirth": false
+    }
+  ],
+  "inputCopy": {
+    "source": "original-root-input-is-borrowed-and-phased",
+    "offset": 100,
+    "copyBytes": 32,
+    "cursorBytes": 8,
+    "expectedPhases": 2
+  }
+}

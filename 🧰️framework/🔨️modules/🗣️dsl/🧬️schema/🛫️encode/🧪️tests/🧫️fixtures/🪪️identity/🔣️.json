@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "policy": {
+    "identity": "retained-original-payload",
+    "borrowedHeaders": "may-move-between-turns",
+    "measurement": "same-identity-as-projection",
+    "differentOriginal": "invariant-refusal-before-effects",
+    "mirror": false
+  },
+  "original": "actual retained 文本 😀",
+  "maximumBytes": 65536,
+  "units": [
+    0,
+    1,
+    3,
+    64
+  ]
+}

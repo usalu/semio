@@ -9,7 +9,7 @@ import controls from"./🧫️fixtures/🎛️control.json";
 import words from"./🧫️fixtures/🔢️binary64.json";
 import choices from"./🧫️fixtures/🛂️choices.json";
 import { EN1995_SQLITE_SCHEMA, en1995SnapshotToSqliteDatabase, en1995SnapshotFromSqliteDatabase, type En1995SqliteSnapshot, type En1995SqliteMember } from "../🟦️.ts";
-import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,type Binary64} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
 import{exportSqliteDatabase,importSqliteDatabase}from"../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 test("EN1995 complete neutral state agrees with independent JSON schema",()=>{expect(new Ajv({strict:false}).validate(schema,fixture)).toBe(true)});
 test("EN1995 owning facade exposes complete relational snapshot directions",()=>{expect(Object.hasOwn(sqliteOwner,"en1995SnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"en1995SnapshotFromSqliteDatabase")).toBe(true)});

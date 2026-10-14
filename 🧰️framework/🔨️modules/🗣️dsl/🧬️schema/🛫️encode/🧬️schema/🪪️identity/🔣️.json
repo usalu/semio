@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "original",
+    "maximumBytes",
+    "units"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "identity": "retained-original-payload",
+        "borrowedHeaders": "may-move-between-turns",
+        "measurement": "same-identity-as-projection",
+        "differentOriginal": "invariant-refusal-before-effects",
+        "mirror": false
+      }
+    },
+    "original": {
+      "const": "actual retained 文本 😀"
+    },
+    "maximumBytes": {
+      "const": 65536
+    },
+    "units": {
+      "const": [
+        0,
+        1,
+        3,
+        64
+      ]
+    }
+  }
+}

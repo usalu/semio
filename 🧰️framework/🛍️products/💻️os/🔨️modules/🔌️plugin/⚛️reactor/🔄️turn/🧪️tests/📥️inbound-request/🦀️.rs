@@ -59,19 +59,19 @@ fn inbound_request_bundle(capability: &str) -> crate::plugin_runtime::ExtensionB
         let value: serde_json::Value = serde_json::from_str(text).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate.bad-request"), error.to_string()))?;
         let answer = serde_json::to_vec(&serde_json::json!({ "echo": value })).expect("the echo answer serializes");
         let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: answer.len(), retained_capacity_bytes: answer.capacity(), ..Default::default() };
-        cx.consume_retained(progress).map_err(|error| semio_framework_diagnostic::FaultFrom::to_fault(&error))?;
+        cx.consume_retained(progress)?;
         Ok(crate::plugin_runtime::ExtensionInvokeStep { payload: Some(answer), retained_progress: progress, refusal: None })
     })
 }
 
-async fn drive_inbound_request(runtime: &crate::plugin_runtime::PluginRuntime<crate::plugin_app::NoPluginApp>, req: u64, capability: &str, request: &str) -> Vec<Effect> {
+async fn drive_inbound_request(runtime: &crate::plugin_runtime::PluginRuntime<crate::plugin_app::NoPluginApp>, req: u64, capability: &str, request: &str,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Vec<Effect> {
     let event = Event::Request {
         req: semio_framework::kernel::RequestId(req),
         from: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId("0".into()) },
         capability: capability.to_string(),
         payload: request.as_bytes().to_vec(),
     };
-    crate::reactor::poll_kernel(runtime, vec![event], None, None, inbound_request_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one inbound-request turn").effects
+    crate::reactor::poll_kernel(runtime, vec![event], None, None, inbound_request_budget(), identity,cx).await.expect("one inbound-request turn").effects
 }
 
 /// ⚖️ LAW: every fixture row is answered by exactly one `Effect::Respond` carrying the SAME `req`, on
@@ -86,6 +86,8 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
     assert_eq!(fixture.seam.outcome_arms, vec!["ok".to_string(), "fault".to_string()]);
     assert_eq!(fixture.seam.origin_tag, "shell");
     assert_eq!(fixture.seam.answered_on_turn, 1);
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut cx=original_caller.context();let mut identity=crate::app_testing::artifact_app_laws::fixture_identity();
     ::semio_framework_async::poll::resolve_ready(async {
         let runtime = crate::plugin_runtime::PluginRuntime::<crate::plugin_app::NoPluginApp>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::extension_deactivate().await;
@@ -97,7 +99,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
                 installed = true;
             }
             let req = (index as u64) + 1;
-            let effects = drive_inbound_request(&runtime, req, &row.capability, &row.request_text).await;
+            let effects = drive_inbound_request(&runtime,req,&row.capability,&row.request_text,&mut identity,&mut cx).await;
             let answers: Vec<&semio_framework::kernel::RequestOutcome> = effects.iter().filter_map(|effect| if let Effect::Respond { req: answered, result } = effect { (answered.0 == req).then_some(result) } else { None }).collect();
             assert_eq!(answers.len(), 1, "{} must be answered exactly once", row.name);
             match (&row.outcome[..], answers[0]) {
@@ -114,6 +116,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
                 (expected, produced) => panic!("{} expected {expected}, got {produced:?}", row.name),
             }
         }
-        crate::plugin_runtime::extension_dispose_cold().unwrap();
+        crate::plugin_runtime::extension_dispose_cold(&mut cx).unwrap();
     });
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).unwrap();
 }

@@ -56,5 +56,28 @@
       "patch": "diff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1 +1 @@\n-old\n+new\ndiff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1 +1 @@\n-old\n+new\n",
       "accept": false
     }
+  ],
+  "positions": [
+    {
+      "id": "exact",
+      "before": "top\nold\ntail\n",
+      "after": "top\nnew\ntail\n",
+      "patch": "diff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1,3 +1,3 @@\n top\n-old\n+new\n tail\n",
+      "accept": true
+    },
+    {
+      "id": "wrong-context",
+      "before": "top\nold\ntail\n",
+      "after": "top\nnew\nforeign\n",
+      "patch": "diff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1,3 +1,3 @@\n top\n-old\n+new\n tail\n",
+      "accept": false
+    },
+    {
+      "id": "wrong-position",
+      "before": "top\nold\ntail\n",
+      "after": "new\ntop\ntail\n",
+      "patch": "diff --git a/source.js b/source.js\n--- a/source.js\n+++ b/source.js\n@@ -1,3 +1,3 @@\n top\n-old\n+new\n tail\n",
+      "accept": false
+    }
   ]
 }

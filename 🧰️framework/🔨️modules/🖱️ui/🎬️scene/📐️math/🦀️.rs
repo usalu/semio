@@ -989,11 +989,14 @@ struct Mesh3dOwner {
     component_ineligible: IneligibleGroups,
     component_probe: Option<(u64,usize)>,
     has_topological_vertex: bool,
+    resource_claimed: bool,
+    resource_closing: bool,
+    resource_loans: u32,
 }
 
 impl Mesh3dOwner {
     fn new(generation: u64, revision: u64, schema: Mesh3dSchema, layout: Mesh3dLayout) -> Self {
-        Self { generation, revision, schema, layout, pages: Some(Box::new(std::array::from_fn(|_| None))), allocated_pages: 0, written: [0; 14], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0, component_references: None, component_retirement: None,scratch_retirement:None, component_domain: 0, component_group: 0, component_complete: true, component_credit: 0, component_fault: None, component_seen: NumericSeen::default(), component_ineligible: IneligibleGroups::default(),component_probe:None, has_topological_vertex: false }
+        Self { generation, revision, schema, layout, pages: Some(Box::new(std::array::from_fn(|_| None))), allocated_pages: 0, written: [0; 14], aabb_min: [f32::INFINITY; 3], aabb_max: [f32::NEG_INFINITY; 3], closing: false, close_page: 0, component_references: None, component_retirement: None,scratch_retirement:None, component_domain: 0, component_group: 0, component_complete: true, component_credit: 0, component_fault: None, component_seen: NumericSeen::default(), component_ineligible: IneligibleGroups::default(),component_probe:None, has_topological_vertex: false, resource_claimed: false, resource_closing: false, resource_loans: 0 }
     }
 
     fn component_header_credit(&self) -> Result<usize, Mesh3dFault> {
@@ -1244,6 +1247,15 @@ impl Mesh3dAuthority {
         }
     }
 
+    fn ready_mut(&mut self, lease: Mesh3dLease) -> Result<&mut Mesh3dOwner, Mesh3dFault> {
+        let slot = self.slots.get_mut(usize::from(lease.slot)).and_then(Option::as_mut).filter(|slot| slot.epoch == lease.epoch).ok_or(Mesh3dFault::Stale)?;
+        match &mut slot.state {
+            Mesh3dSlotState::Ready(owner) if owner.generation == lease.generation && owner.revision == lease.revision => Ok(owner),
+            Mesh3dSlotState::Closing(_) => Err(Mesh3dFault::Closing),
+            _ => Err(Mesh3dFault::Stale),
+        }
+    }
+
     fn reserve_component_credit(&mut self, token: Mesh3dWriteToken, credit: usize) -> Result<(), Mesh3dFault> {
         let geometry_pages = usize::from(self.writing_ref(token)?.layout.page_count);
         let bytes = geometry_pages.checked_mul(MESH3D_PAGE_BYTES).and_then(|bytes| bytes.checked_add(credit)).ok_or(Mesh3dFault::ByteCapacity)?;
@@ -1320,6 +1332,7 @@ impl Mesh3dAuthority {
     }
 
     fn begin_close(&mut self, lease: Mesh3dLease) -> Result<(), Mesh3dFault> {
+        if self.ready(lease).is_ok_and(|owner| owner.resource_claimed || owner.resource_loans != 0) { return Err(Mesh3dFault::Order); }
         let slot = self.slots.get_mut(usize::from(lease.slot)).and_then(Option::as_mut).filter(|slot| slot.epoch == lease.epoch).ok_or(Mesh3dFault::Stale)?;
         if matches!(slot.state, Mesh3dSlotState::Closing(_)) {
             return Ok(());
@@ -1339,6 +1352,13 @@ impl Mesh3dAuthority {
     fn close_demands(&self,slot_index:u16,epoch:u64,work:usize)->Result<RetirementDemand,Mesh3dFault> {
         let slot=self.slots.get(usize::from(slot_index)).and_then(Option::as_ref).filter(|slot|slot.epoch==epoch).ok_or(Mesh3dFault::Stale)?;
         let Mesh3dSlotState::Closing(owner)=&slot.state else{return Err(Mesh3dFault::Closing)};owner.close_demands(work)
+    }
+
+    fn begin_close_resource(&mut self, lease: Mesh3dLease) -> Result<(), Mesh3dFault> {
+        let owner = self.ready_mut(lease)?;
+        if !owner.resource_claimed || !owner.resource_closing || owner.resource_loans != 0 { return Err(Mesh3dFault::Order); }
+        owner.resource_claimed = false;
+        self.begin_close(lease)
     }
 
     fn close_step(&mut self, slot_index: u16, epoch: u64,grant:RetainedCloneGrant) -> Result<Mesh3dOwnershipStep, Mesh3dFault> {
@@ -1537,7 +1557,49 @@ pub fn mesh3d_terminal_is_empty(lease: Mesh3dLease) -> bool {
     mesh3d_authority().try_lock().is_ok_and(|authority| authority.slots.get(usize::from(lease.slot)).and_then(Option::as_ref).is_none_or(|slot| slot.epoch != lease.epoch))
 }
 
+#[path = "📦️resource/🦀️.rs"]
+mod mesh3d_resource;
+pub use mesh3d_resource::{Mesh3dResourceIdentity, Mesh3dResourceLoan, Mesh3dResourceOwner};
+
 impl Mesh3dLease {
+    /// 📃️ Lends one original initialized page while the existing native arena guard is held.
+    pub fn with_original_page<R>(self, index: usize, read: impl FnOnce(&[u8]) -> R) -> Result<R, Mesh3dFault> {
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
+        let owner = authority.ready(self)?;
+        if index >= usize::from(owner.layout.page_count) { return Err(Mesh3dFault::Schema); }
+        let page = owner.pages.as_ref().and_then(|pages| pages.get(index)).and_then(Option::as_ref).ok_or(Mesh3dFault::Incomplete)?;
+        let initialized = owner.layout.total_bytes.saturating_sub(index * MESH3D_PAGE_BYTES).min(MESH3D_PAGE_BYTES);
+        Ok(read(&page.bytes[..initialized]))
+    }
+
+    /// 📏️ Reads the original page census without allocating a transport mirror.
+    pub fn original_page_count(self) -> Result<usize, Mesh3dFault> {
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
+        Ok(usize::from(authority.ready(self)?.layout.page_count))
+    }
+
+    /// 📐️ Reads the initialized geometry extent of the original arena owner.
+    pub fn original_geometry_bytes(self) -> Result<usize, Mesh3dFault> {
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
+        Ok(authority.ready(self)?.layout.total_bytes)
+    }
+
+    /// 🧮️ Reads the three original topological label counts under the arena guard.
+    pub fn original_component_counts(self) -> Result<[usize; 3], Mesh3dFault> {
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
+        let owner = authority.ready(self)?;
+        Ok(std::array::from_fn(|domain| owner.component_references.as_ref().and_then(|table| table.get(["face", "edge", "vertex"][domain])).map_or(0, Vec::len)))
+    }
+
+    /// 🏷️ Lends one complete original label, including labels ineligible for numeric picking.
+    pub fn with_original_component_label<R>(self, domain: usize, group: usize, read: impl FnOnce(&str) -> R) -> Result<R, Mesh3dFault> {
+        let kind = ["face", "edge", "vertex"].get(domain).ok_or(Mesh3dFault::Schema)?;
+        let authority = mesh3d_authority().try_lock().map_err(|_| Mesh3dFault::Busy)?;
+        let owner = authority.ready(self)?;
+        let label = owner.component_references.as_ref().and_then(|table| table.get(*kind)).and_then(|labels| labels.get(group)).ok_or(Mesh3dFault::Schema)?;
+        Ok(read(label.as_str()))
+    }
+
     /// 🔖️ Reads one original canonical label without a floating point conversion.
     pub fn component_label(self, field: Mesh3dField, group: u32) -> Result<Option<u64>, Mesh3dFault> {
         let (kind, domain) = match field { Mesh3dField::FaceIds => ("face", 0u64), Mesh3dField::EdgeIds => ("edge", 1u64), Mesh3dField::VertexIds => ("vertex", 2u64), _ => return Err(Mesh3dFault::Schema) };

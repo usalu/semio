@@ -1,4 +1,7 @@
 #!/usr/bin/env bun
+import { runOwnedCommand } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runExactCargoLaws } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { resolve } from "node:path";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -15,6 +18,11 @@ class SourceScript extends BundleScript { async run(): Promise<void> { sessionLa
 class CheckScript extends BundleScript { async run(args: string[]): Promise<void> { await runCargo(["check", "-p", "semio-s-spatial-kernel-semio-session", ...args], this.repoRoot); } }
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
+    if(args[0]==="original-construction-source"||args[0]==="original-construction-native"){
+      if(args.length!==1)throw Error("Original Session constructor requires exact one cohort");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original Session constructor requires finite original deadline");
+      await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🏗️construction/🧪️tests/🟦️.ts")],this.repoRoot,"session:original-construction-source",remaining,{env:process.env});
+      if(args[0]==="original-construction-native"){const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original Session constructor deadline expired");await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-s-spatial-kernel-semio-session":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-s-spatial-kernel-semio-session",target:{kind:"test",name:"session_construction"},laws:["original_session_constructor_pays_each_exact_birth_and_preserves_original_caller","original_session_constructor_cancellation_closes_only_born_originals"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});}return;
+    }
     const selected=args[0]==="tessellation-validation-frontier" ? "original_session_validation_frontier_funds_actual_body_and_full_cancel_custody" : args[0]==="tessellation-failure" ? "original_session_failed_admitted_event_retains_native_primary_and_actual_cpu" : args[0]==="tessellation-authority" ? "original_session_tessellation_requires_original_capacity_before_any_normal_effect" : args[0]==="retained-work" ? "original_session_retention_transfers_incoming_keys_and_closes_removed_rows" : args[0]==="component-retirement" ? "retired_analytic_mesh_metadata_obeys_exact_byte_grants" : args[0]==="physical-custody" ? "original_session_capture_keeps_same_allocation_until_full_typed_grants" : undefined;
     const names=selected==="original_session_tessellation_requires_original_capacity_before_any_normal_effect"?[selected,"original_session_admission_and_specific_cancel_preserve_source_and_full_custody","original_session_query_requires_original_capacity_after_source_admission","original_session_failed_admitted_event_retains_native_primary_and_actual_cpu"]:selected?[selected]:undefined;
     const groups=sessionLaws().flatMap((group:any)=>names?group.laws.some((law:string)=>names.includes(law))?[{...group,laws:group.laws.filter((law:string)=>names.includes(law))}]:[]:[group]);

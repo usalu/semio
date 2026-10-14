@@ -83,8 +83,7 @@ export async function stageArtifacts(staging: string, owner: string, files: Read
     for (const name of files.keys()) if (isAbsolute(name) || name.split(/[\\/]/).includes("..")) throw new Error(`Invalid artifact path ${name}`);
     if (existsSync(staging)) {
       const markerPath = join(staging, marker);
-      if (!existsSync(markerPath)) rmSync(staging, { recursive: true, force: true });
-      else if (JSON.parse(readFileSync(markerPath, "utf8")).owner !== owner) throw new Error(`Unowned artifact directory: ${staging}`);
+      if (!existsSync(markerPath)||JSON.parse(readFileSync(markerPath, "utf8")).owner !== owner) throw new Error(`Unowned artifact directory: ${staging}`);
     }
     const identical = await hasIdenticalArtifacts(staging, marker, owner, files, signal, control);
     signal.throwIfAborted(); if (control) checkResourceLeaseControl(control);
@@ -117,21 +116,23 @@ export async function stageArtifacts(staging: string, owner: string, files: Read
 /** 🧊️ Acquires immutable executable bytes before releasing the publisher's shared lease. */
 export async function pinExecutableArtifact(source: string, cacheDirectory: string, owner: string, options: ArtifactPublicationOptions): Promise<string> {
   if (!isAbsolute(source) || !isAbsolute(cacheDirectory) || !isAbsolute(options.leaseDirectory)) throw Error("Explicit absolute executable publication paths required");
-  const signal=options.signal??new AbortController().signal;
-  const lease=await acquireResourceLease({directory:options.leaseDirectory,resource:`artifact:${dirname(source)}`,mode:"shared",signal,onWait:options.onWait});
+  const control=options.control,signal=control?.signal??options.signal??new AbortController().signal;
+  if(control){checkResourceLeaseControl(control);if(options.signal&&options.signal!==signal)throw Error("Executable acquisition requires original signal");}
+  const lease=await acquireResourceLease({directory:options.leaseDirectory,resource:`artifact:${dirname(source)}`,mode:"shared",signal,control,onWait:options.onWait});
   try {
-    const digest=await executableDigest(source,signal),name=basename(source),directory=join(cacheDirectory,digest);
+    const digest=await executableDigest(source,signal,control),name=basename(source),directory=join(cacheDirectory,digest);
     await stageArtifacts(directory,owner,new Map([[name,source]]),options);
     const executable=join(directory,name);
-    if(await executableDigest(executable,signal)!==digest)throw Error("Executable artifact changed during acquisition");
+    if(await executableDigest(executable,signal,control)!==digest)throw Error("Executable artifact changed during acquisition");
     return executable;
   } finally {lease.release();}
 }
 
 /** 🔏️ Hashes executable bytes in bounded cancellable reads. */
-async function executableDigest(path: string, signal: AbortSignal): Promise<string> {
-  const file=await open(path,"r"),hash=createHash("sha256"),bytes=Buffer.allocUnsafe(65536);
+async function executableDigest(path: string, signal: AbortSignal, control?: ResourceLeaseControl): Promise<string> {
+  signal.throwIfAborted();if(control)checkResourceLeaseControl(control);
+  const file=await open(path,"r"),hash=createHash("sha256"),bytes=Buffer.allocUnsafe(65536),started=Date.now();let chunks=0;
   try {
-    for(;;){signal.throwIfAborted();const {bytesRead}=await file.read(bytes,0,bytes.length,null);signal.throwIfAborted();if(!bytesRead)return hash.digest("hex");hash.update(bytes.subarray(0,bytesRead));}
+    for(;;){signal.throwIfAborted();if(control)checkResourceLeaseControl(control);const {bytesRead}=await file.read(bytes,0,bytes.length,null);signal.throwIfAborted();if(control)checkResourceLeaseControl(control);if(!bytesRead)return hash.digest("hex");hash.update(bytes.subarray(0,bytesRead));if(control&&++chunks%64===0){await control.publish({resource:`artifact:${path}`,mode:"shared",elapsedMs:Date.now()-started});checkResourceLeaseControl(control);await control.yieldContinuation();checkResourceLeaseControl(control);}}
   } finally {await file.close();}
 }

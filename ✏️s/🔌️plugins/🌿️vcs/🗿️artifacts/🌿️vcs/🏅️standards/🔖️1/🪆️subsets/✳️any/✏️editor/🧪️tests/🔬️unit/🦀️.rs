@@ -434,7 +434,7 @@ fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
     assert_eq!(vcs_bounded_extent(&rejected, &snapshot, &interaction), None);
     let factory = VcsBoundedCommandJobFactory::new("s.vcs.vcs@1/*#editor");
     assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
-    assert!(VcsPlayApp::command_from_action("changeNotes", Some(&action_args([("value", "v".repeat(maximum + additional))]))).is_err());
+    assert!(VcsPlayApp::command_from_action("changeNotes", Some((action_args([("value", "v".repeat(maximum + additional))])).clone()), None).is_err());
 }
 
 #[test]
@@ -500,9 +500,9 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
     declared.sort_unstable();
     assert_eq!(bridged, declared, "every VcsCommand row must have an action-bridge row here");
     for (id, args) in rows {
-        assert_eq!(VcsPlayApp::command_from_action(id, Some(&args)).expect("declared action bridge").command_id(), id);
+        assert_eq!(VcsPlayApp::command_from_action(id, Some((args).clone()), None).expect("declared action bridge").command_id(), id);
     }
-    assert!(VcsPlayApp::command_from_action("unknown", None).is_err());
+    assert!(VcsPlayApp::command_from_action("unknown", None, None).is_err());
 }
 
 /// 🧵️ LAW (design L4 / §2 D): the pointer wire carries its batch and its release flag explicitly — a move keeps every
@@ -513,13 +513,13 @@ fn canvas_pointer_wire_requires_samples_and_cancelled() {
     let f = semio_framework_value::DslValue::float;
     let pair = |x: f64, y: f64| semio_framework_value::DslValue::Array(vec![f(x), f(y)]);
     let batched = semio_framework_value::DslValue::Object(vec![("x".into(), f(3.0)), ("y".into(), f(4.0)), ("samples".into(), semio_framework_value::DslValue::Array(vec![pair(1.0, 1.5), pair(3.0, 4.0)]))]);
-    let VcsCommand::CanvasPointerMove(moved) = VcsPlayApp::command_from_action("canvasPointerMove", Some(&batched)).expect("batched move") else { panic!("move") };
+    let VcsCommand::CanvasPointerMove(moved) = VcsPlayApp::command_from_action("canvasPointerMove", Some((batched).clone()), None).expect("batched move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
     assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
     let snapshot = VcsPlayApp::initial_snapshot();
     let interaction = protocol::InteractionState::default();
     assert_eq!(vcs_bounded_extent(&VcsCommand::CanvasPointerMove(moved), &snapshot, &interaction), Some(VCS_BOUNDED_WORK_ITEMS), "two samples are priced within the bounded raw budget");
-    let refused = |action: &str, args: Option<&semio_framework_value::DslValue>| VcsPlayApp::command_from_action(action, args).err().map(|fault| fault.code);
+    let refused = |action: &str, args: Option<&semio_framework_value::DslValue>| VcsPlayApp::command_from_action(action, args, None).err().map(|fault| fault.code);
     let invalid = Some(semio_framework_plugin::FaultCode::new("app.command.invalid-args"));
     let unbatched = semio_framework_value::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0))]);
     assert_eq!(refused("canvasPointerMove", Some(&unbatched)), invalid, "a move without `samples` is refused");
@@ -528,9 +528,9 @@ fn canvas_pointer_wire_requires_samples_and_cancelled() {
     assert_eq!(refused("canvasPointerMove", Some(&malformed)), invalid, "a malformed sample refuses the batch");
     assert_eq!(refused("canvasPointerUp", Some(&unbatched)), invalid, "a release without `cancelled` is refused");
     let flag = |cancelled: bool| semio_framework_value::DslValue::Object(vec![("cancelled".into(), semio_framework_value::DslValue::Bool(cancelled))]);
-    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&flag(false))).expect("release") else { panic!("up") };
+    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some((flag(false)).clone()), None).expect("release") else { panic!("up") };
     assert!(!released.cancelled);
-    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some(&flag(true))).expect("cancel") else { panic!("up") };
+    let VcsCommand::CanvasPointerUp(released) = VcsPlayApp::command_from_action("canvasPointerUp", Some((flag(true)).clone()), None).expect("cancel") else { panic!("up") };
     assert!(released.cancelled);
     assert_eq!(refused("unknown", None), Some(semio_framework_plugin::FaultCode::new("app.command.unsupported")));
 }
@@ -573,7 +573,7 @@ fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
     let fixture: Value = parse(RETAINED_EDIT_LIMITS).expect("VCS retained edit limits decode");
     let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
-    assert!(VcsPlayApp::command_from_action("textEdit", Some(&action_args([("text", "x".repeat(maximum + additional))]))).is_err());
+    assert!(VcsPlayApp::command_from_action("textEdit", Some((action_args([("text", "x".repeat(maximum + additional))])).clone()), None).is_err());
     let mut oversized_snapshot = VcsPlayApp::initial_snapshot();
     oversized_snapshot.tags = (0..=VCS_EDIT_MAXIMUM_TAGS).map(|index| format!("tag-{index}")).collect();
     let command = VcsCommand::Edit(edit_command::Edit { text: "{}".into() });
@@ -626,6 +626,7 @@ fn every_resumable_edit_turn_stays_below_the_interaction_ceiling() {
 /// retained edit work emitted one uncoalesced edit per keystroke).
 #[semio_framework_async_macros::async_test]
 async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step() {
+    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let run = semio_framework_plugin::artifact_app_laws::typing_run();
     assert!(run.texts.len() > 64 * 10, "the run must outlast the edit ledger many times over");
     let mut instance = app().await;
@@ -645,7 +646,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
         let args = semio_framework_value::DslValue::Object(vec![("text".into(), semio_framework_value::DslValue::String(serde_json::to_string(&next).expect("snapshot json"))), buffer.clone()]);
         let admitted = instance.handle_action("textEdit", Some(&args), &typing_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("keystroke {index} was refused: {fault:?}"));
         settle_action(&mut instance, admitted).await;
-        semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance);
+        semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance,cx);
     }
     assert_eq!(instance.rendered_snapshot().notes, run.expected, "every render reads the open run");
     assert_eq!((instance.snapshot().expect("snapshot").notes, instance.edit_transactions().len()), (run.initial.clone(), edits), "no key lands while the run is open");
@@ -662,6 +663,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
         settle_reserved(&mut instance, admitted).await;
         assert_eq!(&instance.snapshot().expect("snapshot").notes, expected, "one {verb} moves the whole run");
     }
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
 }
 
 //#endregion 🔖️CommandSurface

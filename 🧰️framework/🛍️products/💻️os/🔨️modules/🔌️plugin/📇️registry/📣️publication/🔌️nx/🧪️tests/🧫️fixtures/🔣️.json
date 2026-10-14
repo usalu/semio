@@ -1,0 +1,130 @@
+{
+  "providers": [
+    {
+      "ownerRoot": "applications/design",
+      "sourcePath": "applications/design/catalog/port.ts"
+    }
+  ],
+  "cases": [
+    {
+      "name": "owner-deleted",
+      "ownerKind": null,
+      "sourceKind": null,
+      "contribution": {
+        "version": 1,
+        "publication": {
+          "version": 1,
+          "ownerRoot": "applications/design/catalog",
+          "outputRoot": "applications/design/catalog/generated",
+          "contributions": [
+            {
+              "ownerRoot": "applications/design",
+              "packageRoots": [
+                "applications/design/plugins"
+              ]
+            }
+          ]
+        },
+        "projectRoot": "applications/design",
+        "project": "design-composition",
+        "generateTarget": "generate",
+        "inputs": [
+          "applications/design/catalog/request.json"
+        ]
+      },
+      "count": 0
+    },
+    {
+      "name": "valid-owner",
+      "ownerKind": "directory",
+      "sourceKind": "file",
+      "contribution": {
+        "version": 1,
+        "publication": {
+          "version": 1,
+          "ownerRoot": "applications/design/catalog",
+          "outputRoot": "applications/design/catalog/generated",
+          "contributions": [
+            {
+              "ownerRoot": "applications/design",
+              "packageRoots": [
+                "applications/design/plugins"
+              ]
+            }
+          ]
+        },
+        "projectRoot": "applications/design",
+        "project": "design-composition",
+        "generateTarget": "generate",
+        "inputs": [
+          "applications/design/catalog/request.json"
+        ]
+      },
+      "count": 1
+    },
+    {
+      "name": "broken-present-owner",
+      "ownerKind": "directory",
+      "sourceKind": null,
+      "contribution": {
+        "version": 1,
+        "publication": {
+          "version": 1,
+          "ownerRoot": "applications/design/catalog",
+          "outputRoot": "applications/design/catalog/generated",
+          "contributions": [
+            {
+              "ownerRoot": "applications/design",
+              "packageRoots": [
+                "applications/design/plugins"
+              ]
+            }
+          ]
+        },
+        "projectRoot": "applications/design",
+        "project": "design-composition",
+        "generateTarget": "generate",
+        "inputs": [
+          "applications/design/catalog/request.json"
+        ]
+      },
+      "reject": true
+    },
+    {
+      "name": "malformed-present-owner",
+      "ownerKind": "directory",
+      "sourceKind": "file",
+      "contribution": {},
+      "reject": true
+    },
+    {
+      "name": "symlink-port",
+      "ownerKind": "directory",
+      "sourceKind": "symlink",
+      "contribution": {
+        "version": 1,
+        "publication": {
+          "version": 1,
+          "ownerRoot": "applications/design/catalog",
+          "outputRoot": "applications/design/catalog/generated",
+          "contributions": [
+            {
+              "ownerRoot": "applications/design",
+              "packageRoots": [
+                "applications/design/plugins"
+              ]
+            }
+          ]
+        },
+        "projectRoot": "applications/design",
+        "project": "design-composition",
+        "generateTarget": "generate",
+        "inputs": [
+          "applications/design/catalog/request.json"
+        ]
+      },
+      "reject": true
+    }
+  ],
+  "noProviders": []
+}

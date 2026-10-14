@@ -1,3 +1,4 @@
+import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -51,7 +52,7 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
   for (const retired of [["--", fixture.variant, "--release"], ["--", fixture.variant, "--smoke"], []]) assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", ...retired], {}).args, ["run", "@semio-tech/framework-renderer-wgpu:native", ...retired], "The hard-coded native alias no longer picks a variant");
   assert.deepEqual(resolveInvocation(["run", `@semio-tech/framework-os-dev:run-${fixture.variant}-native-release`], {}).env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: "release" });
   const script = readFileSync(join(native, "📜️script.ts"), "utf8"), old = readFileSync(join(native, "../📦️packages/🟦️typescript/📜️script.ts"), "utf8");
-  assert.ok(!/runCmdStatus|new NativeRunScript|\["nx", "run"/.test(script));
+  assert.ok(!/runCmdStatus|new NativeRunScript|\["repo", "run"/.test(script));
   assert.ok(!/class NativeRunScript|ensureAssetServer/.test(old));
   const capture = await require("esbuild").build({ entryPoints: [join(native, "📦️modules/📜️script.ts")], bundle: true, write: false, metafile: true, platform: "node", format: "esm", packages: "external", logLevel: "silent" });
   assert.ok(!Object.keys(capture.metafile.inputs).some(path => path.includes("🏗️compiler") || path.includes("styling/🏗️builder") || path.endsWith("📚️library/🟦️.ts")), "Native publication must not load application tooling or asset servers");
@@ -118,7 +119,7 @@ if (operation === "consumer" || operation === "waiting") {
 `);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
-  const env = { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") };
+  const env = { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") };
   const run = async (profile: string) => {
     const child = Bun.spawn(["node", cli, "run", `fixture:consume-${profile}`, "--outputStyle=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
     const cancel = () => child.kill("SIGTERM"), deadline = setTimeout(cancel, 60_000);
@@ -151,19 +152,19 @@ if (operation === "consumer" || operation === "waiting") {
   process.once("SIGINT", cancelCompile); process.once("SIGTERM", cancelCompile);
   const nativeEnv = { ...env, CARGO_TARGET_DIR: join(root, ".native-target"), CARGO_BUILD_BUILD_DIR: join(root, ".native-build"), CARGO_NET_OFFLINE: "true" };
   try {
-    for (const args of [["generate-lockfile", "--offline"], ["build", "--locked", "--offline"]]) await runTool("cargo",[...args, "--manifest-path", join(root, "reader/Cargo.toml")],root,compile.signal,false,nativeEnv,{version:1,directory:output});
+    for (const args of [["generate-lockfile", "--offline"], ["build", "--locked", "--offline"]]) await runTool("cargo",[...args, "--manifest-path", join(root, "reader/Cargo.toml")],root,compile.signal,false,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
     const binary = join(root, ".native-target/debug", process.platform === "win32" ? "reader.exe" : "reader");
     for (const profile of fixture.profiles) {
       const path = join(publication.nativeRuntimeDirectory(root, fixture.variant, profile), "🔣️runtime.json");
       const manifest = JSON.parse(readFileSync(path, "utf8"));
-      const rows = await runTool(binary,[path, fixture.variant],root,compile.signal,true,nativeEnv,{version:1,directory:output});
+      const rows = await runTool(binary,[path, fixture.variant],root,compile.signal,true,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
       assert.deepEqual(JSON.parse(rows), manifest.modules.map(({ pluginId, wasmSha256 }: any) => ({ pluginId, wasmSha256 })));
-      await assert.rejects(() => runTool(binary,[path, "wrong-variant"],root,compile.signal,true,nativeEnv,{version:1,directory:output}), /failed \(2\)/);
+      await assert.rejects(() => runTool(binary,[path, "wrong-variant"],root,compile.signal,true,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program}), /failed \(2\)/);
     }
     const path = join(root, "reader/manifest.json"), valid = JSON.parse(readFileSync(join(publication.nativeRuntimeDirectory(root, fixture.variant, "prototype"), "🔣️runtime.json"), "utf8"));
     const validateNative = async (value: unknown, accepted: boolean) => {
       put("reader/manifest.json", typeof value === "string" ? value : JSON.stringify(value));
-      const result = runTool(binary,[path, fixture.variant, "validate"],root,compile.signal,true,nativeEnv,{version:1,directory:output});
+      const result = runTool(binary,[path, fixture.variant, "validate"],root,compile.signal,true,nativeEnv,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program});
       if (accepted) await result; else await assert.rejects(result, /failed \(2\)/);
     };
     for (const entry of fixture.paths) {

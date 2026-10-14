@@ -168,6 +168,11 @@ impl<T> AdmittedSurfaceMap<T> {
         self.slots.get(slot).and_then(Option::as_ref).map(|entry| entry.id.as_str())
     }
 
+    pub fn get_mut_at(&mut self,index:usize)->Option<&mut T>{
+        let slot=usize::from(self.order.get(index).copied().flatten()?);
+        self.slots.get_mut(slot).and_then(Option::as_mut).map(|entry|&mut entry.value)
+    }
+
     pub fn len(&self) -> usize {
         self.order_len
     }

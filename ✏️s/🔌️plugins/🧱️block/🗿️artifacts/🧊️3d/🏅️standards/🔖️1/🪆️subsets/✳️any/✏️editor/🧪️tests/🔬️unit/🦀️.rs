@@ -392,7 +392,7 @@ fn brush_preview_publications_are_partitioned_by_trusted_window_context() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Block3dPlayApp>>(context::block3d_app_manifest_for_tests).await;
-    assert!(<Block3dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None).is_err());
+    assert!(<Block3dPlayApp as ArtifactEditor>::command_from_action("noSuchAction", None, None).is_err());
 }
 //#endregion 🔖️CommandSurface
 
@@ -633,7 +633,7 @@ async fn a_surface_click_is_one_tool_transaction_of_its_mutations() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_bridges_set_active_example() {
     assert!(
-        matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "capsule" })))), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule")
+        matches!(<Block3dPlayApp as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "exampleId": "capsule" }))).clone()), None), Ok(Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id })) if id == "capsule")
     );
 }
 //#endregion 🔖️Behavior

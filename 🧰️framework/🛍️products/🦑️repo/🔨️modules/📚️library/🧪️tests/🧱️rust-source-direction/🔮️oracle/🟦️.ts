@@ -5,7 +5,7 @@ const read = (path: string): any => JSON.parse(readFileSync(join(library, path),
 
 /** 🏘️ Replays the actual policy loader and authored workspace contribution in a private native root. */
 export function writeRustLayerOracle(cwd: string, files: Readonly<Record<string, string>>): void {
-  const repo = resolve(library, "../../../../.."), corpus = read("🧫️fixtures/🧱️rust-source-direction/🔣️.json");
+  const repo = resolve(library, "../../../../.."), corpus = read("🧪️tests/🧫️fixtures/🧱️rust-source-direction/🔣️.json");
   const write = (path: string, content: string): void => { mkdirSync(dirname(join(cwd, path)), { recursive: true }); writeFileSync(join(cwd, path), content); };
   const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
   write(boundary, readFileSync(join(repo, boundary), "utf8"));

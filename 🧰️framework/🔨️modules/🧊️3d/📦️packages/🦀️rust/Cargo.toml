@@ -38,3 +38,4 @@ parry3d = "0.17"
 # the same types. Test-only, `#[cfg(test)]`-gated: never a `[dependencies]` entry.
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-trace.workspace = true

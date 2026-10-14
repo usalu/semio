@@ -107,6 +107,7 @@ struct UiWindow {
     presented_tree: UiTree,
     presented_router: EventRouter,
     presented_ready: bool,
+    presented_source:Option<UiPresentedSourceIdentity>,
     presented_revision: u64,
     presented_accessibility_generation: u64,
     presented_interaction_epoch: u64,
@@ -171,6 +172,7 @@ impl UiWindow {
             presented_tree: UiTree::new(),
             presented_router: EventRouter::new(window_id),
             presented_ready: false,
+            presented_source:None,
             presented_revision: 0,
             presented_accessibility_generation: 0,
             presented_interaction_epoch: 0,
@@ -230,6 +232,7 @@ impl UiWindow {
     }
 
     fn close_presented_tree_storage_step(&mut self, _window_id: &str) -> bool {
+        if self.presented_source.is_some(){return false}
         let Self { presented_tree, .. } = self;
         presented_tree.close_storage_step(&mut |_, _| true)
     }
@@ -959,6 +962,12 @@ pub struct UiSurfaceToken {
     generation: u64,
 }
 
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+struct UiPresentedSourceIdentity{operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,revision:u64,accessibility:u64,interaction:u64,clock:usize,deadline:u64}
+/// 🎟️ One original caller holds the accepted semantic tree until its paid producer returns this loan.
+pub struct UiPresentedTreeLoan{surface:UiSurfaceToken,identity:UiPresentedSourceIdentity,active:bool}
+impl Drop for UiPresentedTreeLoan{fn drop(&mut self){assert!(std::thread::panicking()||!self.active,"accepted tree loan reached Drop before original paid return")}}
+
 impl UiSurfaceToken {
     /// 🧪️ Mints one token for a probe. The gate matches `📌️mounted_layout`'s `layout_tree_now`,
     /// its only non-`cfg(test)` caller — a bare `cfg(test)` here fails every downstream crate that
@@ -1465,6 +1474,7 @@ impl Ui {
 
     /// 🏁 Swaps bounded move-owned tree/router revisions only after the matching pixels are accepted.
     pub fn acknowledge_presented_input(&mut self, witness: u64) -> bool {
+        if self.windows.values().any(|window|window.presented_source.is_some()){return false}
         if !self.presented_input_candidate_matches(witness) {
             return false;
         }
@@ -1682,6 +1692,7 @@ impl Ui {
                 UiSurfaceClosePhase::PresentedDocument
             }
             UiSurfaceClosePhase::PresentedDocument => {
+                if self.windows.get_token(token).is_some_and(|window|window.presented_source.is_some()){return UiSurfaceCloseStep::Pending;}
                 let Some(window_id) = self.windows.id(token).cloned() else { return UiSurfaceCloseStep::Complete };
                 let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
                 let generation = window.presented_accessibility_generation;
@@ -3923,6 +3934,46 @@ impl Ui {
         self.windows.get_token(surface).is_none_or(|window| !window.presented_ready || !window.presented_router.open_overlays().is_empty() || window.presented_tooltip.is_some())
     }
 
+    /// 🧪️ Moves one existing fixture tree into an empty admitted accepted window; no GPU acceptance is asserted.
+    #[cfg(any(test,feature="testkit"))]
+    pub fn donate_original_presented_fixture_tree(&mut self,surface:UiSurfaceToken,original:&mut Option<UiTree>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        let window=self.windows.get_token_mut(surface).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original accepted fixture surface is absent"))?;
+        if window.presented_source.is_some()||window.presented_ready||window.presented_tree.root.is_some()||original.is_none(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original accepted fixture source or receiver custody refused").into())}
+        window.presented_tree=original.take().unwrap();window.presented_revision=window.presented_tree.document().map_or(1,|document|document.revision().0);window.presented_accessibility_generation=1;window.presented_ready=true;
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
+    /// 🧪️ Returns that same original fixture owner only after every actual accepted-source loan was returned.
+    #[cfg(any(test,feature="testkit"))]
+    pub fn take_original_presented_fixture_tree(&mut self,surface:UiSurfaceToken,target:&mut Option<UiTree>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        let window=self.windows.get_token_mut(surface).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original accepted fixture surface is absent"))?;
+        if window.presented_source.is_some()||target.is_some(){return Ok(false)}
+        *target=Some(std::mem::replace(&mut window.presented_tree,UiTree::new()));window.presented_ready=false;
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
+    /// 🎟️ Admits one exact accepted-tree alias through the initiating caller's original stock and clock.
+    pub fn admit_presented_tree_source(&mut self,surface:UiSurfaceToken,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<UiPresentedTreeLoan>,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        let Some(window)=self.windows.get_token_mut(surface).filter(|window|window.closing.is_none()&&window.presented_ready)else{return Ok(None)};
+        if window.presented_source.is_some(){return Ok(None)}
+        let identity=UiPresentedSourceIdentity{operation:cx.operation(),generation:cx.generation(),revision:window.presented_revision,accessibility:window.presented_accessibility_generation,interaction:window.presented_interaction_epoch,clock:cx.clock_source()as usize,deadline:cx.deadline_us()};
+        window.presented_source=Some(identity);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(Some(UiPresentedTreeLoan{surface,identity,active:true}))
+    }
+    /// 👓️ Borrows the original accepted owner without copying a tree, document or params source.
+    pub fn original_presented_tree_source(&self,loan:&UiPresentedTreeLoan)->Option<&UiTree>{
+        let window=self.windows.get_token(loan.surface)?;if !loan.active||window.presented_source!=Some(loan.identity)||window.presented_revision!=loan.identity.revision||window.presented_accessibility_generation!=loan.identity.accessibility||window.presented_interaction_epoch!=loan.identity.interaction{return None}Some(&window.presented_tree)
+    }
+    /// 🤝️ Returns the same alias before accepted-tree replacement or retirement resumes.
+    pub fn return_presented_tree_source(&mut self,loan:&mut UiPresentedTreeLoan,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if !loan.active{return Ok(true)}let identity=loan.identity;
+        if(identity.operation,identity.generation,identity.clock,identity.deadline)!=(cx.operation(),cx.generation(),cx.clock_source()as usize,cx.deadline_us()){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"accepted tree alias requires its original caller").into())}
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        let window=self.windows.get_token_mut(loan.surface).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"accepted tree alias lost its original surface"))?;
+        if window.presented_source!=Some(identity){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"accepted tree alias owner changed before return").into())}
+        window.presented_source=None;loan.active=false;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
+
     /// 🎬️ Exposes only the tree whose surface identity was acknowledged by GPU presentation.
     pub fn presented_tree(&self, window_id: &str, surface: UiSurfaceToken) -> Option<&UiTree> {
         if self.windows.id(surface).is_none_or(|id| id.as_ref() != window_id) {
@@ -4059,3 +4110,7 @@ mod retained_section_collapse_tests;
 #[path = "../../../🧪️tests/🔽️retained-select-origin/🦀️.rs"]
 mod retained_select_origin_tests;
 // #endregion engine
+
+#[cfg(test)]
+#[path="🎟️presented-source/🧪️tests/🦀️.rs"]
+mod original_presented_source_tests;

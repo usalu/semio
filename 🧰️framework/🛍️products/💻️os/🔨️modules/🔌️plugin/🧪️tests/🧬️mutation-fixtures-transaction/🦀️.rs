@@ -196,28 +196,25 @@ struct TxnFixtureJob {
 }
 
 impl semio_framework_job::InteractiveJob for TxnFixtureJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         if cx.should_yield() {
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
+        if self.owners.completion_is_delivered(){return semio_framework_job::JobOutcomeBorrow::admit_complete(cx,None,None).map_err(Into::into)}
         if self.owners.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
             self.page += 1;
-            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into);
         }
         let Some(command) = self.owners.command.as_deref() else {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         };
-        let value = self.count + 1;
-        let emit = match command {
-            TxnCommand::Increment => Emit { artifact_mutations: vec![SetTransactionCountWithoutPreflight { value }.into()], ..Default::default() },
-            TxnCommand::StreamedIncrement => Emit::stream_transaction(txn_stream_transaction(), vec![SetTransactionCountWithoutPreflight { value }.into()]),
-            TxnCommand::IncrementAndNotify => Emit { artifact_mutations: vec![SetTransactionCountAndNotify { value }.into()], ..Default::default() },
-        };
-        self.owners.completion.as_ref().expect("transaction fixture completion").complete(Ok(emit), crate::app_emission::EphemeralEmit::default()).expect("one exact transaction completion");
-        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+        let kind=match command{TxnCommand::Increment=>0u8,TxnCommand::StreamedIncrement=>1,TxnCommand::IncrementAndNotify=>2};
+        if self.owners.pending_is_empty(){let value=self.count+1;let extra=if kind==1{"tx-00000000000005ac".len()+"s.testkit.txn#streamed-increment".len()}else{0};if !self.owners.prepare_emission(cx,std::mem::size_of::<i32>()+extra,extra,||Ok(match kind{0=>Emit{artifact_mutations:vec![SetTransactionCountWithoutPreflight{value}.into()],..Default::default()},1=>Emit::stream_transaction(txn_stream_transaction(),vec![SetTransactionCountWithoutPreflight{value}.into()]),_=>Emit{artifact_mutations:vec![SetTransactionCountAndNotify{value}.into()],..Default::default()}}))?{return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
+        if !self.owners.complete(cx)?{return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -228,9 +225,7 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.owners.close_step(grant)
-    }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.owners.close_step(cx)}
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.owners.demand(0)?.copy_bytes)

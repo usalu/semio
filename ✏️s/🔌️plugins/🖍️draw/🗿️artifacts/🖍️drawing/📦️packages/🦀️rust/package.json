@@ -8,7 +8,7 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-drawing-canvas-window-ownership": "bun nx run @semio-tech/draw-drawing-rs:verify-drawing-canvas-window-ownership"
+    "verify-drawing-canvas-window-ownership": "bun repo run @semio-tech/draw-drawing-rs:verify-drawing-canvas-window-ownership"
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"

@@ -2613,7 +2613,7 @@ impl RetainedPackSymbolTable {
         if self.closed||self.closing{return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::InvariantViolated,"retained-pack.source-reserve",offset))}
         if target>if symbol{self.maximum_symbols}else{self.maximum_scalars}{return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::WorkLimit,"retained-pack.source-reserve",offset))}
         let error=|error|RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.source-reserve",offset);
-        let capacity=if symbol{self.symbols.next_capacity_allocation_bytes(target)}else{self.scalars.next_capacity_allocation_bytes(target)}.map_err(error)?.unwrap_or(0);
+        let capacity=if symbol{self.symbols.next_capacity_allocation_bytes(target)}else{self.scalars.next_capacity_allocation_bytes(if target>self.scalars.capacity(){self.maximum_scalars}else{target})}.map_err(error)?.unwrap_or(0);
         if self.allocated_bytes_checked().and_then(|owned|owned.checked_add(capacity)).is_none_or(|next|next>self.maximum_allocation_bytes){return Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::OwnershipLimit,"retained-pack.source-reserve",offset))}
         let depth=if symbol{self.symbols.next_reserve_depth_demand()}else{self.scalars.next_reserve_depth_demand()}.map_err(error)?;
         Ok(RetirementDemand{capacity_bytes:capacity,depth,..Default::default()})
@@ -2650,7 +2650,7 @@ impl RetainedPackSymbolTable {
         }
         if self.closed||self.closing{return self.remember(Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::InvariantViolated,"retained-pack.symbol-scalars",offset)));}
         if target>self.maximum_scalars{return self.remember(Err(RetainedPackCatalogFault::refusal(ValueRefusalKind::WorkLimit,"retained-pack.symbol-scalars",offset)));}
-        let requested = match self.scalars.next_capacity_allocation_bytes(target) {
+        let requested = match self.scalars.next_capacity_allocation_bytes(if target>self.scalars.capacity(){self.maximum_scalars}else{target}) {
             Ok(Some(requested)) => requested,
             Ok(None) => return Ok(None),
             Err(error) => return self.remember(Err(RetainedPackCatalogFault::from_paged_refusal(error,"retained-pack.symbol-scalar-allocation",offset))),
@@ -2671,7 +2671,7 @@ impl RetainedPackSymbolTable {
 
     pub fn reserve_scalar_capacity(&mut self, target: usize, maximum_bytes: usize, offset: u64) -> Result<RetainedPackCatalogAllocationStep, RetainedPackCatalogAllocationError> {
         let requested = self.next_scalar_allocation_bytes(target, offset).map_err(|fault| RetainedPackCatalogAllocationError { allocated_bytes: 0, fault })?;
-        self.reserve(target, maximum_bytes, offset, requested, false)
+        self.reserve(if target>self.scalars.capacity(){self.maximum_scalars}else{target}, maximum_bytes, offset, requested, false)
     }
 
     fn reserve(

@@ -88,6 +88,23 @@ impl fmt::Debug for UiText {
     }
 }
 
+/// 🫴️ A fixed receiving cell copies the original UTF8 bytes before donating its whole typed header.
+pub struct UiTextOriginalCopy{target:Option<UiText>,source:(usize,usize),offset:usize}
+impl UiTextOriginalCopy{
+ pub fn new(source:&UiText)->Self{Self{target:Some(UiText::default()),source:(source.bytes.as_ptr()as usize,source.len()),offset:0}}
+ pub fn step(&mut self,source:&UiText,grant:semio_framework_value::RetainedCloneGrant)->Result<(Option<UiText>,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{
+  use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+  if self.source!=(source.bytes.as_ptr()as usize,source.len()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original UI text copy source changed"))}
+  if self.target.is_none()||grant.maximum_items==0||grant.maximum_depth==0{return Ok((None,Default::default()))}
+  if self.offset<source.len(){
+   let copied=(source.len()-self.offset).min(grant.maximum_copy_bytes);if copied==0{return Ok((None,Default::default()))}
+   let start=self.offset;let end=start+copied;self.target.as_mut().unwrap().bytes[start..end].copy_from_slice(&source.bytes[start..end]);self.offset=end;
+   return Ok((None,RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))
+  }
+  self.target.as_mut().unwrap().len=source.len;Ok((self.target.take(),RetainedCloneProgress{copied_items:1,..Default::default()}))
+ }
+}
+
 impl UiText {
     pub fn try_from_string(value: String) -> Result<Self, String> {
         if value.len() > UI_TEXT_MAX_BYTES {
@@ -1232,7 +1249,7 @@ pub fn ui_value_headroom() -> UiValueHeadroom {
 
 #[path = "../♻️retirement/🦀️.rs"]
 mod retirement;
-pub use retirement::{close_ui_value_page_with_grant, BuiltTreeRetirement, UiValueRetirement, UiValueRetirementStep};
+pub use retirement::{close_ui_value_page_with_grant, BuiltTreeRetirement, OriginalBuiltTreeRetirement, UiValueRetirement, UiValueRetirementStep};
 pub(crate) use retirement::{UiArenaHandback, UiArenaHandbacks, UiTypedRetire, UiTypedRetirementCursor};
 
 #[derive(Debug, Default)]

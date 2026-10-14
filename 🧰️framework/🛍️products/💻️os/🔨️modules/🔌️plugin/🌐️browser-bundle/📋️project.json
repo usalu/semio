@@ -1,9 +1,9 @@
 {
   "name": "@semio-tech/browser-actor-import-test",
-  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "targets": {
     "runtime-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts runtime-check"
@@ -14,7 +14,7 @@
       ]
     },
     "pending-host-close-check": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts pending-host-close-check"
@@ -25,7 +25,7 @@
       ]
     },
     "test-descriptor-contract": {
-      "executor": "nx:run-commands",
+      "executor": "repo:script",
       "options": {
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test descriptor-contract"

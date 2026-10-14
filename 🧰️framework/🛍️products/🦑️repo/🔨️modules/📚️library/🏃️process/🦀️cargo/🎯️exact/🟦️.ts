@@ -1,6 +1,7 @@
+import {buildModePolicy,readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import {isAbsolute,join} from "node:path";
 import {runOwnedCommand,captureOwnedProcess,type OwnedCommandOptions,type OwnedProcessCaptureOptions,type OwnedProcessCaptureResult} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {runExactCargoLaws,readExactCargoLawPolicyV1,exactExecutableFingerprint,type ExactCargoLawOptions,type ExactCargoLawPort,type ExactCargoLawReceipt} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import {runExactCargoLaws,readExactCargoLawPolicyV1,exactExecutableFingerprint,originalNativeLibraryDirectory,type ExactCargoLawOptions,type ExactCargoLawPort,type ExactCargoLawReceipt} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import {checkScriptInvocation,advanceScriptInvocation,scriptInvocationEnvironment} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 import {cargoRepositoryPackageSelections,cargoWorkspacePreparationInvocationV1,type CargoPreparationInvocationV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
@@ -23,6 +24,7 @@ export function configuredRepositoryCargoPreparationPolicyV1():RepositoryCargoPr
 /** 🔌️ Receives actual selection, command and capture operations without bypassing preparation. */
 export type RepositoryExactCargoLawPort={
   fingerprint:ExactCargoLawPort["fingerprint"];
+  nativeLibraryDirectory?:ExactCargoLawPort["nativeLibraryDirectory"];
   prepare(command:string,args:string[],options:OwnedProcessCaptureOptions):CargoPreparationInvocationV1|undefined|Promise<CargoPreparationInvocationV1|undefined>;
   execute(command:string,args:string[],cwd:string,label:string,budget:number,options:OwnedCommandOptions):Promise<void>;
   capture(command:string,args:string[],options:OwnedProcessCaptureOptions):Promise<OwnedProcessCaptureResult>;
@@ -35,15 +37,18 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
   const preparation=readRepositoryCargoPreparationPolicyV1(options.preparation);
   readExactCargoLawPolicyV1(options.policy);
   checkScriptInvocation(options.invocation);
+  const profile=buildModePolicy(readBuildMode(Object.getOwnPropertyDescriptor(options.invocation.capabilities,"buildMode")?.value)).cargoProfile;
+  for(const args of [options.cargoArgs??[],...options.groups.map(group=>group.cargoArgs??[])])if(args.some(arg=>arg==="--release"||arg==="--profile"||arg.startsWith("--profile=")))throw Error("Exact Cargo profile belongs to the original caller build mode");
   await advanceScriptInvocation(options.invocation, "repository:exact-cargo-selection", "loading");
   const root = getWorkspaceRoot(), environment = options.env ?? process.env;
   const artifactDirectory = options.artifactDir ?? environment.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactDirectory || !isAbsolute(artifactDirectory) || !isGeneratedPath(artifactDirectory)) throw new Error("Repository exact Cargo laws require generated artifact storage");
   const selected = options.manifestPath ? [] : cargoRepositoryPackageSelections(root, options.groups.map(group => group.package));
   const manifestPaths = Object.fromEntries(options.groups.map((group, index) => [group.package, options.manifestPath ?? join(root, selected[index]!.manifest)]));
-  const host:RepositoryExactCargoLawPort=port??{fingerprint:exactExecutableFingerprint,prepare:(_command,args,capture)=>cargoWorkspacePreparationInvocationV1(repositoryCargoPreparationStorageV1(root),root,args,capture.cwd,capture.env),execute:runOwnedCommand,capture:captureOwnedProcess};
+  const host:RepositoryExactCargoLawPort=port??{fingerprint:exactExecutableFingerprint,nativeLibraryDirectory:originalNativeLibraryDirectory,prepare:(_command,args,capture)=>cargoWorkspacePreparationInvocationV1(repositoryCargoPreparationStorageV1(root),root,args,capture.cwd,capture.env),execute:runOwnedCommand,capture:captureOwnedProcess};
   const preparedPort: ExactCargoLawPort = {
     fingerprint: host.fingerprint,
+    nativeLibraryDirectory:host.nativeLibraryDirectory,
     probe: async (command, args, capture) => {
       if (command === "cargo") {
         if (capture.invocation !== options.invocation) throw Error("Exact original Cargo preparation invocation required");
@@ -63,5 +68,5 @@ export async function runRepositoryExactCargoLaws(options:RepositoryExactCargoLa
       return await host.capture(command,args,capture);
     },
   };
-  return await runExactCargoLaws({ ...options, manifestPaths, cargoTargetDir: cargoTargetDirectory(root, environment) }, preparedPort);
+  return await runExactCargoLaws({ ...options, cargoArgs:["--profile",profile,...(options.cargoArgs??[])], manifestPaths, cargoTargetDir: cargoTargetDirectory(root, environment) }, preparedPort);
 }

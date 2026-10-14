@@ -8,7 +8,7 @@
       ".vscode/🧩️launch.seed.jsonc",
       ".vscode/launch.json"
     ],
-    "runner": "bun nx"
+    "runner": "bun repo"
   },
   "buildMachine": {
     "cpus": 10,

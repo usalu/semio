@@ -136,7 +136,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for TestSnaps
     }
 
     fn child_slots() -> &'static [semio_framework_schema_composition::ChildSlotSpec] {
-        &[semio_framework_schema_composition::ChildSlotSpec { name: "slot", kind: "s.test.child", many: true }]
+        &[semio_framework_schema_composition::ChildSlotSpec { name: "slot", selection: semio_framework_schema_composition::ChildSlotSelection::ArtifactKind("s.test.child"), many: true }]
     }
 }
 
